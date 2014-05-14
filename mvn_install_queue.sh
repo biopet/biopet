@@ -1,0 +1,2 @@
+QUEUE_JAR=/data/DIV5/SASC/common/programs/Queue-3.1-1/Queue-shark.jar
+mvn install:install-file -Dfile=$QUEUE_JAR -DgroupId=org.broadinstitute.sting -DartifactId=queue-package -Dversion=3.1 -Dpackaging=jar
