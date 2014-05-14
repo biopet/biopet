@@ -7,6 +7,3 @@
 [submodule "biopet-framework"]
 	path = biopet-framework
 	url = git@git.lumc.nl:biopet/biopet-framework.git
-[submodule "gatk-package"]
-	path = gatk-package
-	url = git@git.lumc.nl:biopet/gatk-package.git
