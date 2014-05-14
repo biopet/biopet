@@ -10,7 +10,5 @@
     <module>biopet-framework</module>
     <module>flexiprep</module>
     <module>gatk</module>
-    <module>flexiprep-package</module>
-    <module>gatk-package</module>
   </modules>
 </project>
