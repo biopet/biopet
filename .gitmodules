@@ -1,9 +1,0 @@
-[submodule "gatk"]
-	path = gatk
-	url = git@git.lumc.nl:biopet/gatk.git
-[submodule "flexiprep"]
-	path = flexiprep
-	url = git@git.lumc.nl:biopet/flexiprep.git
-[submodule "biopet-framework"]
-	path = biopet-framework
-	url = git@git.lumc.nl:biopet/biopet-framework.git
