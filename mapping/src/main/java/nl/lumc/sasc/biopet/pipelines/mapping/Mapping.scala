@@ -84,11 +84,11 @@ class Mapping(private var globalConfig: Config) extends QScript {
       val bwaCommand = new Bwa(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; 
                                         RG = getReadGroup; output = new File(outputDir + outputName + ".sam") }
       add(bwaCommand)
-      bamFile = addAddOrReplaceReadGroups(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
+      bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
       val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = outputDir }
       add(starCommand)
-      bamFile = addSortSam(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
+      bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
     }
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
@@ -110,12 +110,12 @@ class Mapping(private var globalConfig: Config) extends QScript {
   
   def addAddOrReplaceReadGroups(inputSam:List[File], outputFile:File, dir:String) : File = {
     val addOrReplaceReadGroups = new AddOrReplaceReadGroups {
-      input = inputSam
-      output = outputFile
-      createIndex = true
-      memoryLimit = 2
-      nCoresRequest = 2
-      jobResourceRequests :+= "h_vmem=4G"
+      this.input = inputSam
+      this.output = outputFile
+      this.createIndex = true
+      this.memoryLimit = 2
+      this.nCoresRequest = 2
+      this.jobResourceRequests :+= "h_vmem=4G"
 
       this.RGLB = RGLB
       this.RGPL = RGPL
@@ -127,15 +127,15 @@ class Mapping(private var globalConfig: Config) extends QScript {
     return addOrReplaceReadGroups.output
   }
   
-  def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
+  def addMarkDuplicates(input_Bams:List[File], outputFile:File, dir:String) : File = {
     val markDuplicates = new MarkDuplicates {
-      input = inputBams
-      output = outputFile
-      REMOVE_DUPLICATES = false
-      metrics = swapExt(dir,outputFile,".bam",".metrics")
-      outputIndex = swapExt(dir,this.output,".bam",".bai")
-      memoryLimit = 2
-      jobResourceRequests :+= "h_vmem=4G"
+      this.input = input_Bams
+      this.output = outputFile
+      this.REMOVE_DUPLICATES = false
+      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
+      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
+      this.memoryLimit = 2
+      this.jobResourceRequests :+= "h_vmem=4G"
     }
     add(markDuplicates)
     
