@@ -118,7 +118,8 @@ class Mapping(private var globalConfig: Config) extends QScript {
       this.memoryLimit = 2
       this.nCoresRequest = 2
       this.jobResourceRequests :+= "h_vmem=4G"
-
+      
+      this.RGID = qscript.RGID
       this.RGLB = qscript.RGLB
       this.RGPL = qscript.RGPL
       this.RGPU = qscript.RGPU
