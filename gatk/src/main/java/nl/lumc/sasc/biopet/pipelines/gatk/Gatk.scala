@@ -60,58 +60,63 @@ class Gatk(private var globalConfig: Config) extends QScript {
         add(genotypeGVCFs)
         
         //Snp recal
-        val snpVariantRecalibrator = new VariantRecalibrator() with gatkArguments
-        snpVariantRecalibrator.input +:= genotypeGVCFs.out
-        snpVariantRecalibrator.nt = 8
-        snpVariantRecalibrator.recal_file = swapExt(genotypeGVCFs.out,".vcf",".snp.recal")
-        snpVariantRecalibrator.tranches_file = swapExt(genotypeGVCFs.out,".vcf",".snp.tranches")
-        snpVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0")
-        snpVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0")
-        snpVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0")
-        snpVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
-        snpVariantRecalibrator.an = Seq("QD","MQ","MQRankSum","ReadPosRankSum","FS","DP","InbreedingCoeff")
-        snpVariantRecalibrator.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        val snpVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
+          input +:= genotypeGVCFs.out
+          nt = 4; memoryLimit = 2 * nt
+          recal_file = swapExt(genotypeGVCFs.out,".vcf",".snp.recal")
+          tranches_file = swapExt(genotypeGVCFs.out,".vcf",".snp.tranches")
+          resource = Seq(new TaggedFile(config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0"),
+          new TaggedFile(config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0"),
+          new TaggedFile(config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0"),
+          new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0"))
+          an = Seq("QD","MQ","MQRankSum","ReadPosRankSum","FS","DP","InbreedingCoeff")
+          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        }
         add(snpVariantRecalibrator)
         
-        val snpApplyRecalibration = new ApplyRecalibration() with gatkArguments
-        snpApplyRecalibration.input +:= genotypeGVCFs.out
-        snpApplyRecalibration.recal_file = snpVariantRecalibrator.recal_file
-        snpApplyRecalibration.tranches_file = snpVariantRecalibrator.tranches_file
-        snpApplyRecalibration.out = swapExt(genotypeGVCFs.out,".vcf",".snp.recal.vcf")
-        snpApplyRecalibration.ts_filter_level = 99.5
-        snpApplyRecalibration.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        snpApplyRecalibration.nt = 3
-        snpApplyRecalibration.scatterCount = scatterCount
+        val snpApplyRecalibration = new ApplyRecalibration() with gatkArguments {
+          input +:= genotypeGVCFs.out
+          recal_file = snpVariantRecalibrator.recal_file
+          tranches_file = snpVariantRecalibrator.tranches_file
+          out = swapExt(genotypeGVCFs.out,".vcf",".snp.recal.vcf")
+          ts_filter_level = 99.5
+          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+          nt = 3; memoryLimit = 2 * nt
+          scatterCount = scatterCount
+        }
         add(snpApplyRecalibration)
         
         //indel recal
-        val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments
-        indelVariantRecalibrator.input +:= genotypeGVCFs.out
-        indelVariantRecalibrator.nt = 8
-        indelVariantRecalibrator.recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
-        indelVariantRecalibrator.tranches_file = swapExt(genotypeGVCFs.out,".vcf",".indel.tranches")
-        indelVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
-        indelVariantRecalibrator.resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
-        indelVariantRecalibrator.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum","InbreedingCoeff")
-        indelVariantRecalibrator.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
+          input +:= genotypeGVCFs.out
+          nt = 4; memoryLimit = 2 * nt
+          recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
+          tranches_file = swapExt(genotypeGVCFs.out,".vcf",".indel.tranches")
+          resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
+          resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
+          an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum","InbreedingCoeff")
+          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        }
         add(indelVariantRecalibrator)
         
-        val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments
-        indelApplyRecalibration.input +:= genotypeGVCFs.out
-        indelApplyRecalibration.recal_file = indelVariantRecalibrator.recal_file
-        indelApplyRecalibration.tranches_file = indelVariantRecalibrator.tranches_file
-        indelApplyRecalibration.out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
-        indelApplyRecalibration.ts_filter_level = 99.0
-        indelApplyRecalibration.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        indelApplyRecalibration.nt = 3
-        indelApplyRecalibration.scatterCount = scatterCount
+        val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
+          input +:= genotypeGVCFs.out
+          recal_file = indelVariantRecalibrator.recal_file
+          tranches_file = indelVariantRecalibrator.tranches_file
+          out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
+          ts_filter_level = 99.0
+          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+          nt = 3; memoryLimit = 2 * nt
+          scatterCount = scatterCount
+        }
         add(indelApplyRecalibration)
         
         // merge snp and indels
-        val catVariants = new CatVariants()
-        catVariants.variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
-        catVariants.outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
-        catVariants.reference = referenceFile
+        val catVariants = new CatVariants() {
+          variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
+          outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
+          reference = referenceFile
+        }
         add(catVariants)
       } else logger.warn("No gVCFs to genotype")
       

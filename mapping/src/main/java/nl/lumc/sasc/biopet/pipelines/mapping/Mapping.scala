@@ -80,7 +80,6 @@ class Mapping(private var globalConfig: Config) extends QScript {
       if (paired) fastq_R2 = flexiprep.outputFiles("output_R2")
     }
     var bamFile:File = ""
-    //var samFile:File = ""
     if (aligner == "bwa") {
       val bwaCommand = new Bwa(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; 
                                         RG = getReadGroup; output = new File(outputDir + outputName + ".sam") }
@@ -96,46 +95,48 @@ class Mapping(private var globalConfig: Config) extends QScript {
   }
     
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val sortSam = new SortSam
-    sortSam.input = inputSam
-    sortSam.createIndex = true
-    sortSam.output = outputFile
-    sortSam.memoryLimit = 2
-    sortSam.nCoresRequest = 2
-    sortSam.jobResourceRequests :+= "h_vmem=4G"
+    val sortSam = new SortSam {
+      input = inputSam
+      createIndex = true
+      output = outputFile
+      memoryLimit = 2
+      nCoresRequest = 2
+      jobResourceRequests :+= "h_vmem=4G"
+    }
     add(sortSam)
     
     return sortSam.output
   }
   
   def addAddOrReplaceReadGroups(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val addOrReplaceReadGroups = new AddOrReplaceReadGroups
-    addOrReplaceReadGroups.input = inputSam
-    addOrReplaceReadGroups.createIndex = true
-    addOrReplaceReadGroups.output = outputFile
-    addOrReplaceReadGroups.memoryLimit = 2
-    addOrReplaceReadGroups.nCoresRequest = 2
-    addOrReplaceReadGroups.jobResourceRequests :+= "h_vmem=4G"
-    
-    addOrReplaceReadGroups.RGLB = RGLB
-    addOrReplaceReadGroups.RGPL = RGPL
-    addOrReplaceReadGroups.RGPU = RGPU
-    addOrReplaceReadGroups.RGSM = RGSM
-    if (RGCN != null) addOrReplaceReadGroups.RGCN = RGCN
-    if (RGDS != null) addOrReplaceReadGroups.RGDS = RGDS
-    
+    val addOrReplaceReadGroups = new AddOrReplaceReadGroups {
+      input = inputSam
+      output = outputFile
+      createIndex = true
+      memoryLimit = 2
+      nCoresRequest = 2
+      jobResourceRequests :+= "h_vmem=4G"
+
+      this.RGLB = RGLB
+      this.RGPL = RGPL
+      this.RGPU = RGPU
+      this.RGSM = RGSM
+      if (RGCN != null) this.RGCN = RGCN
+      if (RGDS != null) this.RGDS = RGDS
+    }
     return addOrReplaceReadGroups.output
   }
   
   def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates
-    markDuplicates.input = inputBams
-    markDuplicates.output = outputFile
-    markDuplicates.REMOVE_DUPLICATES = false
-    markDuplicates.metrics = swapExt(dir,outputFile,".bam",".metrics")
-    markDuplicates.outputIndex = swapExt(dir,markDuplicates.output,".bam",".bai")
-    markDuplicates.memoryLimit = 2
-    markDuplicates.jobResourceRequests :+= "h_vmem=4G"
+    val markDuplicates = new MarkDuplicates {
+      input = inputBams
+      output = outputFile
+      REMOVE_DUPLICATES = false
+      metrics = swapExt(dir,outputFile,".bam",".metrics")
+      outputIndex = swapExt(dir,this.output,".bam",".bai")
+      memoryLimit = 2
+      jobResourceRequests :+= "h_vmem=4G"
+    }
     add(markDuplicates)
     
     return markDuplicates.output
