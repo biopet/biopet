@@ -4,7 +4,7 @@ import scala.util.parsing.json._
 import java.io.File
 import org.broadinstitute.sting.queue.util.Logging
 
-class Config(var map: Map[String,Any]) extends Logging {
+class Config(private var map: Map[String,Any]) extends Logging {
   def this() = {
     this(Map())
     logger.info("Init phase of config")
@@ -25,14 +25,20 @@ class Config(var map: Map[String,Any]) extends Logging {
   def loadConfigFile(configFile:File) {
     var returnMap: Map[String,Any] = Map()
     var configJson = JSON.parseFull(scala.io.Source.fromFile(configFile).mkString)
-	this.logger.debug("Jsonfile: " + configJson)
-	returnMap = Config.valueToMap(configJson.get)
-	
-    map = Config.mergMaps(returnMap, map)
-    
+    this.logger.debug("Jsonfile: " + configFile)
+    this.logger.debug("Contain: " + configJson)
+    configJson.get match {
+      case m:Map[_,_] => {
+          returnMap = Config.valueToMap(configJson.get)
+          map = Config.mergeMaps(returnMap, map)
+      }
+      case null => logger.warn("Config " + configFile + " wrong format")
+    }
     this.logger.debug("config: " + map)
   }
-    
+  
+  def getMap() : Map[String,Any] = map
+  
   def get(s:String) : Any = map(s)
   def get(s:String, default:Any) : Any = if (contains(s)) get(s) else default
   
@@ -104,6 +110,11 @@ class Config(var map: Map[String,Any]) extends Logging {
   def getAsMap(s:String, default:Map[String,Any]) : Map[String,Any] = if (contains(s)) getAsMap(s) else default
   
   def getAsConfig(s:String, default:Map[String,Any]) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(default)
+  def getAsConfig(s:String, default:Config) : Config = if (contains(s)) Config.mergeConfigs(getAsConfig(s), default) else default
+  def getAsConfig(s:String, default:Config, subDefault:String) : Config = {
+    if (contains(s)) Config.mergeConfigs(getAsConfig(s), default.getAsConfig(subDefault))
+    else default
+  }
   def getAsConfig(s:String) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(Map())
   
   override def toString() : String = map.toString
@@ -126,7 +137,7 @@ object Config {
     return ouputMap
   }
   
-  def mergMaps(map1:Map[String,Any],map2:Map[String,Any]) : Map[String,Any] = {
+  def mergeMaps(map1:Map[String,Any],map2:Map[String,Any]) : Map[String,Any] = {
     var newMap: Map[String,Any] = Map()
     for (key <- map1.keySet.++(map2.keySet)) {
       if (map1.contains(key) && !map2.contains(key)) newMap += (key -> map1(key))
@@ -135,7 +146,7 @@ object Config {
         map1(key) match { 
           case m1:Map[_,_] => {
             map2(key) match {
-              case m2:Map[_,_] => newMap += (key -> mergMaps(Config.valueToMap(m1),Config.valueToMap(m2)))
+              case m2:Map[_,_] => newMap += (key -> mergeMaps(Config.valueToMap(m1),Config.valueToMap(m2)))
               case _ => newMap += (key -> map1(key))
             }
           }
@@ -145,4 +156,6 @@ object Config {
     }
     return newMap
   }
+  
+  def mergeConfigs(config1:Config,config2:Config) : Config = new Config(mergeMaps(config1.getMap, config2.getMap))
 }
