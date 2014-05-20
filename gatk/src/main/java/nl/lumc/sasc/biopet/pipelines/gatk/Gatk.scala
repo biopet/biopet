@@ -53,69 +53,74 @@ class Gatk(private var globalConfig: Config) extends QScript {
     if (onlySample == null) {
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
-        val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments
-        genotypeGVCFs.variant = gvcfFiles
-        genotypeGVCFs.scatterCount = scatterCount
-        genotypeGVCFs.out = new File(outputDir,"final.vcf")
+        val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
+          this.variant = gvcfFiles
+          this.scatterCount = scatterCount
+          this.out = new File(outputDir,"final.vcf")
+        }
         add(genotypeGVCFs)
         
         //Snp recal
         val snpVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-          input +:= genotypeGVCFs.out
-          nt = 4; memoryLimit = 2 * nt
-          recal_file = swapExt(genotypeGVCFs.out,".vcf",".snp.recal")
-          tranches_file = swapExt(genotypeGVCFs.out,".vcf",".snp.tranches")
-          resource = Seq(new TaggedFile(config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0"),
-          new TaggedFile(config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0"),
-          new TaggedFile(config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0"),
-          new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0"))
-          an = Seq("QD","MQ","MQRankSum","ReadPosRankSum","FS","DP","InbreedingCoeff")
-          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+          this.input +:= genotypeGVCFs.out
+          this.nt = 4
+          this.memoryLimit = 2 * nt
+          this.recal_file = swapExt(genotypeGVCFs.out,".vcf",".snp.recal")
+          this.tranches_file = swapExt(genotypeGVCFs.out,".vcf",".snp.tranches")
+          this.resource = Seq(new TaggedFile(config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0"),
+                              new TaggedFile(config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0"),
+                              new TaggedFile(config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0"),
+                              new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0"))
+          this.an = Seq("QD","MQ","MQRankSum","ReadPosRankSum","FS","DP","InbreedingCoeff")
+          this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
         }
         add(snpVariantRecalibrator)
         
         val snpApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-          input +:= genotypeGVCFs.out
-          recal_file = snpVariantRecalibrator.recal_file
-          tranches_file = snpVariantRecalibrator.tranches_file
-          out = swapExt(genotypeGVCFs.out,".vcf",".snp.recal.vcf")
-          ts_filter_level = 99.5
-          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-          nt = 3; memoryLimit = 2 * nt
-          scatterCount = scatterCount
+          this.input +:= genotypeGVCFs.out
+          this.recal_file = snpVariantRecalibrator.recal_file
+          this.tranches_file = snpVariantRecalibrator.tranches_file
+          this.out = swapExt(genotypeGVCFs.out,".vcf",".snp.recal.vcf")
+          this.ts_filter_level = 99.5
+          this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+          this.nt = 3
+          this.memoryLimit = 2 * nt
+          if (scatterCount > 1) this.scatterCount = scatterCount
         }
         add(snpApplyRecalibration)
         
         //indel recal
         val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-          input +:= genotypeGVCFs.out
-          nt = 4; memoryLimit = 2 * nt
-          recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
-          tranches_file = swapExt(genotypeGVCFs.out,".vcf",".indel.tranches")
-          resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
-          resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
-          an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum","InbreedingCoeff")
-          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+          this.input +:= genotypeGVCFs.out
+          this.nt = 4
+          this.memoryLimit = 2 * nt
+          this.recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
+          this.tranches_file = swapExt(genotypeGVCFs.out,".vcf",".indel.tranches")
+          this.resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
+          this.resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
+          this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum","InbreedingCoeff")
+          this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
         }
         add(indelVariantRecalibrator)
         
         val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-          input +:= genotypeGVCFs.out
-          recal_file = indelVariantRecalibrator.recal_file
-          tranches_file = indelVariantRecalibrator.tranches_file
-          out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
-          ts_filter_level = 99.0
-          mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-          nt = 3; memoryLimit = 2 * nt
-          scatterCount = scatterCount
+          this.input +:= genotypeGVCFs.out
+          this.recal_file = indelVariantRecalibrator.recal_file
+          this.tranches_file = indelVariantRecalibrator.tranches_file
+          this.out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
+          this.ts_filter_level = 99.0
+          this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+          this.nt = 3
+          this.memoryLimit = 2 * nt
+          if (scatterCount > 1) this.scatterCount = scatterCount
         }
         add(indelApplyRecalibration)
         
         // merge snp and indels
         val catVariants = new CatVariants() {
-          variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
-          outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
-          reference = referenceFile
+          this.variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
+          this.outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
+          this.reference = referenceFile
         }
         add(catVariants)
       } else logger.warn("No gVCFs to genotype")
@@ -189,7 +194,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       if (paired) flexiprep.input_R2 = fastq_R2
       flexiprep.outputDir = runDir + "flexiprep/"
       flexiprep.script
-      addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
+      addAll(flexiprep.functions) // Add functions of flexiprep to curent function pool
       
       val bwaCommand = new Bwa(config)
       bwaCommand.R1 = flexiprep.outputFiles("output_R1")
@@ -218,65 +223,70 @@ class Gatk(private var globalConfig: Config) extends QScript {
   }
   
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val sortSam = new SortSam
-    sortSam.input = inputSam
-    sortSam.createIndex = true
-    sortSam.output = outputFile
-    sortSam.memoryLimit = 2
-    sortSam.nCoresRequest = 2
-    sortSam.jobResourceRequests :+= "h_vmem=4G"
+    val sortSam = new SortSam {
+      this.input = inputSam
+      this.createIndex = true
+      this.output = outputFile
+      this.memoryLimit = 2
+      this.nCoresRequest = 2
+      this.jobResourceRequests :+= "h_vmem=4G"
+    }
     add(sortSam)
     
     return sortSam.output
   }
   
   def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates
-    markDuplicates.input = inputBams
-    markDuplicates.output = outputFile
-    markDuplicates.REMOVE_DUPLICATES = false
-    markDuplicates.metrics = swapExt(dir,outputFile,".bam",".metrics")
-    markDuplicates.outputIndex = swapExt(dir,markDuplicates.output,".bam",".bai")
-    markDuplicates.memoryLimit = 2
-    markDuplicates.jobResourceRequests :+= "h_vmem=4G"
+    val markDuplicates = new MarkDuplicates {
+      this.input = inputBams
+      this.output = outputFile
+      this.REMOVE_DUPLICATES = false
+      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
+      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
+      this.memoryLimit = 2
+      this.jobResourceRequests :+= "h_vmem=4G"
+    }
     add(markDuplicates)
     
     return markDuplicates.output
   }
   
   def addIndelRealign(inputBam:File, dir:String): File = {
-    val realignerTargetCreator = new RealignerTargetCreator with gatkArguments
-    realignerTargetCreator.I :+= inputBam
-    realignerTargetCreator.o = swapExt(dir,inputBam,".bam",".realign.intervals")
-    //realignerTargetCreator.nt = 1
-    realignerTargetCreator.jobResourceRequests :+= "h_vmem=5G"
-    if (scatterCount > 1) realignerTargetCreator.scatterCount = scatterCount
+    val realignerTargetCreator = new RealignerTargetCreator with gatkArguments {
+      this.I :+= inputBam
+      this.o = swapExt(dir,inputBam,".bam",".realign.intervals")
+      this.jobResourceRequests :+= "h_vmem=5G"
+      if (scatterCount > 1) this.scatterCount = scatterCount
+    }
     add(realignerTargetCreator)
 
-    val indelRealigner = new IndelRealigner with gatkArguments
-    indelRealigner.I :+= inputBam
-    indelRealigner.targetIntervals = realignerTargetCreator.o
-    indelRealigner.o = swapExt(dir,inputBam,".bam",".realign.bam")
-    if (scatterCount > 1) indelRealigner.scatterCount = scatterCount
+    val indelRealigner = new IndelRealigner with gatkArguments {
+      this.I :+= inputBam
+      this.targetIntervals = realignerTargetCreator.o
+      this.o = swapExt(dir,inputBam,".bam",".realign.bam")
+      if (scatterCount > 1) this.scatterCount = scatterCount
+    }
     add(indelRealigner)
     
     return indelRealigner.o
   }
   
   def addBaseRecalibrator(inputBam:File, dir:String): File = {
-    val baseRecalibrator = new BaseRecalibrator with gatkArguments
-    baseRecalibrator.I :+= inputBam
-    baseRecalibrator.o = swapExt(dir,inputBam,".bam",".baserecal")
-    baseRecalibrator.knownSites :+= dbsnp
-    if (scatterCount > 1) baseRecalibrator.scatterCount = scatterCount
-    baseRecalibrator.nct = 2
+    val baseRecalibrator = new BaseRecalibrator with gatkArguments {
+      this.I :+= inputBam
+      this.o = swapExt(dir,inputBam,".bam",".baserecal")
+      this.knownSites :+= dbsnp
+      if (scatterCount > 1) this.scatterCount = scatterCount
+      this.nct = 2
+    }
     add(baseRecalibrator)
 
-    val printReads = new PrintReads with gatkArguments
-    printReads.I :+= inputBam
-    printReads.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
-    printReads.BQSR = baseRecalibrator.o
-    if (scatterCount > 1) printReads.scatterCount = scatterCount
+    val printReads = new PrintReads with gatkArguments {
+      this.I :+= inputBam
+      this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
+      this.BQSR = baseRecalibrator.o
+      if (scatterCount > 1) this.scatterCount = scatterCount
+    }
     
     return printReads.o
   }
