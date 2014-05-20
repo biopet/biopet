@@ -186,7 +186,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       flexiprep.script
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
       
-      val bwaCommand = new Bwa(config.getAsConfig("bwa"))
+      val bwaCommand = new Bwa(config)
       bwaCommand.R1 = flexiprep.outputFiles("output_R1")
       if (paired) bwaCommand.R2 = flexiprep.outputFiles("output_R2")
       bwaCommand.referenceFile = referenceFile
