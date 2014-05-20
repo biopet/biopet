@@ -80,6 +80,8 @@ class Gatk(private var globalConfig: Config) extends QScript {
         snpApplyRecalibration.out = swapExt(genotypeGVCFs.out,".vcf",".snp.recal.vcf")
         snpApplyRecalibration.ts_filter_level = 99.5
         snpApplyRecalibration.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        snpApplyRecalibration.nt = 3
+        snpApplyRecalibration.scatterCount = scatterCount
         add(snpApplyRecalibration)
         
         //indel recal
@@ -101,6 +103,8 @@ class Gatk(private var globalConfig: Config) extends QScript {
         indelApplyRecalibration.out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
         indelApplyRecalibration.ts_filter_level = 99.0
         indelApplyRecalibration.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        indelApplyRecalibration.nt = 3
+        indelApplyRecalibration.scatterCount = scatterCount
         add(indelApplyRecalibration)
         
         // merge snp and indels
