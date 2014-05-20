@@ -14,6 +14,7 @@ import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
 
 class Mapping(private var globalConfig: Config) extends QScript {
+  qscript =>
   @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
   @Input(doc="R1 fastq file", shortName="R1",required=true) var input_R1: File = _
   @Input(doc="R2 fastq file", shortName="R2", required=false) var input_R2: File = _
@@ -79,21 +80,22 @@ class Mapping(private var globalConfig: Config) extends QScript {
       fastq_R1 = flexiprep.outputFiles("output_R1")
       if (paired) fastq_R2 = flexiprep.outputFiles("output_R2")
     }
-    var bamFile:File = ""
+    var bamFile:File = null
     if (aligner == "bwa") {
       val bwaCommand = new Bwa(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; 
                                         RG = getReadGroup; output = new File(outputDir + outputName + ".sam") }
       add(bwaCommand)
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
-      val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = outputDir }
+      val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/" ;
+                                          outputSam = new File(this.outputDir + "/star_output.sam") }
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
     }
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
   }
-    
+  
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
     val sortSam = new SortSam {
       input = inputSam
@@ -124,6 +126,8 @@ class Mapping(private var globalConfig: Config) extends QScript {
       if (RGCN != null) this.RGCN = RGCN
       if (RGDS != null) this.RGDS = RGDS
     }
+    add(addOrReplaceReadGroups)
+    
     return addOrReplaceReadGroups.output
   }
   
