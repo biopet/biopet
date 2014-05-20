@@ -43,7 +43,7 @@ class Star(private var globalConfig: Config) extends CommandLineFunction {
       cmd += required("--genomeDir", genomeDir) +
         required("--readFilesIn", R1) + optional(R2)
     }
-    cmd += optional("-runThreadN", nCoresRequest)
+    cmd += optional("--runThreadN", nCoresRequest)
     
     return cmd
   }
