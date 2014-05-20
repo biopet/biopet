@@ -111,6 +111,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
         val catVariants = new CatVariants()
         catVariants.variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
         catVariants.outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
+        catVariants.reference = referenceFile
         add(catVariants)
       } else logger.warn("No gVCFs to genotype")
       
