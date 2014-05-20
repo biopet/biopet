@@ -119,12 +119,12 @@ class Mapping(private var globalConfig: Config) extends QScript {
       this.nCoresRequest = 2
       this.jobResourceRequests :+= "h_vmem=4G"
 
-      this.RGLB = RGLB
-      this.RGPL = RGPL
-      this.RGPU = RGPU
-      this.RGSM = RGSM
-      if (RGCN != null) this.RGCN = RGCN
-      if (RGDS != null) this.RGDS = RGDS
+      this.RGLB = qscript.RGLB
+      this.RGPL = qscript.RGPL
+      this.RGPU = qscript.RGPU
+      this.RGSM = qscript.RGSM
+      if (RGCN != null) this.RGCN = qscript.RGCN
+      if (RGDS != null) this.RGDS = qscript.RGDS
     }
     add(addOrReplaceReadGroups)
     
