@@ -9,7 +9,7 @@ import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.commandline._
 
-class Flexiprep(private var config: Config) extends QScript {
+class Flexiprep(private var globalConfig: Config) extends QScript {
   def this() = this(new Config())
   
   @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
@@ -19,15 +19,24 @@ class Flexiprep(private var config: Config) extends QScript {
   @Argument(doc="Skip Trim fastq files", shortName="skiptrim", required=false) var skipTrim: Boolean = false
   @Argument(doc="Skip Clip fastq files", shortName="skipclip", required=false) var skipClip: Boolean = false
   
+  var config: Config = _
   var outputFiles:Map[String,File] = Map()
   var paired: Boolean = (input_R2 != null)
   
-  def script() {
-    for (file <- configfiles) config.loadConfigFile(file)
+  def init() {
+    for (file <- configfiles) globalConfig.loadConfigFile(file)
+    config = Config.mergeConfigs(globalConfig.getAsConfig("flexiprep"), globalConfig)
+    logger.debug(config)
+    skipTrim = config.getAsBoolean("skiptrim", false)
+    skipClip = config.getAsBoolean("skipclip", false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
+  }
+  
+  def script() {
+    init()
     
     runInitialFastqc()
     
@@ -59,7 +68,6 @@ class Flexiprep(private var config: Config) extends QScript {
       outputFiles += ("qualtype_R2" -> getQualtype(fastqc_R2))
       outputFiles += ("contams_R2" -> getContams(fastqc_R2))
     }
-    
   }
   
   def getQualtype(fastqc:Fastqc): File = {
@@ -81,7 +89,9 @@ class Flexiprep(private var config: Config) extends QScript {
     return out
   }
   
-  def runTrimClip(R1_in:File, outDir:String) : Map[String,File] = { return runTrimClip(R1_in, new File(""), outDir) }
+  def runTrimClip(R1_in:File, outDir:String) : Map[String,File] = {
+    return runTrimClip(R1_in, new File(""), outDir)
+  }
   def runTrimClip(R1_in:File, R2_in:File, outDir:String) : Map[String,File] = {
     var results: Map[String,File] = Map()
     

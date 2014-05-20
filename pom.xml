@@ -10,5 +10,6 @@
     <module>biopet-framework</module>
     <module>flexiprep</module>
     <module>gatk</module>
+    <module>mapping</module>
   </modules>
 </project>
