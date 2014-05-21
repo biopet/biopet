@@ -6,10 +6,10 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Star(private var globalConfig: Config) extends CommandLineFunction {
+class Star(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "STAR"
-  var config: Config = Config.mergeConfigs(globalConfig.getAsConfig("star"), globalConfig)
+  val config: Config = globalConfig.getAsConfig("star")
 
   @Argument(doc="STAR executeble", shortName="star_exe", required=false)
   var star_exe: String = config.getAsString("exe", "/usr/local/bin/STAR")

@@ -6,10 +6,10 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Fastqc(private var globalConfig: Config) extends CommandLineFunction {
+class Fastqc(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "fastqc"
-  var config: Config = globalConfig.getAsConfig("fastqc")
+  val config: Config = globalConfig.getAsConfig("fastqc")
   
   @Input(doc="fastqc executeble", shortName="Fastqc_Exe")
   var fastqc_exe: File = new File(config.getAsString("exe","/usr/local/FastQC/FastQC_v0.10.1/fastqc"))

@@ -7,10 +7,10 @@ import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Sickle(private var globalConfig: Config) extends CommandLineFunction {
+class Sickle(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "sickle"
-  var config: Config = globalConfig.getAsConfig("sickle")
+  val config: Config = globalConfig.getAsConfig("sickle")
   
   @Input(doc="Sickle exe", required=false) var sickle_exe: File = new File("/usr/local/bin/sickle")
   @Input(doc="R1 input") var input_R1: File = null
