@@ -17,7 +17,6 @@ class Gatk(private var globalConfig: Config) extends QScript {
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
   def this() = this(new Config())
   var config: Config = _
-  var scatterCount: Int = _
   var referenceFile: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
@@ -34,7 +33,6 @@ class Gatk(private var globalConfig: Config) extends QScript {
     referenceFile = config.getAsString("referenceFile")
     dbsnp = config.getAsString("dbsnp")
     gvcfFiles = config.getAsListOfStrings("gvcfFiles", Nil)
-    scatterCount = config.getAsInt("scatterCount", 1)
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -55,14 +53,16 @@ class Gatk(private var globalConfig: Config) extends QScript {
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
         val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
+          val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("genotypegvcfs"), qscript.config)
           this.variant = gvcfFiles
-          this.scatterCount = scatterCount
+          if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
           this.out = new File(outputDir,"final.vcf")
         }
         add(genotypeGVCFs)
         
         //Snp recal
         val snpVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
+          val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
           this.input +:= genotypeGVCFs.out
           this.nt = 4
           this.memoryLimit = 2 * nt
@@ -78,6 +78,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
         add(snpVariantRecalibrator)
         
         val snpApplyRecalibration = new ApplyRecalibration() with gatkArguments {
+          val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
           this.input +:= genotypeGVCFs.out
           this.recal_file = snpVariantRecalibrator.recal_file
           this.tranches_file = snpVariantRecalibrator.tranches_file
@@ -86,12 +87,13 @@ class Gatk(private var globalConfig: Config) extends QScript {
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
           this.nt = 3
           this.memoryLimit = 2 * nt
-          if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+          if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
         }
         add(snpApplyRecalibration)
         
         //indel recal
         val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
+          val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
           this.input +:= genotypeGVCFs.out
           this.nt = 4
           this.memoryLimit = 2 * nt
@@ -105,6 +107,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
         add(indelVariantRecalibrator)
         
         val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
+          val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
           this.input +:= genotypeGVCFs.out
           this.recal_file = indelVariantRecalibrator.recal_file
           this.tranches_file = indelVariantRecalibrator.tranches_file
@@ -113,7 +116,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
           this.nt = 3
           this.memoryLimit = 2 * nt
-          if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+          if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
         }
         add(indelApplyRecalibration)
       } else logger.warn("No gVCFs to genotype")
@@ -141,19 +144,20 @@ class Gatk(private var globalConfig: Config) extends QScript {
       }
       
       // Variant calling
-      val haplotypeCaller = new HaplotypeCaller with gatkArguments
-      if (scatterCount > 1) haplotypeCaller.scatterCount = scatterCount * 15
-      haplotypeCaller.input_file = outputFiles("FinalBams")
-      haplotypeCaller.out = new File(outputDir,sampleID + "/" + sampleID + ".gvcf.vcf")
-      if (dbsnp != null) haplotypeCaller.dbsnp = qscript.dbsnp
-      haplotypeCaller.nct = 3
-      haplotypeCaller.memoryLimit = haplotypeCaller.nct * 2
-      
-      // GVCF options
-      haplotypeCaller.emitRefConfidence = org.broadinstitute.sting.gatk.walkers.haplotypecaller.HaplotypeCaller.ReferenceConfidenceMode.GVCF
-      haplotypeCaller.variant_index_type = GATKVCFIndexType.LINEAR
-      haplotypeCaller.variant_index_parameter = 128000
-      
+      val haplotypeCaller = new HaplotypeCaller with gatkArguments {
+        val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("haplotypecaller"), qscript.config)
+        if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
+        this.input_file = outputFiles("FinalBams")
+        this.out = new File(outputDir,sampleID + "/" + sampleID + ".gvcf.vcf")
+        if (dbsnp != null) this.dbsnp = qscript.dbsnp
+        this.nct = 3
+        this.memoryLimit = this.nct * 2
+
+        // GVCF options
+        this.emitRefConfidence = org.broadinstitute.sting.gatk.walkers.haplotypecaller.HaplotypeCaller.ReferenceConfidenceMode.GVCF
+        this.variant_index_type = GATKVCFIndexType.LINEAR
+        this.variant_index_parameter = 128000
+      }
       if (haplotypeCaller.input_file.size > 0) {
         add(haplotypeCaller)
         outputFiles += ("gvcf" -> List(haplotypeCaller.out))
@@ -165,22 +169,15 @@ class Gatk(private var globalConfig: Config) extends QScript {
   }
   
   // Called for each run from a sample
-  def runJobs(runConfig:Config,sampleConfig:Config) : Map[String,File] = {
+  def runJobs(runConfig:Config, sampleConfig:Config) : Map[String,File] = {
     var outputFiles:Map[String,File] = Map()
-    var paired: Boolean = false
-    var runID: String = ""
-    var fastq_R1: String = ""
-    var fastq_R2: String = ""
-    var sampleID: String = sampleConfig.get("ID").toString
-    if (runConfig.contains("R1")) {
-      fastq_R1 = runConfig.get("R1").toString
-      if (runConfig.contains("R2")) {
-        fastq_R2 = runConfig.get("R2").toString
-        paired = true
-      }
-      if (runConfig.contains("ID")) runID = runConfig.get("ID").toString
-      else throw new IllegalStateException("Missing ID on run for sample: " + sampleID)
-      var runDir: String = outputDir + sampleID + "/run_" + runID + "/"
+    val runID: String = runConfig.getAsString("ID")
+    val fastq_R1: String = runConfig.getAsString("R1", null)
+    val fastq_R2: String = runConfig.getAsString("R2", null)
+    val paired: Boolean = (fastq_R2 != null)
+    val sampleID: String = sampleConfig.get("ID").toString
+    if (fastq_R1 != null) {
+      val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
       
       val flexiprep = new Flexiprep(config)
       flexiprep.input_R1 = fastq_R1
@@ -246,18 +243,20 @@ class Gatk(private var globalConfig: Config) extends QScript {
   
   def addIndelRealign(inputBam:File, dir:String): File = {
     val realignerTargetCreator = new RealignerTargetCreator with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("realignertargetcreator"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".realign.intervals")
       this.jobResourceRequests :+= "h_vmem=5G"
-      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
     }
     add(realignerTargetCreator)
 
     val indelRealigner = new IndelRealigner with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("indelrealigner"), qscript.config)
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
       this.o = swapExt(dir,inputBam,".bam",".realign.bam")
-      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
     }
     add(indelRealigner)
     
@@ -266,19 +265,21 @@ class Gatk(private var globalConfig: Config) extends QScript {
   
   def addBaseRecalibrator(inputBam:File, dir:String): File = {
     val baseRecalibrator = new BaseRecalibrator with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("baserecalibrator"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       this.knownSites :+= dbsnp
-      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
       this.nct = 2
     }
     add(baseRecalibrator)
 
     val printReads = new PrintReads with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("printreads"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
       this.BQSR = baseRecalibrator.o
-      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
     }
     
     return printReads.o
