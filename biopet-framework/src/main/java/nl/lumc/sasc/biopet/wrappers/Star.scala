@@ -18,7 +18,7 @@ class Star(private var globalConfig: Config) extends CommandLineFunction {
   @Input(doc="Fastq file R2", shortName="R2", required=false) var R2: File = _
   @Argument(doc="Output Directory", shortName="outputDir") var outputDir: String = _
   @Argument(doc="GenomeDir", required=false) var genomeDir: String = _
-  if (genomeDir == null) genomeDir = config.getAsString("genomeDir", referenceFile.getParent + "/star/ref")
+  if (genomeDir == null) genomeDir = config.getAsString("genomeDir", referenceFile.getParent + "/star")
   
   @Argument(doc="STAR runmode", shortName="runmode", required=false) var runmode: String = _
   
@@ -30,7 +30,7 @@ class Star(private var globalConfig: Config) extends CommandLineFunction {
   if (threads > maxThreads) threads = maxThreads
   nCoresRequest = Option(threads)
 
-  @Output var outputSam: File = new File(outputDir + "/Aligned.out.sam")
+  @Output var outputSam: File = new File(outputDir + "/star_output.sam")
   
   def commandLine : String= {
     //init()
