@@ -91,7 +91,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
         
         //indel recal
         val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-          this.input +:= genotypeGVCFs.out
+          this.input +:= snpApplyRecalibration.out
           this.nt = 4
           this.memoryLimit = 2 * nt
           this.recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
@@ -104,10 +104,10 @@ class Gatk(private var globalConfig: Config) extends QScript {
         add(indelVariantRecalibrator)
         
         val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-          this.input +:= genotypeGVCFs.out
+          this.input +:= snpApplyRecalibration.out
           this.recal_file = indelVariantRecalibrator.recal_file
           this.tranches_file = indelVariantRecalibrator.tranches_file
-          this.out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
+          this.out = swapExt(genotypeGVCFs.out,".recal.vcf",".indel.recal.vcf")
           this.ts_filter_level = 99.0
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
           this.nt = 3
@@ -115,14 +115,6 @@ class Gatk(private var globalConfig: Config) extends QScript {
           if (scatterCount > 1) this.scatterCount = scatterCount
         }
         add(indelApplyRecalibration)
-        
-        // merge snp and indels
-        val catVariants = new CatVariants() {
-          this.variant = Seq(snpApplyRecalibration.out,indelApplyRecalibration.out)
-          this.outputFile = swapExt(genotypeGVCFs.out,".vcf",".recal.vcf")
-          this.reference = referenceFile
-        }
-        add(catVariants)
       } else logger.warn("No gVCFs to genotype")
       
       

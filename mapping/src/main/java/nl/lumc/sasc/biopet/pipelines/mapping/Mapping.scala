@@ -88,7 +88,7 @@ class Mapping(private var globalConfig: Config) extends QScript {
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
       val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/" ;
-                                          outputSam = new File(this.outputDir + "/star_output.sam") }
+                                          outputSam = new File(this.outputDir + "/Aligned.out.sam") }
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
     }
