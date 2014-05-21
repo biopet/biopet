@@ -7,10 +7,10 @@ import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Cutadapt(private var globalConfig: Config) extends CommandLineFunction {
+class Cutadapt(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   analysisName = "cutadapt"
-  var config: Config = globalConfig.getAsConfig("cutadapt")
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig("cutadapt"), globalConfig)
   
   @Input(doc="Cutadapt exe", required=false)
   var cutadapt_exe: File = new File(config.getAsString("exe","/usr/local/bin/cutadapt"))
