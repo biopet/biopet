@@ -30,7 +30,7 @@ class Star(private var globalConfig: Config) extends CommandLineFunction {
   if (threads > maxThreads) threads = maxThreads
   nCoresRequest = Option(threads)
 
-  @Output var outputSam: File = new File(outputDir + "/star_output.sam")
+  @Output var outputSam: File = new File(outputDir + "/Aligned.out.sam")
   
   def commandLine : String= {
     //init()
