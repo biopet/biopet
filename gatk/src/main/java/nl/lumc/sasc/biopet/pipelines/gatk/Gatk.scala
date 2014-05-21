@@ -55,8 +55,8 @@ class Gatk(private var globalConfig: Config) extends QScript {
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
         val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
-          this.variant = qscript.gvcfFiles
-          this.scatterCount = qscript.scatterCount
+          this.variant = gvcfFiles
+          this.scatterCount = scatterCount
           this.out = new File(outputDir,"final.vcf")
         }
         add(genotypeGVCFs)
@@ -92,7 +92,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
         
         //indel recal
         val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-          this.input +:= snpApplyRecalibration.out
+          this.input +:= genotypeGVCFs.out
           this.nt = 4
           this.memoryLimit = 2 * nt
           this.recal_file = swapExt(genotypeGVCFs.out,".vcf",".indel.recal")
@@ -105,10 +105,10 @@ class Gatk(private var globalConfig: Config) extends QScript {
         add(indelVariantRecalibrator)
         
         val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-          this.input +:= snpApplyRecalibration.out
+          this.input +:= genotypeGVCFs.out
           this.recal_file = indelVariantRecalibrator.recal_file
           this.tranches_file = indelVariantRecalibrator.tranches_file
-          this.out = swapExt(genotypeGVCFs.out,".recal.vcf",".indel.recal.vcf")
+          this.out = swapExt(genotypeGVCFs.out,".vcf",".indel.recal.vcf")
           this.ts_filter_level = 99.0
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
           this.nt = 3
@@ -142,10 +142,10 @@ class Gatk(private var globalConfig: Config) extends QScript {
       
       // Variant calling
       val haplotypeCaller = new HaplotypeCaller with gatkArguments
-      if (scatterCount > 1) haplotypeCaller.scatterCount = qscript.scatterCount * 15
+      if (scatterCount > 1) haplotypeCaller.scatterCount = scatterCount * 15
       haplotypeCaller.input_file = outputFiles("FinalBams")
       haplotypeCaller.out = new File(outputDir,sampleID + "/" + sampleID + ".gvcf.vcf")
-      if (dbsnp != null) haplotypeCaller.dbsnp = dbsnp
+      if (dbsnp != null) haplotypeCaller.dbsnp = qscript.dbsnp
       haplotypeCaller.nct = 3
       haplotypeCaller.memoryLimit = haplotypeCaller.nct * 2
       
@@ -192,8 +192,8 @@ class Gatk(private var globalConfig: Config) extends QScript {
       val bwaCommand = new Bwa(config)
       bwaCommand.R1 = flexiprep.outputFiles("output_R1")
       if (paired) bwaCommand.R2 = flexiprep.outputFiles("output_R2")
-      bwaCommand.referenceFile = qscript.referenceFile
-      bwaCommand.nCoresRequest = 8
+      //bwaCommand.referenceFile = qscript.referenceFile
+      //bwaCommand.nCoresRequest = 8
       bwaCommand.jobResourceRequests :+= "h_vmem=6G"
       bwaCommand.RG = "@RG\\t" +
     		  "ID:" + sampleID + "_" + runID + "\\t" +
@@ -249,7 +249,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".realign.intervals")
       this.jobResourceRequests :+= "h_vmem=5G"
-      if (scatterCount > 1) this.scatterCount = scatterCount
+      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
     }
     add(realignerTargetCreator)
 
@@ -257,7 +257,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
       this.o = swapExt(dir,inputBam,".bam",".realign.bam")
-      if (scatterCount > 1) this.scatterCount = scatterCount
+      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
     }
     add(indelRealigner)
     
@@ -269,7 +269,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       this.knownSites :+= dbsnp
-      if (scatterCount > 1) this.scatterCount = scatterCount
+      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
       this.nct = 2
     }
     add(baseRecalibrator)
@@ -278,7 +278,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
       this.BQSR = baseRecalibrator.o
-      if (scatterCount > 1) this.scatterCount = scatterCount
+      if (scatterCount > 1) this.scatterCount = qscript.scatterCount
     }
     
     return printReads.o
