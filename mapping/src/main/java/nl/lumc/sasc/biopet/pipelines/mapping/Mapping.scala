@@ -98,12 +98,12 @@ class Mapping(private var globalConfig: Config) extends QScript {
   
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
     val sortSam = new SortSam {
-      input = inputSam
-      createIndex = true
-      output = outputFile
-      memoryLimit = 2
-      nCoresRequest = 2
-      jobResourceRequests :+= "h_vmem=4G"
+      this.input = inputSam
+      this.createIndex = true
+      this.output = outputFile
+      this.memoryLimit = 2
+      this.nCoresRequest = 2
+      this.jobResourceRequests :+= "h_vmem=4G"
     }
     add(sortSam)
     

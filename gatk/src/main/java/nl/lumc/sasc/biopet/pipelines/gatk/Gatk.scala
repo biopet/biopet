@@ -11,6 +11,7 @@ import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
 
 class Gatk(private var globalConfig: Config) extends QScript {
+  qscript =>
   @Argument(doc="Config Json file",shortName="config") var configfiles: List[File] = Nil
   @Argument(doc="Only Sample",shortName="sample", required=false) var onlySample: String = _
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
@@ -54,8 +55,8 @@ class Gatk(private var globalConfig: Config) extends QScript {
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
         val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
-          this.variant = gvcfFiles
-          this.scatterCount = scatterCount
+          this.variant = qscript.gvcfFiles
+          this.scatterCount = qscript.scatterCount
           this.out = new File(outputDir,"final.vcf")
         }
         add(genotypeGVCFs)
@@ -85,7 +86,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
           this.nt = 3
           this.memoryLimit = 2 * nt
-          if (scatterCount > 1) this.scatterCount = scatterCount
+          if (scatterCount > 1) this.scatterCount = qscript.scatterCount
         }
         add(snpApplyRecalibration)
         
@@ -112,7 +113,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
           this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
           this.nt = 3
           this.memoryLimit = 2 * nt
-          if (scatterCount > 1) this.scatterCount = scatterCount
+          if (scatterCount > 1) this.scatterCount = qscript.scatterCount
         }
         add(indelApplyRecalibration)
       } else logger.warn("No gVCFs to genotype")
@@ -141,7 +142,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       
       // Variant calling
       val haplotypeCaller = new HaplotypeCaller with gatkArguments
-      if (scatterCount > 1) haplotypeCaller.scatterCount = scatterCount * 15
+      if (scatterCount > 1) haplotypeCaller.scatterCount = qscript.scatterCount * 15
       haplotypeCaller.input_file = outputFiles("FinalBams")
       haplotypeCaller.out = new File(outputDir,sampleID + "/" + sampleID + ".gvcf.vcf")
       if (dbsnp != null) haplotypeCaller.dbsnp = dbsnp
@@ -191,7 +192,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
       val bwaCommand = new Bwa(config)
       bwaCommand.R1 = flexiprep.outputFiles("output_R1")
       if (paired) bwaCommand.R2 = flexiprep.outputFiles("output_R2")
-      bwaCommand.referenceFile = referenceFile
+      bwaCommand.referenceFile = qscript.referenceFile
       bwaCommand.nCoresRequest = 8
       bwaCommand.jobResourceRequests :+= "h_vmem=6G"
       bwaCommand.RG = "@RG\\t" +
