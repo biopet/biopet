@@ -88,7 +88,7 @@ class Mapping(private var globalConfig: Config) extends QScript {
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
       val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/" ;
-                                          outputSam = new File(this.outputDir + "/Aligned.out.sam") }
+                                          outputSam = new File(this.outputDir + "/star_output.sam") }
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
     }
@@ -98,12 +98,12 @@ class Mapping(private var globalConfig: Config) extends QScript {
   
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
     val sortSam = new SortSam {
-      this.input = inputSam
-      this.createIndex = true
-      this.output = outputFile
-      this.memoryLimit = 2
-      this.nCoresRequest = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
+      input = inputSam
+      createIndex = true
+      output = outputFile
+      memoryLimit = 2
+      nCoresRequest = 2
+      jobResourceRequests :+= "h_vmem=4G"
     }
     add(sortSam)
     
