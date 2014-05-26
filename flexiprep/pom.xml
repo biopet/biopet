@@ -21,7 +21,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sting.unpack.phase>prepare-package</sting.unpack.phase>
     <sting.shade.phase>package</sting.shade.phase>
-    <app.main.class>org.broadinstitute.sting.queue.QCommandLine</app.main.class>
+    <app.main.class>nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep</app.main.class>
   </properties>
   
     <dependencies>
@@ -54,6 +54,20 @@
         </dependency>-->
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                 <directory>src/main/java</directory>
+                 <includes>
+                     <include>**/*</include>
+                 </includes>
+            </resource>
+            <resource>
+                 <directory>scripts</directory>
+                 <includes>
+                     <include>**/*</include>
+                 </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.scala-tools</groupId>
