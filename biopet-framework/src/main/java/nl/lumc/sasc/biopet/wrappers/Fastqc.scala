@@ -10,6 +10,7 @@ class Fastqc(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "fastqc"
   val config: Config = globalConfig.getAsConfig("fastqc")
+  logger.debug("Config for " + this.analysisName + ": " + config)
   
   @Input(doc="fastqc executeble", shortName="Fastqc_Exe")
   var fastqc_exe: File = new File(config.getAsString("exe","/usr/local/FastQC/FastQC_v0.10.1/fastqc"))
@@ -25,10 +26,17 @@ class Fastqc(val globalConfig: Config) extends CommandLineFunction {
   @Input(doc="Fastq file", shortName="FQ") var fastqfile: File = _
   @Output(doc="Output", shortName="out") var output: File = _
   
-  def commandLine = {
+  if (config.contains("vmem")) jobResourceRequests :+= "h_vmem=" + config.getAsString("vmem")
+    
+  def init() {
     this.addJobReportBinding("version", getVersion)
-    if (config.contains("fastqc_exe")) fastqc_exe = new File(config.get("fastqc_exe").toString)
-    this.nCoresRequest = Option(threads)
+    var maxThreads: Int = config.getAsInt("maxthreads", 24)
+    if (threads > maxThreads) threads = maxThreads
+    nCoresRequest = Option(threads)
+  }
+  
+  def commandLine = {
+    init()
     required(fastqc_exe) + 
       optional("--java", java_exe) +
       optional("--threads",threads) +
@@ -43,17 +51,22 @@ class Fastqc(val globalConfig: Config) extends CommandLineFunction {
   }
   
   private var version: String = _
-  def getVersion : String = {
-    val REG = """FastQC (.*)""".r
-    if (version == null) for (line <- (fastqc_exe + " --version").!!.split("\n")) {
+  var versionCommand = fastqc_exe + " --version"
+  var versionRegex = """FastQC (.*)"""
+  def getVersion: String = getVersion(versionCommand, versionRegex)
+  def getVersion(cmd:String, regex:String) : String = {
+    val REG = regex.r
+    if (cmd.! != 0) {
+      logger.warn("Version command: '" + cmd + "' give a none-zero exit code, version not found")
+      return "NA"
+    }
+    for (line <- cmd.!!.split("\n")) {
       line match { 
-        case REG(m) => {
-            version = m
-            return version
-        }
+        case REG(m) => return m
         case _ =>
       }
     }
-    return version
+    logger.warn("Version command: '" + cmd + "' give a exit code 0 but no version was found, executeble oke?")
+    return "NA"
   }
 }
