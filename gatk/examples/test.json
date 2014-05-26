@@ -1,0 +1,28 @@
+{
+    "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
+    "bwa" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
+    "flexiprep": {
+        "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
+        "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
+        "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
+    },
+    "gatk": {
+        "referenceFile" : "/home/pjvan_thof/pipelines/test/test",
+        "dbsnp": "/home/pjvan_thof/pipelines/test/test",
+        "hapmap": "/home/pjvan_thof/pipelines/test/test",
+        "omni": "/home/pjvan_thof/pipelines/test/test",
+        "1000G": "/home/pjvan_thof/pipelines/test/test",
+        "mills": "/home/pjvan_thof/pipelines/test/test"
+    },
+    "Samples": {
+        "test": {
+            "ID": "test",
+            "Runs": {
+                "1" : {
+                    "ID": "1",
+                    "R1" : "/home/pjvan_thof/pipelines/test/test.fastq"
+                }
+            }
+        }
+    }
+}

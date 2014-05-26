@@ -1,7 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.wrappers._
+import nl.lumc.sasc.biopet.wrappers.aligners._
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.pipelines.mapping._
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import org.broadinstitute.sting.queue.QScript
 import org.broadinstitute.sting.queue.extensions.gatk._
@@ -120,8 +122,6 @@ class Gatk(private var globalConfig: Config) extends QScript {
         }
         add(indelApplyRecalibration)
       } else logger.warn("No gVCFs to genotype")
-      
-      
     }
   }
   
@@ -179,67 +179,40 @@ class Gatk(private var globalConfig: Config) extends QScript {
     if (fastq_R1 != null) {
       val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
       
-      val flexiprep = new Flexiprep(config)
-      flexiprep.input_R1 = fastq_R1
-      if (paired) flexiprep.input_R2 = fastq_R2
-      flexiprep.outputDir = runDir + "flexiprep/"
-      flexiprep.script
-      addAll(flexiprep.functions) // Add functions of flexiprep to curent function pool
+      val mapping = new Mapping(config)
+      mapping.input_R1 = fastq_R1
+      if (paired) mapping.input_R2 = fastq_R2
+      mapping.outputDir = runDir + "mapping/"
+      mapping.RGSM = sampleID
+      mapping.RGLB = runID
+      if (runConfig.contains("PL")) mapping.RGPL = runConfig.getAsString("PL")
+      if (runConfig.contains("PU")) mapping.RGPU = runConfig.getAsString("PU")
+      if (runConfig.contains("CN")) mapping.RGCN = runConfig.getAsString("CN")
+      mapping.script
+      addAll(mapping.functions) // Add functions of mapping to curent function pool
       
-      val bwaCommand = new Bwa(config)
-      bwaCommand.R1 = flexiprep.outputFiles("output_R1")
-      if (paired) bwaCommand.R2 = flexiprep.outputFiles("output_R2")
-      //bwaCommand.referenceFile = qscript.referenceFile
-      //bwaCommand.nCoresRequest = 8
-      bwaCommand.jobResourceRequests :+= "h_vmem=6G"
-      bwaCommand.RG = "@RG\\t" +
-    		  "ID:" + sampleID + "_" + runID + "\\t" +
-    		  "LB:" + sampleID + "_" + runID + "\\t" +
-    		  "PL:illumina\\t" +
-    		  "CN:SASC\\t" +
-    		  "SM:" + sampleID + "\\t" +
-    		  "PU:na"
-      bwaCommand.output = new File(runDir + sampleID + "-run_" + runID + ".sam")
-      add(bwaCommand)
-      
-      var bamFile:File = addSortSam(List(bwaCommand.output), swapExt(runDir,bwaCommand.output,".sam",".bam"), runDir)
-      bamFile = addMarkDuplicates(List(bamFile), swapExt(runDir,bamFile,".bam",".dedup.bam"), runDir)
-      bamFile = addIndelRealign(bamFile,runDir) // Indel realigner
+      var bamFile:File = addIndelRealign(mapping.outputFiles("finalBamFile"),runDir) // Indel realigner
       bamFile = addBaseRecalibrator(bamFile,runDir) // Base recalibrator
       
       outputFiles += ("FinalBam" -> bamFile)
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for runs: " + runConfig)    
     return outputFiles
   }
-  
-  def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val sortSam = new SortSam {
-      this.input = inputSam
-      this.createIndex = true
-      this.output = outputFile
-      this.memoryLimit = 2
-      this.nCoresRequest = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
-    }
-    add(sortSam)
     
-    return sortSam.output
-  }
-  
-  def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates {
-      this.input = inputBams
-      this.output = outputFile
-      this.REMOVE_DUPLICATES = false
-      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
-      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
-      this.memoryLimit = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
-    }
-    add(markDuplicates)
-    
-    return markDuplicates.output
-  }
+//  def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
+//    val markDuplicates = new MarkDuplicates {
+//      this.input = inputBams
+//      this.output = outputFile
+//      this.REMOVE_DUPLICATES = false
+//      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
+//      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
+//      this.memoryLimit = 2
+//      this.jobResourceRequests :+= "h_vmem=4G"
+//    }
+//    add(markDuplicates)
+//    
+//    return markDuplicates.output
+//  }
   
   def addIndelRealign(inputBam:File, dir:String): File = {
     val realignerTargetCreator = new RealignerTargetCreator with gatkArguments {
