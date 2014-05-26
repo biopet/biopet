@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
 import nl.lumc.sasc.biopet.wrappers._
+import nl.lumc.sasc.biopet.wrappers.aligners._
 import java.util.Date
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
@@ -19,7 +20,7 @@ class Mapping(private var globalConfig: Config) extends QScript {
   @Input(doc="R1 fastq file", shortName="R1",required=true) var input_R1: File = _
   @Input(doc="R2 fastq file", shortName="R2", required=false) var input_R2: File = _
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
-  @Argument(doc="Output name", shortName="outputName", required=true) var outputName: String = _
+  @Argument(doc="Output name", shortName="outputName", required=false) var outputName: String = _
   @Argument(doc="Skip flexiprep", shortName="skipflexiprep", required=false) var skipFlexiprep: Boolean = false
   @Argument(doc="Skip mark duplicates", shortName="skipmarkduplicates", required=false) var skipMarkduplicates: Boolean = false
   @Argument(doc="Alginer", shortName="ALN", required=false) var aligner: String = _
@@ -64,6 +65,8 @@ class Mapping(private var globalConfig: Config) extends QScript {
     if (RGPU == null) RGPU = config.getAsString("RGPU", "na")
     if (RGCN == null && config.contains("RGCN")) RGCN = config.getAsString("RGCN")
     if (RGDS == null && config.contains("RGDS")) RGDS = config.getAsString("RGDS")
+    
+    if (outputName == null) outputName = RGID
   }
   
   def script() {
@@ -94,6 +97,7 @@ class Mapping(private var globalConfig: Config) extends QScript {
     }
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
+    outputFiles += ("finalBamFile" -> bamFile)
   }
   
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {

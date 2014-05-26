@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>Flexiprep</artifactId>
+            <artifactId>Mapping</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
