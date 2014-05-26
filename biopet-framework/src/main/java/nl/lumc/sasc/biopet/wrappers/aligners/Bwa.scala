@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.wrappers
+package nl.lumc.sasc.biopet.wrappers.aligners
 
 import nl.lumc.sasc.biopet.core._
 import org.broadinstitute.sting.queue.function.CommandLineFunction
@@ -9,7 +9,7 @@ import scala.sys.process._
 class Bwa(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "bwa"
-  val config: Config = globalConfig.getAsConfig("bwa")
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig("bwa"), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
 
   @Argument(doc="Bwa executeble", shortName="bwa_exe", required=false) var bwa_exe: String = config.getAsString("exe", "/usr/local/bin/bwa")
