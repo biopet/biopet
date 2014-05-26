@@ -285,3 +285,7 @@ class Gatk(private var globalConfig: Config) extends QScript {
     return printReads.o
   }
 }
+
+object Gatk extends PipelineCommand {
+  override val src = "Gatk"
+}

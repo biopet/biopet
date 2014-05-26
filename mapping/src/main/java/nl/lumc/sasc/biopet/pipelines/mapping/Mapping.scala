@@ -161,3 +161,7 @@ class Mapping(private var globalConfig: Config) extends QScript {
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
 }
+
+object Mapping extends PipelineCommand {
+  override val src = "Mapping"
+}

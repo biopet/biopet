@@ -3,18 +3,20 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.wrappers._
 import org.broadinstitute.sting.queue.QScript
+import org.broadinstitute.sting.queue.engine.JobRunInfo
 import org.broadinstitute.sting.queue.extensions.gatk._
 import org.broadinstitute.sting.queue.extensions.picard._
 import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.commandline._
+import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(private var globalConfig: Config) extends QScript {
   def this() = this(new Config())
   
   @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
-  @Input(doc="R1 fastq file", shortName="R1",required=true) var input_R1: File = _
-  @Input(doc="R2 fastq file", shortName="R2", required=false) var input_R2: File = _
+  @Input(doc="R1 fastq file (gzipped allowed)", shortName="R1",required=true) var input_R1: File = _
+  @Input(doc="R2 fastq file (gzipped allowed)", shortName="R2", required=false) var input_R2: File = _
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
   @Argument(doc="Skip Trim fastq files", shortName="skiptrim", required=false) var skipTrim: Boolean = false
   @Argument(doc="Skip Clip fastq files", shortName="skipclip", required=false) var skipClip: Boolean = false
@@ -26,7 +28,6 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     config = Config.mergeConfigs(globalConfig.getAsConfig("flexiprep"), globalConfig)
-    logger.debug(config)
     skipTrim = config.getAsBoolean("skiptrim", false)
     skipClip = config.getAsBoolean("skipclip", false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
@@ -71,22 +72,22 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
   }
   
   def getQualtype(fastqc:Fastqc): File = {
-    val fastqcToQualtype = new FastqcToQualtype(config)
-    fastqcToQualtype.fastqc_output = fastqc.output
-    var out: File = swapExt(outputDir, fastqc.fastqfile, "", ".qualtype.txt")
-    fastqcToQualtype.out = out
+    val fastqcToQualtype = new FastqcToQualtype(config) {
+      this.fastqc_output = fastqc.output
+      this.out = swapExt(outputDir, fastqc.fastqfile, "", ".qualtype.txt")
+    }
     add(fastqcToQualtype)
-    return out
+    return fastqcToQualtype.out
   }
   
   def getContams(fastqc:Fastqc): File = {
-    val fastqcToContams = new FastqcToContams(config)
-    fastqcToContams.fastqc_output = fastqc.output
-    var out: File = swapExt(outputDir, fastqc.fastqfile, "", ".contams.txt")
-    fastqcToContams.out = out
-    fastqcToContams.contams_file = fastqc.contaminants
+    val fastqcToContams = new FastqcToContams(config) {
+      this.fastqc_output = fastqc.output
+      this.out = swapExt(outputDir, fastqc.fastqfile, "", ".contams.txt")
+      this.contams_file = fastqc.contaminants
+    }
     add(fastqcToContams)
-    return out
+    return fastqcToContams.out
   }
   
   def runTrimClip(R1_in:File, outDir:String) : Map[String,File] = {
@@ -102,26 +103,29 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
     if (paired) R2_ext = R2.getName().substring(R2.getName().lastIndexOf("."), R2.getName().size)
     
     if (!skipClip) { // Adapter clipping
-      val cutadapt_R1 = new Cutadapt(config)
-      cutadapt_R1.fastq_input = R1
-      cutadapt_R1.fastq_output = swapExt(outDir, R1, R1_ext, ".clip"+R1_ext)
-      if (outputFiles.contains("contams_R1")) cutadapt_R1.contams_file = outputFiles("contams_R1")
+      val cutadapt_R1 = new Cutadapt(config) {
+        this.fastq_input = R1
+        this.fastq_output = swapExt(outDir, R1, R1_ext, ".clip"+R1_ext)
+        if (outputFiles.contains("contams_R1")) this.contams_file = outputFiles("contams_R1")
+      }
       add(cutadapt_R1)
       R1 = cutadapt_R1.fastq_output
       if (paired) {
-        val cutadapt_R2 = new Cutadapt(config)
-        cutadapt_R2.fastq_input = R2
-        cutadapt_R2.fastq_output = swapExt(outDir, R2, R2_ext, ".clip"+R2_ext)
-        if (outputFiles.contains("contams_R2")) cutadapt_R2.contams_file = outputFiles("contams_R2")
+        val cutadapt_R2 = new Cutadapt(config) {
+          this.fastq_input = R2
+          this.fastq_output = swapExt(outDir, R2, R2_ext, ".clip"+R2_ext)
+          if (outputFiles.contains("contams_R2")) this.contams_file = outputFiles("contams_R2")
+        }
         add(cutadapt_R2)
         R2 = cutadapt_R2.fastq_output
-        val fastqSync = new FastqSync(config)
-        fastqSync.input_start_fastq = cutadapt_R1.fastq_input
-        fastqSync.input_R1 = cutadapt_R1.fastq_output
-        fastqSync.input_R2 = cutadapt_R2.fastq_output
-        fastqSync.output_R1 = swapExt(outDir, R1, ".clip"+R1_ext, ".clipsync"+R1_ext)
-        fastqSync.output_R2 = swapExt(outDir, R2, ".clip"+R2_ext, ".clipsync"+R2_ext)
-        fastqSync.output_stats = swapExt(outDir, R1, ".clip"+R1_ext, ".clipsync.stats")
+        val fastqSync = new FastqSync(config) {
+          this.input_start_fastq = cutadapt_R1.fastq_input
+          this.input_R1 = cutadapt_R1.fastq_output
+          this.input_R2 = cutadapt_R2.fastq_output
+          this.output_R1 = swapExt(outDir, R1, ".clip"+R1_ext, ".clipsync"+R1_ext)
+          this.output_R2 = swapExt(outDir, R2, ".clip"+R2_ext, ".clipsync"+R2_ext)
+          this.output_stats = swapExt(outDir, R1, ".clip"+R1_ext, ".clipsync.stats")
+        }
         add(fastqSync)
         R1 = fastqSync.output_R1
         R2 = fastqSync.output_R2
@@ -129,16 +133,17 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
     }
     
     if (!skipTrim) { // Quality trimming
-      val sickle = new Sickle(config)
-      sickle.input_R1 = R1
-      sickle.output_R1 = swapExt(outDir, R1, R1_ext, ".trim"+R1_ext)
-      if (outputFiles.contains("qualtype_R1")) sickle.qualityTypeFile = outputFiles("qualtype_R1")
-      if (paired) {
-        sickle.input_R2 = R2
-        sickle.output_R2 = swapExt(outDir, R2, R2_ext, ".trim"+R2_ext)
-        sickle.output_singles = swapExt(outDir, R2, R2_ext, ".trim.singles"+R1_ext)
+      val sickle = new Sickle(config) {
+        this.input_R1 = R1
+        this.output_R1 = swapExt(outDir, R1, R1_ext, ".trim"+R1_ext)
+        if (outputFiles.contains("qualtype_R1")) this.qualityTypeFile = outputFiles("qualtype_R1")
+        if (paired) {
+          this.input_R2 = R2
+          this.output_R2 = swapExt(outDir, R2, R2_ext, ".trim"+R2_ext)
+          this.output_singles = swapExt(outDir, R2, R2_ext, ".trim.singles"+R1_ext)
+        }
+        this.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
       }
-      sickle.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
       add(sickle)
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
@@ -180,4 +185,12 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
       return zcatCommand.out
     } else return file
   }
+  
+  override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {
+    logger.info("Flexiprep is done")
+  }
+}
+
+object Flexiprep extends PipelineCommand {
+  override val src = "Flexiprep"
 }
