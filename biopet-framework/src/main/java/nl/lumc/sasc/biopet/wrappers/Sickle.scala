@@ -11,23 +11,28 @@ class Sickle(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "sickle"
   val config: Config = globalConfig.getAsConfig("sickle")
+  logger.debug("Config for " + this.analysisName + ": " + config)
   
-  @Input(doc="Sickle exe", required=false) var sickle_exe: File = new File("/usr/local/bin/sickle")
+  @Input(doc="Sickle exe", required=false) var sickle_exe: File = new File(config.getAsString("exe", "/usr/local/bin/sickle"))
   @Input(doc="R1 input") var input_R1: File = null
   @Input(doc="R2 input", required=false) var input_R2: File = null
   @Output(doc="R1 output") var output_R1: File = null
   @Output(doc="R2 output", required=false) var output_R2: File = null
   @Output(doc="singles output", required=false) var output_singles: File = null
   @Output(doc="stats output") var output_stats: File = null
-
   @Input(doc="qualityType file", required=false) var qualityTypeFile: File = null
-  var qualityType: String = config.getAsString("qualitytype", null)
+  @Argument(doc="Quality Type", required=false) var qualityType: String = config.getAsString("qualitytype", null)
+  
   var defaultQualityType: String = config.getAsString("defaultqualitytype", "sanger")
-
-  def commandLine = {
+  
+  def init() {
     this.addJobReportBinding("version", getVersion)
     this.getQualityTypeFromFile
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
+  }
+  
+  def commandLine = {
+    init()
     var cmd: String = required(sickle_exe)
     if (input_R2 != null) {
       cmd += required("pe") +
@@ -54,18 +59,38 @@ class Sickle(val globalConfig: Config) extends CommandLineFunction {
     }
   }
   
+//  private var version: String = _
+//  def getVersion : String = {
+//    val REG = """sickle version (.*)""".r
+//    if (version == null) for (line <- (sickle_exe + " --version").!!.split("\n")) {
+//      line match { 
+//        case REG(m) => {
+//            version = m
+//            return version
+//        }
+//        case _ =>
+//      }
+//    }
+//    return version
+//  }
+  
   private var version: String = _
-  def getVersion : String = {
-    val REG = """sickle version (.*)""".r
-    if (version == null) for (line <- (sickle_exe + " --version").!!.split("\n")) {
+  var versionCommand = sickle_exe + " --version"
+  var versionRegex = """sickle version (.*)"""
+  def getVersion: String = getVersion(versionCommand, versionRegex)
+  def getVersion(cmd:String, regex:String) : String = {
+    val REG = regex.r
+    if (cmd.! != 0) {
+      logger.warn("Version command: '" + cmd + "' give a none-zero exit code, version not found")
+      return "NA"
+    }
+    for (line <- cmd.!!.split("\n")) {
       line match { 
-        case REG(m) => {
-            version = m
-            return version
-        }
+        case REG(m) => return m
         case _ =>
       }
     }
-    return version
+    logger.warn("Version command: '" + cmd + "' give a exit code 0 but no version was found, executeble oke?")
+    return "NA"
   }
 }

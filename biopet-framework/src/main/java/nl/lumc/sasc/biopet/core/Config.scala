@@ -15,7 +15,10 @@ class Config(private var map: Map[String,Any]) extends Logging {
     var globalFile: String = System.getenv("QUEUE_CONFIG")
     if (globalFile != null) {
       var file: File = new File(globalFile)
-      if (file.exists()) loadConfigFile(file)
+      if (file.exists()) {
+        logger.info("Loading config file: " + file)
+        loadConfigFile(file)
+      }
       else logger.warn("QUEUE_CONFIG value  found but file does not exist, no glogal config is loaded")
     } else logger.warn("QUEUE_CONFIG value not found, no glogal config is loaded")
   }

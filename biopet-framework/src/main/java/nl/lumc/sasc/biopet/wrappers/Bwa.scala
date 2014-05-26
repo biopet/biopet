@@ -10,27 +10,25 @@ class Bwa(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "bwa"
   val config: Config = globalConfig.getAsConfig("bwa")
+  logger.debug("Config for " + this.analysisName + ": " + config)
 
-  @Argument(doc="Bwa executeble", shortName="bwa_exe", required=false) var bwa_exe: String = _
-  @Input(doc="The reference file for the bam files.", shortName="R") var referenceFile: File = _
+  @Argument(doc="Bwa executeble", shortName="bwa_exe", required=false) var bwa_exe: String = config.getAsString("exe", "/usr/local/bin/bwa")
+  @Input(doc="The reference file for the bam files.", shortName="R") var referenceFile: File = new File(config.getAsString("referenceFile"))
   @Input(doc="Fastq file R1", shortName="R1") var R1: File = _
   @Input(doc="Fastq file R2", shortName="R2", required=false) var R2: File = _
   @Output(doc="Output file SAM", shortName="output") var output: File = _
   
   @Argument(doc="Readgroup header", shortName="RG", required=false) var RG: String = _
-  @Argument(doc="M", shortName="M", required=false) var M: Boolean = false
+  @Argument(doc="M", shortName="M", required=false) var M: Boolean = config.getAsBoolean("M", true)
+  
+  jobResourceRequests :+= "h_vmem=" + config.getAsString("vmem", "6G")
+  
+  var threads: Int = config.getAsInt("threads", 8)
+  var maxThreads: Int = config.getAsInt("maxthreads", 24)
+  if (threads > maxThreads) threads = maxThreads
+  nCoresRequest = Option(threads)
   
   def init() {
-    bwa_exe = config.getAsString("exe", "/usr/local/bin/bwa")
-    M = config.getAsBoolean("M", true)
-    jobResourceRequests :+= "h_vmem=" + config.getAsString("vmem", "6G")
-    var threads: Int = config.getAsInt("threads", 8)
-    var maxThreads: Int = config.getAsInt("maxthreads", 24)
-    if (threads > maxThreads) threads = maxThreads
-    nCoresRequest = Option(threads)
-    
-    referenceFile = new File(config.getAsString("referenceFile"))
-    
     this.addJobReportBinding("version", getVersion)
   }
   
