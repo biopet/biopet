@@ -4,7 +4,7 @@ import scala.util.parsing.json._
 import java.io.File
 import org.broadinstitute.sting.queue.util.Logging
 
-class Config(private var map: Map[String,Any]) extends Logging {
+class Config(var map: Map[String,Any]) extends Logging {
   def this() = {
     this(Map())
     logger.info("Init phase of config")
