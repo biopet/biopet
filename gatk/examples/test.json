@@ -14,10 +14,10 @@
         "1000G": "/home/pjvan_thof/pipelines/test/test",
         "mills": "/home/pjvan_thof/pipelines/test/test"
     },
-    "Samples": {
+    "samples": {
         "test": {
             "ID": "test",
-            "Runs": {
+            "runs": {
                 "1" : {
                     "ID": "1",
                     "R1" : "/home/pjvan_thof/pipelines/test/test.fastq"

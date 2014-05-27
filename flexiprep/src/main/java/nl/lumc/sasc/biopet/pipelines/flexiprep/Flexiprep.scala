@@ -11,18 +11,17 @@ import scala.util.parsing.json._
 import org.broadinstitute.sting.commandline._
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
-class Flexiprep(private var globalConfig: Config) extends QScript {
+class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQScript {
   def this() = this(new Config())
   
-  @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
+  @Argument(doc="Config Json file",shortName="config", required=false) val configfiles: List[File] = Nil
   @Input(doc="R1 fastq file (gzipped allowed)", shortName="R1",required=true) var input_R1: File = _
   @Input(doc="R2 fastq file (gzipped allowed)", shortName="R2", required=false) var input_R2: File = _
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
   @Argument(doc="Skip Trim fastq files", shortName="skiptrim", required=false) var skipTrim: Boolean = false
   @Argument(doc="Skip Clip fastq files", shortName="skipclip", required=false) var skipClip: Boolean = false
   
-  var config: Config = _
-  var outputFiles:Map[String,File] = Map()
+  //var outputFiles:Map[String,File] = Map()
   var paired: Boolean = (input_R2 != null)
   
   def init() {
@@ -38,7 +37,6 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
   
   def script() {
     init()
-    
     runInitialFastqc()
     
     outputFiles += ("output_R1" -> zcatIfNeeded(input_R1,outputDir))
@@ -53,7 +51,6 @@ class Flexiprep(private var globalConfig: Config) extends QScript {
       results = runTrimClip(outputFiles("output_R1"), outputDir)
       outputFiles += ("output_R1" -> results("output_R1"))
     }
-    
     runFinalFastqc()
   }
   

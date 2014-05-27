@@ -14,7 +14,7 @@ import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
 
-class Mapping(private var globalConfig: Config) extends QScript {
+class Mapping(private var globalConfig: Config) extends QScript with BiopetQScript {
   qscript =>
   @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
   @Input(doc="R1 fastq file", shortName="R1",required=true) var input_R1: File = _
@@ -38,15 +38,13 @@ class Mapping(private var globalConfig: Config) extends QScript {
   
   def this() = this(new Config())
   
-  var config: Config = _
   var referenceFile: File = _
-  var outputFiles:Map[String,File] = Map()
   var paired: Boolean = false
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     config = Config.mergeConfigs(globalConfig.getAsConfig("mapping"), globalConfig)
-    if (aligner == null) aligner = "bwa"
+    if (aligner == null) aligner = config.getAsString("aligner", "bwa")
     referenceFile = config.getAsString("referenceFile")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -157,12 +155,24 @@ class Mapping(private var globalConfig: Config) extends QScript {
     RG += "PL:" + RGPL + "\\t"
     RG += "PU:" + RGPU + "\\t"
     RG += "SM:" + RGSM + "\\t"
-    RG += "CN:" + RGCN + "\\t"
-    RG += "DS" + RGDS + "\\t"
-    RG += "DT" + RGDT + "\\t"
-    RG += "PI" + RGPI + "\\t"
+    if (RGCN != null) RG += "CN:" + RGCN + "\\t"
+    if (RGDS != null) RG += "DS" + RGDS + "\\t"
+    if (RGDT != null) RG += "DT" + RGDT + "\\t"
+    if (RGPI > 0) RG += "PI" + RGPI + "\\t"
     
     return RG.substring(0, RG.lastIndexOf("\\t"))
+  }
+  
+  def loadRunConfig(runConfig:Config, sampleConfig:Config, runDir: String) {
+    input_R1 = runConfig.getAsString("R1", null)
+    input_R2 = runConfig.getAsString("R2", null)
+    paired = (input_R2 != null)
+    RGLB = runConfig.getAsString("ID")
+    RGSM = sampleConfig.get("ID").toString
+    if (runConfig.contains("PL")) RGPL = runConfig.getAsString("PL")
+    if (runConfig.contains("PU")) RGPU = runConfig.getAsString("PU")
+    if (runConfig.contains("CN")) RGCN = runConfig.getAsString("CN")
+    outputDir = runDir
   }
 }
 
