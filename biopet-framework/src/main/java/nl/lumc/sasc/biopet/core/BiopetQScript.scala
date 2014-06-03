@@ -4,7 +4,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 import org.broadinstitute.sting.queue.util.Logging
 
-trait BiopetQScript extends Logging {
+abstract trait BiopetQScript extends Logging {
   var config: Config = _
   var outputFiles:Map[String,File] = Map()
   
