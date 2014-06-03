@@ -2,6 +2,7 @@
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     
     "flexiprep": {
+        "native_link": true,
         "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
