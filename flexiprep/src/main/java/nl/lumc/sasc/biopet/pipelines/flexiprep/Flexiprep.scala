@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.wrappers._
+import nl.lumc.sasc.biopet.wrappers.fastq._
 import org.broadinstitute.sting.queue.QScript
 import org.broadinstitute.sting.queue.extensions.gatk._
 import org.broadinstitute.sting.queue.extensions.picard._
