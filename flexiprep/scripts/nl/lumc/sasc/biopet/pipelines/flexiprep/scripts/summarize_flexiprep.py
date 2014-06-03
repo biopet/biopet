@@ -116,7 +116,7 @@ def clip2dict(sample, samplea, sampleb, lib_type, run_dir):
 
     def get_sync_stats(sample):
         stats = {}
-        with open_result(sample + '.clipsync.stats') as src:
+        with open_result(sample + '.clip.sync.stats') as src:
             sync_txt = src.read()
 
         stats['num_reads_discarded_1'] = int(re.search(re_disc_1, sync_txt).group(1))
@@ -146,15 +146,19 @@ def clip2dict(sample, samplea, sampleb, lib_type, run_dir):
     return clip_stats
 
 
-def sickle2dict(run_name, lib_type, run_dir):
+def sickle2dict(run_name, qc_mode, lib_type, run_dir):
 
     trim_stats = {}
+    if qc_mode == 'trim':
+        stat_mark = '.trim.stats'
+    else:
+        stat_mark = '.clip.sync.trim.stats'
 
     if lib_type == 'paired':
         re_paired_kept = re.compile(r'paired records kept: \d+ \((\d+) pairs\)')
         re_disc = re.compile(r'single records discarded: \d+ \(from PE1: (\d+), from PE2: (\d+)\)')
         re_disc_paired = re.compile(r'paired records discarded: \d+ \((\d+) pairs\)')
-        with open(os.path.join(run_dir, run_name + '.filtersync.stats')) as src:
+        with open(os.path.join(run_dir, run_name + stat_mark)) as src:
             sickle_txt = src.read()
 
         discarda = int(re.search(re_disc, sickle_txt).group(1))
@@ -170,7 +174,7 @@ def sickle2dict(run_name, lib_type, run_dir):
     else:
         re_kept = re.compile(r'records kept: (\d+)')
         re_disc = re.compile(r'records discarded: (\d+)')
-        with open(os.path.join(run_dir, run_name + '.filtersync.stats')) as src:
+        with open(os.path.join(run_dir, run_name + stat_mark)) as src:
             sickle_txt = src.read()
 
         trim_stats['num_reads_kept'] = int(re.search(re_kept, sickle_txt).group(1))
@@ -399,7 +403,7 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
         sumd['stats']['clip'] = clip2dict(run_name, samplea, sampleb, lib_type, run_dir)
 
     if 'trim' in qc_mode:
-        sumd['stats']['trim'] = sickle2dict(run_name, lib_type, run_dir)
+        sumd['stats']['trim'] = sickle2dict(run_name, qc_mode, lib_type, run_dir)
 
     dict2json(sumd, outf)
 
