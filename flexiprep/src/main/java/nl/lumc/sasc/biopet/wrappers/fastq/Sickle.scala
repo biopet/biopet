@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.wrappers
+package nl.lumc.sasc.biopet.wrappers.fastq
 
 import nl.lumc.sasc.biopet.core._
 import org.broadinstitute.sting.queue.function.CommandLineFunction
