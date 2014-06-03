@@ -20,10 +20,10 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
   @Argument(doc="Only Sample",shortName="sample", required=false) var onlySample: String = ""
   @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
   
-  //var config: Config = _
   var referenceFile: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
+  var finalBamFiles: List[File] = Nil
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -43,6 +43,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
         var vcfFile = addGenotypeGVCFs(gvcfFiles, outputDir + "recalibration/")
+        vcfFile = addVariantAnnotator(vcfFile, finalBamFiles, outputDir + "recalibration/")
         vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir + "recalibration/")
         vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir + "recalibration/")
       } else logger.warn("No gVCFs to genotype")
@@ -60,6 +61,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
     outputFiles += ("FinalBams" -> runBamfiles)
     
     if (runBamfiles.size > 0) {
+      finalBamFiles ++= runBamfiles
       var gvcfFile = addHaplotypeCaller(runBamfiles, new File(outputDir + sampleID + "/" + sampleID + ".gvcf.vcf"))
       outputFiles += ("gvcf" -> List(gvcfFile))
       gvcfFiles :+= gvcfFile
@@ -142,6 +144,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       this.BQSR = baseRecalibrator.o
       if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
     }
+    add(printReads)
     
     return printReads.o
   }
@@ -210,7 +213,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       this.tranches_file = swapExt(dir, inputVcf,".vcf",".indel.tranches")
       this.resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
       this.resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
-      this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum","InbreedingCoeff")
+      this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
       this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
     }
     add(indelVariantRecalibrator)
@@ -236,11 +239,28 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
       val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("genotypegvcfs"), qscript.config)
       this.variant = gvcfFiles
+      this.annotation ++= Seq("FisherStrand", "QualByDepth", "ChromosomeCounts")
       if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
       this.out = new File(outputDir,"genotype.vcf")
     }
     add(genotypeGVCFs)
     return genotypeGVCFs.out
+  }
+  
+  def addVariantAnnotator(inputvcf:File, bamfiles:List[File], dir:String): File = {
+    val variantAnnotator = new VariantAnnotator with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantannotator"), qscript.config)
+      this.variant = inputvcf
+      this.input_file = bamfiles
+      this.dbsnp = config.getAsString("dbsnp")
+      this.out = swapExt(dir, inputvcf,".vcf",".anotated.vcf")
+      //this.all = true
+      //this.excludeAnnotation +:= "SnpEff"
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
+    }
+    add(variantAnnotator)
+    
+    return variantAnnotator.out
   }
   
   trait gatkArguments extends CommandLineGATK {
