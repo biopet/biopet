@@ -21,7 +21,7 @@ class FastqSync(val globalConfig: Config) extends CommandLineFunction with Pytho
   @Input(doc="R2 input") var input_R2: File = _
   @Output(doc="R1 output") var output_R1: File = _
   @Output(doc="R2 output") var output_R2: File = _
-  @Output(doc="stats output") var output_stats: File = _
+  var output_stats: File = _
   
   def commandLine = {
     getPythonCommand + 
