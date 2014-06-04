@@ -22,6 +22,7 @@ class Sickle(val globalConfig: Config) extends CommandLineFunction {
   @Output(doc="stats output") var output_stats: File = null
   @Input(doc="qualityType file", required=false) var qualityTypeFile: File = null
   @Argument(doc="Quality Type", required=false) var qualityType: String = config.getAsString("qualitytype", null)
+  @Input(doc="deps") var deps: List[File] = Nil
   
   var defaultQualityType: String = config.getAsString("defaultqualitytype", "sanger")
   
