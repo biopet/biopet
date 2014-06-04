@@ -33,6 +33,7 @@ class Fastqc(val globalConfig: Config) extends CommandLineFunction {
     var maxThreads: Int = config.getAsInt("maxthreads", 24)
     if (threads > maxThreads) threads = maxThreads
     nCoresRequest = Option(threads)
+    this.jobNativeArgs :+= "-l h_vmem="+config.getAsString("vmem", "4G")
   }
   
   def commandLine = {
