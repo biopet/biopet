@@ -19,8 +19,8 @@ class Config(var map: Map[String,Any]) extends Logging {
         logger.info("Loading config file: " + file)
         loadConfigFile(file)
       }
-      else logger.warn("QUEUE_CONFIG value  found but file does not exist, no glogal config is loaded")
-    } else logger.warn("QUEUE_CONFIG value not found, no glogal config is loaded")
+      else logger.warn("QUEUE_CONFIG value  found but file does not exist, no global config is loaded")
+    } else logger.warn("QUEUE_CONFIG value not found, no global config is loaded")
   }
   
   def contains(s:String) : Boolean = map.contains(s)
