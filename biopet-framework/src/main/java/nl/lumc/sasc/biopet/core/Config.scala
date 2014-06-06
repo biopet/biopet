@@ -47,80 +47,81 @@ class Config(var map: Map[String,Any]) extends Logging {
   
   def getMap() : Map[String,Any] = map
   
-  def get(s:String) : Any = map(s)
-  def get(s:String, default:Any) : Any = if (contains(s)) get(s) else default
+  def get(key:String) : Any = map(key)
+  def get(key:String, default:Any) : Any = if (contains(key)) get(key) else default
   
-  def getAsString(s:String) : String = map(s).toString
-  def getAsString(s:String, default:String) : String = if (contains(s)) getAsString(s) else default
+  def getAsString(key:String) : String = map(key).toString
+  def getAsString(key:String, default:String) : String = if (contains(key)) getAsString(key) else default
   
-  def getAsInt(s:String) : Int = {
-    map(s) match {
+  def getAsInt(key:String) : Int = {
+    map(key) match {
       case i:Double => return i.toInt
       case i:Int => return i
       case i:String => {
-        logger.warn("Value '" + s + "' is a string insteadof int in json file, trying auto convert")
+        logger.warn("Value '" + key + "' is a string insteadof int in json file, trying auto convert")
         return i.toInt
       }
-      case _ => throw new IllegalStateException("Value '" + s + "' is not an int")
+      case _ => throw new IllegalStateException("Value '" + key + "' is not an int")
     }
   }
   def getAsInt(s:String, default:Int) : Int = if (contains(s)) getAsInt(s) else default
   
-  def getAsDouble(s:String) : Double = {
-    map(s) match {
+  def getAsDouble(key:String) : Double = {
+    map(key) match {
       case d:Double => return d
       case d:Int => return d.toDouble
       case d:String => {
-        logger.warn("Value '" + s + "' is a string insteadof int in json file, trying auto convert")
+        logger.warn("Value '" + key + "' is a string insteadof int in json file, trying auto convert")
         return d.toDouble
       }
-      case _ => throw new IllegalStateException("Value '" + s + "' is not an int")
+      case _ => throw new IllegalStateException("Value '" + key + "' is not an int")
     }
   }
-  def getAsDouble(s:String, default:Double) : Double = if (contains(s)) getAsDouble(s) else default
+  def getAsDouble(key:String, default:Double) : Double = if (contains(key)) getAsDouble(key) else default
   
-  def getAsBoolean(s:String) : Boolean = {
-    map(s) match {
+  def getAsBoolean(key:String) : Boolean = {
+    map(key) match {
       case b:Boolean => b
       case b:String => {
-        logger.warn("Value '" + s + "' is a string insteadof boolean in json file, trying auto convert")
+        logger.warn("Value '" + key + "' is a string insteadof boolean in json file, trying auto convert")
         return b.contains("true")
       }
       case b:Int => {
-        logger.warn("Value '" + s + "' is a int insteadof boolean in json file, trying auto convert")
+        logger.warn("Value '" + key + "' is a int insteadof boolean in json file, trying auto convert")
         (b > 0)
       }
-      case _ => throw new IllegalStateException("Value '" + s + "' is not an boolean")
+      case _ => throw new IllegalStateException("Value '" + key + "' is not an boolean")
     }
   }
-  def getAsBoolean(s:String, default:Boolean) : Boolean = if (contains(s)) getAsBoolean(s) else default
+  def getAsBoolean(key:String, default:Boolean) : Boolean = if (contains(key)) getAsBoolean(key) else default
   
-  def getAsList(s:String) : List[Any] = {
-    map(s) match {
+  def getAsList(key:String) : List[Any] = {
+    map(key) match {
       case l:List[_] => return l
-      case _ => throw new IllegalStateException("Value '" + s + "' is not an List")
+      case s:String => return List(s)
+      case _ => throw new IllegalStateException("Value '" + key + "' is not an List")
     }
   }
-  def getAsList(s:String, default:List[Any]) : List[Any] = if (contains(s)) getAsList(s) else default
-  def getAsListOfStrings(s:String) : List[String] = {
+  def getAsList(key:String, default:List[Any]) : List[Any] = if (contains(key)) getAsList(key) else default
+  def getAsListOfStrings(key:String) : List[String] = {
     var l: List[String] = Nil
-    for (v <- getAsList(s)) l :+= v.toString
+    for (v <- getAsList(key)) l :+= v.toString
     return l
   }
-  def getAsListOfStrings(s:String, default:List[String]) : List[String] = if (contains(s)) getAsListOfStrings(s) else default
+  def getAsListOfStrings(key:String, default:List[String]) : List[String] = if (contains(key)) getAsListOfStrings(key) else default
   
-  def getAsMap(s:String) : Map[String,Any] = {
-    map(s) match {
+  def getAsMap(key:String) : Map[String,Any] = {
+    map(key) match {
       case m:Map[_,_] => return Config.valueToMap(m)
-      case _ => throw new IllegalStateException("Value '" + s + "' is not an Map")
+      case _ => throw new IllegalStateException("Value '" + key + "' is not an Map")
     }
   }
-  def getAsMap(s:String, default:Map[String,Any]) : Map[String,Any] = if (contains(s)) getAsMap(s) else default
+  def getAsMap(key:String, default:Map[String,Any]) : Map[String,Any] = if (contains(key)) getAsMap(key) else default
   
-  def getAsConfig(s:String, default:Map[String,Any]) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(default)
-  def getAsConfig(s:String, default:Config) : Config = if (contains(s)) Config.mergeConfigs(getAsConfig(s), default) else default
-  def getAsConfig(s:String, default:Config, subDefault:String) : Config = {
-    if (contains(s)) Config.mergeConfigs(getAsConfig(s), default.getAsConfig(subDefault))
+  def getAsConfig(key:String, default:Map[String,Any]) : Config = if (contains(key)) new Config(getAsMap(key)) else new Config(default)
+  def getAsConfig(key:String, default:Config) : Config = if (contains(key)) Config.mergeConfigs(getAsConfig(key), default) else default
+  def getAsConfig(key:String, default:Config, subDefault:String) : Config = {
+    if (contains(key)) Config.mergeConfigs(getAsConfig(key), default.getAsConfig(subDefault))
     else default
   }
   def getAsConfig(s:String) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(Map())
