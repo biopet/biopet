@@ -188,12 +188,14 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     }
     
     if (!config.getAsBoolean("skip_native_link", false)) {
-      val lnR1 = new Ln(config) { this.in = R1 }
+      val lnR1 = new Ln(config)
+      lnR1.in = R1
       R1 = new File(outputDir + R1_name + ".qc" + R1_ext)
       lnR1.out = R1
       add(lnR1)
       if (paired) {
-        val lnR2 = new Ln(config) { this.in = R2 }
+        val lnR2 = new Ln(config)
+        lnR2.in = R2
         R2 = new File(outputDir + R2_name + ".qc" + R2_ext)
         lnR2.out = R2
         add(lnR2)
