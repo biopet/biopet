@@ -9,7 +9,7 @@ import java.io.File
 class Seqstat(val globalConfig: Config) extends CommandLineFunction with Python {
   def this() = this(new Config(Map()))
   analysisName = "seqstat"
-  val config: Config = globalConfig.getAsConfig(analysisName)
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + analysisName + ": " + config)
   
   setPythonScript("__init__.py", "scripts/pyfastqc/")

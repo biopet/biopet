@@ -8,7 +8,7 @@ import java.io.File
 class Zcat(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "zcat"
-  val config: Config = globalConfig.getAsConfig("zcat")
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
   
   @Input(doc="Zipped file") var in: File = _
