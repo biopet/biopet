@@ -9,7 +9,7 @@ import scala.sys.process._
 class Bwa(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "bwa"
-  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig("bwa"), globalConfig)
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
 
   @Argument(doc="Bwa executeble", shortName="bwa_exe", required=false) var bwa_exe: String = config.getAsString("exe", "/usr/local/bin/bwa")

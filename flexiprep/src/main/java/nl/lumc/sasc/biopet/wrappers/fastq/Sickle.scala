@@ -10,7 +10,7 @@ import scala.sys.process._
 class Sickle(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "sickle"
-  val config: Config = globalConfig.getAsConfig("sickle")
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
   
   @Input(doc="Sickle exe", required=false) var sickle_exe: File = new File(config.getAsString("exe", "/usr/local/bin/sickle"))

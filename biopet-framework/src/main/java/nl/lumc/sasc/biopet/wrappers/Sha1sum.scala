@@ -8,7 +8,7 @@ import java.io.File
 class Sha1sum(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
   this.analysisName = "sha1sum"
-  val config: Config = globalConfig.getAsConfig("sha1sum")
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
   
   @Input(doc="Zipped file") var in: File = _

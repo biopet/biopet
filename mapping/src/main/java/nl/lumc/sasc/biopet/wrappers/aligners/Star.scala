@@ -8,8 +8,8 @@ import scala.sys.process._
 
 class Star(val globalConfig: Config) extends CommandLineFunction {
   def this() = this(new Config(Map()))
-  this.analysisName = "STAR"
-  val config: Config = globalConfig.getAsConfig("star")
+  this.analysisName = "star"
+  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   logger.debug("Config for " + this.analysisName + ": " + config)
   
   @Argument(doc="STAR executeble", shortName="star_exe", required=false)
