@@ -68,7 +68,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
     else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
     
-    runFinalize(List(outputFiles("output_R1")), List(outputFiles("output_R2")))
+    runFinalize(List(outputFiles("output_R1")), if (outputFiles.contains("output_R2")) List(outputFiles("output_R2")) else List())
   }
   
   def runInitialFastqc() {
@@ -177,7 +177,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   }
   
   def runFinalize(fastq_R1:List[File], fastq_R2:List[File]) {
-    if (fastq_R1.length != fastq_R2.length) throw new IllegalStateException("R1 and R2 file number is not the same")
+    if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
     var R1: File = ""
     var R2: File = ""
     if (fastq_R1.length == 1) { 
