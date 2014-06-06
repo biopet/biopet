@@ -125,6 +125,13 @@ class Config(var map: Map[String,Any]) extends Logging {
   }
   def getAsConfig(s:String) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(Map())
   
+  def getThreads(default:Int) : Int = {
+    val maxThreads = this.getAsInt("maxthreads", 8)
+    val threads = this.getAsInt("threads", default)
+    if (maxThreads > threads) return threads
+    else return maxThreads
+  }
+  
   override def toString() : String = map.toString
 }
 
