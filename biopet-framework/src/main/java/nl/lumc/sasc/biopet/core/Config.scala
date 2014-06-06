@@ -30,8 +30,7 @@ class Config(var map: Map[String,Any]) extends Logging {
     var configJson = JSON.parseFull(scala.io.Source.fromFile(configFile).mkString)
     
     if ( configJson == None ) {
-      println( "[ERROR] The config JSON file is either not properly formatted or not a JSON file"  )
-      System.exit(1)
+      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
     }
     
     this.logger.debug("Jsonfile: " + configFile)
