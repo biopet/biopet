@@ -88,11 +88,23 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
       add(bwaCommand)
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
-      val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/" ;
-                                          outputSam = new File(this.outputDir + "/Aligned.out.sam") }
+      val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/"; init}
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
-    }
+    } else if (aligner == "star-2pass") {
+      val starCommand_pass1 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2;
+            this.outputDir = qscript.outputDir + "star-2pass/aln-pass1/"; init}
+      add(starCommand_pass1)
+      
+      val starCommand_reindex = new Star(config) { this.sjdbFileChrStartEnd = starCommand_pass1.outputTab;
+            this.outputDir = qscript.outputDir + "star-2pass/re-index/" ; this.runmode = "genomeGenerate"; this.sjdbOverhang = 75; init}
+      add(starCommand_reindex)
+      
+      val starCommand_pass2 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.deps ++= starCommand_reindex.outputs;
+            this.outputDir = qscript.outputDir + "star-2pass/aln-pass2/"; this.genomeDir = starCommand_reindex.outputDir; init}
+      add(starCommand_pass2)
+      bamFile = addAddOrReplaceReadGroups(List(starCommand_pass2.outputSam), swapExt(outputDir,starCommand_pass2.outputSam,".sam",".bam"), outputDir)
+    } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
     outputFiles += ("finalBamFile" -> bamFile)
@@ -164,6 +176,9 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
   }
   
   def loadRunConfig(runConfig:Config, sampleConfig:Config, runDir: String) {
+    config = Config.mergeConfigs(globalConfig.getAsConfig("mapping"), globalConfig)
+    val inputType = runConfig.getAsString("inputtype", config.getAsString("inputtype", "dna"))
+    if (inputType == "rna") aligner = config.getAsString("rna_aligner", "star-2pass")
     input_R1 = runConfig.getAsString("R1", null)
     input_R2 = runConfig.getAsString("R2", null)
     paired = (input_R2 != null)
