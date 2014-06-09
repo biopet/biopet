@@ -29,9 +29,9 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     config = Config.mergeConfigs(globalConfig.getAsConfig("gatk"), globalConfig)
     referenceFile = config.getAsString("referenceFile")
-    dbsnp = config.getAsString("dbsnp")
+    if (config.contains("dbsnp")) dbsnp = config.getAsString("dbsnp")
     gvcfFiles = config.getAsListOfStrings("gvcfFiles", Nil)
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
+    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
   
@@ -43,9 +43,11 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       //SampleWide jobs
       if (gvcfFiles.size > 0) {
         var vcfFile = addGenotypeGVCFs(gvcfFiles, outputDir + "recalibration/")
-        vcfFile = addVariantAnnotator(vcfFile, finalBamFiles, outputDir + "recalibration/")
-        vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir + "recalibration/")
-        vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir + "recalibration/")
+        if (qscript.config.getAsString("inputtype", "dna") != "rna") {
+          vcfFile = addVariantAnnotator(vcfFile, finalBamFiles, outputDir + "recalibration/")
+          vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir + "recalibration/")
+          vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir + "recalibration/")
+        }
       } else logger.warn("No gVCFs to genotype")
     } else runSingleSampleJobs(onlySample)
   }
@@ -75,6 +77,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
     val runID: String = runConfig.getAsString("ID")
     val sampleID: String = sampleConfig.get("ID").toString
     val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
+    val inputType = runConfig.getAsString("inputtype", config.getAsString("inputtype", "dna"))
     if (runConfig.contains("R1")) {
       val mapping = new Mapping(config)
       mapping.loadRunConfig(runConfig, sampleConfig, runDir)
@@ -83,6 +86,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       
       var bamFile:File = addIndelRealign(mapping.outputFiles("finalBamFile"),runDir) // Indel realigner
       bamFile = addBaseRecalibrator(bamFile,runDir) // Base recalibrator
+      if (inputType == "rna") bamFile = addSplitNCigarReads(bamFile,runDir)
       
       outputFiles += ("FinalBam" -> bamFile)
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)    
@@ -131,7 +135,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("baserecalibrator"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
-      this.knownSites :+= dbsnp
+      if (dbsnp != null) this.knownSites :+= dbsnp
       if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
       this.nct = this.config.getThreads(2)
     }
@@ -149,6 +153,20 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
     return printReads.o
   }
   
+  def addSplitNCigarReads(inputBam:File, dir:String) : File = {
+    val splitNCigarReads = new SplitNCigarReads with gatkArguments {
+      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("splitncigarreads"), qscript.config)
+      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
+      this.input_file = Seq(inputBam)
+      this.out = swapExt(dir,inputBam,".bam",".split.bam")
+      this.read_filter :+= "ReassignMappingQuality -DMQ 60"
+      this.U = org.broadinstitute.sting.gatk.arguments.ValidationExclusion.TYPE.ALLOW_N_CIGAR_READS
+    }
+    add(splitNCigarReads)
+    
+    return splitNCigarReads.out
+  }
+  
   def addHaplotypeCaller(bamfiles:List[File], outputfile:File): File = {
     val haplotypeCaller = new HaplotypeCaller with gatkArguments {
       val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("haplotypecaller"), qscript.config)
@@ -163,6 +181,13 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       this.emitRefConfidence = org.broadinstitute.sting.gatk.walkers.haplotypecaller.HaplotypeCaller.ReferenceConfidenceMode.GVCF
       this.variant_index_type = GATKVCFIndexType.LINEAR
       this.variant_index_parameter = 128000
+      
+      if (qscript.config.getAsString("inputtype", "dna") == "rna") {
+        this.dontUseSoftClippedBases = true
+        this.recoverDanglingHeads = true
+        this.stand_call_conf = 20
+        this.stand_emit_conf = 20
+      }
     }
     add(haplotypeCaller)
     
