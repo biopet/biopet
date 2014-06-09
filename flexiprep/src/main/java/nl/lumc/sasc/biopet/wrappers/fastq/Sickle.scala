@@ -22,7 +22,7 @@ class Sickle(val globalConfig: Config) extends CommandLineFunction {
   @Output(doc="stats output") var output_stats: File = null
   @Input(doc="qualityType file", required=false) var qualityTypeFile: File = null
   @Argument(doc="Quality Type", required=false) var qualityType: String = config.getAsString("qualitytype", null)
-  @Input(doc="deps") var deps: List[File] = Nil
+  @Input(doc="deps", required=false) var deps: List[File] = Nil
   
   var defaultQualityType: String = config.getAsString("defaultqualitytype", "sanger")
   
@@ -59,22 +59,7 @@ class Sickle(val globalConfig: Config) extends CommandLineFunction {
       } else logger.warn("File : " + qualityTypeFile + " does not exist")
     }
   }
-  
-//  private var version: String = _
-//  def getVersion : String = {
-//    val REG = """sickle version (.*)""".r
-//    if (version == null) for (line <- (sickle_exe + " --version").!!.split("\n")) {
-//      line match { 
-//        case REG(m) => {
-//            version = m
-//            return version
-//        }
-//        case _ =>
-//      }
-//    }
-//    return version
-//  }
-  
+    
   private var version: String = _
   var versionCommand = sickle_exe + " --version"
   var versionRegex = """sickle version (.*)"""
