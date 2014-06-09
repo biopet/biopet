@@ -133,7 +133,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       this.knownSites :+= dbsnp
       if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
-      this.nct = 2
+      this.nct = this.config.getThreads(2)
     }
     add(baseRecalibrator)
 
@@ -156,7 +156,7 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       this.input_file = bamfiles
       this.out = outputfile
       if (dbsnp != null) this.dbsnp = qscript.dbsnp
-      this.nct = 3
+      this.nct = this.config.getThreads(3)
       this.memoryLimit = this.nct * 2
       
       // GVCF options
@@ -170,69 +170,81 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
   }
   
   def addSnpVariantRecalibrator(inputVcf:File, dir:String): File = {
-    val snpVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
-      this.input +:= inputVcf
-      this.nt = 4
-      this.memoryLimit = 2 * nt
-      this.recal_file = swapExt(dir, inputVcf,".vcf",".snp.recal")
-      this.tranches_file = swapExt(dir, inputVcf,".vcf",".snp.tranches")
-      this.resource = Seq(new TaggedFile(config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0"),
-                          new TaggedFile(config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0"),
-                          new TaggedFile(config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0"),
-                          new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0"))
-      this.an = Seq("QD","MQ","MQRankSum","ReadPosRankSum","FS","DP","InbreedingCoeff")
-      this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-    }
+    val snpVariantRecalibrator = getVariantRecalibrator("snp")
+    snpVariantRecalibrator.input +:= inputVcf
+    snpVariantRecalibrator.recal_file = swapExt(dir, inputVcf,".vcf",".snp.recal")
+    snpVariantRecalibrator.tranches_file = swapExt(dir, inputVcf,".vcf",".snp.tranches")
     add(snpVariantRecalibrator)
 
-    val snpApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
-      this.input +:= inputVcf
-      this.recal_file = snpVariantRecalibrator.recal_file
-      this.tranches_file = snpVariantRecalibrator.tranches_file
-      this.out = swapExt(dir, inputVcf,".vcf",".snp.recal.vcf")
-      this.ts_filter_level = 99.5
-      this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-      this.nt = 3
-      this.memoryLimit = 2 * nt
-      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
-    }
+    val snpApplyRecalibration = getApplyRecalibration("snp")
+    snpApplyRecalibration.input +:= inputVcf
+    snpApplyRecalibration.recal_file = snpVariantRecalibrator.recal_file
+    snpApplyRecalibration.tranches_file = snpVariantRecalibrator.tranches_file
+    snpApplyRecalibration.out = swapExt(dir, inputVcf,".vcf",".snp.recal.vcf")
     add(snpApplyRecalibration)
     
     return snpApplyRecalibration.out
   }
   
   def addIndelVariantRecalibrator(inputVcf:File, dir:String): File = {
-    val indelVariantRecalibrator = new VariantRecalibrator() with gatkArguments {
-      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
-      this.input +:= inputVcf
-      this.nt = 4
-      this.memoryLimit = 2 * nt
-      this.recal_file = swapExt(dir, inputVcf,".vcf",".indel.recal")
-      this.tranches_file = swapExt(dir, inputVcf,".vcf",".indel.tranches")
-      this.resource :+= new TaggedFile(config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
-      this.resource :+= new TaggedFile(config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
-      this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
-      this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-    }
+    val indelVariantRecalibrator = getVariantRecalibrator("indel")
+    indelVariantRecalibrator.input +:= inputVcf
+    indelVariantRecalibrator.recal_file = swapExt(dir, inputVcf,".vcf",".indel.recal")
+    indelVariantRecalibrator.tranches_file = swapExt(dir, inputVcf,".vcf",".indel.tranches")
     add(indelVariantRecalibrator)
 
-    val indelApplyRecalibration = new ApplyRecalibration() with gatkArguments {
-      val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
-      this.input +:= inputVcf
-      this.recal_file = indelVariantRecalibrator.recal_file
-      this.tranches_file = indelVariantRecalibrator.tranches_file
-      this.out = swapExt(dir, inputVcf,".vcf",".indel.recal.vcf")
-      this.ts_filter_level = 99.0
-      this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-      this.nt = 3
-      this.memoryLimit = 2 * nt
-      if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
-    }
+    val indelApplyRecalibration = getApplyRecalibration("indel")
+    indelApplyRecalibration.input +:= inputVcf
+    indelApplyRecalibration.recal_file = indelVariantRecalibrator.recal_file
+    indelApplyRecalibration.tranches_file = indelVariantRecalibrator.tranches_file
+    indelApplyRecalibration.out = swapExt(dir, inputVcf,".vcf",".indel.recal.vcf")
     add(indelApplyRecalibration)
     
     return indelApplyRecalibration.out
+  }
+  
+  def getVariantRecalibrator(mode_arg:String) : VariantRecalibrator = {
+    val variantRecalibrator = new VariantRecalibrator() with gatkArguments {
+      var config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
+      if (mode_arg == "indel") {
+        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        this.config = Config.mergeConfigs(this.config.getAsConfig("indel"),this.config)
+        if (config.contains("mills")) this.resource :+= new TaggedFile(this.config.getAsString("mills"), "known=false,training=true,truth=true,prior=12.0")
+      } else { // SNP
+        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        this.config = Config.mergeConfigs(this.config.getAsConfig("snp"),this.config)
+        if (this.config.contains("hapmap")) this.resource +:= new TaggedFile(this.config.getAsString("hapmap"), "known=false,training=true,truth=true,prior=15.0")
+        if (this.config.contains("omni")) this.resource +:= new TaggedFile(this.config.getAsString("omni"), "known=false,training=true,truth=true,prior=12.0")
+        if (this.config.contains("1000G")) this.resource +:= new TaggedFile(this.config.getAsString("1000G"), "known=false,training=true,truth=false,prior=10.0")
+      }
+      logger.debug("VariantRecalibrator-" + mode_arg + ": " + this.config)
+      if (this.config.contains("dbsnp")) this.resource :+= new TaggedFile(this.config.getAsString("dbsnp"), "known=true,training=false,truth=false,prior=2.0")
+      this.nt = config.getThreads(4)
+      this.memoryLimit = 2 * nt
+      this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
+      if (this.config.contains("minnumbadvariants")) this.minNumBadVariants = this.config.getAsInt("minnumbadvariants")
+      if (this.config.contains("maxgaussians")) this.maxGaussians = this.config.getAsInt("maxgaussians")
+    }
+    return variantRecalibrator
+  }
+  
+  def getApplyRecalibration(mode_arg:String) : ApplyRecalibration = {
+    val applyRecalibration = new ApplyRecalibration() with gatkArguments {
+      var config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
+      if (mode_arg == "indel") {
+        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        this.config = Config.mergeConfigs(this.config.getAsConfig("indel"),this.config)
+        this.ts_filter_level = this.config.getAsDouble("ts_filter_level", 99.0)
+      } else { // SNP
+        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        this.config = Config.mergeConfigs(this.config.getAsConfig("snp"),this.config)
+        this.ts_filter_level = this.config.getAsDouble("ts_filter_level", 99.5)
+      }
+      this.nt = config.getThreads(3)
+      this.memoryLimit = 2 * nt
+      if (config.contains("scattercount")) this.scatterCount = this.config.getAsInt("scattercount")
+    }
+    return applyRecalibration
   }
   
   def addGenotypeGVCFs(gvcfFiles: List[File], dir:String): File = {
