@@ -30,8 +30,8 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     config = Config.mergeConfigs(globalConfig.getAsConfig("flexiprep"), globalConfig)
-    skipTrim = config.getAsBoolean("skiptrim", false)
-    skipClip = config.getAsBoolean("skipclip", false)
+    if (!skipTrim) skipTrim = config.getAsBoolean("skiptrim", false)
+    if (!skipClip) skipClip = config.getAsBoolean("skipclip", false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -39,14 +39,14 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
-    else R1_name = input_R1
+    else R1_name = input_R1.getName
     R1_ext = R1_name.substring(R1_name.lastIndexOf("."), R1_name.size)
     R1_name = R1_name.substring(0, R1_name.lastIndexOf(R1_ext))
     
     if (paired) { 
       if (input_R2.endsWith(".gz")) R2_name = input_R2.getName.substring(0, input_R2.getName.lastIndexOf(".gz"))
       else if (input_R2.endsWith(".gzip")) R2_name = input_R2.getName.substring(0, input_R2.getName.lastIndexOf(".gzip"))
-      else R2_name = input_R2
+      else R2_name = input_R2.getName
       R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.size)
       R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
     }
@@ -202,13 +202,13 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
       }
     }
     
-    addSeqstat(R1, "seqstat_qc_R1")
-    if (paired) addSeqstat(R2, "seqstat_qc_R2")
-    
-    addSha1sum(R1, "sha1_qc_R1")
-    if (paired) addSha1sum(R2, "sha1_qc_R2")
-    
     if (!skipTrim || !skipClip) {
+      addSeqstat(R1, "seqstat_qc_R1")
+      if (paired) addSeqstat(R2, "seqstat_qc_R2")
+      
+      addSha1sum(R1, "sha1_qc_R1")
+      if (paired) addSha1sum(R2, "sha1_qc_R2")
+      
       outputFiles += ("fastqc_R1_final" -> runFastqc(outputFiles("output_R1"),outputDir + "/" + R1_name + ".qc.fastqc/").output)
       if (paired) outputFiles += ("fastqc_R2_final" -> runFastqc(outputFiles("output_R2"),outputDir + "/" + R2_name + ".qc.fastqc/").output)
     }
