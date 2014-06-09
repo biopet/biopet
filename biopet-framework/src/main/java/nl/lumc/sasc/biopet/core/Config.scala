@@ -19,8 +19,8 @@ class Config(var map: Map[String,Any]) extends Logging {
         logger.info("Loading config file: " + file)
         loadConfigFile(file)
       }
-      else logger.warn("QUEUE_CONFIG value found but file does not exist, no global config is loaded")
-    } else logger.warn("QUEUE_CONFIG value not found, no global config is loaded")
+      else logger.warn("BIOPET_CONFIG value found but file does not exist, no global config is loaded")
+    } else logger.info("BIOPET_CONFIG value not found, no global config is loaded")
   }
   
   def contains(s:String) : Boolean = map.contains(s)
@@ -29,7 +29,7 @@ class Config(var map: Map[String,Any]) extends Logging {
     var returnMap: Map[String,Any] = Map()
     var configJson = JSON.parseFull(scala.io.Source.fromFile(configFile).mkString)
     
-    if ( configJson == None ) {
+    if (configJson == None) {
       throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
     }
     
