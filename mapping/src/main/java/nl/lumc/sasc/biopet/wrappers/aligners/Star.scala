@@ -23,6 +23,7 @@ class Star(val globalConfig: Config) extends CommandLineFunction {
   @Output(doc="Output tab file", required=false) var outputTab: File = _
   @Input(doc="sjdbFileChrStartEnd file", required=false) var sjdbFileChrStartEnd: File = _
   @Argument(doc="sjdbOverhang", required=false) var sjdbOverhang: Int = _
+  @Argument(doc="outFileNamePrefix", required=false) var outFileNamePrefix: String = _
   @Input(doc="deps", required=false) var deps: List[File] = Nil
   
   @Output(doc="Output genome file", required=false) var outputGenome: File = _
@@ -31,17 +32,20 @@ class Star(val globalConfig: Config) extends CommandLineFunction {
   
   jobResourceRequests :+= "h_vmem=" + config.getAsString("vmem", "6G")
   nCoresRequest = Option(config.getThreads(8))
+  addJobReportBinding("version", "NA")
   
   def init() {
-    this.addJobReportBinding("version", "NA")
+    if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix +="."
+    if (!outputDir.endsWith("/")) outputDir += "/"
+    val prefix = if (outFileNamePrefix != null) outputDir+outFileNamePrefix else outputDir
     if (runmode == null) {
-      outputSam = new File(outputDir + "/Aligned.out.sam")
-      outputTab = new File(outputDir + "/SJ.out.tab")
+      outputSam = new File(prefix + "Aligned.out.sam")
+      outputTab = new File(prefix + "SJ.out.tab")
     } else if (runmode == "genomeGenerate") {
       genomeDir = outputDir
-      outputGenome = new File(genomeDir + "/Genome")
-      outputSA = new File(genomeDir + "/SA")
-      outputSAindex = new File(genomeDir + "/SAindex")
+      outputGenome = new File(prefix + "Genome")
+      outputSA = new File(prefix + "SA")
+      outputSAindex = new File(prefix + "SAindex")
     }
   }
   
@@ -50,14 +54,14 @@ class Star(val globalConfig: Config) extends CommandLineFunction {
     var cmd: String = required("cd",outputDir) + "&&" + required(star_exe)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
-        //required("--genomeDir", genomeDir) +
         required("--genomeFastaFiles", referenceFile)
     } else { // Aligner
       cmd += required("--readFilesIn", R1) + optional(R2)
     }
     cmd += required("--genomeDir", genomeDir) +
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
-      optional("--runThreadN", nCoresRequest)
+      optional("--runThreadN", nCoresRequest) +
+      optional("--outFileNamePrefix", outFileNamePrefix)
     if (sjdbOverhang > 0) cmd += optional("--sjdbOverhang", sjdbOverhang)
     
     return cmd
