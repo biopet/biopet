@@ -1,4 +1,5 @@
 {
+    "inputtype": "rna",
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     "bwa" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
     "flexiprep": {
