@@ -84,9 +84,10 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       mapping.script
       addAll(mapping.functions) // Add functions of mapping to curent function pool
       
-      var bamFile:File = addIndelRealign(mapping.outputFiles("finalBamFile"),runDir) // Indel realigner
-      bamFile = addBaseRecalibrator(bamFile,runDir) // Base recalibrator
+      var bamFile:File = mapping.outputFiles("finalBamFile")
       if (inputType == "rna") bamFile = addSplitNCigarReads(bamFile,runDir)
+      bamFile = addIndelRealign(bamFile,runDir) // Indel realigner
+      bamFile = addBaseRecalibrator(bamFile,runDir) // Base recalibrator
       
       outputFiles += ("FinalBam" -> bamFile)
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)    
@@ -159,7 +160,8 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
       if (config.contains("scattercount")) this.scatterCount = config.getAsInt("scattercount")
       this.input_file = Seq(inputBam)
       this.out = swapExt(dir,inputBam,".bam",".split.bam")
-      this.read_filter :+= "ReassignMappingQuality -DMQ 60"
+      this.read_filter :+= "ReassignMappingQuality"
+      
       this.U = org.broadinstitute.sting.gatk.arguments.ValidationExclusion.TYPE.ALLOW_N_CIGAR_READS
     }
     add(splitNCigarReads)
