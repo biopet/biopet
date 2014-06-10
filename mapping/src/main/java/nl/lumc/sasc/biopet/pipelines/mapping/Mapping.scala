@@ -90,7 +90,7 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
     } else if (aligner == "star") {
       val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/"; init}
       add(starCommand)
-      bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), swapExt(outputDir,starCommand.outputSam,".sam",".bam"), outputDir)
+      bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else if (aligner == "star-2pass") {
       val starCommand_pass1 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2;
             this.outputDir = qscript.outputDir + "star-2pass/aln-pass1/"; init}
@@ -103,7 +103,7 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
       val starCommand_pass2 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.deps ++= starCommand_reindex.outputs;
             this.outputDir = qscript.outputDir + "star-2pass/aln-pass2/"; this.genomeDir = starCommand_reindex.outputDir; init}
       add(starCommand_pass2)
-      bamFile = addAddOrReplaceReadGroups(List(starCommand_pass2.outputSam), swapExt(outputDir,starCommand_pass2.outputSam,".sam",".bam"), outputDir)
+      bamFile = addAddOrReplaceReadGroups(List(starCommand_pass2.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
