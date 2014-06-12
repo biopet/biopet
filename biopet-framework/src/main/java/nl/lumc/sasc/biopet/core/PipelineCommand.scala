@@ -7,23 +7,25 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.FileOutputStream
-import org.broadinstitute.sting.queue.QCommandLine
+//import org.broadinstitute.sting.queue.QCommandLine
 import org.broadinstitute.sting.queue.util.Logging
 
 trait PipelineCommand extends Logging {
-  val src = ""
-  val extension = ".scala"
+//  val src = ""
+//  val extension = ".scala"
+  val pipeline = ""
   
   def main(args: Array[String]): Unit = {
-    val tempFile = java.io.File.createTempFile(src + ".", extension)
-    val is = getClass.getResourceAsStream(src + extension)
-    val os = new FileOutputStream(tempFile)
-    org.apache.commons.io.IOUtils.copy(is, os)
-    os.close()
+//    val tempFile = java.io.File.createTempFile(src + ".", extension)
+//    val is = getClass.getResourceAsStream(src + extension)
+//    val os = new FileOutputStream(tempFile)
+//    org.apache.commons.io.IOUtils.copy(is, os)
+//    os.close()
     
     var argv: Array[String] = Array()
-    argv ++= Array("-S", tempFile.getAbsolutePath)
+    //argv ++= Array("-S", tempFile.getAbsolutePath)
+    argv ++= Array("-S", pipeline)
     argv ++= args
-    return QCommandLine.main(argv)
+    return BiopetQCommandLine.main(argv)
   }
 }

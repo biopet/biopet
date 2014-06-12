@@ -192,5 +192,5 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
 }
 
 object Mapping extends PipelineCommand {
-  override val src = "Mapping"
+  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/mapping/"
 }
