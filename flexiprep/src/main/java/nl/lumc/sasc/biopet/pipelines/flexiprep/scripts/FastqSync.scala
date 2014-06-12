@@ -7,10 +7,10 @@ import org.broadinstitute.sting.queue.function.CommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class FastqSync(val globalConfig: Config) extends CommandLineFunction with Python {
+class FastqSync(val globalConfig: Config) extends Python {
   def this() = this(new Config(Map()))
   analysisName = "fastqsync"
-  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
+  val config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName.toLowerCase), globalConfig)
   logger.debug("Config for " + analysisName + ": " + config)
   
   setPythonScript("__init__.py", "scripts/pyfastqc/")
