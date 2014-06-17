@@ -1,40 +1,38 @@
 package nl.lumc.sasc.biopet.function.aligners
 
 import nl.lumc.sasc.biopet.core._
-import org.broadinstitute.sting.queue.function.CommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Bwa(val globalConfig: Config) extends CommandLineFunction {
-  def this() = this(new Config(Map()))
-  this.analysisName = "bwa"
-  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
-  logger.debug("Config for " + this.analysisName + ": " + config)
-
-  @Argument(doc="Bwa executeble", shortName="bwa_exe", required=false) var bwa_exe: String = config.getAsString("exe", "/usr/local/bin/bwa")
-  @Input(doc="The reference file for the bam files.", shortName="R") var referenceFile: File = new File(config.getAsString("referenceFile"))
-  @Input(doc="Fastq file R1", shortName="R1") var R1: File = _
-  @Input(doc="Fastq file R2", shortName="R2", required=false) var R2: File = _
-  @Output(doc="Output file SAM", shortName="output") var output: File = _
+class Bwa(val globalConfig: Config) extends BiopetCommandLineFunction {
+  @Input(doc="Fastq file R1", shortName="R1")
+  var R1: File = _
   
-  @Argument(doc="Readgroup header", shortName="RG", required=false) var RG: String = _
-  @Argument(doc="M", shortName="M", required=false) var M: Boolean = config.getAsBoolean("M", true)
+  @Input(doc="Fastq file R2", shortName="R2", required=false)
+  var R2: File = _
   
-  jobResourceRequests :+= "h_vmem=" + config.getAsString("vmem", "6G")
+  @Input(doc="The reference file for the bam files.", shortName="R")
+  var referenceFile: File = new File(config.getAsString("referenceFile"))
   
-  var threads: Int = config.getAsInt("threads", 8)
-  var maxThreads: Int = config.getAsInt("maxthreads", 24)
-  if (threads > maxThreads) threads = maxThreads
-  nCoresRequest = Option(threads)
+  @Output(doc="Output file SAM", shortName="output")
+  var output: File = _
   
-  def init() {
-    this.addJobReportBinding("version", getVersion)
+  executeble = config.getAsString("exe", "bwa")
+  
+  var RG: String = _
+  var M = config.getAsBoolean("M", true)
+  
+  override val defaultVmem = "6G"
+  override val defaultThreads = 8
+  override val versionRegex = """Version: (.*)""".r
+  
+  override def beforeCmd() {
+    versionCommand = executeble
   }
   
-  def commandLine = {
-    init()
-    required(bwa_exe) + 
+  def cmdLine = {
+    required(executeble) + 
     required("mem") + 
     optional("-t", nCoresRequest) + 
     optional("-R", RG) + 
@@ -43,20 +41,5 @@ class Bwa(val globalConfig: Config) extends CommandLineFunction {
     required(R1) + 
     optional(R2) + 
     " > " + required(output)
-  }
-  
-  private var version: String = ""
-  def getVersion : String = {
-    val REG = """Version: (.*)""".r
-    if (version == null) for (line <- bwa_exe.!!.split("\n")) {
-      line match { 
-        case REG(m) => {
-            version = m
-            return version
-        }
-        case _ =>
-      }
-    }
-    return version
   }
 }

@@ -1,21 +1,14 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
 import nl.lumc.sasc.biopet.core._
-import org.broadinstitute.sting.queue.function.CommandLineFunction
-import nl.lumc.sasc.biopet.function.Python
+import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class Summarize(val globalConfig: Config) extends CommandLineFunction with Python {
-  def this() = this(new Config(Map()))
-  analysisName = "flexiprep_sumarize"
-  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
-  logger.debug("Config for " + analysisName + ": " + config)
+class Summarize(val globalConfig: Config) extends PythonCommandLineFunction {
+  setPythonScript("__init__.py", "pyfastqc/")
+  setPythonScript("summarize_flexiprep.py")
   
-  setPythonScript("__init__.py", "scripts/pyfastqc/")
-  setPythonScript("summarize_flexiprep.py", "scripts/")
-  
-  @Input(doc="Dep", shortName="dep", required=false) var deps: List[File] = Nil
   @Output(doc="Output file", shortName="out", required=true) var out: File = _
   
   var samplea: String = _
@@ -25,7 +18,7 @@ class Summarize(val globalConfig: Config) extends CommandLineFunction with Pytho
   var trim: Boolean = true
   var clip: Boolean = true
   
-  def commandLine = {
+  def cmdLine = {
     var mode: String = ""
     if (clip) mode += "clip"
     if (trim) mode += "trim"
