@@ -86,6 +86,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   @Input(fullName="script", shortName="S", doc="QScript scala file", required=false)
   @ClassType(classOf[File])
   var scripts: Seq[File] = Nil
+  var pipelineName: String = _
   
   @ArgumentCollection
   val settings = new QGraphSettings
@@ -99,7 +100,11 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
     //qScriptClasses = IOUtils.tempDir("Q-Classes-", "", settings.qSettings.tempDirectory)
     //qScriptManager.loadScripts(scripts, qScriptClasses)
     var temp: Seq[URL] = Seq()
-    for (t <- scripts) temp :+= this.getClass.getResource(t.toString)
+    for (t <- scripts) {
+      temp :+= this.getClass.getResource(t.toString)
+      val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
+      pipelineName = s + "." + System.currentTimeMillis
+    }
     new PluginManager[QScript](qPluginType, temp)
   }
 
@@ -125,7 +130,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       ClassFieldCache.parsingEngine = this.parser
 
       if (settings.qSettings.runName == null)
-        settings.qSettings.runName = "runname"
+        settings.qSettings.runName = pipelineName
       if (IOUtils.isDefaultTempDir(settings.qSettings.tempDirectory))
         settings.qSettings.tempDirectory = IOUtils.absolute(settings.qSettings.runDirectory, ".queue/tmp")
       qGraph.initializeWithSettings(settings)
