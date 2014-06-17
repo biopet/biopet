@@ -1,7 +1,7 @@
 {
     "referenceFile": "/blabla/blabla.fa",
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
-    
+    "bwa": { "exe": "test" },
     "flexiprep": {
         "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},

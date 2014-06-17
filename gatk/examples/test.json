@@ -1,7 +1,7 @@
 {
     "inputtype": "rna",
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
-    "bwa" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
+    "star" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
     "flexiprep": {
         "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
