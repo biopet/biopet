@@ -3,13 +3,13 @@
   <parent>
     <artifactId>Biopet</artifactId>
     <groupId>nl.lumc.sasc</groupId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>nl.lumc.sasc</groupId>
   <artifactId>Gatk</artifactId>
   <name>Gatk</name>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <url>http://maven.apache.org</url>
   <build>
     <resources>

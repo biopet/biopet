@@ -4,7 +4,7 @@
 
   <groupId>nl.lumc.sasc</groupId>
   <artifactId>Gatk</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <packaging>jar</packaging>
 
   <name>Gatk</name>
@@ -13,7 +13,7 @@
   <parent>
       <groupId>nl.lumc.sasc</groupId>
       <artifactId>Biopet</artifactId>
-      <version>0.1.0</version>
+      <version>0.1.1</version>
       <relativePath>../</relativePath>
   </parent>
   
@@ -45,12 +45,12 @@
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Biopet-Framework</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Mapping</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.broadinstitute.sting</groupId>
@@ -60,12 +60,6 @@
     </dependencies>
     <build>
         <resources>
-            <resource>
-                 <directory>src/main/java</directory>
-                 <includes>
-                     <include>**/*</include>
-                 </includes>
-            </resource>
             <resource>
                  <directory>scripts</directory>
                  <includes>
