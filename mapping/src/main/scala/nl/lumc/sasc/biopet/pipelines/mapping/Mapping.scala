@@ -83,25 +83,33 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
     }
     var bamFile:File = null
     if (aligner == "bwa") {
-      val bwaCommand = new Bwa(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; 
-                                        RG = getReadGroup; output = new File(outputDir + outputName + ".sam") }
+      val bwaCommand = new Bwa(config)
+      bwaCommand.R1 = fastq_R1
+      if (paired) bwaCommand.R2 = fastq_R2
+      bwaCommand.RG = getReadGroup
+      bwaCommand.output = new File(outputDir + outputName + ".sam")
       add(bwaCommand)
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
-      val starCommand = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.outputDir = qscript.outputDir + "star/"; init}
+      val starCommand = Star(config, fastq_R1, if (paired) fastq_R2 else null, outputDir)
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else if (aligner == "star-2pass") {
-      val starCommand_pass1 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2;
-            this.outputDir = qscript.outputDir + "star-2pass/aln-pass1/"; init}
+      val starCommand_pass1 = Star(config, fastq_R1, if (paired) fastq_R2 else null, outputDir + "star-2pass/aln-pass1/")
+      starCommand_pass1.afterGraph
       add(starCommand_pass1)
       
-      val starCommand_reindex = new Star(config) { this.sjdbFileChrStartEnd = starCommand_pass1.outputTab;
-            this.outputDir = qscript.outputDir + "star-2pass/re-index/" ; this.runmode = "genomeGenerate"; this.sjdbOverhang = 75; init}
+      val starCommand_reindex = new Star(config)
+      starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
+      starCommand_reindex.outputDir = qscript.outputDir + "star-2pass/re-index/" 
+      starCommand_reindex.runmode = "genomeGenerate"
+      starCommand_reindex.sjdbOverhang = 75
+      starCommand_reindex.afterGraph
       add(starCommand_reindex)
       
-      val starCommand_pass2 = new Star(config) { R1 = fastq_R1; if (paired) R2 = fastq_R2; this.deps ++= starCommand_reindex.outputs;
-            this.outputDir = qscript.outputDir + "star-2pass/aln-pass2/"; this.genomeDir = starCommand_reindex.outputDir; init}
+      val starCommand_pass2 = Star(config, fastq_R1, if (paired) fastq_R2 else null, outputDir + "star-2pass/aln-pass2/")
+      starCommand_pass2.genomeDir = starCommand_reindex.outputDir
+      starCommand_pass2.afterGraph
       add(starCommand_pass2)
       bamFile = addAddOrReplaceReadGroups(List(starCommand_pass2.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
