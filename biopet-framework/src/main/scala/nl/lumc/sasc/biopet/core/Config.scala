@@ -12,7 +12,7 @@ class Config(var map: Map[String,Any]) extends Logging {
   }
   
   def loadDefaultConfig() {
-    var globalFile: String = System.getenv("QUEUE_CONFIG")
+    var globalFile: String = System.getenv("BIOPET_CONFIG")
     if (globalFile != null) {
       var file: File = new File(globalFile)
       if (file.exists()) {
