@@ -11,12 +11,15 @@ class Ln(val globalConfig: Config) extends InProcessFunction {
   this.analysisName = "ln"
   val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
   
-  @Input(doc="Input file") var in: File = _
-  @Output(doc="Link destination") var out: File = _
+  @Input(doc="Input file")
+  var in: File = _
+  
+  @Output(doc="Link destination")
+  var out: File = _
     
   override def run {
     val cmd = "ln -s " + in + " " + out
-    val exitcode = cmd.!
-    System.out.println("cmd: '" + cmd + "', exitcode: " + exitcode)
+    val process = Process(cmd).run
+    System.out.println("cmd: '" + cmd + "', exitcode: " + process.exitValue)
   }
 }
