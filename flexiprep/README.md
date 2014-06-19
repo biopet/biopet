@@ -3,14 +3,18 @@
 QC pipeline for fastq files
 
 ### Commandline options
-| Argument | Explain |
-| :- | :- |
-| -R1,--input_r1 <input_r1> | R1 fastq file (gzipped allowed) |
-| -outputDir,--outputdir <outputdir> | Output directory |
-| -config,--configfiles <configfiles> | Config Json file |
-| -R2,--input_r2 <input_r2> | R2 fastq file (gzipped allowed) |
-| -skiptrim,--skiptrim | Skip Trim fastq files |
-| -skipclip,--skipclip | Skip Clip fastq files |
+- -R1,--input_r1 <input_r1>
+-- R1 fastq file (gzipped allowed)
+- -outputDir,--outputdir <outputdir>
+-- Output directory
+- -config,--configfiles <configfiles>
+-- Config Json file
+- -R2,--input_r2 <input_r2>
+-- R2 fastq file (gzipped allowed)
+- -skiptrim,--skiptrim
+-- Skip Trim fastq files
+- -skipclip,--skipclip
+-- Skip Clip fastq files
 ---
 ### Config options
 
@@ -44,6 +48,6 @@ This can be used in the root of the config or within the flexiprep, within flexi
 | sickle | qualitytype | String |  |  |
 | sickle | defaultqualitytype | String | sanger | use this when quality type can't be found at fastqc |
 ---
-##License
+## License
 
 A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL license; For commercial users or users who do not want to follow the AGPL license, please contact sasc@lumc.nl to purchase a separate license.
