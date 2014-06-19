@@ -4,7 +4,7 @@
 
   <groupId>nl.lumc.sasc</groupId>
   <artifactId>Gatk</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <packaging>jar</packaging>
 
   <name>Gatk</name>
@@ -13,7 +13,7 @@
   <parent>
       <groupId>nl.lumc.sasc</groupId>
       <artifactId>Biopet</artifactId>
-      <version>0.1.1</version>
+      <version>0.1.2</version>
       <relativePath>../</relativePath>
   </parent>
   
@@ -25,38 +25,38 @@
   </properties>
   
     <dependencies>
-        <dependency>
+<!--        <dependency>
           <groupId>junit</groupId>
           <artifactId>junit</artifactId>
           <version>3.8.1</version>
           <scope>test</scope>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
             <version>2.11.0</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.9.2</artifactId>
             <version>2.0.M4</version>
             <scope>test</scope>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Biopet-Framework</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.2</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Mapping</artifactId>
-            <version>0.1.1</version>
+            <version>0.1.2</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.broadinstitute.sting</groupId>
             <artifactId>queue-package</artifactId>
             <version>3.1</version>
-        </dependency>
+        </dependency>-->
     </dependencies>
     <build>
         <resources>
@@ -115,6 +115,15 @@
                       </manifestEntries>
                     </transformer>
                   </transformers>
+                  <artifactSet>
+                    <excludes>
+                      <exclude>junit:junit</exclude>
+                      <exclude>org.scala-lang:scala-compiler</exclude>
+                      <exclude>org.scala-lang:scala-library</exclude>
+                      <exclude>org.scala-lang:scala-reflect</exclude>
+                      <exclude>org.scala-lang.modules:*</exclude>
+                    </excludes>
+                  </artifactSet>
                 </configuration>
             <executions>
               <execution>
