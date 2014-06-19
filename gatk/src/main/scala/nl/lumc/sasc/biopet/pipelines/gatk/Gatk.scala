@@ -310,5 +310,5 @@ class Gatk(private var globalConfig: Config) extends QScript with BiopetQScript 
 }
 
 object Gatk extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/"
+  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/Gatk.class"
 }

@@ -7,7 +7,7 @@ import org.broadinstitute.sting.commandline._
 import scala.sys.process._
 import scala.util.matching.Regex
 
-trait BiopetCommandLineFunction extends CommandLineFunction {
+abstract class BiopetCommandLineFunction extends CommandLineFunction {
   val globalConfig: Config
   analysisName = getClass.getSimpleName
   protected var config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName.toLowerCase), globalConfig)
