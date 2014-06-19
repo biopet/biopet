@@ -38,7 +38,8 @@ class Config(var map: Map[String,Any]) extends Logging {
     configJson.get match {
       case m:Map[_,_] => {
           returnMap = Config.valueToMap(configJson.get)
-          map = Config.mergeMaps(returnMap, map)
+          if (map.isEmpty) returnMap = map
+          else map = Config.mergeMaps(returnMap, map)
       }
       case null => logger.warn("Config " + configFile + " wrong format")
     }
