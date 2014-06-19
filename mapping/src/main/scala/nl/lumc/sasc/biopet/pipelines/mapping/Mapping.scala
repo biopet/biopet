@@ -119,51 +119,48 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
   }
   
   def addSortSam(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val sortSam = new SortSam {
-      this.input = inputSam
-      this.createIndex = true
-      this.output = outputFile
-      this.memoryLimit = 2
-      this.nCoresRequest = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
-    }
+    val sortSam = new SortSam
+    sortSam.input = inputSam
+    sortSam.createIndex = true
+    sortSam.output = outputFile
+    sortSam.memoryLimit = 2
+    sortSam.nCoresRequest = 2
+    sortSam.jobResourceRequests :+= "h_vmem=4G"
     add(sortSam)
     
     return sortSam.output
   }
   
   def addAddOrReplaceReadGroups(inputSam:List[File], outputFile:File, dir:String) : File = {
-    val addOrReplaceReadGroups = new AddOrReplaceReadGroups {
-      this.input = inputSam
-      this.output = outputFile
-      this.createIndex = true
-      this.memoryLimit = 2
-      this.nCoresRequest = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
+    val addOrReplaceReadGroups = new AddOrReplaceReadGroups
+      addOrReplaceReadGroups.input = inputSam
+      addOrReplaceReadGroups.output = outputFile
+      addOrReplaceReadGroups.createIndex = true
+      addOrReplaceReadGroups.memoryLimit = 2
+      addOrReplaceReadGroups.nCoresRequest = 2
+      addOrReplaceReadGroups.jobResourceRequests :+= "h_vmem=4G"
       
-      this.RGID = qscript.RGID
-      this.RGLB = qscript.RGLB
-      this.RGPL = qscript.RGPL
-      this.RGPU = qscript.RGPU
-      this.RGSM = qscript.RGSM
+      addOrReplaceReadGroups.RGID = qscript.RGID
+      addOrReplaceReadGroups.RGLB = qscript.RGLB
+      addOrReplaceReadGroups.RGPL = qscript.RGPL
+      addOrReplaceReadGroups.RGPU = qscript.RGPU
+      addOrReplaceReadGroups.RGSM = qscript.RGSM
       if (RGCN != null) this.RGCN = qscript.RGCN
       if (RGDS != null) this.RGDS = qscript.RGDS
-    }
     add(addOrReplaceReadGroups)
     
     return addOrReplaceReadGroups.output
   }
   
   def addMarkDuplicates(input_Bams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates {
-      this.input = input_Bams
-      this.output = outputFile
-      this.REMOVE_DUPLICATES = false
-      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
-      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
-      this.memoryLimit = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
-    }
+    val markDuplicates = new MarkDuplicates
+    markDuplicates.input = input_Bams
+    markDuplicates.output = outputFile
+    markDuplicates.REMOVE_DUPLICATES = false
+    markDuplicates.metrics = swapExt(dir,outputFile,".bam",".metrics")
+    markDuplicates.outputIndex = swapExt(dir,markDuplicates.output,".bam",".bai")
+    markDuplicates.memoryLimit = 2
+    markDuplicates.jobResourceRequests :+= "h_vmem=4G"
     add(markDuplicates)
     
     return markDuplicates.output
@@ -200,5 +197,5 @@ class Mapping(private var globalConfig: Config) extends QScript with BiopetQScri
 }
 
 object Mapping extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/mapping/"
+  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/mapping/Mapping.class"
 }
