@@ -9,8 +9,11 @@ class Seqstat(val globalConfig: Config) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("seq_stat.py")
   
-  @Input(doc="Fastq input", shortName="fastqc", required=true) var input_fastq: File = _
-  @Output(doc="Output file", shortName="out", required=true) var out: File = _
+  @Input(doc="Fastq input", shortName="fastqc", required=true)
+  var input_fastq: File = _
+  
+  @Output(doc="Output file", shortName="out", required=true)
+  var out: File = _
   
   var fmt: String = _
   

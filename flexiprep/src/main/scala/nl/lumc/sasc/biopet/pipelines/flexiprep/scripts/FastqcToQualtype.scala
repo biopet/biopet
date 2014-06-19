@@ -9,8 +9,11 @@ class FastqcToQualtype(val globalConfig: Config) extends PythonCommandLineFuncti
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("qual_type_sickle.py")
   
-  @Input(doc="Fastqc output", shortName="fastqc", required=true) var fastqc_output: File = _
-  @Output(doc="Output file", shortName="out", required=true) var out: File = _
+  @Input(doc="Fastqc output", shortName="fastqc", required=true)
+  var fastqc_output: File = _
+  
+  @Output(doc="Output file", shortName="out", required=true)
+  var out: File = _
   
   def cmdLine = {
     getPythonCommand +
