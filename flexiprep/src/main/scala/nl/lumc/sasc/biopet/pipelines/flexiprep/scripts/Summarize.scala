@@ -9,7 +9,8 @@ class Summarize(val globalConfig: Config) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("summarize_flexiprep.py")
   
-  @Output(doc="Output file", shortName="out", required=true) var out: File = _
+  @Output(doc="Output file", shortName="out", required=true)
+  var out: File = _
   
   var samplea: String = _
   var sampleb: String = _

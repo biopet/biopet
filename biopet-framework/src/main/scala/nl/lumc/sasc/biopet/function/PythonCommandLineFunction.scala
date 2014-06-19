@@ -7,11 +7,11 @@ import java.io.File
 import scala.collection.JavaConversions._
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
-  executeble = config.getAsString("python_exe", "python")
-  
   @Input(doc="Python script", required=false)
   var python_script: File = _
-    
+  
+  executeble = config.getAsString("python_exe", "python")
+  
   protected var python_script_name : String = _
   def setPythonScript(script:String) { setPythonScript(script,"") }
   def setPythonScript(script:String, subpackage:String) {
@@ -23,7 +23,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
-    
+  
   def getPythonCommand() : String = {
     required(executeble) + required(python_script)
   }

@@ -9,9 +9,14 @@ class FastqcToContams(val globalConfig: Config) extends PythonCommandLineFunctio
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("fastqc_contam.py")
   
-  @Input(doc="Fastqc output", shortName="fastqc", required=true) var fastqc_output: File = _
-  @Input(doc="Contams input", shortName="fastqc", required=false) var contams_file: File = _
-  @Output(doc="Output file", shortName="out", required=true) var out: File = _
+  @Input(doc="Fastqc output", shortName="fastqc", required=true)
+  var fastqc_output: File = _
+  
+  @Input(doc="Contams input", shortName="fastqc", required=false)
+  var contams_file: File = _
+  
+  @Output(doc="Output file", shortName="out", required=true)
+  var out: File = _
   
   def cmdLine = {
     getPythonCommand + 
