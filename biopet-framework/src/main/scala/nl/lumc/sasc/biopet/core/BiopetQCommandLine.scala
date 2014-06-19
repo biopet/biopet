@@ -38,6 +38,7 @@ import org.broadinstitute.sting.utils.classloader.PluginManager
 import org.broadinstitute.sting.utils.exceptions.UserException
 import org.broadinstitute.sting.utils.io.IOUtils
 import org.broadinstitute.sting.utils.help.ApplicationDetails
+import java.io.FileOutputStream
 import java.net.URL
 import java.util.{ResourceBundle, Arrays}
 import org.broadinstitute.sting.utils.text.TextFormattingUtils
@@ -97,15 +98,20 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   private var shuttingDown = false
 
   private lazy val qScriptPluginManager = {
-    //qScriptClasses = IOUtils.tempDir("Q-Classes-", "", settings.qSettings.tempDirectory)
+    qScriptClasses = IOUtils.tempDir("Q-Classes-", "", settings.qSettings.tempDirectory)
     //qScriptManager.loadScripts(scripts, qScriptClasses)
-    var temp: Seq[URL] = Seq()
+    //var temp: Seq[URL] = Seq()
     for (t <- scripts) {
-      temp :+= this.getClass.getResource(t.toString)
+      val is = getClass.getResourceAsStream(t.getAbsolutePath)
+      val os = new FileOutputStream(qScriptClasses.getAbsolutePath + "/" + t.getName)
+      org.apache.commons.io.IOUtils.copy(is, os)
+      os.close()
+      //temp :+= this.getClass.getResource(t.toString)
+      //logger.info(this.getClass.getResource(t.toString))
       val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
       pipelineName = s + "." + System.currentTimeMillis
     }
-    new PluginManager[QScript](qPluginType, temp)
+    new PluginManager[QScript](qPluginType, List(qScriptClasses.toURI.toURL))
   }
 
   private lazy val qCommandPlugin = {
