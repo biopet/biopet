@@ -6,12 +6,14 @@ import org.broadinstitute.sting.queue.function.CommandLineFunction
 import org.broadinstitute.sting.commandline._
 import scala.sys.process._
 import scala.util.matching.Regex
+import nl.lumc.sasc.biopet.core.config._
 
-abstract class BiopetCommandLineFunction extends CommandLineFunction {
-  val globalConfig: Config
+abstract class BiopetCommandLineFunction extends CommandLineFunction with Configurable {
+//  val globalConfig: Config
   analysisName = getClass.getSimpleName
-  protected var config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName.toLowerCase), globalConfig)
-  logger.debug("config passed for " + analysisName)
+//  protected var config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName.toLowerCase), globalConfig)
+//  logger.debug("config passed for " + analysisName)
+//  logger.debug("config for " + analysisName + ": " + config)
   
   @Input(doc="deps", required=false)
   var deps: List[File] = Nil
@@ -33,10 +35,10 @@ abstract class BiopetCommandLineFunction extends CommandLineFunction {
   protected def afterGraph {
   }
   
-  def setConfig(name:String) {
-    analysisName = name
-    config = Config.mergeConfigs(config.getAsConfig(analysisName.toLowerCase), config)
-  }
+//  def setConfig(name:String) {
+//    analysisName = name
+//    config = Config.mergeConfigs(config.getAsConfig(analysisName.toLowerCase), config)
+//  }
     
   override def freezeFieldValues() {
     checkExecuteble
@@ -67,18 +69,18 @@ abstract class BiopetCommandLineFunction extends CommandLineFunction {
   final protected def preCmdInternal {
     checkExecuteble
     //for (input <- this.inputs) if (!input.exists) throw new IllegalStateException("Input: " + input + " for " + analysisName + " is missing")
-    logger.debug("Config for " + analysisName + ": " + config)
+    //logger.debug("Config for " + analysisName + ": " + localConfig)
     
     beforeCmd
     
     addJobReportBinding("version", getVersion)
     
-    if (threads == 0) threads = config.getThreads(defaultThreads)
+    if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
     addJobReportBinding("cores", if (nCoresRequest.get.toInt > 0) nCoresRequest.get.toInt else 1)
     
     if (vmem == null) {
-      if (config.contains("vmem")) vmem = config.getAsString("vmem")
+      if (configContains("vmem")) vmem = config("vmem")
       else if (!defaultVmem.isEmpty) vmem = defaultVmem
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem

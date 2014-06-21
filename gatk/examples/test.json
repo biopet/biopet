@@ -4,10 +4,15 @@
     "star" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
     "flexiprep": {
         "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
-        "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
     },
+    "mapping": {
+    },
     "gatk": {
+        "mapping": {
+            "flexiprep": {
+            }
+        },
         "referenceFile" : "/home/pjvan_thof/pipelines/test/test",
         "dbsnp": "/home/pjvan_thof/pipelines/test/test",
         "hapmap": "/home/pjvan_thof/pipelines/test/test",
@@ -15,13 +20,15 @@
         "1000G": "/home/pjvan_thof/pipelines/test/test",
         "mills": "/home/pjvan_thof/pipelines/test/test"
     },
+    "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
     "samples": {
         "test": {
             "ID": "test",
             "runs": {
                 "1" : {
                     "ID": "1",
-                    "R1" : "/home/pjvan_thof/pipelines/test/test.fastq"
+                    "R1" : "/home/pjvan_thof/pipelines/test/test.fastq",
+                    "R2" : "/home/pjvan_thof/pipelines/test/test.fastq"
                 }
             }
         }

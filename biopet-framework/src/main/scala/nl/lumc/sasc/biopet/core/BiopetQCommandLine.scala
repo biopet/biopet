@@ -109,7 +109,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       //temp :+= this.getClass.getResource(t.toString)
       //logger.info(this.getClass.getResource(t.toString))
       val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
-      pipelineName = s + "." + System.currentTimeMillis
+      pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + System.currentTimeMillis
     }
     new PluginManager[QScript](qPluginType, List(qScriptClasses.toURI.toURL))
   }

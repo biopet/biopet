@@ -1,15 +1,14 @@
 package nl.lumc.sasc.biopet.function
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.queue.function.InProcessFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Ln(val globalConfig: Config) extends InProcessFunction {
-  def this() = this(new Config(Map()))
-  this.analysisName = "ln"
-  val config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName), globalConfig)
+class Ln(val globalConfig: Config, val configPath: List[String]) extends InProcessFunction with Configurable {
+  this.analysisName = getClass.getSimpleName
   
   @Input(doc="Input file")
   var in: File = _

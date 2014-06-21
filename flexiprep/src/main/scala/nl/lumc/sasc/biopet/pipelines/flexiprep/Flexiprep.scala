@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function._
 import nl.lumc.sasc.biopet.function.fastq._
 import org.broadinstitute.sting.queue.QScript
@@ -11,8 +12,8 @@ import scala.util.parsing.json._
 import org.broadinstitute.sting.commandline._
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
-class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQScript {
-  def this() = this(new Config())
+class Flexiprep(val globalConfig: Config, val configPath: List[String]) extends QScript with BiopetQScript {
+  def this() = this(new Config(), Nil)
   
   @Argument(doc="Config Json file",shortName="config", required=false) val configfiles: List[File] = Nil
   @Input(doc="R1 fastq file (gzipped allowed)", shortName="R1",required=true) var input_R1: File = _
@@ -29,9 +30,9 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    config = Config.mergeConfigs(globalConfig.getAsConfig("flexiprep"), globalConfig)
-    if (!skipTrim) skipTrim = config.getAsBoolean("skiptrim", false)
-    if (!skipClip) skipClip = config.getAsBoolean("skipclip", false)
+    //config = Config.mergeConfigs(globalConfig.getAsConfig("flexiprep"), globalConfig)
+    if (!skipTrim) skipTrim = config("skiptrim", false)
+    if (!skipClip) skipClip = config("skipclip", false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -86,7 +87,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   }
   
   def getQualtype(fastqc:Fastqc, pairname:String): File = {
-    val fastqcToQualtype = new FastqcToQualtype(config)
+    val fastqcToQualtype = new FastqcToQualtype(globalConfig, configFullPath)
     fastqcToQualtype.fastqc_output = fastqc.output
     fastqcToQualtype.out = new File(outputDir + pairname + ".qualtype.txt")
     add(fastqcToQualtype)
@@ -94,7 +95,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   }
   
   def getContams(fastqc:Fastqc, pairname:String): File = {
-    val fastqcToContams = new FastqcToContams(config)
+    val fastqcToContams = new FastqcToContams(globalConfig, configFullPath)
     fastqcToContams.fastqc_output = fastqc.output
     fastqcToContams.out = new File(outputDir + pairname + ".contams.txt")
     fastqcToContams.contams_file = fastqc.contaminants
@@ -118,7 +119,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     var R2: File = new File(R2_in)
     
     if (!skipClip) { // Adapter clipping
-      val cutadapt_R1 = new Cutadapt(config)
+      val cutadapt_R1 = new Cutadapt(globalConfig, configFullPath)
       if (!skipTrim || paired) cutadapt_R1.isIntermediate = true
       cutadapt_R1.fastq_input = R1
       cutadapt_R1.fastq_output = swapExt(outDir, R1, R1_ext, ".clip"+R1_ext)
@@ -126,14 +127,14 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
       add(cutadapt_R1)
       R1 = cutadapt_R1.fastq_output
       if (paired) {
-        val cutadapt_R2 = new Cutadapt(config)
+        val cutadapt_R2 = new Cutadapt(globalConfig, configFullPath)
         if (!skipTrim || paired) cutadapt_R2.isIntermediate = true
         cutadapt_R2.fastq_input = R2
         cutadapt_R2.fastq_output = swapExt(outDir, R2, R2_ext, ".clip"+R2_ext)
         if (outputFiles.contains("contams_R2")) cutadapt_R2.contams_file = outputFiles("contams_R2")
         add(cutadapt_R2)
         R2 = cutadapt_R2.fastq_output
-        val fastqSync = new FastqSync(config)
+        val fastqSync = new FastqSync(globalConfig, configFullPath)
         if (!skipTrim) fastqSync.isIntermediate = true
         fastqSync.input_start_fastq = cutadapt_R1.fastq_input
         fastqSync.input_R1 = cutadapt_R1.fastq_output
@@ -149,7 +150,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     }
     
     if (!skipTrim) { // Quality trimming
-      val sickle = new Sickle(config)
+      val sickle = new Sickle(globalConfig, configFullPath)
       sickle.input_R1 = R1
       sickle.output_R1 = swapExt(outDir, R1, R1_ext, ".trim"+R1_ext)
       if (outputFiles.contains("qualtype_R1")) sickle.qualityTypeFile = outputFiles("qualtype_R1")
@@ -181,14 +182,14 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
       throw new IllegalStateException("Not yet inplemented") // For chuncking
     }
     
-    if (!config.getAsBoolean("skip_native_link", false)) {
-      val lnR1 = new Ln(config)
+    if (!config("skip_native_link", false)) {
+      val lnR1 = new Ln(globalConfig, configFullPath)
       lnR1.in = R1
       R1 = new File(outputDir + R1_name + ".qc" + R1_ext)
       lnR1.out = R1
       add(lnR1)
       if (paired) {
-        val lnR2 = new Ln(config)
+        val lnR2 = new Ln(globalConfig, configFullPath)
         lnR2.in = R2
         R2 = new File(outputDir + R2_name + ".qc" + R2_ext)
         lnR2.out = R2
@@ -207,7 +208,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
       if (paired) outputFiles += ("fastqc_R2_final" -> runFastqc(outputFiles("output_R2"),outputDir + "/" + R2_name + ".qc.fastqc/").output)
     }
     
-    val summarize = new Summarize(config)
+    val summarize = new Summarize(globalConfig, configFullPath)
     summarize.runDir = outputDir
     summarize.samplea = R1_name
     if (paired) summarize.sampleb = R2_name
@@ -220,7 +221,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   }
   
   def runFastqc(fastqfile:File, outDir:String) : Fastqc = {
-    val fastqcCommand = new Fastqc(config)
+    val fastqcCommand = new Fastqc(globalConfig, configFullPath)
     fastqcCommand.fastqfile = fastqfile
     var filename: String = fastqfile.getName()
     if (filename.endsWith(".gz")) filename = filename.substring(0,filename.size - 3)
@@ -237,7 +238,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
     if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
       var newFile: File = swapExt(file,".gz","")
       if (file.getName().endsWith(".gzip")) newFile = swapExt(file,".gzip","")
-      val zcatCommand = new Zcat(config)
+      val zcatCommand = new Zcat(globalConfig, configFullPath)
       zcatCommand.input = file
       zcatCommand.output = new File(runDir + newFile)
       //zcatCommand.jobOutputFile = outputDir + "." + file.getName + ".out"
@@ -249,7 +250,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   
   def addSeqstat(fastq:File, key:String) {
     val ext = fastq.getName.substring(fastq.getName.lastIndexOf("."))
-    val seqstat = new Seqstat(config) 
+    val seqstat = new Seqstat(globalConfig, configFullPath) 
     seqstat.input_fastq = fastq
     seqstat.out = swapExt(outputDir, fastq, ext, ".seqstats.json")
     add(seqstat)
@@ -258,7 +259,7 @@ class Flexiprep(private var globalConfig: Config) extends QScript with BiopetQSc
   
   def addSha1sum(fastq:File, key:String) {
     val ext = fastq.getName.substring(fastq.getName.lastIndexOf("."))
-    val sha1sum = new Sha1sum(config)
+    val sha1sum = new Sha1sum(globalConfig, configFullPath)
     sha1sum.input = fastq
     sha1sum.output = swapExt(outputDir, fastq, ext, ".sha1")
     add(sha1sum)

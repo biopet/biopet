@@ -10,7 +10,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc="Python script", required=false)
   var python_script: File = _
   
-  executeble = config.getAsString("python_exe", "python")
+  executeble = config("python_exe", "python")
   
   protected var python_script_name : String = _
   def setPythonScript(script:String) { setPythonScript(script,"") }

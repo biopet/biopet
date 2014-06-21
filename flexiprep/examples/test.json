@@ -1,9 +1,8 @@
 {
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
-    
+    "gatk": {"flexiprep": { "sdfg": { "exe": "gatk" }}},
     "flexiprep": {
-        "native_link": true,
-        "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
+        "fastqc": { "exe": "/home/pjvan_thof/pipelines/test/test" },
         "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
         "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
     }
