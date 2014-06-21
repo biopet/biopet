@@ -52,11 +52,11 @@
             <artifactId>Mapping</artifactId>
             <version>0.1.2</version>
         </dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>org.broadinstitute.sting</groupId>
             <artifactId>queue-package</artifactId>
             <version>3.1</version>
-        </dependency>-->
+        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -117,6 +117,7 @@
                   </transformers>
                   <artifactSet>
                     <excludes>
+                      <exclude>org.broadinstitute.sting:queue-package</exclude>
                       <exclude>junit:junit</exclude>
                       <exclude>org.scala-lang:scala-compiler</exclude>
                       <exclude>org.scala-lang:scala-library</exclude>

@@ -2,11 +2,12 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
 //import java.io.FileOutputStream
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class FastqSync(val globalConfig: Config) extends PythonCommandLineFunction {
+class FastqSync(val globalConfig: Config, val configPath: List[String]) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("sync_paired_end_reads.py")
   

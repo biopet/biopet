@@ -1,13 +1,14 @@
 package nl.lumc.sasc.biopet.function.aligners
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Star(val globalConfig: Config) extends BiopetCommandLineFunction {
+class Star(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
   @Input(doc="The reference file for the bam files.", required=false)
-  var referenceFile: File = new File(config.getAsString("referenceFile"))
+  var referenceFile: File = new File(config("referenceFile"))
   
   @Input(doc="Fastq file R1", required=false)
   var R1: File = _
@@ -33,12 +34,12 @@ class Star(val globalConfig: Config) extends BiopetCommandLineFunction {
   @Output(doc="Output SAindex file", required=false)
   var outputSAindex: File = _
   
-  executeble = config.getAsString("exe", "STAR")
+  executeble = config("exe", "STAR")
   
   @Argument(doc="Output Directory")
   var outputDir: String = _
   
-  var genomeDir: String = config.getAsString("genomeDir", referenceFile.getParent + "/star/")
+  var genomeDir: String = config("genomeDir", referenceFile.getParent + "/star/")
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
@@ -80,8 +81,8 @@ class Star(val globalConfig: Config) extends BiopetCommandLineFunction {
 }
 
 object Star {
-  def apply(config:Config, R1:File, R2:File, outputDir:String): Star = {
-    val star = new Star(config)
+  def apply(globalConfig: Config, configPath: List[String], R1:File, R2:File, outputDir:String): Star = {
+    val star = new Star(globalConfig, configPath)
     star.R1 = R1
     if (R2 != null) star.R2 = R2
     star.outputDir = outputDir

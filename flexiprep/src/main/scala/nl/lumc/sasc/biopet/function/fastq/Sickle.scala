@@ -1,12 +1,13 @@
 package nl.lumc.sasc.biopet.function.fastq
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Sickle(val globalConfig: Config) extends BiopetCommandLineFunction {
+class Sickle(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
   @Input(doc="R1 input")
   var input_R1: File = null
   
@@ -28,14 +29,14 @@ class Sickle(val globalConfig: Config) extends BiopetCommandLineFunction {
   @Output(doc="stats output")
   var output_stats: File = null
   
-  executeble = config.getAsString("exe", "sickle")
-  var qualityType: String = config.getAsString("qualitytype", null)
+  executeble = config("exe", "sickle")
+  var qualityType: String = config("qualitytype", null)
   
   var defaultQualityType: String = _
   override val versionRegex = """sickle version (.*)""".r
   
   override def afterGraph {
-    if (defaultQualityType == null) defaultQualityType = config.getAsString("defaultqualitytype", "sanger")
+    if (defaultQualityType == null) defaultQualityType = config("defaultqualitytype", "sanger")
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
     
     versionCommand = executeble + " --version"

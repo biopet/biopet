@@ -1,11 +1,12 @@
 package nl.lumc.sasc.biopet.function.fastq
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Fastqc(val globalConfig: Config) extends BiopetCommandLineFunction {
+class Fastqc(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
   @Input(doc="Contaminants", required=false)
   var contaminants: File = _
   
@@ -15,12 +16,12 @@ class Fastqc(val globalConfig: Config) extends BiopetCommandLineFunction {
   @Output(doc="Output", shortName="out")
   var output: File = _
   
-  executeble = config.getAsString("exe","fastqc")
-  var java_exe: String = config.getAsConfig("java").getAsString("exe", "java")
-  var kmers: Int = config.getAsInt("kmers", 5)
-  var quiet: Boolean = config.getAsBoolean("quiet", false)
-  var noextract: Boolean = config.getAsBoolean("noextract", false)
-  var nogroup: Boolean = config.getAsBoolean("nogroup", false)
+  executeble = config("exe","fastqc")
+  var java_exe: String = config("exe", "java", "java")
+  var kmers: Int = config("kmers", 5)
+  var quiet: Boolean = config("quiet", false)
+  var noextract: Boolean = config("noextract", false)
+  var nogroup: Boolean = config("nogroup", false)
     
   override val versionRegex = """FastQC (.*)""".r
   override val defaultThreads = 4

@@ -1,12 +1,13 @@
 package nl.lumc.sasc.biopet.function.fastq
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Cutadapt(val globalConfig: Config) extends BiopetCommandLineFunction {
+class Cutadapt(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
   @Input(doc="Input fastq file")
   var fastq_input: File = _
   
@@ -16,16 +17,16 @@ class Cutadapt(val globalConfig: Config) extends BiopetCommandLineFunction {
   @Output(doc="Output fastq file")
   var fastq_output: File = _
   
-  executeble = config.getAsString("exe","cutadapt")
+  executeble = config("exe","cutadapt")
   
-  var default_clip_mode = config.getAsString("default_clip_mode", "3")
-  var opt_adapter: Set[String] = config.getAsListOfStrings("adapter", Nil).to[Set]
-  var opt_anywhere: Set[String] = config.getAsListOfStrings("anywhere", Nil).to[Set]
-  var opt_front: Set[String] = config.getAsListOfStrings("front", Nil).to[Set]
+  var default_clip_mode:String = config("default_clip_mode", "3")
+  var opt_adapter: Set[String] = config("adapter", Nil)
+  var opt_anywhere: Set[String] = config("anywhere", Nil)
+  var opt_front: Set[String] = config("front", Nil)
   
-  var opt_discard: Boolean = config.getAsBoolean("discard",false)
-  var opt_minimum_length: String = config.getAsInt("minimum_length", 1).toString
-  var opt_maximum_length: String = config.getAsString("maximum_length", null) 
+  var opt_discard: Boolean = config("discard",false)
+  var opt_minimum_length: String = config("minimum_length", 1)
+  var opt_maximum_length: String = config("maximum_length", null)
   
   override val versionRegex = """(.*)""".r
   
