@@ -28,21 +28,6 @@ trait Configurable extends Logging {
   implicit def configValue2stringList(value:ConfigValue) = Configurable.any2stringList(value.value)
   implicit def configValue2stringSet(value:ConfigValue) = Configurable.any2stringList(value.value).toSet
   implicit def configValue2map(value:ConfigValue) = Configurable.any2map(value.value)
-  
-  
-  def getThreads(default:Int) : Int = {
-    val maxThreads: Int = config("maxthreads", 8)
-    val threads: Int = config("threads", default)
-    if (maxThreads > threads) return threads
-    else return maxThreads
-  }
-  
-  def getThreads(default:Int, module:String) : Int = {
-    val maxThreads: Int = config("maxthreads", 8, module)
-    val threads: Int = config("threads", default, module)
-    if (maxThreads > threads) return threads
-    else return maxThreads
-  }
 }
 
 object Configurable extends Logging {
