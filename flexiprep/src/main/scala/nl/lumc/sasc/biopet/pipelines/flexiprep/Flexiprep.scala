@@ -60,8 +60,8 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
   def biopetScript() {
     runInitialFastqc()
     
-    outputFiles += ("fastq_input_R1" -> zcatIfNeeded(input_R1,outputDir))
-    if (paired) outputFiles += ("fastq_input_R2" -> zcatIfNeeded(input_R2,outputDir))
+    outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1,outputDir))
+    if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2,outputDir))
     
     addSeqstat(outputFiles("fastq_input_R1"), "seqstat_R1")
     if (paired) addSeqstat(outputFiles("fastq_input_R2"), "seqstat_R2")
@@ -237,17 +237,20 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
     return fastqcCommand
   }
   
-  def zcatIfNeeded(file:File, runDir:String) : File = {
+  def extractIfNeeded(file:File, runDir:String) : File = {
     if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
-      var newFile: File = swapExt(file,".gz","")
-      if (file.getName().endsWith(".gzip")) newFile = swapExt(file,".gzip","")
-      val zcatCommand = new Zcat(this)
-      zcatCommand.input = file
-      zcatCommand.output = new File(runDir + newFile)
-      //zcatCommand.jobOutputFile = outputDir + "." + file.getName + ".out"
+      var newFile: File = swapExt(runDir, file,".gz","")
+      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file,".gzip","")
+      val zcatCommand = Zcat(this, file, newFile)
       if (!this.skipClip || !this.skipTrim) zcatCommand.isIntermediate = true
       add(zcatCommand)
-      return zcatCommand.output
+      return newFile
+    } else if (file.getName().endsWith(".bz2")) {
+      var newFile = swapExt(runDir, file,".bz2","")
+      val pbzip2 = Pbzip2(this,file, newFile)
+      if (!this.skipClip || !this.skipTrim) pbzip2.isIntermediate = true
+      add(pbzip2)
+      return newFile
     } else return file
   }
   
