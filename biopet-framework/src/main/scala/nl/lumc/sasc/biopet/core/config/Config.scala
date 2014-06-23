@@ -6,9 +6,9 @@ import java.io.File
 import org.broadinstitute.sting.queue.util.Logging
 
 class Config(var map: Map[String,Any]) extends Logging {
+  logger.debug("Init phase of config")
   def this() = {
     this(Map())
-    logger.info("Init phase of config")
     loadDefaultConfig()
   }
   
