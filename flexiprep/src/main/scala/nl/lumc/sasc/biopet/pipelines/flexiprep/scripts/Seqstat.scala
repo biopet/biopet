@@ -6,7 +6,7 @@ import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class Seqstat(val globalConfig: Config, val configPath: List[String]) extends PythonCommandLineFunction {
+class Seqstat(val root:Configurable) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("seq_stat.py")
   

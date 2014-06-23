@@ -15,36 +15,65 @@ import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
 
-class Mapping(val globalConfig: Config, val configPath: List[String]) extends QScript with BiopetQScript {
+class Mapping(val root:Configurable) extends QScript with BiopetQScript {
   qscript =>
-  @Argument(doc="Config Json file",shortName="config", required=false) var configfiles: List[File] = Nil
-  @Input(doc="R1 fastq file", shortName="R1",required=true) var input_R1: File = _
-  @Input(doc="R2 fastq file", shortName="R2", required=false) var input_R2: File = _
-  @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
-  @Argument(doc="Output name", shortName="outputName", required=false) var outputName: String = _
-  @Argument(doc="Skip flexiprep", shortName="skipflexiprep", required=false) var skipFlexiprep: Boolean = false
-  @Argument(doc="Skip mark duplicates", shortName="skipmarkduplicates", required=false) var skipMarkduplicates: Boolean = false
-  @Argument(doc="Alginer", shortName="ALN", required=false) var aligner: String = _
-  @Argument(doc="Reference", shortName="R", required=false) var referenceFile: File = _
+  def this() = this(null)
+  
+  @Input(doc="R1 fastq file", shortName="R1",required=true)
+  var input_R1: File = _
+  
+  @Input(doc="R2 fastq file", shortName="R2", required=false)
+  var input_R2: File = _
+  
+  @Argument(doc="Output name", shortName="outputName", required=false)
+  var outputName: String = _
+  
+  @Argument(doc="Skip flexiprep", shortName="skipflexiprep", required=false)
+  var skipFlexiprep: Boolean = false
+  
+  @Argument(doc="Skip mark duplicates", shortName="skipmarkduplicates", required=false)
+  var skipMarkduplicates: Boolean = false
+  
+  @Argument(doc="Alginer", shortName="ALN", required=false)
+  var aligner: String = _
+  
+  @Argument(doc="Reference", shortName="R", required=false)
+  var referenceFile: File = _
   
   // Readgroup items
-  @Argument(doc="Readgroup ID", shortName="RGID", required=false) var RGID: String = _
-  @Argument(doc="Readgroup Library", shortName="RGLB", required=false) var RGLB: String = _
-  @Argument(doc="Readgroup Platform", shortName="RGPL", required=false) var RGPL: String = _
-  @Argument(doc="Readgroup platform unit", shortName="RGPU", required=false) var RGPU: String = _
-  @Argument(doc="Readgroup sample", shortName="RGSM", required=false) var RGSM: String = _
-  @Argument(doc="Readgroup sequencing center", shortName="RGCN", required=false) var RGCN: String = _
-  @Argument(doc="Readgroup description", shortName="RGDS", required=false) var RGDS: String = _
-  @Argument(doc="Readgroup sequencing date", shortName="RGDT", required=false) var RGDT: Date = _
-  @Argument(doc="Readgroup predicted insert size", shortName="RGPI", required=false) var RGPI: Int = _
+  @Argument(doc="Readgroup ID", shortName="RGID", required=false)
+  var RGID: String = _
   
-  def this() = this(new Config(), Nil)
+  @Argument(doc="Readgroup Library", shortName="RGLB", required=false)
+  var RGLB: String = _
+  
+  @Argument(doc="Readgroup Platform", shortName="RGPL", required=false)
+  var RGPL: String = _
+  
+  @Argument(doc="Readgroup platform unit", shortName="RGPU", required=false)
+  var RGPU: String = _
+  
+  @Argument(doc="Readgroup sample", shortName="RGSM", required=false)
+  var RGSM: String = _
+  
+  @Argument(doc="Readgroup sequencing center", shortName="RGCN", required=false)
+  var RGCN: String = _
+  
+  @Argument(doc="Readgroup description", shortName="RGDS", required=false)
+  var RGDS: String = _
+  
+  @Argument(doc="Readgroup sequencing date", shortName="RGDT", required=false)
+  var RGDT: Date = _
+  
+  @Argument(doc="Readgroup predicted insert size", shortName="RGPI", required=false)
+  var RGPI: Int = _
+  
+  
   
   var paired: Boolean = false
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    //config = Config.mergeConfigs(globalConfig("mapping"), globalConfig)
     var inputtype:String = config("inputtype", "dna")
     if (aligner == null) {
       if (inputtype == "rna") aligner = config("aligner", "star-2pass")
@@ -72,12 +101,11 @@ class Mapping(val globalConfig: Config, val configPath: List[String]) extends QS
     if (outputName == null) outputName = RGID
   }
   
-  def script() {
-    this.init()
+  def biopetScript() {
     var fastq_R1: String = input_R1
     var fastq_R2: String = if (paired) input_R2 else ""
     if (!skipFlexiprep) {
-      val flexiprep = new Flexiprep(globalConfig, configFullPath)
+      val flexiprep = new Flexiprep(this)
       flexiprep.input_R1 = fastq_R1
       if (paired) flexiprep.input_R2 = fastq_R2
       flexiprep.outputDir = outputDir + "flexiprep/"
@@ -88,7 +116,7 @@ class Mapping(val globalConfig: Config, val configPath: List[String]) extends QS
     }
     var bamFile:File = null
     if (aligner == "bwa") {
-      val bwaCommand = new Bwa(globalConfig, configFullPath)
+      val bwaCommand = new Bwa(this)
       bwaCommand.R1 = fastq_R1
       if (paired) bwaCommand.R2 = fastq_R2
       bwaCommand.RG = getReadGroup
@@ -96,27 +124,13 @@ class Mapping(val globalConfig: Config, val configPath: List[String]) extends QS
       add(bwaCommand)
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
-      val starCommand = Star(globalConfig, configPath, fastq_R1, if (paired) fastq_R2 else null, outputDir)
+      val starCommand = Star(this, fastq_R1, if (paired) fastq_R2 else null, outputDir)
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else if (aligner == "star-2pass") {
-      val starCommand_pass1 = Star(globalConfig, configPath, fastq_R1, if (paired) fastq_R2 else null, outputDir + "star-2pass/aln-pass1/")
-      starCommand_pass1.afterGraph
-      add(starCommand_pass1)
-      
-      val starCommand_reindex = new Star(globalConfig, configFullPath)
-      starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
-      starCommand_reindex.outputDir = qscript.outputDir + "star-2pass/re-index/" 
-      starCommand_reindex.runmode = "genomeGenerate"
-      starCommand_reindex.sjdbOverhang = 75
-      starCommand_reindex.afterGraph
-      add(starCommand_reindex)
-      
-      val starCommand_pass2 = Star(globalConfig, configPath, fastq_R1, if (paired) fastq_R2 else null, outputDir + "star-2pass/aln-pass2/")
-      starCommand_pass2.genomeDir = starCommand_reindex.outputDir
-      starCommand_pass2.afterGraph
-      add(starCommand_pass2)
-      bamFile = addAddOrReplaceReadGroups(List(starCommand_pass2.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
+      val star2pass = Star._2pass(this, fastq_R1, if (paired) fastq_R2 else null, outputDir)
+      addAll(star2pass._2)
+      bamFile = addAddOrReplaceReadGroups(List(star2pass._1), new File(outputDir + outputName + ".bam"), outputDir)
     } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
     
     if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
@@ -138,20 +152,20 @@ class Mapping(val globalConfig: Config, val configPath: List[String]) extends QS
   
   def addAddOrReplaceReadGroups(inputSam:List[File], outputFile:File, dir:String) : File = {
     val addOrReplaceReadGroups = new AddOrReplaceReadGroups
-      addOrReplaceReadGroups.input = inputSam
-      addOrReplaceReadGroups.output = outputFile
-      addOrReplaceReadGroups.createIndex = true
-      addOrReplaceReadGroups.memoryLimit = 2
-      addOrReplaceReadGroups.nCoresRequest = 2
-      addOrReplaceReadGroups.jobResourceRequests :+= "h_vmem=4G"
-      
-      addOrReplaceReadGroups.RGID = qscript.RGID
-      addOrReplaceReadGroups.RGLB = qscript.RGLB
-      addOrReplaceReadGroups.RGPL = qscript.RGPL
-      addOrReplaceReadGroups.RGPU = qscript.RGPU
-      addOrReplaceReadGroups.RGSM = qscript.RGSM
-      if (RGCN != null) this.RGCN = qscript.RGCN
-      if (RGDS != null) this.RGDS = qscript.RGDS
+    addOrReplaceReadGroups.input = inputSam
+    addOrReplaceReadGroups.output = outputFile
+    addOrReplaceReadGroups.createIndex = true
+    addOrReplaceReadGroups.memoryLimit = 2
+    addOrReplaceReadGroups.nCoresRequest = 2
+    addOrReplaceReadGroups.jobResourceRequests :+= "h_vmem=4G"
+
+    addOrReplaceReadGroups.RGID = RGID
+    addOrReplaceReadGroups.RGLB = RGLB
+    addOrReplaceReadGroups.RGPL = RGPL
+    addOrReplaceReadGroups.RGPU = RGPU
+    addOrReplaceReadGroups.RGSM = RGSM
+    if (RGCN != null) addOrReplaceReadGroups.RGCN = RGCN
+    if (RGDS != null) addOrReplaceReadGroups.RGDS = RGDS
     add(addOrReplaceReadGroups)
     
     return addOrReplaceReadGroups.output

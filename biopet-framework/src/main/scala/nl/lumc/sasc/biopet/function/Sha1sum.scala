@@ -5,7 +5,7 @@ import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class Sha1sum(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Sha1sum(val root:Configurable) extends BiopetCommandLineFunction {
   @Input(doc="Zipped file")
   var input: File = _
   

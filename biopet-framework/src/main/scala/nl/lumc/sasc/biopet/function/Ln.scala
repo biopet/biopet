@@ -7,7 +7,7 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Ln(val globalConfig: Config, val configPath: List[String]) extends InProcessFunction with Configurable {
+class Ln(val root:Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
   
   @Input(doc="Input file")
