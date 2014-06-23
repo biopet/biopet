@@ -17,3 +17,12 @@ class Zcat(val root:Configurable) extends BiopetCommandLineFunction {
   
   def cmdLine = required(executeble) + required(input) + " > " + required(output)
 }
+
+object Zcat {
+  def apply(root:Configurable, input:File, output:File): Zcat = {
+    val zcat = new Zcat(root)
+    zcat.input = input
+    zcat.output = output
+    return zcat
+  }
+}
