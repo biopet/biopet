@@ -135,7 +135,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       if (dbsnp != null) this.knownSites :+= dbsnp
       if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", "baserecalibrator")
-      this.nct = getThreads(2, "baserecalibrator")
+      this.nct = 2
     }
     add(baseRecalibrator)
 
@@ -170,7 +170,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.input_file = bamfiles
       this.out = outputfile
       if (dbsnp != null) this.dbsnp = qscript.dbsnp
-      this.nct = getThreads(3, "haplotypecaller")
+      this.nct = 3
       this.memoryLimit = this.nct * 2
       
       // GVCF options
@@ -237,7 +237,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
         if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
       }
       if (configContains("dbsnp", "variantrecalibrator")) this.resource :+= new TaggedFile(config("dbsnp", "variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
-      this.nt = getThreads(4, "variantrecalibrator")
+      this.nt = 4
       this.memoryLimit = nt * 2
       this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
       if (configContains("minnumbadvariants", "variantrecalibrator")) this.minNumBadVariants = config("minnumbadvariants", "variantrecalibrator")
@@ -255,7 +255,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
         this.ts_filter_level = config("ts_filter_level", 99.5, "applyrecalibration")
       }
-      this.nt = getThreads(3, "applyrecalibration")
+      this.nt = 3
       this.memoryLimit = nt * 2
       if (configContains("scattercount", "applyrecalibration")) this.scatterCount = config("scattercount", "applyrecalibration")
     }
