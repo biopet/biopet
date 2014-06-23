@@ -21,6 +21,10 @@ class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {
   override val defaultVmem = (memory * 2 / 1000) + "G"
   override val defaultThreads = 2
   
+  override def beforeCmd {
+    memory = memory * threads
+  }
+  
   def cmdLine = required(executeble) +
       conditional(decomrpess, "-d") +
       conditional(!decomrpess, "-z") +
