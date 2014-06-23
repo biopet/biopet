@@ -6,7 +6,7 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Star(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Star(val root:Configurable) extends BiopetCommandLineFunction {
   @Input(doc="The reference file for the bam files.", required=false)
   var referenceFile: File = new File(config("referenceFile"))
   
@@ -59,6 +59,7 @@ class Star(val globalConfig: Config, val configPath: List[String]) extends Biope
       outputGenome = new File(prefix + "Genome")
       outputSA = new File(prefix + "SA")
       outputSAindex = new File(prefix + "SAindex")
+      sjdbOverhang = config("sjdboverhang", 75)
     }
   }
   
@@ -81,11 +82,30 @@ class Star(val globalConfig: Config, val configPath: List[String]) extends Biope
 }
 
 object Star {
-  def apply(globalConfig: Config, configPath: List[String], R1:File, R2:File, outputDir:String): Star = {
-    val star = new Star(globalConfig, configPath)
+  def apply(configurable:Configurable, R1:File, R2:File, outputDir:String): Star = {
+    val star = new Star(configurable)
     star.R1 = R1
     if (R2 != null) star.R2 = R2
     star.outputDir = outputDir
+    star.afterGraph
     return star
+  }
+  
+  def _2pass(configurable:Configurable, R1:File, R2:File, outputDir:String) : (File, List[Star]) = {
+    val outDir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
+    val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, outDir + "aln-pass1/")
+    starCommand_pass1.afterGraph
+    
+    val starCommand_reindex = new Star(configurable)
+    starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
+    starCommand_reindex.outputDir = outDir + "re-index/" 
+    starCommand_reindex.runmode = "genomeGenerate"
+    starCommand_reindex.afterGraph
+    
+    val starCommand_pass2 = Star(configurable, R1, if (R2 != null) R2 else null, outDir + "aln-pass2/")
+    starCommand_pass2.genomeDir = starCommand_reindex.outputDir
+    starCommand_pass2.afterGraph
+    
+    return (starCommand_pass2.outputSam, List(starCommand_pass1, starCommand_reindex, starCommand_pass2))
   }
 }

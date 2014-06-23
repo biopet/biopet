@@ -7,7 +7,7 @@ import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Sickle(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Sickle(val root:Configurable) extends BiopetCommandLineFunction {
   @Input(doc="R1 input")
   var input_R1: File = null
   

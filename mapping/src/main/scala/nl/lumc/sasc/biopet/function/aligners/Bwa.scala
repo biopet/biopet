@@ -6,7 +6,7 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Bwa(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Bwa(val root:Configurable) extends BiopetCommandLineFunction {
   @Input(doc="Fastq file R1", shortName="R1")
   var R1: File = _
   

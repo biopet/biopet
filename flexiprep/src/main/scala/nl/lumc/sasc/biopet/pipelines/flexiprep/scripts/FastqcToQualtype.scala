@@ -6,7 +6,7 @@ import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
 import org.broadinstitute.sting.commandline._
 import java.io.File
 
-class FastqcToQualtype(val globalConfig: Config, val configPath: List[String]) extends PythonCommandLineFunction {
+class FastqcToQualtype(val root:Configurable) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("qual_type_sickle.py")
   

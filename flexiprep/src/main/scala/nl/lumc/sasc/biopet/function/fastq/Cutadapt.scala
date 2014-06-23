@@ -7,7 +7,7 @@ import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
-class Cutadapt(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Cutadapt(val root:Configurable) extends BiopetCommandLineFunction {
   @Input(doc="Input fastq file")
   var fastq_input: File = _
   

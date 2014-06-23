@@ -13,14 +13,13 @@ import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
 
-class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScript with BiopetQScript {
+class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   qscript =>
-  def this() = this(new Config(), Nil)
+  def this() = this(null)
   
-  @Argument(doc="Config Json file",shortName="config") var configfiles: List[File] = Nil
-  @Argument(doc="Only Sample",shortName="sample", required=false) var onlySample: String = ""
-  @Argument(doc="Output directory", shortName="outputDir", required=true) var outputDir: String = _
-  
+  @Argument(doc="Only Sample",shortName="sample", required=false)
+  val onlySample: String = ""
+    
   var referenceFile: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
@@ -28,7 +27,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    //config = Config.mergeConfigs(globalConfig.getAsConfig("gatk"), globalConfig)
     referenceFile = config("referenceFile")
     if (configContains("dbsnp")) dbsnp = config("dbsnp")
     gvcfFiles = config("gvcfFiles", Nil) :: Nil
@@ -36,8 +34,7 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
   
-  def script() {
-    init()
+  def biopetScript() {
     if (onlySample.isEmpty) {
       runSamplesJobs
       
@@ -54,7 +51,7 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   }
   
   // Called for each sample
-  override def runSingleSampleJobs(sampleConfig:Map[String,Any]) : Map[String,List[File]] = {
+  def runSingleSampleJobs(sampleConfig:Map[String,Any]) : Map[String,List[File]] = {
     var outputFiles:Map[String,List[File]] = Map()
     var runBamfiles: List[File] = List()
     var sampleID: String = sampleConfig("ID").toString
@@ -73,7 +70,7 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   }
   
   // Called for each run from a sample
-  override def runSingleRunJobs(runConfig:Map[String,Any], sampleConfig:Map[String,Any]) : Map[String,File] = {
+  def runSingleRunJobs(runConfig:Map[String,Any], sampleConfig:Map[String,Any]) : Map[String,File] = {
     var outputFiles:Map[String,File] = Map()
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
@@ -82,7 +79,7 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = config("inputtype", "dna").toString
     if (runConfig.contains("R1")) {
-      val mapping = new Mapping(globalConfig, configFullPath)
+      val mapping = new Mapping(this)
       mapping.loadRunConfig(runConfig, sampleConfig, runDir)
       mapping.script
       addAll(mapping.functions) // Add functions of mapping to curent function pool
@@ -114,7 +111,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addIndelRealign(inputBam:File, dir:String): File = {
     val realignerTargetCreator = new RealignerTargetCreator with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("realignertargetcreator"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".realign.intervals")
       this.jobResourceRequests :+= "h_vmem=5G"
@@ -123,7 +119,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
     add(realignerTargetCreator)
 
     val indelRealigner = new IndelRealigner with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("indelrealigner"), qscript.config)
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
       this.o = swapExt(dir,inputBam,".bam",".realign.bam")
@@ -136,7 +131,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addBaseRecalibrator(inputBam:File, dir:String): File = {
     val baseRecalibrator = new BaseRecalibrator with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("baserecalibrator"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       if (dbsnp != null) this.knownSites :+= dbsnp
@@ -146,7 +140,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
     add(baseRecalibrator)
 
     val printReads = new PrintReads with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("printreads"), qscript.config)
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
       this.BQSR = baseRecalibrator.o
@@ -159,7 +152,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addSplitNCigarReads(inputBam:File, dir:String) : File = {
     val splitNCigarReads = new SplitNCigarReads with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("splitncigarreads"), qscript.config)
       if (configContains("scattercount", "splitncigarreads")) this.scatterCount = config("scattercount", "splitncigarreads")
       this.input_file = Seq(inputBam)
       this.out = swapExt(dir,inputBam,".bam",".split.bam")
@@ -174,7 +166,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addHaplotypeCaller(bamfiles:List[File], outputfile:File): File = {
     val haplotypeCaller = new HaplotypeCaller with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("haplotypecaller"), qscript.config)
       if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", "haplotypecaller")
       this.input_file = bamfiles
       this.out = outputfile
@@ -236,19 +227,15 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def getVariantRecalibrator(mode_arg:String) : VariantRecalibrator = {
     val variantRecalibrator = new VariantRecalibrator() with gatkArguments {
-      //var config = Config.mergeConfigs(qscript.config.getAsConfig("variantrecalibrator"), qscript.config)
       if (mode_arg == "indel") {
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        //this.config = Config.mergeConfigs(this.config.getAsConfig("indel"),this.config)
         if (configContains("mills", "variantrecalibrator")) this.resource :+= new TaggedFile(config("mills", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
       } else { // SNP
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        //this.config = Config.mergeConfigs(this.config.getAsConfig("snp"),this.config)
         if (configContains("hapmap", "variantrecalibrator")) this.resource +:= new TaggedFile(config("hapmap", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
         if (configContains("omni", "variantrecalibrator")) this.resource +:= new TaggedFile(config("omni", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
         if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
       }
-      //logger.debug("VariantRecalibrator-" + mode_arg + ": " + this.config)
       if (configContains("dbsnp", "variantrecalibrator")) this.resource :+= new TaggedFile(config("dbsnp", "variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
       this.nt = getThreads(4, "variantrecalibrator")
       this.memoryLimit = nt * 2
@@ -261,14 +248,11 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def getApplyRecalibration(mode_arg:String) : ApplyRecalibration = {
     val applyRecalibration = new ApplyRecalibration() with gatkArguments {
-      //var config = Config.mergeConfigs(qscript.config.getAsConfig("applyrecalibration"), qscript.config)
       if (mode_arg == "indel") {
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        //this.config = Config.mergeConfigs(this.config.getAsConfig("indel"),this.config)
         this.ts_filter_level = config("ts_filter_level", 99.0, "applyrecalibration")
       } else { // SNP
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        //this.config = Config.mergeConfigs(this.config.getAsConfig("snp"),this.config)
         this.ts_filter_level = config("ts_filter_level", 99.5, "applyrecalibration")
       }
       this.nt = getThreads(3, "applyrecalibration")
@@ -280,7 +264,6 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addGenotypeGVCFs(gvcfFiles: List[File], dir:String): File = {
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("genotypegvcfs"), qscript.config)
       this.variant = gvcfFiles
       this.annotation ++= Seq("FisherStrand", "QualByDepth", "ChromosomeCounts")
       if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", "genotypegvcfs")
@@ -292,13 +275,10 @@ class Gatk(val globalConfig: Config, val configPath: List[String]) extends QScri
   
   def addVariantAnnotator(inputvcf:File, bamfiles:List[File], dir:String): File = {
     val variantAnnotator = new VariantAnnotator with gatkArguments {
-      //val config: Config = Config.mergeConfigs(qscript.config.getAsConfig("variantannotator"), qscript.config)
       this.variant = inputvcf
       this.input_file = bamfiles
       this.dbsnp = config("dbsnp", "variantannotator")
       this.out = swapExt(dir, inputvcf,".vcf",".anotated.vcf")
-      //this.all = true
-      //this.excludeAnnotation +:= "SnpEff"
       if (configContains("scattercount", "variantannotator")) this.scatterCount = config("scattercount", "variantannotator")
     }
     add(variantAnnotator)

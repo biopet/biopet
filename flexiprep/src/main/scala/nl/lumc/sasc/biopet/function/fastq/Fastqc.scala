@@ -6,7 +6,8 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 import scala.sys.process._
 
-class Fastqc(val globalConfig: Config, val configPath: List[String]) extends BiopetCommandLineFunction {
+class Fastqc(val root:Configurable) extends BiopetCommandLineFunction {
+  
   @Input(doc="Contaminants", required=false)
   var contaminants: File = _
   
