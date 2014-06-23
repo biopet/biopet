@@ -9,11 +9,7 @@ import scala.util.matching.Regex
 import nl.lumc.sasc.biopet.core.config._
 
 abstract class BiopetCommandLineFunction extends CommandLineFunction with Configurable {
-//  val globalConfig: Config
   analysisName = getClass.getSimpleName
-//  protected var config: Config = Config.mergeConfigs(globalConfig.getAsConfig(analysisName.toLowerCase), globalConfig)
-//  logger.debug("config passed for " + analysisName)
-//  logger.debug("config for " + analysisName + ": " + config)
   
   @Input(doc="deps", required=false)
   var deps: List[File] = Nil
@@ -35,11 +31,6 @@ abstract class BiopetCommandLineFunction extends CommandLineFunction with Config
   protected def afterGraph {
   }
   
-//  def setConfig(name:String) {
-//    analysisName = name
-//    config = Config.mergeConfigs(config.getAsConfig(analysisName.toLowerCase), config)
-//  }
-    
   override def freezeFieldValues() {
     checkExecuteble
     afterGraph
@@ -114,5 +105,19 @@ abstract class BiopetCommandLineFunction extends CommandLineFunction with Config
     }
     logger.warn("Version command: '" + versionCommand + "' give a exit code 0 but no version was found, executeble oke?")
     return "N/A"
+  }
+  
+  def getThreads(default:Int) : Int = {
+    val maxThreads: Int = config("maxthreads", 8)
+    val threads: Int = config("threads", default)
+    if (maxThreads > threads) return threads
+    else return maxThreads
+  }
+  
+  def getThreads(default:Int, module:String) : Int = {
+    val maxThreads: Int = config("maxthreads", 8, module)
+    val threads: Int = config("threads", default, module)
+    if (maxThreads > threads) return threads
+    else return maxThreads
   }
 }
