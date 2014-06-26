@@ -1,9 +1,10 @@
 package nl.lumc.sasc.biopet.core
 
-//import org.broadinstitute.sting.queue.QScript
 import java.io.File
+import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
+import org.broadinstitute.sting.queue.QSettings
 import org.broadinstitute.sting.queue.function.QFunction
 
 trait BiopetQScript extends Configurable {
@@ -15,13 +16,20 @@ trait BiopetQScript extends Configurable {
   
   var outputFiles:Map[String,File] = Map()
   
+  var qSettings: QSettings
+  
   def init
   def biopetScript
   
   final def script() {
     init
     biopetScript
-    // TODO: Config report
+    val configReport = globalConfig.getReport
+    val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
+    val writer = new PrintWriter(configReportFile)
+    writer.write(configReport)
+    writer.close()
+    for (line <- configReport.split("\n")) logger.debug(line)
   }
   
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
