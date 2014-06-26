@@ -29,7 +29,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     referenceFile = config("referenceFile")
     if (configContains("dbsnp")) dbsnp = config("dbsnp")
-    gvcfFiles = config("gvcfFiles", Nil) :: Nil
+    for (file <- config("gvcfFiles", Nil).getList) gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -62,7 +62,8 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     
     if (runBamfiles.size > 0) {
       finalBamFiles ++= runBamfiles
-      var gvcfFile = addHaplotypeCaller(runBamfiles, new File(outputDir + sampleID + "/" + sampleID + ".gvcf.vcf"))
+      val gvcfFile = new File(outputDir + sampleID + "/" + sampleID + ".gvcf.vcf")
+      addHaplotypeCaller(runBamfiles, gvcfFile)
       outputFiles += ("gvcf" -> List(gvcfFile))
       gvcfFiles :+= gvcfFile
     } else logger.warn("No bamfiles for variant calling for sample: " + sampleID)
@@ -114,7 +115,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".realign.intervals")
       this.jobResourceRequests :+= "h_vmem=5G"
-      if (configContains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", "realignertargetcreator")
+      if (configContains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", 1, "realignertargetcreator")
     }
     add(realignerTargetCreator)
 
@@ -122,7 +123,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
       this.o = swapExt(dir,inputBam,".bam",".realign.bam")
-      if (configContains("scattercount", "indelrealigner")) this.scatterCount = config("scattercount", "indelrealigner")
+      if (configContains("scattercount", "indelrealigner")) this.scatterCount = config("scattercount", 1, "indelrealigner")
     }
     add(indelRealigner)
     
@@ -134,7 +135,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       if (dbsnp != null) this.knownSites :+= dbsnp
-      if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", "baserecalibrator")
+      if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
       this.nct = 2
     }
     add(baseRecalibrator)
@@ -143,7 +144,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
       this.BQSR = baseRecalibrator.o
-      if (configContains("scattercount", "printreads")) this.scatterCount = config("scattercount", "printreads")
+      if (configContains("scattercount", "printreads")) this.scatterCount = config("scattercount", 1, "printreads")
     }
     add(printReads)
     
@@ -152,7 +153,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   
   def addSplitNCigarReads(inputBam:File, dir:String) : File = {
     val splitNCigarReads = new SplitNCigarReads with gatkArguments {
-      if (configContains("scattercount", "splitncigarreads")) this.scatterCount = config("scattercount", "splitncigarreads")
+      if (configContains("scattercount", "splitncigarreads")) this.scatterCount = config("scattercount", 1, "splitncigarreads")
       this.input_file = Seq(inputBam)
       this.out = swapExt(dir,inputBam,".bam",".split.bam")
       this.read_filter :+= "ReassignMappingQuality"
@@ -166,7 +167,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   
   def addHaplotypeCaller(bamfiles:List[File], outputfile:File): File = {
     val haplotypeCaller = new HaplotypeCaller with gatkArguments {
-      if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", "haplotypecaller")
+      if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
       this.input_file = bamfiles
       this.out = outputfile
       if (dbsnp != null) this.dbsnp = qscript.dbsnp
@@ -180,10 +181,15 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       
       val inputType:String = config("inputtype", "dna")
       if (inputType == "rna") {
-        this.dontUseSoftClippedBases = true
-        this.recoverDanglingHeads = true
-        this.stand_call_conf = 20
-        this.stand_emit_conf = 20
+        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", true, "haplotypecaller")
+        this.recoverDanglingHeads = config("recoverdanglingheads", true, "haplotypecaller")
+        this.stand_call_conf = config("stand_call_conf", 20, "haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", 20, "haplotypecaller")
+      } else {
+        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", false, "haplotypecaller")
+        this.recoverDanglingHeads = config("recoverdanglingheads", false, "haplotypecaller")
+        this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", 10, "haplotypecaller")
       }
     }
     add(haplotypeCaller)
@@ -229,19 +235,19 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     val variantRecalibrator = new VariantRecalibrator() with gatkArguments {
       if (mode_arg == "indel") {
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        if (configContains("mills", "variantrecalibrator")) this.resource :+= new TaggedFile(config("mills", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
+        if (configContains("mills", "variantrecalibrator")) this.resource :+= new TaggedFile(config("mills", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
       } else { // SNP
         this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        if (configContains("hapmap", "variantrecalibrator")) this.resource +:= new TaggedFile(config("hapmap", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
-        if (configContains("omni", "variantrecalibrator")) this.resource +:= new TaggedFile(config("omni", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
-        if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
+        if (configContains("hapmap", "variantrecalibrator")) this.resource +:= new TaggedFile(config("hapmap", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
+        if (configContains("omni", "variantrecalibrator")) this.resource +:= new TaggedFile(config("omni", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
+        if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
       }
-      if (configContains("dbsnp", "variantrecalibrator")) this.resource :+= new TaggedFile(config("dbsnp", "variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
+      if (configContains("dbsnp", "variantrecalibrator")) this.resource :+= new TaggedFile(config("dbsnp", "", "variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
       this.nt = 4
       this.memoryLimit = nt * 2
       this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
-      if (configContains("minnumbadvariants", "variantrecalibrator")) this.minNumBadVariants = config("minnumbadvariants", "variantrecalibrator")
-      if (configContains("maxgaussians", "variantrecalibrator")) this.maxGaussians = config("maxgaussians", "variantrecalibrator")
+      if (configContains("minnumbadvariants", "variantrecalibrator")) this.minNumBadVariants = config("minnumbadvariants", "", "variantrecalibrator")
+      if (configContains("maxgaussians", "variantrecalibrator")) this.maxGaussians = config("maxgaussians", "", "variantrecalibrator")
     }
     return variantRecalibrator
   }
@@ -257,7 +263,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       }
       this.nt = 3
       this.memoryLimit = nt * 2
-      if (configContains("scattercount", "applyrecalibration")) this.scatterCount = config("scattercount", "applyrecalibration")
+      if (configContains("scattercount", "applyrecalibration")) this.scatterCount = config("scattercount", 1, "applyrecalibration")
     }
     return applyRecalibration
   }
@@ -266,7 +272,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
       this.variant = gvcfFiles
       this.annotation ++= Seq("FisherStrand", "QualByDepth", "ChromosomeCounts")
-      if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", "genotypegvcfs")
+      if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
       this.out = new File(outputDir,"genotype.vcf")
     }
     add(genotypeGVCFs)
@@ -279,7 +285,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.input_file = bamfiles
       this.dbsnp = config("dbsnp", "variantannotator")
       this.out = swapExt(dir, inputvcf,".vcf",".anotated.vcf")
-      if (configContains("scattercount", "variantannotator")) this.scatterCount = config("scattercount", "variantannotator")
+      if (configContains("scattercount", "variantannotator")) this.scatterCount = config("scattercount", 1, "variantannotator")
     }
     add(variantAnnotator)
     
