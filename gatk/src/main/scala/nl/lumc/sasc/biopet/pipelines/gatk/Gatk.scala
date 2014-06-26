@@ -82,7 +82,8 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     if (runConfig.contains("R1")) {
       val mapping = new Mapping(this)
       mapping.loadRunConfig(runConfig, sampleConfig, runDir)
-      mapping.script
+      mapping.init
+      mapping.biopetScript
       addAll(mapping.functions) // Add functions of mapping to curent function pool
       
       var bamFile:File = mapping.outputFiles("finalBamFile")
