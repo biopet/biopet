@@ -4,6 +4,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 import nl.lumc.sasc.biopet.core.config._
 import org.broadinstitute.sting.commandline._
+import org.broadinstitute.sting.queue.function.QFunction
 
 trait BiopetQScript extends Configurable {
   @Argument(doc="Config Json file",shortName="config", required=false)
@@ -22,4 +23,12 @@ trait BiopetQScript extends Configurable {
     biopetScript
     // TODO: Config report
   }
+  
+  def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
+  def add(function: QFunction, isIntermediate:Boolean = false) {
+    function.isIntermediate = isIntermediate
+    add(function)
+  }
+  
+  
 }
