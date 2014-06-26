@@ -4,6 +4,7 @@ import nl.lumc.sasc.biopet.core._
 import scala.util.parsing.json._
 import java.io.File
 import org.broadinstitute.sting.queue.util.Logging
+import argonaut._, Argonaut._
 
 class Config(var map: Map[String,Any]) extends Logging {
   logger.debug("Init phase of config")
@@ -19,8 +20,7 @@ class Config(var map: Map[String,Any]) extends Logging {
       if (file.exists()) {
         logger.info("Loading config file: " + file)
         loadConfigFile(file)
-      }
-      else logger.warn("BIOPET_CONFIG value found but file does not exist, no global config is loaded")
+      } else logger.warn("BIOPET_CONFIG value found but file does not exist, no global config is loaded")
     } else logger.info("BIOPET_CONFIG value not found, no global config is loaded")
   }
   
@@ -48,6 +48,7 @@ class Config(var map: Map[String,Any]) extends Logging {
   
   var notFoundCache: List[ConfigValueIndex] = List()
   var foundCache: Map[ConfigValueIndex,ConfigValue] = Map()
+  var defaultCache: Map[ConfigValueIndex,ConfigValue] = Map()
   
   def contains(s:String) : Boolean = map.contains(s)
   def contains(requestedIndex:ConfigValueIndex) : Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key)
@@ -98,8 +99,8 @@ class Config(var map: Map[String,Any]) extends Logging {
     val requestedIndex = ConfigValueIndex(module,path,key)
     if (contains(requestedIndex)) return foundCache(requestedIndex)
     else {
-      foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, null, default))
-      return foundCache(requestedIndex)
+      defaultCache += (requestedIndex -> ConfigValue.apply(requestedIndex, null, default, true))
+      return defaultCache(requestedIndex)
     }
   }
   
@@ -121,88 +122,33 @@ class Config(var map: Map[String,Any]) extends Logging {
     return returnMap
   }
   
-  private def check(module:String, path: List[String], key:String) {
-    
+  def getReport: String = {
+    var output:StringBuilder = new StringBuilder
+    output.append("Config report, sorted on module:\n")
+    var modules:Map[String,StringBuilder] = Map()
+    for ((key,value) <- foundCache) {
+      val module = key.module
+      if (!modules.contains(module)) modules += (module -> new StringBuilder)
+      modules(module).append("Found: " + value.toString + "\n")
+    }
+    for ((key,value) <- defaultCache) {
+      val module = key.module
+      if (!modules.contains(module)) modules += (module -> new StringBuilder)
+      modules(module).append("Default used: " + value.toString + "\n")
+    }
+    for (value <- notFoundCache) {
+      val module = value.module
+      if (!modules.contains(module)) modules += (module -> new StringBuilder)
+      if (!defaultCache.contains(value)) modules(module).append("Not Found: " + value.toString + "\n")
+    }
+    for ((key,value) <- modules) {
+      output.append("Config options for module: " + key + "\n")
+      output.append(value.toString)
+      output.append("\n")
+    }
+    return output.toString
   }
-    
-//  def getAsString(key:String) : String = map(key).toString
-//  def getAsString(key:String, default:String) : String = if (contains(key)) getAsString(key) else default
-//  
-//  def getAsInt(key:String) : Int = {
-//    map(key) match {
-//      case i:Double => return i.toInt
-//      case i:Int => return i
-//      case i:String => {
-//        logger.warn("Value '" + key + "' is a string insteadof int in json file, trying auto convert")
-//        return i.toInt
-//      }
-//      case _ => throw new IllegalStateException("Value '" + key + "' is not an int")
-//    }
-//  }
-//  def getAsInt(s:String, default:Int) : Int = if (contains(s)) getAsInt(s) else default
-//  
-//  def getAsDouble(key:String) : Double = {
-//    map(key) match {
-//      case d:Double => return d
-//      case d:Int => return d.toDouble
-//      case d:String => {
-//        logger.warn("Value '" + key + "' is a string insteadof int in json file, trying auto convert")
-//        return d.toDouble
-//      }
-//      case _ => throw new IllegalStateException("Value '" + key + "' is not an int")
-//    }
-//  }
-//  def getAsDouble(key:String, default:Double) : Double = if (contains(key)) getAsDouble(key) else default
-//  
-//  def getAsBoolean(key:String) : Boolean = {
-//    map(key) match {
-//      case b:Boolean => b
-//      case b:String => {
-//        logger.warn("Value '" + key + "' is a string insteadof boolean in json file, trying auto convert")
-//        return b.contains("true")
-//      }
-//      case b:Int => {
-//        logger.warn("Value '" + key + "' is a int insteadof boolean in json file, trying auto convert")
-//        (b > 0)
-//      }
-//      case _ => throw new IllegalStateException("Value '" + key + "' is not an boolean")
-//    }
-//  }
-//  def getAsBoolean(key:String, default:Boolean) : Boolean = if (contains(key)) getAsBoolean(key) else default
-//  
-//  def getAsList(key:String) : List[Any] = {
-//    map(key) match {
-//      case l:List[_] => return l
-//      case s:String => return List(s)
-//      case _ => throw new IllegalStateException("Value '" + key + "' is not an List")
-//    }
-//  }
-//  def getAsList(key:String, default:List[Any]) : List[Any] = if (contains(key)) getAsList(key) else default
-//  def getAsListOfStrings(key:String) : List[String] = {
-//    var l: List[String] = Nil
-//    for (v <- getAsList(key)) l :+= v.toString
-//    return l
-//  }
-//  def getAsListOfStrings(key:String, default:List[String]) : List[String] = if (contains(key)) getAsListOfStrings(key) else default
-//  
-//  def getAsMap(key:String) : Map[String,Any] = Config.valueToMap(map(key))
-//  def getAsMap(key:String, default:Map[String,Any]) : Map[String,Any] = if (contains(key)) getAsMap(key) else default
-//  
-//  def getAsConfig(key:String, default:Map[String,Any]) : Config = if (contains(key)) new Config(getAsMap(key)) else new Config(default)
-//  def getAsConfig(key:String, default:Config) : Config = if (contains(key)) Config.mergeConfigs(getAsConfig(key), default) else default
-//  def getAsConfig(key:String, default:Config, subDefault:String) : Config = {
-//    if (contains(key)) Config.mergeConfigs(getAsConfig(key), default.getAsConfig(subDefault))
-//    else default
-//  }
-//  def getAsConfig(s:String) : Config = if (contains(s)) new Config(getAsMap(s)) else new Config(Map())
-//  
-//  def getThreads(default:Int) : Int = {
-//    val maxThreads = this.getAsInt("maxthreads", 8)
-//    val threads = this.getAsInt("threads", default)
-//    if (maxThreads > threads) return threads
-//    else return maxThreads
-//  }
-  
+      
   override def toString() : String = map.toString
 }
 
