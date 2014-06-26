@@ -121,14 +121,14 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
       if (paired) bwaCommand.R2 = fastq_R2
       bwaCommand.RG = getReadGroup
       bwaCommand.output = new File(outputDir + outputName + ".sam")
-      add(bwaCommand)
+      add(bwaCommand, isIntermediate = true)
       bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
     } else if (aligner == "star") {
-      val starCommand = Star(this, fastq_R1, if (paired) fastq_R2 else null, outputDir)
+      val starCommand = Star(this, fastq_R1, if (paired) fastq_R2 else null, outputDir, isIntermediate = true)
       add(starCommand)
       bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
     } else if (aligner == "star-2pass") {
-      val star2pass = Star._2pass(this, fastq_R1, if (paired) fastq_R2 else null, outputDir)
+      val star2pass = Star._2pass(this, fastq_R1, if (paired) fastq_R2 else null, outputDir, isIntermediate = true)
       addAll(star2pass._2)
       bamFile = addAddOrReplaceReadGroups(List(star2pass._1), new File(outputDir + outputName + ".bam"), outputDir)
     } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
@@ -145,6 +145,7 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     sortSam.memoryLimit = 2
     sortSam.nCoresRequest = 2
     sortSam.jobResourceRequests :+= "h_vmem=4G"
+    if (!skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
     
     return sortSam.output
@@ -166,6 +167,7 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     addOrReplaceReadGroups.RGSM = RGSM
     if (RGCN != null) addOrReplaceReadGroups.RGCN = RGCN
     if (RGDS != null) addOrReplaceReadGroups.RGDS = RGDS
+    if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
     add(addOrReplaceReadGroups)
     
     return addOrReplaceReadGroups.output
@@ -200,13 +202,13 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
   }
   
   def loadRunConfig(runConfig:Map[String,Any], sampleConfig:Map[String,Any], runDir: String) {
-    //config = Config.mergeConfigs(globalConfig.getAsConfig("mapping"), globalConfig)
+    logger.debug("Mapping runconfig: " + runConfig)
     var inputType = ""
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = config("inputtype", "dna")
     if (inputType == "rna") aligner = config("rna_aligner", "star-2pass")
     if (runConfig.contains("R1")) input_R1 = runConfig("R1").toString
-    if (runConfig.contains("R2")) input_R1 = runConfig("R2").toString
+    if (runConfig.contains("R2")) input_R2 = runConfig("R2").toString
     paired = (input_R2 != null)
     RGLB = runConfig("ID").toString
     RGSM = sampleConfig("ID").toString
