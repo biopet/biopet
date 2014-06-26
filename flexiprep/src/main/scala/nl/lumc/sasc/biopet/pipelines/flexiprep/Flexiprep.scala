@@ -231,7 +231,7 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
     if (filename.endsWith(".gzip")) filename = filename.substring(0,filename.size - 5)
     if (filename.endsWith(".fastq")) filename = filename.substring(0,filename.size - 6)
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
-    fastqcCommand.output = outDir + "/" + filename + "_fastqc.ouput"
+    fastqcCommand.output = outDir + "/" + filename + "_fastqc.output"
     fastqcCommand.afterGraph
     add(fastqcCommand)
     return fastqcCommand

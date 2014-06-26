@@ -109,7 +109,8 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
       flexiprep.input_R1 = fastq_R1
       if (paired) flexiprep.input_R2 = fastq_R2
       flexiprep.outputDir = outputDir + "flexiprep/"
-      flexiprep.script
+      flexiprep.init
+      flexiprep.biopetScript
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
       fastq_R1 = flexiprep.outputFiles("output_R1")
       if (paired) fastq_R2 = flexiprep.outputFiles("output_R2")
