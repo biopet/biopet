@@ -53,7 +53,7 @@ class Cutadapt(val root:Configurable) extends BiopetCommandLineFunction {
       required(fastq_input) +
       " > " + required(fastq_output)
     } else {
-      analysisName = getClass.getName + "-ln"
+      analysisName = getClass.getSimpleName + "-ln"
       "ln -sf " + 
       required(fastq_input) +
       required(fastq_output)
