@@ -58,8 +58,15 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
   }
   
   def biopetScript() {
-    runInitialFastqc()
+    runInitialJobs()
     
+    if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
+    else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
+    
+    runFinalize(List(outputFiles("output_R1")), if (outputFiles.contains("output_R2")) List(outputFiles("output_R2")) else List())
+  }
+  
+  def runInitialJobs() {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1,outputDir))
     if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2,outputDir))
     
@@ -69,13 +76,6 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
     addSha1sum(outputFiles("fastq_input_R1"), "sha1_R1")
     if (paired) addSha1sum(outputFiles("fastq_input_R2"), "sha1_R2")
     
-    if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
-    else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
-    
-    runFinalize(List(outputFiles("output_R1")), if (outputFiles.contains("output_R2")) List(outputFiles("output_R2")) else List())
-  }
-  
-  def runInitialFastqc() {
     var fastqc_R1 = runFastqc(input_R1,outputDir + "/" + R1_name + ".fastqc/")
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
     outputFiles += ("qualtype_R1" -> getQualtype(fastqc_R1, R1_name))
@@ -115,12 +115,13 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
   def runTrimClip(R1_in:File, R2_in:File, outDir:String) {
     runTrimClip(R1_in, R2_in, outDir, "")
   }
-  def runTrimClip(R1_in:File, R2_in:File, outDir:String, chunk:String) {
+  def runTrimClip(R1_in:File, R2_in:File, outDir:String, chunkarg:String) : (File,File) = {
+    val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String,File] = Map()
 
     var R1: File = new File(R1_in)
     var R2: File = new File(R2_in)
-    
+        
     if (!skipClip) { // Adapter clipping
       val cutadapt_R1 = new Cutadapt(this)
       if (!skipTrim || paired) cutadapt_R1.isIntermediate = true
@@ -157,12 +158,12 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       sickle.input_R1 = R1
       sickle.output_R1 = swapExt(outDir, R1, R1_ext, ".trim"+R1_ext)
       if (outputFiles.contains("qualtype_R1")) sickle.qualityTypeFile = outputFiles("qualtype_R1")
-      if (!skipClip) sickle.deps :+= outputFiles(chunk + "fastq_input_R1")
+      if (!skipClip) sickle.deps :+= R1_in
       if (paired) {
         sickle.input_R2 = R2
         sickle.output_R2 = swapExt(outDir, R2, R2_ext, ".trim"+R2_ext)
         sickle.output_singles = swapExt(outDir, R2, R2_ext, ".trim.singles"+R1_ext)
-        if (!skipClip) sickle.deps :+= outputFiles(chunk + "fastq_input_R2")
+        if (!skipClip) sickle.deps :+= R2_in
       }
       sickle.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
       add(sickle)
@@ -170,8 +171,9 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       if (paired) R2 = sickle.output_R2
     }
     
-    outputFiles += ("output_R1" -> R1)
-    if (paired) outputFiles += ("output_R2" -> R2)
+    outputFiles += (chunk + "output_R1" -> R1)
+    if (paired) outputFiles += (chunk + "output_R2" -> R2)
+    return (R1, R2)
   }
   
   def runFinalize(fastq_R1:List[File], fastq_R2:List[File]) {
@@ -182,10 +184,17 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       for (file <- fastq_R1) R1 = file
       for (file <- fastq_R2) R2 = file
     } else {
-      throw new IllegalStateException("Not yet inplemented") // For chuncking
+      R1 = new File(outputDir + R1_name + ".qc" + R1_ext)
+      logger.debug(fastq_R1)
+      add(Cat(this, fastq_R1, R1), true)
+      if (paired) {
+        logger.debug(fastq_R2)
+        R2 = new File(outputDir + R2_name + ".qc" + R2_ext)
+        add(Cat(this, fastq_R2, R2), true)
+      }
     }
     
-    if (!config("skip_native_link", false)) {
+    if (fastq_R1.length == 1 && !config("skip_native_link", false)) {
       val lnR1 = new Ln(this)
       lnR1.in = R1
       R1 = new File(outputDir + R1_name + ".qc" + R1_ext)
@@ -199,6 +208,9 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
         add(lnR2)
       }
     }
+    
+    outputFiles += ("output_R1" -> R1)
+    if (paired) outputFiles += ("output_R2" -> R2)
     
     if (!skipTrim || !skipClip) {
       addSeqstat(R1, "seqstat_qc_R1")

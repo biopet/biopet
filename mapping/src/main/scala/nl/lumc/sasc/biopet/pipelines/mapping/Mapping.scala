@@ -4,16 +4,19 @@ import nl.lumc.sasc.biopet.function._
 import nl.lumc.sasc.biopet.function.aligners._
 import java.util.Date
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.apps.FastqSplitter
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import org.broadinstitute.sting.queue.QScript
 import org.broadinstitute.sting.queue.extensions.gatk._
 import org.broadinstitute.sting.queue.extensions.picard.MarkDuplicates
+import org.broadinstitute.sting.queue.extensions.picard.MergeSamFiles
 import org.broadinstitute.sting.queue.extensions.picard.SortSam
 import org.broadinstitute.sting.queue.extensions.picard.AddOrReplaceReadGroups
 import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
 import org.broadinstitute.sting.utils.variant._
+import scala.math._
 
 class Mapping(val root:Configurable) extends QScript with BiopetQScript {
   qscript =>
@@ -39,6 +42,9 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
   
   @Argument(doc="Reference", shortName="R", required=false)
   var referenceFile: File = _
+  
+  @Argument(doc="auto chuning", shortName="chunking", required=false)
+  var chunking: Boolean = false
   
   // Readgroup items
   @Argument(doc="Readgroup ID", shortName="RGID", required=false)
@@ -68,9 +74,8 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
   @Argument(doc="Readgroup predicted insert size", shortName="RGPI", required=false)
   var RGPI: Int = _
   
-  
-  
   var paired: Boolean = false
+  var numberChunks = 0
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -99,42 +104,101 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     if (RGDS == null && configContains("RGDS")) RGDS = config("RGDS")
     
     if (outputName == null) outputName = RGID
+    
+    if (!chunking && numberChunks > 1) chunking = true
+    if (!chunking) chunking = config("chunking", false)
+    if (chunking) {
+      val chunkSize:Int = config("chunksize", (1 << 30))
+      val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3 
+                     else input_R1.length
+      if (numberChunks == 0 && configContains("numberchunks")) numberChunks = config("numberchunks")
+      else if (numberChunks == 0) numberChunks = ceil(filesize.toDouble / chunkSize).toInt
+      logger.debug("Chunks: " + numberChunks)
+    }
   }
   
   def biopetScript() {
-    var fastq_R1: String = input_R1
-    var fastq_R2: String = if (paired) input_R2 else ""
-    if (!skipFlexiprep) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.input_R1 = fastq_R1
-      if (paired) flexiprep.input_R2 = fastq_R2
-      flexiprep.outputDir = outputDir + "flexiprep/"
-      flexiprep.init
-      flexiprep.biopetScript
-      addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
-      fastq_R1 = flexiprep.outputFiles("output_R1")
-      if (paired) fastq_R2 = flexiprep.outputFiles("output_R2")
-    }
-    var bamFile:File = null
-    if (aligner == "bwa") {
-      val bwaCommand = new Bwa(this)
-      bwaCommand.R1 = fastq_R1
-      if (paired) bwaCommand.R2 = fastq_R2
-      bwaCommand.RG = getReadGroup
-      bwaCommand.output = new File(outputDir + outputName + ".sam")
-      add(bwaCommand, isIntermediate = true)
-      bamFile = addSortSam(List(bwaCommand.output), swapExt(outputDir,bwaCommand.output,".sam",".bam"), outputDir)
-    } else if (aligner == "star") {
-      val starCommand = Star(this, fastq_R1, if (paired) fastq_R2 else null, outputDir, isIntermediate = true)
-      add(starCommand)
-      bamFile = addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(outputDir + outputName + ".bam"), outputDir)
-    } else if (aligner == "star-2pass") {
-      val star2pass = Star._2pass(this, fastq_R1, if (paired) fastq_R2 else null, outputDir, isIntermediate = true)
-      addAll(star2pass._2)
-      bamFile = addAddOrReplaceReadGroups(List(star2pass._1), new File(outputDir + outputName + ".bam"), outputDir)
-    } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
+    var fastq_R1: File = input_R1
+    var fastq_R2: File = if (paired) input_R2 else ""
+    val flexiprep = new Flexiprep(this)
+    var bamFiles:List[File] = Nil
+    var fastq_R1_output: List[File] = Nil
+    var fastq_R2_output: List[File] = Nil
     
-    if (!skipMarkduplicates) bamFile = addMarkDuplicates(List(bamFile), swapExt(outputDir,bamFile,".bam",".dedup.bam"), outputDir)
+    
+    def removeGz(file:String):String = {
+      if (file.endsWith(".gz")) return file.substring(0, file.lastIndexOf(".gz"))
+      else if (file.endsWith(".gzip")) return file.substring(0, file.lastIndexOf(".gzip"))
+      else return file
+    }
+    var chunks:Map[String, (String,String)] = Map()
+    if (chunking) for (t <- 1 to numberChunks) {
+      chunks += ("chunk_" + t -> (removeGz(outputDir + "chunk_" + t + "/" + fastq_R1.getName),
+                                  if (paired) removeGz(outputDir + "chunk_" + t + "/" + fastq_R2.getName) else ""))
+    } else chunks += ("" -> (fastq_R1,fastq_R2))
+    
+    if (chunking) {
+      val fastSplitter_R1 = new FastqSplitter(this)
+      fastSplitter_R1.input = fastq_R1
+      fastSplitter_R1.memoryLimit = 4
+      fastSplitter_R1.jobResourceRequests :+= "h_vmem=8G"
+      for ((chunk,fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
+      add(fastSplitter_R1)
+      
+      if (paired) {
+        val fastSplitter_R2 = new FastqSplitter(this)
+        fastSplitter_R2.input = fastq_R2
+        fastSplitter_R2.memoryLimit = 4
+        fastSplitter_R2.jobResourceRequests :+= "h_vmem=8G"
+        for ((chunk,fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
+        add(fastSplitter_R2)
+      }
+    }
+    
+    for ((chunk,fastqfile) <- chunks) {
+      var R1 = fastqfile._1
+      var R2 = fastqfile._2
+      if (!skipFlexiprep) {
+        flexiprep.input_R1 = fastq_R1
+        if (paired) flexiprep.input_R2 = fastq_R2
+        flexiprep.outputDir = outputDir + "flexiprep/"
+        flexiprep.init
+        flexiprep.runInitialJobs
+        //flexiprep.biopetScript
+        val flexiout = flexiprep.runTrimClip(R1, R2, outputDir + chunk, chunk)
+        logger.debug(chunk + " - " + flexiout)
+        R1 = flexiout._1
+        if (paired) R2 = flexiout._2
+        fastq_R1_output :+= R1
+        fastq_R2_output :+= R2
+      }
+      val chunkDir = if (chunk.isEmpty) outputDir else outputDir + chunk + "/"
+      if (aligner == "bwa") {
+        val bwaCommand = new Bwa(this)
+        bwaCommand.R1 = R1
+        if (paired) bwaCommand.R2 = R2
+        bwaCommand.RG = getReadGroup
+        bwaCommand.output = new File(chunkDir + outputName + ".sam")
+        add(bwaCommand, isIntermediate = true)
+        bamFiles :+= addSortSam(List(bwaCommand.output), swapExt(chunkDir,bwaCommand.output,".sam",".bam"), chunkDir)
+      } else if (aligner == "star") {
+        val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true)
+        add(starCommand)
+        bamFiles :+= addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(chunkDir + outputName + ".bam"), chunkDir)
+      } else if (aligner == "star-2pass") {
+        val star2pass = Star._2pass(this, R1, if (paired) R2 else null, chunkDir, isIntermediate = true)
+        addAll(star2pass._2)
+        bamFiles :+= addAddOrReplaceReadGroups(List(star2pass._1), new File(chunkDir + outputName + ".bam"), chunkDir)
+      } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
+    }
+    if (!skipFlexiprep) {
+      flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
+      addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
+    }
+    
+    var bamFile = ""
+    if (!skipMarkduplicates) bamFile = addMarkDuplicates(bamFiles, new File(outputDir + outputName + ".dedup.bam"), outputDir)
+    if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
     outputFiles += ("finalBamFile" -> bamFile)
   }
   
@@ -150,6 +214,22 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     add(sortSam)
     
     return sortSam.output
+  }
+  
+  def addMergeBam(inputSam:List[File], outputFile:File, dir:String) : File = {
+    val mergeSam = new MergeSamFiles
+    mergeSam.input = inputSam
+    mergeSam.createIndex = true
+    mergeSam.output = outputFile
+    mergeSam.memoryLimit = 2
+    mergeSam.nCoresRequest = 2
+    mergeSam.assumeSorted = true
+    mergeSam.USE_THREADING = true
+    mergeSam.jobResourceRequests :+= "h_vmem=4G"
+    if (!skipMarkduplicates) mergeSam.isIntermediate = true
+    add(mergeSam)
+    
+    return mergeSam.output
   }
   
   def addAddOrReplaceReadGroups(inputSam:List[File], outputFile:File, dir:String) : File = {
