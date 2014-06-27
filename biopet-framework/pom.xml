@@ -38,6 +38,11 @@
             <version>2.11.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.11.0</version>
+        </dependency>
 <!--        <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.9.2</artifactId>
@@ -118,7 +123,7 @@
                 <filter>
                   <artifact>org.broadinstitute.sting:queue-package</artifact>
                   <excludes>
-                      <exclude>scala/**</exclude>
+<!--                      <exclude>scala/**</exclude>-->
                   </excludes>
                   <includes>
                     <include>*/**</include>
