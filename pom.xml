@@ -11,5 +11,7 @@
     <module>flexiprep</module>
     <module>gatk</module>
     <module>mapping</module>
+    <module>bam-metrics</module>
+    <module>pipeline-template</module>
   </modules>
 </project>
