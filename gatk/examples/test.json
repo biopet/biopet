@@ -1,4 +1,5 @@
 {
+    "samtools": { "exe": "test"},
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     "star" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
     "bwa" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
@@ -30,6 +31,11 @@
             "ID": "test",
             "runs": {
                 "1" : {
+                    "ID": "1",
+                    "R1" : "/home/pjvan_thof/pipelines/test/test.R1.fastq.gz",
+                    "R2" : "/home/pjvan_thof/pipelines/test/test.R2.fastq.gz"
+                },
+                "2" : {
                     "ID": "1",
                     "R1" : "/home/pjvan_thof/pipelines/test/test.R1.fastq.gz",
                     "R2" : "/home/pjvan_thof/pipelines/test/test.R2.fastq.gz"
