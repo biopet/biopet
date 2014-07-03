@@ -19,6 +19,7 @@ trait Configurable extends Logging {
   
   implicit def configValue2file(value:ConfigValue) = new File(Configurable.any2string(value.value))
   implicit def configValue2string(value:ConfigValue) = Configurable.any2string(value.value)
+  implicit def configValue2long(value:ConfigValue) = Configurable.any2long(value.value)
   implicit def configValue2int(value:ConfigValue) = Configurable.any2int(value.value)
   implicit def configValue2optionInt(value:ConfigValue) = Option(Configurable.any2int(value.value))
   implicit def configValue2double(value:ConfigValue) = Configurable.any2double(value.value)
@@ -51,10 +52,23 @@ object Configurable extends Logging {
     }
   }
   
+  def any2long(any:Any) : Long = {
+    any match {
+      case l:Double => return l.toLong
+      case l:Int => return l.toLong
+      case l:Long => return l
+      case l:String => {
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        return l.toLong
+      }
+      case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
+    }
+  }
+  
   def any2double(any:Any) : Double = {
     any match {
-      case d:Double => return d.toInt
-      case d:Int => return d
+      case d:Double => return d
+      case d:Int => return d.toDouble
       case d:String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         return d.toInt
