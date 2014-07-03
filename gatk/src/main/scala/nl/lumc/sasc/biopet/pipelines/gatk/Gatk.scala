@@ -5,6 +5,8 @@ import nl.lumc.sasc.biopet.function.aligners._
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.pipelines.mapping._
+import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import org.broadinstitute.sting.queue.QScript
 import org.broadinstitute.sting.queue.extensions.gatk._
@@ -58,12 +60,19 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     for ((run, runFiles) <- runRunsJobs(sampleConfig)) {
       runBamfiles +:= runFiles("FinalBam")
     }
+    var bamFile = runBamfiles.head
+    if (runBamfiles.size > 1) {
+      bamFile = new File(outputDir + sampleID + "/" + sampleID + ".bam" )
+      add(MarkDuplicates(this, runBamfiles, bamFile))
+    }
     outputFiles += ("FinalBams" -> runBamfiles)
+    
+    addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions) // Metrics pipeline
     
     if (runBamfiles.size > 0) {
       finalBamFiles ++= runBamfiles
       val gvcfFile = new File(outputDir + sampleID + "/" + sampleID + ".gvcf.vcf")
-      addHaplotypeCaller(runBamfiles, gvcfFile)
+      addHaplotypeCaller(bamFile :: Nil, gvcfFile)
       outputFiles += ("gvcf" -> List(gvcfFile))
       gvcfFiles :+= gvcfFile
     } else logger.warn("No bamfiles for variant calling for sample: " + sampleID)
@@ -80,10 +89,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = config("inputtype", "dna").toString
     if (runConfig.contains("R1")) {
-      val mapping = new Mapping(this)
-      mapping.loadRunConfig(runConfig, sampleConfig, runDir)
-      mapping.init
-      mapping.biopetScript
+      val mapping = Mapping.loadFromRunConfig(this, runConfig, sampleConfig, runDir)
       addAll(mapping.functions) // Add functions of mapping to curent function pool
       
       var bamFile:File = mapping.outputFiles("finalBamFile")
@@ -94,21 +100,6 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       outputFiles += ("FinalBam" -> bamFile)
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)    
     return outputFiles
-  }
-  
-  def addMarkDuplicates(inputBams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates {
-      this.input = inputBams
-      this.output = outputFile
-      this.REMOVE_DUPLICATES = false
-      this.metrics = swapExt(dir,outputFile,".bam",".metrics")
-      this.outputIndex = swapExt(dir,this.output,".bam",".bai")
-      this.memoryLimit = 2
-      this.jobResourceRequests :+= "h_vmem=4G"
-    }
-    add(markDuplicates)
-    
-    return markDuplicates.output
   }
   
   def addIndelRealign(inputBam:File, dir:String): File = {
