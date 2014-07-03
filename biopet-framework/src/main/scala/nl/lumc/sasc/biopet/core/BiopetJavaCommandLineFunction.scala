@@ -9,7 +9,7 @@ abstract class BiopetJavaCommandLineFunction extends JavaCommandLineFunction wit
     preCmdInternal
     val cmd = super.commandLine
     val finalCmd = executeble + cmd.substring(cmd.indexOf(" "))
-    addJobReportBinding("command", cmd)
+//    addJobReportBinding("command", cmd)
     return cmd
   }
 }
