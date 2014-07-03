@@ -36,6 +36,16 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     afterGraph
     jobOutputFile = new File(firstOutput.getParent + "/."  + firstOutput.getName + "." + analysisName + ".out")
     
+    if (threads == 0) threads = getThreads(defaultThreads)
+    if (threads > 1) nCoresRequest = Option(threads)
+    
+    if (vmem == null) {
+      if (configContains("vmem")) vmem = config("vmem")
+      else if (!defaultVmem.isEmpty) vmem = defaultVmem
+    }
+    if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
+    jobName = this.analysisName + ":" + firstOutput.getName
+    
     super.freezeFieldValues()
   }
   
@@ -64,27 +74,18 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     
     beforeCmd
     
-    addJobReportBinding("version", getVersion)
-    
-    if (threads == 0) threads = getThreads(defaultThreads)
-    if (threads > 1) nCoresRequest = Option(threads)
     addJobReportBinding("cores", if (nCoresRequest.get.toInt > 0) nCoresRequest.get.toInt else 1)
-    
-    if (vmem == null) {
-      if (configContains("vmem")) vmem = config("vmem")
-      else if (!defaultVmem.isEmpty) vmem = defaultVmem
-    }
-    if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
-    jobName = this.analysisName + ":" + firstOutput.getName
+    addJobReportBinding("version", getVersion)
   }
   
-  protected var versionCommand: String = _
+  protected def versionCommand: String = null
   protected val versionRegex: Regex = null
+  protected val versionExitcode = List(0) // Can select multiple
   def getVersion : String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
     val buffer = new StringBuffer()
     val process = Process(versionCommand).run(ProcessLogger(buffer append _))
-    if (process.exitValue != 0) {
+    if (!versionExitcode.contains(process.exitValue)) {
       logger.warn("Version command: '" + versionCommand + "' give exit code " + process.exitValue + ", version not found")
       return "N/A"
     }
@@ -95,7 +96,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         case _ =>
       }
     }
-    logger.warn("Version command: '" + versionCommand + "' give a exit code 0 but no version was found, executeble oke?")
+    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executeble oke?")
     return "N/A"
   }
   
