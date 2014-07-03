@@ -38,9 +38,9 @@ class Sickle(val root:Configurable) extends BiopetCommandLineFunction {
   override def afterGraph {
     if (defaultQualityType == null) defaultQualityType = config("defaultqualitytype", "sanger")
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
-    
-    versionCommand = executeble + " --version"
   }
+  
+  override def versionCommand = executeble + " --version"
   
   override def beforeCmd {
     qualityType = getQualityTypeFromFile

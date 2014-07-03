@@ -19,18 +19,17 @@ class Bwa(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Output file SAM", shortName="output")
   var output: File = _
   
-  executeble = config("exe", "bwa")
-  
   var RG: String = _
   var M: Boolean = config("M", true)
   
+  executeble = config("exe", "bwa")
+  override val versionRegex = """Version: (.*)""".r
+  override val versionExitcode = List(0,1)
+  
   override val defaultVmem = "6G"
   override val defaultThreads = 8
-  override val versionRegex = """Version: (.*)""".r
   
-  override def beforeCmd() {
-    versionCommand = executeble
-  }
+  override def versionCommand = executeble
   
   def cmdLine = {
     required(executeble) + 

@@ -18,6 +18,8 @@ class Cutadapt(val root:Configurable) extends BiopetCommandLineFunction {
   var fastq_output: File = _
   
   executeble = config("exe","cutadapt")
+  override def versionCommand = executeble + " --version"
+  override val versionRegex = """(.*)""".r
   
   var default_clip_mode:String = config("default_clip_mode", "3")
   var opt_adapter: Set[String] = config("adapter", Nil)
@@ -27,15 +29,9 @@ class Cutadapt(val root:Configurable) extends BiopetCommandLineFunction {
   var opt_discard: Boolean = config("discard",false)
   var opt_minimum_length: String = config("minimum_length", 1)
   var opt_maximum_length: String = config("maximum_length", null)
-  
-  override val versionRegex = """(.*)""".r
-  
-  override def afterGraph() {
-    versionCommand = executeble + " --version"
-  }
-  
+    
   override def beforeCmd() {
-    this.getContamsFromFile
+    getContamsFromFile
   }
   
   def cmdLine = {

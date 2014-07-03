@@ -31,9 +31,10 @@ class Fastqc(val root:Configurable) extends BiopetCommandLineFunction {
     this.checkExecuteble
     val fastqcDir = executeble.substring(0, executeble.lastIndexOf("/"))
     if (contaminants == null) contaminants = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
-    versionCommand = executeble + " --version"
   }
-    
+  
+  override def versionCommand = executeble + " --version"
+  
   def cmdLine = {
     required(executeble) + 
       optional("--java", java_exe) +
