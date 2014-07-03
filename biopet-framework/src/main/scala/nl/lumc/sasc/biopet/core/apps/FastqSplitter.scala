@@ -1,23 +1,23 @@
 package nl.lumc.sasc.biopet.core.apps
 
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.PrintWriter
+import java.io.{BufferedInputStream, File, FileInputStream, PrintWriter}
 import java.util.zip.GZIPInputStream
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.sting.commandline.{Input, Output}
 
 class FastqSplitter(val root:Configurable) extends BiopetJavaCommandLineFunction {
-  javaMainClass = "nl.lumc.sasc.biopet.core.apps.FastqSplitter"
+  javaMainClass = getClass.getName
   
   @Input(doc="Input fastq", shortName = "input", required = true)
   var input: File = _
   
   @Output(doc="Output fastq files", shortName="output", required = true)
   var output: List[File] = Nil
+  
+  override val defaultVmem = "8G"
+  memoryLimit = Option(4.0)
   
   override def commandLine = super.commandLine + required(input) + repeat(output)
 }
