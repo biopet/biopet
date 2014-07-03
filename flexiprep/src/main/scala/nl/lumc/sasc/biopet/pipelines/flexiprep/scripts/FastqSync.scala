@@ -8,7 +8,6 @@ import org.broadinstitute.sting.commandline._
 import java.io.File
 
 class FastqSync(val root:Configurable) extends PythonCommandLineFunction {
-  setPythonScript("__init__.py", "pyfastqc/")
   setPythonScript("sync_paired_end_reads.py")
   
   @Input(doc="Start fastq")
@@ -29,8 +28,7 @@ class FastqSync(val root:Configurable) extends PythonCommandLineFunction {
   //No output Annotation so file 
   var output_stats: File = _
   
-  def cmdLine = {
-    getPythonCommand + 
+  def cmdLine = getPythonCommand + 
     required(input_start_fastq) +
     required(input_R1) +
     required(input_R2) +
@@ -38,5 +36,4 @@ class FastqSync(val root:Configurable) extends PythonCommandLineFunction {
     required(output_R2) +
     " > " +
     required(output_stats)
-  }
 }
