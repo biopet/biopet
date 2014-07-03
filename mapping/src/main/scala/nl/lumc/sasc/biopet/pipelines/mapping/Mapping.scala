@@ -2,14 +2,16 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 
 import nl.lumc.sasc.biopet.function._
 import nl.lumc.sasc.biopet.function.aligners._
+import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
 import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import org.broadinstitute.sting.queue.QScript
 import org.broadinstitute.sting.queue.extensions.gatk._
-import org.broadinstitute.sting.queue.extensions.picard.MarkDuplicates
 import org.broadinstitute.sting.queue.extensions.picard.MergeSamFiles
 import org.broadinstitute.sting.queue.extensions.picard.SortSam
 import org.broadinstitute.sting.queue.extensions.picard.AddOrReplaceReadGroups
@@ -125,7 +127,6 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     var fastq_R1_output: List[File] = Nil
     var fastq_R2_output: List[File] = Nil
     
-    
     def removeGz(file:String):String = {
       if (file.endsWith(".gz")) return file.substring(0, file.lastIndexOf(".gz"))
       else if (file.endsWith(".gzip")) return file.substring(0, file.lastIndexOf(".gzip"))
@@ -196,9 +197,12 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
     }
     
-    var bamFile = ""
-    if (!skipMarkduplicates) bamFile = addMarkDuplicates(bamFiles, new File(outputDir + outputName + ".dedup.bam"), outputDir)
-    if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
+    var bamFile = bamFiles.head
+    if (!skipMarkduplicates) {
+      bamFile = new File(outputDir + outputName + ".dedup.bam")
+      add(MarkDuplicates(this, bamFiles, bamFile))
+    } else if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
+    
     outputFiles += ("finalBamFile" -> bamFile)
   }
   
@@ -254,20 +258,6 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     return addOrReplaceReadGroups.output
   }
   
-  def addMarkDuplicates(input_Bams:List[File], outputFile:File, dir:String) : File = {
-    val markDuplicates = new MarkDuplicates
-    markDuplicates.input = input_Bams
-    markDuplicates.output = outputFile
-    markDuplicates.REMOVE_DUPLICATES = false
-    markDuplicates.metrics = swapExt(dir,outputFile,".bam",".metrics")
-    markDuplicates.outputIndex = swapExt(dir,markDuplicates.output,".bam",".bai")
-    markDuplicates.memoryLimit = 2
-    markDuplicates.jobResourceRequests :+= "h_vmem=4G"
-    add(markDuplicates)
-    
-    return markDuplicates.output
-  }
-  
   def getReadGroup() : String = {
     var RG: String = "@RG\\t" + "ID:" + RGID + "\\t"
     RG += "LB:" + RGLB + "\\t"
@@ -281,25 +271,31 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
-  
-  def loadRunConfig(runConfig:Map[String,Any], sampleConfig:Map[String,Any], runDir: String) {
-    logger.debug("Mapping runconfig: " + runConfig)
-    var inputType = ""
-    if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
-    else inputType = config("inputtype", "dna")
-    if (inputType == "rna") aligner = config("rna_aligner", "star-2pass")
-    if (runConfig.contains("R1")) input_R1 = runConfig("R1").toString
-    if (runConfig.contains("R2")) input_R2 = runConfig("R2").toString
-    paired = (input_R2 != null)
-    RGLB = runConfig("ID").toString
-    RGSM = sampleConfig("ID").toString
-    if (runConfig.contains("PL")) RGPL = runConfig("PL").toString
-    if (runConfig.contains("PU")) RGPU = runConfig("PU").toString
-    if (runConfig.contains("CN")) RGCN = runConfig("CN").toString
-    outputDir = runDir
-  }
 }
 
 object Mapping extends PipelineCommand {
   override val pipeline = "/nl/lumc/sasc/biopet/pipelines/mapping/Mapping.class"
+  
+  def loadFromRunConfig(root:Configurable, runConfig:Map[String,Any], sampleConfig:Map[String,Any], runDir: String) : Mapping = {
+    val mapping = new Mapping(root)
+    
+    logger.debug("Mapping runconfig: " + runConfig)
+    var inputType = ""
+    if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
+    else inputType = root.config("inputtype", "dna").getString
+    if (inputType == "rna") mapping.aligner = root.config("rna_aligner", "star-2pass").getString
+    if (runConfig.contains("R1")) mapping.input_R1 = new File(runConfig("R1").toString)
+    if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
+    mapping.paired = (mapping.input_R2 != null)
+    mapping.RGLB = runConfig("ID").toString
+    mapping.RGSM = sampleConfig("ID").toString
+    if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
+    if (runConfig.contains("PU")) mapping.RGPU = runConfig("PU").toString
+    if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
+    mapping.outputDir = runDir
+    
+    mapping.init
+    mapping.biopetScript
+    return mapping
+  }
 }
