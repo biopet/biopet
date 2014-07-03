@@ -49,6 +49,11 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Bam-Metrics</artifactId>
+            <version>0.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>Mapping</artifactId>
             <version>0.1.3</version>
         </dependency>
