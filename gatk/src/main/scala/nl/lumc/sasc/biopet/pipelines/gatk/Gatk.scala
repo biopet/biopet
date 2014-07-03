@@ -109,6 +109,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.jobResourceRequests :+= "h_vmem=5G"
       if (configContains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", 1, "realignertargetcreator")
     }
+    realignerTargetCreator.isIntermediate = true
     add(realignerTargetCreator)
 
     val indelRealigner = new IndelRealigner with gatkArguments {
