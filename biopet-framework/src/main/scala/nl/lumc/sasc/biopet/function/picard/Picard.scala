@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.function.picard
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import org.broadinstitute.sting.commandline._
 
-abstract class Picard extends BiopetJavaCommandLineFunction {
+trait Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc="VERBOSITY", required = false)
   var verbosity: String = config("verbosity", "INFO", "picard")
   
