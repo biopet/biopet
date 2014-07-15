@@ -13,5 +13,6 @@
     <module>mapping</module>
     <module>bam-metrics</module>
     <module>pipeline-template</module>
+    <module>gatk-variantcalling</module>
   </modules>
 </project>
