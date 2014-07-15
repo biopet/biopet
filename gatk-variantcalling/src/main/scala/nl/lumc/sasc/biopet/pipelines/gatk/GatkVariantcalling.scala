@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function._
 import org.broadinstitute.sting.queue.QScript
-import org.broadinstitute.sting.queue.extensions.gatk.{BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs}
+import org.broadinstitute.sting.queue.extensions.gatk.{BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates}
 import org.broadinstitute.sting.queue.function._
 import org.broadinstitute.sting.commandline._
 import org.broadinstitute.sting.utils.variant.GATKVCFIndexType
@@ -84,9 +84,25 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
       if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
       this.nct = config("threads", 2, "baserecalibrator")
     }
-    baseRecalibrator.isIntermediate = true
     add(baseRecalibrator)
-
+    
+    val baseRecalibratorAfter = new BaseRecalibrator with gatkArguments {
+      this.I :+= inputBam
+      this.o = swapExt(dir,inputBam,".bam",".baserecal.after")
+      this.BQSR = baseRecalibrator.o
+      if (dbsnp != null) this.knownSites :+= dbsnp
+      if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
+      this.nct = config("threads", 2, "baserecalibrator")
+    }
+    add(baseRecalibratorAfter)
+    
+    val analyzeCovariates = new AnalyzeCovariates with gatkArguments {
+      this.before = baseRecalibrator.o
+      this.after = baseRecalibratorAfter.o
+      this.plots = swapExt(dir,inputBam,".bam",".baserecal.pdf")
+    }
+    add(analyzeCovariates)
+    
     val printReads = new PrintReads with gatkArguments {
       this.I :+= inputBam
       this.o = swapExt(dir,inputBam,".bam",".baserecal.bam")
