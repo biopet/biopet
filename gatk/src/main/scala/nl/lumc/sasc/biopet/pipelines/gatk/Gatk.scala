@@ -13,10 +13,9 @@ import org.broadinstitute.sting.queue.extensions.gatk._
 import org.broadinstitute.sting.queue.extensions.picard._
 import org.broadinstitute.sting.queue.function._
 import scala.util.parsing.json._
-import org.broadinstitute.sting.utils.variant._
+import org.broadinstitute.sting.utils.variant.GATKVCFIndexType
 
 class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
-  qscript =>
   def this() = this(null)
   
   @Argument(doc="Only Sample",shortName="sample", required=false)
@@ -111,7 +110,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
     }
     realignerTargetCreator.isIntermediate = true
     add(realignerTargetCreator)
-
+    
     val indelRealigner = new IndelRealigner with gatkArguments {
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
@@ -163,7 +162,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
       this.input_file = bamfiles
       this.out = outputfile
-      if (dbsnp != null) this.dbsnp = qscript.dbsnp
+      if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
       this.nct = 3
       this.memoryLimit = this.nct * 2
       
