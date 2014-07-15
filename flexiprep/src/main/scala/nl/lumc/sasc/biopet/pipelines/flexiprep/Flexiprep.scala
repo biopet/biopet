@@ -27,6 +27,9 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
   @Argument(doc="Skip Clip fastq files", shortName="skipclip", required=false)
   var skipClip: Boolean = false
   
+  @Argument(doc="Skip summary", shortName="skipsummary", required=false)
+  var skipSummary: Boolean = false
+  
   var paired: Boolean = (input_R2 != null)
   var R1_ext: String = _
   var R2_ext: String = _
@@ -223,16 +226,18 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       if (paired) outputFiles += ("fastqc_R2_final" -> runFastqc(outputFiles("output_R2"),outputDir + "/" + R2_name + ".qc.fastqc/").output)
     }
     
+    if (!skipSummary) {
     val summarize = new Summarize(this)
-    summarize.runDir = outputDir
-    summarize.samplea = R1_name
-    if (paired) summarize.sampleb = R2_name
-    summarize.samplename = R1_name
-    summarize.clip = !skipClip
-    summarize.trim = !skipTrim
-    summarize.out = new File(outputDir + R1_name + ".summary.json")
-    for ((k,v) <- outputFiles) summarize.deps +:= v
-    add(summarize)
+      summarize.runDir = outputDir
+      summarize.samplea = R1_name
+      if (paired) summarize.sampleb = R2_name
+      summarize.samplename = R1_name
+      summarize.clip = !skipClip
+      summarize.trim = !skipTrim
+      summarize.out = new File(outputDir + R1_name + ".summary.json")
+      for ((k,v) <- outputFiles) summarize.deps +:= v
+      add(summarize)
+    }
   }
   
   def runFastqc(fastqfile:File, outDir:String) : Fastqc = {
