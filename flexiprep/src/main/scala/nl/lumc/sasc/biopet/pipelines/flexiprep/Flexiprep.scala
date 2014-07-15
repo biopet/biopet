@@ -143,6 +143,7 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
         R2 = cutadapt_R2.fastq_output
         val fastqSync = new FastqSync(this)
         if (!skipTrim) fastqSync.isIntermediate = true
+        fastqSync.deps ++= Seq(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"))
         fastqSync.input_start_fastq = cutadapt_R1.fastq_input
         fastqSync.input_R1 = cutadapt_R1.fastq_output
         fastqSync.input_R2 = cutadapt_R2.fastq_output
@@ -159,10 +160,12 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
     if (!skipTrim) { // Quality trimming
       val sickle = new Sickle(this)
       sickle.input_R1 = R1
+      sickle.deps :+= outputFiles("fastq_input_R1")
       sickle.output_R1 = swapExt(outDir, R1, R1_ext, ".trim"+R1_ext)
       if (outputFiles.contains("qualtype_R1")) sickle.qualityTypeFile = outputFiles("qualtype_R1")
       if (!skipClip) sickle.deps :+= R1_in
       if (paired) {
+        sickle.deps :+= outputFiles("fastq_input_R2")
         sickle.input_R2 = R2
         sickle.output_R2 = swapExt(outDir, R2, R2_ext, ".trim"+R2_ext)
         sickle.output_singles = swapExt(outDir, R2, R2_ext, ".trim.singles"+R1_ext)
@@ -259,13 +262,13 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       var newFile: File = swapExt(runDir, file,".gz","")
       if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file,".gzip","")
       val zcatCommand = Zcat(this, file, newFile)
-      if (!this.skipClip || !this.skipTrim) zcatCommand.isIntermediate = true
+      zcatCommand.isIntermediate = true
       add(zcatCommand)
       return newFile
     } else if (file.getName().endsWith(".bz2")) {
       var newFile = swapExt(runDir, file,".bz2","")
       val pbzip2 = Pbzip2(this,file, newFile)
-      if (!this.skipClip || !this.skipTrim) pbzip2.isIntermediate = true
+      pbzip2.isIntermediate = true
       add(pbzip2)
       return newFile
     } else return file
