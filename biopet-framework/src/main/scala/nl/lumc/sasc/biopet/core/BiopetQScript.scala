@@ -22,6 +22,8 @@ trait BiopetQScript extends Configurable {
   def biopetScript
   
   final def script() {
+    for (file <- configfiles) globalConfig.loadConfigFile(file)
+    if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
     val configReport = globalConfig.getReport
