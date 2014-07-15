@@ -137,7 +137,8 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
     if (chunking) for (t <- 1 to numberChunks) {
       chunks += ("chunk_" + t -> (removeGz(outputDir + "chunk_" + t + "/" + fastq_R1.getName),
                                   if (paired) removeGz(outputDir + "chunk_" + t + "/" + fastq_R2.getName) else ""))
-    } else chunks += (flexiprep.outputDir -> (fastq_R1,fastq_R2))
+    } else chunks += ("flexiprep" -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
+                                      flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
     
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -163,6 +164,7 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
       if (!skipFlexiprep) {
         flexiprep.input_R1 = fastq_R1
         if (paired) flexiprep.input_R2 = fastq_R2
+        flexiprep.skipSummary = true
         flexiprep.init
         flexiprep.runInitialJobs
         //flexiprep.biopetScript
@@ -173,7 +175,7 @@ class Mapping(val root:Configurable) extends QScript with BiopetQScript {
         fastq_R1_output :+= R1
         fastq_R2_output :+= R2
       }
-      val chunkDir = if (chunk.isEmpty) outputDir else outputDir + chunk + "/"
+      val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
       if (aligner == "bwa") {
         val bwaCommand = new Bwa(this)
         bwaCommand.R1 = R1
