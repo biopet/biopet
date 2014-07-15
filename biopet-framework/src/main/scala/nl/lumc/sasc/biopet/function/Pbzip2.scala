@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.function
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 //import org.broadinstitute.sting.queue.function.CommandLineFunction
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline._
 import java.io.File
 
 class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {

@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.function.samtools
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
 
 class SamtoolsFlagstat(val root:Configurable) extends Samtools {

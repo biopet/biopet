@@ -5,3 +5,5 @@
 /gatk-variantcalling/nbactions.xml
 /gatk-variantcalling/dependency-reduced-pom.xml
 /bam-metrics/nbactions.xml
+dependency-reduced-pom.xml
+nbactions.xml

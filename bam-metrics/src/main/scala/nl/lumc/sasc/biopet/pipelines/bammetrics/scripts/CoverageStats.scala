@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics.scripts
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 import java.io.File
 
 class CoverageStats(val root:Configurable) extends PythonCommandLineFunction {

@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.core.config
 import nl.lumc.sasc.biopet.core._
 import scala.util.parsing.json._
 import java.io.File
-import org.broadinstitute.sting.queue.util.Logging
+import org.broadinstitute.gatk.queue.util.Logging
 
 class Config(var map: Map[String,Any]) extends Logging {
   logger.debug("Init phase of config")

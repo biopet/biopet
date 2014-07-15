@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline._
 import scala.sys.process._
 import nl.lumc.sasc.biopet.core.config._
 

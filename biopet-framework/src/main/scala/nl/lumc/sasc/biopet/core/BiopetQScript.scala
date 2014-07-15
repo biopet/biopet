@@ -3,9 +3,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.sting.commandline._
-import org.broadinstitute.sting.queue.QSettings
-import org.broadinstitute.sting.queue.function.QFunction
+import org.broadinstitute.gatk.utils.commandline._
+import org.broadinstitute.gatk.queue.QSettings
+import org.broadinstitute.gatk.queue.function.QFunction
 
 trait BiopetQScript extends Configurable {
   @Argument(doc="Config Json file",shortName="config", required=false)

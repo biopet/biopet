@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.broadinstitute.sting</groupId>
             <artifactId>queue-package</artifactId>
-            <version>3.1</version>
+            <version>3.2</version>
         </dependency>
     </dependencies>
     <build>

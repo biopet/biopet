@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.function.picard
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 
 trait Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc="VERBOSITY", required = false)

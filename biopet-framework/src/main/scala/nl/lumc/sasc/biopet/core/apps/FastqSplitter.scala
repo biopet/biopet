@@ -5,7 +5,7 @@ import java.util.zip.GZIPInputStream
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 class FastqSplitter(val root:Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName

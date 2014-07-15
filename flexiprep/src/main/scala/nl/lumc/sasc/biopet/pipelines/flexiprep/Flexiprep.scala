@@ -4,12 +4,12 @@ import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function._
 import nl.lumc.sasc.biopet.function.fastq._
-import org.broadinstitute.sting.queue.QScript
-import org.broadinstitute.sting.queue.extensions.gatk._
-import org.broadinstitute.sting.queue.extensions.picard._
-import org.broadinstitute.sting.queue.function._
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk._
+import org.broadinstitute.gatk.queue.extensions.picard._
+import org.broadinstitute.gatk.queue.function._
 import scala.util.parsing.json._
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {

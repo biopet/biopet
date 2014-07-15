@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.function
 
 import java.io.FileOutputStream
 import nl.lumc.sasc.biopet.core._
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.utils.commandline._
 import java.io.File
 import scala.collection.JavaConversions._
 

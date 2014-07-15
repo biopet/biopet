@@ -14,5 +14,6 @@
     <module>bam-metrics</module>
     <module>pipeline-template</module>
     <module>gatk-variantcalling</module>
+    <module>gatk-genotyping</module>
   </modules>
 </project>

@@ -1,12 +1,12 @@
 package nl.lumc.sasc.biopet.core.apps
 
+import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.SAMSequenceRecord
 import java.io.File
-import net.sf.samtools.SAMSequenceRecord
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.PrintWriter
-import net.sf.samtools.SAMFileReader
 import scala.io.Source
 
 class BedToInterval(val root:Configurable) extends BiopetJavaCommandLineFunction {

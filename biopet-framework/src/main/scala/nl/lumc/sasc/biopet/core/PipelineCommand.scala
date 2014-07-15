@@ -8,7 +8,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.FileOutputStream
 //import org.broadinstitute.sting.queue.QCommandLine
-import org.broadinstitute.sting.queue.util.Logging
+import org.broadinstitute.gatk.queue.util.Logging
 
 trait PipelineCommand extends Logging {
 //  val src = ""

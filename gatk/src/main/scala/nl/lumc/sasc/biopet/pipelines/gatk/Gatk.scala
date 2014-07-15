@@ -2,18 +2,19 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.function._
 import nl.lumc.sasc.biopet.function.aligners._
+import java.io.File
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.pipelines.mapping._
 import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
-import org.broadinstitute.sting.queue.QScript
-import org.broadinstitute.sting.queue.extensions.gatk._
-import org.broadinstitute.sting.queue.extensions.picard._
-import org.broadinstitute.sting.queue.function._
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk._
+import org.broadinstitute.gatk.queue.extensions.picard._
+import org.broadinstitute.gatk.queue.function._
+import org.broadinstitute.gatk.utils.commandline.{Argument}
 import scala.util.parsing.json._
-import org.broadinstitute.sting.utils.variant.GATKVCFIndexType
 
 class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
@@ -150,7 +151,7 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.out = swapExt(dir,inputBam,".bam",".split.bam")
       this.read_filter :+= "ReassignMappingQuality"
       
-      this.U = org.broadinstitute.sting.gatk.arguments.ValidationExclusion.TYPE.ALLOW_N_CIGAR_READS
+      this.U = org.broadinstitute.gatk.engine.arguments.ValidationExclusion.TYPE.ALLOW_N_CIGAR_READS
     }
     add(splitNCigarReads)
     
@@ -167,8 +168,8 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
       this.memoryLimit = this.nct * 2
       
       // GVCF options
-      this.emitRefConfidence = org.broadinstitute.sting.gatk.walkers.haplotypecaller.HaplotypeCaller.ReferenceConfidenceMode.GVCF
-      this.variant_index_type = GATKVCFIndexType.LINEAR
+      this.emitRefConfidence =  org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
+      this.variant_index_type = org.broadinstitute.gatk.utils.variant.GATKVCFIndexType.LINEAR
       this.variant_index_parameter = 128000
       
       val inputType:String = config("inputtype", "dna")
@@ -226,10 +227,10 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   def getVariantRecalibrator(mode_arg:String) : VariantRecalibrator = {
     val variantRecalibrator = new VariantRecalibrator() with gatkArguments {
       if (mode_arg == "indel") {
-        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
         if (configContains("mills", "variantrecalibrator")) this.resource :+= new TaggedFile(config("mills", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
       } else { // SNP
-        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
         if (configContains("hapmap", "variantrecalibrator")) this.resource +:= new TaggedFile(config("hapmap", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
         if (configContains("omni", "variantrecalibrator")) this.resource +:= new TaggedFile(config("omni", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
         if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
@@ -247,10 +248,10 @@ class Gatk(val root:Configurable) extends QScript with MultiSampleQScript {
   def getApplyRecalibration(mode_arg:String) : ApplyRecalibration = {
     val applyRecalibration = new ApplyRecalibration() with gatkArguments {
       if (mode_arg == "indel") {
-        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
         this.ts_filter_level = config("ts_filter_level", 99.0, "applyrecalibration")
       } else { // SNP
-        this.mode = org.broadinstitute.sting.gatk.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
         this.ts_filter_level = config("ts_filter_level", 99.5, "applyrecalibration")
       }
       this.nt = 3

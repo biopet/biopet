@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.function._
-import org.broadinstitute.sting.queue.QScript
-import org.broadinstitute.sting.queue.extensions.gatk.{BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates}
-import org.broadinstitute.sting.queue.function._
-import org.broadinstitute.sting.commandline._
-import org.broadinstitute.sting.utils.variant.GATKVCFIndexType
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.{BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates}
+import org.broadinstitute.gatk.queue.function._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -126,7 +126,7 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
       
       // GVCF options
       if (gvcfMode) {
-        this.emitRefConfidence = org.broadinstitute.sting.gatk.walkers.haplotypecaller.HaplotypeCaller.ReferenceConfidenceMode.GVCF
+        this.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
         this.variant_index_type = GATKVCFIndexType.LINEAR
         this.variant_index_parameter = 128000
       }

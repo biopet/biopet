@@ -1,13 +1,13 @@
 package nl.lumc.sasc.biopet.core.apps
 
+import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.SAMRecord
 import java.io.{BufferedInputStream, File, FileInputStream, PrintWriter}
-import net.sf.samtools.SAMFileReader
-import net.sf.samtools.SAMRecord
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Input, Output}
-import org.broadinstitute.sting.queue.util.Logging
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.queue.util.Logging
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 

@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.function.bedtools
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 import java.io.File
 
 class BedtoolsIntersect(val root:Configurable) extends Bedtools {

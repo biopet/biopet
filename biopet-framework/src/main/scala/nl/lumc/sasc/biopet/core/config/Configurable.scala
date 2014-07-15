@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
-import org.broadinstitute.sting.queue.util.Logging
+import org.broadinstitute.gatk.queue.util.Logging
 
 trait Configurable extends Logging {
   val root: Configurable

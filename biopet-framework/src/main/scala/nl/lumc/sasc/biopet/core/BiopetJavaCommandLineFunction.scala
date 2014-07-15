@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.sting.queue.function.JavaCommandLineFunction
+import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
 abstract class BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
   executeble = "java"

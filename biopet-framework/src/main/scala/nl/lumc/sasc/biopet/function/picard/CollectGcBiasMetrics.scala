@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.function.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.sting.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 
 class CollectGcBiasMetrics(val root:Configurable) extends Picard {
   javaMainClass = "net.sf.picard.analysis.CollectGcBiasMetrics"

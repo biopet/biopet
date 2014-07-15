@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.sting.queue.QException
-import org.broadinstitute.sting.queue.function.CommandLineFunction
-import org.broadinstitute.sting.commandline._
+import org.broadinstitute.gatk.queue.QException
+import org.broadinstitute.gatk.queue.function.CommandLineFunction
+import org.broadinstitute.gatk.utils.commandline._
 import scala.sys.process._
 import scala.util.matching.Regex
 

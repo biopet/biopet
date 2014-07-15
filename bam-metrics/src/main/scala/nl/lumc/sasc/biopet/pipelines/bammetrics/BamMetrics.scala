@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
-import org.broadinstitute.sting.queue.QScript
+import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
 import java.io.File
 import nl.lumc.sasc.biopet.core.apps.{BedToInterval, BiopetFlagstat}
