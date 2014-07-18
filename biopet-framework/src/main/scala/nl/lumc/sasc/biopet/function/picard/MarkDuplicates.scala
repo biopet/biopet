@@ -5,8 +5,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 
 class MarkDuplicates(val root:Configurable) extends Picard {
-  javaMainClass = "net.sf.picard.sam.MarkDuplicates"
-
+  javaMainClass = "picard.sam.MarkDuplicates"
+  
   @Input(doc="The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: List[File] = Nil
 
