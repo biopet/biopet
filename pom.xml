@@ -15,5 +15,7 @@
     <module>pipeline-template</module>
     <module>gatk-variantcalling</module>
     <module>gatk-genotyping</module>
+    <module>gatk-pipeline</module>
+    <module>gatk-benchmark-genotyping</module>
   </modules>
 </project>
