@@ -22,7 +22,7 @@
     <sting.unpack.phase>prepare-package</sting.unpack.phase>
     <sting.shade.phase>package</sting.shade.phase>
     <sting.binary-dist.name>SASC-Pipelines</sting.binary-dist.name>
-    <app.main.class>org.broadinstitute.sting.queue.QCommandLine</app.main.class>
+    <app.main.class>org.broadinstitute.gatk.queue.QCommandLine</app.main.class>
   </properties>
   
     <dependencies>
@@ -50,9 +50,9 @@
             <scope>test</scope>
         </dependency>-->
         <dependency>
-            <groupId>org.broadinstitute.sting</groupId>
+            <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>queue-package</artifactId>
-            <version>3.2</version>
+            <version>3.2-2</version>
         </dependency>
     </dependencies>
     <build>
@@ -121,7 +121,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.broadinstitute.sting:queue-package</artifact>
+                  <artifact>org.broadinstitute.gatk:queue-package</artifact>
                   <excludes>
 <!--                      <exclude>scala/**</exclude>-->
                   </excludes>

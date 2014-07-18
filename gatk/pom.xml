@@ -58,9 +58,9 @@
             <version>0.1.3</version>
         </dependency>
         <dependency>
-            <groupId>org.broadinstitute.sting</groupId>
+            <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>queue-package</artifactId>
-            <version>3.2</version>
+            <version>3.2-2</version>
         </dependency>
     </dependencies>
     <build>
@@ -122,7 +122,7 @@
                   </transformers>
                   <artifactSet>
                     <excludes>
-                      <exclude>org.broadinstitute.sting:queue-package</exclude>
+                      <exclude>org.broadinstitute.gatk:queue-package</exclude>
                       <exclude>junit:junit</exclude>
                       <exclude>org.scala-lang:scala-compiler</exclude>
                       <exclude>org.scala-lang:scala-library</exclude>
