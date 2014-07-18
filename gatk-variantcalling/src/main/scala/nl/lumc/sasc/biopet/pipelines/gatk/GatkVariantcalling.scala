@@ -36,6 +36,8 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
     if (reference == null) reference = config("reference")
     if (dbsnp == null && configContains("dbsnp")) dbsnp = config("dbsnp")
     if (outputFile == null) outputFile = outputDir + outputName + (if (gvcfMode) ".gvcf.vcf" else ".vcf")
+    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
+    else if (!outputDir.endsWith("/")) outputDir += "/"
   }
   
   def biopetScript() {
@@ -82,7 +84,7 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
       this.o = swapExt(dir,inputBam,".bam",".baserecal")
       if (dbsnp != null) this.knownSites :+= dbsnp
       if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
-      this.nct = config("threads", 2, "baserecalibrator")
+      this.nct = config("threads", 1, "baserecalibrator")
     }
     add(baseRecalibrator)
     
@@ -92,7 +94,7 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
       this.BQSR = baseRecalibrator.o
       if (dbsnp != null) this.knownSites :+= dbsnp
       if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
-      this.nct = config("threads", 2, "baserecalibrator")
+      this.nct = config("threads", 1, "baserecalibrator")
     }
     add(baseRecalibratorAfter)
     
@@ -117,6 +119,7 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
   
   def addHaplotypeCaller(bamfiles:List[File], outputfile:File): File = {
     val haplotypeCaller = new HaplotypeCaller with gatkArguments {
+      this.min_mapping_quality_score = config("minMappingQualityScore", 20, "haplotypecaller")
       if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
       this.input_file = bamfiles
       this.out = outputfile
@@ -141,7 +144,7 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
         this.dontUseSoftClippedBases = config("dontusesoftclippedbases", false, "haplotypecaller")
         this.recoverDanglingHeads = config("recoverdanglingheads", false, "haplotypecaller")
         this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 10, "haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", 30, "haplotypecaller")
       }
     }
     add(haplotypeCaller)
@@ -156,6 +159,8 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
       if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
       if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
       this.out = outputDir + outputName + ".vcf"
+      this.stand_call_conf = config("stand_call_conf", 30, "genotypegvcfs")
+      this.stand_emit_conf = config("stand_emit_conf", 30, "genotypegvcfs")
     }
     add(genotypeGVCFs)
     return genotypeGVCFs.out
