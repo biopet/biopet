@@ -9,13 +9,9 @@
   <modules>
     <module>biopet-framework</module>
     <module>flexiprep</module>
-    <module>gatk</module>
     <module>mapping</module>
     <module>bam-metrics</module>
     <module>pipeline-template</module>
-    <module>gatk-variantcalling</module>
-    <module>gatk-genotyping</module>
-    <module>gatk-pipeline</module>
-    <module>gatk-benchmark-genotyping</module>
+    <module>gatk</module>
   </modules>
 </project>

@@ -1,9 +1,1 @@
-/bam-metrics/dependency-reduced-pom.xml
-/biopet-framework/nbactions.xml
-/pipeline-template/dependency-reduced-pom.xml
-/pipeline-template/nbactions.xml
-/gatk-variantcalling/nbactions.xml
-/gatk-variantcalling/dependency-reduced-pom.xml
-/bam-metrics/nbactions.xml
 dependency-reduced-pom.xml
-nbactions.xml
