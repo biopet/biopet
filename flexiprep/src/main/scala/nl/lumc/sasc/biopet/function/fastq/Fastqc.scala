@@ -17,7 +17,7 @@ class Fastqc(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Output", shortName="out")
   var output: File = _
   
-  executeble = config("exe","fastqc")
+  executable = config("exe","fastqc")
   var java_exe: String = config("exe", "java", "java")
   var kmers: Int = config("kmers", 5)
   var quiet: Boolean = config("quiet", false)
@@ -28,15 +28,15 @@ class Fastqc(val root:Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 4
   
   override def afterGraph {
-    this.checkExecuteble
-    val fastqcDir = executeble.substring(0, executeble.lastIndexOf("/"))
+    this.checkExecutable
+    val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
     if (contaminants == null) contaminants = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
   }
   
-  override def versionCommand = executeble + " --version"
+  override def versionCommand = executable + " --version"
   
   def cmdLine = {
-    required(executeble) + 
+    required(executable) + 
       optional("--java", java_exe) +
       optional("--threads",threads) +
       optional("--contaminants",contaminants) +

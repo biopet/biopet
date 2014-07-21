@@ -34,7 +34,7 @@ class Star(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Output SAindex file", required=false)
   var outputSAindex: File = _
   
-  executeble = config("exe", "STAR")
+  executable = config("exe", "STAR")
   
   @Argument(doc="Output Directory")
   var outputDir: String = _
@@ -64,7 +64,7 @@ class Star(val root:Configurable) extends BiopetCommandLineFunction {
   }
   
   def cmdLine : String = {
-    var cmd: String = required("cd",outputDir) + "&&" + required(executeble)
+    var cmd: String = required("cd",outputDir) + "&&" + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
         required("--genomeFastaFiles", referenceFile)

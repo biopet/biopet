@@ -23,7 +23,7 @@ class BedtoolsCoverage(val root:Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
   
-  def cmdLine = required(executeble) + required("coverage") + 
+  def cmdLine = required(executable) + required("coverage") + 
     required(inputTag, input) + 
     required("-b", intersectFile) + 
     conditional(depth, "-d") + 

@@ -13,7 +13,7 @@ class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Unzipped file")
   var output: File = _
   
-  executeble = config("exe", "pbzip2")
+  executable = config("exe", "pbzip2")
   
   var decomrpess = true
   var memory: Int = config("memory", 1000)
@@ -25,7 +25,7 @@ class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {
     memory = memory * threads
   }
   
-  def cmdLine = required(executeble) +
+  def cmdLine = required(executable) +
       conditional(decomrpess, "-d") +
       conditional(!decomrpess, "-z") +
       optional("-p", threads, spaceSeparated=false) +

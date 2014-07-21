@@ -26,7 +26,7 @@ class BedtoolsIntersect(val root:Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
   
-  def cmdLine = required(executeble) + required("intersect") + 
+  def cmdLine = required(executable) + required("intersect") + 
     required(inputTag, input) + 
     required("-b", intersectFile) + 
     required("-f", minOverlap) + 

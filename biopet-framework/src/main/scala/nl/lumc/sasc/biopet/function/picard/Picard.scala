@@ -25,7 +25,7 @@ trait Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc="CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", false, "picard")
   
-  override def versionCommand = executeble + " " + javaOpts + " " + javaExecutable + " -h"
+  override def versionCommand = executable + " " + javaOpts + " " + javaExecutable + " -h"
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0,1)
   

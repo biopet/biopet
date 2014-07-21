@@ -29,7 +29,7 @@ class Sickle(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="stats output")
   var output_stats: File = null
   
-  executeble = config("exe", "sickle")
+  executable = config("exe", "sickle")
   var qualityType: String = config("qualitytype", null)
   
   var defaultQualityType: String = _
@@ -40,14 +40,14 @@ class Sickle(val root:Configurable) extends BiopetCommandLineFunction {
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
   }
   
-  override def versionCommand = executeble + " --version"
+  override def versionCommand = executable + " --version"
   
   override def beforeCmd {
     qualityType = getQualityTypeFromFile
   }
   
   def cmdLine = {
-    var cmd: String = required(executeble)
+    var cmd: String = required(executable)
     if (input_R2 != null) {
       cmd += required("pe") +
       required("-r", input_R2) + 

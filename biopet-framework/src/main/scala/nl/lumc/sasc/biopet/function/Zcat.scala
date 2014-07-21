@@ -12,9 +12,9 @@ class Zcat(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Unzipped file")
   var output: File = _
   
-  executeble = config("exe", "zcat")
+  executable = config("exe", "zcat")
   
-  def cmdLine = required(executeble) + required(input) + " > " + required(output)
+  def cmdLine = required(executable) + required(input) + " > " + required(output)
 }
 
 object Zcat {

@@ -12,7 +12,7 @@ class Sha1sum(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Unzipped file")
   var output: File = _
   
-  executeble = config("exe","sha1sum")
+  executable = config("exe","sha1sum")
   
-  def cmdLine = required(executeble) + required(input) + " > " + required(output)
+  def cmdLine = required(executable) + required(input) + " > " + required(output)
 }

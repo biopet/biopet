@@ -7,7 +7,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.apps.{BedToInterval, BiopetFlagstat}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.function.bedtools.{BedtoolsCoverage, BedtoolsIntersect}
-import nl.lumc.sasc.biopet.function.picard.{CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics}
+import nl.lumc.sasc.biopet.function.picard.{CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics}
 import nl.lumc.sasc.biopet.function.samtools.SamtoolsFlagstat
 
 class BamMetrics(val root:Configurable) extends QScript with BiopetQScript {
@@ -36,6 +36,7 @@ class BamMetrics(val root:Configurable) extends QScript with BiopetQScript {
     add(BiopetFlagstat(this, inputBam, outputDir))
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
     add(CollectInsertSizeMetrics(this, inputBam, outputDir))
+    add(CollectAlignmentSummaryMetrics(this, inputBam, outputDir))
     
     val baitIntervalFile = if (baitBedFile != null) new File(outputDir, baitBedFile.getName.stripSuffix(".bed") + ".interval") else null
     if (baitIntervalFile != null)

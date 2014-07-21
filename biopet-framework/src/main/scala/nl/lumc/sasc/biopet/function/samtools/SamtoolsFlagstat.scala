@@ -11,7 +11,7 @@ class SamtoolsFlagstat(val root:Configurable) extends Samtools {
   @Output(doc="output File")
   var output: File = _
   
-  def cmdLine = required(executeble) + required("flagstat") + required(input) + " > " + required(output)
+  def cmdLine = required(executable) + required("flagstat") + required(input) + " > " + required(output)
 }
 
 object SamtoolsFlagstat {

@@ -22,17 +22,17 @@ class Bwa(val root:Configurable) extends BiopetCommandLineFunction {
   var RG: String = _
   var M: Boolean = config("M", true)
   
-  executeble = config("exe", "bwa")
+  executable = config("exe", "bwa")
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0,1)
   
   override val defaultVmem = "6G"
   override val defaultThreads = 8
   
-  override def versionCommand = executeble
+  override def versionCommand = executable
   
   def cmdLine = {
-    required(executeble) + 
+    required(executable) + 
     required("mem") + 
     optional("-t", nCoresRequest) + 
     optional("-R", RG) + 

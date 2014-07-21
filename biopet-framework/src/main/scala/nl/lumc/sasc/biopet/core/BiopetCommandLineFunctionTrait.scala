@@ -22,8 +22,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var vmem: String = _
   val defaultVmem: String = ""
   
-  @Argument(doc="Executeble")
-  var executeble: String = _
+  @Argument(doc="Executable")
+  var executable: String = _
   
   protected def beforeCmd {
   }
@@ -32,7 +32,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
   
   override def freezeFieldValues() {
-    checkExecuteble
+    checkExecutable
     afterGraph
     jobOutputFile = new File(firstOutput.getParent + "/."  + firstOutput.getName + "." + analysisName + ".out")
     
@@ -49,26 +49,26 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     super.freezeFieldValues()
   }
   
-  protected def checkExecuteble {
-    try if (executeble != null) {
+  protected def checkExecutable {
+    try if (executable != null) {
       val buffer = new StringBuffer()
-      val cmd = Seq("which", executeble)
+      val cmd = Seq("which", executable)
       val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
       if (process.exitValue == 0) {
-        executeble = buffer.toString
-        val file = new File(executeble)
-        executeble = file.getCanonicalPath
+        executable = buffer.toString
+        val file = new File(executable)
+        executable = file.getCanonicalPath
       } else {
-        logger.error("executeble: '" + executeble + "' not found, please check config")
-        throw new QException("executeble: '" + executeble + "' not found, please check config")
+        logger.error("executable: '" + executable + "' not found, please check config")
+        throw new QException("executable: '" + executable + "' not found, please check config")
       }
     } catch {
-      case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executeble skipped: " + ioe)
+      case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
     }
   }
   
   final protected def preCmdInternal {
-    checkExecuteble
+    checkExecutable
     //for (input <- this.inputs) if (!input.exists) throw new IllegalStateException("Input: " + input + " for " + analysisName + " is missing")
     //logger.debug("Config for " + analysisName + ": " + localConfig)
     
@@ -96,7 +96,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         case _ =>
       }
     }
-    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executeble oke?")
+    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executable oke?")
     return "N/A"
   }
   
