@@ -51,8 +51,8 @@
         </dependency>-->
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
-            <artifactId>queue-package</artifactId>
-            <version>3.2-2</version>
+            <artifactId>gatk-queue-package-distribution</artifactId>
+            <version>3.2</version>
         </dependency>
     </dependencies>
     <build>
@@ -121,7 +121,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.broadinstitute.gatk:queue-package</artifact>
+                  <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
                   <excludes>
 <!--                      <exclude>scala/**</exclude>-->
                   </excludes>

@@ -49,8 +49,8 @@
         </dependency>
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
-            <artifactId>queue-package</artifactId>
-            <version>3.2-2</version>
+            <artifactId>gatk-queue-package-distribution</artifactId>
+            <version>3.2</version>
         </dependency>
     </dependencies>
     <build>
@@ -112,7 +112,7 @@
                   </transformers>
                   <artifactSet>
                     <excludes>
-                      <exclude>org.broadinstitute.gatk:queue-package</exclude>
+                      <exclude>org.broadinstitute.gatk:gatk-queue-package-distribution</exclude>
                       <exclude>junit:junit</exclude>
                       <exclude>org.scala-lang:scala-compiler</exclude>
                       <exclude>org.scala-lang:scala-library</exclude>
