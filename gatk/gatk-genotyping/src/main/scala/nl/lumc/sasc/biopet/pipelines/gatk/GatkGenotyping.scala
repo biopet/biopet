@@ -57,6 +57,13 @@ class GatkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
       if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
       if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
       this.out = outputFile
+      if (config("inputtype", "dna") == "rna") {
+        this.stand_call_conf = config("stand_call_conf", 20, "haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", 20, "haplotypecaller")
+      } else {
+        this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", 30, "haplotypecaller")
+      }
     }
     add(genotypeGVCFs)
     return genotypeGVCFs.out
