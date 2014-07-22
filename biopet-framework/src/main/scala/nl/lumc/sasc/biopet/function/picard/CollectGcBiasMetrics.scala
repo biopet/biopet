@@ -20,19 +20,19 @@ class CollectGcBiasMetrics(val root:Configurable) extends Picard {
   var outputSummary: File = _
 
   @Argument(doc="Reference file", required = false)
-  var reference: File = config("reference", "")
+  var reference: File = config("reference", required=true)
   
   @Argument(doc="Window size", required = false)
-  var windowSize: Int = config("windowsize", 100)
+  var windowSize: Option[Int] = config("windowsize")
   
   @Argument(doc="MINIMUM_GENOME_FRACTION", required=false)
-  var minGenomeFraction: Double = config("mingenomefraction", 1.0E-5)
+  var minGenomeFraction: Option[Double] = config("mingenomefraction")
   
   @Argument(doc="ASSUME_SORTED", required=false)
-  var assumeSorted: Boolean = config("assumesorted", false)
+  var assumeSorted: Boolean = config("assumesorted", default=true)
   
   @Argument(doc="IS_BISULFITE_SEQUENCED", required=false)
-  var isBisulfiteSequinced: Boolean = config("isbisulfitesequinced", false)
+  var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
   
   override def afterGraph {
     if (outputChart == null) outputChart = new File(output + ".pdf")
@@ -48,7 +48,7 @@ class CollectGcBiasMetrics(val root:Configurable) extends Picard {
     optional("WINDOW_SIZE=", windowSize, spaceSeparated=false) +
     optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated=false) + 
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
-    conditional(isBisulfiteSequinced, "IS_BISULFITE_SEQUENCED=TRUE")
+    conditional(isBisulfiteSequinced.getOrElse(false), "IS_BISULFITE_SEQUENCED=TRUE")
 }
 
 object CollectGcBiasMetrics {

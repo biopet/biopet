@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.function
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 import java.io.File
 

@@ -10,25 +10,43 @@ trait Configurable extends Logging {
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
   
-  def config(key:String) = globalConfig(configName, configPath, key)
-  def config(key:String, default:Any) = globalConfig(configName, configPath, key, default)
-  def config(key:String, default:Any, module:String) = globalConfig(module, configName :: configPath, key, default)
+  def config(key:String, default:Any = null, submodule:String = null, required:Boolean = false): ConfigValue = {
+    val m = if (submodule != null) submodule else configName
+    val p = if (submodule != null) configName :: configPath else configPath
+    if (!configContains(key, submodule) && default == null) {
+      if (required) {
+        logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
+        throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
+      } else return null
+    }
+    if (default == null) return globalConfig(m, p, key)
+    else return globalConfig(m, p, key, default)
+  }
+  //def config(key:String, default:Any) = globalConfig(configName, configPath, key, default)
+  //def config(key:String, default:Any, module:String) = globalConfig(module, configName :: configPath, key, default)
   
-  def configContains(key:String) = globalConfig.contains(configName, configPath, key)
-  def configContains(key:String, module:String) = globalConfig.contains(module, configName :: configPath, key)
+  //def configContains(key:String) = globalConfig.contains(configName, configPath, key)
+  def configContains(key:String, submodule:String = null) = {
+    val m = if (submodule != null) submodule else configName
+    val p = if (submodule != null) configName :: configPath else configPath
+    
+    globalConfig.contains(m, p, key)
+  }
   
-  implicit def configValue2file(value:ConfigValue) = new File(Configurable.any2string(value.value))
-  implicit def configValue2string(value:ConfigValue) = Configurable.any2string(value.value)
-  implicit def configValue2long(value:ConfigValue) = Configurable.any2long(value.value)
-  implicit def configValue2int(value:ConfigValue) = Configurable.any2int(value.value)
-  implicit def configValue2optionInt(value:ConfigValue) = Option(Configurable.any2int(value.value))
-  implicit def configValue2double(value:ConfigValue) = Configurable.any2double(value.value)
-  implicit def configValue2optionDouble(value:ConfigValue) = Option(Configurable.any2double(value.value))
-  implicit def configValue2boolean(value:ConfigValue) = Configurable.any2boolean(value.value)
-  implicit def configValue2list(value:ConfigValue) = Configurable.any2list(value.value)
-  implicit def configValue2stringList(value:ConfigValue) = Configurable.any2stringList(value.value)
-  implicit def configValue2stringSet(value:ConfigValue) = Configurable.any2stringList(value.value).toSet
-  implicit def configValue2map(value:ConfigValue) = Configurable.any2map(value.value)
+  implicit def configValue2file(value:ConfigValue): File = if (value != null) new File(Configurable.any2string(value.value)) else null
+  implicit def configValue2string(value:ConfigValue): String = if (value != null) Configurable.any2string(value.value) else null
+  implicit def configValue2long(value:ConfigValue): Long = if (value != null) Configurable.any2long(value.value) else 0
+  implicit def configValue2optionLong(value:ConfigValue): Option[Long] = if (value != null) Option(Configurable.any2long(value.value)) else None
+  implicit def configValue2int(value:ConfigValue): Int = if (value != null) Configurable.any2int(value.value) else 0
+  implicit def configValue2optionInt(value:ConfigValue): Option[Int] = if (value != null) Option(Configurable.any2int(value.value)) else None
+  implicit def configValue2double(value:ConfigValue): Double = if (value != null) Configurable.any2double(value.value) else 0
+  implicit def configValue2optionDouble(value:ConfigValue): Option[Double] = if (value != null) Option(Configurable.any2double(value.value)) else None
+  implicit def configValue2boolean(value:ConfigValue): Boolean = if (value != null) Configurable.any2boolean(value.value) else false
+  implicit def configValue2optionBoolean(value:ConfigValue): Option[Boolean] = if (value != null) Option(Configurable.any2boolean(value.value)) else None
+  implicit def configValue2list(value:ConfigValue): List[Any] = if (value != null) Configurable.any2list(value.value) else null
+  implicit def configValue2stringList(value:ConfigValue): List[String] = if (value != null) Configurable.any2stringList(value.value) else null
+  implicit def configValue2stringSet(value:ConfigValue): Set[String] = if (value != null) Configurable.any2stringList(value.value).toSet else null
+  implicit def configValue2map(value:ConfigValue): Map[String, Any] = if (value != null) Configurable.any2map(value.value) else null
 }
 
 object Configurable extends Logging {

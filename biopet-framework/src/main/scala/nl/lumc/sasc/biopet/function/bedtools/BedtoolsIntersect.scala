@@ -15,7 +15,7 @@ class BedtoolsIntersect(val root:Configurable) extends Bedtools {
   var output: File = _
   
   @Argument(doc="Min overlap", required=false)
-  var minOverlap: Double = config("minoverlap", 1E-9)
+  var minOverlap: Option[Double] = config("minoverlap")
   
   @Argument(doc="Only count", required=false)
   var count: Boolean = false
@@ -29,7 +29,7 @@ class BedtoolsIntersect(val root:Configurable) extends Bedtools {
   def cmdLine = required(executable) + required("intersect") + 
     required(inputTag, input) + 
     required("-b", intersectFile) + 
-    required("-f", minOverlap) + 
+    optional("-f", minOverlap) + 
     conditional(count, "-c") + 
     " > " + required(output)
 }
@@ -41,7 +41,7 @@ object BedtoolsIntersect {
     bedtoolsIntersect.input = input
     bedtoolsIntersect.intersectFile = intersect
     bedtoolsIntersect.output = output
-    if (minOverlap > 0) bedtoolsIntersect.minOverlap = minOverlap
+    if (minOverlap > 0) bedtoolsIntersect.minOverlap = Option(minOverlap)
     bedtoolsIntersect.count = count
     return bedtoolsIntersect
   }

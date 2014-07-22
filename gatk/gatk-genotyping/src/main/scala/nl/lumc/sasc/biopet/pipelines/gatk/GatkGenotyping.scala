@@ -1,11 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.function._
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.{CommandLineGATK, GenotypeGVCFs, SelectVariants}
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
 
 class GatkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
@@ -31,7 +29,7 @@ class GatkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
   
   def init() {
     if (reference == null) reference = config("reference")
-    if (dbsnp == null && configContains("dbsnp")) dbsnp = config("dbsnp")
+    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputFile == null) outputFile = outputDir + outputName + ".vcf"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -55,14 +53,15 @@ class GatkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
       this.variant = gvcfFiles
       if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
-      if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
+      if (configContains("scattercount", submodule="genotypegvcfs"))
+        this.scatterCount = config("scattercount", submodule="genotypegvcfs")
       this.out = outputFile
       if (config("inputtype", "dna").getString == "rna") {
-        this.stand_call_conf = config("stand_call_conf", 20, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 20, "haplotypecaller")
+        this.stand_call_conf = config("stand_call_conf", default=20, submodule="haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", default=20, submodule="haplotypecaller")
       } else {
-        this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 30, "haplotypecaller")
+        this.stand_call_conf = config("stand_call_conf", default=30, submodule="haplotypecaller")
+        this.stand_emit_conf = config("stand_emit_conf", default=30, submodule="haplotypecaller")
       }
     }
     add(genotypeGVCFs)
@@ -74,7 +73,8 @@ class GatkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
       this.variant = inputFile
       for (sample <- samples) this.sample_name :+= sample
       this.excludeNonVariants = true
-      if (configContains("scattercount", "selectvariants")) this.scatterCount = config("scattercount", 1, "selectvariants")
+      if (configContains("scattercount", submodule="selectvariants")) 
+        this.scatterCount = config("scattercount", submodule="selectvariants")
       this.out = outputDir + name + ".vcf"
     }
     add(selectVariants)

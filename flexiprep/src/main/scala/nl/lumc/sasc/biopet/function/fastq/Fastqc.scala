@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.function.fastq
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
 import scala.sys.process._
 
@@ -17,12 +17,12 @@ class Fastqc(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Output", shortName="out")
   var output: File = _
   
-  executable = config("exe","fastqc")
-  var java_exe: String = config("exe", "java", "java")
-  var kmers: Int = config("kmers", 5)
-  var quiet: Boolean = config("quiet", false)
-  var noextract: Boolean = config("noextract", false)
-  var nogroup: Boolean = config("nogroup", false)
+  executable = config("exe", default="fastqc")
+  var java_exe: String = config("exe", default="java", submodule="java")
+  var kmers: Option[Int] = config("kmers")
+  var quiet: Boolean = config("quiet")
+  var noextract: Boolean = config("noextract")
+  var nogroup: Boolean = config("nogroup")
     
   override val versionRegex = """FastQC (.*)""".r
   override val defaultThreads = 4

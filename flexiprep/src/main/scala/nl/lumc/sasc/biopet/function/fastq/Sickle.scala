@@ -29,14 +29,14 @@ class Sickle(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="stats output")
   var output_stats: File = null
   
-  executable = config("exe", "sickle")
-  var qualityType: String = config("qualitytype", null)
+  executable = config("exe", default="sickle")
+  var qualityType: String = config("qualitytype")
   
   var defaultQualityType: String = _
   override val versionRegex = """sickle version (.*)""".r
   
   override def afterGraph {
-    if (defaultQualityType == null) defaultQualityType = config("defaultqualitytype", "sanger")
+    if (defaultQualityType == null) defaultQualityType = config("defaultqualitytype", default="sanger")
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
   }
   

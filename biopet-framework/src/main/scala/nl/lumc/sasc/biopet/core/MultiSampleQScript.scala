@@ -9,6 +9,7 @@ trait MultiSampleQScript extends BiopetQScript {
   final def runSamplesJobs : Map[String,Map[String,File]] = {
     var output: Map[String,Map[String,File]] = Map()
     samples = config("samples")
+    if (samples == null) samples = Map()
     if (globalConfig.contains("samples")) for ((key,value) <- samples) {
       var sample = Configurable.any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)

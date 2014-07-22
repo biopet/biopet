@@ -1,8 +1,8 @@
 package nl.lumc.sasc.biopet.function
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
 
 class Zcat(val root:Configurable) extends BiopetCommandLineFunction {
@@ -12,7 +12,7 @@ class Zcat(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Unzipped file")
   var output: File = _
   
-  executable = config("exe", "zcat")
+  executable = config("exe", default="zcat")
   
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 }

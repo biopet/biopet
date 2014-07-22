@@ -1,20 +1,16 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.function._
-import nl.lumc.sasc.biopet.function.aligners._
+import nl.lumc.sasc.biopet.core.MultiSampleQScript
+import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.pipelines.mapping._
 import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
-import nl.lumc.sasc.biopet.pipelines.flexiprep._
+import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk._
 import org.broadinstitute.gatk.queue.extensions.picard._
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{Argument}
-import scala.util.parsing.json._
 
 class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
@@ -35,9 +31,11 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    referenceFile = config("referenceFile")
-    if (configContains("dbsnp")) dbsnp = config("dbsnp")
-    for (file <- config("gvcfFiles", Nil).getList) gvcfFiles :+= file.toString
+    referenceFile = config("reference", required=true)
+    dbsnp = config("dbsnp")
+    if (configContains("gvcfFiles")) 
+      for (file <- config("gvcfFiles").getList) 
+        gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -62,7 +60,7 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
         addAll(gatkGenotyping.functions)
         var vcfFile = gatkGenotyping.outputFile
         
-        if (config("inputtype", "dna").getString != "rna") {
+        if (config("inputtype", default="dna").getString != "rna") {
           vcfFile = addVariantAnnotator(vcfFile, finalBamFiles, outputDir + "recalibration/")
           vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir + "recalibration/")
           vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir + "recalibration/")
@@ -104,7 +102,7 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
     val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
     var inputType = ""
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
-    else inputType = config("inputtype", "dna").toString
+    else inputType = config("inputtype", default="dna").toString
     if (runConfig.contains("R1")) {
       val mapping = Mapping.loadFromRunConfig(this, runConfig, sampleConfig, runDir)
       addAll(mapping.functions) // Add functions of mapping to curent function pool
@@ -162,19 +160,26 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
     val variantRecalibrator = new VariantRecalibrator() with gatkArguments {
       if (mode_arg == "indel") {
         this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        if (configContains("mills", "variantrecalibrator")) this.resource :+= new TaggedFile(config("mills", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
+        if (configContains("mills", submodule="variantrecalibrator"))
+          this.resource :+= new TaggedFile(config("mills", submodule="variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
       } else { // SNP
         this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        if (configContains("hapmap", "variantrecalibrator")) this.resource +:= new TaggedFile(config("hapmap", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
-        if (configContains("omni", "variantrecalibrator")) this.resource +:= new TaggedFile(config("omni", "", "variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
-        if (configContains("1000G", "variantrecalibrator")) this.resource +:= new TaggedFile(config("1000G", "", "variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
+        if (configContains("hapmap", submodule="variantrecalibrator")) 
+          this.resource +:= new TaggedFile(config("hapmap", submodule="variantrecalibrator").getString, "known=false,training=true,truth=true,prior=15.0")
+        if (configContains("omni", submodule="variantrecalibrator")) 
+          this.resource +:= new TaggedFile(config("omni", submodule="variantrecalibrator").getString, "known=false,training=true,truth=true,prior=12.0")
+        if (configContains("1000G", submodule="variantrecalibrator")) 
+          this.resource +:= new TaggedFile(config("1000G", submodule="variantrecalibrator").getString, "known=false,training=true,truth=false,prior=10.0")
       }
-      if (configContains("dbsnp", "variantrecalibrator")) this.resource :+= new TaggedFile(config("dbsnp", "", "variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
+      if (configContains("dbsnp", submodule="variantrecalibrator")) 
+        this.resource :+= new TaggedFile(config("dbsnp", submodule="variantrecalibrator").getString, "known=true,training=false,truth=false,prior=2.0")
       this.nt = 4
       this.memoryLimit = nt * 2
       this.an = Seq("QD","DP","FS","ReadPosRankSum","MQRankSum")
-      if (configContains("minnumbadvariants", "variantrecalibrator")) this.minNumBadVariants = config("minnumbadvariants", "", "variantrecalibrator")
-      if (configContains("maxgaussians", "variantrecalibrator")) this.maxGaussians = config("maxgaussians", "", "variantrecalibrator")
+      if (configContains("minnumbadvariants", submodule="variantrecalibrator")) 
+        this.minNumBadVariants = config("minnumbadvariants", submodule="variantrecalibrator")
+      if (configContains("maxgaussians", submodule="variantrecalibrator")) 
+        this.maxGaussians = config("maxgaussians", submodule="variantrecalibrator")
     }
     return variantRecalibrator
   }
@@ -183,14 +188,15 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
     val applyRecalibration = new ApplyRecalibration() with gatkArguments {
       if (mode_arg == "indel") {
         this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-        this.ts_filter_level = config("ts_filter_level", 99.0, "applyrecalibration")
+        this.ts_filter_level = config("ts_filter_level", default=99.0, submodule="applyrecalibration")
       } else { // SNP
         this.mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-        this.ts_filter_level = config("ts_filter_level", 99.5, "applyrecalibration")
+        this.ts_filter_level = config("ts_filter_level", default=99.5, submodule="applyrecalibration")
       }
       this.nt = 3
       this.memoryLimit = nt * 2
-      if (configContains("scattercount", "applyrecalibration")) this.scatterCount = config("scattercount", 1, "applyrecalibration")
+      if (configContains("scattercount", submodule="applyrecalibration")) 
+        this.scatterCount = config("scattercount", submodule="applyrecalibration")
     }
     return applyRecalibration
   }
@@ -199,9 +205,10 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
     val variantAnnotator = new VariantAnnotator with gatkArguments {
       this.variant = inputvcf
       this.input_file = bamfiles
-      this.dbsnp = config("dbsnp", "variantannotator")
+      this.dbsnp = config("dbsnp", submodule="variantannotator")
       this.out = swapExt(dir, inputvcf,".vcf",".anotated.vcf")
-      if (configContains("scattercount", "variantannotator")) this.scatterCount = config("scattercount", 1, "variantannotator")
+      if (configContains("scattercount", submodule="variantannotator"))
+        this.scatterCount = config("scattercount", submodule="variantannotator")
     }
     add(variantAnnotator)
     
@@ -212,7 +219,8 @@ class GatkPipeline(val root:Configurable) extends QScript with MultiSampleQScrip
     val combineGVCFs = new CombineGVCFs with gatkArguments {
       this.variant = input
       this.o = output
-      if (configContains("scattercount", "variantannotator")) this.scatterCount = config("scattercount", 1, "combinegvcfs")
+      if (configContains("scattercount", submodule="variantannotator")) 
+        this.scatterCount = config("scattercount", submodule="combinegvcfs")
     }
     add(combineGVCFs)
     

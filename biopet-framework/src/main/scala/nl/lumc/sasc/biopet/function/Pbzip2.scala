@@ -1,9 +1,8 @@
 package nl.lumc.sasc.biopet.function
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-//import org.broadinstitute.sting.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
 
 class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {
@@ -13,16 +12,16 @@ class Pbzip2(val root:Configurable) extends BiopetCommandLineFunction {
   @Output(doc="Unzipped file")
   var output: File = _
   
-  executable = config("exe", "pbzip2")
+  executable = config("exe", default="pbzip2")
   
   var decomrpess = true
-  var memory: Int = config("memory", 1000)
+  var memory: Option[Int] = config("memory")
   
-  override val defaultVmem = (memory * 2 / 1000) + "G"
+  override val defaultVmem = (memory.getOrElse(1000) * 2 / 1000) + "G"
   override val defaultThreads = 2
   
   override def beforeCmd {
-    memory = memory * threads
+    if (!memory.isEmpty) memory = Option(memory.get * threads)
   }
   
   def cmdLine = required(executable) +

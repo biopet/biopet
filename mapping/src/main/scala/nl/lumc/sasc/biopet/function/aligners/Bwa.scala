@@ -14,15 +14,15 @@ class Bwa(val root:Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
   
   @Input(doc="The reference file for the bam files.", shortName="R")
-  var referenceFile: File = new File(config("referenceFile"))
+  var referenceFile: File = config("referenceFile", required=true)
   
   @Output(doc="Output file SAM", shortName="output")
   var output: File = _
   
   var RG: String = _
-  var M: Boolean = config("M", true)
+  var M: Boolean = config("M", default=true)
   
-  executable = config("exe", "bwa")
+  executable = config("exe", default="bwa")
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0,1)
   

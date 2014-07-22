@@ -17,25 +17,25 @@ class CollectInsertSizeMetrics(val root:Configurable) extends Picard {
   var outputHistogram: File = _
   
   @Argument(doc="Reference file", required = false)
-  var reference: File = config("reference", "")
+  var reference: File = config("reference")
   
   @Argument(doc="DEVIATIONS", required = false)
-  var deviations: Double = config("deviations", 10.0)
+  var deviations: Option[Double] = config("deviations")
   
   @Argument(doc="MINIMUM_PCT", required=false)
-  var minPct: Double = config("minpct", 0.05)
+  var minPct: Option[Double] = config("minpct")
   
   @Argument(doc="ASSUME_SORTED", required=false)
-  var assumeSorted: Boolean = config("assumesorted", false)
+  var assumeSorted: Boolean = config("assumesorted", default=true)
   
   @Argument(doc="STOP_AFTER", required=false)
-  var stopAfter: Long = config("metricaccumulationlevel", 0)
+  var stopAfter: Option[Long] = config("stopAfter")
   
   @Argument(doc="METRIC_ACCUMULATION_LEVEL", required=false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", List())
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
   
   @Argument(doc="HISTOGRAM_WIDTH", required=false)
-  var histogramWidth: Int = config("histogramWidth", 0)
+  var histogramWidth: Option[Int] = config("histogramWidth")
   
   override def afterGraph {
     if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
@@ -49,8 +49,8 @@ class CollectInsertSizeMetrics(val root:Configurable) extends Picard {
     required("REFERENCE_SEQUENCE=", reference, spaceSeparated=false) + 
     optional("DEVIATIONS=", deviations, spaceSeparated=false) +
     repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated=false) +
-    (if (stopAfter > 0) optional("STOP_AFTER=", stopAfter, spaceSeparated=false) else "") +
-    (if (histogramWidth > 0) optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated=false) else "") +
+    optional("STOP_AFTER=", stopAfter, spaceSeparated=false) +
+    optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated=false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE")
 }
 

@@ -1,12 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.function._
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{CommandLineGATK, GenotypeGVCFs, SelectVariants}
-import org.broadinstitute.gatk.queue.function._
-import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{Input, Argument}
 import scala.util.Random
 
 class GatkBenchmarkGenotyping(val root:Configurable) extends QScript with BiopetQScript {
@@ -32,7 +29,7 @@ class GatkBenchmarkGenotyping(val root:Configurable) extends QScript with Biopet
       gvcfFiles ::= file.toString
     }
     if (reference == null) reference = config("reference")
-    if (dbsnp == null && configContains("dbsnp")) dbsnp = config("dbsnp")
+    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -48,12 +45,6 @@ class GatkBenchmarkGenotyping(val root:Configurable) extends QScript with Biopet
       addGenotypingPipeline(gvcfPool)
       todoGvcfs = todoGvcfs.filter(b => b != todoGvcfs(index))
     }
-  }
-  
-  trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = reference
-    this.memoryLimit = 2
-    this.jobResourceRequests :+= "h_vmem=4G"
   }
   
   def addGenotypingPipeline(gvcfPool: List[File]) {

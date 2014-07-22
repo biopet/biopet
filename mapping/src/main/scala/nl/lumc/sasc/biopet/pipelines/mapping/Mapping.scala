@@ -1,23 +1,16 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import nl.lumc.sasc.biopet.function._
-import nl.lumc.sasc.biopet.function.aligners._
+import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
-import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.function.aligners.{Bwa, Star}
 import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
-import nl.lumc.sasc.biopet.pipelines.flexiprep._
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk._
-import org.broadinstitute.gatk.queue.extensions.picard.MergeSamFiles
-import org.broadinstitute.gatk.queue.extensions.picard.SortSam
-import org.broadinstitute.gatk.queue.extensions.picard.AddOrReplaceReadGroups
-import org.broadinstitute.gatk.queue.function._
-import scala.util.parsing.json._
-import org.broadinstitute.gatk.utils.variant._
+import org.broadinstitute.gatk.queue.extensions.picard.{MergeSamFiles, SortSam, AddOrReplaceReadGroups}
 import scala.math._
 
 class Mapping(val root:Configurable) extends QScript with BiopetQScript {

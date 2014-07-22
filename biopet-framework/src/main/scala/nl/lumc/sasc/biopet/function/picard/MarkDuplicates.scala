@@ -17,40 +17,40 @@ class MarkDuplicates(val root:Configurable) extends Picard {
   var outputMetrics: File = _
   
   @Argument(doc="PROGRAM_RECORD_ID", required=false)
-  var programRecordId: String = if (configContains("programrecordid")) config("programrecordid") else null
+  var programRecordId: String = config("programrecordid")
   
   @Argument(doc="PROGRAM_GROUP_VERSION", required=false)
-  var programGroupVersion: String = if (configContains("programgroupversion")) config("programgroupversion") else null
+  var programGroupVersion: String = config("programgroupversion")
   
   @Argument(doc="PROGRAM_GROUP_COMMAND_LINE", required=false)
-  var programGroupCommandLine: String = if (configContains("programgroupcommandline")) config("programgroupcommandline") else null
+  var programGroupCommandLine: String = config("programgroupcommandline")
   
   @Argument(doc="PROGRAM_GROUP_NAME", required=false)
-  var programGroupName: String = if (configContains("programgroupname")) config("programgroupname") else null
+  var programGroupName: String = config("programgroupname")
   
   @Argument(doc="COMMENT", required=false)
-  var comment: String = if (configContains("comment")) config("comment") else null
+  var comment: String = config("comment")
   
   @Argument(doc="REMOVE_DUPLICATES", required=false)
-  var removeDuplicates: Boolean = config("removeduplicates", false)
+  var removeDuplicates: Boolean = config("removeduplicates", default=false)
   
   @Argument(doc="ASSUME_SORTED", required=false)
-  var assumeSorted: Boolean = config("assumesorted", false)
+  var assumeSorted: Boolean = config("assumesorted", default=false)
   
   @Argument(doc="MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP", required=false)
-  var maxSequencesForDiskReadEndsMap: Int = config("maxSequencesForDiskReadEndsMap", 50000)
+  var maxSequencesForDiskReadEndsMap: Option[Int] = config("maxSequencesForDiskReadEndsMap")
   
   @Argument(doc="MAX_FILE_HANDLES_FOR_READ_ENDS_MAP", required=false)
-  var maxFileHandlesForReadEndsMap: Int = config("maxFileHandlesForReadEndsMap", 8000)
+  var maxFileHandlesForReadEndsMap: Option[Int] = config("maxFileHandlesForReadEndsMap")
   
   @Argument(doc="SORTING_COLLECTION_SIZE_RATIO", required=false)
-  var sortingCollectionSizeRatio: Double = config("sortingCollectionSizeRatio", 0.25)
+  var sortingCollectionSizeRatio: Option[Double] = config("sortingCollectionSizeRatio")
   
   @Argument(doc="READ_NAME_REGEX", required=false)
-  var readNameRegex: String = if (configContains("readNameRegex")) config("readNameRegex") else null
+  var readNameRegex: String = config("readNameRegex")
   
   @Argument(doc="OPTICAL_DUPLICATE_PIXEL_DISTANCE", required=false)
-  var opticalDuplicatePixelDistance: Int = config("opticalDuplicatePixelDistance", 100)
+  var opticalDuplicatePixelDistance: Option[Int] = config("opticalDuplicatePixelDistance")
   
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated=false) +
@@ -63,11 +63,11 @@ class MarkDuplicates(val root:Configurable) extends Picard {
     optional("COMMENT=", comment, spaceSeparated=false) +
     conditional(removeDuplicates, "REMOVE_DUPLICATES=TRUE") + 
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") + 
-    (if (maxSequencesForDiskReadEndsMap > 0) optional("MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP=", maxSequencesForDiskReadEndsMap, spaceSeparated=false) else "") +
-    (if (maxFileHandlesForReadEndsMap > 0) optional("MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=", maxFileHandlesForReadEndsMap, spaceSeparated=false) else "") +
-    (if (sortingCollectionSizeRatio > 0) optional("SORTING_COLLECTION_SIZE_RATIO=", sortingCollectionSizeRatio, spaceSeparated=false) else "") +
+    optional("MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP=", maxSequencesForDiskReadEndsMap, spaceSeparated=false) +
+    optional("MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=", maxFileHandlesForReadEndsMap, spaceSeparated=false) +
+    optional("SORTING_COLLECTION_SIZE_RATIO=", sortingCollectionSizeRatio, spaceSeparated=false) +
     optional("READ_NAME_REGEX=", readNameRegex, spaceSeparated=false) +
-    (if (opticalDuplicatePixelDistance > 0) optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=", opticalDuplicatePixelDistance, spaceSeparated=false) else "")
+    optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=", opticalDuplicatePixelDistance, spaceSeparated=false)
 }
  object MarkDuplicates {
    def apply(root:Configurable, input:List[File], outputDir:String) : MarkDuplicates = {

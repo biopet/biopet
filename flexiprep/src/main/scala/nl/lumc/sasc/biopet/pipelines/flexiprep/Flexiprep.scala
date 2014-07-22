@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk._
 import org.broadinstitute.gatk.queue.extensions.picard._
 import org.broadinstitute.gatk.queue.function._
 import scala.util.parsing.json._
-import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{Input, Argument}
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
@@ -38,8 +38,8 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    if (!skipTrim) skipTrim = config("skiptrim", false)
-    if (!skipClip) skipClip = config("skipclip", false)
+    if (!skipTrim) skipTrim = config("skiptrim", default=false)
+    if (!skipClip) skipClip = config("skipclip", default=false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -200,7 +200,7 @@ class Flexiprep(val root:Configurable) extends QScript with BiopetQScript {
       }
     }
     
-    if (fastq_R1.length == 1 && !config("skip_native_link", false)) {
+    if (fastq_R1.length == 1 && !config("skip_native_link", default=false)) {
       val lnR1 = new Ln(this)
       lnR1.in = R1
       R1 = new File(outputDir + R1_name + ".qc" + R1_ext)

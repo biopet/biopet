@@ -50,12 +50,12 @@ class BamMetrics(val root:Configurable) extends QScript with BiopetQScript {
                              else targetInterval.output, targetInterval.output, targetDir))
       
       val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
-      add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", 1.0)), true)
+      add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default=1.0)), true)
       add(SamtoolsFlagstat(this, strictOutputBam))
       add(BiopetFlagstat(this, strictOutputBam, targetDir))
       
       val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
-      add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", 0.01)), true)
+      add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default=0.01)), true)
       add(SamtoolsFlagstat(this, looseOutputBam))
       add(BiopetFlagstat(this, looseOutputBam, targetDir))
       

@@ -1,9 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{Input, Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
 
 class FastqcToContams(val root:Configurable) extends PythonCommandLineFunction {

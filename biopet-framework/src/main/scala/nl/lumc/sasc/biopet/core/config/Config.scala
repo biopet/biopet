@@ -107,7 +107,7 @@ class Config(var map: Map[String,Any]) extends Logging {
     val requestedIndex = ConfigValueIndex(module,path,key)
     if (contains(requestedIndex)) return foundCache(requestedIndex)
     else {
-      logger.error("Value in config could not be found but it seems required, inde: " + requestedIndex)
+      logger.error("Value in config could not be found but it seems required, index: " + requestedIndex)
       throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
     }
   }

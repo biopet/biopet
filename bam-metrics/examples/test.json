@@ -1,4 +1,5 @@
 {
+    "reference": "bla",
     "bedtools": { "exe": "test"},
     "samtools": { "exe": "test"}
 }

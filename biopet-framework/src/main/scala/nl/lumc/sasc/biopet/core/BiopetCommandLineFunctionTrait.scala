@@ -40,8 +40,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (threads > 1) nCoresRequest = Option(threads)
     
     if (vmem == null) {
-      if (configContains("vmem")) vmem = config("vmem")
-      else if (!defaultVmem.isEmpty) vmem = defaultVmem
+      vmem = config("vmem")
+      if (vmem == null && !defaultVmem.isEmpty) vmem = defaultVmem
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
     jobName = this.analysisName + ":" + firstOutput.getName
@@ -101,15 +101,15 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
   
   def getThreads(default:Int) : Int = {
-    val maxThreads: Int = config("maxthreads", 8)
-    val threads: Int = config("threads", default)
+    val maxThreads: Int = config("maxthreads", default=8)
+    val threads: Int = config("threads", default=default)
     if (maxThreads > threads) return threads
     else return maxThreads
   }
   
   def getThreads(default:Int, module:String) : Int = {
-    val maxThreads: Int = config("maxthreads", 8, module)
-    val threads: Int = config("threads", default, module)
+    val maxThreads: Int = config("maxthreads", default=8, submodule=module)
+    val threads: Int = config("threads", default=default, submodule=module)
     if (maxThreads > threads) return threads
     else return maxThreads
   }

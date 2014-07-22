@@ -31,10 +31,10 @@ class GatkVariantcalling(val root:Configurable) extends QScript with BiopetQScri
   var singleGenotyping = false
   
   def init() {
-    if (gvcfMode) gvcfMode = config("gvcfmode", true)
-    if (!singleGenotyping) singleGenotyping = config("singlegenotyping", false)
-    if (reference == null) reference = config("reference")
-    if (dbsnp == null && configContains("dbsnp")) dbsnp = config("dbsnp")
+    if (gvcfMode) gvcfMode = config("gvcfmode", default=true)
+    if (!singleGenotyping) singleGenotyping = config("singlegenotyping")
+    if (reference == null) reference = config("reference", required=true)
+    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputFile == null) outputFile = outputDir + outputName + (if (gvcfMode) ".gvcf.vcf" else ".vcf")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"

@@ -1,11 +1,10 @@
 package nl.lumc.sasc.biopet.function
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline._
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 import java.io.File
-import scala.sys.process._
+import scala.sys.process.Process
 
 class Ln(val root:Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
