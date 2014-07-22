@@ -1,9 +1,10 @@
 package nl.lumc.sasc.biopet.core.config
 
 import nl.lumc.sasc.biopet.core._
-import scala.util.parsing.json._
 import java.io.File
 import org.broadinstitute.gatk.queue.util.Logging
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
 
 class Config(var map: Map[String,Any]) extends Logging {
   logger.debug("Init phase of config")
@@ -24,23 +25,45 @@ class Config(var map: Map[String,Any]) extends Logging {
   }
   
   def loadConfigFile(configFile:File) {
-    var configJson = JSON.parseFull(scala.io.Source.fromFile(configFile).mkString)
-    
+    logger.debug("Jsonfile: " + configFile)
+    val jsonText = scala.io.Source.fromFile(configFile).mkString
+    val json = Parse.parseOption(jsonText)
+    logger.debug(json)
+    val configJson = jsonToMap(json.get)
+    logger.debug("Contain: " + configJson)
     if (configJson == None) {
       throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
     }
     
-    this.logger.debug("Jsonfile: " + configFile)
-    this.logger.debug("Contain: " + configJson)
-    configJson.get match {
-      case m:Map[_,_] => {
-          logger.debug(m)
-          if (map.isEmpty) map = m.asInstanceOf[Map[String,Any]]
-          else map = Config.mergeMaps(m.asInstanceOf[Map[String,Any]], map)
+    if (map.isEmpty) map = configJson
+    else map = Config.mergeMaps(configJson, map)
+    logger.debug("New config: " + map)
+  }
+  
+  private def jsonToMap(json:Json) : Map[String, Any] = {
+    var output: Map[String, Any] = Map()
+    if (json.isObject) {
+      for (key <- json.objectFieldsOrEmpty) {
+        val value: Any = jsonToAny(json.field(key).get)
+        output += (key -> value)
       }
-      case null => logger.warn("Config " + configFile + " wrong format")
-    }
-    this.logger.debug("config: " + map)
+    } else return null
+    return output
+  }
+  
+  private def jsonToAny(json:Json): Any = {
+    if (json.isObject) return jsonToMap(json)
+    else if (json.isArray) {
+     var list:List[Any] = List()
+     for (value <- json.objectValues.get) list ::= jsonToAny(value)
+     return list
+    } else if (json.isBool) return json.bool.get
+    else if (json.isString) return json.string.get.toString
+    else if (json.isNumber) {
+      val num = json.number.get
+      if (num.toString.contains(".")) return num.toDouble
+      else return num.toLong
+    } else throw new IllegalStateException("Config value type not supported, value: " + json)
   }
   
   def getMap() : Map[String,Any] = map

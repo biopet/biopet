@@ -54,6 +54,11 @@
             <artifactId>gatk-queue-package-distribution</artifactId>
             <version>3.2</version>
         </dependency>
+        <dependency>
+            <groupId>io.argonaut</groupId>
+            <artifactId>argonaut_2.11</artifactId>
+            <version>6.1-M3</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
