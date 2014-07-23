@@ -1,71 +1,85 @@
+/**
+ * Copyright (c) 2014 Leiden University Medical Center
+ *
+ * @author  Wibowo Arindrarto
+ */
+
 package nl.lumc.sasc.biopet.function
 
 import java.io.File
-
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
+/**
+ * Abstract class for all seqtk wrappers.
+ */
 abstract class Seqtk extends BiopetCommandLineFunction {
   executable = config("exe", default = "seqtk", submodule = "seqtk")
   override def versionCommand = executable
   override val versionRegex = """Version: (.*)""".r
 }
 
+/**
+ * Wrapper for the seqtk seq subcommand.
+ * Written based on seqtk version 1.0-r63-dirty.
+ */
 class SeqtkSeq(val root: Configurable) extends Seqtk {
+
+  /** input file */
   @Input(doc = "Input file (FASTQ or FASTA)")
   var input: File = _
 
+  /** output file */
   @Output(doc = "Output file")
   var output: File = _
 
-  /* mask bases with quality lower than INT [0] */
+  /** mask bases with quality lower than INT [0] */
   var q: Option[Int] = config("q")
 
-  /* masked bases converted to CHAR; 0 for lowercase [0] */
+  /** masked bases converted to CHAR; 0 for lowercase [0] */
   var n: String = config("n")
 
-  /* number of residues per line; 0 for 2^32-1 [0] */
+  /** number of residues per line; 0 for 2^32-1 [0] */
   var l: Option[Int] = config("l")
 
-  /* quality shift: ASCII-INT gives base quality [33] */
+  /** quality shift: ASCII-INT gives base quality [33] */
   var Q: Option[Int] = config("Q")
 
-  /* random seed (effective with -f) [11] */
+  /** random seed (effective with -f) [11] */
   var s: Option[Int] = config("s")
 
-  /* sample FLOAT fraction of sequences [1] */
+  /** sample FLOAT fraction of sequences [1] */
   var f: Option[Int] = config("f")
 
-  /* mask regions in BED or name list FILE [null] */
+  /** mask regions in BED or name list FILE [null] */
   var M: File = config("M")
 
-  /* drop sequences with length shorter than INT [0] */
+  /** drop sequences with length shorter than INT [0] */
   var L: Option[Int] = config("L")
 
-  /* mask complement region (effective with -M) */
+  /** mask complement region (effective with -M) */
   var c: Boolean = config("c")
 
-  /* reverse complement */
+  /** reverse complement */
   var r: Boolean = config("r")
 
-  /* force FASTA output (discard quality) */
+  /** force FASTA output (discard quality) */
   var A: Boolean = config("A")
 
-  /* drop comments at the header lines */
+  /** drop comments at the header lines */
   var C: Boolean = config("C")
 
-  /* drop sequences containing ambiguous bases */
+  /** drop sequences containing ambiguous bases */
   var N: Boolean = config("N")
 
-  /* output the 2n-1 reads only */
+  /** output the 2n-1 reads only */
   var flag1: Boolean = config("1")
 
-  /* output the 2n reads only */
+  /** output the 2n reads only */
   var flag2: Boolean = config("2")
 
-  /* shift quality by '(-Q) - 33' */
+  /** shift quality by '(-Q) - 33' */
   var V: Boolean = config("V")
 
   def cmdLine = {
