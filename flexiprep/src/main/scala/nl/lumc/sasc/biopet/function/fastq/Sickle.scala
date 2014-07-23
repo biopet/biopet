@@ -1,11 +1,13 @@
 package nl.lumc.sasc.biopet.function.fastq
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
+
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+
+import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 
 class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "R1 input")

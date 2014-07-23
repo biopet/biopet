@@ -1,10 +1,12 @@
 package nl.lumc.sasc.biopet.function.fastq
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 import scala.sys.process._
+
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 
 class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 

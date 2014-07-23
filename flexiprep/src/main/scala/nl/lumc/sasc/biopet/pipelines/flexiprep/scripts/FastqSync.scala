@@ -1,9 +1,11 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
+import java.io.File
+
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("sync_paired_end_reads.py")

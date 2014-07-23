@@ -1,11 +1,13 @@
 package nl.lumc.sasc.biopet.function.fastq
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
+
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input fastq file")
