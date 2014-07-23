@@ -32,7 +32,7 @@ import org.broadinstitute.gatk.queue.util._
 import org.broadinstitute.gatk.queue.QCommandPlugin
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.QScriptManager
-import org.broadinstitute.gatk.queue.engine.{QStatusMessenger, QGraphSettings, QGraph}
+import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
 import collection.JavaConversions._
 import org.broadinstitute.gatk.utils.classloader.PluginManager
 import org.broadinstitute.gatk.utils.exceptions.UserException
@@ -40,7 +40,7 @@ import org.broadinstitute.gatk.utils.io.IOUtils
 import org.broadinstitute.gatk.utils.help.ApplicationDetails
 import java.io.FileOutputStream
 import java.net.URL
-import java.util.{ResourceBundle, Arrays}
+import java.util.{ ResourceBundle, Arrays }
 import org.broadinstitute.gatk.utils.text.TextFormattingUtils
 import org.apache.commons.io.FilenameUtils
 
@@ -84,11 +84,11 @@ object BiopetQCommandLine extends Logging {
  * Entry point of Queue.  Compiles and runs QScripts passed in to the command line.
  */
 class BiopetQCommandLine extends CommandLineProgram with Logging {
-  @Input(fullName="script", shortName="S", doc="QScript scala file", required=false)
+  @Input(fullName = "script", shortName = "S", doc = "QScript scala file", required = false)
   @ClassType(classOf[File])
   var scripts: Seq[File] = Nil
   var pipelineName: String = _
-  
+
   @ArgumentCollection
   val settings = new QGraphSettings
 
@@ -155,8 +155,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       // TODO: Default command plugin argument?
       val remoteFileConverter = (
         for (commandPlugin <- allCommandPlugins if (commandPlugin.remoteFileConverter != null))
-        yield commandPlugin.remoteFileConverter
-        ).headOption.getOrElse(null)
+          yield commandPlugin.remoteFileConverter).headOption.getOrElse(null)
 
       if (remoteFileConverter != null)
         loadArgumentsIntoObject(remoteFileConverter)
@@ -267,37 +266,35 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   override def getArgumentTypeDescriptors =
     Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
 
-  override def getApplicationDetails : ApplicationDetails = {
+  override def getApplicationDetails: ApplicationDetails = {
     new ApplicationDetails(createQueueHeader(),
-                           Seq.empty[String],
-                           ApplicationDetails.createDefaultRunningInstructions(getClass.asInstanceOf[Class[CommandLineProgram]]),
-                           "")
+      Seq.empty[String],
+      ApplicationDetails.createDefaultRunningInstructions(getClass.asInstanceOf[Class[CommandLineProgram]]),
+      "")
   }
 
-  private def createQueueHeader() : Seq[String] = {
+  private def createQueueHeader(): Seq[String] = {
     Seq(String.format("Queue v%s, Compiled %s", getQueueVersion, getBuildTimestamp),
-         "Copyright (c) 2012 The Broad Institute",
-         "For support and documentation go to http://www.broadinstitute.org/gatk")
+      "Copyright (c) 2012 The Broad Institute",
+      "For support and documentation go to http://www.broadinstitute.org/gatk")
   }
 
-  private def getQueueVersion : String = {
-    val stingResources : ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
+  private def getQueueVersion: String = {
+    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
 
-    if ( stingResources.containsKey("org.broadinstitute.sting.queue.QueueVersion.version") ) {
+    if (stingResources.containsKey("org.broadinstitute.sting.queue.QueueVersion.version")) {
       stingResources.getString("org.broadinstitute.sting.queue.QueueVersion.version")
-    }
-    else {
+    } else {
       "<unknown>"
     }
   }
 
-  private def getBuildTimestamp : String = {
-    val stingResources : ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
+  private def getBuildTimestamp: String = {
+    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
 
-    if ( stingResources.containsKey("build.timestamp") ) {
+    if (stingResources.containsKey("build.timestamp")) {
       stingResources.getString("build.timestamp")
-    }
-    else {
+    } else {
       "<unknown>"
     }
   }

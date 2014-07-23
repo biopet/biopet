@@ -8,19 +8,19 @@ import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 
 trait BiopetQScript extends Configurable {
-  @Argument(doc="Config Json file",shortName="config", required=false)
+  @Argument(doc = "Config Json file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
-  
-  @Argument(doc="Output directory", shortName="outputDir", required=true)
+
+  @Argument(doc = "Output directory", shortName = "outputDir", required = true)
   var outputDir: String = _
-  
-  var outputFiles:Map[String,File] = Map()
-  
+
+  var outputFiles: Map[String, File] = Map()
+
   var qSettings: QSettings
-  
+
   def init
   def biopetScript
-  
+
   final def script() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
@@ -33,12 +33,11 @@ trait BiopetQScript extends Configurable {
     writer.close()
     for (line <- configReport.split("\n")) logger.debug(line)
   }
-  
+
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
-  def add(function: QFunction, isIntermediate:Boolean = false) {
+  def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
   }
-  
-  
+
 }

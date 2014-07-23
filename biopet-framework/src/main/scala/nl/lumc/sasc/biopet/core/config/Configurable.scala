@@ -9,8 +9,8 @@ trait Configurable extends Logging {
   val configPath: List[String] = if (root != null) root.configFullPath else List()
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
-  
-  def config(key:String, default:Any = null, submodule:String = null, required:Boolean = false): ConfigValue = {
+
+  def config(key: String, default: Any = null, submodule: String = null, required: Boolean = false): ConfigValue = {
     val m = if (submodule != null) submodule else configName
     val p = if (submodule != null) configName :: configPath else configPath
     if (!configContains(key, submodule) && default == null) {
@@ -24,113 +24,113 @@ trait Configurable extends Logging {
   }
   //def config(key:String, default:Any) = globalConfig(configName, configPath, key, default)
   //def config(key:String, default:Any, module:String) = globalConfig(module, configName :: configPath, key, default)
-  
+
   //def configContains(key:String) = globalConfig.contains(configName, configPath, key)
-  def configContains(key:String, submodule:String = null) = {
+  def configContains(key: String, submodule: String = null) = {
     val m = if (submodule != null) submodule else configName
     val p = if (submodule != null) configName :: configPath else configPath
-    
+
     globalConfig.contains(m, p, key)
   }
-  
-  implicit def configValue2file(value:ConfigValue): File = if (value != null) new File(Configurable.any2string(value.value)) else null
-  implicit def configValue2string(value:ConfigValue): String = if (value != null) Configurable.any2string(value.value) else null
-  implicit def configValue2long(value:ConfigValue): Long = if (value != null) Configurable.any2long(value.value) else 0
-  implicit def configValue2optionLong(value:ConfigValue): Option[Long] = if (value != null) Option(Configurable.any2long(value.value)) else None
-  implicit def configValue2int(value:ConfigValue): Int = if (value != null) Configurable.any2int(value.value) else 0
-  implicit def configValue2optionInt(value:ConfigValue): Option[Int] = if (value != null) Option(Configurable.any2int(value.value)) else None
-  implicit def configValue2double(value:ConfigValue): Double = if (value != null) Configurable.any2double(value.value) else 0
-  implicit def configValue2optionDouble(value:ConfigValue): Option[Double] = if (value != null) Option(Configurable.any2double(value.value)) else None
-  implicit def configValue2boolean(value:ConfigValue): Boolean = if (value != null) Configurable.any2boolean(value.value) else false
-  implicit def configValue2optionBoolean(value:ConfigValue): Option[Boolean] = if (value != null) Option(Configurable.any2boolean(value.value)) else None
-  implicit def configValue2list(value:ConfigValue): List[Any] = if (value != null) Configurable.any2list(value.value) else null
-  implicit def configValue2stringList(value:ConfigValue): List[String] = if (value != null) Configurable.any2stringList(value.value) else null
-  implicit def configValue2stringSet(value:ConfigValue): Set[String] = if (value != null) Configurable.any2stringList(value.value).toSet else null
-  implicit def configValue2map(value:ConfigValue): Map[String, Any] = if (value != null) Configurable.any2map(value.value) else null
+
+  implicit def configValue2file(value: ConfigValue): File = if (value != null) new File(Configurable.any2string(value.value)) else null
+  implicit def configValue2string(value: ConfigValue): String = if (value != null) Configurable.any2string(value.value) else null
+  implicit def configValue2long(value: ConfigValue): Long = if (value != null) Configurable.any2long(value.value) else 0
+  implicit def configValue2optionLong(value: ConfigValue): Option[Long] = if (value != null) Option(Configurable.any2long(value.value)) else None
+  implicit def configValue2int(value: ConfigValue): Int = if (value != null) Configurable.any2int(value.value) else 0
+  implicit def configValue2optionInt(value: ConfigValue): Option[Int] = if (value != null) Option(Configurable.any2int(value.value)) else None
+  implicit def configValue2double(value: ConfigValue): Double = if (value != null) Configurable.any2double(value.value) else 0
+  implicit def configValue2optionDouble(value: ConfigValue): Option[Double] = if (value != null) Option(Configurable.any2double(value.value)) else None
+  implicit def configValue2boolean(value: ConfigValue): Boolean = if (value != null) Configurable.any2boolean(value.value) else false
+  implicit def configValue2optionBoolean(value: ConfigValue): Option[Boolean] = if (value != null) Option(Configurable.any2boolean(value.value)) else None
+  implicit def configValue2list(value: ConfigValue): List[Any] = if (value != null) Configurable.any2list(value.value) else null
+  implicit def configValue2stringList(value: ConfigValue): List[String] = if (value != null) Configurable.any2stringList(value.value) else null
+  implicit def configValue2stringSet(value: ConfigValue): Set[String] = if (value != null) Configurable.any2stringList(value.value).toSet else null
+  implicit def configValue2map(value: ConfigValue): Map[String, Any] = if (value != null) Configurable.any2map(value.value) else null
 }
 
 object Configurable extends Logging {
-  def any2string(any:Any) : String = {
+  def any2string(any: Any): String = {
     if (any == null) return null
     any match {
-      case s:String => return s
-      case _ => return any.toString
+      case s: String => return s
+      case _         => return any.toString
     }
   }
-  
-  def any2int(any:Any) : Int = {
+
+  def any2int(any: Any): Int = {
     any match {
-      case i:Double => return i.toInt
-      case i:Int => return i
-      case i:String => {
+      case i: Double => return i.toInt
+      case i: Int    => return i
+      case i: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         return i.toInt
       }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
-  
-  def any2long(any:Any) : Long = {
+
+  def any2long(any: Any): Long = {
     any match {
-      case l:Double => return l.toLong
-      case l:Int => return l.toLong
-      case l:Long => return l
-      case l:String => {
+      case l: Double => return l.toLong
+      case l: Int    => return l.toLong
+      case l: Long   => return l
+      case l: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         return l.toLong
       }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
-  
-  def any2double(any:Any) : Double = {
+
+  def any2double(any: Any): Double = {
     any match {
-      case d:Double => return d
-      case d:Int => return d.toDouble
-      case d:String => {
+      case d: Double => return d
+      case d: Int    => return d.toDouble
+      case d: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         return d.toInt
       }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
-  
-  def any2boolean(any:Any) : Boolean = {
+
+  def any2boolean(any: Any): Boolean = {
     any match {
-      case b:Boolean => return b
-      case b:String => {
+      case b: Boolean => return b
+      case b: String => {
         logger.warn("Value '" + any + "' is a string insteadof boolean in json file, trying auto convert")
         return b.contains("true")
       }
-      case b:Int => {
+      case b: Int => {
         logger.warn("Value '" + any + "' is a int insteadof boolean in json file, trying auto convert")
         return (b > 0)
       }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an boolean")
     }
   }
-  
-  def any2list(any:Any) : List[Any] = {
+
+  def any2list(any: Any): List[Any] = {
     if (any == null) return null
     any match {
-      case l:List[_] => return l
-      case s:String => return List(s)
-      case _ => throw new IllegalStateException("Value '" + any + "' is not an List")
+      case l: List[_] => return l
+      case s: String  => return List(s)
+      case _          => throw new IllegalStateException("Value '" + any + "' is not an List")
     }
   }
-  
-  def any2stringList(any:Any) : List[String] = {
+
+  def any2stringList(any: Any): List[String] = {
     if (any == null) return null
     var l: List[String] = Nil
-      for (v <- any2list(any)) l :+= v.toString
-      return l
+    for (v <- any2list(any)) l :+= v.toString
+    return l
   }
-  
-  def any2map(any:Any) : Map[String,Any] = {
+
+  def any2map(any: Any): Map[String, Any] = {
     if (any == null) return null
     any match {
-      case m:Map[_, _] => return m.asInstanceOf[Map[String,Any]]
-      case _ => throw new IllegalStateException("Value '" + any + "' is not an Map")
+      case m: Map[_, _] => return m.asInstanceOf[Map[String, Any]]
+      case _            => throw new IllegalStateException("Value '" + any + "' is not an Map")
     }
   }
 }
