@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.function.fastq
 
 import java.io.File
+import scala.io.Source
 import scala.sys.process._
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -32,8 +33,10 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def afterGraph {
     this.checkExecutable
-    val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
-    if (contaminants == null) contaminants = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+    if (contaminants == null) {
+      val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
+      contaminants = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+    }
   }
 
   override def versionCommand = executable + " --version"
@@ -50,6 +53,29 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
       conditional(quiet, "--quiet") +
       required("-o", output.getParent()) +
       required(fastqfile)
+  }
+  
+  def getDataBlock(name:String): Array[String] = { // Based on Fastqc v0.10.1
+    val outputDir = output.getName.stripSuffix(".zip")
+    val dataFile = new File(outputDir + "/fastqc_data.txt")
+    if (!dataFile.exists) return null
+    val data = Source.fromFile(dataFile).mkString
+    for (block <- data.split(">>END_MODULE\n")) {
+      val b = if (block.startsWith("##FastQC")) block.substring(block.indexOf("\n") + 1) else block
+      if (b.startsWith(">>" + name)) 
+        return for (line <- b.split("\n")) 
+          yield line
+    }
+    return null
+  }
+  
+  def getEncoding: String = {
+    val block = getDataBlock("Basic Statistics")
+    if (block == null) return null
+    for (line <- block
+         if (line.startsWith("Encoding")))
+            return line.stripPrefix("Encoding\t")
+    return null // Could be default Sanger with a warning in the log
   }
 }
 
