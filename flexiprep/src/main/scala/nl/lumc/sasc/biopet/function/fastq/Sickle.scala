@@ -11,25 +11,25 @@ import nl.lumc.sasc.biopet.core.config._
 
 class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "R1 input")
-  var input_R1: File = null
+  var input_R1: File = _
 
   @Input(doc = "R2 input", required = false)
-  var input_R2: File = null
+  var input_R2: File = _
 
   @Input(doc = "qualityType file", required = false)
   var qualityTypeFile: File = _
 
   @Output(doc = "R1 output")
-  var output_R1: File = null
+  var output_R1: File = _
 
   @Output(doc = "R2 output", required = false)
-  var output_R2: File = null
+  var output_R2: File = _
 
   @Output(doc = "singles output", required = false)
-  var output_singles: File = null
+  var output_singles: File = _
 
   @Output(doc = "stats output")
-  var output_stats: File = null
+  var output_stats: File = _
 
   executable = config("exe", default = "sickle")
   var qualityType: String = config("qualitytype")

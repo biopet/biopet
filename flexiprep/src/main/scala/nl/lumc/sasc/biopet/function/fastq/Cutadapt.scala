@@ -19,6 +19,9 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Output fastq file")
   var fastq_output: File = _
 
+  @Output(doc = "Output statistics file")
+  var stats_output: File = _
+
   executable = config("exe", default = "cutadapt")
   override def versionCommand = executable + " --version"
   override val versionRegex = """(.*)""".r
@@ -49,7 +52,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
         optional("-M", opt_maximum_length) +
         // input / output
         required(fastq_input) +
-        " > " + required(fastq_output)
+        required("--output", fastq_output) +
+        " > " + required(stats_output)
     } else {
       analysisName = getClass.getSimpleName + "-ln"
       "ln -sf " +
