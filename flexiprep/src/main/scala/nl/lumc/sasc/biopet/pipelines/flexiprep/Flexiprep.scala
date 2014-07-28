@@ -82,12 +82,14 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     if (paired) addSha1sum(outputFiles("fastq_input_R2"), "sha1_R2")
 
     var fastqc_R1 = Fastqc(this, input_R1, outputDir + "/" + R1_name + ".fastqc/")
+    add(fastqc_R1)
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
     outputFiles += ("qualtype_R1" -> getQualtype(fastqc_R1, R1_name))
     outputFiles += ("contams_R1" -> getContams(fastqc_R1, R1_name))
 
     if (paired) {
       var fastqc_R2 = Fastqc(this, input_R2, outputDir + "/" + R2_name + ".fastqc/")
+      add(fastqc_R2)
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
       outputFiles += ("qualtype_R2" -> getQualtype(fastqc_R2, R2_name))
       outputFiles += ("contams_R2" -> getContams(fastqc_R2, R2_name))
@@ -232,9 +234,14 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
       addSha1sum(R1, "sha1_qc_R1")
       if (paired) addSha1sum(R2, "sha1_qc_R2")
-      
-      outputFiles += ("fastqc_R1_final" -> Fastqc(this, outputFiles("output_R1"), outputDir + "/" + R1_name + ".qc.fastqc/").output)
-      if (paired) outputFiles += ("fastqc_R2_final" -> Fastqc(this, outputFiles("output_R2"), outputDir + "/" + R2_name + ".qc.fastqc/").output)
+      val fastqc_R1 = Fastqc(this, outputFiles("output_R1"), outputDir + "/" + R1_name + ".qc.fastqc/")
+      add(fastqc_R1)
+      outputFiles += ("fastqc_R1_final" -> fastqc_R1.output)
+      if (paired) {
+        val fastqc_R2 = Fastqc(this, outputFiles("output_R2"), outputDir + "/" + R2_name + ".qc.fastqc/")
+        add(fastqc_R2)
+        outputFiles += ("fastqc_R2_final" -> fastqc_R2.output)
+      }
     }
 
     if (!skipSummary) {
