@@ -255,7 +255,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       summarize.samplename = R1_name
       summarize.clip = !skipClip
       summarize.trim = !skipTrim
-      summarize.out = new File(outputDir + R1_name + ".summary.json")
+      summarize.out = new File(outputDir + summarize.samplename + "." + this.getClass.getSimpleName + ".summary.json")
       for ((k, v) <- outputFiles) summarize.deps +:= v
       add(summarize)
     }
