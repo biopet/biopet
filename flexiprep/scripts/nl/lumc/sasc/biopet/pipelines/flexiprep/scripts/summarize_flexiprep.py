@@ -91,7 +91,7 @@ def clip2dict(sample, samplea, sampleb, lib_type, run_dir):
 
     def get_cutadapt_stats(read_pair, adapter_dict):
         stats = {}
-        stat_file = read_pair + '.clipstat'
+        stat_file = read_pair + '.clip.stats'
 
         try:
             with open_result(stat_file) as src:
@@ -152,7 +152,10 @@ def sickle2dict(run_name, qc_mode, lib_type, run_dir):
     if qc_mode == 'trim':
         stat_mark = '.trim.stats'
     else:
-        stat_mark = '.clip.sync.trim.stats'
+        if lib_type == 'paired':
+            stat_mark = '.clip.sync.trim.stats'
+        else:
+            stat_mark = '.clip.trim.stats'
 
     if lib_type == 'paired':
         re_paired_kept = re.compile(r'paired records kept: \d+ \((\d+) pairs\)')

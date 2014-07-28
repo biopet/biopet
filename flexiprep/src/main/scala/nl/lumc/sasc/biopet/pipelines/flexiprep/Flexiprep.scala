@@ -137,6 +137,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       cutadapt_R1.fastq_input = R1
       cutadapt_R1.fastq_output = swapExt(outDir, R1, R1_ext, ".clip" + R1_ext)
       cutadapt_R1.stats_output = swapExt(outDir, R1, R1_ext, ".clip.stats")
+      outputFiles += ("cutadapt_R1_stats" -> cutadapt_R1.stats_output)
 
       if (outputFiles.contains("contams_R1")) cutadapt_R1.contams_file = outputFiles("contams_R1")
 
@@ -148,6 +149,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         if (!skipTrim || paired) cutadapt_R2.isIntermediate = true
         cutadapt_R2.fastq_input = R2
         cutadapt_R2.fastq_output = swapExt(outDir, R2, R2_ext, ".clip" + R2_ext)
+        cutadapt_R2.stats_output = swapExt(outDir, R2, R2_ext, ".clip.stats")
+        outputFiles += ("cutadapt_R2_stats" -> cutadapt_R2.stats_output)
         if (outputFiles.contains("contams_R2")) cutadapt_R2.contams_file = outputFiles("contams_R2")
         add(cutadapt_R2)
         R2 = cutadapt_R2.fastq_output
