@@ -75,24 +75,24 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
     if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2, outputDir))
 
-    addSeqstat(outputFiles("fastq_input_R1"), "seqstat_R1")
-    if (paired) addSeqstat(outputFiles("fastq_input_R2"), "seqstat_R2")
-
-    addSha1sum(outputFiles("fastq_input_R1"), "sha1_R1")
-    if (paired) addSha1sum(outputFiles("fastq_input_R2"), "sha1_R2")
-
     var fastqc_R1 = Fastqc(this, input_R1, outputDir + "/" + R1_name + ".fastqc/")
     add(fastqc_R1)
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
     outputFiles += ("qualtype_R1" -> getQualtype(fastqc_R1, R1_name))
     outputFiles += ("contams_R1" -> getContams(fastqc_R1, R1_name))
-
+    
+    addSeqstat(outputFiles("fastq_input_R1"), "seqstat_R1", fastqc_R1)
+    addSha1sum(outputFiles("fastq_input_R1"), "sha1_R1")
+    
     if (paired) {
       var fastqc_R2 = Fastqc(this, input_R2, outputDir + "/" + R2_name + ".fastqc/")
       add(fastqc_R2)
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
       outputFiles += ("qualtype_R2" -> getQualtype(fastqc_R2, R2_name))
       outputFiles += ("contams_R2" -> getContams(fastqc_R2, R2_name))
+      
+      addSeqstat(outputFiles("fastq_input_R2"), "seqstat_R2", fastqc_R2)
+      addSha1sum(outputFiles("fastq_input_R2"), "sha1_R2")
     }
   }
 
@@ -278,11 +278,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     } else return file
   }
 
-  def addSeqstat(fastq: File, key: String) {
+  def addSeqstat(fastq: File, key: String, fastqc:Fastqc = null) {
     val ext = fastq.getName.substring(fastq.getName.lastIndexOf("."))
     val seqstat = new Seqstat(this)
     seqstat.input_fastq = fastq
+    seqstat.fastqc = fastqc
     seqstat.out = swapExt(outputDir, fastq, ext, ".seqstats.json")
+    if (fastqc != null) seqstat.deps ::= fastqc.output
     add(seqstat)
     outputFiles += (key -> seqstat.out)
   }
