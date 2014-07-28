@@ -128,13 +128,19 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     var R2: File = new File(R2_in)
 
     if (!skipClip) { // Adapter clipping
+
       val cutadapt_R1 = new Cutadapt(this)
+
       if (!skipTrim || paired) cutadapt_R1.isIntermediate = true
       cutadapt_R1.fastq_input = R1
       cutadapt_R1.fastq_output = swapExt(outDir, R1, R1_ext, ".clip" + R1_ext)
+      cutadapt_R1.stats_output = swapExt(outDir, R1, R1_ext, ".clip.stats")
+
       if (outputFiles.contains("contams_R1")) cutadapt_R1.contams_file = outputFiles("contams_R1")
+
       add(cutadapt_R1)
       R1 = cutadapt_R1.fastq_output
+
       if (paired) {
         val cutadapt_R2 = new Cutadapt(this)
         if (!skipTrim || paired) cutadapt_R2.isIntermediate = true
