@@ -56,7 +56,7 @@
     <build>
         <resources>
             <resource>
-                 <directory>scripts</directory>
+                 <directory>src/main/scripts</directory>
                  <includes>
                      <include>**/*</include>
                  </includes>
