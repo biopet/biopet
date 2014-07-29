@@ -8,6 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.function.Ln
 
 class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input fastq file")
@@ -56,9 +57,11 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
         " > " + required(stats_output)
     } else {
       analysisName = getClass.getSimpleName + "-ln"
-      "ln -sf " +
-        required(fastq_input) +
-        required(fastq_output)
+      val lnOut = new Ln(this)
+      lnOut.in = new java.io.File(required(fastq_input))
+      lnOut.out = new java.io.File(required(fastq_output))
+      lnOut.relative = true
+      lnOut.cmd
     }
   }
 

@@ -63,14 +63,16 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
     result
   }
 
+  lazy val cmd: String = {
+    if (relative) {
+      // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
+      "ln -s " + inRelative + " " + outCanonical
+    } else {
+      "ln -s " + inCanonical + " " + outCanonical
+    }
+  }
+
   override def run {
-    val cmd =
-      if (relative) {
-        // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
-        "ln -s " + inRelative + " " + outCanonical
-      } else {
-        "ln -s " + inCanonical + " " + outCanonical
-      }
     val process = Process(cmd).run
     System.out.println("cmd: '" + cmd + "', exitcode: " + process.exitValue)
   }
