@@ -97,7 +97,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("qualtype_R1" -> getQualtype(fastqc_R1, R1_name))
     outputFiles += ("contams_R1" -> getContams(fastqc_R1, R1_name))
 
-    val sha1sum_R1 = Sha1sum(this, outputFiles("fastq_input_R1"))
+    val sha1sum_R1 = Sha1sum(this, outputFiles("fastq_input_R1"), outputDir)
     add(sha1sum_R1)
     summary.addSha1sum(sha1sum_R1, R2 = false, after = false)
 
@@ -109,7 +109,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       outputFiles += ("qualtype_R2" -> getQualtype(fastqc_R2, R2_name))
       outputFiles += ("contams_R2" -> getContams(fastqc_R2, R2_name))
 
-      val sha1sum_R2 = Sha1sum(this, outputFiles("fastq_input_R2"))
+      val sha1sum_R2 = Sha1sum(this, outputFiles("fastq_input_R2"), outputDir)
       add(sha1sum_R2)
       summary.addSha1sum(sha1sum_R2, R2 = true, after = false)
     }
@@ -148,12 +148,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     var R1: File = new File(R1_in)
     var R2: File = new File(R2_in)
     
-    val seqstat_R1 = Seqstat(this, R1, fastqc_R1)
+    val seqstat_R1 = Seqstat(this, R1, fastqc_R1, outDir)
     add(seqstat_R1)
     summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
     
     if (paired) {
-      val seqstat_R2 = Seqstat(this, R2, fastqc_R2)
+      val seqstat_R2 = Seqstat(this, R2, fastqc_R2, outDir)
       add(seqstat_R2)
       summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
@@ -223,12 +223,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       if (paired) R2 = sickle.output_R2
     }
     
-    val seqstat_R1_after = Seqstat(this, R1, fastqc_R1)
+    val seqstat_R1_after = Seqstat(this, R1, fastqc_R1, outDir)
     add(seqstat_R1_after)
     summary.addSeqstat(seqstat_R1_after, R2 = false, after = true, chunk)
     
     if (paired) {
-      val seqstat_R2_after = Seqstat(this, R2, fastqc_R2)
+      val seqstat_R2_after = Seqstat(this, R2, fastqc_R2, outDir)
       add(seqstat_R2_after)
       summary.addSeqstat(seqstat_R2_after, R2 = true, after = true, chunk)
     }
@@ -279,11 +279,11 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
     if (!skipTrim || !skipClip) {
 
-      val sha1sum_R1 = Sha1sum(this, R1)
+      val sha1sum_R1 = Sha1sum(this, R1, outputDir)
       add(sha1sum_R1)
       summary.addSha1sum(sha1sum_R1, R2 = false, after = true)
       if (paired) {
-        val sha1sum_R2 = Sha1sum(this, R2)
+        val sha1sum_R2 = Sha1sum(this, R2, outputDir)
         add(sha1sum_R2)
         summary.addSha1sum(sha1sum_R2, R2 = true, after = true)
       }

@@ -50,12 +50,12 @@ class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
 }
 
 object Seqstat {
-  def apply(root:Configurable, fastqfile: File, fastqc:Fastqc): Seqstat = {
+  def apply(root: Configurable, fastqfile: File, fastqc: Fastqc, outDir: String): Seqstat = {
     val seqstat = new Seqstat(root)
     val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
     seqstat.input_fastq = fastqfile
     seqstat.fastqc = fastqc
-    seqstat.out = new File(fastqfile.getAbsolutePath.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
+    seqstat.out = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     if (fastqc != null) seqstat.deps ::= fastqc.output
     return seqstat
   }
