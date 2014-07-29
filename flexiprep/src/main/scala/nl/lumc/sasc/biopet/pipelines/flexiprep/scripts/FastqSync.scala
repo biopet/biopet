@@ -4,6 +4,9 @@ import java.io.File
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
@@ -36,4 +39,14 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
     required(output_R2) +
     " > " +
     required(output_stats)
+    
+  def getSummary: Json = {
+    return jNull
+  }
+}
+
+object FastqSync {
+  def mergeSummarys(jsons:List[Json]): Json = {
+    return jNull
+  }
 }

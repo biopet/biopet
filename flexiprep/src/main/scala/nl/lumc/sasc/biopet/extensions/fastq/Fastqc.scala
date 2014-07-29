@@ -6,6 +6,9 @@ import scala.sys.process._
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
+
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 
@@ -76,6 +79,10 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
          if (line.startsWith("Encoding")))
             return line.stripPrefix("Encoding\t")
     return null // Could be default Sanger with a warning in the log
+  }
+  
+  def getSummary: Json = {
+    return jNull
   }
 }
 

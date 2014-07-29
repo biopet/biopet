@@ -49,11 +49,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   var fastqcR2after: Fastqc = _
   
   var flexiprep: Flexiprep = root.asInstanceOf[Flexiprep]
-  
-  var clipping = true
-  var trimming = true
-  var paired = true
-  
+    
   def addFastqc(fastqc:Fastqc, R2:Boolean = false, after:Boolean = false): Fastqc = {
     if (!R2 && !after) this.fastqcR1 = fastqc
     else if (!R2 && after) this.fastqcR1after = fastqc
@@ -105,34 +101,112 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   }
 
   override def run {
-    clipping = !flexiprep.skipClip
-    trimming = !flexiprep.skipTrim
-    paired = flexiprep.paired
-    
+    logger.debug("Start")
+    val summary = ("flexiprep" := (("clipping" := !flexiprep.skipClip) ->: 
+                                   ("trimming" := !flexiprep.skipTrim) ->: 
+                                   ("paired" := flexiprep.paired) ->: 
+                                   jEmptyObject)) ->:
+                  ("seqstat" := seqstatSummary) ->: 
+                  ("sha1" := sha1Summary) ->:
+                  ("fastqc" := fastqcSummary) ->:
+                  ("clipping" :=? clipstatSummary) ->?:
+                  ("trimming" :=? trimstatSummary) ->?:
+                  jEmptyObject
+    logger.debug(summary.spaces2) // TODO: need output writter
+    logger.debug("Stop")
   }
   
-  def seqstatSummary(): Json = {
-    //TODO
-    return null
+  def seqstatSummary(): Option[Json] = {
+    val R1: Json = if (chunks.size == 1) chunks.head._2.seqstatR1.getSummary
+                            else {
+                              val s = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
+                              Seqstat.mergeSummarys(s.toList)
+                            }
+    val R2: Option[Json] =  if (!flexiprep.paired) None
+                            else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.getSummary)
+                            else {
+                              val s = for ((key, value) <- chunks) yield value.seqstatR2.getSummary
+                              Option(Seqstat.mergeSummarys(s.toList))
+                            }
+    val R1_proc: Option[Json] = if (flexiprep.skipClip && flexiprep.skipTrim) None
+                                else if (chunks.size == 1) Option(chunks.head._2.seqstatR1after.getSummary)
+                                else {
+                                  val s = for ((key, value) <- chunks) yield value.seqstatR1after.getSummary
+                                  Option(Seqstat.mergeSummarys(s.toList))
+                                }
+    val R2_proc: Option[Json] = if (!flexiprep.paired && flexiprep.skipClip && flexiprep.skipTrim) None
+                                else if (chunks.size == 1) Option(chunks.head._2.seqstatR2after.getSummary)
+                                else {
+                                  val s = for ((key, value) <- chunks) yield value.seqstatR2after.getSummary
+                                  Option(Seqstat.mergeSummarys(s.toList))
+                                }
+    return Option(("R1_raw" := R1) ->: 
+                  ("R2_raw" :=? R2) ->?: 
+                  ("R1_proc" :=? R1_proc) ->?: 
+                  ("R2_proc" :=? R2_proc) ->?: 
+                  jEmptyObject)
   }
-  def sha1Summary(): Json = {
-    //TODO
-    return null
+  
+  def sha1Summary: Json = {
+    return  ("R1_raw" := sha1Summary(sha1R1)) ->:
+            ("R2_raw" :=? sha1Summary(sha1R2)) ->?:
+            ("R1_proc" :=? sha1Summary(sha1R1after)) ->?:
+            ("R2_proc" :=? sha1Summary(sha1R2after)) ->?:
+            jEmptyObject
   }
-  def fastqcSummary(): Json  = {
-    //TODO
-    return null
+  
+  def sha1Summary(sha1sum:Sha1sum): Option[Json] = {
+    if (sha1sum == null) return None
+    else return Option(sha1sum.getSummary)
   }
-  def clipstatSummary(): Json = {
-    //TODO
-    return null
+  
+  def fastqcSummary: Json = {
+    return  ("R1_raw" := fastqcSummary(fastqcR1)) ->:
+            ("R2_raw" :=? fastqcSummary(fastqcR2)) ->?:
+            ("R1_proc" :=? fastqcSummary(fastqcR1after)) ->?:
+            ("R2_proc" :=? fastqcSummary(fastqcR2after)) ->?:
+            jEmptyObject
   }
-  def syncstatSummary(): Json = {
-    //TODO
-    return null
+  
+  def fastqcSummary(fastqc:Fastqc): Option[Json]  = {
+    if (fastqc == null) return None
+    else return Option(fastqc.getSummary)
   }
-  def trimstatSummary(): Json = {
-    //TODO
-    return null
+  
+  def clipstatSummary(): Option[Json] = {
+    if (flexiprep.skipClip) return None
+    val R1: Json =  if (chunks.size == 1) chunks.head._2.cutadaptR1.getSummary
+                            else {
+                              val s = for ((key, value) <- chunks) yield value.cutadaptR1.getSummary
+                              Cutadapt.mergeSummarys(s.toList)
+                            }
+    val R2: Option[Json] =  if (!flexiprep.paired) None
+                            else if (chunks.size == 1) Option(chunks.head._2.cutadaptR2.getSummary)
+                            else {
+                              val s = for ((key, value) <- chunks) yield value.cutadaptR2.getSummary
+                              Option(Cutadapt.mergeSummarys(s.toList))
+                            }
+    return Option(("R1" := R1) ->: 
+                  ("R2" :=? R2) ->?: 
+                  ("fastqSync" :=? syncstatSummary) ->?: 
+                  jEmptyObject)
+  }
+  
+  def syncstatSummary(): Option[Json] = {
+    if (flexiprep.skipClip || !flexiprep.paired) return None
+    if (chunks.size == 1) return Option(chunks.head._2.sickle.getSummary)
+    else {
+      val s = for ((key, value) <- chunks) yield value.fastqSync.getSummary
+      return Option(FastqSync.mergeSummarys(s.toList))
+    }
+  }
+  
+  def trimstatSummary(): Option[Json] = {
+    if (flexiprep.skipTrim) return None
+    if (chunks.size == 1) return Option(chunks.head._2.sickle.getSummary)
+    else {
+      val s = for ((key, value) <- chunks) yield value.sickle.getSummary
+      return Option(Sickle.mergeSummarys(s.toList))
+    }
   }
 }

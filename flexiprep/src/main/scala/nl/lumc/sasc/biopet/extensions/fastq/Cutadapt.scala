@@ -84,12 +84,12 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   }
   
   def getSummary: Json = {
-    return null
+    return jNull
   }
 }
 
 object Cutadapt {
   def mergeSummarys(jsons:List[Json]): Json = {
-    return null
+    return jNull
   }
 }

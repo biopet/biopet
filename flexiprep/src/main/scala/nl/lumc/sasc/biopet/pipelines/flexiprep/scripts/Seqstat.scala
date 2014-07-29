@@ -5,6 +5,9 @@ import java.io.File
 import nl.lumc.sasc.biopet.extensions.fastq.Fastqc
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
@@ -39,5 +42,25 @@ class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
       optional("--fmt", fmt) +
       required("-o", out) +
       required(input_fastq)
+  }
+  
+  def getSummary: Json = {
+    return jNull
+  }
+}
+
+object Seqstat {
+  def apply(root:Configurable, fastqfile: File, fastqc:Fastqc): Seqstat = {
+    val seqstat = new Seqstat(root)
+    val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
+    seqstat.input_fastq = fastqfile
+    seqstat.fastqc = fastqc
+    seqstat.out = new File(fastqfile.getAbsolutePath.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
+    if (fastqc != null) seqstat.deps ::= fastqc.output
+    return seqstat
+  }
+  
+  def mergeSummarys(jsons:List[Json]): Json = {
+    return jNull
   }
 }

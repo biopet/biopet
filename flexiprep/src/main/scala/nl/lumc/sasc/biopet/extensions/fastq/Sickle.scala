@@ -81,12 +81,12 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   }
   
   def getSummary: Json = {
-    return null
+    return jNull
   }
 }
 
 object Sickle {
   def mergeSummarys(jsons:List[Json]): Json = {
-    return null
+    return jNull
   }
 }
