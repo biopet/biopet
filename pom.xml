@@ -9,6 +9,7 @@
   <modules>
     <module>biopet-framework</module>
     <module>flexiprep</module>
+    <module>gentrap</module>
     <module>mapping</module>
     <module>bam-metrics</module>
     <module>pipeline-template</module>
