@@ -5,7 +5,7 @@ import java.io.File
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
-import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
 class FastqcToQualtype(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")

@@ -1,10 +1,13 @@
-package nl.lumc.sasc.biopet.function.fastq
+package nl.lumc.sasc.biopet.extensions.fastq
 
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -78,5 +81,15 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
         }
       } else logger.warn("File : " + contams_file + " does not exist")
     }
+  }
+  
+  def getSummary: Json = {
+    return null
+  }
+}
+
+object Cutadapt {
+  def mergeSummarys(jsons:List[Json]): Json = {
+    return null
   }
 }

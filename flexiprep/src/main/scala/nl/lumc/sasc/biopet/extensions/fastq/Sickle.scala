@@ -1,10 +1,13 @@
-package nl.lumc.sasc.biopet.function.fastq
+package nl.lumc.sasc.biopet.extensions.fastq
 
 import java.io.File
 import scala.io.Source._
 import scala.sys.process._
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
@@ -30,15 +33,16 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Output(doc = "stats output")
   var output_stats: File = _
-
+  
+  var fastqc: Fastqc = _
+  
   executable = config("exe", default = "sickle")
   var qualityType: String = config("qualitytype")
 
-  var defaultQualityType: String = _
+  var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
   override val versionRegex = """sickle version (.*)""".r
 
   override def afterGraph {
-    if (defaultQualityType == null) defaultQualityType = config("defaultqualitytype", default = "sanger")
     if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
   }
 
@@ -73,6 +77,16 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
         }
       } else logger.warn("File : " + qualityTypeFile + " does not exist")
     }
+    return null
+  }
+  
+  def getSummary: Json = {
+    return null
+  }
+}
+
+object Sickle {
+  def mergeSummarys(jsons:List[Json]): Json = {
     return null
   }
 }

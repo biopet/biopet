@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.samtools
+package nl.lumc.sasc.biopet.extensions.samtools
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 

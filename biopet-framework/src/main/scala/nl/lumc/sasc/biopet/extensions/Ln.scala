@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function
+package nl.lumc.sasc.biopet.extensions
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction

@@ -10,8 +10,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.function._
-import nl.lumc.sasc.biopet.function.fastq._
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.fastq._
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
@@ -274,7 +274,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       return newFile
     } else return file
   }
-
+  
   def addSeqstat(fastq: File, key: String, fastqc:Fastqc = null) {
     val ext = fastq.getName.substring(fastq.getName.lastIndexOf("."))
     val seqstat = new Seqstat(this)

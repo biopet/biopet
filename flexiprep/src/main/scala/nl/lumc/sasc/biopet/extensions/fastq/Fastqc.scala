@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.fastq
+package nl.lumc.sasc.biopet.extensions.fastq
 
 import java.io.File
 import scala.io.Source

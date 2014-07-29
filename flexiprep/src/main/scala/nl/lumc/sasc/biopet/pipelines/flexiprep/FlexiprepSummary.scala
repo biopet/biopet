@@ -1,10 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.function.Sha1sum
-import nl.lumc.sasc.biopet.function.fastq.Cutadapt
-import nl.lumc.sasc.biopet.function.fastq.Fastqc
-import nl.lumc.sasc.biopet.function.fastq.Sickle
+import nl.lumc.sasc.biopet.extensions.Sha1sum
+import nl.lumc.sasc.biopet.extensions.fastq.Cutadapt
+import nl.lumc.sasc.biopet.extensions.fastq.Fastqc
+import nl.lumc.sasc.biopet.extensions.fastq.Sickle
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.FastqSync
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.Seqstat
 import org.broadinstitute.gatk.queue.function.InProcessFunction
@@ -38,26 +38,6 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   
   var chunks: Map[String, Chunk] = Map()
   
-  def addSeqstat(seqstat:Seqstat, R2:Boolean = false, after:Boolean = false, chunk:String=""): Seqstat = {
-    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
-    if (!R2 && !after) chunks(chunk).seqstatR1 = seqstat
-    else if (!R2 && after) chunks(chunk).seqstatR1after = seqstat
-    else if (R2 && !after) chunks(chunk).seqstatR2 = seqstat
-    else if (R2 && after) chunks(chunk).seqstatR2after = seqstat
-    deps ::= seqstat.out
-    return seqstat
-  }
-  
-  def addCutadapt(cutadapt:Cutadapt, R2:Boolean = false, chunk:String=""): Cutadapt = {
-    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
-    if (!R2) chunks(chunk).cutadaptR1 = cutadapt
-    else chunks(chunk).cutadaptR2 = cutadapt
-    //TODO: stats file of cutadapt
-    return cutadapt
-  }
-  
-  
-  
   var sha1R1: Sha1sum = _
   var sha1R2: Sha1sum = _
   var sha1R1after: Sha1sum = _
@@ -74,6 +54,56 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   var trimming = true
   var paired = true
   
+  def addFastqc(fastqc:Fastqc, R2:Boolean = false, after:Boolean = false): Fastqc = {
+    if (!R2 && !after) this.fastqcR1 = fastqc
+    else if (!R2 && after) this.fastqcR1after = fastqc
+    else if (R2 && !after) this.fastqcR2 = fastqc
+    else if (R2 && after) this.fastqcR2after = fastqc
+    deps ::= fastqc.output
+    return fastqc
+  }
+  
+  def addSha1sum(sha1sum:Sha1sum, R2:Boolean = false, after:Boolean = false): Sha1sum = {
+    if (!R2 && !after) this.sha1R1 = sha1sum
+    else if (!R2 && after) this.sha1R1after = sha1sum
+    else if (R2 && !after) this.sha1R2 = sha1sum
+    else if (R2 && after) this.sha1R2after = sha1sum
+    deps ::= sha1sum.output
+    return sha1sum
+  }
+  
+  def addSeqstat(seqstat:Seqstat, R2:Boolean = false, after:Boolean = false, chunk:String=""): Seqstat = {
+    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
+    if (!R2 && !after) chunks(chunk).seqstatR1 = seqstat
+    else if (!R2 && after) chunks(chunk).seqstatR1after = seqstat
+    else if (R2 && !after) chunks(chunk).seqstatR2 = seqstat
+    else if (R2 && after) chunks(chunk).seqstatR2after = seqstat
+    deps ::= seqstat.out
+    return seqstat
+  }
+  
+  def addCutadapt(cutadapt:Cutadapt, R2:Boolean = false, chunk:String=""): Cutadapt = {
+    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
+    if (!R2) chunks(chunk).cutadaptR1 = cutadapt
+    else chunks(chunk).cutadaptR2 = cutadapt
+    deps ::= cutadapt.stats_output
+    return cutadapt
+  }
+  
+  def addSickle(sickle:Sickle, chunk:String=""): Sickle = {
+    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
+    chunks(chunk).sickle = sickle
+    deps ::= sickle.output_stats
+    return sickle
+  }
+  
+  def addFastqcSync(fastqSync:FastqSync, chunk:String=""): FastqSync = {
+    if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
+    chunks(chunk).fastqSync = fastqSync
+    deps ::= fastqSync.output_stats
+    return fastqSync
+  }
+
   override def run {
     clipping = !flexiprep.skipClip
     trimming = !flexiprep.skipTrim

@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.picard
+package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable

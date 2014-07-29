@@ -2,11 +2,11 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.function.fastq.Fastqc
+import nl.lumc.sasc.biopet.extensions.fastq.Fastqc
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.function.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
 class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("__init__.py", "pyfastqc/")

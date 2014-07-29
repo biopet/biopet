@@ -6,9 +6,9 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.core.apps.{ BedToInterval, BiopetFlagstat }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.function.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
-import nl.lumc.sasc.biopet.function.picard.{ CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics }
-import nl.lumc.sasc.biopet.function.samtools.SamtoolsFlagstat
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
+import nl.lumc.sasc.biopet.extensions.picard.{ CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics }
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 
 class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)

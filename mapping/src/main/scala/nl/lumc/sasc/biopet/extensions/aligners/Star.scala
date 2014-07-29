@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.aligners
+package nl.lumc.sasc.biopet.extensions.aligners
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._

@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.bedtools
+package nl.lumc.sasc.biopet.extensions.bedtools
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
