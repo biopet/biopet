@@ -11,7 +11,7 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.function.Ln
+import nl.lumc.sasc.biopet.extensions.Ln
 
 class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input fastq file")
