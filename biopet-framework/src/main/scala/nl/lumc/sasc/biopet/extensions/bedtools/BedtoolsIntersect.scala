@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.bedtools
+package nl.lumc.sasc.biopet.extensions.bedtools
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }

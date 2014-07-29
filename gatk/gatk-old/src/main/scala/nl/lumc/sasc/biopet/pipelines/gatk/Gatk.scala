@@ -1,12 +1,12 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.function._
-import nl.lumc.sasc.biopet.function.aligners._
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.aligners._
 import java.io.File
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.pipelines.mapping._
-import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import org.broadinstitute.gatk.queue.QScript

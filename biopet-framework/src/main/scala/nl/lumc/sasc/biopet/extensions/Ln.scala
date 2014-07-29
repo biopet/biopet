@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function
+package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 import scala.sys.process.Process

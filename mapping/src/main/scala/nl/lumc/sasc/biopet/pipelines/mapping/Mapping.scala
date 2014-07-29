@@ -5,8 +5,8 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
-import nl.lumc.sasc.biopet.function.aligners.{ Bwa, Star }
-import nl.lumc.sasc.biopet.function.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star }
+import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript

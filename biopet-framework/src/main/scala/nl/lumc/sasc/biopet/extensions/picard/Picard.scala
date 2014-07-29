@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.function.picard
+package nl.lumc.sasc.biopet.extensions.picard
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
