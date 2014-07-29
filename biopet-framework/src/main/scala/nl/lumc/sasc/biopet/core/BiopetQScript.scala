@@ -8,10 +8,11 @@ import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 
 trait BiopetQScript extends Configurable {
-  @Argument(doc = "Config Json file", shortName = "config", required = false)
+
+  @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "conf", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Output directory", shortName = "outputDir", required = true)
+  @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
   var outputDir: String = _
 
   var outputFiles: Map[String, File] = Map()
