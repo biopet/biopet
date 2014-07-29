@@ -239,6 +239,25 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
     # gather seqstat files
     sstats = [s for s in os.listdir(run_dir) if s.endswith('.seqstats.json')]
 
+    if lib_type == 'paired':
+        if qc_mode == 'clip':
+            stat_mark = '.clip.sync'
+        elif qc_mode == 'trim':
+            stat_mark = '.trim'
+        elif qc_mode == 'cliptrim':
+            stat_mark = '.clip.sync.trim'
+        else:
+            assert qc_mode == 'none'
+    else:
+        if qc_mode == 'clip':
+            stat_mark = '.clip'
+        elif qc_mode == 'trim':
+            stat_mark == '.trim'
+        elif qc_mode == 'cliptrim':
+            stat_mark == '.clip.trim'
+        else:
+            assert qc_mode == 'none'
+
     if lib_type == 'single':
         if qc_mode == 'none':
             assert len(chksums) == len(fastqcs) == len(sstats) == 1
@@ -269,7 +288,7 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
                     [x for x in fastqcs if x.endswith('.qc.fastqc')][0],
                     'proc_1')
             seqstat_p1 = load_json([x for x in sstats if
-                x.endswith('.qc.seqstats.json')][0])['stats']
+                x.endswith(stat_mark + '.seqstats.json')][0])['stats']
             seqstat_p1['mean_gc'] = gc_from_fastqc(
                     fqd_p1['files']['txt_fastqc_proc_1']['path'])
             sumd['stats']['fastq_proc_1'] = seqstat_p1
@@ -284,7 +303,7 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
                     [x for x in fastqcs if x != fqp1_name][0],
                     'raw_1')
             seqstat_r1 = load_json([x for x in sstats if not
-                    x.endswith('.qc.seqstats.json')][0])['stats']
+                    x.endswith(stat_mark + '.seqstats.json')][0])['stats']
             seqstat_r1['mean_gc'] = gc_from_fastqc(
                     fqd_r1['files']['txt_fastqc_raw_1']['path'])
             sumd['stats']['fastq_raw_1'] = seqstat_r1
@@ -333,7 +352,7 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
             assert len(fastqcs) == len(sstats) == 4
             proc_chksums = [x for x in chksums if x.endswith('.qc.sha1')]
             proc_fastqcs = [x for x in fastqcs if x.endswith('.qc.fastqc')]
-            proc_sstats = [x for x in sstats if x.endswith('.qc.seqstats.json')]
+            proc_sstats = [x for x in sstats if x.endswith(stat_mark + '.seqstats.json')]
             raw_chksums = [x for x in chksums if x not in proc_chksums]
             raw_fastqcs = [x for x in fastqcs if x not in proc_fastqcs]
             raw_sstats = [x for x in sstats if x not in proc_sstats]
