@@ -21,7 +21,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <sting.unpack.phase>prepare-package</sting.unpack.phase>
     <sting.shade.phase>package</sting.shade.phase>
-    <app.main.class>nl.lumc.sasc.biopet.pipelines.flexiprep.Gentrap</app.main.class>
+    <app.main.class>nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap</app.main.class>
   </properties>
   
     <dependencies>
