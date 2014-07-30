@@ -6,10 +6,7 @@
 
 package nl.lumc.sasc.biopet.function.seqtk
 
-import java.io.File
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * Abstract class for all seqtk wrappers.
