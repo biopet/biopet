@@ -2,10 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Sha1sum
-import nl.lumc.sasc.biopet.extensions.fastq.Cutadapt
-import nl.lumc.sasc.biopet.extensions.fastq.Fastqc
-import nl.lumc.sasc.biopet.extensions.fastq.Sickle
-import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.FastqSync
+import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.{ FastqSync, Seqstat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.Seqstat
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }

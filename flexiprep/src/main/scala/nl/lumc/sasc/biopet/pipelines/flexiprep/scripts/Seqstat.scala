@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.fastq.Fastqc
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import argonaut._, Argonaut._
@@ -32,7 +32,6 @@ class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
         case s if (s.contains("Illumina <1.3"))         => fmt = "solexa"
         case s if (s.contains("Illumina 1.3"))          => fmt = "illumina"
         case s if (s.contains("Illumina 1.5"))          => fmt = "illumina"
-        //case _ => null
       }
     }
   }
