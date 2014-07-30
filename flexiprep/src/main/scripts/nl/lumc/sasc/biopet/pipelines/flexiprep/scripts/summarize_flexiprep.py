@@ -239,6 +239,7 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
     # gather seqstat files
     sstats = [s for s in os.listdir(run_dir) if s.endswith('.seqstats.json')]
 
+    stat_mark = ""
     if lib_type == 'paired':
         if qc_mode == 'clip':
             stat_mark = '.clip.sync'
@@ -252,9 +253,9 @@ def summarize_flexiprep(run_name, qc_mode, samplea, sampleb, outf, run_dir):
         if qc_mode == 'clip':
             stat_mark = '.clip'
         elif qc_mode == 'trim':
-            stat_mark == '.trim'
+            stat_mark = '.trim'
         elif qc_mode == 'cliptrim':
-            stat_mark == '.clip.trim'
+            stat_mark = '.clip.trim'
         else:
             assert qc_mode == 'none'
 
