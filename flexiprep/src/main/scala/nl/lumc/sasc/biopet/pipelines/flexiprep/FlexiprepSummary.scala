@@ -99,19 +99,22 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     deps ::= fastqSync.output_stats
     return fastqSync
   }
-
+  // format: OFF
   override def run {
     logger.debug("Start")
-    val summary = ("flexiprep" := (("clipping" := !flexiprep.skipClip) ->:
-      ("trimming" := !flexiprep.skipTrim) ->:
-      ("paired" := flexiprep.paired) ->:
-      jEmptyObject)) ->:
+    val summary = 
+      ("flexiprep" := (
+        ("clipping" := !flexiprep.skipClip) ->:
+        ("trimming" := !flexiprep.skipTrim) ->:
+        ("paired" := flexiprep.paired) ->:
+        jEmptyObject)) ->:
       ("seqstat" := seqstatSummary) ->:
       ("sha1" := sha1Summary) ->:
       ("fastqc" := fastqcSummary) ->:
       ("clipping" :=? clipstatSummary) ->?:
       ("trimming" :=? trimstatSummary) ->?:
       jEmptyObject
+    // format: ON
     logger.debug(summary.spaces2) // TODO: need output writter
     logger.debug("Stop")
   }
