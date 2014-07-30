@@ -31,10 +31,10 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
   @Argument(doc = "Skip summary", shortName = "skipsummary", required = false)
   var skipSummary: Boolean = false
-  
+
   @Argument(doc = "Sample name", shortName = "sample", required = false)
   var sampleName: String = _
-  
+
   @Argument(doc = "Library name", shortName = "library", required = false)
   var libraryName: String = _
 
@@ -43,14 +43,14 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var R2_ext: String = _
   var R1_name: String = _
   var R2_name: String = _
-  
+
   var fastqc_R1: Fastqc = _
   var fastqc_R2: Fastqc = _
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
-  
+
   val summary = new FlexiprepSummary(this)
-  
+
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!skipTrim) skipTrim = config("skiptrim", default = false)
@@ -73,7 +73,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.size)
       R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
     }
-    
+
     summary.out = outputDir + "new.flexiprep.summary.json"
   }
 
@@ -147,17 +147,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
     var R1: File = new File(R1_in)
     var R2: File = new File(R2_in)
-    
+
     val seqstat_R1 = Seqstat(this, R1, fastqc_R1, outDir)
     add(seqstat_R1)
     summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
-    
+
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, fastqc_R2, outDir)
       add(seqstat_R2)
       summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
-    
+
     if (!skipClip) { // Adapter clipping
 
       val cutadapt_R1 = new Cutadapt(this)
@@ -201,7 +201,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         R2 = fastqSync.output_R2
       }
     }
-    
+
     if (!skipTrim) { // Quality trimming
       val sickle = new Sickle(this)
       sickle.input_R1 = R1
@@ -222,18 +222,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
     }
-    
+
     val seqstat_R1_after = Seqstat(this, R1, fastqc_R1, outDir)
     add(seqstat_R1_after)
     summary.addSeqstat(seqstat_R1_after, R2 = false, after = true, chunk)
-    
+
     if (paired) {
       val seqstat_R2_after = Seqstat(this, R2, fastqc_R2, outDir)
       add(seqstat_R2_after)
       summary.addSeqstat(seqstat_R2_after, R2 = true, after = true, chunk)
     }
 
-    
     outputFiles += (chunk + "output_R1" -> R1)
     if (paired) outputFiles += (chunk + "output_R2" -> R2)
     return (R1, R2)

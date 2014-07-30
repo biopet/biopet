@@ -33,9 +33,9 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Output(doc = "stats output")
   var output_stats: File = _
-  
+
   var fastqc: Fastqc = _
-  
+
   executable = config("exe", default = "sickle")
   var qualityType: String = config("qualitytype")
 
@@ -79,14 +79,14 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
     }
     return null
   }
-  
+
   def getSummary: Json = {
     return jNull
   }
 }
 
 object Sickle {
-  def mergeSummarys(jsons:List[Json]): Json = {
+  def mergeSummarys(jsons: List[Json]): Json = {
     return jNull
   }
 }

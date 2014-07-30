@@ -85,14 +85,14 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
       } else logger.warn("File : " + contams_file + " does not exist")
     }
   }
-  
+
   def getSummary: Json = {
     return jNull
   }
 }
 
 object Cutadapt {
-  def mergeSummarys(jsons:List[Json]): Json = {
+  def mergeSummarys(jsons: List[Json]): Json = {
     return jNull
   }
 }

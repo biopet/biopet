@@ -39,14 +39,14 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
     required(output_R2) +
     " > " +
     required(output_stats)
-    
+
   def getSummary: Json = {
     return jNull
   }
 }
 
 object FastqSync {
-  def mergeSummarys(jsons:List[Json]): Json = {
+  def mergeSummarys(jsons: List[Json]): Json = {
     return jNull
   }
 }
