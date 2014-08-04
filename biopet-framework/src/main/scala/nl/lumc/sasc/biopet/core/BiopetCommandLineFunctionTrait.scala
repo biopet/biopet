@@ -83,20 +83,21 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0) // Can select multiple
   def getVersion: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
-    val buffer = new StringBuffer()
-    val process = Process(versionCommand).run(ProcessLogger(buffer append _))
+    val stdout = new StringBuffer()
+    val stderr = new StringBuffer()
+    def outputLog = "\n output log: \n stdout: \n" + stdout.toString + "\n stderr: \n" + stderr.toString
+    val process = Process(versionCommand).run(ProcessLogger(stdout append _, stderr append _))
     if (!versionExitcode.contains(process.exitValue)) {
-      logger.warn("Version command: '" + versionCommand + "' give exit code " + process.exitValue + ", version not found")
+      logger.warn("Version command: '" + versionCommand + "' give exit code " + process.exitValue + ", version not found" + outputLog)
       return "N/A"
     }
-    val lines = versionCommand lines_! ProcessLogger(buffer append _)
-    for (line <- lines) {
+    for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
       line match {
         case versionRegex(m) => return m
         case _               =>
       }
     }
-    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executable oke?")
+    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executable correct?" + outputLog)
     return "N/A"
   }
 
