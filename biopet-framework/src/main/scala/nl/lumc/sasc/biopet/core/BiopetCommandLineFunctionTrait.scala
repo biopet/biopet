@@ -88,7 +88,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     def outputLog = "Version command: \n" + versionCommand + 
                     "\n output log: \n stdout: \n" + stdout.toString + 
                     "\n stderr: \n" + stderr.toString
-    val process = Process(versionCommand).run(ProcessLogger(stdout append _, stderr append _))
+    val process = Process(versionCommand).run(ProcessLogger(stdout append _+"\n", stderr append _+"\n"))
     if (!versionExitcode.contains(process.exitValue)) {
       logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
       return "N/A"
