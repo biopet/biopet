@@ -155,6 +155,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     for ((chunk, fastqfile) <- chunks) {
       var R1 = fastqfile._1
       var R2 = fastqfile._2
+      val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
       if (!skipFlexiprep) {
         flexiprep.input_R1 = fastq_R1
         if (paired) flexiprep.input_R2 = fastq_R2
@@ -162,14 +163,14 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         flexiprep.init
         flexiprep.runInitialJobs
         //flexiprep.biopetScript
-        val flexiout = flexiprep.runTrimClip(R1, R2, outputDir + chunk, chunk)
+        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunk)
         logger.debug(chunk + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
         fastq_R1_output :+= R1
         fastq_R2_output :+= R2
       }
-      val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
+      
       if (aligner == "bwa") {
         val bwaCommand = new Bwa(this)
         bwaCommand.R1 = R1
