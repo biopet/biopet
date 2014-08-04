@@ -12,7 +12,6 @@ import scala.io.Source
 
 import org.broadinstitute.gatk.utils.commandline.{ Input }
 
-
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 

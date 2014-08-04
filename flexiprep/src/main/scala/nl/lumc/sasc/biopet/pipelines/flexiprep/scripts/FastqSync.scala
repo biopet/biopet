@@ -31,7 +31,8 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
   //No output Annotation so file 
   var output_stats: File = _
 
-  def cmdLine = getPythonCommand +
+  def cmdLine = {
+    getPythonCommand +
     required(input_start_fastq) +
     required(input_R1) +
     required(input_R2) +
@@ -39,6 +40,7 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
     required(output_R2) +
     " > " +
     required(output_stats)
+  }
 
   def getSummary: Json = {
     return jNull
@@ -46,6 +48,18 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
 }
 
 object FastqSync {
+  def apply(root: Configurable, input_start_fastq:File, input_R1:File, input_R2:File, 
+            output_R1:File, output_R2:File, output_stats:File): FastqSync = {
+    val fastqSync = new FastqSync(root)
+    fastqSync.input_start_fastq = input_start_fastq
+    fastqSync.input_R1 = input_R1
+    fastqSync.input_R2 = input_R2
+    fastqSync.output_R1 = output_R1
+    fastqSync.output_R2 = output_R2
+    fastqSync.output_stats = output_stats
+    return fastqSync
+  }
+  
   def mergeSummarys(jsons: List[Json]): Json = {
     return jNull
   }

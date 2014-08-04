@@ -32,11 +32,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
       super.cmdLine
     } else {
       analysisName = getClass.getSimpleName + "-ln"
-      val lnOut = new Ln(this)
-      lnOut.in = new java.io.File(required(fastq_input))
-      lnOut.out = new java.io.File(required(fastq_output))
-      lnOut.relative = true
-      lnOut.cmd
+      Ln(this, fastq_input, fastq_output, relative = true).cmd
     }
   }
   
@@ -64,6 +60,14 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
 }
 
 object Cutadapt {
+  def apply(root: Configurable, input:File, output:File): Cutadapt = {
+    val cutadapt = new Cutadapt(root)
+    cutadapt.fastq_input = input
+    cutadapt.fastq_output = output
+    cutadapt.stats_output = new File(output.getAbsolutePath.substring(0, output.getName.lastIndexOf(".")) + ".stats")
+    return cutadapt
+  }
+  
   def mergeSummarys(jsons: List[Json]): Json = {
     return jNull
   }
