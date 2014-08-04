@@ -1,10 +1,8 @@
 {
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
-    "gatk": {"flexiprep": { "sdfg": { "exe": "gatk" }}},
-    "pbzip2": { "exe": "test" },
     "flexiprep": {
-        "fastqc": { "exe": "test" },
-        "cutadapt": {"exe":"test"},
-        "sickle": {"exe":"test"}
+        "seqtk": {"exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"},
+        "cutadapt": {"exe":"/home/pjvan_thof/.local/bin/cutadapt"},
+        "sickle": {"exe":"/data/DIV5/SASC/pjvan_thof/bin/sickle"}
     }
 }

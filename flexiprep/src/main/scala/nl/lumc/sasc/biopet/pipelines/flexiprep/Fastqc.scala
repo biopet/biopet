@@ -15,7 +15,7 @@ import scalaz._, Scalaz._
 
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
   def getDataBlock(name: String): Array[String] = { // Based on Fastqc v0.10.1
-    val outputDir = output.getName.stripSuffix(".zip")
+    val outputDir = output.getAbsolutePath.stripSuffix(".zip")
     val dataFile = new File(outputDir + "/fastqc_data.txt")
     if (!dataFile.exists) return null
     val data = Source.fromFile(dataFile).mkString

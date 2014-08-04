@@ -2,7 +2,6 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import argonaut._, Argonaut._
@@ -22,19 +21,6 @@ class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
   var out: File = _
 
   var fmt: String = _
-  var fastqc: Fastqc = _
-
-  override def beforeCmd {
-    if (fastqc != null && fmt == null) {
-      fastqc.getEncoding match {
-        case null                                       => {}
-        case s if (s.contains("Sanger / Illumina 1.9")) => fmt = "sanger"
-        case s if (s.contains("Illumina <1.3"))         => fmt = "solexa"
-        case s if (s.contains("Illumina 1.3"))          => fmt = "illumina"
-        case s if (s.contains("Illumina 1.5"))          => fmt = "illumina"
-      }
-    }
-  }
 
   def cmdLine = {
     getPythonCommand +
@@ -49,13 +35,11 @@ class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
 }
 
 object Seqstat {
-  def apply(root: Configurable, fastqfile: File, fastqc: Fastqc, outDir: String): Seqstat = {
+  def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
     val seqstat = new Seqstat(root)
     val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
     seqstat.input_fastq = fastqfile
-    seqstat.fastqc = fastqc
     seqstat.out = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
-    if (fastqc != null) seqstat.deps ::= fastqc.output
     return seqstat
   }
 
