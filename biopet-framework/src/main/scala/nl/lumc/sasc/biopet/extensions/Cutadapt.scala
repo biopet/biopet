@@ -22,12 +22,12 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """(.*)""".r
 
   var default_clip_mode: String = config("default_clip_mode", default = "3")
-  var opt_adapter: Set[Any] = Set() 
-  if (configContains("adapter")) opt_adapter ++= config("adapter").getList
-  var opt_anywhere: Set[Any] = Set() 
-  if (configContains("anywhere")) opt_anywhere ++= config("anywhere").getList
-  var opt_front: Set[Any] = Set() 
-  if (configContains("front")) opt_front ++= config("front").getList
+  var opt_adapter: Set[String] = Set()
+  if (configContains("adapter")) for (adapter <- config("adapter").getList) opt_adapter += adapter.toString
+  var opt_anywhere: Set[String] = Set()
+  if (configContains("anywhere")) for (adapter <- config("anywhere").getList) opt_anywhere += adapter.toString
+  var opt_front: Set[String] = Set()
+  if (configContains("front")) for (adapter <- config("front").getList) opt_front += adapter.toString
 
   var opt_discard: Boolean = config("discard")
   var opt_minimum_length: String = config("minimum_length", 1)
