@@ -34,7 +34,8 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
     this.checkExecutable
     if (contaminants == null) {
       val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
-      contaminants = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+      val defaultContams = new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+      contaminants = config("contaminants", default = defaultContams)
     }
   }
 
