@@ -4,9 +4,9 @@
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     "bwa": { "exe": "test" },
     "flexiprep": {
-        "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
-        "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
-        "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
+        "fastqc": {"exe":"test"},
+        "cutadapt": {"exe":"test"},
+        "sickle": {"exe":"test"}
     },
     "chunking": false
 }

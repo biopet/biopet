@@ -3,11 +3,11 @@
     "reference" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
     "samtools": { "exe": "test"},
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
-    "star" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
-    "bwa" : {"exe":"/home/pjvan_thof/pipelines/test/test"},
+    "star" : {"exe":"test"},
+    "bwa" : {"exe":"test"},
     "flexiprep": {
-        "fastqc": {"exe":"/home/pjvan_thof/pipelines/test/test"},
-        "sickle": {"exe":"/home/pjvan_thof/pipelines/test/test"}
+        "fastqc": {"exe":"test"},
+        "sickle": {"exe":"test"}
     },
     "mapping": {
     },
@@ -17,30 +17,30 @@
             }
         },
         "referenceFile" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
-        "dbsnp": "/home/pjvan_thof/pipelines/test/test",
-        "hapmap": "/home/pjvan_thof/pipelines/test/test",
-        "omni": "/home/pjvan_thof/pipelines/test/test",
-        "1000G": "/home/pjvan_thof/pipelines/test/test",
-        "mills": "/home/pjvan_thof/pipelines/test/test",
+        "dbsnp": "test",
+        "hapmap": "test",
+        "omni": "test",
+        "1000G": "test",
+        "mills": "test",
         "haplotypecaller": {
             "stand_call_conf": 20,
             "stand_emit_conf": 20
         }
     },
-    "cutadapt": {"exe":"/home/pjvan_thof/pipelines/test/test"},
+    "cutadapt": {"exe":"test"},
     "samples": {
         "test": {
             "ID": "test",
             "runs": {
                 "1" : {
                     "ID": "1",
-                    "R1" : "/home/pjvan_thof/pipelines/test/test.R1.fastq.gz",
-                    "R2" : "/home/pjvan_thof/pipelines/test/test.R2.fastq.gz"
+                    "R1" : "test.R1.fastq.gz",
+                    "R2" : "test.R2.fastq.gz"
                 },
                 "2" : {
                     "ID": "1",
-                    "R1" : "/home/pjvan_thof/pipelines/test/test.R1.fastq.gz",
-                    "R2" : "/home/pjvan_thof/pipelines/test/test.R2.fastq.gz"
+                    "R1" : "test.R1.fastq.gz",
+                    "R2" : "test.R2.fastq.gz"
                 }
             }
         }
