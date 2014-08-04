@@ -85,10 +85,12 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (versionCommand == null || versionRegex == null) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
-    def outputLog = "\n output log: \n stdout: \n" + stdout.toString + "\n stderr: \n" + stderr.toString
+    def outputLog = "Version command: \n" + versionCommand + 
+                    "\n output log: \n stdout: \n" + stdout.toString + 
+                    "\n stderr: \n" + stderr.toString
     val process = Process(versionCommand).run(ProcessLogger(stdout append _, stderr append _))
     if (!versionExitcode.contains(process.exitValue)) {
-      logger.warn("Version command: '" + versionCommand + "' give exit code " + process.exitValue + ", version not found" + outputLog)
+      logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
       return "N/A"
     }
     for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
@@ -97,7 +99,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         case _               =>
       }
     }
-    logger.warn("Version command: '" + versionCommand + "' give a exit code " + process.exitValue + " but no version was found, executable correct?" + outputLog)
+    logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
     return "N/A"
   }
 
