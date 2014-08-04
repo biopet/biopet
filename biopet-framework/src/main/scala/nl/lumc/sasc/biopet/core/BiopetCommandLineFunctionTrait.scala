@@ -1,11 +1,11 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline._
-import scala.sys.process._
+import org.broadinstitute.gatk.utils.commandline.{Input, Argument}
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.matching.Regex
 
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {
