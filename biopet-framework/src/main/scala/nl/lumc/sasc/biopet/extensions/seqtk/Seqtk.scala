@@ -15,4 +15,5 @@ abstract class Seqtk extends BiopetCommandLineFunction {
   executable = config("exe", default = "seqtk", submodule = "seqtk")
   override def versionCommand = executable
   override val versionRegex = """Version: (.*)""".r
+  override val versionExitcode = List(0, 1)
 }
