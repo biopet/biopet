@@ -29,6 +29,7 @@ trait BiopetQScript extends Configurable {
     biopetScript
     val configReport = globalConfig.getReport
     val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
+    configReportFile.getParentFile.mkdir
     val writer = new PrintWriter(configReportFile)
     writer.write(configReport)
     writer.close()
