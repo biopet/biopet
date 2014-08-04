@@ -55,10 +55,10 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
       // calculate 'distance' from output directory to input
       // which is the number of directory walks required to get to the inUnique directory from outDir
       val outDir = FilenameUtils.getFullPathNoEndSeparator(outUnique)
-      val dist: Int = scala.math.max(0, outDir.split(File.separator).length - 1)
+      val dist: Int = scala.math.max(0, inUnique.split(File.separator).length - 1)
       val result =
         if (dist > 0)
-          ((".." + File.separator) * dist) + File.separator + inUnique
+          ((".." + File.separator) * dist) + inUnique
         else
           inUnique
       result
