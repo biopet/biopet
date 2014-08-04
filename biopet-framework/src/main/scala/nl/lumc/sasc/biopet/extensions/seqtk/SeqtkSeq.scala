@@ -4,7 +4,7 @@
  * @author  Wibowo Arindrarto
  */
 
-package nl.lumc.sasc.biopet.function.seqtk
+package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }

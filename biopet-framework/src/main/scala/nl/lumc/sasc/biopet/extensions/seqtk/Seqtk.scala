@@ -4,7 +4,7 @@
  * @author  Wibowo Arindrarto
  */
 
-package nl.lumc.sasc.biopet.function.seqtk
+package nl.lumc.sasc.biopet.extensions.seqtk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
