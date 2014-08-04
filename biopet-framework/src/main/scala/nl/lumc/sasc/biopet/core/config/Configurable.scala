@@ -10,27 +10,27 @@ trait Configurable extends Logging {
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
 
-  def config(key: String, default: Any = null, submodule: String = null, required: Boolean = false): ConfigValue = {
+  def config(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar:Boolean = true): ConfigValue = {
     val m = if (submodule != null) submodule else configName
     val p = if (submodule != null) configName :: configPath else configPath
-    if (!configContains(key, submodule) && default == null) {
+    if (!configContains(key, submodule, freeVar) && default == null) {
       if (required) {
         logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
         throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
       } else return null
     }
-    if (default == null) return globalConfig(m, p, key)
-    else return globalConfig(m, p, key, default)
+    if (default == null) return globalConfig(m, p, key, freeVar)
+    else return globalConfig(m, p, key, default, freeVar)
   }
   //def config(key:String, default:Any) = globalConfig(configName, configPath, key, default)
   //def config(key:String, default:Any, module:String) = globalConfig(module, configName :: configPath, key, default)
 
   //def configContains(key:String) = globalConfig.contains(configName, configPath, key)
-  def configContains(key: String, submodule: String = null) = {
+  def configContains(key: String, submodule: String = null, freeVar:Boolean = true) = {
     val m = if (submodule != null) submodule else configName
     val p = if (submodule != null) configName :: configPath else configPath
 
-    globalConfig.contains(m, p, key)
+    globalConfig.contains(m, p, key, freeVar)
   }
 
   implicit def configValue2file(value: ConfigValue): File = if (value != null) new File(Configurable.any2string(value.value)) else null

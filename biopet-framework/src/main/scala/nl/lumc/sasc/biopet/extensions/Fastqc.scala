@@ -19,7 +19,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   executable = config("exe", default = "fastqc")
-  var java_exe: String = config("exe", default = "java", submodule = "java")
+  var java_exe: String = config("exe", default = "java", submodule = "java", freeVar = false)
   var kmers: Option[Int] = config("kmers")
   var quiet: Boolean = config("quiet")
   var noextract: Boolean = config("noextract")

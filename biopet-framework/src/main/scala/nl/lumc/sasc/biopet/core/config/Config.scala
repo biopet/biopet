@@ -73,9 +73,10 @@ class Config(var map: Map[String, Any]) extends Logging {
   var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
 
   def contains(s: String): Boolean = map.contains(s)
-  def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key)
-  def contains(module: String, path: List[String], key: String): Boolean = {
-    val requestedIndex = ConfigValueIndex(module, path, key)
+  def contains(requestedIndex: ConfigValueIndex, freeVar:Boolean): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
+  def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, true)
+  def contains(module: String, path: List[String], key: String, freeVar:Boolean = true): Boolean = {
+    val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
     if (notFoundCache.contains(requestedIndex)) return false
     else if (foundCache.contains(requestedIndex)) return true
     else {
@@ -89,12 +90,13 @@ class Config(var map: Map[String, Any]) extends Logging {
             foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, ConfigValueIndex(module, submodules2, key), p(key)))
             return true
           }
-
-          val p2 = getMapFromPath(submodules2)
-          //logger.debug("p2: " + p2)
-          if (p2.contains(key)) {
-            foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, ConfigValueIndex(module, submodules2, key), p2(key)))
-            return true
+          if (freeVar) {
+            val p2 = getMapFromPath(submodules2)
+            //logger.debug("p2: " + p2)
+            if (p2.contains(key)) {
+              foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, ConfigValueIndex(module, submodules2, key), p2(key)))
+              return true
+            }
           }
           submodules2 = submodules2.init
         }
@@ -104,7 +106,7 @@ class Config(var map: Map[String, Any]) extends Logging {
       if (p.contains(key)) { // Module is not nested
         foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, ConfigValueIndex(module, Nil, key), p(key)))
         return true
-      } else if (this.contains(key)) { // Root value of json
+      } else if (this.contains(key) && freeVar) { // Root value of json
         foundCache += (requestedIndex -> ConfigValue.apply(requestedIndex, ConfigValueIndex("", Nil, key), get(key)))
         return true
       } else { // At this point key is not found on the path
@@ -117,23 +119,26 @@ class Config(var map: Map[String, Any]) extends Logging {
   private def get(key: String): Any = map(key)
   private def get(key: String, default: Any): Any = if (contains(key)) get(key) else default
 
-  def apply(module: String, path: List[String], key: String, default: Any): ConfigValue = {
+  def apply(module: String, path: List[String], key: String, default: Any = null, freeVar:Boolean = true): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key)
-    if (contains(requestedIndex)) return foundCache(requestedIndex)
-    else {
+    if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
+    else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue.apply(requestedIndex, null, default, true))
       return defaultCache(requestedIndex)
-    }
-  }
-
-  def apply(module: String, path: List[String], key: String): ConfigValue = {
-    val requestedIndex = ConfigValueIndex(module, path, key)
-    if (contains(requestedIndex)) return foundCache(requestedIndex)
-    else {
+    } else {
       logger.error("Value in config could not be found but it seems required, index: " + requestedIndex)
       throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
     }
   }
+
+//  def apply(module: String, path: List[String], key: String, freeVar:Boolean = true): ConfigValue = {
+//    val requestedIndex = ConfigValueIndex(module, path, key)
+//    if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
+//    else {
+//      logger.error("Value in config could not be found but it seems required, index: " + requestedIndex)
+//      throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
+//    }
+//  }
 
   private def getMapFromPath(path: List[String]): Map[String, Any] = {
     var returnMap: Map[String, Any] = map
