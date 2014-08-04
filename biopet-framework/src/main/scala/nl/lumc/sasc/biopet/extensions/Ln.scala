@@ -18,52 +18,52 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
   var relative: Boolean = true
 
-  private lazy val inCanonical: String = {
-    // need to remove "/~" to correctly expand path with tilde
-    in.getCanonicalPath().replace("/~", "")
-  }
-
-  private lazy val outCanonical: String = {
-    out.getCanonicalPath().replace("/~", "")
-  }
-
-  private lazy val inToks: Array[String] = {
-    inCanonical.split(File.separator)
-  }
-
-  private lazy val outToks: Array[String] = {
-    outCanonical.split(File.separator)
-  }
-
-  private lazy val commonPrefixLength: Int = {
-    val maxLength = scala.math.min(inToks.length, outToks.length)
-    var i: Int = 0;
-    while (i < maxLength && inToks(i) == outToks(i)) i += 1;
-    i
-  }
-
-  private lazy val inUnique: String = {
-    inToks.slice(commonPrefixLength, inToks.length).mkString(File.separator)
-  }
-
-  private lazy val outUnique: String = {
-    outToks.slice(commonPrefixLength, outToks.length).mkString(File.separator)
-  }
-
-  private lazy val inRelative: String = {
-    // calculate 'distance' from output directory to input
-    // which is the number of directory walks required to get to the inUnique directory from outDir
-    val outDir = FilenameUtils.getFullPathNoEndSeparator(outUnique)
-    val dist: Int = scala.math.max(0, outDir.split(File.separator).length - 1)
-    val result =
-      if (dist > 0)
-        ((".." + File.separator) * dist) + File.separator + inUnique
-      else
-        inUnique
-    result
-  }
-
   lazy val cmd: String = {
+    lazy val inCanonical: String = {
+      // need to remove "/~" to correctly expand path with tilde
+      in.getCanonicalPath().replace("/~", "")
+    }
+
+    lazy val outCanonical: String = {
+      out.getCanonicalPath().replace("/~", "")
+    }
+
+    lazy val inToks: Array[String] = {
+      inCanonical.split(File.separator)
+    }
+
+    lazy val outToks: Array[String] = {
+      outCanonical.split(File.separator)
+    }
+
+    lazy val commonPrefixLength: Int = {
+      val maxLength = scala.math.min(inToks.length, outToks.length)
+      var i: Int = 0;
+      while (i < maxLength && inToks(i) == outToks(i)) i += 1;
+      i
+    }
+
+    lazy val inUnique: String = {
+      inToks.slice(commonPrefixLength, inToks.length).mkString(File.separator)
+    }
+
+    lazy val outUnique: String = {
+      outToks.slice(commonPrefixLength, outToks.length).mkString(File.separator)
+    }
+
+    lazy val inRelative: String = {
+      // calculate 'distance' from output directory to input
+      // which is the number of directory walks required to get to the inUnique directory from outDir
+      val outDir = FilenameUtils.getFullPathNoEndSeparator(outUnique)
+      val dist: Int = scala.math.max(0, outDir.split(File.separator).length - 1)
+      val result =
+        if (dist > 0)
+          ((".." + File.separator) * dist) + File.separator + inUnique
+        else
+          inUnique
+      result
+    }
+
     if (relative) {
       // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
       "ln -s " + inRelative + " " + outCanonical
@@ -77,3 +77,13 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
     System.out.println("cmd: '" + cmd + "', exitcode: " + process.exitValue)
   }
 }
+
+ object Ln {
+   def apply(root: Configurable, input:File, output:File, relative:Boolean = true): Ln = {
+     val ln = new Ln(root)
+     ln.in = input
+     ln.out = output
+     ln.relative = relative
+     return ln
+   }
+ }
