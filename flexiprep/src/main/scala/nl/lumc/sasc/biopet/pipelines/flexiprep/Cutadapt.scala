@@ -33,8 +33,8 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     } else {
       analysisName = getClass.getSimpleName + "-ln"
       val lnOut = new Ln(this)
-      lnOut.in = new java.io.File(required(fastq_input))
-      lnOut.out = new java.io.File(required(fastq_output))
+      lnOut.in = fastq_input
+      lnOut.out = fastq_output
       lnOut.relative = true
       lnOut.cmd
     }
