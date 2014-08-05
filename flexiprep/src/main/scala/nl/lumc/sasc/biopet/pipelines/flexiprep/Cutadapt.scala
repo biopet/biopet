@@ -64,7 +64,7 @@ object Cutadapt {
     val cutadapt = new Cutadapt(root)
     cutadapt.fastq_input = input
     cutadapt.fastq_output = output
-    cutadapt.stats_output = new File(output.getAbsolutePath.substring(0, output.getName.lastIndexOf(".")) + ".stats")
+    cutadapt.stats_output = new File(output.getAbsolutePath.substring(0, output.getAbsolutePath.lastIndexOf(".")) + ".stats")
     return cutadapt
   }
   
