@@ -26,10 +26,10 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Skip summary", shortName = "skipsummary", required = false)
   var skipSummary: Boolean = false
 
-  @Argument(doc = "Sample name", shortName = "sample", required = false)
+  @Argument(doc = "Sample name", shortName = "sample", required = true)
   var sampleName: String = _
 
-  @Argument(doc = "Library name", shortName = "library", required = false)
+  @Argument(doc = "Library name", shortName = "library", required = true)
   var libraryName: String = _
 
   var paired: Boolean = (input_R2 != null)
@@ -51,6 +51,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     if (!skipClip) skipClip = config("skipclip", default = false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
+    if (sampleName == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
+    if (libraryName == null) throw new IllegalStateException("Missing Library name on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
 
