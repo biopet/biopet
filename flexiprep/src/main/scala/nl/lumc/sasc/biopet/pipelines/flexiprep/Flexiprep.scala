@@ -70,7 +70,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
     }
 
-    summary.out = outputDir + "new.flexiprep.summary.json"
+    summary.out = outputDir + sampleName + "-" + libraryName + ".qc.summary.json"
   }
 
   def biopetScript() {
@@ -276,19 +276,6 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       }
     }
 
-    if (!skipSummary) {
-      val summarize = new Summarize(this)
-      summarize.runDir = outputDir
-      summarize.samplea = R1_name
-      if (paired) summarize.sampleb = R2_name
-      summarize.samplename = R1_name
-      summarize.clip = !skipClip
-      summarize.trim = !skipTrim
-      summarize.out = new File(outputDir + summarize.samplename + "." + this.getClass.getSimpleName + ".summary.json")
-      for ((k, v) <- outputFiles) summarize.deps +:= v
-      add(summarize)
-    }
-    
     add(summary)
   }
 
