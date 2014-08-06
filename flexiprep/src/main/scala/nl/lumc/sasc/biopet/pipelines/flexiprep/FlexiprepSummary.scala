@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
+import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Sha1sum
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.{ FastqSync, Seqstat }
@@ -46,6 +47,8 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   var fastqcR2after: Fastqc = _
 
   var flexiprep: Flexiprep = root.asInstanceOf[Flexiprep]
+  
+  var resourses:Map[String, Json] = Map()
 
   def addFastqc(fastqc: Fastqc, R2: Boolean = false, after: Boolean = false): Fastqc = {
     if (!R2 && !after) this.fastqcR1 = fastqc
@@ -99,29 +102,39 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   // format: OFF
   override def run {
     logger.debug("Start")
+    sha1Summary()
     val summary = 
-      ("flexiprep" := (
-        ("clipping" := !flexiprep.skipClip) ->:
-        ("trimming" := !flexiprep.skipTrim) ->:
-        ("paired" := flexiprep.paired) ->:
-        jEmptyObject)) ->:
-      ("seqstat" := seqstatSummary) ->:
-      ("sha1" := sha1Summary) ->:
-      ("fastqc" := fastqcSummary) ->:
-      ("clipping" :=? clipstatSummary) ->?:
-      ("trimming" :=? trimstatSummary) ->?:
-      jEmptyObject
+      ("samples" := ( flexiprep.sampleName :=
+        ("runs" := ( flexiprep.libraryName := (
+          ("flexiprep" := (
+            ("clipping" := !flexiprep.skipClip) ->:
+            ("trimming" := !flexiprep.skipTrim) ->:
+            ("paired" := flexiprep.paired) ->:
+            jEmptyObject)) ->:
+          ("stats" := (
+            ("fastq" := seqstatSummary) ->:
+            ("clipping" :=? clipstatSummary) ->?:
+            ("trimming" :=? trimstatSummary) ->?:
+            jEmptyObject)) ->:
+          ("resourses" := (("raw_R1" := getResourses(fastqcR1, sha1R1)) ->:
+            ("raw_R2" :?= getResourses(fastqcR2, sha1R2)) ->?:
+            ("proc_R1" :?= getResourses(fastqcR1after, sha1R1after)) ->?:
+            ("proc_R2" :?= getResourses(fastqcR2after, sha1R2after)) ->?:
+            jEmptyObject)) ->:
+          jEmptyObject ))->: jEmptyObject)->: jEmptyObject)->: jEmptyObject) ->: jEmptyObject
     // format: ON
-    logger.debug(summary.spaces2) // TODO: need output writter
+    val summeryText = summary.spaces2
+    logger.debug("\n" + summeryText)
+    val writer = new PrintWriter(out)
+    writer.write(summeryText)
+    writer.close()
     logger.debug("Stop")
   }
 
   def seqstatSummary(): Option[Json] = {
-    val R1: Json = if (chunks.size == 1) chunks.head._2.seqstatR1.getSummary
-    else {
-      val s = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
-      Seqstat.mergeSummarys(s.toList)
-    }
+    val R1_chunks = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
+    val R1: Json = Seqstat.mergeSummarys(R1_chunks.toList)
+    
     val R2: Option[Json] = if (!flexiprep.paired) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.getSummary)
     else {
@@ -147,12 +160,16 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
       jEmptyObject)
   }
 
-  def sha1Summary: Json = {
-    return ("R1_raw" := sha1Summary(sha1R1)) ->:
-      ("R2_raw" :=? sha1Summary(sha1R2)) ->?:
-      ("R1_proc" :=? sha1Summary(sha1R1after)) ->?:
-      ("R2_proc" :=? sha1Summary(sha1R2after)) ->?:
-      jEmptyObject
+  def sha1Summary() {
+    val R1_raw = sha1Summary(sha1R1)
+    val R2_raw = sha1Summary(sha1R2)
+    val R1_proc = sha1Summary(sha1R1after)
+    val R2_proc = sha1Summary(sha1R2after)
+    
+    if (!R1_raw.isEmpty) resourses += ("fastq_R1_raw" -> R1_raw.get)
+    if (!R2_raw.isEmpty) resourses += ("fastq_R2_raw" -> R2_raw.get)
+    if (!R1_proc.isEmpty) resourses += ("fastq_R1_proc" -> R1_proc.get)
+    if (!R2_proc.isEmpty) resourses += ("fastq_R2_proc" -> R2_proc.get)
   }
 
   def sha1Summary(sha1sum: Sha1sum): Option[Json] = {
@@ -160,14 +177,12 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     else return Option(sha1sum.getSummary)
   }
 
-  def fastqcSummary: Json = {
-    return ("R1_raw" := fastqcSummary(fastqcR1)) ->:
-      ("R2_raw" :=? fastqcSummary(fastqcR2)) ->?:
-      ("R1_proc" :=? fastqcSummary(fastqcR1after)) ->?:
-      ("R2_proc" :=? fastqcSummary(fastqcR2after)) ->?:
-      jEmptyObject
+  def getResourses(fastqc:Fastqc, sha1sum:Sha1sum): Option[Json] = {
+    if (fastqc == null || sha1sum == null) return None
+    val fastqcSum = fastqcSummary(fastqc).get
+    return Option(("fastq" := sha1Summary(sha1sum)) ->: fastqcSum)
   }
-
+  
   def fastqcSummary(fastqc: Fastqc): Option[Json] = {
     if (fastqc == null) return None
     else return Option(fastqc.getSummary)
@@ -188,17 +203,14 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     }
     return Option(("R1" := R1) ->:
       ("R2" :=? R2) ->?:
-      ("fastqSync" :=? syncstatSummary) ->?:
+      ("fastq_sync" :=? syncstatSummary) ->?:
       jEmptyObject)
   }
 
   def syncstatSummary(): Option[Json] = {
     if (flexiprep.skipClip || !flexiprep.paired) return None
-    if (chunks.size == 1) return Option(chunks.head._2.sickle.getSummary)
-    else {
-      val s = for ((key, value) <- chunks) yield value.fastqSync.getSummary
-      return Option(FastqSync.mergeSummarys(s.toList))
-    }
+    val s = for ((key, value) <- chunks) yield value.fastqSync.getSummary
+    return Option(FastqSync.mergeSummarys(s.toList))
   }
 
   def trimstatSummary(): Option[Json] = {
