@@ -6,6 +6,7 @@ import org.broadinstitute.gatk.utils.commandline._
 import java.io.File
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
+import scala.io.Source
 
 class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Zipped file")
@@ -19,7 +20,10 @@ class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 
   def getSummary: Json = {
-    return jNull
+    val data = Source.fromFile(output).mkString.split(" ")
+    return ("path" := output.getAbsolutePath) ->:
+      ("sha1sum" := data(0)) ->:
+      jEmptyObject
   }
 }
 

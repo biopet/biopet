@@ -288,6 +288,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       for ((k, v) <- outputFiles) summarize.deps +:= v
       add(summarize)
     }
+    
+    add(summary)
   }
 
   def extractIfNeeded(file: File, runDir: String): File = {

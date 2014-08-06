@@ -10,6 +10,8 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
+import scala.io.Source
+
 class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("sync_paired_end_reads.py")
 
@@ -43,7 +45,27 @@ class FastqSync(val root: Configurable) extends PythonCommandLineFunction {
   }
 
   def getSummary: Json = {
-    return jNull
+    val R1_filteredR = """Filtered (\d*) reads from first read file.""".r
+    val R2_filteredR = """Filtered (\d*) reads from second read file.""".r
+    val readsLeftR = """Synced read files contain (\d*) reads.""".r
+    
+    var R1_filtered = 0
+    var R2_filtered = 0
+    var readsLeft = 0
+    
+    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
+      line match {
+        case R1_filteredR(m) => R1_filtered = m.toInt
+        case R2_filteredR(m) => R2_filtered = m.toInt
+        case readsLeftR(m) => readsLeft = m.toInt
+        case _ => 
+      }
+    }
+    
+    return ("num_reads_discarded_R1" := R1_filtered) ->:
+      ("num_reads_discarded_R2" := R2_filtered) ->:
+      ("num_reads_kept" := readsLeft) ->:
+      jEmptyObject
   }
 }
 
@@ -61,6 +83,19 @@ object FastqSync {
   }
   
   def mergeSummarys(jsons: List[Json]): Json = {
-    return jNull
+    var R1_filtered = 0
+    var R2_filtered = 0
+    var readsLeft = 0
+    
+    for (json <- jsons) {
+      R1_filtered += json.field("num_reads_discarded_R1").get.numberOrZero.toInt
+      R2_filtered += json.field("num_reads_discarded_R2").get.numberOrZero.toInt
+      readsLeft += json.field("num_reads_kept").get.numberOrZero.toInt
+    }
+    
+    return ("num_reads_discarded_R1" := R1_filtered) ->:
+      ("num_reads_discarded_R2" := R2_filtered) ->:
+      ("num_reads_kept" := readsLeft) ->:
+      jEmptyObject
   }
 }
