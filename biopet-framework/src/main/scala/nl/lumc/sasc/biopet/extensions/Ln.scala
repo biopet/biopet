@@ -74,7 +74,7 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
   override def run {
     val process = Process(cmd).run
-    System.out.println("cmd: '" + cmd + "', exitcode: " + process.exitValue)
+    logger.info("cmd: '" + cmd + "', exitcode: " + process.exitValue)
   }
 }
 
