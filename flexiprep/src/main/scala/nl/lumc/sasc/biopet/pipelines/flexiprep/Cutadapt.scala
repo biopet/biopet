@@ -23,7 +23,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
   
   override def cmdLine = {
     if (!opt_adapter.isEmpty || !opt_anywhere.isEmpty || !opt_front.isEmpty) {
-      analysisName = getClass.getName
+      analysisName = getClass.getSimpleName
       super.cmdLine
     } else {
       analysisName = getClass.getSimpleName + "-ln"
