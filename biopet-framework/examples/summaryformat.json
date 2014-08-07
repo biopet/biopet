@@ -1,0 +1,33 @@
+{
+    "_meta": {},
+    "stats": {},
+    "resources": {
+        "res_key": {
+            "uri:": "",
+            "md5sum": "",
+            "sha256sum": "",
+            "adler32sum": ""
+        }
+    },
+    "samples" :{
+        "SampleID": {
+            "stats": {},
+            "resources": {},
+            "libraries": {
+                "libraryID": {
+                    "stats": {},
+                    "resources": {}
+                }
+            }
+        }, "SampleID2": {
+            "stats": {},
+            "resources": {},
+            "libraries": {
+                "libraryID": {
+                    "stats": {},
+                    "resources": {}
+                }
+            }
+        }
+    }
+}
