@@ -201,7 +201,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = new File(outputDir + outputName + ".dedup.bam")
       add(MarkDuplicates(this, bamFiles, bamFile))
     } else if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
-
+    
+    addAll(BamMetrics.apply(this, bamFile, outputDir + "metrics/").functions)
+    
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
