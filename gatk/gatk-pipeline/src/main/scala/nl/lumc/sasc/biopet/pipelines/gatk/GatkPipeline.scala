@@ -79,8 +79,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     }
     outputFiles += ("FinalBams" -> runBamfiles)
 
-    //    addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions) // Metrics pipeline
-
     if (runBamfiles.size > 0) {
       finalBamFiles ++= runBamfiles
       val gatkVariantcalling = new GatkVariantcalling(this)
