@@ -3,14 +3,13 @@
     "reference" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
     "samtools": { "exe": "test"},
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
+    "flexiprep": {
+        "seqtk": {"exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"},
+        "cutadapt": {"exe":"/home/pjvan_thof/.local/bin/cutadapt"},
+        "sickle": {"exe":"/data/DIV5/SASC/pjvan_thof/bin/sickle"}
+    },
     "star" : {"exe":"test"},
     "bwa" : {"exe":"test"},
-    "flexiprep": {
-        "fastqc": {"exe":"test"},
-        "sickle": {"exe":"test"}
-    },
-    "mapping": {
-    },
     "gatk": {
         "mapping": {
             "flexiprep": {
