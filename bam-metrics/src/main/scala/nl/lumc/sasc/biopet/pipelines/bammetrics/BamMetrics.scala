@@ -29,6 +29,11 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on BamMetrics module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
+    if (configContains("targetBed")) {
+      for (file <- config("targetBed").getList) {
+        bedFiles +:= new File(file.toString)
+      }
+    }
   }
 
   def biopetScript() {
