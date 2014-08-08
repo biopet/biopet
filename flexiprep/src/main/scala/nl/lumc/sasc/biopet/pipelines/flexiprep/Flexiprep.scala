@@ -23,9 +23,6 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Skip Clip fastq files", shortName = "skipclip", required = false)
   var skipClip: Boolean = false
 
-  @Argument(doc = "Skip summary", shortName = "skipsummary", required = false)
-  var skipSummary: Boolean = false
-
   @Argument(doc = "Sample name", shortName = "sample", required = true)
   var sampleName: String = _
 
