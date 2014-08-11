@@ -22,7 +22,7 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
   def getSummary: Json = {
     val data = Source.fromFile(output).mkString.split(" ")
     return ("path" := output.getAbsolutePath) ->:
-      ("sha1sum" := data(0)) ->:
+      ("md5sum" := data(0)) ->:
       jEmptyObject
   }
 }
