@@ -10,6 +10,7 @@ import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument, ClassType }
 import org.broadinstitute.gatk.queue.extensions.picard.{ MergeSamFiles, SortSam, AddOrReplaceReadGroups }
 import scala.math._
 
@@ -38,8 +39,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Reference", shortName = "R", required = false)
   var referenceFile: File = _
 
-  @Argument(doc = "auto chuning", shortName = "chunking", required = false)
+  @Argument(doc = "Chunking", shortName = "chunking", required = false)
   var chunking: Boolean = false
+  
+  @ClassType(classOf[Int])
+  @Argument(doc = "Number of chunks, when not defined pipeline will automatic calculate number of chunks", shortName = "numberChunks", required = false)
+  var numberChunks: Option[Int] = None
 
   // Readgroup items
   @Argument(doc = "Readgroup ID", shortName = "RGID", required = false)
@@ -70,7 +75,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGPI: Int = _
 
   var paired: Boolean = false
-  var numberChunks = 0
 
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -100,15 +104,19 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     if (outputName == null) outputName = RGID
 
-    if (!chunking && numberChunks > 1) chunking = true
+    if (!chunking && numberChunks.isDefined) chunking = true
     if (!chunking) chunking = config("chunking", false)
     if (chunking) {
-      val chunkSize: Int = config("chunksize", (1 << 30))
-      val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3
-      else input_R1.length
-      if (numberChunks == 0 && configContains("numberchunks")) numberChunks = config("numberchunks")
-      else if (numberChunks == 0) numberChunks = ceil(filesize.toDouble / chunkSize).toInt
-      logger.debug("Chunks: " + numberChunks)
+      if (numberChunks.isEmpty) {
+        if (configContains("numberchunks")) numberChunks = config("numberchunks", default = None)
+        else {
+          val chunkSize: Int = config("chunksize", (1 << 30))
+          val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3
+                         else input_R1.length
+          numberChunks = Option(ceil(filesize.toDouble / chunkSize).toInt)
+        }
+      }
+      logger.debug("Chunks: " + numberChunks.getOrElse(1))
     }
   }
 
@@ -127,7 +135,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       else return file
     }
     var chunks: Map[String, (String, String)] = Map()
-    if (chunking) for (t <- 1 to numberChunks) {
+    if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       chunks += ("chunk_" + t -> (removeGz(outputDir + "chunk_" + t + "/" + fastq_R1.getName),
         if (paired) removeGz(outputDir + "chunk_" + t + "/" + fastq_R2.getName) else ""))
     }
