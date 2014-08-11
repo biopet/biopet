@@ -30,9 +30,8 @@ class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
 object Sha1sum {
   def apply(root: Configurable, fastqfile: File, outDir: String): Sha1sum = {
     val sha1sum = new Sha1sum(root)
-    val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
     sha1sum.input = fastqfile
-    sha1sum.output = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".sha1")
+    sha1sum.output = new File(outDir + fastqfile.getName + ".sha1")
     return sha1sum
   }
 }
