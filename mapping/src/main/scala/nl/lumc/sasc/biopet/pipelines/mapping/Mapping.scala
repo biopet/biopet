@@ -159,7 +159,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       if (!skipFlexiprep) {
         flexiprep.input_R1 = fastq_R1
         if (paired) flexiprep.input_R2 = fastq_R2
-        if (chunking) flexiprep.skipSummary = true
         flexiprep.sampleName = this.RGSM
         flexiprep.libraryName = this.RGLB
         flexiprep.init
