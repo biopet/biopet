@@ -47,7 +47,6 @@ object FastqSplitter {
             }
           }
         }
-        writter.flush
       }
     }
     for (writter <- output) writter.close
