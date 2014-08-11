@@ -124,7 +124,15 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     var fastq_R1: File = input_R1
     var fastq_R2: File = if (paired) input_R2 else ""
     val flexiprep = new Flexiprep(this)
-    flexiprep.outputDir = outputDir + "flexiprep/"
+    if (!skipFlexiprep) {
+      flexiprep.outputDir = outputDir + "flexiprep/"
+      flexiprep.input_R1 = fastq_R1
+      if (paired) flexiprep.input_R2 = fastq_R2
+      flexiprep.sampleName = this.RGSM
+      flexiprep.libraryName = this.RGLB
+      flexiprep.init
+      flexiprep.runInitialJobs
+    }
     var bamFiles: List[File] = Nil
     var fastq_R1_output: List[File] = Nil
     var fastq_R2_output: List[File] = Nil
@@ -166,13 +174,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       var deps: List[File] = Nil
       val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
       if (!skipFlexiprep) {
-        flexiprep.input_R1 = fastq_R1
-        if (paired) flexiprep.input_R2 = fastq_R2
-        flexiprep.sampleName = this.RGSM
-        flexiprep.libraryName = this.RGLB
-        flexiprep.init
-        flexiprep.runInitialJobs
-        //flexiprep.biopetScript
         val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunk)
         logger.debug(chunk + " - " + flexiout)
         R1 = flexiout._1
