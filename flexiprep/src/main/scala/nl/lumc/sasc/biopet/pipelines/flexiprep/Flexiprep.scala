@@ -5,7 +5,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Cat, Ln, Pbzip2, Md5sum, Zcat }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln, Pbzip2, Md5sum, Zcat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
@@ -124,7 +124,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   def runTrimClip(R1_in: File, R2_in: File, outDir: String) {
     runTrimClip(R1_in, R2_in, outDir, "")
   }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: String, chunkarg: String): (File, File) = {
+  def runTrimClip(R1_in: File, R2_in: File, outDir: String, chunkarg: String): (File, File, List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String, File] = Map()
 
@@ -133,33 +133,32 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     var deps: List[File] = if (paired) List(R1, R2) else List(R1)
     
     val seqtkSeq_R1 = SeqtkSeq.apply(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
-    add(seqtkSeq_R1, true)
+    add(seqtkSeq_R1, isIntermediate = true)
     R1 = seqtkSeq_R1.output
     deps ::= R1
     
     if (paired) {
       val seqtkSeq_R2 = SeqtkSeq.apply(this, R2, swapExt(outDir, R2, R2_ext, ".sanger" + R2_ext), fastqc_R2)
-      add(seqtkSeq_R2, true)
+      add(seqtkSeq_R2, isIntermediate = true)
       R2 = seqtkSeq_R2.output
       deps ::= R2
     }
     
     val seqstat_R1 = Seqstat(this, R1, outDir)
-    add(seqstat_R1)
+    add(seqstat_R1, isIntermediate = true)
     summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
-      add(seqstat_R2)
+      add(seqstat_R2, isIntermediate = true)
       summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
     
     if (!skipClip) { // Adapter clipping
 
       val cutadapt_R1 = Cutadapt(this, R1, swapExt(outDir, R1, R1_ext, ".clip" + R1_ext))
-      if (!skipTrim || paired) cutadapt_R1.isIntermediate = true
       if (outputFiles.contains("contams_R1")) cutadapt_R1.contams_file = outputFiles("contams_R1")
-      add(cutadapt_R1)
+      add(cutadapt_R1, isIntermediate = true)
       summary.addCutadapt(cutadapt_R1, R2 = false, chunk)
       R1 = cutadapt_R1.fastq_output
       deps ::= R1
@@ -167,19 +166,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
       if (paired) {
         val cutadapt_R2 = Cutadapt(this, R2, swapExt(outDir, R2, R2_ext, ".clip" + R2_ext))
-        if (!skipTrim || paired) cutadapt_R2.isIntermediate = true
         outputFiles += ("cutadapt_R2_stats" -> cutadapt_R2.stats_output)
         if (outputFiles.contains("contams_R2")) cutadapt_R2.contams_file = outputFiles("contams_R2")
-        add(cutadapt_R2)
+        add(cutadapt_R2, isIntermediate = true)
         summary.addCutadapt(cutadapt_R2, R2 = true, chunk)
         R2 = cutadapt_R2.fastq_output
         deps ::= R2
         
         val fastqSync = FastqSync(this, cutadapt_R1.fastq_input, cutadapt_R1.fastq_output, cutadapt_R2.fastq_output, 
            swapExt(outDir, R1, R1_ext, ".sync" + R1_ext), swapExt(outDir, R2, R2_ext, ".sync" + R2_ext), swapExt(outDir, R1, R1_ext, ".sync.stats"))
-        if (!skipTrim) fastqSync.isIntermediate = true
         fastqSync.deps :::= deps
-        add(fastqSync)
+        add(fastqSync, isIntermediate = true)
         summary.addFastqcSync(fastqSync, chunk)
         outputFiles += ("syncStats" -> fastqSync.output_stats)
         R1 = fastqSync.output_R1
@@ -199,7 +196,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       }
       sickle.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
       sickle.deps = deps
-      add(sickle)
+      add(sickle, isIntermediate = true)
       summary.addSickle(sickle, chunk)
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
@@ -219,35 +216,16 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
     outputFiles += (chunk + "output_R1" -> R1)
     if (paired) outputFiles += (chunk + "output_R2" -> R2)
-    return (R1, R2)
+    return (R1, R2, deps)
   }
 
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
     if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
-    var R1: File = ""
-    var R2: File = ""
-    if (fastq_R1.length == 1) {
-      R1 = fastq_R1.head
-      R2 = fastq_R2.head
-    } else {
-      R1 = new File(outputDir + R1_name + ".qc" + R1_ext)
-      add(Cat(this, fastq_R1, R1), true)
-      if (paired) {
-        R2 = new File(outputDir + R2_name + ".qc" + R2_ext)
-        add(Cat(this, fastq_R2, R2), true)
-      }
-    }
-
-    if (fastq_R1.length == 1 && !config("skip_native_link", default = false)) {
-      val newFile = new File(outputDir + R1_name + ".qc" + R1_ext)
-      add(Ln(this, R1, newFile))
-      R1 = newFile
-      if (paired) {
-        val newFile = new File(outputDir + R2_name + ".qc" + R2_ext)
-        add(Ln(this, R2, newFile))
-        R2 = newFile
-      }
-    }
+    val R1 = new File(outputDir + R1_name + ".qc" + R1_ext + ".gz")
+    val R2 = new File(outputDir + R2_name + ".qc" + R2_ext + ".gz")
+    
+    add(Gzip(this, fastq_R1, R1), true)
+    if (paired) add(Gzip(this, fastq_R2, R2), true)
 
     outputFiles += ("output_R1" -> R1)
     if (paired) outputFiles += ("output_R2" -> R2)

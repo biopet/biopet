@@ -163,6 +163,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     for ((chunk, fastqfile) <- chunks) {
       var R1 = fastqfile._1
       var R2 = fastqfile._2
+      var deps: List[File] = Nil
       val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
       if (!skipFlexiprep) {
         flexiprep.input_R1 = fastq_R1
@@ -176,6 +177,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         logger.debug(chunk + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
+        deps = flexiout._3
         fastq_R1_output :+= R1
         fastq_R2_output :+= R2
       }
@@ -184,16 +186,17 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         val bwaCommand = new Bwa(this)
         bwaCommand.R1 = R1
         if (paired) bwaCommand.R2 = R2
+        bwaCommand.deps = deps
         bwaCommand.RG = getReadGroup
         bwaCommand.output = new File(chunkDir + outputName + ".sam")
         add(bwaCommand, isIntermediate = true)
         bamFiles :+= addSortSam(List(bwaCommand.output), swapExt(chunkDir, bwaCommand.output, ".sam", ".bam"), chunkDir)
       } else if (aligner == "star") {
-        val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true)
+        val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
         add(starCommand)
         bamFiles :+= addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(chunkDir + outputName + ".bam"), chunkDir)
       } else if (aligner == "star-2pass") {
-        val star2pass = Star._2pass(this, R1, if (paired) R2 else null, chunkDir, isIntermediate = true)
+        val star2pass = Star._2pass(this, R1, if (paired) R2 else null, chunkDir, isIntermediate = true, deps = deps)
         addAll(star2pass._2)
         bamFiles :+= addAddOrReplaceReadGroups(List(star2pass._1), new File(chunkDir + outputName + ".bam"), chunkDir)
       } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
