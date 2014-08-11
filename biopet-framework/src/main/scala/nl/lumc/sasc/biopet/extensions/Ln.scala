@@ -54,13 +54,19 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
     lazy val inRelative: String = {
       // calculate 'distance' from output directory to input
       // which is the number of directory walks required to get to the inUnique directory from outDir
-      val outDir = FilenameUtils.getFullPathNoEndSeparator(outUnique)
-      val dist: Int = scala.math.max(0, inUnique.split(File.separator).length - 1)
+      val dist =
+        // relative path differs depending on which of the input or target is in the 'higher' directory
+        if (inToks.length > outToks.length)
+          scala.math.max(0, inUnique.split(File.separator).length - 1)
+        else
+          scala.math.max(0, outUnique.split(File.separator).length - 1)
+
       val result =
         if (dist > 0)
           ((".." + File.separator) * dist) + inUnique
         else
           inUnique
+
       result
     }
 
