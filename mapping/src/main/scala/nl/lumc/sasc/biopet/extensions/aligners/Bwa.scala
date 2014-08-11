@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions.aligners
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 import scala.sys.process._
 
@@ -14,7 +14,7 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var referenceFile: File = config("referenceFile", required = true)
+  var reference: File = config("reference", required = true)
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -37,7 +37,7 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-t", nCoresRequest) +
       optional("-R", RG) +
       conditional(M, "-M") +
-      required(referenceFile) +
+      required(reference) +
       required(R1) +
       optional(R2) +
       " > " + required(output)

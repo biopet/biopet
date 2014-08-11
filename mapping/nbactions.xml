@@ -10,7 +10,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG</exec.args>
+                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG -numberChunks 10</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
             </properties>
@@ -25,7 +25,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG</exec.args>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG -numberChunks 10</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
@@ -41,7 +41,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG</exec.args>
+                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.mapping.Mapping -R1 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_1.fastq.gz -R2 /data/DIV5/SASC/pjvan_thof/rig_validation/input/gcat_set_025/gcat_set_025_2.fastq.gz -outDir /home/pjvan_thof/pipelines/test -config /home/pjvan_thof/pipelines/biopet/mapping/examples/test.json -RGLB test -RGSM test -ALN bwa -l DEBUG -numberChunks 10</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
             </properties>

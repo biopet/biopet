@@ -1,12 +1,12 @@
 {
     "samtools": {"exe": "test"},
-    "referenceFile": "/blabla/blabla.fa",
+    "reference": "/blabla/blabla.fa",
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     "bwa": { "exe": "test" },
     "flexiprep": {
-        "fastqc": {"exe":"test"},
-        "cutadapt": {"exe":"test"},
-        "sickle": {"exe":"test"}
-    },
-    "chunking": false
+        "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
+        "seqtk": {"exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"},
+        "cutadapt": {"exe":"/home/pjvan_thof/.local/bin/cutadapt"},
+        "sickle": {"exe":"/data/DIV5/SASC/pjvan_thof/bin/sickle"}
+    }
 }

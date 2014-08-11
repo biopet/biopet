@@ -1,5 +1,5 @@
 {
-    "referenceFile" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
+    "reference" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
     "reference" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
     "samtools": { "exe": "test"},
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
@@ -15,7 +15,7 @@
             "flexiprep": {
             }
         },
-        "referenceFile" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
+        "reference" : "/data/DIV5/SASC/common/gatk_bundle_2.8/hg19/ucsc.hg19.fasta",
         "dbsnp": "test",
         "hapmap": "test",
         "omni": "test",

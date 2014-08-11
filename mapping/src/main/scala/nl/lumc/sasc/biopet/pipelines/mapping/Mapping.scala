@@ -37,7 +37,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var aligner: String = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var referenceFile: File = _
+  var reference: File = _
 
   @Argument(doc = "Chunking", shortName = "chunking", required = false)
   var chunking: Boolean = false
@@ -83,7 +83,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       if (inputtype == "rna") aligner = config("aligner", "star-2pass")
       else aligner = config("aligner", "bwa")
     }
-    if (referenceFile == null) referenceFile = config("referenceFile")
+    if (reference == null) reference = config("reference")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     if (input_R1 == null) throw new IllegalStateException("Missing Fastq R1 on mapping module")

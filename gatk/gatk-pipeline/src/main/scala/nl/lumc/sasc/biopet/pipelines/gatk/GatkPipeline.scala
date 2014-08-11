@@ -22,14 +22,14 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   @Argument(doc = "Merge gvcfs", shortName = "mergegvcfs", required = false)
   var mergeGvcfs: Boolean = false
 
-  var referenceFile: File = _
+  var reference: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
 
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    referenceFile = config("reference", required = true)
+    reference = config("reference", required = true)
     dbsnp = config("dbsnp")
     if (configContains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
@@ -224,7 +224,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = referenceFile
+    this.reference_sequence = reference
     this.memoryLimit = 2
     this.jobResourceRequests :+= "h_vmem=4G"
   }

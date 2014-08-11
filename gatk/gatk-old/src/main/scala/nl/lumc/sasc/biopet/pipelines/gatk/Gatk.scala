@@ -22,14 +22,14 @@ class Gatk(val root: Configurable) extends QScript with MultiSampleQScript {
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   val onlySample: String = ""
 
-  var referenceFile: File = _
+  var reference: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
 
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    referenceFile = config("referenceFile")
+    reference = config("reference")
     if (configContains("dbsnp")) dbsnp = config("dbsnp")
     for (file <- config("gvcfFiles", Nil).getList) gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
@@ -286,7 +286,7 @@ class Gatk(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = referenceFile
+    this.reference_sequence = reference
     this.memoryLimit = 2
     this.jobResourceRequests :+= "h_vmem=4G"
   }

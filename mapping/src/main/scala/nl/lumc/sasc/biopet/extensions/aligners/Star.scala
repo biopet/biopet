@@ -8,7 +8,7 @@ import scala.sys.process._
 
 class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "The reference file for the bam files.", required = false)
-  var referenceFile: File = new File(config("referenceFile"))
+  var reference: File = new File(config("reference"))
 
   @Input(doc = "Fastq file R1", required = false)
   var R1: File = _
@@ -39,7 +39,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Output Directory")
   var outputDir: String = _
 
-  var genomeDir: String = config("genomeDir", referenceFile.getParent + "/star/")
+  var genomeDir: String = config("genomeDir", reference.getParent + "/star/")
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
@@ -67,7 +67,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
     var cmd: String = required("cd", outputDir) + "&&" + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
-        required("--genomeFastaFiles", referenceFile)
+        required("--genomeFastaFiles", reference)
     } else { // Aligner
       cmd += required("--readFilesIn", R1) + optional(R2)
     }
