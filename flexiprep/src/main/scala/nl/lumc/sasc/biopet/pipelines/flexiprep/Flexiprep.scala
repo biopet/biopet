@@ -5,7 +5,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Cat, Ln, Pbzip2, Sha1sum, Zcat }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Ln, Pbzip2, Md5sum, Zcat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
@@ -89,9 +89,9 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
     outputFiles += ("contams_R1" -> getContams(fastqc_R1, R1_name))
 
-    val sha1sum_R1 = Sha1sum(this, outputFiles("fastq_input_R1"), outputDir)
-    add(sha1sum_R1)
-    summary.addSha1sum(sha1sum_R1, R2 = false, after = false)
+    val md5sum_R1 = Md5sum(this, input_R1, outputDir)
+    add(md5sum_R1)
+    summary.addMd5sum(md5sum_R1, R2 = false, after = false)
 
     if (paired) {
       fastqc_R2 = Fastqc(this, input_R2, outputDir + "/" + R2_name + ".fastqc/")
@@ -100,9 +100,9 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
       outputFiles += ("contams_R2" -> getContams(fastqc_R2, R2_name))
 
-      val sha1sum_R2 = Sha1sum(this, outputFiles("fastq_input_R2"), outputDir)
-      add(sha1sum_R2)
-      summary.addSha1sum(sha1sum_R2, R2 = true, after = false)
+      val md5sum_R2 = Md5sum(this, input_R2, outputDir)
+      add(md5sum_R2)
+      summary.addMd5sum(md5sum_R2, R2 = true, after = false)
     }
   }
 
@@ -253,13 +253,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     if (paired) outputFiles += ("output_R2" -> R2)
 
     if (!skipTrim || !skipClip) {
-      val sha1sum_R1 = Sha1sum(this, R1, outputDir)
-      add(sha1sum_R1)
-      summary.addSha1sum(sha1sum_R1, R2 = false, after = true)
+      val md5sum_R1 = Md5sum(this, R1, outputDir)
+      add(md5sum_R1)
+      summary.addMd5sum(md5sum_R1, R2 = false, after = true)
       if (paired) {
-        val sha1sum_R2 = Sha1sum(this, R2, outputDir)
-        add(sha1sum_R2)
-        summary.addSha1sum(sha1sum_R2, R2 = true, after = true)
+        val md5sum_R2 = Md5sum(this, R2, outputDir)
+        add(md5sum_R2)
+        summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
       fastqc_R1_after = Fastqc(this, outputFiles("output_R1"), outputDir + "/" + R1_name + ".qc.fastqc/")
       add(fastqc_R1_after)

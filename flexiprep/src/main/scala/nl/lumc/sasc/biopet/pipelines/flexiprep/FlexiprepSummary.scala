@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.Sha1sum
+import nl.lumc.sasc.biopet.extensions.Md5sum
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.{ FastqSync, Seqstat }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts.Seqstat
 import org.broadinstitute.gatk.queue.function.InProcessFunction
@@ -36,10 +36,10 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
 
   var chunks: Map[String, Chunk] = Map()
 
-  var sha1R1: Sha1sum = _
-  var sha1R2: Sha1sum = _
-  var sha1R1after: Sha1sum = _
-  var sha1R2after: Sha1sum = _
+  var md5R1: Md5sum = _
+  var md5R2: Md5sum = _
+  var md5R1after: Md5sum = _
+  var md5R2after: Md5sum = _
 
   var fastqcR1: Fastqc = _
   var fastqcR2: Fastqc = _
@@ -59,13 +59,13 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     return fastqc
   }
 
-  def addSha1sum(sha1sum: Sha1sum, R2: Boolean = false, after: Boolean = false): Sha1sum = {
-    if (!R2 && !after) this.sha1R1 = sha1sum
-    else if (!R2 && after) this.sha1R1after = sha1sum
-    else if (R2 && !after) this.sha1R2 = sha1sum
-    else if (R2 && after) this.sha1R2after = sha1sum
-    deps ::= sha1sum.output
-    return sha1sum
+  def addMd5sum(md5sum: Md5sum, R2: Boolean = false, after: Boolean = false): Md5sum = {
+    if (!R2 && !after) this.md5R1 = md5sum
+    else if (!R2 && after) this.md5R1after = md5sum
+    else if (R2 && !after) this.md5R2 = md5sum
+    else if (R2 && after) this.md5R2after = md5sum
+    deps ::= md5sum.output
+    return md5sum
   }
 
   def addSeqstat(seqstat: Seqstat, R2: Boolean = false, after: Boolean = false, chunk: String = ""): Seqstat = {
@@ -102,7 +102,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   // format: OFF
   override def run {
     logger.debug("Start")
-    sha1Summary()
+    md5Summary()
     val summary = 
       ("samples" := ( flexiprep.sampleName :=
         ("runs" := ( flexiprep.libraryName := (
@@ -116,10 +116,10 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
             ("clipping" :=? clipstatSummary) ->?:
             ("trimming" :=? trimstatSummary) ->?:
             jEmptyObject)) ->:
-          ("resourses" := (("raw_R1" := getResourses(fastqcR1, sha1R1)) ->:
-            ("raw_R2" :?= getResourses(fastqcR2, sha1R2)) ->?:
-            ("proc_R1" :?= getResourses(fastqcR1after, sha1R1after)) ->?:
-            ("proc_R2" :?= getResourses(fastqcR2after, sha1R2after)) ->?:
+          ("resourses" := (("raw_R1" := getResourses(fastqcR1, md5R1)) ->:
+            ("raw_R2" :?= getResourses(fastqcR2, md5R2)) ->?:
+            ("proc_R1" :?= getResourses(fastqcR1after, md5R1after)) ->?:
+            ("proc_R2" :?= getResourses(fastqcR2after, md5R2after)) ->?:
             jEmptyObject)) ->:
           jEmptyObject ))->: jEmptyObject)->: jEmptyObject)->: jEmptyObject) ->: jEmptyObject
     // format: ON
@@ -160,11 +160,11 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
       jEmptyObject)
   }
 
-  def sha1Summary() {
-    val R1_raw = sha1Summary(sha1R1)
-    val R2_raw = sha1Summary(sha1R2)
-    val R1_proc = sha1Summary(sha1R1after)
-    val R2_proc = sha1Summary(sha1R2after)
+  def md5Summary() {
+    val R1_raw = md5Summary(md5R1)
+    val R2_raw = md5Summary(md5R2)
+    val R1_proc = md5Summary(md5R1after)
+    val R2_proc = md5Summary(md5R2after)
     
     if (!R1_raw.isEmpty) resourses += ("fastq_R1_raw" -> R1_raw.get)
     if (!R2_raw.isEmpty) resourses += ("fastq_R2_raw" -> R2_raw.get)
@@ -172,15 +172,15 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     if (!R2_proc.isEmpty) resourses += ("fastq_R2_proc" -> R2_proc.get)
   }
 
-  def sha1Summary(sha1sum: Sha1sum): Option[Json] = {
-    if (sha1sum == null) return None
-    else return Option(sha1sum.getSummary)
+  def md5Summary(md5sum: Md5sum): Option[Json] = {
+    if (md5sum == null) return None
+    else return Option(md5sum.getSummary)
   }
 
-  def getResourses(fastqc:Fastqc, sha1sum:Sha1sum): Option[Json] = {
-    if (fastqc == null || sha1sum == null) return None
+  def getResourses(fastqc:Fastqc, md5sum:Md5sum): Option[Json] = {
+    if (fastqc == null || md5sum == null) return None
     val fastqcSum = fastqcSummary(fastqc).get
-    return Option(("fastq" := sha1Summary(sha1sum)) ->: fastqcSum)
+    return Option(("fastq" := md5Summary(md5sum)) ->: fastqcSum)
   }
   
   def fastqcSummary(fastqc: Fastqc): Option[Json] = {
