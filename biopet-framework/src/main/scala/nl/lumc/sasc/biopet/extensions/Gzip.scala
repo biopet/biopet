@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline._
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
 class Gzip(val root: Configurable) extends BiopetCommandLineFunction {

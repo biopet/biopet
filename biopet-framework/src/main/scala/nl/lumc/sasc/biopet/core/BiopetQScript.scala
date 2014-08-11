@@ -2,8 +2,8 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config._
-import org.broadinstitute.gatk.utils.commandline._
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 

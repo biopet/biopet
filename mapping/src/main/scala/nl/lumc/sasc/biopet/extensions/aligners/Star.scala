@@ -1,10 +1,9 @@
 package nl.lumc.sasc.biopet.extensions.aligners
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
-import scala.sys.process._
 
 class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "The reference file for the bam files.", required = false)

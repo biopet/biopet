@@ -10,7 +10,7 @@ import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument, ClassType }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
 import org.broadinstitute.gatk.queue.extensions.picard.{ MergeSamFiles, SortSam, AddOrReplaceReadGroups }
 import scala.math._
 

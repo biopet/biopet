@@ -1,6 +1,5 @@
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.core._
 import java.io.File
 import org.broadinstitute.gatk.queue.util.Logging
 import argonaut._, Argonaut._
@@ -130,15 +129,6 @@ class Config(var map: Map[String, Any]) extends Logging {
       throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
     }
   }
-
-//  def apply(module: String, path: List[String], key: String, freeVar:Boolean = true): ConfigValue = {
-//    val requestedIndex = ConfigValueIndex(module, path, key)
-//    if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
-//    else {
-//      logger.error("Value in config could not be found but it seems required, index: " + requestedIndex)
-//      throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
-//    }
-//  }
 
   private def getMapFromPath(path: List[String]): Map[String, Any] = {
     var returnMap: Map[String, Any] = map

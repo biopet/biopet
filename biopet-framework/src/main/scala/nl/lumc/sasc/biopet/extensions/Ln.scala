@@ -2,7 +2,6 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 import scala.sys.process.Process
-import org.apache.commons.io.FilenameUtils;
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.config.Configurable

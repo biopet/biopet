@@ -1,10 +1,9 @@
 package nl.lumc.sasc.biopet.extensions.aligners
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
-import scala.sys.process._
 
 class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file R1", shortName = "R1")

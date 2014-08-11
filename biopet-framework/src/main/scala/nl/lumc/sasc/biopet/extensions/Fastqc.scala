@@ -4,8 +4,8 @@ import java.io.File
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
