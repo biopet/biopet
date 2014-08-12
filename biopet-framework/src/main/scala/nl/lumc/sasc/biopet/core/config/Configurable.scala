@@ -41,6 +41,8 @@ trait Configurable extends Logging {
   implicit def configValue2optionInt(value: ConfigValue): Option[Int] = if (value != null) Option(Configurable.any2int(value.value)) else None
   implicit def configValue2double(value: ConfigValue): Double = if (value != null) Configurable.any2double(value.value) else 0
   implicit def configValue2optionDouble(value: ConfigValue): Option[Double] = if (value != null) Option(Configurable.any2double(value.value)) else None
+  implicit def configValue2float(value: ConfigValue): Float = if (value != null) Configurable.any2float(value.value) else 0
+  implicit def configValue2optionFloat(value: ConfigValue): Option[Float] = if (value != null) Option(Configurable.any2float(value.value)) else None
   implicit def configValue2boolean(value: ConfigValue): Boolean = if (value != null) Configurable.any2boolean(value.value) else false
   implicit def configValue2optionBoolean(value: ConfigValue): Option[Boolean] = if (value != null) Option(Configurable.any2boolean(value.value)) else None
   implicit def configValue2list(value: ConfigValue): List[Any] = if (value != null) Configurable.any2list(value.value) else null
@@ -86,10 +88,24 @@ object Configurable extends Logging {
   def any2double(any: Any): Double = {
     any match {
       case d: Double => return d
+      case d: Float  => return d.toDouble
       case d: Int    => return d.toDouble
       case d: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
-        return d.toInt
+        return d.toDouble
+      }
+      case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
+    }
+  }
+  
+  def any2float(any: Any): Float = {
+    any match {
+      case f: Double => return f.toFloat
+      case f: Int    => return f.toFloat
+      case f: Float  => return f
+      case f: String => {
+        logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
+        return f.toFloat
       }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
