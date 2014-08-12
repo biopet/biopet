@@ -1,12 +1,16 @@
 package nl.lumc.sasc.biopet.core
 
+import java.io.BufferedInputStream
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{Input, Argument}
-import scala.sys.process.{Process, ProcessLogger}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
+import scala.io.Source
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
+import java.io.FileInputStream
+import java.security.MessageDigest
 
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {
   analysisName = getClass.getSimpleName
@@ -65,12 +69,19 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     } catch {
       case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
     }
+    
+    val is = new FileInputStream(executable)
+    val cnt = is.available
+    val bytes = Array.ofDim[Byte](cnt)
+    is.read(bytes)
+    is.close()
+    val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+    
+    addJobReportBinding("md5sum_exe", md5)
   }
 
   final protected def preCmdInternal {
     checkExecutable
-    //for (input <- this.inputs) if (!input.exists) throw new IllegalStateException("Input: " + input + " for " + analysisName + " is missing")
-    //logger.debug("Config for " + analysisName + ": " + localConfig)
 
     beforeCmd
 
@@ -85,10 +96,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (versionCommand == null || versionRegex == null) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
-    def outputLog = "Version command: \n" + versionCommand + 
-                    "\n output log: \n stdout: \n" + stdout.toString + 
-                    "\n stderr: \n" + stderr.toString
-    val process = Process(versionCommand).run(ProcessLogger(stdout append _+"\n", stderr append _+"\n"))
+    def outputLog = "Version command: \n" + versionCommand +
+      "\n output log: \n stdout: \n" + stdout.toString +
+      "\n stderr: \n" + stderr.toString
+    val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
     if (!versionExitcode.contains(process.exitValue)) {
       logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
       return "N/A"
@@ -96,7 +107,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
       line match {
         case versionRegex(m) => return m
-        case _               =>
+        case _ =>
       }
     }
     logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
