@@ -16,7 +16,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Written based on cufflinks version v2.2.1.
  */
 class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
-
+  
   /** default executable */
   executable = config("exe", default = "cufflinks")
 
@@ -31,7 +31,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks GTF output")
     // cufflinks always outputs a transcripts.gtf file in the output directory
-    output_dir.getCanonicalPath() + File.pathSeparator + "transcripts.gtf"
+    new File(output_dir + File.pathSeparator + "transcripts.gtf")
   }
 
   @Output(doc = "Output isoform FPKM file")
@@ -39,7 +39,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks isoform FPKM output")
     // cufflinks always outputs a isoforms.fpkm_tracking file in the output directory
-    output_dir.getCanonicalPath() + File.pathSeparator + "isoforms.fpkm_tracking"
+    new File(output_dir + File.pathSeparator + "isoforms.fpkm_tracking")
   }
 
   @Output(doc = "Output GTF file")
@@ -47,11 +47,11 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks genes FPKM output")
     // cufflinks always outputs a genes.fpkm_tracking file in the output directory
-    output_dir.getCanonicalPath() + File.pathSeparator + "genes.fpkm_tracking"
+    new File(output_dir + File.pathSeparator + "genes.fpkm_tracking")
   }
 
   /** write all output files to this directory [./] */
-  var output_dir: String = config("output_dir", required = true)
+  var output_dir: String = _
 
   /** number of threads used during analysis [1] */
   var num_threads: Option[Int] = config("num_threads")
@@ -72,7 +72,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   var frag_bias_correct: String = config("frag_bias_correct")
 
   /** use 'rescue method' for multi-reads (more accurate) [FALSE] */
-  var multi_read_correct: Bool = config("multi_read_correct")
+  var multi_read_correct: Boolean = config("multi_read_correct")
 
   /** library prep used for input reads [below] */
   var library_type: String = config("library_type")
@@ -90,10 +90,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   var max_mle_iterations: Option[Int] = config("max_mle_iterations")
 
   /** count hits compatible with reference RNAs only [FALSE] */
-  var compatible_hits_norm: Bool = config("compatible_hits_norm")
+  var compatible_hits_norm: Boolean = config("compatible_hits_norm")
 
   /** count all hits for normalization [TRUE] */
-  var total_hits_norm: Bool = config("total_hits_norm")
+  var total_hits_norm: Boolean = config("total_hits_norm")
 
   /** Number of fragment generation samples [100] */
   var num_frag_count_draws: Option[Int] = config("num_frag_count_draws")
@@ -105,10 +105,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   var max_frag_multihits: String = config("max_frag_multihits")
 
   /** No effective length correction [FALSE] */
-  var no_effective_length_correction: Bool = config("no_effective_length_correction")
+  var no_effective_length_correction: Boolean = config("no_effective_length_correction")
 
   /** No length correction [FALSE] */
-  var no_length_correction: Bool = config("no_length_correction")
+  var no_length_correction: Boolean = config("no_length_correction")
 
   /** assembled transcripts have this ID prefix [CUFF] */
   var label: String = config("label")
@@ -156,7 +156,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   var overlap_radius: Option[Int] = config("overlap_radius")
 
   /** disable tiling by faux reads [FALSE] */
-  var no_faux_reads: Bool = config("no_faux_reads")
+  var no_faux_reads: Boolean = config("no_faux_reads")
 
   /** overhang allowed on 3' end when merging with reference [600] */
   var flag_3_overhang_tolerance: Option[Int] = config("flag_3_overhang_tolerance")
@@ -165,13 +165,13 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   var intron_overhang_tolerance: Option[Int] = config("intron_overhang_tolerance")
 
   /** log-friendly verbose processing (no progress bar) [FALSE] */
-  var verbose: Bool = config("verbose")
+  var verbose: Boolean = config("verbose")
 
   /** log-friendly quiet processing (no progress bar) [FALSE] */
-  var quiet: Bool = config("quiet")
+  var quiet: Boolean = config("quiet")
 
   /** do not contact server to check for update availability [FALSE] */
-  var no_update_check: Bool = config("no_update_check")
+  var no_update_check: Boolean = config("no_update_check")
 
   override val versionRegex = """cufflinks v(.*)""".r
   override def versionCommand = executable
