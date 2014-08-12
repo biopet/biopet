@@ -28,7 +28,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
   
   override def cmdLine = {
     if (Q != None) {
-      analysisName = getClass.getName
+      analysisName = getClass.getSimpleName
       super.cmdLine
     } else {
       analysisName = getClass.getSimpleName + "-ln"
