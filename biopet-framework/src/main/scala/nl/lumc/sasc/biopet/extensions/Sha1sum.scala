@@ -9,10 +9,10 @@ import scalaz._, Scalaz._
 import scala.io.Source
 
 class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "Zipped file")
+  @Input(doc = "Input file")
   var input: File = _
 
-  @Output(doc = "Unzipped file")
+  @Output(doc = "File to write input file checksum")
   var output: File = _
 
   executable = config("exe", default = "sha1sum")

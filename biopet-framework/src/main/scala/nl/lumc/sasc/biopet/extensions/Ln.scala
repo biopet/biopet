@@ -61,10 +61,10 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
           scala.math.max(0, outUnique.split(File.separator).length - 1)
 
       val result =
-        if (dist > 0)
-          ((".." + File.separator) * dist) + inUnique
-        else
+        if (dist == 0 || inToks.length > outToks.length)
           inUnique
+        else
+          ((".." + File.separator) * dist) + inUnique
 
       result
     }
