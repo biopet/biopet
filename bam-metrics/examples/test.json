@@ -1,5 +1,6 @@
 {
     "reference": "bla",
     "bedtools": { "exe": "test"},
-    "samtools": { "exe": "test"}
+    "samtools": { "exe": "test"},
+    "targetBed": ["target_1", "target_2"]
 }

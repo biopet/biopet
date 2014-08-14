@@ -1,5 +1,5 @@
 {
-    "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
+    "fastqc": { "exe": "/data/DIV5/SASC/common/programs/FastQC/fastqc_v0.11.2/fastqc" },
     "flexiprep": {
         "seqtk": {"exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"},
         "cutadapt": {"exe":"/home/pjvan_thof/.local/bin/cutadapt"},

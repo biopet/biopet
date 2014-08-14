@@ -17,5 +17,6 @@
         <module>gatk-old</module>
         <module>gatk-pipeline</module>
         <module>gatk-variantcalling</module>
+        <module>gatk-vcf-sample-compare</module>
     </modules>
 </project>
