@@ -54,7 +54,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     if (json.isObject) return jsonToMap(json)
     else if (json.isArray) {
       var list: List[Any] = List()
-      for (value <- json.objectValues.get) list ::= jsonToAny(value)
+      for (value <- json.array.get) list ::= jsonToAny(value)
       return list
     } else if (json.isBool) return json.bool.get
     else if (json.isString) return json.string.get.toString
