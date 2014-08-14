@@ -224,8 +224,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     val R1 = new File(outputDir + R1_name + ".qc" + R1_ext + ".gz")
     val R2 = new File(outputDir + R2_name + ".qc" + R2_ext + ".gz")
     
-    add(Gzip(this, fastq_R1, R1), true)
-    if (paired) add(Gzip(this, fastq_R2, R2), true)
+    add(Gzip(this, fastq_R1, R1))
+    if (paired) add(Gzip(this, fastq_R2, R2))
 
     outputFiles += ("output_R1" -> R1)
     if (paired) outputFiles += ("output_R2" -> R2)
