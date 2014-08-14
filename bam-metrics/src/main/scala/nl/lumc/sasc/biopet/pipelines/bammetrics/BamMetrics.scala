@@ -34,6 +34,7 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
         bedFiles +:= new File(file.toString)
       }
     }
+    if (baitBedFile == null && configContains("targetBait")) baitBedFile = config("targetBait")
   }
 
   def biopetScript() {
