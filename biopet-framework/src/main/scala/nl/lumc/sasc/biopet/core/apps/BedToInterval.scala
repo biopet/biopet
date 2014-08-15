@@ -51,18 +51,26 @@ object BedToInterval {
     val writer = new PrintWriter(args(2))
 
     val inputSam = new SAMFileReader(new File(args(1)))
-    for (bla <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) {
-      val record = bla.asInstanceOf[SAMSequenceRecord]
+    val refs = for (SQ <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) yield {
+      val record = SQ.asInstanceOf[SAMSequenceRecord]
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
+      record.getSequenceName -> record.getSequenceLength
     }
     inputSam.close
-
+    val refsMap = Map(refs:_*)
+    
     val bedFile = Source.fromFile(args(0))
-    for (line <- bedFile.getLines) {
-      val split = line.split("\t")
-      val chr = split(0)
-      val start = split(1)
-      val stop = split(2)
+    for (
+        line <- bedFile.getLines;
+        val split = line.split("\t")
+        if split.size >= 3;
+        val chr = split(0);
+        val start = split(1);
+        val stop = split(2)
+        if start forall Character.isDigit
+        if stop forall Character.isDigit
+      ) {
+      if (!refsMap.contains(chr)) throw new IllegalStateException("Chr '" + chr + "' in bed file not found in bam file")
       writer.write(chr + "\t" + start + "\t" + stop + "\t")
       if (split.length >= 6 && (split(5) == "+" || split(5) == "-")) writer.write(split(5))
       else {
