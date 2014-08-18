@@ -14,7 +14,6 @@
     <modules>
         <module>gatk-benchmark-genotyping</module>
         <module>gatk-genotyping</module>
-        <module>gatk-old</module>
         <module>gatk-pipeline</module>
         <module>gatk-variantcalling</module>
         <module>gatk-vcf-sample-compare</module>
