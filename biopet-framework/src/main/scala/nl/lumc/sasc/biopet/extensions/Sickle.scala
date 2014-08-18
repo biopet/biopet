@@ -27,9 +27,13 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
 
   var fastqc: Fastqc = _
 
-  executable = config("exe", default = "sickle")
+  executable = config("exe", default = "sickle", freeVar = false)
   var qualityType: String = config("qualitytype")
-
+  var qualityThreshold: Option[Int] = config("qualityThreshold")
+  var lengthThreshold: Option[Int] = config("lengthThreshold")
+  var noFiveprime: Boolean = config("noFiveprime")
+  var discardN: Boolean = config("discardN")
+  var quiet: Boolean = config("quiet")
   var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
   override val versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
@@ -48,9 +52,13 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
     } else cmd += required("se")
     cmd +
       required("-f", input_R1) +
-      required("-f", input_R1) +
       required("-t", qualityType) +
       required("-o", output_R1) +
+      optional("-q", qualityThreshold) +
+      optional("-l", lengthThreshold) +
+      optional("-x", noFiveprime) +
+      optional("-n", discardN) +
+      optional("--quiet", quiet)
       " > " + required(output_stats)
   }
 }
