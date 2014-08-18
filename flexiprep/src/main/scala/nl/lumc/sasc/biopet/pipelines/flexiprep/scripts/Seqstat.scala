@@ -48,11 +48,11 @@ object Seqstat {
   }
 
   def mergeSummarys(jsons: List[Json]): Json = {
-    def addJson(json:Json, total:Map[String, Int]) {
+    def addJson(json:Json, total:Map[String, Long]) {
       for (key <- json.objectFieldsOrEmpty) {
         if (json.field(key).get.isObject) addJson(json.field(key).get, total)
         else if (json.field(key).get.isNumber) {
-          val number = json.field(key).get.numberOrZero.toInt
+          val number = json.field(key).get.numberOrZero.toLong
           if (total.contains(key)) {
             if (key == "len_min") {
               if (total(key) > number) total(key) = number
@@ -65,8 +65,8 @@ object Seqstat {
       }
     }
     
-    var basesTotal: Map[String, Int] = Map()
-    var readsTotal: Map[String, Int] = Map()
+    var basesTotal: Map[String, Long] = Map()
+    var readsTotal: Map[String, Long] = Map()
     var encoding: Set[Json] = Set()
     for (json <- jsons) {
       encoding += json.fieldOrEmptyString("qual_encoding")
