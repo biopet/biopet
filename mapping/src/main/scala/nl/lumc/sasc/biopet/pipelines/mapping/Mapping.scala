@@ -188,7 +188,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         bwaCommand.R1 = R1
         if (paired) bwaCommand.R2 = R2
         bwaCommand.deps = deps
-        bwaCommand.RG = getReadGroup
+        bwaCommand.R = getReadGroup
         bwaCommand.output = new File(chunkDir + outputName + ".sam")
         add(bwaCommand, isIntermediate = true)
         bamFiles :+= addSortSam(List(bwaCommand.output), swapExt(chunkDir, bwaCommand.output, ".sam", ".bam"), chunkDir)
