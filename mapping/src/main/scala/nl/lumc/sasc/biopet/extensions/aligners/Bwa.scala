@@ -18,10 +18,36 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
 
-  var RG: String = _
+  var R: String = config("R")
+  var k: Option[Int] = config("k")
+  var r: Option[Float] = config("r")
+  var S: Boolean = config("S")
   var M: Boolean = config("M", default = true)
+  var w: Option[Int] = config("w")
+  var d: Option[Int] = config("d")
+  var c: Option[Int] = config("c")
+  var D: Option[Float] = config("D")
+  var W: Option[Int] = config("W")
+  var m: Option[Int] = config("m")
+  var P: Boolean = config("P")
+  var e: Boolean = config("e")
+  var A: Option[Int] = config("A")
+  var B: Option[Int] = config("B")
+  var O: String = config("O")
+  var E: String = config("E")
+  var L: String = config("L")
+  var U: Option[Int] = config("U")
+  var x: String = config("x")
+  var p: Boolean = config("p")
+  var v: Option[Int] = config("v")
+  var T: Option[Int] = config("T")
+  var h: Option[Int] = config("h")
+  var a: Boolean = config("a")
+  var C: Boolean = config("C")
+  var Y: Boolean = config("Y")
+  var I: String = config("I")  
 
-  executable = config("exe", default = "bwa")
+  executable = config("exe", default = "bwa", freeVar = false)
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0, 1)
 
@@ -33,9 +59,12 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine = {
     required(executable) +
       required("mem") +
+      optional("-k", k) +
+      optional("-r", r) +
       optional("-t", nCoresRequest) +
-      optional("-R", RG) +
+      optional("-R", R) +
       conditional(M, "-M") +
+      conditional(S, "-S") +
       required(reference) +
       required(R1) +
       optional(R2) +
