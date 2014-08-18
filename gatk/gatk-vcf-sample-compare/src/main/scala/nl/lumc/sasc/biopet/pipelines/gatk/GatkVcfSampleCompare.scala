@@ -4,9 +4,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
-import org.broadinstitute.gatk.queue.extensions.gatk.SelectVariants
-import org.broadinstitute.gatk.queue.extensions.gatk.VariantEval
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, SelectVariants, VariantEval }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQScript {
@@ -69,7 +67,7 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
         variantEval.ST = Seq("VariantType", "CompRod")
         variantEval.noEV = true
         variantEval.EV = Seq("CompOverlap")
-        if (targetBed != null) variantEval.L = Seq(targetBed)
+        if (targetBed != null) variantEval.L = targetBed
         add(variantEval)
       }
     }
