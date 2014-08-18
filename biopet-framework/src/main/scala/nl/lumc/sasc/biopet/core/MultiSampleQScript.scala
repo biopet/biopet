@@ -29,8 +29,8 @@ trait MultiSampleQScript extends BiopetQScript {
   final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, Map[String, File]] = {
     var output: Map[String, Map[String, File]] = Map()
     val sampleID = sampleConfig("ID")
-    if (sampleConfig.contains("librarys")) {
-      val runs = Configurable.any2map(sampleConfig("librarys"))
+    if (sampleConfig.contains("libraries")) {
+      val runs = Configurable.any2map(sampleConfig("libraries"))
       for ((key, value) <- runs) {
         var library = Configurable.any2map(value)
         if (!library.contains("ID")) library += ("ID" -> key)
