@@ -288,7 +288,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 object Mapping extends PipelineCommand {
   override val pipeline = "/nl/lumc/sasc/biopet/pipelines/mapping/Mapping.class"
 
-  def loadFromRunConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any], runDir: String): Mapping = {
+  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any], runDir: String): Mapping = {
     val mapping = new Mapping(root)
 
     logger.debug("Mapping runconfig: " + runConfig)

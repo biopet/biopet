@@ -70,17 +70,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   // Called for each sample
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): Map[String, List[File]] = {
     var outputFiles: Map[String, List[File]] = Map()
-    var runBamfiles: List[File] = List()
+    var libraryBamfiles: List[File] = List()
     var sampleID: String = sampleConfig("ID").toString
-    for ((run, runFiles) <- runRunsJobs(sampleConfig)) {
-      runBamfiles +:= runFiles("FinalBam")
+    for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
+      libraryBamfiles +:= libraryFiles("FinalBam")
     }
-    outputFiles += ("FinalBams" -> runBamfiles)
+    outputFiles += ("FinalBams" -> libraryBamfiles)
 
-    if (runBamfiles.size > 0) {
-      finalBamFiles ++= runBamfiles
+    if (libraryBamfiles.size > 0) {
+      finalBamFiles ++= libraryBamfiles
       val gatkVariantcalling = new GatkVariantcalling(this)
-      gatkVariantcalling.inputBams = runBamfiles
+      gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = outputDir + sampleID + "/variantcalling/"
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
@@ -91,7 +91,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   // Called for each run from a sample
-  def runSingleRunJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File] = {
+  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File] = {
     var outputFiles: Map[String, File] = Map()
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
@@ -100,7 +100,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = config("inputtype", default = "dna").toString
     if (runConfig.contains("R1")) {
-      val mapping = Mapping.loadFromRunConfig(this, runConfig, sampleConfig, runDir)
+      val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       addAll(mapping.functions) // Add functions of mapping to curent function pool
 
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))

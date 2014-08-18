@@ -26,20 +26,20 @@ trait MultiSampleQScript extends BiopetQScript {
     return runSingleSampleJobs(Configurable.any2map(samples(sample)))
   }
 
-  final def runRunsJobs(sampleConfig: Map[String, Any]): Map[String, Map[String, File]] = {
+  final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, Map[String, File]] = {
     var output: Map[String, Map[String, File]] = Map()
     val sampleID = sampleConfig("ID")
-    if (sampleConfig.contains("runs")) {
-      val runs = Configurable.any2map(sampleConfig("runs"))
+    if (sampleConfig.contains("librarys")) {
+      val runs = Configurable.any2map(sampleConfig("librarys"))
       for ((key, value) <- runs) {
-        var run = Configurable.any2map(value)
-        if (!run.contains("ID")) run += ("ID" -> key)
-        if (run("ID") == key) {
-          output += key -> runSingleRunJobs(run, sampleConfig)
+        var library = Configurable.any2map(value)
+        if (!library.contains("ID")) library += ("ID" -> key)
+        if (library("ID") == key) {
+          output += key -> runSingleLibraryJobs(library, sampleConfig)
         } else logger.warn("Key is not the same as ID on value for run of sample: " + sampleID)
       }
     } else logger.warn("No runs found in config for sample: " + sampleID)
     return output
   }
-  def runSingleRunJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File]
+  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File]
 }
