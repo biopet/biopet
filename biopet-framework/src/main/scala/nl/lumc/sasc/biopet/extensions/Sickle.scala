@@ -58,7 +58,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-l", lengthThreshold) +
       optional("-x", noFiveprime) +
       optional("-n", discardN) +
-      optional("--quiet", quiet)
+      optional("--quiet", quiet) +
       " > " + required(output_stats)
   }
 }
