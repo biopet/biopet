@@ -75,6 +75,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGPI: Int = _
 
   var paired: Boolean = false
+  
+  val flexiprep = new Flexiprep(this)
 
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -123,7 +125,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript() {
     var fastq_R1: File = input_R1
     var fastq_R2: File = if (paired) input_R2 else ""
-    val flexiprep = new Flexiprep(this)
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep/"
       flexiprep.input_R1 = fastq_R1
