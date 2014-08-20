@@ -6,6 +6,7 @@ class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValu
   def getDouble = Configurable.any2double(value)
   def getList = Configurable.any2list(value)
   def getMap = Configurable.any2map(value)
+  def getBoolean = Configurable.any2boolean(value)
 
   override def toString: String = {
     var output = "key = " + requestIndex.key

@@ -124,7 +124,12 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.input_file = bamfiles
       this.out = outputfile
       if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
-      this.nct = config("threads", 3, "haplotypecaller")
+      this.nct = config("threads", default = 3, submodule = "haplotypecaller")
+      if (config("outputToBam", default = false, submodule = "haplotypecaller").getBoolean) {
+        this.bamOutput = outputfile.getAbsolutePath + ".bam"
+        nct = 1
+        logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
+      }
       this.memoryLimit = this.nct * 2
 
       // GVCF options
