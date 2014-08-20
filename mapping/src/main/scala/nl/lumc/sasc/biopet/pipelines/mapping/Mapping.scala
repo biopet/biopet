@@ -75,6 +75,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGPI: Int = _
 
   var paired: Boolean = false
+  
+  val flexiprep = new Flexiprep(this)
 
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -123,7 +125,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript() {
     var fastq_R1: File = input_R1
     var fastq_R2: File = if (paired) input_R2 else ""
-    val flexiprep = new Flexiprep(this)
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep/"
       flexiprep.input_R1 = fastq_R1
@@ -144,11 +145,11 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     }
     var chunks: Map[String, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      chunks += ("chunk_" + t -> (removeGz(outputDir + "chunk_" + t + "/" + fastq_R1.getName),
-        if (paired) removeGz(outputDir + "chunk_" + t + "/" + fastq_R2.getName) else ""))
-    }
-    else chunks += ("flexiprep" -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
+      val chunkDir = "chunks/" + t + "/"
+      chunks += (chunkDir -> (removeGz(chunkDir + fastq_R1.getName),
+        if (paired) removeGz(chunkDir + fastq_R2.getName) else ""))
+    } else chunks += ("flexiprep/" -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
+                        flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -172,7 +173,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       var R1 = fastqfile._1
       var R2 = fastqfile._2
       var deps: List[File] = Nil
-      val chunkDir = if (chunking) outputDir + chunk + "/" else outputDir
+      val chunkDir = if (chunking) outputDir + chunk else outputDir
       if (!skipFlexiprep) {
         val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunk)
         logger.debug(chunk + " - " + flexiout)

@@ -50,8 +50,9 @@ object BiopetFlagstat extends Logging {
     val max = 60
     for (t <- 0 to (max / m))
       flagstatCollector.addFunction("MAPQ>" + (t * m), record => record.getMappingQuality > (t * m))
-    flagstatCollector.addFunction("First normal, second read inverted (paired end orientation)", record => {
-      if (record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
+    flagstatCollector.addFunction("First normal, second read inverted (paired end orientation)", record => { 
+      if (record.getReadPairedFlag && 
+          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -59,7 +60,8 @@ object BiopetFlagstat extends Logging {
       else false
     })
     flagstatCollector.addFunction("First normal, second read normal", record => {
-      if (record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag && 
+          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -67,7 +69,8 @@ object BiopetFlagstat extends Logging {
       else false
     })
     flagstatCollector.addFunction("First inverted, second read inverted", record => {
-      if (record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag && 
+          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -75,16 +78,17 @@ object BiopetFlagstat extends Logging {
       else false
     })
     flagstatCollector.addFunction("First inverted, second read normal", record => {
-      if (record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag && 
+          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart))) true
       else false
     })
-    flagstatCollector.addFunction("Mate in same strand", record => record.getReadNegativeStrandFlag && record.getMateNegativeStrandFlag &&
+    flagstatCollector.addFunction("Mate in same strand", record => record.getReadPairedFlag && record.getReadNegativeStrandFlag && record.getMateNegativeStrandFlag &&
       record.getReferenceIndex == record.getMateReferenceIndex)
-    flagstatCollector.addFunction("Mate on other chr", record => record.getReferenceIndex != record.getMateReferenceIndex)
+    flagstatCollector.addFunction("Mate on other chr", record => record.getReadPairedFlag && record.getReferenceIndex != record.getMateReferenceIndex)
 
     for (record <- inputSam.iterator) {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
@@ -107,18 +111,18 @@ object BiopetFlagstat extends Logging {
       addFunction("All", record => true)
       addFunction("Mapped", record => !record.getReadUnmappedFlag)
       addFunction("Duplicates", record => record.getDuplicateReadFlag)
-      addFunction("FirstOfPair", record => record.getFirstOfPairFlag)
-      addFunction("SecondOfPair", record => record.getSecondOfPairFlag)
+      addFunction("FirstOfPair", record => if (record.getReadPairedFlag) record.getFirstOfPairFlag else false)
+      addFunction("SecondOfPair", record => if (record.getReadPairedFlag) record.getSecondOfPairFlag else false)
 
       addFunction("ReadNegativeStrand", record => record.getReadNegativeStrandFlag)
 
       addFunction("NotPrimaryAlignment", record => record.getNotPrimaryAlignmentFlag)
 
       addFunction("ReadPaired", record => record.getReadPairedFlag)
-      addFunction("ProperPair", record => record.getProperPairFlag)
+      addFunction("ProperPair", record => if (record.getReadPairedFlag) record.getProperPairFlag else false)
 
-      addFunction("MateNegativeStrand", record => record.getMateNegativeStrandFlag)
-      addFunction("MateUnmapped", record => record.getMateUnmappedFlag)
+      addFunction("MateNegativeStrand", record => if (record.getReadPairedFlag) record.getMateNegativeStrandFlag else false)
+      addFunction("MateUnmapped", record => if (record.getReadPairedFlag) record.getMateUnmappedFlag else false)
 
       addFunction("ReadFailsVendorQualityCheck", record => record.getReadFailsVendorQualityCheckFlag)
       addFunction("SupplementaryAlignment", record => record.getSupplementaryAlignmentFlag)

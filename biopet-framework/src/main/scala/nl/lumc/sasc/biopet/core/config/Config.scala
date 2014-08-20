@@ -27,12 +27,12 @@ class Config(var map: Map[String, Any]) extends Logging {
     logger.debug("Jsonfile: " + configFile)
     val jsonText = scala.io.Source.fromFile(configFile).mkString
     val json = Parse.parseOption(jsonText)
+    if (json == None) {
+      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
+    }
     logger.debug(json)
     val configJson = jsonToMap(json.get)
     logger.debug("Contain: " + configJson)
-    if (configJson == None) {
-      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
-    }
 
     if (map.isEmpty) map = configJson
     else map = Config.mergeMaps(configJson, map)
