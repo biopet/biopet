@@ -147,7 +147,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
       val s = for ((key, value) <- chunks) yield value.seqstatR1after.getSummary
       Option(Seqstat.mergeSummarys(s.toList))
     }
-    val R2_proc: Option[Json] = if (!flexiprep.paired && flexiprep.skipClip && flexiprep.skipTrim) None
+    val R2_proc: Option[Json] = if (!flexiprep.paired || (flexiprep.skipClip && flexiprep.skipTrim)) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR2after.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.seqstatR2after.getSummary
