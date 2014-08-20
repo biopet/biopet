@@ -30,7 +30,7 @@ trait Picard extends BiopetJavaCommandLineFunction {
 //  override val versionExitcode = List(0, 1)
 
   override val defaultVmem = "8G"
-  memoryLimit = Option(5.0)
+  memoryLimit = Option(4.0)
 
   override def commandLine = super.commandLine +
     required("TMP_DIR=" + jobTempDir) +
