@@ -131,7 +131,9 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
       }
       this.memoryLimit = this.nct * 2
-
+      
+      if (configContains("allSitePLs")) this.allSitePLs = config("allSitePLs")
+      
       // GVCF options
       if (gvcfMode) {
         this.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
