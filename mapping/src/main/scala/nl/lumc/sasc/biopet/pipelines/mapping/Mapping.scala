@@ -6,12 +6,11 @@ import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star }
-import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles}
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
-import org.broadinstitute.gatk.queue.extensions.picard.{ AddOrReplaceReadGroups }
 import scala.math._
 
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
@@ -202,11 +201,11 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       } else if (aligner == "star") {
         val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
         add(starCommand)
-        bamFiles :+= addAddOrReplaceReadGroups(List(starCommand.outputSam), new File(chunkDir + outputName + ".bam"), chunkDir)
+        bamFiles :+= addAddOrReplaceReadGroups(starCommand.outputSam, chunkDir)
       } else if (aligner == "star-2pass") {
         val star2pass = Star._2pass(this, R1, if (paired) R2 else null, chunkDir, isIntermediate = true, deps = deps)
         addAll(star2pass._2)
-        bamFiles :+= addAddOrReplaceReadGroups(List(star2pass._1), new File(chunkDir + outputName + ".bam"), chunkDir)
+        bamFiles :+= addAddOrReplaceReadGroups(star2pass._1, chunkDir)
       } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
     }
     if (!skipFlexiprep) {
@@ -259,14 +258,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 //    return mergeSam.output
 //  }
 
-  def addAddOrReplaceReadGroups(inputSam: List[File], outputFile: File, dir: String): File = {
-    val addOrReplaceReadGroups = new AddOrReplaceReadGroups
-    addOrReplaceReadGroups.input = inputSam
-    addOrReplaceReadGroups.output = outputFile
+  def addAddOrReplaceReadGroups(inputSam: File, outputDir: String): File = {
+    val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, inputSam, outputDir)
     addOrReplaceReadGroups.createIndex = true
-    addOrReplaceReadGroups.memoryLimit = 2
-    addOrReplaceReadGroups.nCoresRequest = 2
-    addOrReplaceReadGroups.jobResourceRequests :+= "h_vmem=4G"
 
     addOrReplaceReadGroups.RGID = RGID
     addOrReplaceReadGroups.RGLB = RGLB
