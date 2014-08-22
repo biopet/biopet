@@ -6,12 +6,12 @@ import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star }
-import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
-import org.broadinstitute.gatk.queue.extensions.picard.{ MergeSamFiles, SortSam, AddOrReplaceReadGroups }
+import org.broadinstitute.gatk.queue.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups }
 import scala.math._
 
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
@@ -192,7 +192,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         bwaCommand.R = getReadGroup
         bwaCommand.output = new File(chunkDir + outputName + ".sam")
         add(bwaCommand, isIntermediate = true)
-        bamFiles :+= addSortSam(List(bwaCommand.output), swapExt(chunkDir, bwaCommand.output, ".sam", ".bam"), chunkDir)
+        val sortSam = SortSam(this, bwaCommand.output, chunkDir)
+        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+        add(sortSam)
+        bamFiles :+= sortSam.output
       } else if (aligner == "star") {
         val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
         add(starCommand)
@@ -219,19 +222,19 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-  def addSortSam(inputSam: List[File], outputFile: File, dir: String): File = {
-    val sortSam = new SortSam
-    sortSam.input = inputSam
-    sortSam.createIndex = true
-    sortSam.output = outputFile
-    sortSam.memoryLimit = 2
-    sortSam.nCoresRequest = 2
-    sortSam.jobResourceRequests :+= "h_vmem=4G"
-    if (!skipMarkduplicates) sortSam.isIntermediate = true
-    add(sortSam)
-
-    return sortSam.output
-  }
+//  def addSortSam(inputSam: List[File], outputFile: File, dir: String): File = {
+//    val sortSam = new SortSam
+//    sortSam.input = inputSam
+//    sortSam.createIndex = true
+//    sortSam.output = outputFile
+//    sortSam.memoryLimit = 2
+//    sortSam.nCoresRequest = 2
+//    sortSam.jobResourceRequests :+= "h_vmem=4G"
+//    if (!skipMarkduplicates) sortSam.isIntermediate = true
+//    add(sortSam)
+//
+//    return sortSam.output
+//  }
 
   def addMergeBam(inputSam: List[File], outputFile: File, dir: String): File = {
     val mergeSam = new MergeSamFiles
