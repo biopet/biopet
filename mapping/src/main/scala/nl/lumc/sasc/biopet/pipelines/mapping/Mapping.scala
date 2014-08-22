@@ -6,12 +6,12 @@ import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star }
-import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam}
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
-import org.broadinstitute.gatk.queue.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups }
+import org.broadinstitute.gatk.queue.extensions.picard.{ AddOrReplaceReadGroups }
 import scala.math._
 
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
@@ -218,7 +218,11 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir + outputName + ".dedup.bam")
       add(MarkDuplicates(this, bamFiles, bamFile))
-    } else if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
+    } else if (skipMarkduplicates && chunking) {
+      val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
+      add(mergeSamFile)
+      bamFile = mergeSamFile.output
+    }
     
     if (!skipMetrics) addAll(BamMetrics.apply(this, bamFile, outputDir + "metrics/").functions)
     
@@ -239,21 +243,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 //    return sortSam.output
 //  }
 
-  def addMergeBam(inputSam: List[File], outputFile: File, dir: String): File = {
-    val mergeSam = new MergeSamFiles
-    mergeSam.input = inputSam
-    mergeSam.createIndex = true
-    mergeSam.output = outputFile
-    mergeSam.memoryLimit = 2
-    mergeSam.nCoresRequest = 2
-    mergeSam.assumeSorted = true
-    mergeSam.USE_THREADING = true
-    mergeSam.jobResourceRequests :+= "h_vmem=4G"
-    if (!skipMarkduplicates) mergeSam.isIntermediate = true
-    add(mergeSam)
-
-    return mergeSam.output
-  }
+//  def addMergeBam(inputSam: List[File], outputFile: File, dir: String): File = {
+//    val mergeSam = new MergeSamFiles
+//    mergeSam.input = inputSam
+//    mergeSam.createIndex = true
+//    mergeSam.output = outputFile
+//    mergeSam.memoryLimit = 2
+//    mergeSam.nCoresRequest = 2
+//    mergeSam.assumeSorted = true
+//    mergeSam.USE_THREADING = true
+//    mergeSam.jobResourceRequests :+= "h_vmem=4G"
+//    if (!skipMarkduplicates) mergeSam.isIntermediate = true
+//    add(mergeSam)
+//
+//    return mergeSam.output
+//  }
 
   def addAddOrReplaceReadGroups(inputSam: List[File], outputFile: File, dir: String): File = {
     val addOrReplaceReadGroups = new AddOrReplaceReadGroups
