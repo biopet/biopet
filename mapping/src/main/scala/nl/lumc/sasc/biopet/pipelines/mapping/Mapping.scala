@@ -228,36 +228,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-//  def addSortSam(inputSam: List[File], outputFile: File, dir: String): File = {
-//    val sortSam = new SortSam
-//    sortSam.input = inputSam
-//    sortSam.createIndex = true
-//    sortSam.output = outputFile
-//    sortSam.memoryLimit = 2
-//    sortSam.nCoresRequest = 2
-//    sortSam.jobResourceRequests :+= "h_vmem=4G"
-//    if (!skipMarkduplicates) sortSam.isIntermediate = true
-//    add(sortSam)
-//
-//    return sortSam.output
-//  }
-
-//  def addMergeBam(inputSam: List[File], outputFile: File, dir: String): File = {
-//    val mergeSam = new MergeSamFiles
-//    mergeSam.input = inputSam
-//    mergeSam.createIndex = true
-//    mergeSam.output = outputFile
-//    mergeSam.memoryLimit = 2
-//    mergeSam.nCoresRequest = 2
-//    mergeSam.assumeSorted = true
-//    mergeSam.USE_THREADING = true
-//    mergeSam.jobResourceRequests :+= "h_vmem=4G"
-//    if (!skipMarkduplicates) mergeSam.isIntermediate = true
-//    add(mergeSam)
-//
-//    return mergeSam.output
-//  }
-
   def addAddOrReplaceReadGroups(inputSam: File, outputDir: String): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, inputSam, outputDir)
     addOrReplaceReadGroups.createIndex = true
