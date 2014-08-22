@@ -33,6 +33,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Skip mark duplicates", shortName = "skipmarkduplicates", required = false)
   var skipMarkduplicates: Boolean = false
 
+  @Argument(doc = "Skip metrics", shortName = "skipmetrics", required = false)
+  var skipMetrics: Boolean = false
+  
   @Argument(doc = "Alginer", shortName = "ALN", required = false)
   var aligner: String = _
 
@@ -217,7 +220,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       add(MarkDuplicates(this, bamFiles, bamFile))
     } else if (skipMarkduplicates && chunking) bamFile = addMergeBam(bamFiles, new File(outputDir + outputName + ".bam"), outputDir)
     
-    addAll(BamMetrics.apply(this, bamFile, outputDir + "metrics/").functions)
+    if (!skipMetrics) addAll(BamMetrics.apply(this, bamFile, outputDir + "metrics/").functions)
     
     outputFiles += ("finalBamFile" -> bamFile)
   }
