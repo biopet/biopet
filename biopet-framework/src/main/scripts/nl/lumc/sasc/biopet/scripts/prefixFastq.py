@@ -43,8 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--gzip', dest='gzip',
             action='store_true',
             help="Whether input FASTQ file is gzipped or not.")
-    parser.add_argument('--prefix', dest='prefix',
-            action='store_true',
+    parser.add_argument('--prefix', dest='prefix', type=str,
             default=PREFIX,
             help="Whether input FASTQ file is gzipped or not.")
 
