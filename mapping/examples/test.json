@@ -1,5 +1,6 @@
 {
     "samtools": {"exe": "test"},
+    "star": {"exe": "test"},
     "reference": "/blabla/blabla.fa",
     "fastqc": { "exe": "/home/pjvan_thof/Downloads/FastQC/fastqc" },
     "bwa": { "exe": "test" },

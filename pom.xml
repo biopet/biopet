@@ -14,5 +14,6 @@
     <module>bam-metrics</module>
     <module>pipeline-template</module>
     <module>gatk</module>
+    <module>biopet-package</module>
   </modules>
 </project>
