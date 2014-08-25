@@ -22,11 +22,11 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var dbsnp: File = _
 
   @Argument(doc = "OutputName", required = false)
-  var outputName: String = "hc"
+  var outputName: String = _
 
   @Output(doc = "OutputFile", required = false)
   var outputFile: File = _
-
+  
   var gvcfMode = true
   var singleGenotyping = false
 
@@ -35,7 +35,9 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (!singleGenotyping) singleGenotyping = config("singlegenotyping")
     if (reference == null) reference = config("reference", required = true)
     if (dbsnp == null) dbsnp = config("dbsnp")
-    if (outputFile == null) outputFile = outputDir + outputName + (if (gvcfMode) ".gvcf.vcf" else ".vcf")
+    if (outputFile == null) outputFile = outputDir + 
+      (if (outputName != null && !outputName.endsWith(".")) outputName + "." else outputName) + 
+      (if (gvcfMode) "hc.gvcf.vcf" else ".vcf")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
