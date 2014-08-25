@@ -16,6 +16,12 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
   @Argument(doc = "dept", required = false)
   var depth: Boolean = false
+  
+  @Argument(doc = "sameStrand", required = false)
+  var sameStrand: Boolean = false
+  
+  @Argument(doc = "diffStrand", required = false)
+  var diffStrand: Boolean = false
 
   var inputTag = "-a"
 
@@ -27,17 +33,21 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     required(inputTag, input) +
     required("-b", intersectFile) +
     conditional(depth, "-d") +
+    conditional(sameStrand, "-s") +
+    conditional(diffStrand, "-S") +
     " > " + required(output)
 }
 
 object BedtoolsCoverage {
   def apply(root: Configurable, input: File, intersect: File, output: File,
-            depth: Boolean = true): BedtoolsCoverage = {
+            depth: Boolean = true, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
     val bedtoolsCoverage = new BedtoolsCoverage(root)
     bedtoolsCoverage.input = input
     bedtoolsCoverage.intersectFile = intersect
     bedtoolsCoverage.output = output
     bedtoolsCoverage.depth = depth
+    bedtoolsCoverage.sameStrand = sameStrand
+    bedtoolsCoverage.diffStrand = diffStrand
     return bedtoolsCoverage
   }
 }
