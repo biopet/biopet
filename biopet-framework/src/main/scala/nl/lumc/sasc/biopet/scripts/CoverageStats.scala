@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.bammetrics.scripts
+package nl.lumc.sasc.biopet.scripts
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction

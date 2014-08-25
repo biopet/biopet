@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.scripts.CoverageStats
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File

@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.flexiprep.scripts
+package nl.lumc.sasc.biopet.scripts
 
 import java.io.File
 

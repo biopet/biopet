@@ -6,7 +6,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat }
-import nl.lumc.sasc.biopet.pipelines.flexiprep.scripts._
+import nl.lumc.sasc.biopet.scripts._
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
