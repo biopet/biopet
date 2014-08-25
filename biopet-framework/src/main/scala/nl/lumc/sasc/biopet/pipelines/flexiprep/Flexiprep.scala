@@ -73,9 +73,9 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript() {
     runInitialJobs()
 
-    if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
-    else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
-
+    val out = if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
+              else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
+    
     runFinalize(List(outputFiles("output_R1")), if (outputFiles.contains("output_R2")) List(outputFiles("output_R2")) else List())
   }
 
@@ -115,13 +115,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     return fastqcToContams.out
   }
 
-  def runTrimClip(R1_in: File, outDir: String, chunk: String) {
+  def runTrimClip(R1_in: File, outDir: String, chunk: String): (File, File, List[File]) = {
     runTrimClip(R1_in, new File(""), outDir, chunk)
   }
-  def runTrimClip(R1_in: File, outDir: String) {
+  def runTrimClip(R1_in: File, outDir: String): (File, File, List[File]) = {
     runTrimClip(R1_in, new File(""), outDir, "")
   }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: String) {
+  def runTrimClip(R1_in: File, R2_in: File, outDir: String): (File, File, List[File]) = {
     runTrimClip(R1_in, R2_in, outDir, "")
   }
   def runTrimClip(R1_in: File, R2_in: File, outDir: String, chunkarg: String): (File, File, List[File]) = {
@@ -227,8 +227,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     add(Gzip(this, fastq_R1, R1))
     if (paired) add(Gzip(this, fastq_R2, R2))
 
-    outputFiles += ("output_R1" -> R1)
-    if (paired) outputFiles += ("output_R2" -> R2)
+    outputFiles += ("output_R1_gzip" -> R1)
+    if (paired) outputFiles += ("output_R2_gzip" -> R2)
 
     if (!skipTrim || !skipClip) {
       val md5sum_R1 = Md5sum(this, R1, outputDir)
@@ -239,15 +239,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         add(md5sum_R2)
         summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
-      fastqc_R1_after = Fastqc(this, outputFiles("output_R1"), outputDir + "/" + R1_name + ".qc.fastqc/")
+      fastqc_R1_after = Fastqc(this, R1, outputDir + "/" + R1_name + ".qc.fastqc/")
       add(fastqc_R1_after)
       summary.addFastqc(fastqc_R1_after, after = true)
-      outputFiles += ("fastqc_R1_final" -> fastqc_R1_after.output)
       if (paired) {
-        fastqc_R2_after = Fastqc(this, outputFiles("output_R2"), outputDir + "/" + R2_name + ".qc.fastqc/")
+        fastqc_R2_after = Fastqc(this, R2, outputDir + "/" + R2_name + ".qc.fastqc/")
         add(fastqc_R2_after)
         summary.addFastqc(fastqc_R2_after, R2 = true, after = true)
-        outputFiles += ("fastqc_R2_final" -> fastqc_R2_after.output)
       }
     }
 

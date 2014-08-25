@@ -9,6 +9,7 @@ import nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantcalling
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare
 import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.pipelines.sage.Sage
 
 object BiopetExecutable {
 
@@ -21,7 +22,8 @@ object BiopetExecutable {
       "gatk-genotyping" -> GatkGenotyping,
       "gatk-variantcalling" -> GatkVariantcalling,
       "gatk-pipeline" -> GatkPipeline,
-      "gatk-vcf-sample-compare" -> GatkVcfSampleCompare
+      "gatk-vcf-sample-compare" -> GatkVcfSampleCompare,
+      "sage" -> Sage
     )
    
   /**

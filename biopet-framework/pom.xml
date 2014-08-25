@@ -91,6 +91,8 @@
                         <filter>
                           <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
                           <includes>
+                            <include>com/sun/**</include>
+                            <include>org/ggf/**</include>
                             <include>picard/**</include>
                             <include>htsjdk/**</include>
                             <include>javassist/**</include>
