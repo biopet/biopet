@@ -65,9 +65,6 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-R", R) +
       conditional(M, "-M") +
       conditional(S, "-S") +
-      required(reference) +
-      required(R1) +
-      optional(R2) +
       optional("-w", w) +
       optional("-d", d) +
       optional("-c", c) +
@@ -91,6 +88,9 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
       conditional(C, "-C") +
       conditional(Y, "-Y") +
       optional("-I", I) +      
+      required(reference) +
+      required(R1) +
+      optional(R2) +
       " > " + required(output)
   }
 }
