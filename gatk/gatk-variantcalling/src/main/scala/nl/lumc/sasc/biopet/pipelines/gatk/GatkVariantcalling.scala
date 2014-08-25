@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions._
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates }
+import org.broadinstitute.gatk.queue.extensions.gatk.{ BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates , UnifiedGenotyper}
 import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
@@ -22,20 +22,25 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var dbsnp: File = _
 
   @Argument(doc = "OutputName", required = false)
-  var outputName: String = "hc"
+  var outputName: String = ""
 
-  @Output(doc = "OutputFile", required = false)
-  var outputFile: File = _
+  @Output(doc = "OutputFileHc", shortName = "outputFileHc", fullName = "outputFileHc", required = false)
+  var outputFileHc: File = _
+  
+  @Output(doc = "OutputFileUg", shortName = "outputFileUg", fullName = "outputFileUg", required = false)
+  var outputFileUg: File = _
 
   var gvcfMode = true
   var singleGenotyping = false
 
   def init() {
     if (gvcfMode) gvcfMode = config("gvcfmode", default = true)
-    if (!singleGenotyping) singleGenotyping = config("singlegenotyping")
+    if (configContains("singlegenotyping")) singleGenotyping = config("singlegenotyping")
     if (reference == null) reference = config("reference", required = true)
     if (dbsnp == null) dbsnp = config("dbsnp")
-    if (outputFile == null) outputFile = outputDir + outputName + (if (gvcfMode) ".gvcf.vcf" else ".vcf")
+    if (!outputName.isEmpty && !outputName.endsWith(".")) outputName += "."
+    if (outputFileHc == null) outputFileHc = outputDir + outputName + (if (gvcfMode) "hc.gvcf.vcf" else ".vcf")
+    if (outputFileUg == null) outputFileUg = outputDir + outputName + "ug.vcf"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -46,8 +51,9 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       var bamFile = if (dbsnp != null) addIndelRealign(inputBam, outputDir) else inputBam
       bamFiles :+= addBaseRecalibrator(bamFile, outputDir)
     }
-    addHaplotypeCaller(bamFiles, outputFile)
-    if (gvcfMode && singleGenotyping) addGenotypeGVCFs(List(outputFile), outputDir)
+    addHaplotypeCaller(bamFiles, outputFileHc)
+    addUnifiedGenotyper(bamFiles, outputFileUg)
+    if (gvcfMode && singleGenotyping) addGenotypeGVCFs(List(outputFileHc), outputDir)
   }
 
   trait gatkArguments extends CommandLineGATK {
@@ -157,6 +163,32 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     add(haplotypeCaller)
 
     return haplotypeCaller.out
+  }
+  
+  def addUnifiedGenotyper(bamfiles: List[File], outputfile: File): File = {
+    val unifiedGenotyper = new UnifiedGenotyper with gatkArguments {
+      this.min_quality_score = config("minMappingQualityScore", 20, "UnifiedGenotyper").getInt.toByte
+      if (configContains("scattercount", "UnifiedGenotyper")) this.scatterCount = config("scattercount", 1, "UnifiedGenotyper")
+      this.input_file = bamfiles
+      this.out = outputfile
+      if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
+      this.nct = config("threads", default = 3, submodule = "UnifiedGenotyper")
+      this.memoryLimit = this.nct * 2
+      
+      if (configContains("allSitePLs")) this.allSitePLs = config("allSitePLs")
+      
+      val inputType: String = config("inputtype", "dna")
+      if (inputType == "rna") {
+        this.stand_call_conf = config("stand_call_conf", 20, "UnifiedGenotyper")
+        this.stand_emit_conf = config("stand_emit_conf", 20, "UnifiedGenotyper")
+      } else {
+        this.stand_call_conf = config("stand_call_conf", 30, "UnifiedGenotyper")
+        this.stand_emit_conf = config("stand_emit_conf", 30, "UnifiedGenotyper")
+      }
+    }
+    add(unifiedGenotyper)
+
+    return unifiedGenotyper.out
   }
 
   def addGenotypeGVCFs(gvcfFiles: List[File], dir: String): File = {

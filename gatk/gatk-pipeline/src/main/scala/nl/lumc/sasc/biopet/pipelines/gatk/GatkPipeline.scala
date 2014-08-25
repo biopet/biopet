@@ -82,10 +82,12 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = outputDir + sampleID + "/variantcalling/"
+      gatkVariantcalling.outputName = sampleID
+      gatkVariantcalling.singleGenotyping = true
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
-      gvcfFiles :+= gatkVariantcalling.outputFile
+      gvcfFiles :+= gatkVariantcalling.outputFileHc
     } else logger.warn("No bamfiles for variant calling for sample: " + sampleID)
     return outputFiles
   }
