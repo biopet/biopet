@@ -214,30 +214,26 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def addBwa(R1:File, R2:File, output:File, deps:List[File]): File = {
     val bwaCommand = new Bwa(this)
-        bwaCommand.R1 = R1
-        if (paired) bwaCommand.R2 = R2
-        bwaCommand.deps = deps
-        bwaCommand.R = getReadGroup
-        bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-        add(bwaCommand, isIntermediate = true)
-        val sortSam = SortSam(this, bwaCommand.output, output)
-        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
-        add(sortSam)
-        return sortSam.output
+    bwaCommand.R1 = R1
+    if (paired) bwaCommand.R2 = R2
+    bwaCommand.deps = deps
+    bwaCommand.R = getReadGroup
+    bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    add(bwaCommand, isIntermediate = true)
+    val sortSam = SortSam(this, bwaCommand.output, output)
+    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    add(sortSam)
+    return sortSam.output
   }
   
   def addBowtie(R1:File, R2:File, output:File, deps:List[File]): File = {
     val bowtie = new Bowtie(this)
-        bowtie.R1 = R1
-        if (paired) bowtie.R2 = R2
-        bowtie.deps = deps
-        bowtie.sam_RG = getReadGroup
-        bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-        add(bowtie, isIntermediate = true)
-        val sortSam = SortSam(this, bowtie.output, output)
-        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
-        add(sortSam)
-        return sortSam.output
+    bowtie.R1 = R1
+    if (paired) bowtie.R2 = R2
+    bowtie.deps = deps
+    bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    add(bowtie, isIntermediate = true)
+    return addAddOrReplaceReadGroups(bowtie.output, output)
   }
   
   def addStar(R1:File, R2:File, output:File, deps:List[File]): File = {
