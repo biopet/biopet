@@ -76,7 +76,9 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     val out = if (paired) runTrimClip(outputFiles("fastq_input_R1"), outputFiles("fastq_input_R2"), outputDir)
               else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
     
-    runFinalize(List(outputFiles("output_R1")), if (outputFiles.contains("output_R2")) List(outputFiles("output_R2")) else List())
+    val R1_files = for ((k,v) <- outputFiles if k.endsWith("output_R1")) yield v
+    val R2_files = for ((k,v) <- outputFiles if k.endsWith("output_R2")) yield v
+    runFinalize(R1_files.toList, R2_files.toList)
   }
 
   def runInitialJobs() {
