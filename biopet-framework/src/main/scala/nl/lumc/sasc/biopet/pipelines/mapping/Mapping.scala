@@ -77,16 +77,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGPI: Int = _
 
   var paired: Boolean = false
-  
+  var defaultAligner = "bwa"
   val flexiprep = new Flexiprep(this)
-
+  
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    var inputtype: String = config("inputtype", "dna")
-    if (aligner == null) {
-      if (inputtype == "rna") aligner = config("aligner", "star-2pass")
-      else aligner = config("aligner", "bwa")
-    }
+    if (aligner == null) aligner = config("aligner", default = defaultAligner)
     if (reference == null) reference = config("reference")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
