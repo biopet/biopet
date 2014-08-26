@@ -89,6 +89,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val flexiprepOutput = for ((key,file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
       val prefixFastq = PrefixFastq.apply(this, flexiprepOutput.head, runDir)
       prefixFastq.prefix = config("sage_tag", default = "CATG")
+      prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
       add(prefixFastq)
       outputFiles += ("prefix_fastq" -> prefixFastq.output)
       
