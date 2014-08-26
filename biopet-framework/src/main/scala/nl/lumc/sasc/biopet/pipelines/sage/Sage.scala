@@ -95,6 +95,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       
       val mapping = new Mapping(this)
       mapping.skipFlexiprep = true
+      mapping.skipMarkduplicates = true
       mapping.input_R1 = prefixFastq.output
       mapping.RGLB = runConfig("ID").toString
       mapping.RGSM = sampleConfig("ID").toString
