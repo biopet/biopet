@@ -14,10 +14,10 @@ trait Picard extends BiopetJavaCommandLineFunction {
   var stringency: String = config("validationstringency", submodule = "picard")
 
   @Argument(doc = "COMPRESSION_LEVEL", required = false)
-  var compression: Int = config("compressionlevel", submodule = "picard")
+  var compression: Option[Int] = config("compressionlevel", submodule = "picard")
 
   @Argument(doc = "MAX_RECORDS_IN_RAM", required = false)
-  var maxRecordsInRam: Int = config("maxrecordsinram", submodule = "picard")
+  var maxRecordsInRam: Option[Int] = config("maxrecordsinram", submodule = "picard")
 
   @Argument(doc = "CREATE_INDEX", required = false)
   var createIndex: Boolean = config("createindex", default = true, submodule = "picard")
