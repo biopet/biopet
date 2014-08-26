@@ -5,7 +5,7 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star }
+import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star , Bowtie}
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -182,27 +182,15 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         fastq_R2_output :+= R2
       }
       
-      if (aligner == "bwa") {
-        val bwaCommand = new Bwa(this)
-        bwaCommand.R1 = R1
-        if (paired) bwaCommand.R2 = R2
-        bwaCommand.deps = deps
-        bwaCommand.R = getReadGroup
-        bwaCommand.output = new File(chunkDir + outputName + ".sam")
-        add(bwaCommand, isIntermediate = true)
-        val sortSam = SortSam(this, bwaCommand.output, chunkDir)
-        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
-        add(sortSam)
-        bamFiles :+= sortSam.output
-      } else if (aligner == "star") {
-        val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
-        add(starCommand)
-        bamFiles :+= addAddOrReplaceReadGroups(starCommand.outputSam, chunkDir)
-      } else if (aligner == "star-2pass") {
-        val star2pass = Star._2pass(this, R1, if (paired) R2 else null, chunkDir, isIntermediate = true, deps = deps)
-        addAll(star2pass._2)
-        bamFiles :+= addAddOrReplaceReadGroups(star2pass._1, chunkDir)
-      } else throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
+      val outputBam = new File(chunkDir + outputName + ".bam")
+      bamFiles :+= outputBam
+      aligner match {
+        case "bwa" => addBwa(R1, R2, outputBam, deps)
+        case "bowtie" => addBowtie(R1, R2, outputBam, deps)
+        case "star" => addStar(R1, R2, outputBam, deps)
+        case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
+        case _ => throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
+      }
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
@@ -224,8 +212,48 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-  def addAddOrReplaceReadGroups(inputSam: File, outputDir: String): File = {
-    val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, inputSam, outputDir)
+  def addBwa(R1:File, R2:File, output:File, deps:List[File]): File = {
+    val bwaCommand = new Bwa(this)
+        bwaCommand.R1 = R1
+        if (paired) bwaCommand.R2 = R2
+        bwaCommand.deps = deps
+        bwaCommand.R = getReadGroup
+        bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+        add(bwaCommand, isIntermediate = true)
+        val sortSam = SortSam(this, bwaCommand.output, output)
+        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+        add(sortSam)
+        return sortSam.output
+  }
+  
+  def addBowtie(R1:File, R2:File, output:File, deps:List[File]): File = {
+    val bowtie = new Bowtie(this)
+        bowtie.R1 = R1
+        if (paired) bowtie.R2 = R2
+        bowtie.deps = deps
+        bowtie.sam_RG = getReadGroup
+        bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+        add(bowtie, isIntermediate = true)
+        val sortSam = SortSam(this, bowtie.output, output)
+        if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+        add(sortSam)
+        return sortSam.output
+  }
+  
+  def addStar(R1:File, R2:File, output:File, deps:List[File]): File = {
+    val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
+    add(starCommand)
+    return addAddOrReplaceReadGroups(starCommand.outputSam, output)
+  }
+  
+  def addStar2pass(R1:File, R2:File, output:File, deps:List[File]): File = {
+    val starCommand = Star._2pass(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
+    addAll(starCommand._2)
+    return addAddOrReplaceReadGroups(starCommand._1, output)
+  }
+  
+  def addAddOrReplaceReadGroups(input: File, output: File): File = {
+    val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = RGID

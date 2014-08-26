@@ -59,10 +59,10 @@ class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
 }
 
 object AddOrReplaceReadGroups {
-  def apply(root: Configurable, input: File, outputDir: String, sortOrder: String = null): AddOrReplaceReadGroups = {
+  def apply(root: Configurable, input: File, output: File, sortOrder: String = null): AddOrReplaceReadGroups = {
     val addOrReplaceReadGroups = new AddOrReplaceReadGroups(root)
     addOrReplaceReadGroups.input = input
-    addOrReplaceReadGroups.output = new File(outputDir, input.getName.stripSuffix(".bam").stripSuffix(".sam") + ".sorted.bam")
+    addOrReplaceReadGroups.output = output
     if (sortOrder == null) addOrReplaceReadGroups.sortOrder = "coordinate"
     else addOrReplaceReadGroups.sortOrder = sortOrder
     return addOrReplaceReadGroups

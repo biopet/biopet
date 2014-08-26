@@ -23,10 +23,10 @@ class SortSam(val root: Configurable) extends Picard {
 }
 
 object SortSam {
-  def apply(root: Configurable, input: File, outputDir: String, sortOrder: String = null): SortSam = {
+  def apply(root: Configurable, input: File, output: File, sortOrder: String = null): SortSam = {
     val sortSam = new SortSam(root)
     sortSam.input = input
-    sortSam.output = new File(outputDir, input.getName.stripSuffix(".bam").stripSuffix(".sam") + ".sorted.bam")
+    sortSam.output = output
     if (sortOrder == null) sortSam.sortOrder = "coordinate"
     else sortSam.sortOrder = sortOrder
     return sortSam
