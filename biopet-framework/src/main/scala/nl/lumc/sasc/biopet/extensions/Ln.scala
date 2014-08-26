@@ -71,9 +71,9 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
     if (relative) {
       // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
-      "ln -s " + inRelative + " " + outCanonical
+      "ln -s '" + inRelative + "' '" + outCanonical + "'"
     } else {
-      "ln -s " + inCanonical + " " + outCanonical
+      "ln -s '" + inCanonical + "' '" + outCanonical + "'"
     }
   }
 
