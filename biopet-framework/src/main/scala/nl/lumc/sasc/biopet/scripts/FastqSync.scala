@@ -82,7 +82,7 @@ object FastqSync {
     return fastqSync
   }
   
-  def mergeSummarys(jsons: List[Json]): Json = {
+  def mergeSummaries(jsons: List[Json]): Json = {
     var R1_filtered = 0
     var R2_filtered = 0
     var readsLeft = 0

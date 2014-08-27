@@ -47,7 +47,7 @@ object Seqstat {
     return seqstat
   }
 
-  def mergeSummarys(jsons: List[Json]): Json = {
+  def mergeSummaries(jsons: List[Json]): Json = {
     def addJson(json:Json, total:Map[String, Long]) {
       for (key <- json.objectFieldsOrEmpty) {
         if (json.field(key).get.isObject) addJson(json.field(key).get, total)

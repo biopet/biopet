@@ -84,7 +84,7 @@ object Cutadapt {
     return cutadapt
   }
   
-  def mergeSummarys(jsons: List[Json]): Json = {
+  def mergeSummaries(jsons: List[Json]): Json = {
     var affected = 0
     var tooShort = 0
     var tooLong = 0
