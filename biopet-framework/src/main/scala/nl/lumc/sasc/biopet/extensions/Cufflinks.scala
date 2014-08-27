@@ -27,7 +27,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   /** output files, computed automatically from output directory */
 
   @Output(doc = "Output GTF file")
-  lazy val output_gtf: File = {
+  lazy val outputGtf: File = {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks GTF output")
     // cufflinks always outputs a transcripts.gtf file in the output directory
@@ -35,7 +35,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   @Output(doc = "Output isoform FPKM file")
-  lazy val output_isoforms_fpkm: File = {
+  lazy val outputIsoformsFpkm: File = {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks isoform FPKM output")
     // cufflinks always outputs a isoforms.fpkm_tracking file in the output directory
@@ -43,7 +43,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   @Output(doc = "Output GTF file")
-  lazy val output_genes_fpkm: File = {
+  lazy val outputGenesFpkm: File = {
     if (input == null || output_dir == null)
       throw new RuntimeException("Unexpected error when trying to set cufflinks genes FPKM output")
     // cufflinks always outputs a genes.fpkm_tracking file in the output directory
@@ -185,19 +185,19 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--GTF-guide", GTF_guide) +
       optional("--mask-file", mask_file) +
       optional("--frag-bias-correct", frag_bias_correct) +
-      optional("--multi-read-correct", multi_read_correct) +
+      conditional(multi_read_correct, "--multi-read-correct") +
       optional("--library-type", library_type) +
       optional("--library-norm-method", library_norm_method) +
       optional("--frag-len-mean", frag_len_mean) +
       optional("--frag-len-std-dev", frag_len_std_dev) +
       optional("--max-mle-iterations", max_mle_iterations) +
-      optional("--compatible-hits-norm", compatible_hits_norm) +
-      optional("--total-hits-norm", total_hits_norm) +
+      conditional(compatible_hits_norm, "--compatible-hits-norm") +
+      conditional(total_hits_norm, "--total-hits-norm") +
       optional("--num-frag-count-draws", num_frag_count_draws) +
       optional("--num-frag-assign-draws", num_frag_assign_draws) +
       optional("--max-frag-multihits", max_frag_multihits) +
-      optional("--no-effective-length-correction", no_effective_length_correction) +
-      optional("--no-length-correction", no_length_correction) +
+      conditional(no_effective_length_correction, "--no-effective-length-correction") +
+      conditional(no_length_correction, "--no-length-correction") +
       optional("--label", label) +
       optional("--min-isoform-fraction", min_isoform_fraction) +
       optional("--pre-mrna-fraction", pre_mrna_fraction) +
@@ -213,12 +213,12 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--trim-3-dropoff-frac", trim_3_dropoff_frac) +
       optional("--max-multiread-fraction", max_multiread_fraction) +
       optional("--overlap-radius", overlap_radius) +
-      optional("--no-faux-reads", no_faux_reads) +
+      conditional(no_faux_reads, "--no-faux-reads") +
       optional("--flag-3-overhang-tolerance", flag_3_overhang_tolerance) +
       optional("--intron-overhang-tolerance", intron_overhang_tolerance) +
-      optional("--verbose", verbose) +
-      optional("--quiet", quiet) +
-      optional("--no-update-check", no_update_check) +
+      conditional(verbose, "--verbose") +
+      conditional(quiet, "--quiet") +
+      conditional(no_update_check, "--no-update-check") +
       required(input)
   }
 }
