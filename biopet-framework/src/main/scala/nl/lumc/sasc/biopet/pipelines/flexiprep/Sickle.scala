@@ -39,7 +39,7 @@ class Sickle(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Sickle(r
 }
 
 object Sickle {
-  def mergeSummarys(jsons: List[Json]): Json = {
+  def mergeSummaries(jsons: List[Json]): Json = {
     var total: Map[String, Int] = Map()
     
     for (json <- jsons) {

@@ -47,7 +47,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
 
   var flexiprep: Flexiprep = root.asInstanceOf[Flexiprep]
   
-  var resourses:Map[String, Json] = Map()
+  var resources:Map[String, Json] = Map()
 
   def addFastqc(fastqc: Fastqc, R2: Boolean = false, after: Boolean = false): Fastqc = {
     if (!R2 && !after) this.fastqcR1 = fastqc
@@ -104,7 +104,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     md5Summary()
     val summary = 
       ("samples" := ( flexiprep.sampleName :=
-        ("runs" := ( flexiprep.libraryName := (
+        ("libraries" := ( flexiprep.libraryName := (
           ("flexiprep" := (
             ("clipping" := !flexiprep.skipClip) ->:
             ("trimming" := !flexiprep.skipTrim) ->:
@@ -115,10 +115,10 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
             ("clipping" :=? clipstatSummary) ->?:
             ("trimming" :=? trimstatSummary) ->?:
             jEmptyObject)) ->:
-          ("resourses" := (("raw_R1" := getResourses(fastqcR1, md5R1)) ->:
-            ("raw_R2" :?= getResourses(fastqcR2, md5R2)) ->?:
-            ("proc_R1" :?= getResourses(fastqcR1after, md5R1after)) ->?:
-            ("proc_R2" :?= getResourses(fastqcR2after, md5R2after)) ->?:
+          ("resources" := (("raw_R1" := getResources(fastqcR1, md5R1)) ->:
+            ("raw_R2" :?= getResources(fastqcR2, md5R2)) ->?:
+            ("proc_R1" :?= getResources(fastqcR1after, md5R1after)) ->?:
+            ("proc_R2" :?= getResources(fastqcR2after, md5R2after)) ->?:
             jEmptyObject)) ->:
           jEmptyObject ))->: jEmptyObject)->: jEmptyObject)->: jEmptyObject) ->: jEmptyObject
     // format: ON
@@ -132,25 +132,25 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
 
   def seqstatSummary(): Option[Json] = {
     val R1_chunks = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
-    val R1: Json = Seqstat.mergeSummarys(R1_chunks.toList)
+    val R1: Json = Seqstat.mergeSummaries(R1_chunks.toList)
     
     val R2: Option[Json] = if (!flexiprep.paired) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.seqstatR2.getSummary
-      Option(Seqstat.mergeSummarys(s.toList))
+      Option(Seqstat.mergeSummaries(s.toList))
     }
     val R1_proc: Option[Json] = if (flexiprep.skipClip && flexiprep.skipTrim) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR1after.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.seqstatR1after.getSummary
-      Option(Seqstat.mergeSummarys(s.toList))
+      Option(Seqstat.mergeSummaries(s.toList))
     }
     val R2_proc: Option[Json] = if (!flexiprep.paired || (flexiprep.skipClip && flexiprep.skipTrim)) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR2after.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.seqstatR2after.getSummary
-      Option(Seqstat.mergeSummarys(s.toList))
+      Option(Seqstat.mergeSummaries(s.toList))
     }
     return Option(("R1_raw" := R1) ->:
       ("R2_raw" :=? R2) ->?:
@@ -165,10 +165,10 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     val R1_proc = md5Summary(md5R1after)
     val R2_proc = md5Summary(md5R2after)
     
-    if (!R1_raw.isEmpty) resourses += ("fastq_R1_raw" -> R1_raw.get)
-    if (!R2_raw.isEmpty) resourses += ("fastq_R2_raw" -> R2_raw.get)
-    if (!R1_proc.isEmpty) resourses += ("fastq_R1_proc" -> R1_proc.get)
-    if (!R2_proc.isEmpty) resourses += ("fastq_R2_proc" -> R2_proc.get)
+    if (!R1_raw.isEmpty) resources += ("fastq_R1_raw" -> R1_raw.get)
+    if (!R2_raw.isEmpty) resources += ("fastq_R2_raw" -> R2_raw.get)
+    if (!R1_proc.isEmpty) resources += ("fastq_R1_proc" -> R1_proc.get)
+    if (!R2_proc.isEmpty) resources += ("fastq_R2_proc" -> R2_proc.get)
   }
 
   def md5Summary(md5sum: Md5sum): Option[Json] = {
@@ -176,7 +176,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     else return Option(md5sum.getSummary)
   }
 
-  def getResourses(fastqc:Fastqc, md5sum:Md5sum): Option[Json] = {
+  def getResources(fastqc:Fastqc, md5sum:Md5sum): Option[Json] = {
     if (fastqc == null || md5sum == null) return None
     val fastqcSum = fastqcSummary(fastqc).get
     return Option(("fastq" := md5Summary(md5sum)) ->: fastqcSum)
@@ -192,13 +192,13 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     val R1: Json = if (chunks.size == 1) chunks.head._2.cutadaptR1.getSummary
     else {
       val s = for ((key, value) <- chunks) yield value.cutadaptR1.getSummary
-      Cutadapt.mergeSummarys(s.toList)
+      Cutadapt.mergeSummaries(s.toList)
     }
     val R2: Option[Json] = if (!flexiprep.paired) None
     else if (chunks.size == 1) Option(chunks.head._2.cutadaptR2.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.cutadaptR2.getSummary
-      Option(Cutadapt.mergeSummarys(s.toList))
+      Option(Cutadapt.mergeSummaries(s.toList))
     }
     return Option(("R1" := R1) ->:
       ("R2" :=? R2) ->?:
@@ -209,7 +209,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   def syncstatSummary(): Option[Json] = {
     if (flexiprep.skipClip || !flexiprep.paired) return None
     val s = for ((key, value) <- chunks) yield value.fastqSync.getSummary
-    return Option(FastqSync.mergeSummarys(s.toList))
+    return Option(FastqSync.mergeSummaries(s.toList))
   }
 
   def trimstatSummary(): Option[Json] = {
@@ -217,7 +217,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     if (chunks.size == 1) return Option(chunks.head._2.sickle.getSummary)
     else {
       val s = for ((key, value) <- chunks) yield value.sickle.getSummary
-      return Option(Sickle.mergeSummarys(s.toList))
+      return Option(Sickle.mergeSummaries(s.toList))
     }
   }
 }
