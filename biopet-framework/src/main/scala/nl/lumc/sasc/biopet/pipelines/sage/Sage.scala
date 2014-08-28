@@ -108,8 +108,11 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.biopetScript
       addAll(mapping.functions)
       
-      if (config("library_counts", default = false).getBoolean) 
+      if (config("library_counts", default = false).getBoolean) {
         this.addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
+        
+        // TODO: Tag counts
+      }
       
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
