@@ -21,9 +21,22 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   @Input(doc = "squishedCountBed, by suppling this file the auto squish job will be skipped", required = false)
   var squishedCountBed : File = _
   
+  @Input(doc = "Transcriptome, used for generation of tag library", required = false)
+  var transcriptome : File = _
+  
+  var tagsLibrary : File = _
+  
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
-    if (countBed == null && squishedCountBed == null) throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
+    if (!outputDir.endsWith("/")) outputDir += "/"
+    if (countBed == null) countBed = config("count_bed")
+    if (squishedCountBed == null) squishedCountBed = config("squished_count_bed")
+    if (tagsLibrary == null) tagsLibrary = config("tags_library")
+    if (transcriptome == null) transcriptome = config("transcriptome")
+    if (transcriptome == null && tagsLibrary == null) 
+      throw new IllegalStateException("No transcriptome or taglib found")
+    if (countBed == null && squishedCountBed == null) 
+      throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
   }
 
   def biopetScript() {
@@ -33,7 +46,16 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       squishedCountBed = squishBed.output
     }
     
-    // Tag library creation
+    if (tagsLibrary == null) {
+      val cdl = new CreateDeepsageLibrary(this)
+      cdl.input = transcriptome
+      cdl.output = outputDir + "tablib/tab.lib"
+      cdl.noAntiTagsOutput = outputDir + "tablib/no_antisense_genes.txt"
+      cdl.noTagsOutput = outputDir + "tablib/no_sense_genes.txt"
+      cdl.allGenesOutput = outputDir + "tablib/all_genes.txt"
+      add(cdl)
+      tagsLibrary = cdl.output
+    }
     
     runSamplesJobs
   }
@@ -56,14 +78,15 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
                     add(mergeSamFiles)
                     mergeSamFiles.output
                   } else null
-    val fastqFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-                  else if (libraryBamfiles.size > 1) {
-                    val cat = Cat.apply(this, libraryBamfiles, sampleDir + sampleID + ".fastq")
+    val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
+                  else if (libraryFastqFiles.size > 1) {
+                    val cat = Cat.apply(this, libraryFastqFiles, sampleDir + sampleID + ".fastq")
                     add(cat)
                     cat.output
                   } else null
     
-    this.addBedtoolsCounts(bamFile, sampleID, sampleDir)
+    addBedtoolsCounts(bamFile, sampleID, sampleDir)
+    addTablibCounts(fastqFile, sampleID, sampleDir)
     
     return outputFiles
   }
@@ -109,9 +132,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       addAll(mapping.functions)
       
       if (config("library_counts", default = false).getBoolean) {
-        this.addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
-        
-        // TODO: Tag counts
+        addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
+        addTablibCounts(prefixFastq.output, sampleID + "-" + runID, runDir)
       }
       
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
@@ -120,12 +142,28 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   def addBedtoolsCounts(bamFile:File, outputPrefix: String, outputDir: String) {
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".sense.count", 
+    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.counts", 
                          depth = false, sameStrand = true, diffStrand = false))
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".antisense.count", 
+    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.counts", 
                          depth = false, sameStrand = false, diffStrand = true))
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".count", 
+    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.counts", 
                          depth = false, sameStrand = false, diffStrand = false))
+  }
+  
+  def addTablibCounts(fastq:File, outputPrefix: String, outputDir: String) {
+    val countFastq = new CountFastq(this)
+    countFastq.input = fastq
+    countFastq.output = outputDir + outputPrefix + ".raw.counts"
+    add(countFastq)
+    
+    val createTagCounts = new CreateTagCounts(this)
+    createTagCounts.input = countFastq.output
+    createTagCounts.tagLib = tagsLibrary
+    createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"
+    createTagCounts.countAllSense = outputDir + outputPrefix + ".tagcount.all.sense.counts"
+    createTagCounts.countAntiSense = outputDir + outputPrefix + ".tagcount.antisense.counts"
+    createTagCounts.countAllAntiSense = outputDir + outputPrefix + ".tagcount.all.antisense.counts"
+    add(createTagCounts)
   }
 }
 

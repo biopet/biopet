@@ -17,7 +17,13 @@
     <sting.binary-dist.name>SASC-Pipelines</sting.binary-dist.name>
     <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutable</app.main.class>
   </properties>
-  
+    <repositories>
+        <repository>
+            <id>biojava-maven-repo</id>
+            <name>BioJava repository</name>
+            <url>http://www.biojava.org/download/maven/</url>			
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
           <groupId>org.testng</groupId>
@@ -39,6 +45,16 @@
             <groupId>io.argonaut</groupId>
             <artifactId>argonaut_2.11</artifactId>
             <version>6.1-M4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-core</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-sequencing</artifactId>
+            <version>3.1.0</version>
         </dependency>
     </dependencies>
     <build>
