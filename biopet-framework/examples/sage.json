@@ -9,5 +9,15 @@
         "seqtk": {"exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"},
         "cutadapt": {"exe":"/home/pjvan_thof/.local/bin/cutadapt"},
         "sickle": {"exe":"/data/DIV5/SASC/pjvan_thof/bin/sickle"}
-    }
+    },
+    "samples": {
+        "test": {
+            "libraries": {
+                "1": {
+                    "R1": "test.fastq"
+                }
+            }
+        }
+    },
+    "bowtie": {"exe": "test"}
 }

@@ -142,12 +142,25 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   def addBedtoolsCounts(bamFile:File, outputPrefix: String, outputDir: String) {
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.counts", 
-                         depth = false, sameStrand = true, diffStrand = false))
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.counts", 
-                         depth = false, sameStrand = false, diffStrand = true))
-    add(BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.counts", 
-                         depth = false, sameStrand = false, diffStrand = false))
+    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.coverage", 
+                         depth = false, sameStrand = true, diffStrand = false)
+    val countSense = new BedtoolsCoverageToCounts(this)
+    countSense.input = bedtoolsSense.output
+    countSense.output = outputDir + outputPrefix + ".genome.sense.counts"
+    
+    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.coverage", 
+                         depth = false, sameStrand = false, diffStrand = true)
+    val countAntisense = new BedtoolsCoverageToCounts(this)
+    countAntisense.input = bedtoolsAntisense.output
+    countAntisense.output = outputDir + outputPrefix + ".genome.antisense.counts"
+    
+    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.coverage", 
+                         depth = false, sameStrand = false, diffStrand = false)
+    val count = new BedtoolsCoverageToCounts(this)
+    count.input = bedtools.output
+    count.output = outputDir + outputPrefix + ".genome.counts"
+    
+    add(bedtoolsSense, countSense, bedtoolsAntisense, countAntisense, bedtools, count)
   }
   
   def addTablibCounts(fastq:File, outputPrefix: String, outputDir: String) {
