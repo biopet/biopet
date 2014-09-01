@@ -26,6 +26,15 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   
   var tagsLibrary : File = _
   
+  defaults ++= Map("bowtie" -> Map(
+                  "m" -> 1,
+                  "k" -> 1,
+                  "best" -> true,
+                  "strata" -> true,
+                  "seedmms" -> 1
+                )
+              )
+  
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
@@ -41,7 +50,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def biopetScript() {
     if (squishedCountBed == null) {
-      val squishBed = SquishBed.apply(this, countBed, outputDir)
+      val squishBed = SquishBed(this, countBed, outputDir)
       add(squishBed)
       squishedCountBed = squishBed.output
     }
