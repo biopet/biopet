@@ -19,7 +19,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  override val versionRegex = """Version: (.*)""".r
+  override val versionRegex = """.*[Vv]ersion:? (.*)""".r
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
   
