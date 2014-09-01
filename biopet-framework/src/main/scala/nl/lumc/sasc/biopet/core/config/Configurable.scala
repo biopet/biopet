@@ -9,6 +9,7 @@ trait Configurable extends Logging {
   val configPath: List[String] = if (root != null) root.configFullPath else List()
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
+  var defaults: Map[String,Any] = if (root != null) root.defaults else Map()
   
   val config = new ConfigFuntions
   
@@ -16,14 +17,18 @@ trait Configurable extends Logging {
     def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar:Boolean = true): ConfigValue = {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
-      if (!contains(key, submodule, freeVar) && default == null) {
+      val d = {
+        val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
+        if (value.isDefined) value.get else default
+      }
+      if (!contains(key, submodule, freeVar) && d == null) {
         if (required) {
           logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
           throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
         } else return null
       }
-      if (default == null) return globalConfig(m, p, key, freeVar)
-      else return globalConfig(m, p, key, default, freeVar)
+      if (d == null) return globalConfig(m, p, key, freeVar)
+      else return globalConfig(m, p, key, d, freeVar)
     }
     
     def contains(key: String, submodule: String = null, freeVar:Boolean = true) = {
