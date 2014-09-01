@@ -9,7 +9,7 @@ trait Configurable extends Logging {
   val configPath: List[String] = if (root != null) root.configFullPath else List()
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
-  var defaults: Map[String,Any] = if (root != null) root.defaults else Map()
+  var defaults: scala.collection.mutable.Map[String,Any] = if (root != null) root.defaults else scala.collection.mutable.Map()
   
   val config = new ConfigFuntions
   
@@ -18,8 +18,8 @@ trait Configurable extends Logging {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
       val d = {
-        val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
-        if (value.isDefined) value.get else default
+        val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
+        if (value.isDefined) value.get.value else default
       }
       if (!contains(key, submodule, freeVar) && d == null) {
         if (required) {
