@@ -29,7 +29,7 @@ class MergeSamFiles(val root: Configurable) extends Picard {
   var comment: String = config("comment")
   
   override def commandLine = super.commandLine +
-    required("INPUT=", input, spaceSeparated = false) +
+    repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     required("SORT_ORDER=", sortOrder, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
