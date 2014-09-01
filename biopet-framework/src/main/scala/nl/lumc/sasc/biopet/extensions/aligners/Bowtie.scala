@@ -27,13 +27,27 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
-  var sam_RG: String = _
+  var sam_RG: String = config("sam-RG")
+  var seedlen: Option[Int] = config("seedlen")
+  var k: Option[Int] = config("k")
+  var m: Option[Int] = config("m")
+  var best: Boolean = config("best")
+  var maxbts: Option[Int] = config("maxbts")
+  var strata: Boolean = config("strata")
+  var maqerr: Option[Int] = config("maqerr")
   
   def cmdLine = {
     required(executable) +
       optional("--threads", nCoresRequest) +
       conditional(sam, "--sam") +
-      required("--sam-RG", sam_RG) +
+      conditional(best, "--best") +
+      conditional(strata, "--strata") +
+      optional("--sam-RG", sam_RG) +
+      optional("--seedlen", seedlen) +
+      optional("--k", k) +
+      optional("--m", m) +
+      optional("--maxbts", maxbts) +
+      optional("--maqerr", maqerr) +
       required(reference) +
       required(R1) +
       optional(R2) +
