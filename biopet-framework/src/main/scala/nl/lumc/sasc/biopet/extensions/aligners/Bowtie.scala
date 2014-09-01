@@ -29,6 +29,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var sam: Boolean = config("sam", default = true)
   var sam_RG: String = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
+  var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")
   var m: Option[Int] = config("m")
   var best: Boolean = config("best")
@@ -44,8 +45,9 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
       conditional(strata, "--strata") +
       optional("--sam-RG", sam_RG) +
       optional("--seedlen", seedlen) +
-      optional("--k", k) +
-      optional("--m", m) +
+      optional("--seedmms", seedmms) +
+      optional("-k", k) +
+      optional("-m", m) +
       optional("--maxbts", maxbts) +
       optional("--maqerr", maqerr) +
       required(reference) +
