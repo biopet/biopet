@@ -58,10 +58,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     if (tagsLibrary == null) {
       val cdl = new CreateDeepsageLibrary(this)
       cdl.input = transcriptome
-      cdl.output = outputDir + "tablib/tab.lib"
-      cdl.noAntiTagsOutput = outputDir + "tablib/no_antisense_genes.txt"
-      cdl.noTagsOutput = outputDir + "tablib/no_sense_genes.txt"
-      cdl.allGenesOutput = outputDir + "tablib/all_genes.txt"
+      cdl.output = outputDir + "taglib/tag.lib"
+      cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
+      cdl.noTagsOutput = outputDir + "taglib/no_sense_genes.txt"
+      cdl.allGenesOutput = outputDir + "taglib/all_genes.txt"
       add(cdl)
       tagsLibrary = cdl.output
     }
