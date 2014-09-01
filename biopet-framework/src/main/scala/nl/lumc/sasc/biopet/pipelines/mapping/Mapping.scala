@@ -89,18 +89,18 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (input_R1 == null) throw new IllegalStateException("Missing Fastq R1 on mapping module")
     paired = (input_R2 != null)
 
-    if (RGLB == null && configContains("RGLB")) RGLB = config("RGLB")
+    if (RGLB == null && config.contains("RGLB")) RGLB = config("RGLB")
     else if (RGLB == null) throw new IllegalStateException("Missing Readgroup library on mapping module")
-    if (RGSM == null && configContains("RGSM")) RGSM = config("RGSM")
+    if (RGSM == null && config.contains("RGSM")) RGSM = config("RGSM")
     else if (RGLB == null) throw new IllegalStateException("Missing Readgroup sample on mapping module")
-    if (RGID == null && configContains("RGID")) RGID = config("RGID")
+    if (RGID == null && config.contains("RGID")) RGID = config("RGID")
     else if (RGID == null && RGSM != null && RGLB != null) RGID = RGSM + "-" + RGLB
     else if (RGID == null) throw new IllegalStateException("Missing Readgroup ID on mapping module")
 
     if (RGPL == null) RGPL = config("RGPL", "illumina")
     if (RGPU == null) RGPU = config("RGPU", "na")
-    if (RGCN == null && configContains("RGCN")) RGCN = config("RGCN")
-    if (RGDS == null && configContains("RGDS")) RGDS = config("RGDS")
+    if (RGCN == null && config.contains("RGCN")) RGCN = config("RGCN")
+    if (RGDS == null && config.contains("RGDS")) RGDS = config("RGDS")
 
     if (outputName == null) outputName = RGID
 
@@ -108,7 +108,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (!chunking) chunking = config("chunking", false)
     if (chunking) {
       if (numberChunks.isEmpty) {
-        if (configContains("numberchunks")) numberChunks = config("numberchunks", default = None)
+        if (config.contains("numberchunks")) numberChunks = config("numberchunks", default = None)
         else {
           val chunkSize: Int = config("chunksize", (1 << 30))
           val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3

@@ -33,7 +33,7 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   
   def init() {
     if (reference == null) reference = config("reference")
-    if (configContains("targetBed")) 
+    if (config.contains("targetBed")) 
       for (bed <- config("targetBed").getList) 
         targetBed :+= bed.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")

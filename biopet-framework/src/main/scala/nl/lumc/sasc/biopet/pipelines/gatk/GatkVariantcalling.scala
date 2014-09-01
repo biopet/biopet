@@ -63,7 +63,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.I :+= inputBam
       this.o = swapExt(dir, inputBam, ".bam", ".realign.intervals")
       this.jobResourceRequests :+= "h_vmem=5G"
-      if (configContains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", 1, "realignertargetcreator")
+      if (config.contains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", 1, "realignertargetcreator")
     }
     realignerTargetCreator.isIntermediate = true
     add(realignerTargetCreator)
@@ -72,7 +72,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.I :+= inputBam
       this.targetIntervals = realignerTargetCreator.o
       this.o = swapExt(dir, inputBam, ".bam", ".realign.bam")
-      if (configContains("scattercount", "indelrealigner")) this.scatterCount = config("scattercount", 1, "indelrealigner")
+      if (config.contains("scattercount", "indelrealigner")) this.scatterCount = config("scattercount", 1, "indelrealigner")
     }
     indelRealigner.isIntermediate = true
     add(indelRealigner)
@@ -85,7 +85,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.I :+= inputBam
       this.o = swapExt(dir, inputBam, ".bam", ".baserecal")
       if (dbsnp != null) this.knownSites :+= dbsnp
-      if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
+      if (config.contains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
       this.nct = config("threads", 1, "baserecalibrator")
     }
     add(baseRecalibrator)
@@ -95,7 +95,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.o = swapExt(dir, inputBam, ".bam", ".baserecal.after")
       this.BQSR = baseRecalibrator.o
       if (dbsnp != null) this.knownSites :+= dbsnp
-      if (configContains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
+      if (config.contains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
       this.nct = config("threads", 1, "baserecalibrator")
     }
     add(baseRecalibratorAfter)
@@ -111,7 +111,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       this.I :+= inputBam
       this.o = swapExt(dir, inputBam, ".bam", ".baserecal.bam")
       this.BQSR = baseRecalibrator.o
-      if (configContains("scattercount", "printreads")) this.scatterCount = config("scattercount", 1, "printreads")
+      if (config.contains("scattercount", "printreads")) this.scatterCount = config("scattercount", 1, "printreads")
     }
     printReads.isIntermediate = true
     add(printReads)
@@ -122,10 +122,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   def addHaplotypeCaller(bamfiles: List[File], outputfile: File): File = {
     val haplotypeCaller = new HaplotypeCaller with gatkArguments {
       this.min_mapping_quality_score = config("minMappingQualityScore", 20, "haplotypecaller")
-      if (configContains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
+      if (config.contains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
       this.input_file = bamfiles
       this.out = outputfile
-      if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
+      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
       this.nct = config("threads", default = 3, submodule = "haplotypecaller")
       if (config("outputToBam", default = false, submodule = "haplotypecaller").getBoolean) {
         this.bamOutput = outputfile.getAbsolutePath + ".bam"
@@ -134,7 +134,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       }
       this.memoryLimit = this.nct * 2
       
-      if (configContains("allSitePLs")) this.allSitePLs = config("allSitePLs")
+      if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
       
       // GVCF options
       if (gvcfMode) {
@@ -165,8 +165,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
       this.variant = gvcfFiles
       this.annotation ++= Seq("FisherStrand", "QualByDepth", "ChromosomeCounts")
-      if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
-      if (configContains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
+      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
+      if (config.contains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
       this.out = outputDir + outputName + ".vcf"
       this.stand_call_conf = config("stand_call_conf", 30, "genotypegvcfs")
       this.stand_emit_conf = config("stand_emit_conf", 30, "genotypegvcfs")

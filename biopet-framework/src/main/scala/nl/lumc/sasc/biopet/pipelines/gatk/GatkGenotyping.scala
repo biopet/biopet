@@ -52,8 +52,8 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   def addGenotypeGVCFs(gvcfFiles: List[File], outputFile: File): File = {
     val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
       this.variant = gvcfFiles
-      if (configContains("dbsnp")) this.dbsnp = config("dbsnp")
-      if (configContains("scattercount", submodule = "genotypegvcfs"))
+      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
+      if (config.contains("scattercount", submodule = "genotypegvcfs"))
         this.scatterCount = config("scattercount", submodule = "genotypegvcfs")
       this.out = outputFile
       if (config("inputtype", "dna").getString == "rna") {
@@ -73,7 +73,7 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
       this.variant = inputFile
       for (sample <- samples) this.sample_name :+= sample
       this.excludeNonVariants = true
-      if (configContains("scattercount", submodule = "selectvariants"))
+      if (config.contains("scattercount", submodule = "selectvariants"))
         this.scatterCount = config("scattercount", submodule = "selectvariants")
       this.out = outputDir + name + ".vcf"
     }

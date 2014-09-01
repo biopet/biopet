@@ -25,7 +25,7 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
   var dbsnp: File = _
 
   def init() {
-    if (configContains("gvcffiles")) for (file <- config("gvcffiles").getList) {
+    if (config.contains("gvcffiles")) for (file <- config("gvcffiles").getList) {
       gvcfFiles ::= file.toString
     }
     if (reference == null) reference = config("reference")
