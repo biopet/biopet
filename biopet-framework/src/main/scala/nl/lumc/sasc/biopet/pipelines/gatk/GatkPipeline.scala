@@ -27,8 +27,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
 
-  def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
+  override def init() {
+    super.init
     reference = config("reference", required = true)
     dbsnp = config("dbsnp")
     if (config.contains("gvcfFiles"))
@@ -81,7 +81,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       finalBamFiles ++= libraryBamfiles
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
-      gatkVariantcalling.outputDir = outputDir + sampleID + "/variantcalling/"
+      gatkVariantcalling.outputDir = globalSampleDir + sampleID + "/variantcalling/"
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
@@ -95,7 +95,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     var outputFiles: Map[String, File] = Map()
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
+    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
     var inputType = ""
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = config("inputtype", default = "dna").toString

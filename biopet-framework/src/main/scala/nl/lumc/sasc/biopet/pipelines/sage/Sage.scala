@@ -35,8 +35,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
                 )
               )
   
-  def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
+  override def init() {
+    super.init
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (countBed == null) countBed = config("count_bed")
     if (squishedCountBed == null) squishedCountBed = config("squished_count_bed")
@@ -75,7 +75,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     var libraryBamfiles: List[File] = List()
     var libraryFastqFiles: List[File] = List()
     val sampleID: String = sampleConfig("ID").toString
-    val sampleDir: String = outputDir + sampleID + "/" 
+    val sampleDir: String = globalSampleDir + sampleID + "/" 
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
       libraryFastqFiles +:= libraryFiles("prefix_fastq")
       libraryBamfiles +:= libraryFiles("FinalBam")
@@ -105,7 +105,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     var outputFiles: Map[String, File] = Map()
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
+    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
     if (runConfig.contains("R1")) {
       val flexiprep = new Flexiprep(this)
       flexiprep.outputDir = runDir + "flexiprep/"
