@@ -3,8 +3,9 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gatk.HaplotypeCaller
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates }
+import org.broadinstitute.gatk.queue.extensions.gatk.{ BaseRecalibrator, CommandLineGATK, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates }
 import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
@@ -120,42 +121,9 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   }
 
   def addHaplotypeCaller(bamfiles: List[File], outputfile: File): File = {
-    val haplotypeCaller = new HaplotypeCaller with gatkArguments {
-      this.min_mapping_quality_score = config("minMappingQualityScore", 20, "haplotypecaller")
-      if (config.contains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
-      this.input_file = bamfiles
-      this.out = outputfile
-      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-      this.nct = config("threads", default = 3, submodule = "haplotypecaller")
-      if (config("outputToBam", default = false, submodule = "haplotypecaller").getBoolean) {
-        this.bamOutput = outputfile.getAbsolutePath + ".bam"
-        nct = 1
-        logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
-      }
-      this.memoryLimit = this.nct * 2
-      
-      if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
-      
-      // GVCF options
-      if (gvcfMode) {
-        this.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
-        this.variant_index_type = GATKVCFIndexType.LINEAR
-        this.variant_index_parameter = 128000
-      }
-
-      val inputType: String = config("inputtype", "dna")
-      if (inputType == "rna") {
-        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", true, "haplotypecaller")
-        this.recoverDanglingHeads = config("recoverdanglingheads", true, "haplotypecaller")
-        this.stand_call_conf = config("stand_call_conf", 20, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 20, "haplotypecaller")
-      } else {
-        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", false, "haplotypecaller")
-        this.recoverDanglingHeads = config("recoverdanglingheads", false, "haplotypecaller")
-        this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 30, "haplotypecaller")
-      }
-    }
+    val haplotypeCaller = new HaplotypeCaller(this)
+    haplotypeCaller.input_file = bamfiles
+    haplotypeCaller.out = outputfile
     add(haplotypeCaller)
 
     return haplotypeCaller.out
