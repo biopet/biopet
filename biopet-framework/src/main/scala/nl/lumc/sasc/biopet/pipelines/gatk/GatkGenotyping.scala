@@ -2,8 +2,8 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.gatk.{ GenotypeGVCFs, SelectVariants }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, GenotypeGVCFs, SelectVariants }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript {
@@ -43,40 +43,16 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
     }
   }
 
-  trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = reference
-    this.memoryLimit = 2
-    this.jobResourceRequests :+= "h_vmem=4G"
-  }
-
   def addGenotypeGVCFs(gvcfFiles: List[File], outputFile: File): File = {
-    val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
-      this.variant = gvcfFiles
-      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-      if (config.contains("scattercount", submodule = "genotypegvcfs"))
-        this.scatterCount = config("scattercount", submodule = "genotypegvcfs")
-      this.out = outputFile
-      if (config("inputtype", "dna").getString == "rna") {
-        this.stand_call_conf = config("stand_call_conf", default = 20, submodule = "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", default = 20, submodule = "haplotypecaller")
-      } else {
-        this.stand_call_conf = config("stand_call_conf", default = 30, submodule = "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", default = 30, submodule = "haplotypecaller")
-      }
-    }
+    val genotypeGVCFs = GenotypeGVCFs(this, gvcfFiles, outputFile)
     add(genotypeGVCFs)
     return genotypeGVCFs.out
   }
 
   def addSelectVariants(inputFile: File, samples: List[String], outputDir: String, name: String) {
-    val selectVariants = new SelectVariants with gatkArguments {
-      this.variant = inputFile
-      for (sample <- samples) this.sample_name :+= sample
-      this.excludeNonVariants = true
-      if (config.contains("scattercount", submodule = "selectvariants"))
-        this.scatterCount = config("scattercount", submodule = "selectvariants")
-      this.out = outputDir + name + ".vcf"
-    }
+    val selectVariants = SelectVariants(this, inputFile, outputDir + name + ".vcf")
+    selectVariants.excludeNonVariants = true
+    for (sample <- samples) selectVariants.sample_name :+= sample
     add(selectVariants)
   }
 }

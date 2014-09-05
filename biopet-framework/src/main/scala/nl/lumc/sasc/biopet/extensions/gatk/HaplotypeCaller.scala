@@ -5,7 +5,7 @@ import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.HaplotypeCaller with GatkGeneral {
   min_mapping_quality_score = config("minMappingQualityScore", default = 20)
-  if (config.contains("scattercount", "haplotypecaller")) scatterCount = config("scattercount")
+  if (config.contains("scattercount")) scatterCount = config("scattercount")
   if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
   nct = config("threads", default = 3)
   bamOutput = config("bamOutput")

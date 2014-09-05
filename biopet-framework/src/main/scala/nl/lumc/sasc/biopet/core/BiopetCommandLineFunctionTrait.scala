@@ -1,12 +1,12 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.BufferedInputStream
+//import java.io.BufferedInputStream
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-import scala.io.Source
+//import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 import java.io.FileInputStream

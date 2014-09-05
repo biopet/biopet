@@ -8,6 +8,7 @@ class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValu
   def getDouble = Configurable.any2double(value)
   def getList = Configurable.any2list(value)
   def getFileList: List[File] = for (file <- Configurable.any2stringList(value)) yield new File(file)
+  def getStringList: List[String] = Configurable.any2stringList(value)
   def getMap = Configurable.any2map(value)
   def getBoolean = Configurable.any2boolean(value)
 
