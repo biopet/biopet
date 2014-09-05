@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
-import nl.lumc.sasc.biopet.extensions.gatk.{ApplyRecalibration, CombineGVCFs, VariantAnnotator, VariantRecalibrator}
+import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
@@ -58,9 +58,13 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         var vcfFile = gatkGenotyping.outputFile
 
         if (config("inputtype", default = "dna").getString != "rna") {
-          vcfFile = addVariantAnnotator(vcfFile, finalBamFiles, outputDir + "recalibration/")
-          vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir + "recalibration/")
-          vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir + "recalibration/")
+          val recalibration = new GatkVariantRecalibration(this)
+          recalibration.inputVcf = vcfFile
+          recalibration.bamFiles = finalBamFiles
+          recalibration.outputDir = outputDir + "recalibration/"
+          recalibration.init
+          recalibration.biopetScript
+          vcfFile = recalibration.outputVcf
         }
       } else logger.warn("No gVCFs to genotype")
     } else runSingleSampleJobs(onlySample)
@@ -105,46 +109,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     return outputFiles
-  }
-
-  def addSnpVariantRecalibrator(inputVcf: File, dir: String): File = {
-    val snpRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"), 
-                                               swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = false)
-    if (!snpRecal.resource.isEmpty) {
-      add(snpRecal)
-
-      val snpApply = ApplyRecalibration(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal.vcf"), 
-                                                snpRecal.recal_file, snpRecal.tranches_file, indel = false)
-      add(snpApply)
-
-      return snpApply.out
-    } else {
-      logger.warn("Skipped snp Recalibration, resource is missing")
-      return inputVcf
-    }
-  }
-
-  def addIndelVariantRecalibrator(inputVcf: File, dir: String): File = {
-    val indelRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"), 
-                                               swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = true)
-    if (!indelRecal.resource.isEmpty) {
-      add(indelRecal)
-      
-      val indelApply = ApplyRecalibration(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal.vcf"), 
-                                                indelRecal.recal_file, indelRecal.tranches_file, indel = true)
-      add(indelApply)
-
-      return indelApply.out
-    } else {
-      logger.warn("Skipped indel Recalibration, resource is missing")
-      return inputVcf
-    }
-  }
-
-  def addVariantAnnotator(inputvcf: File, bamfiles: List[File], dir: String): File = {
-    val variantAnnotator = VariantAnnotator(this, inputvcf, bamfiles, swapExt(dir, inputvcf, ".vcf", ".anotated.vcf")) 
-    add(variantAnnotator)
-    return variantAnnotator.out
   }
 }
 
