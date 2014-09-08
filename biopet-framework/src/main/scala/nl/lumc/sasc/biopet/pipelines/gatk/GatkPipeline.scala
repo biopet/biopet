@@ -26,8 +26,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
 
-  override def init() {
-    super.init
+  def init() {
     reference = config("reference", required = true)
     dbsnp = config("dbsnp")
     if (config.contains("gvcfFiles"))
