@@ -35,7 +35,7 @@ trait Configurable extends Logging {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
 
-      globalConfig.contains(m, p, key, freeVar)
+      globalConfig.contains(m, p, key, freeVar) || !Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)).isEmpty
     }
   }
   
