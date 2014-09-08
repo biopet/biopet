@@ -143,38 +143,33 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     }
     var chunks: Map[String, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = "chunks/" + t + "/"
+      val chunkDir = outputDir + "chunks/" + t + "/"
       chunks += (chunkDir -> (removeGz(chunkDir + fastq_R1.getName),
         if (paired) removeGz(chunkDir + fastq_R2.getName) else ""))
-    } else chunks += ("flexiprep/" -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
+    } else chunks += (outputDir -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
                         flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
       fastSplitter_R1.input = fastq_R1
-      fastSplitter_R1.memoryLimit = 4
-      fastSplitter_R1.jobResourceRequests :+= "h_vmem=8G"
-      for ((chunk, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
+      for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
       add(fastSplitter_R1)
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
         fastSplitter_R2.input = fastq_R2
-        fastSplitter_R2.memoryLimit = 4
-        fastSplitter_R2.jobResourceRequests :+= "h_vmem=8G"
-        for ((chunk, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
+        for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
         add(fastSplitter_R2)
       }
     }
 
-    for ((chunk, fastqfile) <- chunks) {
+    for ((chunkDir, fastqfile) <- chunks) {
       var R1 = fastqfile._1
       var R2 = fastqfile._2
       var deps: List[File] = Nil
-      val chunkDir = if (chunking) outputDir + chunk else outputDir
       if (!skipFlexiprep) {
-        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunk)
-        logger.debug(chunk + " - " + flexiout)
+        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunkDir)
+        logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
         deps = flexiout._3
