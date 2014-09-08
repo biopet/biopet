@@ -5,22 +5,17 @@
 package nl.lumc.sasc.biopet.pipelines.yamsvp
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.svcallers.Clever
 
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-
-import nl.lumc.sasc.biopet.scripts.PrefixFastq
 
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
-
 
 
 
@@ -29,9 +24,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
   var reference: File = _
   var finalBamFiles: List[File] = Nil
-  
-  @Input(doc = "countBed", required = false)
-  var countBed : File = _
   
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
@@ -47,8 +39,9 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     // start with QC, alignment, call sambamba, call sv callers, reporting
 
     // read config and set all parameters for the pipeline
-    logger.warn("runSamplesJobs")
+    logger.info("Starting YAM SV Pipeline")
     runSamplesJobs
+    // 
 
   }
   
@@ -59,7 +52,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val sampleID: String = sampleConfig("ID").toString
     val sampleDir: String = outputDir + sampleID + "/" 
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-      libraryFastqFiles +:= libraryFiles("prefix_fastq")
       libraryBamfiles +:= libraryFiles("FinalBam")
     }
     
@@ -75,7 +67,13 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
                     add(cat)
                     cat.output
                   } else null
-    
+
+    /// bamfile will be used as input for the SV callers. First run Clever
+//    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
+//    
+//    val clever = Clever(this, bamFile, this.reference, sampleDir )
+//    outputFiles += ("CleverVCF" -> List(clever.outputvcf) )
+//    add(clever)
     return outputFiles
   }
   
@@ -86,29 +84,12 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val sampleID: String = sampleConfig("ID").toString
     val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
     if (runConfig.contains("R1")) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.outputDir = runDir + "flexiprep/"
-      flexiprep.input_R1 = new File(runConfig("R1").toString)
-      flexiprep.skipClip = true
-      flexiprep.skipTrim = true
-      flexiprep.sampleName = sampleID
-      flexiprep.libraryName = runID
-      flexiprep.init
-      flexiprep.biopetScript
-      addAll(flexiprep.functions)
-      
-      val flexiprepOutput = for ((key,file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
-      val prefixFastq = PrefixFastq.apply(this, flexiprepOutput.head, runDir)
-      prefixFastq.prefix = config("sage_tag", default = "CATG")
-      prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
-      add(prefixFastq)
-      outputFiles += ("prefix_fastq" -> prefixFastq.output)
-      
-      val mapping = new Mapping(this)
-      mapping.skipFlexiprep = true
+      val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
+      mapping.skipFlexiprep = false
       mapping.skipMarkduplicates = true
       mapping.defaultAligner = "bwa"
-      mapping.input_R1 = prefixFastq.output
+      mapping.chunking = true
+      mapping.numberChunks = 4
       mapping.RGLB = runConfig("ID").toString
       mapping.RGSM = sampleConfig("ID").toString
       if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
@@ -118,12 +99,12 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.init
       mapping.biopetScript
       addAll(mapping.functions)
-      
+
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
+    logger.debug( outputFiles )
     return outputFiles
   }
-  
 }
 
 object Yamsvp extends PipelineCommand {
