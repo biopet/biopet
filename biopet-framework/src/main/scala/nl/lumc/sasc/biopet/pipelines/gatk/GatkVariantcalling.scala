@@ -71,7 +71,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
     printReads.BQSR = baseRecalibrator.o
-    add(printReads, isIntermediate = true)
+    add(printReads, isIntermediate = false)
 
     return printReads.o
   }
