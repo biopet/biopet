@@ -45,7 +45,9 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   var fastqcR1after: Fastqc = _
   var fastqcR2after: Fastqc = _
 
-  var flexiprep: Flexiprep = root.asInstanceOf[Flexiprep]
+  var flexiprep: Flexiprep = if (root.isInstanceOf[Flexiprep]) root.asInstanceOf[Flexiprep] else {
+    throw new IllegalStateException("Root is no instance of Flexiprep")
+  }
   
   var resources:Map[String, Json] = Map()
 

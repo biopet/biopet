@@ -5,7 +5,12 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 
 trait MultiSampleQScript extends BiopetQScript {
   var samples: Map[String, Any] = Map()
+  var globalSampleDir: String = _
 
+  def init {
+    globalSampleDir = outputDir + "samples/"
+  }
+  
   final def runSamplesJobs: Map[String, Map[String, File]] = {
     var output: Map[String, Map[String, File]] = Map()
     samples = config("samples")

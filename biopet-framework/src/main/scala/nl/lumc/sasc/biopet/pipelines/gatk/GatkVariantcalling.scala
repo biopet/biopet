@@ -2,12 +2,9 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator}
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BaseRecalibrator, CommandLineGATK, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, GenotypeGVCFs, AnalyzeCovariates }
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -52,125 +49,44 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (gvcfMode && singleGenotyping) addGenotypeGVCFs(List(outputFile), outputDir)
   }
 
-  trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = reference
-    this.memoryLimit = 2
-    this.jobResourceRequests :+= "h_vmem=4G"
-  }
-
   def addIndelRealign(inputBam: File, dir: String): File = {
-    val realignerTargetCreator = new RealignerTargetCreator with gatkArguments {
-      this.I :+= inputBam
-      this.o = swapExt(dir, inputBam, ".bam", ".realign.intervals")
-      this.jobResourceRequests :+= "h_vmem=5G"
-      if (config.contains("scattercount", "realignertargetcreator")) this.scatterCount = config("scattercount", 1, "realignertargetcreator")
-    }
-    realignerTargetCreator.isIntermediate = true
-    add(realignerTargetCreator)
+    val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
+    add(realignerTargetCreator, isIntermediate = true)
 
-    val indelRealigner = new IndelRealigner with gatkArguments {
-      this.I :+= inputBam
-      this.targetIntervals = realignerTargetCreator.o
-      this.o = swapExt(dir, inputBam, ".bam", ".realign.bam")
-      if (config.contains("scattercount", "indelrealigner")) this.scatterCount = config("scattercount", 1, "indelrealigner")
-    }
-    indelRealigner.isIntermediate = true
-    add(indelRealigner)
+    val indelRealigner = IndelRealigner.apply(this, inputBam, realignerTargetCreator.out, dir)
+    add(indelRealigner, isIntermediate = true)
 
     return indelRealigner.o
   }
 
   def addBaseRecalibrator(inputBam: File, dir: String): File = {
-    val baseRecalibrator = new BaseRecalibrator with gatkArguments {
-      this.I :+= inputBam
-      this.o = swapExt(dir, inputBam, ".bam", ".baserecal")
-      if (dbsnp != null) this.knownSites :+= dbsnp
-      if (config.contains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
-      this.nct = config("threads", 1, "baserecalibrator")
-    }
+    val baseRecalibrator = BaseRecalibrator.apply(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal")) //with gatkArguments {
     add(baseRecalibrator)
 
-    val baseRecalibratorAfter = new BaseRecalibrator with gatkArguments {
-      this.I :+= inputBam
-      this.o = swapExt(dir, inputBam, ".bam", ".baserecal.after")
-      this.BQSR = baseRecalibrator.o
-      if (dbsnp != null) this.knownSites :+= dbsnp
-      if (config.contains("scattercount", "baserecalibrator")) this.scatterCount = config("scattercount", 1, "baserecalibrator")
-      this.nct = config("threads", 1, "baserecalibrator")
-    }
+    val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after")) //with gatkArguments {
+    baseRecalibratorAfter.BQSR = baseRecalibrator.o
     add(baseRecalibratorAfter)
 
-    val analyzeCovariates = new AnalyzeCovariates with gatkArguments {
-      this.before = baseRecalibrator.o
-      this.after = baseRecalibratorAfter.o
-      this.plots = swapExt(dir, inputBam, ".bam", ".baserecal.pdf")
-    }
-    add(analyzeCovariates)
+    add(AnalyzeCovariates(this, baseRecalibrator.o, baseRecalibratorAfter.o, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
 
-    val printReads = new PrintReads with gatkArguments {
-      this.I :+= inputBam
-      this.o = swapExt(dir, inputBam, ".bam", ".baserecal.bam")
-      this.BQSR = baseRecalibrator.o
-      if (config.contains("scattercount", "printreads")) this.scatterCount = config("scattercount", 1, "printreads")
-    }
-    printReads.isIntermediate = true
-    add(printReads)
+    val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
+    printReads.BQSR = baseRecalibrator.o
+    add(printReads, isIntermediate = true)
 
     return printReads.o
   }
 
   def addHaplotypeCaller(bamfiles: List[File], outputfile: File): File = {
-    val haplotypeCaller = new HaplotypeCaller with gatkArguments {
-      this.min_mapping_quality_score = config("minMappingQualityScore", 20, "haplotypecaller")
-      if (config.contains("scattercount", "haplotypecaller")) this.scatterCount = config("scattercount", 1, "haplotypecaller")
-      this.input_file = bamfiles
-      this.out = outputfile
-      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-      this.nct = config("threads", default = 3, submodule = "haplotypecaller")
-      if (config("outputToBam", default = false, submodule = "haplotypecaller").getBoolean) {
-        this.bamOutput = outputfile.getAbsolutePath + ".bam"
-        nct = 1
-        logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
-      }
-      this.memoryLimit = this.nct * 2
-      
-      if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
-      
-      // GVCF options
-      if (gvcfMode) {
-        this.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
-        this.variant_index_type = GATKVCFIndexType.LINEAR
-        this.variant_index_parameter = 128000
-      }
-
-      val inputType: String = config("inputtype", "dna")
-      if (inputType == "rna") {
-        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", true, "haplotypecaller")
-        this.recoverDanglingHeads = config("recoverdanglingheads", true, "haplotypecaller")
-        this.stand_call_conf = config("stand_call_conf", 20, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 20, "haplotypecaller")
-      } else {
-        this.dontUseSoftClippedBases = config("dontusesoftclippedbases", false, "haplotypecaller")
-        this.recoverDanglingHeads = config("recoverdanglingheads", false, "haplotypecaller")
-        this.stand_call_conf = config("stand_call_conf", 30, "haplotypecaller")
-        this.stand_emit_conf = config("stand_emit_conf", 30, "haplotypecaller")
-      }
-    }
+    val haplotypeCaller = new HaplotypeCaller(this)
+    haplotypeCaller.input_file = bamfiles
+    haplotypeCaller.out = outputfile
     add(haplotypeCaller)
 
     return haplotypeCaller.out
   }
 
   def addGenotypeGVCFs(gvcfFiles: List[File], dir: String): File = {
-    val genotypeGVCFs = new GenotypeGVCFs() with gatkArguments {
-      this.variant = gvcfFiles
-      this.annotation ++= Seq("FisherStrand", "QualByDepth", "ChromosomeCounts")
-      if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-      if (config.contains("scattercount", "genotypegvcfs")) this.scatterCount = config("scattercount", 1, "genotypegvcfs")
-      this.out = outputDir + outputName + ".vcf"
-      this.stand_call_conf = config("stand_call_conf", 30, "genotypegvcfs")
-      this.stand_emit_conf = config("stand_emit_conf", 30, "genotypegvcfs")
-    }
+    val genotypeGVCFs = GenotypeGVCFs(this, gvcfFiles, outputDir + outputName + ".vcf")
     add(genotypeGVCFs)
     return genotypeGVCFs.out
   }

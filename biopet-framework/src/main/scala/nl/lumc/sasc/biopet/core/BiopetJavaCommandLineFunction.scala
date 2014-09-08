@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core
 
 import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
-abstract class BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
+trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
   executable = "java"
 
   override def commandLine: String = {
