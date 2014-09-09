@@ -287,7 +287,7 @@ object Mapping extends PipelineCommand {
     var inputType = ""
     if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
     else inputType = root.config("inputtype", "dna").getString
-    if (inputType == "rna") mapping.aligner = root.config("rna_aligner", "star-2pass").getString
+    if (inputType == "rna") mapping.defaultAligner = "star-2pass"
     if (runConfig.contains("R1")) mapping.input_R1 = new File(runConfig("R1").toString)
     if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
     mapping.paired = (mapping.input_R2 != null)
