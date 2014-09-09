@@ -4,6 +4,7 @@ import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsMpileup, SamtoolsView}
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.mutable.Map
 import scala.io.Source
@@ -12,8 +13,11 @@ import scala.math.round
 class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input fasta", shortName = "input", required = true)
-  var input: File = _
+  @Input(doc = "Input mpileup file", shortName = "mpileup", required = true)
+  var inputMpileup: File = _
+  
+  @Input(doc = "Input bam file", shortName = "bam", required = true)
+  var inputBam: File = _
   
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
@@ -23,12 +27,34 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
+  
+  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed")))
+  defaults ++= Map("samtoolsview" -> Map("b" -> true, "h" -> true))
+  
+  override def commandLine = {
+    (if (inputMpileup == null) {
+      val samtoolsView = new SamtoolsView(this)
+      val samtoolsMpileup = new SamtoolsMpileup(this)
+      samtoolsView.input = inputBam
+      samtoolsView.cmdPipe + " | " + samtoolsMpileup.cmdPipeInput + " | "
+    } else "") + 
+      super.commandLine + 
+      required("-o", output) + 
+      required("-minDP", minDP) + 
+      required("-minAP", minAP) + 
+      (if (inputBam == null) required("-I", inputMpileup) else "")
     
-  override def commandLine = super.commandLine + 
-    required("-I", input) + 
-    required("-o", output) + 
-    required("-minDP", minDP) + 
-    required("-minAP", minAP)
+    val samtoolsView = new SamtoolsView(this)
+    val samtoolsMpileup = new SamtoolsMpileup(this)
+    samtoolsView.input = inputBam
+    val bla = samtoolsView.cmdPipe + " | " + samtoolsMpileup.cmdPipeInput + " | "
+    
+    super.commandLine + 
+      required("-I", inputMpileup) + 
+      required("-o", output) + 
+      required("-minDP", minDP) + 
+      required("-minAP", minAP)
+  }
 }
 
 object MpileupToVcf {
