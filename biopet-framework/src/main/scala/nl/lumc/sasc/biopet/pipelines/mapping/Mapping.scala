@@ -5,7 +5,7 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.apps.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star , Bowtie}
+import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star , Bowtie, Stampy}
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -182,6 +182,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       aligner match {
         case "bwa" => addBwa(R1, R2, outputBam, deps)
         case "bowtie" => addBowtie(R1, R2, outputBam, deps)
+        case "stampy" => addStampy(R1, R2, outputBam, deps)
         case "star" => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
         case _ => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
@@ -218,6 +219,32 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     add(bwaCommand, isIntermediate = true)
     val sortSam = SortSam(this, bwaCommand.output, output)
+    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    add(sortSam)
+    return sortSam.output
+  }
+  
+  def addStampy(R1:File, R2:File, output:File, deps:List[File]): File = {
+    
+    var RG: String = "ID:" + RGID + ","
+    RG += "SM:" + RGSM + ","
+    RG += "LB:" + RGLB + ","
+    if (RGDS != null) RG += "DS" + RGDS + ","
+    RG += "PU:" + RGPU + ","
+    if (RGPI > 0) RG += "PI:" + RGPI + ","
+    if (RGCN != null) RG += "CN:" + RGCN + ","
+    if (RGDT != null) RG += "DT:" + RGDT + ","
+    RG += "PL:" + RGPL
+
+    val stampyCmd = new Stampy(this)
+    stampyCmd.R1 = R1
+    if (paired) stampyCmd.R2 = R2
+    stampyCmd.deps = deps
+    stampyCmd.readgroup = RG
+    stampyCmd.sanger = true
+    stampyCmd.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    add(stampyCmd, isIntermediate = true)
+    val sortSam = SortSam(this, stampyCmd.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
     return sortSam.output
