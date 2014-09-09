@@ -3,7 +3,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import htsjdk.samtools.SAMFileReader
+import scala.collection.JavaConversions._
 import java.io.File
+import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
@@ -109,11 +112,41 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       addAll(mapping.functions) // Add functions of mapping to curent function pool
 
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
+    } else if (runConfig.contains("bam")) {
+      var bamFile = new File(runConfig("bam").toString)
+      if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
+      
+      var readGroupOke = true
+      val inputSam = new SAMFileReader(bamFile)
+      val header = inputSam.getFileHeader.getReadGroups
+      for (readGroup <- inputSam.getFileHeader.getReadGroups) {
+        if (readGroup.getSample != sampleID) logger.warn("Sample ID readgroup in bam file is not the same")
+        if (readGroup.getLibrary != runID) logger.warn("Library ID readgroup in bam file is not the same")
+        if (readGroup.getSample != sampleID && readGroup.getLibrary != runID) readGroupOke = false
+      }
+      inputSam.close
+      
+      if (!readGroupOke) {
+        if (config("correct_readgroups", default = false)) {
+          logger.info("Correcting readgroups, file:" + bamFile)
+          val aorrg = AddOrReplaceReadGroups(this, bamFile, new File(runDir + sampleID + "-" + runID + ".bam"))
+          aorrg.RGID = sampleID + "-" + runID
+          aorrg.RGLB = runID
+          aorrg.RGSM = sampleID
+          if (runConfig.contains("PL")) aorrg.RGPL = runConfig("PL").toString
+          if (runConfig.contains("PU")) aorrg.RGPU = runConfig("PU").toString
+          if (runConfig.contains("CN")) aorrg.RGCN = runConfig("CN").toString
+          add(aorrg, isIntermediate = true)
+        } else throw new IllegalStateException("Readgroup sample and/or library of input bamfile is not correct, file: " + bamFile + 
+        "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
+      }
+      
+      outputFiles += ("FinalBam" -> bamFile)
+    } else logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     return outputFiles
   }
 }
 
 object GatkPipeline extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkPipeline.class"
+  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkPipeline.class"  
 }
