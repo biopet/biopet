@@ -107,6 +107,9 @@
                         <filter>
                           <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
                           <includes>
+                            <include>*/**</include>
+                            <include>org/simpleframework/**</include>
+                            <include>org/jets3t/**</include>
                             <include>com/sun/**</include>
                             <include>org/ggf/**</include>
                             <include>picard/**</include>
