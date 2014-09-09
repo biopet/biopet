@@ -136,8 +136,7 @@ object Configurable extends Logging {
     if (any == null) return null
     any match {
       case l: List[_] => return l
-      case s: String  => return List(s)
-      case _          => throw new IllegalStateException("Value '" + any + "' is not an List")
+      case _          => List(any)
     }
   }
 
