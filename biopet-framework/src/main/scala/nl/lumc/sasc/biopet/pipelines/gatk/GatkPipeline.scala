@@ -122,7 +122,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       for (readGroup <- inputSam.getFileHeader.getReadGroups) {
         if (readGroup.getSample != sampleID) logger.warn("Sample ID readgroup in bam file is not the same")
         if (readGroup.getLibrary != runID) logger.warn("Library ID readgroup in bam file is not the same")
-        if (readGroup.getSample != sampleID && readGroup.getLibrary != runID) readGroupOke = false
+        if (readGroup.getSample != sampleID || readGroup.getLibrary != runID) readGroupOke = false
       }
       inputSam.close
       
