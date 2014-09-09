@@ -35,8 +35,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
                 )
               )
   
-  override def init() {
-    super.init
+  def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (countBed == null) countBed = config("count_bed")
     if (squishedCountBed == null) squishedCountBed = config("squished_count_bed")

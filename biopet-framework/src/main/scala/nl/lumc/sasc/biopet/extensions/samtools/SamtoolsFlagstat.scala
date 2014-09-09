@@ -32,5 +32,5 @@ object SamtoolsFlagstat {
     return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
-  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".flagstat"
+  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".flagstat"
 }

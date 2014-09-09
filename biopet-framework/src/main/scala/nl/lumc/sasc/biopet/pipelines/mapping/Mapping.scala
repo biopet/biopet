@@ -186,6 +186,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
         case _ => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
       }
+      if (config("chunk_metrics", default = false))
+        addAll(BamMetrics(this, outputBam, chunkDir + "metrics/").functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
@@ -202,7 +204,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = mergeSamFile.output
     }
     
-    if (!skipMetrics) addAll(BamMetrics.apply(this, bamFile, outputDir + "metrics/").functions)
+    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions)
     
     outputFiles += ("finalBamFile" -> bamFile)
   }
