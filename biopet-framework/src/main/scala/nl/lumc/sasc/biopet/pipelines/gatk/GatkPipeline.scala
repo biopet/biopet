@@ -134,11 +134,13 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           aorrg.RGLB = runID
           aorrg.RGSM = sampleID
           if (runConfig.contains("PL")) aorrg.RGPL = runConfig("PL").toString
+          else aorrg.RGPL = "illumina"
           if (runConfig.contains("PU")) aorrg.RGPU = runConfig("PU").toString
+          else aorrg.RGPU = "na"
           if (runConfig.contains("CN")) aorrg.RGCN = runConfig("CN").toString
           add(aorrg, isIntermediate = true)
         } else throw new IllegalStateException("Readgroup sample and/or library of input bamfile is not correct, file: " + bamFile + 
-        "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
+            "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
       }
       
       outputFiles += ("FinalBam" -> bamFile)
