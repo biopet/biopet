@@ -10,6 +10,7 @@ import nl.lumc.sasc.biopet.core.PipelineCommand
 
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.svcallers.Breakdancer
 import nl.lumc.sasc.biopet.extensions.svcallers.Clever
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -17,15 +18,13 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 
-
-
 class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   var reference: File = _
   var finalBamFiles: List[File] = Nil
-  
-  def init() {
+
+  override def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     reference = config("reference", required = true)
     if (outputDir == null)
@@ -44,52 +43,66 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     // 
 
   }
-  
+
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): Map[String, List[File]] = {
     var outputFiles: Map[String, List[File]] = Map()
     var libraryBamfiles: List[File] = List()
     var libraryFastqFiles: List[File] = List()
     val sampleID: String = sampleConfig("ID").toString
-    val sampleDir: String = outputDir + sampleID + "/" 
+    val sampleDir: String = outputDir + sampleID + "/"
+
+    val svcallingDir: String = sampleDir + "svcalls/"
+
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
       libraryBamfiles +:= libraryFiles("FinalBam")
     }
-    
+
     val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-                  else if (libraryBamfiles.size > 1) {
-                    val mergeSamFiles = MergeSamFiles(this, libraryBamfiles, sampleDir)
-                    add(mergeSamFiles)
-                    mergeSamFiles.output
-                  } else null
+    else if (libraryBamfiles.size > 1) {
+      val mergeSamFiles = MergeSamFiles(this, libraryBamfiles, sampleDir)
+      add(mergeSamFiles)
+      mergeSamFiles.output
+    } else null
     val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
-                  else if (libraryFastqFiles.size > 1) {
-                    val cat = Cat.apply(this, libraryFastqFiles, sampleDir + sampleID + ".fastq")
-                    add(cat)
-                    cat.output
-                  } else null
+    else if (libraryFastqFiles.size > 1) {
+      val cat = Cat.apply(this, libraryFastqFiles, sampleDir + sampleID + ".fastq")
+      add(cat)
+      cat.output
+    } else null
 
     /// bamfile will be used as input for the SV callers. First run Clever
-//    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
-//    
-//    val clever = Clever(this, bamFile, this.reference, sampleDir )
-//    outputFiles += ("CleverVCF" -> List(clever.outputvcf) )
-//    add(clever)
+    //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
+
+    val cleverDir = svcallingDir + sampleID + ".clever/"
+    val clever = Clever(this, bamFile, this.reference, cleverDir)
+    outputFiles += ("clever_vcf" -> List(clever.outputvcf))
+    add(clever)
+
+    //    val breakdancerDir = sampleDir + sampleID + ".breakdancer/"
+    //    val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir )
+    //    outputFiles += ("breakdancer_vcf" -> List(breakdancer.output) )
+    //    addAll(breakdancer.functions)
+
     return outputFiles
   }
-  
+
   // Called for each run from a sample
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File] = {
     var outputFiles: Map[String, File] = Map()
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = outputDir + sampleID + "/run_" + runID + "/"
+    val alignmentDir: String = outputDir + sampleID + "/alignment/"
+
+    val runDir: String = alignmentDir + "run_" + runID + "/"
     if (runConfig.contains("R1")) {
       val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       mapping.skipFlexiprep = false
-      mapping.skipMarkduplicates = true
-      mapping.defaultAligner = "bwa"
-      mapping.chunking = true
-      mapping.numberChunks = 4
+      mapping.skipMarkduplicates = true // we do the dedup marking using Sambamba
+      mapping.defaultAligner = "stampy"
+      mapping.aligner = "stampy" // enfore stampy to be the aligner
+
+      //      mapping.chunking = true // align in chunks
+      //      mapping.numberChunks = 4 // could be a fixed value if taken from config
       mapping.RGLB = runConfig("ID").toString
       mapping.RGSM = sampleConfig("ID").toString
       if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
@@ -102,7 +115,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
       outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
-    logger.debug( outputFiles )
+    logger.debug(outputFiles)
     return outputFiles
   }
 }
