@@ -86,7 +86,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (reference == null) reference = config("reference")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
-    if (input_R1 == null) throw new IllegalStateException("Missing Fastq R1 on mapping module")
+    if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
     paired = (input_R2 != null)
 
     if (RGLB == null && config.contains("RGLB")) RGLB = config("RGLB")
@@ -153,13 +153,13 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val fastSplitter_R1 = new FastqSplitter(this)
       fastSplitter_R1.input = fastq_R1
       for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
-      add(fastSplitter_R1)
+      add(fastSplitter_R1, isIntermediate = true)
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
         fastSplitter_R2.input = fastq_R2
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
-        add(fastSplitter_R2)
+        add(fastSplitter_R2, isIntermediate = true)
       }
     }
 
@@ -184,7 +184,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         case "bowtie" => addBowtie(R1, R2, outputBam, deps)
         case "star" => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
-        case _ => throw new IllegalStateException("Option Alginer: '" + aligner + "' is not valid")
+        case _ => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
       }
     }
     if (!skipFlexiprep) {
