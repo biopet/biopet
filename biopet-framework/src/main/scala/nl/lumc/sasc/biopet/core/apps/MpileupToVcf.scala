@@ -6,17 +6,16 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsMpileup, SamtoolsView}
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.mutable.Map
 import scala.io.Source
 import scala.math.round
 
 class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input mpileup file", shortName = "mpileup", required = true)
+  @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
   var inputMpileup: File = _
   
-  @Input(doc = "Input bam file", shortName = "bam", required = true)
+  @Input(doc = "Input bam file", shortName = "bam", required = false)
   var inputBam: File = _
   
   @Output(doc = "Output tag library", shortName = "output", required = true)
@@ -28,7 +27,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
   
-  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed")))
+  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed").getStringList.head))
   defaults ++= Map("samtoolsview" -> Map("b" -> true, "h" -> true))
   
   override def commandLine = {
@@ -43,17 +42,6 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
       required("-minDP", minDP) + 
       required("-minAP", minAP) + 
       (if (inputBam == null) required("-I", inputMpileup) else "")
-    
-    val samtoolsView = new SamtoolsView(this)
-    val samtoolsMpileup = new SamtoolsMpileup(this)
-    samtoolsView.input = inputBam
-    val bla = samtoolsView.cmdPipe + " | " + samtoolsMpileup.cmdPipeInput + " | "
-    
-    super.commandLine + 
-      required("-I", inputMpileup) + 
-      required("-o", output) + 
-      required("-minDP", minDP) + 
-      required("-minAP", minAP)
   }
 }
 
@@ -67,6 +55,7 @@ object MpileupToVcf {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    import scala.collection.mutable.Map
     for (t <- 0 until args.size) {
       args(t) match {
         case "-I" => input = new File(args(t+1))
@@ -82,15 +71,16 @@ object MpileupToVcf {
     val writer = new PrintWriter(output)
     writer.println("##fileformat=VCFv4.2")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
-    writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">")
+    writer.println("##INFO=<ID=FREQ,Number=1,Type=String,Description=\"Allele Frequency\">")
     writer.println("##INFO=<ID=RFC,Number=1,Type=Integer,Description=\"Reference Forward Reads\">")
     writer.println("##INFO=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
     writer.println("##INFO=<ID=AFC,Number=1,Type=Integer,Description=\"Alternetive Forward Reads\">")
     writer.println("##INFO=<ID=ARC,Number=1,Type=Integer,Description=\"Alternetive Reverse Reads\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO")
     val inputStream = if (input != null) Source.fromFile(input).getLines else Source.stdin.getLines
-    for (line <- inputStream) {
-      val values = line.split("\t")
+    for (line <- inputStream; 
+         val values = line.split("\t");
+         if values.size > 5) {
       val chr = values(0)
       val pos = values(1)
       val ref = values(2)
@@ -99,7 +89,7 @@ object MpileupToVcf {
       val qual = values(5)
       
       class Counts(var forward:Int, var reverse:Int)
-      val counts: Map[String, Counts] = Map(ref -> new Counts(0,0))
+      val counts: Map[String, Counts] = Map(ref.toUpperCase -> new Counts(0,0))
       
       def addCount(s:String) {
         val upper = s.toUpperCase
@@ -131,20 +121,20 @@ object MpileupToVcf {
               }
               for (c <- t until t + size.toInt) insert = insert + mpileup(c)
               t += size.toInt
-              //println(size + "\t" + insert)
           }
-          case _ =>  {
+          case 'a' | 'c' | 't' | 'g' | 'A' | 'C' | 'T' | 'G' =>  {
               addCount(mpileup(t).toString)
               t += 1
           }
+          case _ => t += 1
         }
       }
       
-      if (reads >= minDP) for ((key, value) <- counts if key != ref if value.forward+value.reverse >= minAP) {
-        val info: String = "DP=" + reads + ":RFC=" + counts(ref).forward + ":RRC=" + counts(ref).reverse +
-                          ":AFC=" + value.forward + ":ARC=" + value.reverse + 
-                          ":AF=" + round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2 + "%"
-        val outputLine: Array[String] = Array(chr, pos, ".", ref, key, ".", ".", info)
+      if (reads >= minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward+value.reverse >= minAP) {
+        val info: String = "DP=" + reads + ";RFC=" + counts(ref.toUpperCase).forward + ";RRC=" + counts(ref.toUpperCase).reverse +
+                          ";AFC=" + value.forward + ";ARC=" + value.reverse + 
+                          ";FREQ=" + round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2 + "%"
+        val outputLine: Array[String] = Array(chr, pos, ".", ref.toUpperCase, key, ".", ".", info)
         writer.println(outputLine.mkString("\t"))
       }
     }
