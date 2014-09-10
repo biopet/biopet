@@ -9,7 +9,8 @@ trait Configurable extends Logging {
   val configPath: List[String] = if (root != null) root.configFullPath else List()
   protected val configName = getClass.getSimpleName.toLowerCase
   protected val configFullPath = configName :: configPath
-  var defaults: scala.collection.mutable.Map[String,Any] = if (root != null) root.defaults else scala.collection.mutable.Map()
+  var defaults: scala.collection.mutable.Map[String,Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray:_*)
+                                                          else scala.collection.mutable.Map()
   
   val config = new ConfigFuntions
   
