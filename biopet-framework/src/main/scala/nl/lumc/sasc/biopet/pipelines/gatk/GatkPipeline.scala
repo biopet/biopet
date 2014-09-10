@@ -83,13 +83,16 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
       libraryBamfiles +:= libraryFiles("FinalBam")
     }
-    outputFiles += ("FinalBams" -> libraryBamfiles)
+    outputFiles += ("final_bam" -> libraryBamfiles)
 
     if (libraryBamfiles.size > 0) {
       finalBamFiles ++= libraryBamfiles
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = globalSampleDir + sampleID + "/variantcalling/"
+      gatkVariantcalling.singleGenotyping = true
+      gatkVariantcalling.preProcesBams = false
+      gatkVariantcalling.outputName = sampleID
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
@@ -111,7 +114,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       addAll(mapping.functions) // Add functions of mapping to curent function pool
 
-      outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
+      outputFiles += ("mapped_bam" -> mapping.outputFiles("finalBamFile"))
     } else if (runConfig.contains("bam")) {
       var bamFile = new File(runConfig("bam").toString)
       if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
@@ -144,8 +147,19 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
       }
       
-      outputFiles += ("FinalBam" -> bamFile)
+      outputFiles += ("mapped_bam" -> bamFile)
     } else logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
+    
+    val gatkVariantcalling = new GatkVariantcalling(this)
+    gatkVariantcalling.inputBams = List(outputFiles("mapped_bam"))
+    gatkVariantcalling.outputDir = runDir
+    gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
+    gatkVariantcalling.preProcesBams = true
+    gatkVariantcalling.init
+    gatkVariantcalling.biopetScript
+    addAll(gatkVariantcalling.functions)
+    outputFiles += "final_bam" -> gatkVariantcalling.outputFiles("final_bam")
+    
     return outputFiles
   }
 }
