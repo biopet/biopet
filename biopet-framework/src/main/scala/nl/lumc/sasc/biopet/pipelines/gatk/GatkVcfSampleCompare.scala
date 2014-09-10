@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, SelectVariants, VariantEval }
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, SelectVariants, VariantEval , CombineVariants}
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQScript {
@@ -33,18 +33,21 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   
   def init() {
     if (reference == null) reference = config("reference")
-    if (config.contains("targetBed")) 
-      for (bed <- config("targetBed").getList) 
+    if (config.contains("target_bed")) 
+      for (bed <- config("target_bed").getList) 
         targetBed :+= bed.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
   def biopetScript() {
-    vcfFile = vcfFiles.head
-    if (vcfFiles.size > 1) {
-      
-    } else vcfFile = vcfFiles.head
+    vcfFile = if (vcfFiles.size > 1) {
+      val combineVariants = new CombineVariants with gatkArguments
+      combineVariants.variant = vcfFiles
+      combineVariants.out = outputDir + "merge.vcf"
+      add(combineVariants)
+      combineVariants.out
+    } else vcfFiles.head
     
     for (sample <- samples) {
       sampleVcfs += (sample -> new File(outputDir + sample + File.separator + sample + ".vcf"))
