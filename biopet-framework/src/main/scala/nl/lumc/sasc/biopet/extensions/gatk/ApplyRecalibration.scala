@@ -4,13 +4,13 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.ApplyRecalibration with GatkGeneral {
-  if (config.contains("scattercount")) scatterCount = config("scattercount")
-  
-  nt = Option(getThreads(3))
-  memoryLimit = Option(nt.getOrElse(1) * 2)
-  
   override def afterGraph {
     super.afterGraph
+    
+    if (config.contains("scattercount")) scatterCount = config("scattercount")
+  
+    nt = Option(getThreads(3))
+    memoryLimit = Option(nt.getOrElse(1) * 2)
     ts_filter_level = config("ts_filter_level")
   }
 }
