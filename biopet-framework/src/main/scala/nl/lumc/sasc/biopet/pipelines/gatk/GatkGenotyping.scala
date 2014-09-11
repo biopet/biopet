@@ -50,7 +50,7 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   }
 
   def addSelectVariants(inputFile: File, samples: List[String], outputDir: String, name: String) {
-    val selectVariants = SelectVariants(this, inputFile, outputDir + name + ".vcf")
+    val selectVariants = SelectVariants(this, inputFile, outputDir + name + ".vcf.gz")
     selectVariants.excludeNonVariants = true
     for (sample <- samples) selectVariants.sample_name :+= sample
     add(selectVariants)
