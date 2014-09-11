@@ -29,6 +29,15 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
 
+  class LibraryOutput extends AbstractLibraryOutput {
+    var mappedBamFile: File = _
+    var preProcesBamFile: File = _
+  }
+  
+  class SampleOutput[LibraryOutput] extends AbstractSampleOutput[LibraryOutput] {
+    
+  }
+  
   def init() {
     reference = config("reference", required = true)
     dbsnp = config("dbsnp")
@@ -45,7 +54,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   def biopetScript() {
     if (onlySample.isEmpty) {
       runSamplesJobs
-
+      
       //SampleWide jobs
       if (mergeGvcfs && gvcfFiles.size > 0) {
         val newFile = outputDir + "merged.gvcf.vcf"
@@ -76,14 +85,14 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): Map[String, List[File]] = {
-    var outputFiles: Map[String, List[File]] = Map()
+  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput[LibraryOutput] = {
+    val sampleOutput = new SampleOutput[LibraryOutput]
     var libraryBamfiles: List[File] = List()
     var sampleID: String = sampleConfig("ID").toString
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-      libraryBamfiles +:= libraryFiles("FinalBam")
+      libraryBamfiles +:= libraryFiles.preProcesBamFile
     }
-    outputFiles += ("final_bam" -> libraryBamfiles)
+    //outputFiles += ("final_bam" -> libraryBamfiles)
 
     if (libraryBamfiles.size > 0) {
       finalBamFiles ++= libraryBamfiles
@@ -98,12 +107,12 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       addAll(gatkVariantcalling.functions)
       gvcfFiles :+= gatkVariantcalling.outputFile
     } else logger.warn("No bamfiles for variant calling for sample: " + sampleID)
-    return outputFiles
+    return sampleOutput
   }
 
   // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File] = {
-    var outputFiles: Map[String, File] = Map()
+  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
+    val libraryOutput = new LibraryOutput
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
     val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
@@ -113,8 +122,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     if (runConfig.contains("R1")) {
       val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       addAll(mapping.functions) // Add functions of mapping to curent function pool
-
-      outputFiles += ("mapped_bam" -> mapping.outputFiles("finalBamFile"))
+      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
     } else if (runConfig.contains("bam")) {
       var bamFile = new File(runConfig("bam").toString)
       if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
@@ -147,20 +155,20 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
       }
       
-      outputFiles += ("mapped_bam" -> bamFile)
+      libraryOutput.mappedBamFile = bamFile
     } else logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     
     val gatkVariantcalling = new GatkVariantcalling(this)
-    gatkVariantcalling.inputBams = List(outputFiles("mapped_bam"))
+    gatkVariantcalling.inputBams = List(libraryOutput.mappedBamFile)
     gatkVariantcalling.outputDir = runDir
     gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
     gatkVariantcalling.preProcesBams = true
     gatkVariantcalling.init
     gatkVariantcalling.biopetScript
     addAll(gatkVariantcalling.functions)
-    outputFiles += "final_bam" -> gatkVariantcalling.outputFiles("final_bam")
+    libraryOutput.preProcesBamFile = gatkVariantcalling.outputFiles("final_bam")
     
-    return outputFiles
+    return libraryOutput
   }
 }
 

@@ -35,6 +35,15 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
                 )
               )
   
+  class LibraryOutput extends AbstractLibraryOutput {
+    var mappedBamFile: File = _
+    var prefixFastq: File = _
+  }
+  
+  class SampleOutput[LibraryOutput] extends AbstractSampleOutput[LibraryOutput] {
+    
+  }
+  
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (countBed == null) countBed = config("count_bed")
@@ -69,15 +78,15 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): Map[String, List[File]] = {
-    var outputFiles: Map[String, List[File]] = Map()
+  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput[LibraryOutput] = {
+    val sampleOutput = new SampleOutput[LibraryOutput]
     var libraryBamfiles: List[File] = List()
     var libraryFastqFiles: List[File] = List()
     val sampleID: String = sampleConfig("ID").toString
     val sampleDir: String = globalSampleDir + sampleID + "/" 
     for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-      libraryFastqFiles +:= libraryFiles("prefix_fastq")
-      libraryBamfiles +:= libraryFiles("FinalBam")
+      libraryFastqFiles +:= libraryFiles.prefixFastq
+      libraryBamfiles +:= libraryFiles.mappedBamFile
     }
     
     val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
@@ -96,12 +105,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     addBedtoolsCounts(bamFile, sampleID, sampleDir)
     addTablibCounts(fastqFile, sampleID, sampleDir)
     
-    return outputFiles
+    return sampleOutput
   }
 
   // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): Map[String, File] = {
-    var outputFiles: Map[String, File] = Map()
+  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
+    val libraryOutput = new LibraryOutput
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
     val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
@@ -122,7 +131,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       prefixFastq.prefix = config("sage_tag", default = "CATG")
       prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
       add(prefixFastq)
-      outputFiles += ("prefix_fastq" -> prefixFastq.output)
+      libraryOutput.prefixFastq = prefixFastq.output
       
       val mapping = new Mapping(this)
       mapping.skipFlexiprep = true
@@ -144,9 +153,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         addTablibCounts(prefixFastq.output, sampleID + "-" + runID, runDir)
       }
       
-      outputFiles += ("FinalBam" -> mapping.outputFiles("finalBamFile"))
+      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
-    return outputFiles
+    return libraryOutput
   }
   
   def addBedtoolsCounts(bamFile:File, outputPrefix: String, outputDir: String) {
