@@ -25,12 +25,12 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     if (config("inputtype", default = "dna").getString == "rna") {
       dontUseSoftClippedBases = config("dontusesoftclippedbases", default = true)
       recoverDanglingHeads = config("recoverdanglingheads", default = true)
-      stand_call_conf = config("stand_call_conf", default = 20)
+      stand_call_conf = config("stand_call_conf", default = 0.0001)
       stand_emit_conf = config("stand_emit_conf", default = 0)
     } else {
       dontUseSoftClippedBases = config("dontusesoftclippedbases", default = false)
       recoverDanglingHeads = config("recoverdanglingheads", default = false)
-      stand_call_conf = config("stand_call_conf", default = 30)
+      stand_call_conf = config("stand_call_conf", default = 0.0001)
       stand_emit_conf = config("stand_emit_conf", default = 0)
     }
     if (bamOutput != null && nct.getOrElse(1) > 1) {
