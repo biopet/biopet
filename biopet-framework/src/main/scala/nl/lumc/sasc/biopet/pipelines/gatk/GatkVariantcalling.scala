@@ -45,6 +45,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
   def biopetScript() {
     def doublePreProces(files:List[File]): File = {
+      if (files.size == 1) return files.head
+      if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
       val markDub = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
       if (dbsnp != null && config("double_pre_proces", default = true).getBoolean) {
         add(markDub, isIntermediate = true)
