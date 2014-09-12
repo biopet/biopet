@@ -6,6 +6,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SAMFileReader
 import scala.collection.JavaConversions._
 import java.io.File
+import nl.lumc.sasc.biopet.extensions.gatk.HaplotypeCaller
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -34,7 +35,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     var preProcesBamFile: File = _
   }
   
-  class SampleOutput[LibraryOutput] extends AbstractSampleOutput[LibraryOutput] {
+  class SampleOutput extends AbstractSampleOutput {
     
   }
   
@@ -81,16 +82,27 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           vcfFile = recalibration.outputVcf
         }
       } else logger.warn("No gVCFs to genotype")
+      
+      val hc = new HaplotypeCaller(this)
+      val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput; 
+                     (libraryID,libraryOutput) <- sampleOutput.getAllLibraries) {
+          hc.input_file +:= libraryOutput.preProcesBamFile
+          logger.debug("add bam: " + libraryOutput.preProcesBamFile)
+        }
+      hc.out = outputDir + "variantcalling/hc.vcf.gz"
+      add(hc)
+      
     } else runSingleSampleJobs(onlySample)
   }
 
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput[LibraryOutput] = {
-    val sampleOutput = new SampleOutput[LibraryOutput]
+  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
+    val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
     var sampleID: String = sampleConfig("ID").toString
-    for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-      libraryBamfiles +:= libraryFiles.preProcesBamFile
+    sampleOutput.libraries = runLibraryJobs(sampleConfig)
+    for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
+      libraryBamfiles +:= libraryOutput.preProcesBamFile
     }
     //outputFiles += ("final_bam" -> libraryBamfiles)
 
