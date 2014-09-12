@@ -23,6 +23,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   
   var minDP:Option[Int] = config("min_dp")
   var minAP:Option[Int] = config("min_ap")
+  var sample: String = _
   
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
@@ -41,6 +42,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
       required("-o", output) + 
       required("-minDP", minDP) + 
       required("-minAP", minAP) + 
+      required("-sample", sample) + 
       (if (inputBam == null) required("-I", inputMpileup) else "")
   }
 }
@@ -48,6 +50,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
 object MpileupToVcf {
   var input: File = _
   var output: File = _
+  var sample: String = _
   var minDP = 8
   var minAP = 2
   
@@ -62,21 +65,24 @@ object MpileupToVcf {
         case "-o" => output = new File(args(t+1))
         case "-minDP" => minDP = args(t+1).toInt
         case "-minAP" => minAP = args(t+1).toInt
+        case "-sample" => sample = args(t+1)
         case _ =>
       }
     }
     if (input != null && !input.exists) throw new IllegalStateException("Input file does not exist")
     if (output == null) throw new IllegalStateException("Output file not found, use -o")
+    if (sample == null) throw new IllegalStateException("Output not given, pls use -sample")
     
     val writer = new PrintWriter(output)
     writer.println("##fileformat=VCFv4.2")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
-    writer.println("##INFO=<ID=FREQ,Number=1,Type=String,Description=\"Allele Frequency\">")
-    writer.println("##INFO=<ID=RFC,Number=1,Type=Integer,Description=\"Reference Forward Reads\">")
-    writer.println("##INFO=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
-    writer.println("##INFO=<ID=AFC,Number=1,Type=Integer,Description=\"Alternetive Forward Reads\">")
-    writer.println("##INFO=<ID=ARC,Number=1,Type=Integer,Description=\"Alternetive Reverse Reads\">")
-    writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO")
+    writer.println("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
+    writer.println("##FORMAT=<ID=FREQ,Number=1,Type=String,Description=\"Allele Frequency\">")
+    writer.println("##FORMAT=<ID=RFC,Number=1,Type=Integer,Description=\"Reference Forward Reads\">")
+    writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
+    writer.println("##FORMAT=<ID=AFC,Number=1,Type=Integer,Description=\"Alternetive Forward Reads\">")
+    writer.println("##FORMAT=<ID=ARC,Number=1,Type=Integer,Description=\"Alternetive Reverse Reads\">")
+    writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + sample)
     val inputStream = if (input != null) Source.fromFile(input).getLines else Source.stdin.getLines
     for (line <- inputStream; 
          val values = line.split("\t");
@@ -131,10 +137,12 @@ object MpileupToVcf {
       }
       
       if (reads >= minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward+value.reverse >= minAP) {
-        val info: String = "DP=" + reads + ";RFC=" + counts(ref.toUpperCase).forward + ";RRC=" + counts(ref.toUpperCase).reverse +
-                          ";AFC=" + value.forward + ";ARC=" + value.reverse + 
-                          ";FREQ=" + round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2 + "%"
-        val outputLine: Array[String] = Array(chr, pos, ".", ref.toUpperCase, key, ".", ".", info)
+        val info: String = "DP=" + reads
+        val format: String = "DP:RFC:RRC:AFC:ARC:FREQ\t" + reads + ":" + 
+                          counts(ref.toUpperCase).forward + ":" + counts(ref.toUpperCase).reverse +
+                          ":" + value.forward + ":" + value.reverse + 
+                          ":" + round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2 + "%"
+        val outputLine: Array[String] = Array(chr, pos, ".", ref.toUpperCase, key, ".", ".", info, format)
         writer.println(outputLine.mkString("\t"))
       }
     }
