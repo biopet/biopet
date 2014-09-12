@@ -40,7 +40,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     var prefixFastq: File = _
   }
   
-  class SampleOutput[LibraryOutput] extends AbstractSampleOutput[LibraryOutput] {
+  class SampleOutput extends AbstractSampleOutput {
     
   }
   
@@ -78,8 +78,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput[LibraryOutput] = {
-    val sampleOutput = new SampleOutput[LibraryOutput]
+  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
+    val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
     var libraryFastqFiles: List[File] = List()
     val sampleID: String = sampleConfig("ID").toString
