@@ -3,8 +3,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, SelectVariants, VariantEval , CombineVariants}
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, VariantEval}
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQScript {
@@ -42,18 +44,14 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
 
   def biopetScript() {
     vcfFile = if (vcfFiles.size > 1) {
-      val combineVariants = new CombineVariants with gatkArguments
-      combineVariants.variant = vcfFiles
-      combineVariants.out = outputDir + "merge.vcf"
+      val combineVariants = CombineVariants(this, vcfFiles, outputDir + "merge.vcf")
       add(combineVariants)
       combineVariants.out
     } else vcfFiles.head
     
     for (sample <- samples) {
       sampleVcfs += (sample -> new File(outputDir + sample + File.separator + sample + ".vcf"))
-      val selectVariants = new SelectVariants with gatkArguments
-      selectVariants.variant = vcfFile
-      selectVariants.out = sampleVcfs(sample)
+      val selectVariants = SelectVariants(this, vcfFile, sampleVcfs(sample))
       selectVariants.sample_name = Seq(sample)
       selectVariants.excludeNonVariants = true
       add(selectVariants)
