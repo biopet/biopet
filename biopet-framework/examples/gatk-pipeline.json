@@ -29,19 +29,12 @@
     "cutadapt": {"exe":"test"},
     "samples": {
         "test": {
-            "ID": "test",
-            "runs": {
-                "1" : {
-                    "ID": "1",
-                    "R1" : "test.R1.fastq.gz",
-                    "R2" : "test.R2.fastq.gz"
-                },
-                "2" : {
-                    "ID": "1",
-                    "R1" : "test.R1.fastq.gz",
-                    "R2" : "test.R2.fastq.gz"
+            "libraries": {
+                "3" : {
+                    "bam" : "/data/DIV5/SASC/project-072-vcf_Comparison/analysis/runs/01/losekoot_redo_FC59b_L5_I12_S41/run_01/losekoot_redo_FC59b_L5_I12_S41-01.dedup.bam"
                 }
             }
         }
-    }
+    },
+    "correct_readgroups": true
 }

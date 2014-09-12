@@ -10,7 +10,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.sage.Sage -outDir /home/pjvan_thof/pipelines/test --transcriptome bla.fa --countbed bla.bed -config /home/pjvan_thof/pipelines/biopet/biopet-framework/examples/sage.json</exec.args>
+                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/compare_test/samples.json -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/config.json -outDir /home/pjvan_thof/pipelines/test</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
             </properties>
@@ -25,7 +25,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath nl.lumc.sasc.biopet.pipelines.sage.Sage -outDir /home/pjvan_thof/pipelines/test --transcriptome bla.fa --countbed bla.bed -config /home/pjvan_thof/pipelines/biopet/biopet-framework/examples/sage.json</exec.args>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/compare_test/samples.json -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/config.json -outDir /home/pjvan_thof/pipelines/test</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
@@ -41,7 +41,7 @@
                 <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
             </goals>
             <properties>
-                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.sage.Sage -outDir /home/pjvan_thof/pipelines/test --transcriptome bla.fa --countbed bla.bed -config /home/pjvan_thof/pipelines/biopet/biopet-framework/examples/sage.json</exec.args>
+                <exec.args>-classpath %classpath nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/compare_test/samples.json -config /data/DIV5/SASC/project-062-snake/analysis/scripts/biopet/config.json -outDir /home/pjvan_thof/pipelines/test</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.workingdir>/home/pjvan_thof/pipelines/test</exec.workingdir>
             </properties>
