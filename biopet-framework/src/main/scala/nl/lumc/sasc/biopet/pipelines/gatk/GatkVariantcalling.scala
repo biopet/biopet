@@ -71,7 +71,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (variantcalling) {
       // Haplotypecaller with default settings
       val hc = new HaplotypeCaller(this)
-      hc.defaults += "emitRefConfidence" -> "GVCF"
+      hc.useGvcf
       hc.input_file = bamFiles
       hc.out = outputFile
       add(hc)
@@ -91,7 +91,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       outputFiles += "raw_vcf" -> m2v.output
 
       val hcAlleles = new HaplotypeCaller(this)
-      hcAlleles.defaults += "emitRefConfidence" -> "NONE"
       hcAlleles.input_file = bamFiles
       hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
       hcAlleles.alleles = m2v.output
