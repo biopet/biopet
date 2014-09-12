@@ -6,6 +6,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SAMFileReader
 import scala.collection.JavaConversions._
 import java.io.File
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.HaplotypeCaller
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
@@ -32,11 +33,11 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   class LibraryOutput extends AbstractLibraryOutput {
     var mappedBamFile: File = _
-    var preProcesBamFile: File = _
+    var variantcalling: GatkVariantcalling.ScriptOutput = _
   }
   
   class SampleOutput extends AbstractSampleOutput {
-    
+    var variantcalling: GatkVariantcalling.ScriptOutput = _
   }
   
   def init() {
@@ -83,15 +84,26 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         }
       } else logger.warn("No gVCFs to genotype")
       
-      val hc = new HaplotypeCaller(this)
-      val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput; 
-                     (libraryID,libraryOutput) <- sampleOutput.getAllLibraries) {
-          hc.input_file +:= libraryOutput.preProcesBamFile
-          logger.debug("add bam: " + libraryOutput.preProcesBamFile)
-        }
-      hc.out = outputDir + "variantcalling/hc.vcf.gz"
-      add(hc)
+      val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput;
+                              file <- sampleOutput.variantcalling.bamFiles) yield file
+      val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawVcfFile
+      val hcDiscorvery = new HaplotypeCaller(this)
+      hcDiscorvery.input_file = allBamfiles.toSeq
+      hcDiscorvery.out = outputDir + "variantcalling/hc.vcf.gz"
+      add(hcDiscorvery)
       
+      val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/raw.vcf.gz")
+      add(cvRaw)
+      
+      val hcRaw = new HaplotypeCaller(this)
+      hcRaw.input_file = allBamfiles.toSeq
+      hcRaw.out = outputDir + "variantcalling/raw_genotype.vcf.gz"
+      hcRaw.alleles = cvRaw.out
+      hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
+      add(hcRaw)
+      
+      val cvFinal = CombineVariants(this, List(hcDiscorvery.out, hcRaw.out), outputDir + "variantcalling/merge.vcf.gz")
+      add(cvFinal)
     } else runSingleSampleJobs(onlySample)
   }
 
@@ -102,7 +114,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     var sampleID: String = sampleConfig("ID").toString
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
     for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
-      libraryBamfiles +:= libraryOutput.preProcesBamFile
+      libraryBamfiles = libraryOutput.variantcalling.bamFiles
     }
     //outputFiles += ("final_bam" -> libraryBamfiles)
 
@@ -111,13 +123,13 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = globalSampleDir + sampleID + "/variantcalling/"
-      gatkVariantcalling.singleGenotyping = true
       gatkVariantcalling.preProcesBams = false
-      gatkVariantcalling.outputName = sampleID
+      gatkVariantcalling.sampleID = sampleID
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
-      gvcfFiles :+= gatkVariantcalling.outputFile
+      sampleOutput.variantcalling = gatkVariantcalling.scriptOutput
+      gvcfFiles :+= gatkVariantcalling.scriptOutput.gvcfFile
     } else logger.warn("No bamfiles for variant calling for sample: " + sampleID)
     return sampleOutput
   }
@@ -175,10 +187,12 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     gatkVariantcalling.outputDir = runDir
     gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
     gatkVariantcalling.preProcesBams = true
+    gatkVariantcalling.sampleID = sampleID
     gatkVariantcalling.init
     gatkVariantcalling.biopetScript
     addAll(gatkVariantcalling.functions)
-    libraryOutput.preProcesBamFile = gatkVariantcalling.outputFiles("final_bam")
+    libraryOutput.variantcalling = gatkVariantcalling.scriptOutput
+    //libraryOutput.preProcesBamFile = gatkVariantcalling.outputFiles("final_bam")
     
     return libraryOutput
   }
