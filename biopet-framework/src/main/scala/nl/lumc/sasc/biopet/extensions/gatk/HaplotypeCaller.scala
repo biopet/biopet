@@ -14,6 +14,15 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     bamOutput = config("bamOutput")
     memoryLimit = Option(nct.getOrElse(1) * 2)
     if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
+    if (config.contains("output_mode")){
+      import org.broadinstitute.gatk.tools.walkers.genotyper.OutputMode._
+      config("output_mode").getString match {
+        case "EMIT_ALL_CONFIDENT_SITES" => output_mode = EMIT_ALL_CONFIDENT_SITES
+        case "EMIT_ALL_SITES" => output_mode = EMIT_ALL_SITES
+        case "EMIT_VARIANTS_ONLY" => output_mode = EMIT_VARIANTS_ONLY
+        case e => logger.warn("output mode '" + e + "' does not exist")
+      }
+    }
 
     if (config("inputtype", default = "dna").getString == "rna") {
       dontUseSoftClippedBases = config("dontusesoftclippedbases", default = true)
