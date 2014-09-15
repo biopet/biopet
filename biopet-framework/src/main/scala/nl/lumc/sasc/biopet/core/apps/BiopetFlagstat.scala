@@ -105,7 +105,7 @@ object BiopetFlagstat extends Logging {
     private val names: Map[Int, String] = Map()
     private var functions: Array[SAMRecord => Boolean] = Array()
     private var totalCounts: Array[Long] = Array()
-    private var crossCounts = Array.ofDim[Int](1, 1)
+    private var crossCounts = Array.ofDim[Long](1, 1)
 
     def loadDefaultFunctions {
       addFunction("All", record => true)
@@ -149,7 +149,7 @@ object BiopetFlagstat extends Logging {
 
     def addFunction(name: String, function: SAMRecord => Boolean) {
       functionCount += 1
-      crossCounts = Array.ofDim[Int](functionCount, functionCount)
+      crossCounts = Array.ofDim[Long](functionCount, functionCount)
       totalCounts = new Array[Long](functionCount)
       val temp = new Array[SAMRecord => Boolean](functionCount)
       for (t <- 0 until (temp.size - 1)) temp(t) = functions(t)
