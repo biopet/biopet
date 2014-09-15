@@ -26,6 +26,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   @Argument(doc = "Merge gvcfs", shortName = "mergegvcfs", required = false)
   var mergeGvcfs: Boolean = false
 
+  @Argument(doc = "Joint variantcalling", shortName = "jointCalling", required = false)
+  var jointVariantcalling = false
+  
   var reference: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
@@ -46,6 +49,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     if (config.contains("target_bed")) {
       defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
     }
+    if (config.contains("joint_variantcalling")) jointVariantcalling = config("joint_variantcalling", default = false)
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
         gvcfFiles :+= file.toString
@@ -84,26 +88,30 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         }
       } else logger.warn("No gVCFs to genotype")
       
-      val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput;
-                              file <- sampleOutput.variantcalling.bamFiles) yield file
-      val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawVcfFile
-      val hcDiscorvery = new HaplotypeCaller(this)
-      hcDiscorvery.input_file = allBamfiles.toSeq
-      hcDiscorvery.out = outputDir + "variantcalling/hc.vcf.gz"
-      add(hcDiscorvery)
-      
-      val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/raw.vcf.gz")
-      add(cvRaw)
-      
-      val hcRaw = new HaplotypeCaller(this)
-      hcRaw.input_file = allBamfiles.toSeq
-      hcRaw.out = outputDir + "variantcalling/raw_genotype.vcf.gz"
-      hcRaw.alleles = cvRaw.out
-      hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
-      add(hcRaw)
-      
-      val cvFinal = CombineVariants(this, List(hcDiscorvery.out, hcRaw.out), outputDir + "variantcalling/merge.vcf.gz")
-      add(cvFinal)
+      if (jointVariantcalling) {
+        val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput;
+                                file <- sampleOutput.variantcalling.bamFiles) yield file
+        val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawVcfFile
+        val hcDiscorvery = new HaplotypeCaller(this)
+        hcDiscorvery.input_file = allBamfiles.toSeq
+        hcDiscorvery.scatterCount = config("scattercount", submodule = "multisample")
+        hcDiscorvery.out = outputDir + "variantcalling/hc.vcf.gz"
+        add(hcDiscorvery)
+
+        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/raw.vcf.gz")
+        add(cvRaw)
+
+        val hcRaw = new HaplotypeCaller(this)
+        hcRaw.input_file = allBamfiles.toSeq
+        hcRaw.scatterCount = config("scattercount", submodule = "multisample")
+        hcRaw.out = outputDir + "variantcalling/raw_genotype.vcf.gz"
+        hcRaw.alleles = cvRaw.out
+        hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
+        add(hcRaw)
+
+        val cvFinal = CombineVariants(this, List(hcDiscorvery.out, hcRaw.out), outputDir + "variantcalling/merge.vcf.gz")
+        add(cvFinal)
+      }
     } else runSingleSampleJobs(onlySample)
   }
 
@@ -114,9 +122,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     var sampleID: String = sampleConfig("ID").toString
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
     for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
-      libraryBamfiles = libraryOutput.variantcalling.bamFiles
+      libraryBamfiles ++= libraryOutput.variantcalling.bamFiles
     }
-    //outputFiles += ("final_bam" -> libraryBamfiles)
 
     if (libraryBamfiles.size > 0) {
       finalBamFiles ++= libraryBamfiles
