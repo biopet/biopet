@@ -26,6 +26,7 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   
   var vcfFile: File = _
   var sampleVcfs:Map[String, File] = Map()
+  def generalSampleDir = outputDir + "samples/"
   
   trait gatkArguments extends CommandLineGATK {
     this.reference_sequence = reference
@@ -50,15 +51,24 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
     } else vcfFiles.head
     
     for (sample <- samples) {
-      sampleVcfs += (sample -> new File(outputDir + sample + File.separator + sample + ".vcf"))
+      sampleVcfs += (sample -> new File(generalSampleDir + sample + File.separator + sample + ".vcf"))
       val selectVariants = SelectVariants(this, vcfFile, sampleVcfs(sample))
       selectVariants.sample_name = Seq(sample)
       selectVariants.excludeNonVariants = true
       add(selectVariants)
     }
     
+    val sampleCompareMetrics = new SampleCompareMetrics(this)
+    sampleCompareMetrics.samples = samples
+    sampleCompareMetrics.sampleDir = generalSampleDir
+    sampleCompareMetrics.snpRelFile = outputDir + "compare.snp.rel.tsv"
+    sampleCompareMetrics.snpAbsFile = outputDir + "compare.snp.abs.tsv"
+    sampleCompareMetrics.indelRelFile = outputDir + "compare.indel.rel.tsv"
+    sampleCompareMetrics.indelAbsFile = outputDir + "compare.indel.abs.tsv"
+    sampleCompareMetrics.totalFile = outputDir + "total.tsv"
+    
     for ((sample,sampleVcf) <- sampleVcfs) {
-      val sampleDir = outputDir + sample + File.separator
+      val sampleDir = generalSampleDir + sample + File.separator
       for ((compareSample,compareSampleVcf) <- sampleVcfs) {
         val variantEval = new VariantEval with gatkArguments
         variantEval.eval = Seq(sampleVcf)
@@ -70,8 +80,10 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
         variantEval.EV = Seq("CompOverlap")
         if (targetBed != null) variantEval.L = targetBed
         add(variantEval)
+        sampleCompareMetrics.deps ::= variantEval.out
       }
     }
+    add(sampleCompareMetrics)
   }
 }
 
