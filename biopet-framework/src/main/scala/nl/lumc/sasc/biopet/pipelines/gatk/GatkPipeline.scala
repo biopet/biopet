@@ -63,7 +63,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       
       //SampleWide jobs
       if (mergeGvcfs && gvcfFiles.size > 0) {
-        val newFile = outputDir + "merged.gvcf.vcf"
+        val newFile = outputDir + "merged.gvcf.vcf.gz"
         add(CombineGVCFs(this, gvcfFiles, newFile))
         gvcfFiles = List(newFile)
       }
