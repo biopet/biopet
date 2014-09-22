@@ -77,7 +77,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         addAll(gatkGenotyping.functions)
         var vcfFile = gatkGenotyping.outputFile
 
-        if (config("inputtype", default = "dna").getString != "rna") {
+        if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
           val recalibration = new GatkVariantRecalibration(this)
           recalibration.inputVcf = vcfFile
           recalibration.bamFiles = finalBamFiles
