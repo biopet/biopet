@@ -199,7 +199,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     gatkVariantcalling.biopetScript
     addAll(gatkVariantcalling.functions)
     libraryOutput.variantcalling = gatkVariantcalling.scriptOutput
-    //libraryOutput.preProcesBamFile = gatkVariantcalling.outputFiles("final_bam")
     
     return libraryOutput
   }

@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.core.apps.MpileupToVcf
+import nl.lumc.sasc.biopet.core.apps.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
@@ -90,10 +90,16 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         add(m2v)
         scriptOutput.rawVcfFile = m2v.output
 
+        val vcfFilter = new VcfFilter(this)
+        vcfFilter.defaults ++= Map("min_sample_depth" -> 8, "min_alternate_depth" -> 4, "min_samples_pass" -> 1)
+        vcfFilter.inputVcf = m2v.output
+        vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
+        add(vcfFilter)
+        
         val hcAlleles = new HaplotypeCaller(this)
         hcAlleles.input_file = scriptOutput.bamFiles
         hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
-        hcAlleles.alleles = m2v.output
+        hcAlleles.alleles = vcfFilter.outputVcf
         hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
         add(hcAlleles)
         scriptOutput.rawGenotypeVcf = hcAlleles.out
