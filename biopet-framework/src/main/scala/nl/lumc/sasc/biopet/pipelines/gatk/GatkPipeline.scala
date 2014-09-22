@@ -111,11 +111,11 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
         add(hcRaw)
 
-        val discoveryOnly = SelectVariants(this, hcDiscorvery.out, outputDir + "discovery.only.vcf.gz")
+        val discoveryOnly = SelectVariants(this, hcDiscorvery.out, outputDir + "variantcalling/discovery.only.vcf.gz")
         discoveryOnly.discordance = hcRaw.out
         add(discoveryOnly)
         
-        val allelesOnly = SelectVariants(this, hcRaw.out, outputDir + "genotype_raw_alleles.only.vcf.gz")
+        val allelesOnly = SelectVariants(this, hcRaw.out, outputDir + "variantcalling/genotype_raw_alleles.only.vcf.gz")
         allelesOnly.discordance = hcDiscorvery.out
         add(allelesOnly)
         
@@ -123,7 +123,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           if (config("prio_calls", default = "discovery").getString != "discovery") List(hcRaw.out, discoveryOnly.out)
           else List(hcDiscorvery.out, allelesOnly.out)
         }
-        val cvFinal = CombineVariants(this, mergeList, outputDir + "final.vcf.gz")
+        val cvFinal = CombineVariants(this, mergeList, outputDir + "variantcalling/final.vcf.gz")
         add(cvFinal)        
       }
     } else runSingleSampleJobs(onlySample)
