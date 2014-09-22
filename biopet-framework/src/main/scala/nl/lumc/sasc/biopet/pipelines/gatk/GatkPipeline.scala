@@ -92,18 +92,22 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput;
                                 file <- sampleOutput.variantcalling.bamFiles) yield file
         val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
-        val hcDiscorvery = new HaplotypeCaller(this)
+        val hcDiscorvery = new HaplotypeCaller(this) {
+          override protected lazy val configName = "haplotypecaller"
+          override def configPath:  List[String] = "multisample" :: super.configPath
+        }
         hcDiscorvery.input_file = allBamfiles.toSeq
-        hcDiscorvery.scatterCount = config("scattercount", submodule = "multisample")
         hcDiscorvery.out = outputDir + "variantcalling/hc.vcf.gz"
         add(hcDiscorvery)
 
         val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/raw.vcf.gz")
         add(cvRaw)
 
-        val hcRaw = new HaplotypeCaller(this)
+        val hcRaw = new HaplotypeCaller(this) {
+          override protected lazy val configName = "haplotypecaller"
+          override def configPath:  List[String] = "multisample" :: super.configPath
+        }
         hcRaw.input_file = allBamfiles.toSeq
-        hcRaw.scatterCount = config("scattercount", submodule = "multisample")
         hcRaw.out = outputDir + "variantcalling/raw_genotype.vcf.gz"
         hcRaw.alleles = cvRaw.out
         hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES

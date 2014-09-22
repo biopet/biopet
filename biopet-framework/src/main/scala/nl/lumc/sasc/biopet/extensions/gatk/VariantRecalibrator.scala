@@ -18,8 +18,8 @@ class VariantRecalibrator(val root: Configurable) extends org.broadinstitute.gat
 object VariantRecalibrator {
   def apply(root: Configurable, input:File, recal_file:File, tranches_file:File, indel: Boolean = false): VariantRecalibrator = {
     val vr = new VariantRecalibrator(root) {
-      override val configName = "variantrecalibrator"
-      override val configFullPath = (if (indel) "indel" else "snp") :: configName :: configPath
+      override lazy val configName = "variantrecalibrator"
+      override def configPath:  List[String] = (if (indel) "indel" else "snp") :: super.configPath
       if (indel) {
         mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
         defaults ++= Map("ts_filter_level" -> 99.0)
