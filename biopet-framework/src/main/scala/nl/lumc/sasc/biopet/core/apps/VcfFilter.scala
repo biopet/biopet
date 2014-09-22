@@ -53,7 +53,6 @@ object VcfFilter {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    
     for (t <- 0 until args.size) {
       args(t) match {
         case "-I" => inputVcf =  new File(args(t+1))
@@ -69,22 +68,16 @@ object VcfFilter {
     if (outputVcf == null) throw new IllegalStateException("No outputVcf, use -o")
     
     val reader = new VCFFileReader(inputVcf)
-    val header = reader.getFileHeader
-    val builder = new VariantContextWriterBuilder().setOutputFile(outputVcf)
-    val writer = new AsyncVariantContextWriter(builder.build)
-    writer.writeHeader(header)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(outputVcf).build)
+    writer.writeHeader(reader.getFileHeader)
     for (record <- reader) {
-      val chr = record.getChr
-      val pos = record.getStart
-      
       val genotypes = for (genotype <- record.getGenotypes) yield {
         genotype.getDP >= minSampleDepth && 
         List(genotype.getAD:_*).tail.count(_ >= minAlternateDepth) > 0
       }
       
-      if (record.getAttributeAsInt("DP", -1) >= minTotalDepth && genotypes.count(_ == true) >= minSamplesPass) {
+      if (record.getAttributeAsInt("DP", -1) >= minTotalDepth && genotypes.count(_ == true) >= minSamplesPass)
         writer.add(record)
-      }
     }
     reader.close
     writer.close
