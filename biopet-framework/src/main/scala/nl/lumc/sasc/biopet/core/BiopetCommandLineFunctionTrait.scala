@@ -29,10 +29,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   @Argument(doc = "Executable")
   var executable: String = _
 
-  protected def beforeCmd {
+  protected[core] def beforeCmd {
   }
 
-  protected def afterGraph {
+  protected[core] def afterGraph {
   }
 
   override def freezeFieldValues() {
