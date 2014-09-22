@@ -10,6 +10,7 @@ import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, HaplotypeCaller, S
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript {
@@ -120,8 +121,13 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         add(allelesOnly)
         
         def mergeList = {
-          if (config("prio_calls", default = "discovery").getString != "discovery") List(hcRaw.out, discoveryOnly.out)
-          else List(hcDiscorvery.out, allelesOnly.out)
+          val allele = new TaggedFile(hcRaw.out, "allele_mode")
+          val alleleOnly = new TaggedFile(allelesOnly.out, "allele_mode")
+          val disc = new TaggedFile(hcDiscorvery.out, "discovery_mode")
+          val discOnly = new TaggedFile(discoveryOnly.out, "discovery_mode")
+          val raw = new TaggedFile(cvRaw.out, "raw_mode")
+          if (config("prio_calls", default = "discovery").getString != "discovery") List(allele, discOnly, raw)
+          else List(disc, alleleOnly, raw)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + "variantcalling/final.vcf.gz")
         cvFinal.filteredrecordsmergetype = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.FilteredRecordMergeType.KEEP_UNCONDITIONAL

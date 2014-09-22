@@ -9,6 +9,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.math.round
+import scala.math.floor
 
 class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -24,6 +25,8 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   
   var minDP:Option[Int] = config("min_dp")
   var minAP:Option[Int] = config("min_ap")
+  var homoFraction:Option[Double] = config("homoFraction")
+  var ploity:Option[Int] = config("ploity")
   var sample: String = _
   
   override val defaultVmem = "8G"
@@ -41,8 +44,10 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
     } else "") + 
       super.commandLine + 
       required("-o", output) + 
-      required("-minDP", minDP) + 
-      required("-minAP", minAP) + 
+      optional("-minDP", minDP) + 
+      optional("-minAP", minAP) +
+      optional("-homoFraction", homoFraction) +
+      optional("-ploity", ploity) +
       required("-sample", sample) + 
       (if (inputBam == null) required("-I", inputMpileup) else "")
   }
@@ -54,6 +59,8 @@ object MpileupToVcf {
   var sample: String = _
   var minDP = 8
   var minAP = 2
+  var homoFraction = 0.8
+  var ploity = 2
   
   /**
    * @param args the command line arguments
@@ -67,6 +74,8 @@ object MpileupToVcf {
         case "-minDP" => minDP = args(t+1).toInt
         case "-minAP" => minAP = args(t+1).toInt
         case "-sample" => sample = args(t+1)
+        case "-homoFraction" => homoFraction = args(t+1).toDouble
+        case "-ploity" => ploity = args(t+1).toInt
         case _ =>
       }
     }
@@ -75,7 +84,7 @@ object MpileupToVcf {
     if (sample == null) throw new IllegalStateException("Output not given, pls use -sample")
     
     val writer = new PrintWriter(output)
-    writer.println("##fileformat=VCFv4.2")
+    writer.println("##fileformat=VCFv4.1")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
     writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency, for each ALT allele, in the same order as listed\">")
     writer.println("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
@@ -85,6 +94,7 @@ object MpileupToVcf {
     writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
     writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
+    writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + sample)
     val inputStream = if (input != null) Source.fromFile(input).getLines else Source.stdin.getLines
     class Counts(var forward:Int, var reverse:Int)
@@ -155,9 +165,23 @@ object MpileupToVcf {
       }
       
       if (alt.size > 0) {
+        val ad = for (ad <- format("AD").split(",")) yield ad.toInt
+        var left = reads
+        val gt = ArrayBuffer[Int]()
+        
+        for (p <- 0 to alt.size if gt.size < ploity) {
+          var max = -1
+          for (a <- 0 until ad.length if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.exists(_ == a)) max = a
+          val f = ad(max).toDouble / reads
+          for (a <- 0 to floor(f).toInt if gt.size < ploity) gt.append(max)
+          if (f - floor(f) >= homoFraction) {
+            for (b <- p to ploity if gt.size < ploity) gt.append(max)
+          }
+          left -= ad(max)
+        }
         info += ("AF=" + format("FREQ"))
         writer.println(Array(chr, pos, ".", ref.toUpperCase, alt.mkString(","), ".", ".", info.mkString(";"), 
-                                    format.keys.mkString(":"), format.values.mkString(":")
+                                    "GT:" + format.keys.mkString(":"), gt.sortWith(_ < _).mkString("/") + ":" + format.values.mkString(":")
                             ).mkString("\t"))
       }
     }
