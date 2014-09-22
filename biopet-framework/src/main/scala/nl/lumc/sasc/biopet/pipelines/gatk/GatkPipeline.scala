@@ -6,10 +6,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SAMFileReader
 import scala.collection.JavaConversions._
 import java.io.File
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.gatk.HaplotypeCaller
+import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, HaplotypeCaller, SelectVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
-import nl.lumc.sasc.biopet.extensions.gatk.CombineGVCFs
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
@@ -113,8 +111,20 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         hcRaw.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
         add(hcRaw)
 
-        val cvFinal = CombineVariants(this, List(hcDiscorvery.out, hcRaw.out), outputDir + "variantcalling/merge.vcf.gz")
-        add(cvFinal)
+        val discoveryOnly = SelectVariants(this, hcDiscorvery.out, outputDir + "discovery.only.vcf.gz")
+        discoveryOnly.discordance = hcRaw.out
+        add(discoveryOnly)
+        
+        val allelesOnly = SelectVariants(this, hcRaw.out, outputDir + "genotype_raw_alleles.only.vcf.gz")
+        allelesOnly.discordance = hcDiscorvery.out
+        add(allelesOnly)
+        
+        def mergeList = {
+          if (config("prio_calls", default = "discovery").getString != "discovery") List(hcRaw.out, discoveryOnly.out)
+          else List(hcDiscorvery.out, allelesOnly.out)
+        }
+        val cvFinal = CombineVariants(this, mergeList, outputDir + "final.vcf.gz")
+        add(cvFinal)        
       }
     } else runSingleSampleJobs(onlySample)
   }

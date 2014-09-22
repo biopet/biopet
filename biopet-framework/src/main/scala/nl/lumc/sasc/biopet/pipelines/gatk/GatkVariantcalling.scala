@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.core.apps.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator}
+import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator, SelectVariants, CombineVariants}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
@@ -75,6 +75,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       add(hcGvcf)
       scriptOutput.gvcfFile = hcGvcf.out
 
+      val genotypeGVCFs = GenotypeGVCFs(this, List(hcGvcf.out), outputDir + outputName + ".discovery.vcf.gz")
+      add(genotypeGVCFs)
+      scriptOutput.vcfFile = genotypeGVCFs.out
+      
       // Generate raw vcf
       val bamFile: File = if (scriptOutput.bamFiles.size > 1) {
         val markDub = MarkDuplicates(this, scriptOutput.bamFiles, new File(outputDir + "dedup.bam"))
@@ -104,11 +108,22 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
         add(hcAlleles)
         scriptOutput.rawGenotypeVcf = hcAlleles.out
+        
+        val discoveryOnly = SelectVariants(this, genotypeGVCFs.out, outputDir + outputName + ".discovery.only.vcf.gz")
+        discoveryOnly.discordance = hcAlleles.out
+        add(discoveryOnly)
+        
+        val allelesOnly = SelectVariants(this, hcAlleles.out, outputDir + outputName + ".genotype_raw_alleles.only.vcf.gz")
+        allelesOnly.discordance = genotypeGVCFs.out
+        add(allelesOnly)
+        
+        def mergeList = {
+          if (config("prio_calls", default = "discovery").getString != "discovery") List(hcAlleles.out, discoveryOnly.out)
+          else List(genotypeGVCFs.out, allelesOnly.out)
+        }
+        val cvFinal = CombineVariants(this, mergeList, outputDir + outputName + ".final.vcf.gz")
+        add(cvFinal)
       }
-      
-      val genotypeGVCFs = GenotypeGVCFs(this, List(hcGvcf.out), outputDir + outputName + ".vcf.gz")
-      add(genotypeGVCFs)
-      scriptOutput.vcfFile = genotypeGVCFs.out
     }
   }
 
