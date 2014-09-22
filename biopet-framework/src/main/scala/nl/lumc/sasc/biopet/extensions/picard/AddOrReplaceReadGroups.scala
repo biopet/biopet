@@ -12,6 +12,9 @@ class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
 
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
+  
+  @Output(doc = "The output file to bam file to", required = true)
+  lazy val outputIndex: File = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
 
   @Argument(doc = "Sort order of output file Required. Possible values: {unsorted, queryname, coordinate} ", required = true)
   var sortOrder: String = _
