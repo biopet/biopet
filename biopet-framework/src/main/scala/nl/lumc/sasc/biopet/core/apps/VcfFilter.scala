@@ -67,7 +67,7 @@ object VcfFilter {
     if (inputVcf == null) throw new IllegalStateException("No inputVcf, use -I")
     if (outputVcf == null) throw new IllegalStateException("No outputVcf, use -o")
     
-    val reader = new VCFFileReader(inputVcf)
+    val reader = new VCFFileReader(inputVcf, false)
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(outputVcf).build)
     writer.writeHeader(reader.getFileHeader)
     for (record <- reader) {
