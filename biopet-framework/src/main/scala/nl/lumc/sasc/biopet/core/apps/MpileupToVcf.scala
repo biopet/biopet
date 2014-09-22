@@ -6,12 +6,13 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsMpileup, SamtoolsView}
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.math.round
 
 class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
-
+  
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
   var inputMpileup: File = _
   
@@ -76,14 +77,17 @@ object MpileupToVcf {
     val writer = new PrintWriter(output)
     writer.println("##fileformat=VCFv4.2")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
+    writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency, for each ALT allele, in the same order as listed\">")
     writer.println("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
-    writer.println("##FORMAT=<ID=FREQ,Number=1,Type=String,Description=\"Allele Frequency\">")
+    writer.println("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Total Allele Depth\">")
+    writer.println("##FORMAT=<ID=FREQ,Number=A,Type=Float,Description=\"Allele Frequency\">")
     writer.println("##FORMAT=<ID=RFC,Number=1,Type=Integer,Description=\"Reference Forward Reads\">")
     writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
-    writer.println("##FORMAT=<ID=AFC,Number=1,Type=Integer,Description=\"Alternetive Forward Reads\">")
-    writer.println("##FORMAT=<ID=ARC,Number=1,Type=Integer,Description=\"Alternetive Reverse Reads\">")
+    writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
+    writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + sample)
     val inputStream = if (input != null) Source.fromFile(input).getLines else Source.stdin.getLines
+    class Counts(var forward:Int, var reverse:Int)
     for (line <- inputStream; 
          val values = line.split("\t");
          if values.size > 5) {
@@ -94,7 +98,6 @@ object MpileupToVcf {
       val mpileup = values(4)
       val qual = values(5)
       
-      class Counts(var forward:Int, var reverse:Int)
       val counts: Map[String, Counts] = Map(ref.toUpperCase -> new Counts(0,0))
       
       def addCount(s:String) {
@@ -136,14 +139,26 @@ object MpileupToVcf {
         }
       }
       
+      val info: ArrayBuffer[String] = ArrayBuffer("DP=" + reads)
+      val format: Map[String, String] = Map("DP" -> reads.toString)
+      val alt: ArrayBuffer[String] = new ArrayBuffer
+      format += ("RFC" -> counts(ref.toUpperCase).forward.toString)
+      format += ("RRC" -> counts(ref.toUpperCase).reverse.toString)
+      format += ("AD" -> (counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse).toString)
       if (reads >= minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward+value.reverse >= minAP) {
-        val info: String = "DP=" + reads
-        val format: String = "DP:RFC:RRC:AFC:ARC:FREQ\t" + reads + ":" + 
-                          counts(ref.toUpperCase).forward + ":" + counts(ref.toUpperCase).reverse +
-                          ":" + value.forward + ":" + value.reverse + 
-                          ":" + round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2 + "%"
-        val outputLine: Array[String] = Array(chr, pos, ".", ref.toUpperCase, key, ".", ".", info, format)
-        writer.println(outputLine.mkString("\t"))
+        alt += key
+        format += ("AD" -> (format("AD") + "," + (value.forward + value.reverse).toString))
+        format += ("AFC" -> ( (if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
+        format += ("ARC" -> ( (if (format.contains("ARC")) format("ARC") + "," else "") + value.reverse))
+        format += ("FREQ" -> ( (if (format.contains("FREQ")) format("FREQ") + "," else "") + 
+                              round((value.forward+value.reverse).toDouble/reads*1E4).toDouble/1E2))
+      }
+      
+      if (alt.size > 0) {
+        info += ("AF=" + format("FREQ"))
+        writer.println(Array(chr, pos, ".", ref.toUpperCase, alt.mkString(","), ".", ".", info.mkString(";"), 
+                                    format.keys.mkString(":"), format.values.mkString(":")
+                            ).mkString("\t"))
       }
     }
     writer.close
