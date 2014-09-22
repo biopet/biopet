@@ -95,6 +95,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         vcfFilter.inputVcf = m2v.output
         vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
         add(vcfFilter)
+        scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         
         val hcAlleles = new HaplotypeCaller(this)
         hcAlleles.input_file = scriptOutput.bamFiles
@@ -147,6 +148,7 @@ object GatkVariantcalling extends PipelineCommand {
     var gvcfFile: File = _
     var vcfFile: File = _
     var rawVcfFile: File = _
+    var rawFilterVcfFile: File = _
     var rawGenotypeVcf: File = _
   }
 }

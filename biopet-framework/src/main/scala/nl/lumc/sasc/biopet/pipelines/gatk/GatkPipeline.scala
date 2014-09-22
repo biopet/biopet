@@ -91,7 +91,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       if (jointVariantcalling) {
         val allBamfiles = for ((sampleID,sampleOutput) <- samplesOutput;
                                 file <- sampleOutput.variantcalling.bamFiles) yield file
-        val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawVcfFile
+        val allRawVcfFiles = for ((sampleID,sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
         val hcDiscorvery = new HaplotypeCaller(this)
         hcDiscorvery.input_file = allBamfiles.toSeq
         hcDiscorvery.scatterCount = config("scattercount", submodule = "multisample")
