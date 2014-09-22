@@ -124,6 +124,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           else List(hcDiscorvery.out, allelesOnly.out)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + "variantcalling/final.vcf.gz")
+        cvFinal.filteredrecordsmergetype = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.FilteredRecordMergeType.KEEP_UNCONDITIONAL
         add(cvFinal)        
       }
     } else runSingleSampleJobs(onlySample)

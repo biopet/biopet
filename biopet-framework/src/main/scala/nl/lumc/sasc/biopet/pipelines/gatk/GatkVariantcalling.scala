@@ -122,6 +122,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           else List(genotypeGVCFs.out, allelesOnly.out)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + outputName + ".final.vcf.gz")
+        cvFinal.filteredrecordsmergetype = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.FilteredRecordMergeType.KEEP_UNCONDITIONAL
         add(cvFinal)
       }
     }
