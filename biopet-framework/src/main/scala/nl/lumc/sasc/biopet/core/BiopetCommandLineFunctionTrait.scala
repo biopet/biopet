@@ -26,7 +26,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var vmem: String = _
   val defaultVmem: String = ""
 
-  @Argument(doc = "Executable")
+  @Argument(doc = "Executable", required = false)
   var executable: String = _
 
   protected[core] def beforeCmd {
@@ -66,18 +66,18 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         logger.error("executable: '" + executable + "' not found, please check config")
         throw new QException("executable: '" + executable + "' not found, please check config")
       }
+    
+      val is = new FileInputStream(executable)
+      val cnt = is.available
+      val bytes = Array.ofDim[Byte](cnt)
+      is.read(bytes)
+      is.close()
+      val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+
+      addJobReportBinding("md5sum_exe", md5)
     } catch {
       case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
     }
-    
-    val is = new FileInputStream(executable)
-    val cnt = is.available
-    val bytes = Array.ofDim[Byte](cnt)
-    is.read(bytes)
-    is.close()
-    val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
-    
-    addJobReportBinding("md5sum_exe", md5)
   }
 
   final protected def preCmdInternal {
