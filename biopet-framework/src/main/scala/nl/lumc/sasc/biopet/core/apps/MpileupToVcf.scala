@@ -4,12 +4,13 @@ import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.samtools.{SamtoolsMpileup, SamtoolsView}
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.math.round
 import scala.math.floor
+import scala.collection.JavaConversions._
 
 class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -28,19 +29,24 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var homoFraction:Option[Double] = config("homoFraction")
   var ploity:Option[Int] = config("ploity")
   var sample: String = _
+  var reference: String = config("reference")
   
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultVmem = "6G"
+  memoryLimit = Option(2.0)
   
-  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed").getStringList.head))
-  defaults ++= Map("samtoolsview" -> Map("b" -> true, "h" -> true))
+  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed").getStringList.head,
+                                                                              "disable_baq" -> true, "min_map_quality" -> 1))
+  
+  override def afterGraph {
+    super.afterGraph
+    val samtoolsMpileup = new SamtoolsMpileup(this)
+  }
   
   override def commandLine = {
     (if (inputMpileup == null) {
-      val samtoolsView = new SamtoolsView(this)
       val samtoolsMpileup = new SamtoolsMpileup(this)
-      samtoolsView.input = inputBam
-      samtoolsView.cmdPipe + " | " + samtoolsMpileup.cmdPipeInput + " | "
+      samtoolsMpileup.input = inputBam
+      samtoolsMpileup.cmdPipe + " | "
     } else "") + 
       super.commandLine + 
       required("-o", output) + 
@@ -81,8 +87,8 @@ object MpileupToVcf {
     }
     if (input != null && !input.exists) throw new IllegalStateException("Input file does not exist")
     if (output == null) throw new IllegalStateException("Output file not found, use -o")
-    if (sample == null) throw new IllegalStateException("Output not given, pls use -sample")
-    
+    if (sample == null) throw new IllegalStateException("sample not given, pls use -sample")
+        
     val writer = new PrintWriter(output)
     writer.println("##fileformat=VCFv4.1")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
@@ -179,7 +185,6 @@ object MpileupToVcf {
           }
           left -= ad(max)
         }
-        info += ("AF=" + format("FREQ"))
         writer.println(Array(chr, pos, ".", ref.toUpperCase, alt.mkString(","), ".", ".", info.mkString(";"), 
                                     "GT:" + format.keys.mkString(":"), gt.sortWith(_ < _).mkString("/") + ":" + format.values.mkString(":")
                             ).mkString("\t"))
