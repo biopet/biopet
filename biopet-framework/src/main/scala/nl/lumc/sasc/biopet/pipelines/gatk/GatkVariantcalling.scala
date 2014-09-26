@@ -1,15 +1,17 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand , BiopetCommandLineFunction}
 import java.io.File
 import nl.lumc.sasc.biopet.core.apps.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator, SelectVariants, CombineVariants}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScript {
+  qscript =>
   def this() = this(null)
 
   val scriptOutput = new GatkVariantcalling.ScriptOutput
@@ -95,16 +97,27 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         scriptOutput.rawVcfFile = m2v.output
 
         val vcfFilter = new VcfFilter(this)
-        vcfFilter.defaults ++= Map("min_sample_depth" -> 8, "min_alternate_depth" -> 4, "min_samples_pass" -> 1)
+        vcfFilter.defaults ++= Map("min_sample_depth" -> 8, 
+                                   "min_alternate_depth" -> 2, 
+                                   "min_samples_pass" -> 1, 
+                                   "filter_ref_calls" -> true)
         vcfFilter.inputVcf = m2v.output
         vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
         add(vcfFilter)
         scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         
+        val alleleOnly = new CommandLineFunction {
+          @Input val input: File = vcfFilter.outputVcf
+          @Output val output: File = outputDir + "variantcalling/raw.allele_only.vcf.gz"
+          @Output val outputindex: File = outputDir + "variantcalling/raw.allele_only.vcf.gz.tbi"
+          def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
+        }
+        add(alleleOnly, isIntermediate = true)
+        
         val hcAlleles = new HaplotypeCaller(this)
         hcAlleles.input_file = scriptOutput.bamFiles
         hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
-        hcAlleles.alleles = vcfFilter.outputVcf
+        hcAlleles.alleles = alleleOnly.output
         hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
         add(hcAlleles)
         scriptOutput.rawGenotypeVcf = hcAlleles.out
@@ -117,9 +130,21 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         allelesOnly.discordance = genotypeGVCFs.out
         add(allelesOnly)
         
+        def removeNoneVariants(input:File): File = {
+          val output = input.getAbsolutePath.stripSuffix(".vcf.gz") + ".variants_only.vcf.gz"
+          val sv = SelectVariants(this, input, output)
+          sv.excludeFiltered = true
+          sv.excludeNonVariants = true
+          add(sv, isIntermediate = true)
+          sv.out
+        }
+        
         def mergeList = {
-          if (config("prio_calls", default = "discovery").getString != "discovery") List(hcAlleles.out, discoveryOnly.out, vcfFilter.outputVcf)
-          else List(genotypeGVCFs.out, allelesOnly.out, vcfFilter.outputVcf)
+          val allele = new TaggedFile(removeNoneVariants(hcAlleles.out), "allele_mode")
+          val disc = new TaggedFile(removeNoneVariants(genotypeGVCFs.out), "discovery_mode")
+          val raw = new TaggedFile(removeNoneVariants(vcfFilter.outputVcf), "raw_mode")
+          if (config("prio_calls", default = "discovery").getString != "discovery") List(allele, disc, raw)
+          else List(disc, allele, raw)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + outputName + ".final.vcf.gz")
         cvFinal.filteredrecordsmergetype = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.FilteredRecordMergeType.KEEP_UNCONDITIONAL
