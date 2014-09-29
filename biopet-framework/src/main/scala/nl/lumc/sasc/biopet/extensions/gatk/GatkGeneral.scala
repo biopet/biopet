@@ -6,7 +6,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
   memoryLimit = Option(2)
   
-  override val defaultVmem = "4G"
+  override val defaultVmem = "6G"
   
   if (config.contains("intervals", submodule = "gatk")) intervals = config("intervals", submodule = "gatk").getFileList
   if (config.contains("exclude_intervals", submodule = "gatk")) excludeIntervals = config("exclude_intervals", submodule = "gatk").getFileList

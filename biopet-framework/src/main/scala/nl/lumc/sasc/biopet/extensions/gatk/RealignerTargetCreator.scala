@@ -4,7 +4,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class RealignerTargetCreator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.RealignerTargetCreator with GatkGeneral {
-  override val defaultVmem = "5G"
+  override val defaultVmem = "6G"
+  memoryLimit = Some(2.5)
   
   if (config.contains("scattercount")) scatterCount = config("scattercount")
 
