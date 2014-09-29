@@ -33,8 +33,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   
   var preProcesBams = true
   var variantcalling = true
+  var useAllelesOption: Boolean = _
 
   def init() {
+    useAllelesOption = config("use_alleles_option", default = false)
     if (reference == null) reference = config("reference", required = true)
     if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputName == null && sampleID != null) outputName = sampleID
@@ -106,29 +108,31 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         add(vcfFilter)
         scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         
-        val alleleOnly = new CommandLineFunction {
-          @Input val input: File = vcfFilter.outputVcf
-          @Output val output: File = outputDir + "variantcalling/raw.allele_only.vcf.gz"
-          @Output val outputindex: File = outputDir + "variantcalling/raw.allele_only.vcf.gz.tbi"
-          def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
+        if (useAllelesOption) {
+          val alleleOnly = new CommandLineFunction {
+            @Input val input: File = vcfFilter.outputVcf
+            @Output val output: File = outputDir + "variantcalling/raw.allele_only.vcf.gz"
+            @Output val outputindex: File = outputDir + "variantcalling/raw.allele_only.vcf.gz.tbi"
+            def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
+          }
+          add(alleleOnly, isIntermediate = true)
+
+          val hcAlleles = new HaplotypeCaller(this)
+          hcAlleles.input_file = scriptOutput.bamFiles
+          hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
+          hcAlleles.alleles = alleleOnly.output
+          hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
+          add(hcAlleles)
+          scriptOutput.rawGenotypeVcf = hcAlleles.out
+
+//          val discoveryOnly = SelectVariants(this, genotypeGVCFs.out, outputDir + outputName + ".discovery.only.vcf.gz")
+//          discoveryOnly.discordance = hcAlleles.out
+//          add(discoveryOnly)
+//
+//          val allelesOnly = SelectVariants(this, hcAlleles.out, outputDir + outputName + ".genotype_raw_alleles.only.vcf.gz")
+//          allelesOnly.discordance = genotypeGVCFs.out
+//          add(allelesOnly)
         }
-        add(alleleOnly, isIntermediate = true)
-        
-        val hcAlleles = new HaplotypeCaller(this)
-        hcAlleles.input_file = scriptOutput.bamFiles
-        hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
-        hcAlleles.alleles = alleleOnly.output
-        hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
-        add(hcAlleles)
-        scriptOutput.rawGenotypeVcf = hcAlleles.out
-        
-        val discoveryOnly = SelectVariants(this, genotypeGVCFs.out, outputDir + outputName + ".discovery.only.vcf.gz")
-        discoveryOnly.discordance = hcAlleles.out
-        add(discoveryOnly)
-        
-        val allelesOnly = SelectVariants(this, hcAlleles.out, outputDir + outputName + ".genotype_raw_alleles.only.vcf.gz")
-        allelesOnly.discordance = genotypeGVCFs.out
-        add(allelesOnly)
         
         def removeNoneVariants(input:File): File = {
           val output = input.getAbsolutePath.stripSuffix(".vcf.gz") + ".variants_only.vcf.gz"
@@ -140,14 +144,15 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         }
         
         def mergeList = {
-          val allele = new TaggedFile(removeNoneVariants(hcAlleles.out), "allele_mode")
           val disc = new TaggedFile(removeNoneVariants(genotypeGVCFs.out), "discovery_mode")
           val raw = new TaggedFile(removeNoneVariants(vcfFilter.outputVcf), "raw_mode")
-          if (config("prio_calls", default = "discovery").getString != "discovery") List(allele, disc, raw)
-          else List(disc, allele, raw)
+          if (useAllelesOption) {
+            val allele = new TaggedFile(removeNoneVariants(scriptOutput.rawGenotypeVcf), "allele_mode")
+            if (config("prio_calls", default = "discovery").getString != "discovery") List(allele, disc, raw)
+            else List(disc, allele, raw)
+        } else List(disc, raw)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + outputName + ".final.vcf.gz")
-        cvFinal.filteredrecordsmergetype = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.FilteredRecordMergeType.KEEP_UNCONDITIONAL
         add(cvFinal)
       }
     }
