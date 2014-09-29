@@ -27,7 +27,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var minDP:Option[Int] = config("min_dp")
   var minAP:Option[Int] = config("min_ap")
   var homoFraction:Option[Double] = config("homoFraction")
-  var ploity:Option[Int] = config("ploity")
+  var ploidy:Option[Int] = config("ploidy")
   var sample: String = _
   var reference: String = config("reference")
   
@@ -53,7 +53,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
       optional("-minDP", minDP) + 
       optional("-minAP", minAP) +
       optional("-homoFraction", homoFraction) +
-      optional("-ploity", ploity) +
+      optional("-ploidy", ploidy) +
       required("-sample", sample) + 
       (if (inputBam == null) required("-I", inputMpileup) else "")
   }
@@ -66,7 +66,7 @@ object MpileupToVcf {
   var minDP = 8
   var minAP = 2
   var homoFraction = 0.8
-  var ploity = 2
+  var ploidy = 2
   
   /**
    * @param args the command line arguments
@@ -81,7 +81,7 @@ object MpileupToVcf {
         case "-minAP" => minAP = args(t+1).toInt
         case "-sample" => sample = args(t+1)
         case "-homoFraction" => homoFraction = args(t+1).toDouble
-        case "-ploity" => ploity = args(t+1).toInt
+        case "-ploidy" => ploidy = args(t+1).toInt
         case _ =>
       }
     }
@@ -175,13 +175,13 @@ object MpileupToVcf {
         var left = reads
         val gt = ArrayBuffer[Int]()
         
-        for (p <- 0 to alt.size if gt.size < ploity) {
+        for (p <- 0 to alt.size if gt.size < ploidy) {
           var max = -1
           for (a <- 0 until ad.length if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.exists(_ == a)) max = a
-          val f = ad(max).toDouble / reads
-          for (a <- 0 to floor(f).toInt if gt.size < ploity) gt.append(max)
+          val f = ad(max).toDouble / left
+          for (a <- 0 to floor(f).toInt if gt.size < ploidy) gt.append(max)
           if (f - floor(f) >= homoFraction) {
-            for (b <- p to ploity if gt.size < ploity) gt.append(max)
+            for (b <- p to ploidy if gt.size < ploidy) gt.append(max)
           }
           left -= ad(max)
         }
