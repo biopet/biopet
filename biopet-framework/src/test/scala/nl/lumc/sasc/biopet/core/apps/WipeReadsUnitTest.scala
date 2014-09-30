@@ -109,13 +109,13 @@ class WipeReadsUnitTest extends Assertions {
   @Test def testOptSingleReadGroup() = {
     val argList = List("--readGroup", "g1") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(Array("g1").sameElements(opts("readGroup")))
+    assert(opts("readGroup") == Seq("g1"))
   }
 
   @Test def testOptMultipleReadGroup() = {
     val argList = List("--readGroup", "g1,g2") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(Array("g1", "g2").sameElements(opts("readGroup")))
+    assert(opts("readGroup") == Seq("g1", "g2"))
   }
 }
 

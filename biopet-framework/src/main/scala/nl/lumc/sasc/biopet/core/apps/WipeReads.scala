@@ -70,7 +70,7 @@ object WipeReads {
           => parseOption(opts ++ Map("limitToRegion" -> true), tail)
       // TODO: better way to parse multiple flag values?
       case ("--readGroup" | "-RG") :: value :: tail if !opts.contains("readGroup")
-          => parseOption(opts ++ Map("readGroup" -> value.split(",")), tail)
+          => parseOption(opts ++ Map("readGroup" -> value.split(",").toSeq), tail)
       case option :: tail
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
