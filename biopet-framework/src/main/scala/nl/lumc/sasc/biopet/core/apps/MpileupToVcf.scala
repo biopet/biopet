@@ -124,6 +124,7 @@ object MpileupToVcf {
       }
       
       var t = 0
+      var dels = 0
       while(t < mpileup.size) {
         mpileup(t) match {
           case ',' => {
@@ -136,6 +137,10 @@ object MpileupToVcf {
           }
           case '^' => t += 2
           case '$' => t += 1
+          case '*' => {
+              dels += 1
+              t += 1
+          }
           case '+' | '-' => {
               t += 1
               var size = ""
@@ -172,7 +177,7 @@ object MpileupToVcf {
       
       if (alt.size > 0) {
         val ad = for (ad <- format("AD").split(",")) yield ad.toInt
-        var left = reads
+        var left = reads - dels
         val gt = ArrayBuffer[Int]()
         
         for (p <- 0 to alt.size if gt.size < ploidy) {
