@@ -105,7 +105,11 @@ object WipeReads {
       |  -o,--outputBAM             Output BAM file
       |
       |optional arguments:
-      |  -f,--minOverlapFraction    Minimum overlap of reads and target regions
+      |  -RG,--readGroup            Read groups to remove (default: all)
+      |  -Q,--minMapQ               Minimum MAPQ value of reads in target region (default: 0)
+      |  --limitToRegion            Whether to remove only reads in the target regions and and
+      |                             keep the same reads if they map to other regions
+      |                             (default: not set)
       |
       |This tool will remove BAM records that overlaps a set of given regions.
       |By default, if the removed reads are also mapped to other regions outside
