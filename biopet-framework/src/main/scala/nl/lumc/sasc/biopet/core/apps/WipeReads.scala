@@ -58,19 +58,22 @@ object WipeReads {
           => parseOption(opts ++ Map("targetRegions" -> checkInputFile(new File(value))), tail)
       case ("--outputBAM" | "-o") :: value :: tail if !opts.contains("outputBAM")
           => parseOption(opts ++ Map("outputBAM" -> new File(value)), tail)
+      // TODO: implementation
       case ("--minOverlapFraction" | "-f") :: value :: tail if !opts.contains("minOverlapFraction")
           => parseOption(opts ++ Map("minOverlapFraction" -> value.toDouble), tail)
       case ("--minMapQ" | "-Q") :: value :: tail if !opts.contains("minMapQ")
           => parseOption(opts ++ Map("minMapQ" -> value.toInt), tail)
-      case ("--strand" | "-s") :: (value @ ("plus" | "minus" | "ignore")) :: tail if !opts.contains("strand")
+      // TODO: implementation
+      case ("--strand" | "-s") :: (value @ ("identical" | "opposite" | "both")) :: tail if !opts.contains("strand")
           => parseOption(opts ++ Map("strand" -> Strand.withName(value.capitalize)), tail)
+      // TODO: implementation
       case ("--makeIndex") :: tail
           => parseOption(opts ++ Map("makeIndex" -> true), tail)
       case ("--limitToRegion" | "-limit") :: tail
           => parseOption(opts ++ Map("limitToRegion" -> true), tail)
       // TODO: better way to parse multiple flag values?
       case ("--readGroup" | "-RG") :: value :: tail if !opts.contains("readGroup")
-          => parseOption(opts ++ Map("readGroup" -> value.split(",").toSeq), tail)
+          => parseOption(opts ++ Map("readGroup" -> value.split(",").toVector), tail)
       case option :: tail
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }

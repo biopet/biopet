@@ -76,22 +76,22 @@ class WipeReadsUnitTest extends Assertions {
     assert(opts("minMapQ") == 13)
   }
 
-  @Test def testOptStrandPlus() = {
-    val argList = List("--strand", "plus") ::: minArgList
+  @Test def testOptStrandIdentical() = {
+    val argList = List("--strand", "identical") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Plus)
+    assert(opts("strand") == Strand.Identical)
   }
 
-  @Test def testOptStrandMinus() = {
-    val argList = List("--strand", "minus") ::: minArgList
+  @Test def testOptStrandOpposite() = {
+    val argList = List("--strand", "opposite") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Minus)
+    assert(opts("strand") == Strand.Opposite)
   }
 
-  @Test def testOptStrandIgnore() = {
-    val argList = List("--strand", "ignore") ::: minArgList
+  @Test def testOptStrandBoth() = {
+    val argList = List("--strand", "both") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Ignore)
+    assert(opts("strand") == Strand.Both)
   }
 
   @Test def testOptMakeIndex() = {
@@ -109,13 +109,13 @@ class WipeReadsUnitTest extends Assertions {
   @Test def testOptSingleReadGroup() = {
     val argList = List("--readGroup", "g1") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Seq("g1"))
+    assert(opts("readGroup") == Vector("g1"))
   }
 
   @Test def testOptMultipleReadGroup() = {
     val argList = List("--readGroup", "g1,g2") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Seq("g1", "g2"))
+    assert(opts("readGroup") == Vector("g1", "g2"))
   }
 }
 
