@@ -33,34 +33,36 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 object WipeReads {
 
   type OptionMap = Map[String, Any]
-  case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
 
   private object Strand extends Enumeration {
     type Strand = Value
     val Identical, Opposite, Both = Value
   }
 
-  private def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
-    // BED file coordinates are 0-based, half open so we need to do some conversion
-    Source.fromFile(inFile)
-      .getLines()
-      .filterNot(_.trim.isEmpty)
-      .dropWhile(_.matches("^track | ^browser "))
-      .map(line => line.trim.split("\t") match {
-        case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
-        case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
-    })
-
-  private def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
-  // convert coordinate to 1-based fully closed
-  // parse chrom, start blocks, end blocks, strands
-
-  private def makeRawIntervalFromGTF(inFile: File): Iterator[RawInterval] = ???
-  // convert coordinate to 1-based fully closed
-  // parse chrom, start blocks, end blocks, strands
-
   // TODO: check that interval chrom is in the BAM file (optionally, when prepended with 'chr' too)
   def makeQueryIntervalFromFile(inFile: File, inBAM: SAMFileReader): Iterator[QueryInterval] = {
+
+    case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
+
+    def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
+    // BED file coordinates are 0-based, half open so we need to do some conversion
+      Source.fromFile(inFile)
+        .getLines()
+        .filterNot(_.trim.isEmpty)
+        .dropWhile(_.matches("^track | ^browser "))
+        .map(line => line.trim.split("\t") match {
+        case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
+        case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
+      })
+
+    def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
+
+    def makeRawIntervalFromGTF(inFile: File): Iterator[RawInterval] = ???
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
+
     // detect interval file format from extension
     val iterFunc: (File => Iterator[RawInterval]) =
       if (getExtension(inFile.toString.toLowerCase) == "bed")
