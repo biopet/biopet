@@ -37,7 +37,7 @@ object WipeReads {
 
   object Strand extends Enumeration {
     type Strand = Value
-    val Plus, Minus, Ignore = Value
+    val Identical, Opposite, Both = Value
   }
 
   private def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
