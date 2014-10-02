@@ -5,6 +5,7 @@
 package nl.lumc.sasc.biopet.core.apps
 
 import java.io.{ File, IOException }
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 import com.twitter.algebird.{ BF, BloomFilter }
@@ -35,7 +36,7 @@ object WipeReads {
 
   type OptionMap = Map[String, Any]
 
-  private object Strand extends Enumeration {
+  object Strand extends Enumeration {
     type Strand = Value
     val Identical, Opposite, Both = Value
   }
@@ -112,9 +113,9 @@ object WipeReads {
 
     // TODO: how to chain initTargets to filteredTargets directly?
     val initTargets: Iterator[Vector[SAMRecord]] = for {
-      x <- firstBAM.queryOverlapping(iv.toArray);
+      x <- firstBAM.queryOverlapping(iv.toArray).asScala
       // TODO: can we do without Vector here? It's only so we can flatten it later
-    } yield Vector(x, monadicMateQuery(secondBAM, x)).flatten
+    } yield Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten
 
     val filteredTargets: Iterator[SAMRecord] = initTargets.flatten
       // filter on minimum MAPQ value
