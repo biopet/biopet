@@ -35,7 +35,7 @@ object WipeReads {
   type OptionMap = Map[String, Any]
   case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
 
-  object Strand extends Enumeration {
+  private object Strand extends Enumeration {
     type Strand = Value
     val Identical, Opposite, Both = Value
   }
@@ -103,7 +103,7 @@ object WipeReads {
     else
       throw new IOException("Input file " + inFile.getPath + " not found")
 
-  def checkInputBAM(inBAM: File): File = {
+  private def checkInputBAM(inBAM: File): File = {
     // input BAM must have a .bam.bai index
     if (new File(inBAM.getPath + ".bai").exists)
       checkInputFile(inBAM)
@@ -141,7 +141,7 @@ object WipeReads {
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
 
-  def validateOption(opts: OptionMap): Unit = {
+  private def validateOption(opts: OptionMap): Unit = {
     // TODO: better way to check for required arguments ~ use scalaz.Validation?
     if (opts.get("inputBAM") == None)
       throw new IllegalArgumentException("Input BAM not supplied")
