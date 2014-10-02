@@ -7,6 +7,7 @@ package nl.lumc.sasc.biopet.core.apps
 import java.io.{ File, IOException }
 import scala.io.Source
 
+import com.twitter.algebird.{ BF, BloomFilter }
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMRecord
@@ -75,42 +76,57 @@ object WipeReads {
       .map(x => inBAM.makeQueryInterval(x.chrom, x.start, x.end))
   }
 
-  // TODO: implement optional index creation
-  private def prepIndexedInputBAM(inFile: File, inFileIndex: File = null): SAMFileReader =
-      if (inFileIndex != null)
-        new SAMFileReader(inFile, inFileIndex)
+  // TODO: set minimum fraction for overlap
+  def makeBloomFilter(iv: Iterator[QueryInterval],
+                      inBAM: File,
+                      inBAMIndex: File = null,
+                      filterOutMulti: Boolean = true,
+                      minMapQ: Int = 0,
+                      readGroupIDs: Set[String] = Set()): BF = {
+
+    // TODO: implement optional index creation
+    def prepIndexedInputBAM(): SAMFileReader =
+      if (inBAMIndex != null)
+        new SAMFileReader(inBAM, inBAMIndex)
       else {
-        val sfr = new SAMFileReader(inFile)
+        val sfr = new SAMFileReader(inBAM)
         if (!sfr.hasIndex)
           throw new IllegalStateException("Input BAM file must be indexed")
         else
           sfr
       }
 
-  def queryTargetRecords(iv: Iterator[QueryInterval], reader: SAMFileReader, minMapQ: Int = 0): Set[SAMRecord] = ???
-    // TODO: set minimum fraction for overlap
-    // TODO: RG filtering
-    // query BAM files for SAM records overlapping target region
-    // optional: filter for MapQ value
-    // conditional: get mates (if records are paired)
+    // TODO: can we accumulate errors / exceptions instead of ignoring them?
+    def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
+      try {
+        Some(inBAM.queryMate(rec))
+      } catch {
+        case e: Exception => None
+      }
 
-  def queryMateRecords(records: Vector[SAMRecord]): Set[SAMRecord] = ???
-  // query mates
+    val bloomSize: Int = 100000000
+    val bloomFp: Double = 1e-10
+    val firstBAM = prepIndexedInputBAM()
+    val secondBAM = prepIndexedInputBAM()
+    val bfm = BloomFilter(bloomSize, bloomFp, 13)
 
-  private def writeWipedBAM(inBAM: SAMFileReader, targetNames: Set[SAMRecord]): Unit = ???
+    // TODO: how to chain initTargets to filteredTargets directly?
+    val initTargets: Iterator[Vector[SAMRecord]] = for {
+      x <- firstBAM.queryOverlapping(iv.toArray);
+      // TODO: can we do without Vector here? It's only so we can flatten it later
+    } yield Vector(x, monadicMateQuery(secondBAM, x)).flatten
 
-  private def checkInputFile(inFile: File): File =
-    if (inFile.exists)
-      inFile
-    else
-      throw new IOException("Input file " + inFile.getPath + " not found")
+    val filteredTargets: Iterator[SAMRecord] = initTargets.flatten
+      // filter on minimum MAPQ value
+      .filter(x => x.getMappingQuality >= minMapQ)
+      // filter on specific read group IDs
+      .filter(x => if (readGroupIDs.size == 0) true else readGroupIDs.contains(x.getReadGroup.getReadGroupId))
 
-  private def checkInputBAM(inBAM: File): File = {
-    // input BAM must have a .bam.bai index
-    if (new File(inBAM.getPath + ".bai").exists)
-      checkInputFile(inBAM)
-    else
-      throw new IOException("Index for input BAM file " + inBAM.getPath + " not found")
+    // if filtering out multi-mapped reads, our elements is the read name
+    // otherwise it's the entire SAM string
+    filteredTargets
+      .map(x => if (filterOutMulti) x.getReadName else x.getSAMString)
+      .foldLeft(bfm.create())(_.+(_))
   }
 
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =
@@ -149,6 +165,20 @@ object WipeReads {
       throw new IllegalArgumentException("Input BAM not supplied")
     if (opts.get("targetRegions") == None)
       throw new IllegalArgumentException("Target regions file not supplied")
+  }
+
+  def checkInputFile(inFile: File): File =
+    if (inFile.exists)
+      inFile
+    else
+      throw new IOException("Input file " + inFile.getPath + " not found")
+
+  def checkInputBAM(inBAM: File): File = {
+    // input BAM must have a .bam.bai index
+    if (new File(inBAM.getPath + ".bai").exists)
+      checkInputFile(inBAM)
+    else
+      throw new IOException("Index for input BAM file " + inBAM.getPath + " not found")
   }
 
   def main(args: Array[String]): Unit = {
