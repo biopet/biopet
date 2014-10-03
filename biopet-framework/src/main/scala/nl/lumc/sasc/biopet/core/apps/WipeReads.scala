@@ -36,15 +36,15 @@ object WipeReads {
 
   type OptionMap = Map[String, Any]
 
+  case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
+
   object Strand extends Enumeration {
     type Strand = Value
     val Identical, Opposite, Both = Value
   }
 
   // TODO: check that interval chrom is in the BAM file (optionally, when prepended with 'chr' too)
-  def makeQueryIntervalFromFile(inFile: File, inBAM: SAMFileReader): Iterator[QueryInterval] = {
-
-    case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
+  def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
 
     def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
     // BED file coordinates are 0-based, half open so we need to do some conversion
@@ -73,12 +73,10 @@ object WipeReads {
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
     iterFunc(inFile)
-      .filter(x => inBAM.getFileHeader.getSequenceIndex(x.chrom) > -1)
-      .map(x => inBAM.makeQueryInterval(x.chrom, x.start, x.end))
   }
 
   // TODO: set minimum fraction for overlap
-  def makeBloomFilter(iv: Iterator[QueryInterval],
+  def makeBloomFilter(iv: Iterator[RawInterval],
                       inBAM: File, inBAMIndex: File = null,
                       filterOutMulti: Boolean = true,
                       minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
@@ -95,6 +93,20 @@ object WipeReads {
         else
           sfr
       }
+
+    // create objects for querying intervals, allowing for
+    // chromosome names with or without a "chr" prefix
+    def monadicMakeQueryInterval(inBAM: SAMFileReader, ri: RawInterval): Option[QueryInterval] =
+      if (inBAM.getFileHeader.getSequenceIndex(ri.chrom) > -1)
+        Some(inBAM.makeQueryInterval(ri.chrom, ri.start, ri.end))
+      else if (ri.chrom.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex(ri.chrom.substring(3)) > -1)
+        Some(inBAM.makeQueryInterval(ri.chrom.substring(3), ri.start, ri.end))
+      else if (!ri.chrom.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex("chr" + ri.chrom) > -1)
+        Some(inBAM.makeQueryInterval("chr" + ri.chrom, ri.start, ri.end))
+      else
+        None
 
     // TODO: can we accumulate errors / exceptions instead of ignoring them?
     def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
@@ -121,8 +133,9 @@ object WipeReads {
     val firstBAM = prepIndexedInputBAM()
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
+    val intervals = iv.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
 
-    firstBAM.queryOverlapping(iv.toArray).asScala
+    firstBAM.queryOverlapping(intervals).asScala
         // filter for MAPQ on target region reads
         .filter(x => x.getMappingQuality >= minMapQ)
         // filter on specific read group IDs
