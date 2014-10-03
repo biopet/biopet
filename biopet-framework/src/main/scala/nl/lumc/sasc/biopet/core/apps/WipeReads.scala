@@ -53,8 +53,8 @@ object WipeReads {
         .filterNot(_.trim.isEmpty)
         .dropWhile(_.matches("^track | ^browser "))
         .map(line => line.trim.split("\t") match {
-        case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
-        case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
+          case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
+          case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
       })
 
     def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
@@ -79,11 +79,10 @@ object WipeReads {
 
   // TODO: set minimum fraction for overlap
   def makeBloomFilter(iv: Iterator[QueryInterval],
-                      inBAM: File,
-                      inBAMIndex: File = null,
+                      inBAM: File, inBAMIndex: File = null,
                       filterOutMulti: Boolean = true,
-                      minMapQ: Int = 0,
-                      readGroupIDs: Set[String] = Set()): BF = {
+                      minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
+                      bloomSize: Int = 100000000, bloomFp: Double = 1e-10): BF = {
 
     // TODO: implement optional index creation
     def prepIndexedInputBAM(): SAMFileReader =
@@ -105,29 +104,35 @@ object WipeReads {
         case e: Exception => None
       }
 
-    val bloomSize: Int = 100000000
-    val bloomFp: Double = 1e-10
+    // filter function for read IDs
+    val rgFilter =
+      if (readGroupIDs.size == 0)
+        (r: SAMRecord) => true
+      else
+        (r: SAMRecord) => readGroupIDs.contains(r.getReadGroup.getReadGroupId)
+
+    // function to get set element
+    val SAMToElem =
+      if (filterOutMulti)
+        (r: SAMRecord) => r.getReadName
+      else
+        (r: SAMRecord) => r.getSAMString
+
     val firstBAM = prepIndexedInputBAM()
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
 
-    // TODO: how to chain initTargets to filteredTargets directly?
-    val initTargets: Iterator[Vector[SAMRecord]] = for {
-      x <- firstBAM.queryOverlapping(iv.toArray).asScala
-      // TODO: can we do without Vector here? It's only so we can flatten it later
-    } yield Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten
-
-    val filteredTargets: Iterator[SAMRecord] = initTargets.flatten
-      // filter on minimum MAPQ value
-      .filter(x => x.getMappingQuality >= minMapQ)
-      // filter on specific read group IDs
-      .filter(x => if (readGroupIDs.size == 0) true else readGroupIDs.contains(x.getReadGroup.getReadGroupId))
-
-    // if filtering out multi-mapped reads, our elements is the read name
-    // otherwise it's the entire SAM string
-    filteredTargets
-      .map(x => if (filterOutMulti) x.getReadName else x.getSAMString)
-      .foldLeft(bfm.create())(_.+(_))
+    firstBAM.queryOverlapping(iv.toArray).asScala
+        // filter for MAPQ on target region reads
+        .filter(x => x.getMappingQuality >= minMapQ)
+        // filter on specific read group IDs
+        .filter(x => rgFilter(x))
+        // TODO: how to directly get SAMRecord and its pairs without multiple flattens?
+        .flatMap(x => Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten)
+        // transfrom SAMRecord to string
+        .map(x => SAMToElem(x))
+        // build bloom filter using fold to prevent loading all strings to memory
+        .foldLeft(bfm.create())(_.+(_))
   }
 
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =
