@@ -232,6 +232,4 @@ object WipeReads {
       |By default, if the removed reads are also mapped to other regions outside
       |the given ones, they will also be removed.
     """.stripMargin
-
-
 }
