@@ -110,10 +110,14 @@ object WipeReads {
 
     // TODO: can we accumulate errors / exceptions instead of ignoring them?
     def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
-      try {
-        Some(inBAM.queryMate(rec))
-      } catch {
-        case e: Exception => None
+      // catching unpaired read here since queryMate will raise an exception if not
+      if (!rec.getReadPairedFlag) {
+        None
+      } else {
+        inBAM.queryMate(rec) match {
+          case null     => None
+          case qres @ _ => Some(qres)
+        }
       }
 
     // filter function for read IDs
