@@ -20,9 +20,16 @@ class WipeReadsUnitTest extends Assertions {
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource(p).toURI).toString
 
+  private def makeTempBAM(): File =
+    File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
+
+  private def makeTempBAMIndex(bam: File): File =
+    new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
+
   val sbam01 = new File(resourcePath("/single01.bam"))
   val sbam02 = new File(resourcePath("/single02.bam"))
   val sbam03 = new File(resourcePath("/single03.bam"))
+  val sbam04 = new File(resourcePath("/single04.bam"))
   val pbam01 = new File(resourcePath("/paired01.bam"))
   val pbam02 = new File(resourcePath("/paired02.bam"))
   val pbam03 = new File(resourcePath("/paired03.bam"))
@@ -212,8 +219,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testWriteSingleBAMDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBAM = File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
-    val outBAMIndex = new File(outBAM.getAbsolutePath.stripSuffix(".bam") + ".bai")
+    val outBAM = makeTempBAM()
+    val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
     writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM)
@@ -225,10 +232,31 @@ class WipeReadsUnitTest extends Assertions {
     assert(outBAMIndex.exists)
   }
 
+  @Test def testWriteSingleBAMAndFilteredBAM() = {
+    val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
+    val outBAM = makeTempBAM()
+    val outBAMIndex = makeTempBAMIndex(outBAM)
+    outBAM.deleteOnExit()
+    outBAMIndex.deleteOnExit()
+    val filteredOutBAM = makeTempBAM()
+    val filteredOutBAMIndex = makeTempBAMIndex(filteredOutBAM)
+    filteredOutBAM.deleteOnExit()
+    filteredOutBAMIndex.deleteOnExit()
+    writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM, filteredOutBAM = filteredOutBAM)
+    val exp = new SAMFileReader(sbam04).asScala
+    val obs = new SAMFileReader(filteredOutBAM).asScala
+    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    assert(res.reduceLeft(_ && _))
+    assert(outBAM.exists)
+    assert(outBAMIndex.exists)
+    assert(filteredOutBAM.exists)
+    assert(filteredOutBAMIndex.exists)
+  }
+
   @Test def testWritePairBAMDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBAM = File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
-    val outBAMIndex = new File(outBAM.getAbsolutePath.stripSuffix(".bam") + ".bai")
+    val outBAM = makeTempBAM()
+    val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
     writeFilteredBAM(mockFilterOutFunc, pbam01, outBAM)

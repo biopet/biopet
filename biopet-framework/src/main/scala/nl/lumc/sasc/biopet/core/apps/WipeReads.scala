@@ -179,7 +179,7 @@ object WipeReads {
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
     val filteredBAM =
       if (filteredOutBAM != null)
-        factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
+        factory.makeBAMWriter(templateBAM.getFileHeader, true, filteredOutBAM)
       else
         null
 
