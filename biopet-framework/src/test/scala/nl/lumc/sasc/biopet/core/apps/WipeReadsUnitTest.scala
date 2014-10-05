@@ -171,8 +171,8 @@ class WipeReadsUnitTest extends Assertions {
     assert(isFilteredOut("r04\t99\tchrQ\t450\t60\t10M\t=\t490\t50\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
     assert(isFilteredOut("r04\t147\tchrQ\t490\t60\t10M\t=\t450\t-50\tGCATGCATGC\tEEFFGGHHII\tRG:Z:001\n"))
     /* TODO: exclude r05 from set
-    assert(!isFilteredOut("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1290\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r05\t147\tchrQ\t1290\t60\t5M100N5M\t=\t1250\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1140\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r05\t147\tchrQ\t1140\t60\t10M\t=\t850\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
      */
   }
 
