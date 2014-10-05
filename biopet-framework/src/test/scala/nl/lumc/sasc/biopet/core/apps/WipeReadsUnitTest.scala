@@ -47,17 +47,17 @@ class WipeReadsUnitTest extends Assertions {
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
     //       and only filling the filter with a few items
-    val bf = makeBloomFilter(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
     // by default, set elements are SAM record read names
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r03").isTrue)
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r03"))
     /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
              this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
-    assert(!bf.contains("r05").isTrue)
+    assert(!isFilteredOut("r05"))
      */
-    assert(!bf.contains("r06").isTrue)
-    assert(bf.contains("r01").isTrue)
-    assert(bf.contains("r04").isTrue)
+    assert(!isFilteredOut("r06"))
+    assert(isFilteredOut("r01"))
+    assert(isFilteredOut("r04"))
   }
 
   @Test def testSingleBAMFilterOutMultiNotSet() = {
@@ -66,17 +66,18 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+"), // overlaps r04
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
-    val bf = makeBloomFilter(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10, filterOutMulti = false)
-    assert(!bf.contains("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r01\t16\tchrQ\t190\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r03\t16\tchrQ\t690\t60\t10M\t*\t0\t0\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r01\t16\tchrQ\t290\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n").isTrue)
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10,
+                                              filterOutMulti = false)
+    assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r01\t16\tchrQ\t190\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r03\t16\tchrQ\t690\t60\t10M\t*\t0\t0\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n"))
+    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
+    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
+    assert(isFilteredOut("r01\t16\tchrQ\t290\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
+    assert(isFilteredOut("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
     /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
              this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
-    assert(!bf.contains("r05\t0\tchrQ\t890\t60\t5M200N5M\t*\t0\t0\tGATACGATAC\tFEFEFEFEFE\tRG:Z:001\n").isTrue)
+    assert(!isFilteredOut("r05\t0\tchrQ\t890\t60\t5M200N5M\t*\t0\t0\tGATACGATAC\tFEFEFEFEFE\tRG:Z:001\n"))
      */
   }
 
@@ -85,14 +86,15 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 291, 320, "+"),
       RawInterval("chrQ", 451, 480, "+")
     )
-    val bf = makeBloomFilter(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10, minMapQ = 60)
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
+                                              minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
-    assert(!bf.contains("r01").isTrue)
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r06").isTrue)
-    assert(!bf.contains("r08").isTrue)
-    assert(bf.contains("r04").isTrue)
-    assert(bf.contains("r07").isTrue)
+    assert(!isFilteredOut("r01"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r06"))
+    assert(!isFilteredOut("r08"))
+    assert(isFilteredOut("r04"))
+    assert(isFilteredOut("r07"))
   }
 
   @Test def testSingleBAMFilterMinMapQFilterOutMultiNotSet() = {
@@ -100,18 +102,18 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 291, 320, "+"),
       RawInterval("chrQ", 451, 480, "+")
     )
-    val bf = makeBloomFilter(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
-                             minMapQ = 60, filterOutMulti = false)
-    assert(!bf.contains("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r01\t16\tchrQ\t190\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n").isTrue)
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
+                                              minMapQ = 60, filterOutMulti = false)
+    assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r01\t16\tchrQ\t190\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n"))
     // this r01 is not in since it is below the MAPQ threshold
-    assert(!bf.contains("r01\t16\tchrQ\t290\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n").isTrue)
-    assert(!bf.contains("r07\t16\tchrQ\t860\t30\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r08\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:002\n").isTrue)
-    assert(bf.contains("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n").isTrue)
+    assert(!isFilteredOut("r01\t16\tchrQ\t290\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n"))
+    assert(!isFilteredOut("r07\t16\tchrQ\t860\t30\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
+    assert(!isFilteredOut("r08\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:002\n"))
+    assert(isFilteredOut("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
     // this r07 is not in since filterOuMulti is false
-    assert(bf.contains("r07\t16\tchrQ\t460\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n").isTrue)
+    assert(isFilteredOut("r07\t16\tchrQ\t460\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
   }
 
   @Test def testSingleBAMFilterReadGroupIDs() = {
@@ -119,13 +121,14 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 291, 320, "+"),
       RawInterval("chrQ", 451, 480, "+")
     )
-    val bf = makeBloomFilter(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10, readGroupIDs = Set("002", "003"))
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r04").isTrue)
-    assert(!bf.contains("r06").isTrue)
-    assert(!bf.contains("r08").isTrue)
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
+                                              readGroupIDs = Set("002", "003"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r04"))
+    assert(!isFilteredOut("r06"))
+    assert(!isFilteredOut("r08"))
     // only r01 is in the set since it is RG 002
-    assert(bf.contains("r01").isTrue)
+    assert(isFilteredOut("r01"))
   }
 
   @Test def testPairBAMDefault() = {
@@ -134,17 +137,17 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+"), // overlaps r04
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
-    val bf = makeBloomFilter(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
     // by default, set elements are SAM record read names
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r03").isTrue)
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r03"))
     /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
              this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
-    assert(!bf.contains("r05").isTrue)
+    assert(!isFilteredOut("r05"))
      */
-    assert(!bf.contains("r06").isTrue)
-    assert(bf.contains("r01").isTrue)
-    assert(bf.contains("r04").isTrue)
+    assert(!isFilteredOut("r06"))
+    assert(isFilteredOut("r01"))
+    assert(isFilteredOut("r04"))
   }
 
   @Test def testPairBAMFilterOutMultiNotSet() = {
@@ -153,22 +156,23 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+"), // overlaps r04
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
-    val bf = makeBloomFilter(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10, filterOutMulti = false)
-    assert(!bf.contains("r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r01\t163\tchrQ\t150\t60\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r01\t83\tchrQ\t190\t60\t10M\t=\t150\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r03\t163\tchrQ\t650\t60\t10M\t=\t690\t50\tTTTTTCCCCC\tHHHHHHHHHH\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r03\t83\tchrQ\t690\t60\t10M\t=\t650\t-50\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r06\t4\t*\t0\t0\t*\t*\t0\t0\tGCGCGCGCGC\tHIHIHIHIHI\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r01\t163\tchrQ\t250\t60\t10M\t=\t290\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r01\t83\tchrQ\t290\t60\t10M\t=\t250\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r04\t99\tchrQ\t450\t60\t10M\t=\t490\t50\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(bf.contains("r04\t147\tchrQ\t490\t60\t10M\t=\t450\t-50\tGCATGCATGC\tEEFFGGHHII\tRG:Z:001\n").isTrue)
+    val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10,
+                                              filterOutMulti = false)
+    assert(!isFilteredOut("r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r01\t163\tchrQ\t150\t60\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n"))
+    assert(!isFilteredOut("r01\t83\tchrQ\t190\t60\t10M\t=\t150\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
+    assert(!isFilteredOut("r03\t163\tchrQ\t650\t60\t10M\t=\t690\t50\tTTTTTCCCCC\tHHHHHHHHHH\tRG:Z:001\n"))
+    assert(!isFilteredOut("r03\t83\tchrQ\t690\t60\t10M\t=\t650\t-50\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n"))
+    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
+    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tGCGCGCGCGC\tHIHIHIHIHI\tRG:Z:001\n"))
+    assert(isFilteredOut("r01\t163\tchrQ\t250\t60\t10M\t=\t290\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n"))
+    assert(isFilteredOut("r01\t83\tchrQ\t290\t60\t10M\t=\t250\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
+    assert(isFilteredOut("r04\t99\tchrQ\t450\t60\t10M\t=\t490\t50\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(isFilteredOut("r04\t147\tchrQ\t490\t60\t10M\t=\t450\t-50\tGCATGCATGC\tEEFFGGHHII\tRG:Z:001\n"))
     /* TODO: exclude r05 from set
-    assert(!bf.contains("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1290\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n").isTrue)
-    assert(!bf.contains("r05\t147\tchrQ\t1290\t60\t5M100N5M\t=\t1250\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n").isTrue)
+    assert(!isFilteredOut("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1290\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r05\t147\tchrQ\t1290\t60\t5M100N5M\t=\t1250\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
      */
   }
 
@@ -177,13 +181,14 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 291, 320, "+"),
       RawInterval("chrQ", 451, 480, "+")
     )
-    val bf = makeBloomFilter(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10, minMapQ = 60)
+    val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
+                                              minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
-    assert(!bf.contains("r01").isTrue)
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r06").isTrue)
-    assert(!bf.contains("r08").isTrue)
-    assert(bf.contains("r04").isTrue)
+    assert(!isFilteredOut("r01"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r06"))
+    assert(!isFilteredOut("r08"))
+    assert(isFilteredOut("r04"))
   }
 
   @Test def testPairBAMFilterReadGroupIDs() = {
@@ -191,13 +196,14 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 291, 320, "+"),
       RawInterval("chrQ", 451, 480, "+")
     )
-    val bf = makeBloomFilter(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10, readGroupIDs = Set("002", "003"))
-    assert(!bf.contains("r02").isTrue)
-    assert(!bf.contains("r04").isTrue)
-    assert(!bf.contains("r06").isTrue)
-    assert(!bf.contains("r08").isTrue)
+    val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
+                                              readGroupIDs = Set("002", "003"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r04"))
+    assert(!isFilteredOut("r06"))
+    assert(!isFilteredOut("r08"))
     // only r01 is in the set since it is RG 002
-    assert(bf.contains("r01").isTrue)
+    assert(isFilteredOut("r01"))
   }
 
   @Test def testOptMinimum() = {

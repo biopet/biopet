@@ -76,11 +76,12 @@ object WipeReads {
   }
 
   // TODO: set minimum fraction for overlap
-  def makeBloomFilter(iv: Iterator[RawInterval],
-                      inBAM: File, inBAMIndex: File = null,
-                      filterOutMulti: Boolean = true,
-                      minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                      bloomSize: Int = 100000000, bloomFp: Double = 1e-10): BF = {
+  def makeFilterOutFunction(iv: Iterator[RawInterval],
+                            inBAM: File, inBAMIndex: File = null,
+                            filterOutMulti: Boolean = true,
+                            minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
+                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10):
+                             (Any => Boolean) = {
 
     // TODO: implement optional index creation
     def prepIndexedInputBAM(): SAMFileReader =
@@ -138,8 +139,7 @@ object WipeReads {
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
     val intervals = iv.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
-
-    firstBAM.queryOverlapping(intervals).asScala
+    val filteredOutSet: BF = firstBAM.queryOverlapping(intervals).asScala
         // filter for MAPQ on target region reads
         .filter(x => x.getMappingQuality >= minMapQ)
         // filter on specific read group IDs
@@ -150,6 +150,19 @@ object WipeReads {
         .map(x => SAMToElem(x))
         // build bloom filter using fold to prevent loading all strings to memory
         .foldLeft(bfm.create())(_.+(_))
+
+    if (filterOutMulti)
+      (rec: Any) => rec match {
+        case rec: SAMRecord => filteredOutSet.contains(rec.getReadName).isTrue
+        case rec: String    => filteredOutSet.contains(rec).isTrue
+        case _ => false
+      }
+    else
+      (rec: Any) => rec match {
+        case rec: SAMRecord => filteredOutSet.contains(rec.getSAMString).isTrue
+        case rec: String    => filteredOutSet.contains(rec).isTrue
+        case _ => false
+      }
   }
 
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =
