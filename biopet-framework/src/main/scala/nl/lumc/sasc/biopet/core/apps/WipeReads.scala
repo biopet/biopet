@@ -11,6 +11,8 @@ import scala.io.Source
 import com.twitter.algebird.{ BF, BloomFilter }
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
+import htsjdk.samtools.SAMFileWriter
+import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -163,6 +165,34 @@ object WipeReads {
         case rec: String    => filteredOutSet.contains(rec).isTrue
         case _ => false
       }
+  }
+
+  // TODO: implement filtered reads BAM output and stats file output
+  def writeFilteredBAM(filterFunc: (SAMRecord => Boolean), inBAM: File, outBAM: File,
+                       writeIndex: Boolean = true, async: Boolean = true,
+                       filteredOutBAM: File = null) = {
+
+    val factory = new SAMFileWriterFactory()
+      .setCreateIndex(writeIndex)
+      .setUseAsyncIo(async)
+    val templateBAM = new SAMFileReader(inBAM)
+    val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
+    val filteredBAM =
+      if (filteredOutBAM != null)
+        factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
+      else
+        null
+
+    try {
+      for (rec: SAMRecord <- templateBAM.asScala) {
+        if (!filterFunc(rec)) targetBAM.addAlignment(rec)
+        else if (filteredBAM != null) filteredBAM.addAlignment(rec)
+      }
+    } finally {
+      templateBAM.close()
+      targetBAM.close()
+      if (filteredBAM != null) filteredBAM.close()
+    }
   }
 
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =

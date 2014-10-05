@@ -6,7 +6,9 @@ package nl.lumc.sasc.biopet.core.apps
 
 import java.nio.file.Paths
 import java.io.{ File, IOException }
+import scala.collection.JavaConverters._
 
+import htsjdk.samtools.{ SAMFileReader, SAMRecord }
 import org.scalatest.Assertions
 import org.testng.annotations.Test
 
@@ -20,8 +22,10 @@ class WipeReadsUnitTest extends Assertions {
 
   val sbam01 = new File(resourcePath("/single01.bam"))
   val sbam02 = new File(resourcePath("/single02.bam"))
+  val sbam03 = new File(resourcePath("/single03.bam"))
   val pbam01 = new File(resourcePath("/paired01.bam"))
   val pbam02 = new File(resourcePath("/paired02.bam"))
+  val pbam03 = new File(resourcePath("/paired03.bam"))
   val bed01 = new File(resourcePath("/rrna01.bed"))
   val minArgList = List("-I", sbam01.toString, "-l", bed01.toString, "-o", "mock.bam")
 
@@ -204,6 +208,36 @@ class WipeReadsUnitTest extends Assertions {
     assert(!isFilteredOut("r08"))
     // only r01 is in the set since it is RG 002
     assert(isFilteredOut("r01"))
+  }
+
+  @Test def testWriteSingleBAMDefault() = {
+    val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
+    val outBAM = File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
+    val outBAMIndex = new File(outBAM.getAbsolutePath.stripSuffix(".bam") + ".bai")
+    outBAM.deleteOnExit()
+    outBAMIndex.deleteOnExit()
+    writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM)
+    val exp = new SAMFileReader(sbam03).asScala
+    val obs = new SAMFileReader(outBAM).asScala
+    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    assert(res.reduceLeft(_ && _))
+    assert(outBAM.exists)
+    assert(outBAMIndex.exists)
+  }
+
+  @Test def testWritePairBAMDefault() = {
+    val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
+    val outBAM = File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
+    val outBAMIndex = new File(outBAM.getAbsolutePath.stripSuffix(".bam") + ".bai")
+    outBAM.deleteOnExit()
+    outBAMIndex.deleteOnExit()
+    writeFilteredBAM(mockFilterOutFunc, pbam01, outBAM)
+    val exp = new SAMFileReader(pbam03).asScala
+    val obs = new SAMFileReader(outBAM).asScala
+    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    assert(res.reduceLeft(_ && _))
+    assert(outBAM.exists)
+    assert(outBAMIndex.exists)
   }
 
   @Test def testOptMinimum() = {
