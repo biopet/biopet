@@ -20,7 +20,11 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
-
+// TODO: finish implementation for usage in pipelines
+/** WipeReads function class for usage in Biopet pipelines
+  *
+  * @param root Configuration object for the pipeline
+  */
 class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
@@ -36,18 +40,25 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object WipeReads {
 
+  /** Container type for command line flags */
   type OptionMap = Map[String, Any]
 
+  /** Container class for interval parsing results */
   case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
 
+  /** Enum type for strand overlap orientation */
   object Strand extends Enumeration {
     type Strand = Value
     val Identical, Opposite, Both = Value
   }
 
-  // TODO: check that interval chrom is in the BAM file (optionally, when prepended with 'chr' too)
+  /** Function to create iterator over intervals from input interval file
+    *
+    * @param inFile input interval file
+    */
   def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
 
+    /** Function to create iterator from BED file */
     def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
     // BED file coordinates are 0-based, half open so we need to do some conversion
       Source.fromFile(inFile)
@@ -59,10 +70,14 @@ object WipeReads {
           case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
       })
 
+    // TODO: implementation
+    /** Function to create iterator from refFlat file */
     def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
 
+    // TODO: implementation
+    /** Function to create iterator from GTF file */
     def makeRawIntervalFromGTF(inFile: File): Iterator[RawInterval] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
@@ -78,6 +93,20 @@ object WipeReads {
   }
 
   // TODO: set minimum fraction for overlap
+  /** Function to create function to check SAMRecord for exclusion in filtered BAM file.
+    *
+    * The returned function evaluates all filtered-in SAMRecord to false.
+    *
+    * @param iv iterator yielding RawInterval objects
+    * @param inBAM input BAM file
+    * @param inBAMIndex input BAM file index
+    * @param filterOutMulti whether to filter out reads with same name outside target region (default: true)
+    * @param minMapQ minimum MapQ of reads in target region to filter out (default: 0)
+    * @param readGroupIDs read group IDs of reads in target region to filter out (default: all IDs)
+    * @param bloomSize expected size of elements to contain in the Bloom filter
+    * @param bloomFp expected Bloom filter false positive rate
+    * @return function that checks whether a SAMRecord or String is to be excluded
+    */
   def makeFilterOutFunction(iv: Iterator[RawInterval],
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
@@ -86,6 +115,7 @@ object WipeReads {
                              (Any => Boolean) = {
 
     // TODO: implement optional index creation
+    /** Function to check for BAM file index and return a SAMFileReader given a File */
     def prepIndexedInputBAM(): SAMFileReader =
       if (inBAMIndex != null)
         new SAMFileReader(inBAM, inBAMIndex)
@@ -97,8 +127,15 @@ object WipeReads {
           sfr
       }
 
-    // create objects for querying intervals, allowing for
-    // chromosome names with or without a "chr" prefix
+    /** Function to query intervals from a BAM file
+      *
+      * The function still works when only either one of the interval or BAM
+      * file contig is prepended with "chr"
+      *
+      * @param inBAM BAM file to query as SAMFileReader
+      * @param ri raw interval object containing query
+      * @return QueryInterval wrapped in Option
+      */
     def monadicMakeQueryInterval(inBAM: SAMFileReader, ri: RawInterval): Option[QueryInterval] =
       if (inBAM.getFileHeader.getSequenceIndex(ri.chrom) > -1)
         Some(inBAM.makeQueryInterval(ri.chrom, ri.start, ri.end))
@@ -112,6 +149,12 @@ object WipeReads {
         None
 
     // TODO: can we accumulate errors / exceptions instead of ignoring them?
+    /** Function to query mate from a BAM file
+      *
+      * @param inBAM BAM file to query as SAMFileReader
+      * @param rec SAMRecord whose mate will be queried
+      * @return SAMRecord wrapped in Option
+      */
     def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
       // catching unpaired read here since queryMate will raise an exception if not
       if (!rec.getReadPairedFlag) {
@@ -123,14 +166,14 @@ object WipeReads {
         }
       }
 
-    // filter function for read IDs
+    /** filter function for read IDs */
     val rgFilter =
       if (readGroupIDs.size == 0)
         (r: SAMRecord) => true
       else
         (r: SAMRecord) => readGroupIDs.contains(r.getReadGroup.getReadGroupId)
 
-    // function to get set element
+    /** function to get set element */
     val SAMToElem =
       if (filterOutMulti)
         (r: SAMRecord) => r.getReadName
@@ -167,7 +210,16 @@ object WipeReads {
       }
   }
 
-  // TODO: implement filtered reads BAM output and stats file output
+  // TODO: implement stats file output
+  /** Function to filter input BAM and write its output to the filesystem
+    *
+    * @param filterFunc filter function that evaluates true for excluded SAMRecord
+    * @param inBAM input BAM file
+    * @param outBAM output BAM file
+    * @param writeIndex whether to write index for output BAM file
+    * @param async whether to write asynchronously
+    * @param filteredOutBAM whether to write excluded SAMRecords to their own BAM file
+    */
   def writeFilteredBAM(filterFunc: (SAMRecord => Boolean), inBAM: File, outBAM: File,
                        writeIndex: Boolean = true, async: Boolean = true,
                        filteredOutBAM: File = null) = {
@@ -195,6 +247,12 @@ object WipeReads {
     }
   }
 
+  /** Recursive function to parse command line options
+    *
+    * @param opts OptionMap instance which may contain parsed options
+    * @param list remaining command line arguments
+    * @return OptionMap instance
+    */
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =
     list match {
       case Nil
@@ -224,6 +282,7 @@ object WipeReads {
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
 
+  /** Function to validate OptionMap instances */
   private def validateOption(opts: OptionMap): Unit = {
     // TODO: better way to check for required arguments ~ use scalaz.Validation?
     if (opts.get("inputBAM") == None)
@@ -232,12 +291,14 @@ object WipeReads {
       throw new IllegalArgumentException("Target regions file not supplied")
   }
 
+  /** Function that returns the given File if it exists */
   def checkInputFile(inFile: File): File =
     if (inFile.exists)
       inFile
     else
       throw new IOException("Input file " + inFile.getPath + " not found")
 
+  /** Function that returns the given BAM file if it exists and is indexed */
   def checkInputBAM(inBAM: File): File = {
     // input BAM must have a .bam.bai index
     if (new File(inBAM.getPath + ".bai").exists || new File(inBAM.getPath + ".bam.bai").exists )
