@@ -313,9 +313,9 @@ class WipeReadsUnitTest extends Assertions {
   }
 
   @Test def testOptMakeIndex() = {
-    val argList = List("--makeIndex") ::: minArgList
+    val argList = List("--noMakeIndex") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("makeIndex") == true) // why can't we evaluate directly??
+    assert(opts("noMakeIndex") == true) // why can't we evaluate directly??
   }
 
   @Test def testOptLimitToRegion() = {
@@ -327,12 +327,12 @@ class WipeReadsUnitTest extends Assertions {
   @Test def testOptSingleReadGroup() = {
     val argList = List("--readGroup", "g1") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Vector("g1"))
+    assert(opts("readGroup") == Set("g1"))
   }
 
   @Test def testOptMultipleReadGroup() = {
     val argList = List("--readGroup", "g1,g2") ::: minArgList
     val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Vector("g1", "g2"))
+    assert(opts("readGroup") == Set("g1", "g2"))
   }
 }

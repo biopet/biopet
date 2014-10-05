@@ -205,22 +205,21 @@ object WipeReads {
           => parseOption(opts ++ Map("targetRegions" -> checkInputFile(new File(value))), tail)
       case ("--outputBAM" | "-o") :: value :: tail if !opts.contains("outputBAM")
           => parseOption(opts ++ Map("outputBAM" -> new File(value)), tail)
-      // TODO: implementation
-      case ("--minOverlapFraction" | "-f") :: value :: tail if !opts.contains("minOverlapFraction")
-          => parseOption(opts ++ Map("minOverlapFraction" -> value.toDouble), tail)
       case ("--minMapQ" | "-Q") :: value :: tail if !opts.contains("minMapQ")
           => parseOption(opts ++ Map("minMapQ" -> value.toInt), tail)
-      // TODO: implementation
-      case ("--strand" | "-s") :: (value @ ("identical" | "opposite" | "both")) :: tail if !opts.contains("strand")
-          => parseOption(opts ++ Map("strand" -> Strand.withName(value.capitalize)), tail)
-      // TODO: implementation
-      case ("--makeIndex") :: tail
-          => parseOption(opts ++ Map("makeIndex" -> true), tail)
-      case ("--limitToRegion" | "-limit") :: tail
-          => parseOption(opts ++ Map("limitToRegion" -> true), tail)
       // TODO: better way to parse multiple flag values?
       case ("--readGroup" | "-RG") :: value :: tail if !opts.contains("readGroup")
-          => parseOption(opts ++ Map("readGroup" -> value.split(",").toVector), tail)
+      => parseOption(opts ++ Map("readGroup" -> value.split(",").toSet), tail)
+      case ("--noMakeIndex") :: tail
+          => parseOption(opts ++ Map("noMakeIndex" -> true), tail)
+      case ("--limitToRegion" | "-limit") :: tail
+          => parseOption(opts ++ Map("limitToRegion" -> true), tail)
+      // TODO: implementation
+      case ("--minOverlapFraction" | "-f") :: value :: tail if !opts.contains("minOverlapFraction")
+      => parseOption(opts ++ Map("minOverlapFraction" -> value.toDouble), tail)
+      // TODO: implementation
+      case ("--strand" | "-s") :: (value @ ("identical" | "opposite" | "both")) :: tail if !opts.contains("strand")
+      => parseOption(opts ++ Map("strand" -> Strand.withName(value.capitalize)), tail)
       case option :: tail
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
@@ -255,13 +254,28 @@ object WipeReads {
     }
     val options = parseOption(Map(), args.toList)
     validateOption(options)
+
+    val inputBAM = options("inputBAM").asInstanceOf[File]
+    val outputBAM = options("outputBAM").asInstanceOf[File]
+
+    val iv = makeRawIntervalFromFile(options("targetRegions").asInstanceOf[File])
+    // limiting bloomSize to 70M and bloomFp to 4e-7 due to Int size limitation set in algebird
+    val filterFunc = makeFilterOutFunction(iv = iv,
+      inBAM = inputBAM,
+      filterOutMulti = !options.getOrElse("limitToRegion", false).asInstanceOf[Boolean],
+      minMapQ = options.getOrElse("minMapQ", 0).asInstanceOf[Int],
+      readGroupIDs = options.getOrElse("readGroupIDs", Set()).asInstanceOf[Set[String]],
+      bloomSize = 70000000, bloomFp = 4e-7)
+
+    writeFilteredBAM(filterFunc, inputBAM, outputBAM,
+      writeIndex = !options.getOrElse("noMakeIndex", false).asInstanceOf[Boolean])
   }
 
   val usage: String =
     """
-      |usage: java -cp BiopetFramework.jar nl.lumc.sasc.biopet-core.apps.WipeReads [options] -I input -l regions -o output
+      |usage: java -cp BiopetFramework.jar nl.lumc.sasc.biopet.core.apps.WipeReads [options] -I input -l regions -o output
       |
-      |WipeReads - Tool for reads removal from an indexed BAM file.
+      |WipeReads - Tool for reads removal from an indexed BAM file
       |
       |positional arguments:
       |  -I,--inputBAM              Input BAM file, must be indexed with '.bam.bai' or 'bai' extension
@@ -269,8 +283,12 @@ object WipeReads {
       |  -o,--outputBAM             Output BAM file
       |
       |optional arguments:
-      |  -RG,--readGroup            Read groups to remove (default: all)
-      |  -Q,--minMapQ               Minimum MAPQ value of reads in target region (default: 0)
+      |  -RG,--readGroup            Read groups to remove; set multiple read groups using commas
+      |                             (default: all)
+      |  -Q,--minMapQ               Minimum MAPQ value of reads in target region
+      |                             (default: 0)
+      |  --makeIndex                Write BAM output file index
+      |                             (default: true)
       |  --limitToRegion            Whether to remove only reads in the target regions and and
       |                             keep the same reads if they map to other regions
       |                             (default: not set)
