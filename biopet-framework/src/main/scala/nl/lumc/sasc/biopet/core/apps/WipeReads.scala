@@ -241,7 +241,7 @@ object WipeReads {
 
   def checkInputBAM(inBAM: File): File = {
     // input BAM must have a .bam.bai index
-    if (new File(inBAM.getPath + ".bai").exists)
+    if (new File(inBAM.getPath + ".bai").exists || new File(inBAM.getPath + ".bam.bai").exists )
       checkInputFile(inBAM)
     else
       throw new IOException("Index for input BAM file " + inBAM.getPath + " not found")
@@ -264,7 +264,7 @@ object WipeReads {
       |WipeReads - Tool for reads removal from an indexed BAM file.
       |
       |positional arguments:
-      |  -I,--inputBAM              Input BAM file, must be indexed with '.bam.bai' extension
+      |  -I,--inputBAM              Input BAM file, must be indexed with '.bam.bai' or 'bai' extension
       |  -l,--targetRegions         Input BED file
       |  -o,--outputBAM             Output BAM file
       |
