@@ -25,10 +25,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   @Argument(doc = "Merge gvcfs", shortName = "mergegvcfs", required = false)
   var mergeGvcfs: Boolean = false
 
-  @Argument(doc = "Joint variantcalling", shortName = "jointCalling", required = false)
+  @Argument(doc = "Joint variantcalling", shortName = "jointVariantCalling", required = false)
   var jointVariantcalling = false
   
-  @Argument(doc = "Joint genotyping", shortName = "jointCalling", required = false)
+  @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
   var jointGenotyping = false
   
   var reference: File = _
