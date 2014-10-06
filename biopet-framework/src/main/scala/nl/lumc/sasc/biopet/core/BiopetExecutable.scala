@@ -49,7 +49,7 @@ object BiopetExecutable {
     lazy val toolList: String = toBulletedList(tools, "tools")
 
     lazy val addendum: String =
-      """Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git"""".stripMargin
+      """Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git""".stripMargin
 
     lazy val baseUsage: String =
       """
