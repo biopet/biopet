@@ -61,13 +61,36 @@ class WipeReadsUnitTest extends Assertions {
     // by default, set elements are SAM record read names
     assert(!isFilteredOut("r02"))
     assert(!isFilteredOut("r03"))
-    /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
-             this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
     assert(!isFilteredOut("r05"))
-     */
     assert(!isFilteredOut("r06"))
     assert(isFilteredOut("r01"))
     assert(isFilteredOut("r04"))
+  }
+
+  @Test def testSingleBAMDefaultPartialExonOverlap() = {
+    val intervals: Iterator[RawInterval] = Iterator(
+      RawInterval("chrQ", 881, 1000, "+") // overlaps first exon of r05
+    )
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
+    assert(!isFilteredOut("r01"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r03"))
+    assert(!isFilteredOut("r04"))
+    assert(!isFilteredOut("r06"))
+    assert(isFilteredOut("r05"))
+  }
+
+  @Test def testSingleBAMDefaultNoExonOverlap() = {
+    val intervals: Iterator[RawInterval] = Iterator(
+      RawInterval("chrP", 881, 1000, "+")
+    )
+    val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
+    assert(!isFilteredOut("r01"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r03"))
+    assert(!isFilteredOut("r04"))
+    assert(!isFilteredOut("r06"))
+    assert(!isFilteredOut("r05"))
   }
 
   @Test def testSingleBAMFilterOutMultiNotSet() = {
@@ -85,10 +108,7 @@ class WipeReadsUnitTest extends Assertions {
     assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
     assert(isFilteredOut("r01\t16\tchrQ\t290\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
     assert(isFilteredOut("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
-    /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
-             this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
     assert(!isFilteredOut("r05\t0\tchrQ\t890\t60\t5M200N5M\t*\t0\t0\tGATACGATAC\tFEFEFEFEFE\tRG:Z:001\n"))
-     */
   }
 
   @Test def testSingleBAMFilterMinMapQ() = {
@@ -148,16 +168,25 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
-    // by default, set elements are SAM record read names
     assert(!isFilteredOut("r02"))
     assert(!isFilteredOut("r03"))
-    /* TODO: exclude r05 from set since the mapped read does not overlap with our interval
-             this is a limitation of htsjdk, as it checks for overlaps with records instead of alignment blocks
     assert(!isFilteredOut("r05"))
-     */
     assert(!isFilteredOut("r06"))
     assert(isFilteredOut("r01"))
     assert(isFilteredOut("r04"))
+  }
+
+  @Test def testPairBAMPartialExonOverlap() = {
+    val intervals: Iterator[RawInterval] = Iterator(
+      RawInterval("chrQ", 891, 1000, "+")
+    )
+    val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
+    assert(!isFilteredOut("r01"))
+    assert(!isFilteredOut("r02"))
+    assert(!isFilteredOut("r03"))
+    assert(!isFilteredOut("r04"))
+    assert(!isFilteredOut("r06"))
+    assert(isFilteredOut("r05"))
   }
 
   @Test def testPairBAMFilterOutMultiNotSet() = {
@@ -180,10 +209,8 @@ class WipeReadsUnitTest extends Assertions {
     assert(isFilteredOut("r01\t83\tchrQ\t290\t60\t10M\t=\t250\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
     assert(isFilteredOut("r04\t99\tchrQ\t450\t60\t10M\t=\t490\t50\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
     assert(isFilteredOut("r04\t147\tchrQ\t490\t60\t10M\t=\t450\t-50\tGCATGCATGC\tEEFFGGHHII\tRG:Z:001\n"))
-    /* TODO: exclude r05 from set
     assert(!isFilteredOut("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1140\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r05\t147\tchrQ\t1140\t60\t10M\t=\t850\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
-     */
   }
 
   @Test def testPairBAMFilterMinMapQ() = {

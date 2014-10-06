@@ -9,10 +9,12 @@ import scala.collection.JavaConverters._
 import scala.io.Source
 
 import com.twitter.algebird.{ BF, BloomFilter }
+import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
+import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -168,6 +170,30 @@ object WipeReads {
         }
       }
 
+    /**
+     * Function to ensure that a SAMRecord overlaps our target regions
+     *
+     * This is required because htsjdk's queryOverlap method does not take into
+     * account the SAMRecord splicing structure
+     *
+     * @param rec SAMRecord to check
+     * @param ivtm mutable mapping of a chromosome and its interval tree
+     * @return
+     */
+    def alignmentBlockOverlaps(rec: SAMRecord, ivtm: Map[String, IntervalTree]): Boolean =
+      // if SAMRecord is not spliced, assume queryOverlap has done its job
+      // otherwise check for alignment block overlaps in our interval list
+      // using raw SAMString to bypass cigar string decoding
+      if (rec.getSAMString.split("\t")(5).contains("N")) {
+        for (ab: AlignmentBlock <- rec.getAlignmentBlocks.asScala) {
+          if (!ivtm(rec.getReferenceName).findOverlapping(
+            new Interval(ab.getReferenceStart, ab.getReferenceStart + ab.getLength - 1, null)).isEmpty)
+            return true
+        }
+        false
+      } else
+        true
+
     /** filter function for read IDs */
     val rgFilter =
       if (readGroupIDs.size == 0)
@@ -185,8 +211,19 @@ object WipeReads {
     val firstBAM = prepIndexedInputBAM()
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
-    val intervals = iv.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
-    val filteredOutSet: BF = firstBAM.queryOverlapping(intervals).asScala
+
+    val intervals = iv.toList
+    val queryIntervals = intervals.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
+
+    /** interval tree for ensuring that split reads do overlap our target regions */
+    val ivtm = scala.collection.mutable.Map.empty[String, IntervalTree]
+    for (iv: RawInterval <- intervals) {
+      ivtm.getOrElseUpdate(iv.chrom, new IntervalTree).insert(new Interval(iv.start, iv.end))
+    }
+
+    val filteredOutSet: BF = firstBAM.queryOverlapping(queryIntervals).asScala
+      // ensure spliced reads have at least one block overlapping target region
+      .filter(x => alignmentBlockOverlaps(x, ivtm.toMap))
       // filter for MAPQ on target region reads
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
