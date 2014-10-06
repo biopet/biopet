@@ -7,9 +7,8 @@ trait PipelineCommand extends Logging {
 
   def main(args: Array[String]): Unit = {
     var argv: Array[String] = Array()
-    //argv ++= Array("-S", tempFile.getAbsolutePath)
     argv ++= Array("-S", pipeline)
     argv ++= args
-    return BiopetQCommandLine.main(argv)
+    BiopetQCommandLine.main(argv)
   }
 }
