@@ -225,8 +225,8 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM)
     val exp = new SAMFileReader(sbam03).asScala
     val obs = new SAMFileReader(outBAM).asScala
-    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
-    assert(res.reduceLeft(_ && _))
+    for ((e, o) <- exp.zip(obs))
+      assert(e.getSAMString === o.getSAMString)
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
   }
@@ -244,8 +244,8 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM, filteredOutBAM = filteredOutBAM)
     val exp = new SAMFileReader(sbam04).asScala
     val obs = new SAMFileReader(filteredOutBAM).asScala
-    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
-    assert(res.reduceLeft(_ && _))
+    for ((e, o) <- exp.zip(obs))
+      assert(e.getSAMString === o.getSAMString)
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
     assert(filteredOutBAM.exists)
@@ -261,8 +261,8 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, pbam01, outBAM)
     val exp = new SAMFileReader(pbam03).asScala
     val obs = new SAMFileReader(outBAM).asScala
-    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
-    assert(res.reduceLeft(_ && _))
+    for ((e, o) <- exp.zip(obs))
+      assert(e.getSAMString === o.getSAMString)
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
   }
