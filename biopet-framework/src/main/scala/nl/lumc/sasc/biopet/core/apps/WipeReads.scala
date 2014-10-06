@@ -11,7 +11,6 @@ import scala.io.Source
 import com.twitter.algebird.{ BF, BloomFilter }
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
-import htsjdk.samtools.SAMFileWriter
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import org.apache.commons.io.FilenameUtils.getExtension
@@ -21,10 +20,11 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 // TODO: finish implementation for usage in pipelines
-/** WipeReads function class for usage in Biopet pipelines
-  *
-  * @param root Configuration object for the pipeline
-  */
+/**
+ * WipeReads function class for usage in Biopet pipelines
+ *
+ * @param root Configuration object for the pipeline
+ */
 class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
@@ -36,7 +36,6 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
   var outputBAM: File = _
 
 }
-
 
 object WipeReads {
 
@@ -52,15 +51,16 @@ object WipeReads {
     val Identical, Opposite, Both = Value
   }
 
-  /** Function to create iterator over intervals from input interval file
-    *
-    * @param inFile input interval file
-    */
+  /**
+   * Function to create iterator over intervals from input interval file
+   *
+   * @param inFile input interval file
+   */
   def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
 
     /** Function to create iterator from BED file */
     def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
-    // BED file coordinates are 0-based, half open so we need to do some conversion
+      // BED file coordinates are 0-based, half open so we need to do some conversion
       Source.fromFile(inFile)
         .getLines()
         .filterNot(_.trim.isEmpty)
@@ -68,7 +68,7 @@ object WipeReads {
         .map(line => line.trim.split("\t") match {
           case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
           case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
-      })
+        })
 
     // TODO: implementation
     /** Function to create iterator from refFlat file */
@@ -93,26 +93,26 @@ object WipeReads {
   }
 
   // TODO: set minimum fraction for overlap
-  /** Function to create function to check SAMRecord for exclusion in filtered BAM file.
-    *
-    * The returned function evaluates all filtered-in SAMRecord to false.
-    *
-    * @param iv iterator yielding RawInterval objects
-    * @param inBAM input BAM file
-    * @param inBAMIndex input BAM file index
-    * @param filterOutMulti whether to filter out reads with same name outside target region (default: true)
-    * @param minMapQ minimum MapQ of reads in target region to filter out (default: 0)
-    * @param readGroupIDs read group IDs of reads in target region to filter out (default: all IDs)
-    * @param bloomSize expected size of elements to contain in the Bloom filter
-    * @param bloomFp expected Bloom filter false positive rate
-    * @return function that checks whether a SAMRecord or String is to be excluded
-    */
+  /**
+   * Function to create function to check SAMRecord for exclusion in filtered BAM file.
+   *
+   * The returned function evaluates all filtered-in SAMRecord to false.
+   *
+   * @param iv iterator yielding RawInterval objects
+   * @param inBAM input BAM file
+   * @param inBAMIndex input BAM file index
+   * @param filterOutMulti whether to filter out reads with same name outside target region (default: true)
+   * @param minMapQ minimum MapQ of reads in target region to filter out (default: 0)
+   * @param readGroupIDs read group IDs of reads in target region to filter out (default: all IDs)
+   * @param bloomSize expected size of elements to contain in the Bloom filter
+   * @param bloomFp expected Bloom filter false positive rate
+   * @return function that checks whether a SAMRecord or String is to be excluded
+   */
   def makeFilterOutFunction(iv: Iterator[RawInterval],
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10):
-                             (Any => Boolean) = {
+                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (Any => Boolean) = {
 
     // TODO: implement optional index creation
     /** Function to check for BAM file index and return a SAMFileReader given a File */
@@ -127,15 +127,16 @@ object WipeReads {
           sfr
       }
 
-    /** Function to query intervals from a BAM file
-      *
-      * The function still works when only either one of the interval or BAM
-      * file contig is prepended with "chr"
-      *
-      * @param inBAM BAM file to query as SAMFileReader
-      * @param ri raw interval object containing query
-      * @return QueryInterval wrapped in Option
-      */
+    /**
+     * Function to query intervals from a BAM file
+     *
+     * The function still works when only either one of the interval or BAM
+     * file contig is prepended with "chr"
+     *
+     * @param inBAM BAM file to query as SAMFileReader
+     * @param ri raw interval object containing query
+     * @return QueryInterval wrapped in Option
+     */
     def monadicMakeQueryInterval(inBAM: SAMFileReader, ri: RawInterval): Option[QueryInterval] =
       if (inBAM.getFileHeader.getSequenceIndex(ri.chrom) > -1)
         Some(inBAM.makeQueryInterval(ri.chrom, ri.start, ri.end))
@@ -149,12 +150,13 @@ object WipeReads {
         None
 
     // TODO: can we accumulate errors / exceptions instead of ignoring them?
-    /** Function to query mate from a BAM file
-      *
-      * @param inBAM BAM file to query as SAMFileReader
-      * @param rec SAMRecord whose mate will be queried
-      * @return SAMRecord wrapped in Option
-      */
+    /**
+     * Function to query mate from a BAM file
+     *
+     * @param inBAM BAM file to query as SAMFileReader
+     * @param rec SAMRecord whose mate will be queried
+     * @return SAMRecord wrapped in Option
+     */
     def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
       // catching unpaired read here since queryMate will raise an exception if not
       if (!rec.getReadPairedFlag) {
@@ -185,41 +187,42 @@ object WipeReads {
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
     val intervals = iv.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
     val filteredOutSet: BF = firstBAM.queryOverlapping(intervals).asScala
-        // filter for MAPQ on target region reads
-        .filter(x => x.getMappingQuality >= minMapQ)
-        // filter on specific read group IDs
-        .filter(x => rgFilter(x))
-        // TODO: how to directly get SAMRecord and its pairs without multiple flattens?
-        .flatMap(x => Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten)
-        // transfrom SAMRecord to string
-        .map(x => SAMToElem(x))
-        // build bloom filter using fold to prevent loading all strings to memory
-        .foldLeft(bfm.create())(_.+(_))
+      // filter for MAPQ on target region reads
+      .filter(x => x.getMappingQuality >= minMapQ)
+      // filter on specific read group IDs
+      .filter(x => rgFilter(x))
+      // TODO: how to directly get SAMRecord and its pairs without multiple flattens?
+      .flatMap(x => Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten)
+      // transfrom SAMRecord to string
+      .map(x => SAMToElem(x))
+      // build bloom filter using fold to prevent loading all strings to memory
+      .foldLeft(bfm.create())(_.+(_))
 
     if (filterOutMulti)
       (rec: Any) => rec match {
         case rec: SAMRecord => filteredOutSet.contains(rec.getReadName).isTrue
         case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _ => false
+        case _              => false
       }
     else
       (rec: Any) => rec match {
         case rec: SAMRecord => filteredOutSet.contains(rec.getSAMString).isTrue
         case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _ => false
+        case _              => false
       }
   }
 
   // TODO: implement stats file output
-  /** Function to filter input BAM and write its output to the filesystem
-    *
-    * @param filterFunc filter function that evaluates true for excluded SAMRecord
-    * @param inBAM input BAM file
-    * @param outBAM output BAM file
-    * @param writeIndex whether to write index for output BAM file
-    * @param async whether to write asynchronously
-    * @param filteredOutBAM whether to write excluded SAMRecords to their own BAM file
-    */
+  /**
+   * Function to filter input BAM and write its output to the filesystem
+   *
+   * @param filterFunc filter function that evaluates true for excluded SAMRecord
+   * @param inBAM input BAM file
+   * @param outBAM output BAM file
+   * @param writeIndex whether to write index for output BAM file
+   * @param async whether to write asynchronously
+   * @param filteredOutBAM whether to write excluded SAMRecords to their own BAM file
+   */
   def writeFilteredBAM(filterFunc: (SAMRecord => Boolean), inBAM: File, outBAM: File,
                        writeIndex: Boolean = true, async: Boolean = true,
                        filteredOutBAM: File = null) = {
@@ -247,13 +250,15 @@ object WipeReads {
     }
   }
 
-  /** Recursive function to parse command line options
-    *
-    * @param opts OptionMap instance which may contain parsed options
-    * @param list remaining command line arguments
-    * @return OptionMap instance
-    */
+  /**
+   * Recursive function to parse command line options
+   *
+   * @param opts OptionMap instance which may contain parsed options
+   * @param list remaining command line arguments
+   * @return OptionMap instance
+   */
   def parseOption(opts: OptionMap, list: List[String]): OptionMap =
+    // format: OFF
     list match {
       case Nil
           => opts
@@ -281,6 +286,7 @@ object WipeReads {
       case option :: tail
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
+  // format: ON
 
   /** Function to validate OptionMap instances */
   private def validateOption(opts: OptionMap): Unit = {
@@ -301,7 +307,7 @@ object WipeReads {
   /** Function that returns the given BAM file if it exists and is indexed */
   def checkInputBAM(inBAM: File): File = {
     // input BAM must have a .bam.bai index
-    if (new File(inBAM.getPath + ".bai").exists || new File(inBAM.getPath + ".bam.bai").exists )
+    if (new File(inBAM.getPath + ".bai").exists || new File(inBAM.getPath + ".bam.bai").exists)
       checkInputFile(inBAM)
     else
       throw new IOException("Index for input BAM file " + inBAM.getPath + " not found")

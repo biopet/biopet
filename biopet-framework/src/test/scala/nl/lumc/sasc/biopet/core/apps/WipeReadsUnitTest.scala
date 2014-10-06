@@ -12,7 +12,6 @@ import htsjdk.samtools.{ SAMFileReader, SAMRecord }
 import org.scalatest.Assertions
 import org.testng.annotations.Test
 
-
 class WipeReadsUnitTest extends Assertions {
 
   import WipeReads._
@@ -78,7 +77,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10,
-                                              filterOutMulti = false)
+      filterOutMulti = false)
     assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r01\t16\tchrQ\t190\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r03\t16\tchrQ\t690\t60\t10M\t*\t0\t0\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n"))
@@ -98,7 +97,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+")
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
-                                              minMapQ = 60)
+      minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
     assert(!isFilteredOut("r01"))
     assert(!isFilteredOut("r02"))
@@ -114,7 +113,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+")
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
-                                              minMapQ = 60, filterOutMulti = false)
+      minMapQ = 60, filterOutMulti = false)
     assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r01\t16\tchrQ\t190\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n"))
     // this r01 is not in since it is below the MAPQ threshold
@@ -133,7 +132,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+")
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
-                                              readGroupIDs = Set("002", "003"))
+      readGroupIDs = Set("002", "003"))
     assert(!isFilteredOut("r02"))
     assert(!isFilteredOut("r04"))
     assert(!isFilteredOut("r06"))
@@ -168,7 +167,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10,
-                                              filterOutMulti = false)
+      filterOutMulti = false)
     assert(!isFilteredOut("r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
     assert(!isFilteredOut("r01\t163\tchrQ\t150\t60\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n"))
@@ -193,7 +192,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+")
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
-                                              minMapQ = 60)
+      minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
     assert(!isFilteredOut("r01"))
     assert(!isFilteredOut("r02"))
@@ -208,7 +207,7 @@ class WipeReadsUnitTest extends Assertions {
       RawInterval("chrQ", 451, 480, "+")
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
-                                              readGroupIDs = Set("002", "003"))
+      readGroupIDs = Set("002", "003"))
     assert(!isFilteredOut("r02"))
     assert(!isFilteredOut("r04"))
     assert(!isFilteredOut("r06"))
@@ -226,7 +225,7 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM)
     val exp = new SAMFileReader(sbam03).asScala
     val obs = new SAMFileReader(outBAM).asScala
-    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
     assert(res.reduceLeft(_ && _))
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
@@ -245,7 +244,7 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, sbam01, outBAM, filteredOutBAM = filteredOutBAM)
     val exp = new SAMFileReader(sbam04).asScala
     val obs = new SAMFileReader(filteredOutBAM).asScala
-    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
     assert(res.reduceLeft(_ && _))
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
@@ -262,7 +261,7 @@ class WipeReadsUnitTest extends Assertions {
     writeFilteredBAM(mockFilterOutFunc, pbam01, outBAM)
     val exp = new SAMFileReader(pbam03).asScala
     val obs = new SAMFileReader(outBAM).asScala
-    val res = for ( (e,o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
+    val res = for ((e, o) <- exp.zip(obs)) yield e.getSAMString === o.getSAMString
     assert(res.reduceLeft(_ && _))
     assert(outBAM.exists)
     assert(outBAMIndex.exists)
