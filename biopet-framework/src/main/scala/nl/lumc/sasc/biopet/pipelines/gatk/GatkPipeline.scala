@@ -30,6 +30,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
   var jointGenotyping = false
   
+  var singleSampleCalling = true
   var reference: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
@@ -52,8 +53,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     if (config.contains("target_bed")) {
       defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
     }
-    if (config.contains("joint_variantcalling")) jointVariantcalling = config("joint_variantcalling", default = false)
-    if (config.contains("joint_genotyping")) jointGenotyping = config("joint_genotyping", default = false)
+    jointVariantcalling = config("joint_variantcalling", default = false)
+    jointGenotyping = config("joint_genotyping", default = false)
+    singleSampleCalling = config("single_sample_calling", default = true)
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
         gvcfFiles :+= file.toString
@@ -135,6 +137,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
       gatkVariantcalling.preProcesBams = false
+      if (!singleSampleCalling) {
+        gatkVariantcalling.useHaplotypecaller = false
+        gatkVariantcalling.useUnifiedGenotyper = false
+      }
       gatkVariantcalling.sampleID = sampleID
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
