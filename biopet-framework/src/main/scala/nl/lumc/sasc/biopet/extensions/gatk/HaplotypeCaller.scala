@@ -10,7 +10,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     min_mapping_quality_score = config("minMappingQualityScore", default = 20)
     if (config.contains("scattercount")) scatterCount = config("scattercount")
     if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-    if (config.contains("ploidy")) this.sample_ploidy = config("ploidy")
+    this.sample_ploidy = config("ploidy")
     nct = config("threads", default = 3)
     bamOutput = config("bamOutput")
     memoryLimit = Option(nct.getOrElse(1) * 2)
