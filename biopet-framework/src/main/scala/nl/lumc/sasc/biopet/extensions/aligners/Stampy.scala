@@ -26,7 +26,6 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
 
   
   // options set via API or config
-//  var _threads: Option[Int] = config("threads", default = nCoresRequest)
 //  var numrecords: String = config("numrecords", default = "all")
   var solexa: Boolean = config("solexa", default = false)
   var solexaold: Boolean = config("solexaold", default = false)
@@ -48,7 +47,8 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """stampy v(.*) \(.*\), .*""".r
   override val versionExitcode = List(0, 1)
 
-  override val defaultVmem = "6G"
+  /// Stampy uses approx factor 1.1 times the size of the genome in memory.
+  override val defaultVmem = "4G"
   override val defaultThreads = 8
 
   override def versionCommand = executable + " --help"
@@ -61,9 +61,11 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
     conditional(sanger, "--sanger") +
     optional("--insertsize", insertsize) +
     optional("--insertsd", insertsd)
-    
-    var defaultval: Option[Int] = config("somedefault", default = -1)
-    if ( insertsd2 != defaultval ) {
+
+    // Optionally start Mate Pair alignment, if set, the aligner will 
+    // assign MP reads as MP, otherwise in PE mode, these reads will 
+    // be aligned with the bits RR or FF showing a False Inversion event
+    if ( insertsd2.getOrElse(-1) != -1 ) {
       cmd += optional("--insertsize2", insertsize2) +
             optional("--insertsd2", insertsd2)
     }

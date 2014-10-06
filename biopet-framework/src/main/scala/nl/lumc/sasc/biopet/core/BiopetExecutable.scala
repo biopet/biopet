@@ -12,6 +12,7 @@ import nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare
 import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.sage.Sage
+import nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp
 
 object BiopetExecutable {
 
@@ -27,7 +28,8 @@ object BiopetExecutable {
       "gatk-variant-recalibration" -> GatkVariantRecalibration,
       "gatk-vcf-sample-compare" -> GatkVcfSampleCompare,
       "sage" -> Sage,
-      "basty" -> Basty
+      "basty" -> Basty,
+      "yamsvp" -> Yamsvp
     )
    
   /**

@@ -53,8 +53,8 @@ class Clever(val root: Configurable) extends BiopetCommandLineFunction  {
   }
 
   def cmdLine = required(executable) +
-      "--sorted " +
-      "--use_xa " +
+      " --sorted " +
+      " --use_xa " +
       optional("-T", nCoresRequest) +
       conditional(f ,"-f") +
       conditional(a ,"-a") +
