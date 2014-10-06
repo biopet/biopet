@@ -81,24 +81,32 @@ object BiopetExecutable {
     args match {
       case Array("pipeline", pipelineName, pipelineArgs @ _*) =>
         if (pipelines.contains(pipelineName))
-          if (pipelineArgs.isEmpty)
+          if (pipelineArgs.isEmpty) {
             pipelines(pipelineName).main(Array("--help"))
-          else
+            System.exit(1)
+          }
+          else {
             pipelines(pipelineName).main(pipelineArgs.toArray)
-        else
+            System.exit(0)
+          }
+        else {
           System.err.println(s"ERROR: pipeline '$pipelineName' does not exist")
-        System.err.println(pipelineUsage)
-        System.exit(1)
+          System.err.println(pipelineUsage)
+          System.exit(1)
+        }
       case Array("pipeline") =>
         System.err.println(pipelineUsage)
         System.exit(1)
       case Array("tool", toolName, toolArgs @ _*) =>
-        if (tools.contains(toolName))
+        if (tools.contains(toolName)) {
           tools(toolName).main(toolArgs.toArray)
-        else
+          System.exit(0)
+        }
+        else {
           System.err.println(s"ERROR: tool '$toolName' does not exist")
           System.err.println(toolUsage)
           System.exit(1)
+        }
       case Array("tool") =>
         System.err.println(toolUsage)
         System.exit(1)
