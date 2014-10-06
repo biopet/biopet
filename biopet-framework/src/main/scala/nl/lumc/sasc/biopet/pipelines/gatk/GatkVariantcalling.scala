@@ -111,8 +111,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         if (useAllelesOption) {
           val alleleOnly = new CommandLineFunction {
             @Input val input: File = vcfFilter.outputVcf
-            @Output val output: File = outputDir + "variantcalling/raw.allele_only.vcf.gz"
-            @Output val outputindex: File = outputDir + "variantcalling/raw.allele_only.vcf.gz.tbi"
+            @Output val output: File = outputDir + "raw.allele_only.vcf.gz"
+            @Output val outputindex: File = outputDir + "raw.allele_only.vcf.gz.tbi"
             def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
           }
           add(alleleOnly, isIntermediate = true)
@@ -170,6 +170,11 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
   def addBaseRecalibrator(inputBam: File, dir: String, isIntermediate: Boolean = false): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal")) //with gatkArguments {
+    
+    if (baseRecalibrator.knownSites.isEmpty) {
+      logger.warn("No Known site found, skipping base recalibration")
+      return inputBam
+    }
     add(baseRecalibrator)
 
     val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after")) //with gatkArguments {
