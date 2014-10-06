@@ -124,14 +124,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(hcAlleles)
           scriptOutput.rawGenotypeVcf = hcAlleles.out
-
-//          val discoveryOnly = SelectVariants(this, genotypeGVCFs.out, outputDir + outputName + ".discovery.only.vcf.gz")
-//          discoveryOnly.discordance = hcAlleles.out
-//          add(discoveryOnly)
-//
-//          val allelesOnly = SelectVariants(this, hcAlleles.out, outputDir + outputName + ".genotype_raw_alleles.only.vcf.gz")
-//          allelesOnly.discordance = genotypeGVCFs.out
-//          add(allelesOnly)
         }
         
         def removeNoneVariants(input:File): File = {
