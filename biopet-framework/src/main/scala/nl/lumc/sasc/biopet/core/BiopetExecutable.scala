@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.basty.Basty
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkBenchmarkGenotyping
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkGenotyping
@@ -25,7 +26,8 @@ object BiopetExecutable {
       "gatk-pipeline" -> GatkPipeline,
       "gatk-variant-recalibration" -> GatkVariantRecalibration,
       "gatk-vcf-sample-compare" -> GatkVcfSampleCompare,
-      "sage" -> Sage
+      "sage" -> Sage,
+      "basty" -> Basty
     )
    
   /**

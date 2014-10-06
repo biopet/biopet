@@ -30,7 +30,7 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   def init() {
     if (reference == null) reference = config("reference")
     if (dbsnp == null) dbsnp = config("dbsnp")
-    if (outputFile == null) outputFile = outputDir + outputName + ".vcf"
+    if (outputFile == null) outputFile = outputDir + outputName + ".vcf.gz"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }

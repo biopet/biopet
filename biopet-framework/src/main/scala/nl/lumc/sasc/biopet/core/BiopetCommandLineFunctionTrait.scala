@@ -13,7 +13,7 @@ import java.io.FileInputStream
 import java.security.MessageDigest
 
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {
-  analysisName = getClass.getSimpleName
+  analysisName = configName
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
@@ -26,19 +26,19 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var vmem: String = _
   val defaultVmem: String = ""
 
-  @Argument(doc = "Executable")
+  @Argument(doc = "Executable", required = false)
   var executable: String = _
 
-  protected def beforeCmd {
+  protected[core] def beforeCmd {
   }
 
-  protected def afterGraph {
+  protected[core] def afterGraph {
   }
 
   override def freezeFieldValues() {
     checkExecutable
     afterGraph
-    jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + analysisName + ".out")
+    jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
@@ -48,7 +48,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
       if (vmem == null && !defaultVmem.isEmpty) vmem = defaultVmem
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
-    jobName = this.analysisName + ":" + firstOutput.getName
+    jobName = configName + ":" + firstOutput.getName
 
     super.freezeFieldValues()
   }
@@ -66,18 +66,18 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         logger.error("executable: '" + executable + "' not found, please check config")
         throw new QException("executable: '" + executable + "' not found, please check config")
       }
+    
+      val is = new FileInputStream(executable)
+      val cnt = is.available
+      val bytes = Array.ofDim[Byte](cnt)
+      is.read(bytes)
+      is.close()
+      val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+
+      addJobReportBinding("md5sum_exe", md5)
     } catch {
       case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
     }
-    
-    val is = new FileInputStream(executable)
-    val cnt = is.available
-    val bytes = Array.ofDim[Byte](cnt)
-    is.read(bytes)
-    is.close()
-    val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
-    
-    addJobReportBinding("md5sum_exe", md5)
   }
 
   final protected def preCmdInternal {

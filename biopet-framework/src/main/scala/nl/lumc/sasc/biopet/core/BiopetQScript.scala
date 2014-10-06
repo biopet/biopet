@@ -22,11 +22,17 @@ trait BiopetQScript extends Configurable {
   def init
   def biopetScript
 
+  var functions: Seq[QFunction]
+  
   final def script() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
+    for (function <- functions) function match {
+      case f:BiopetCommandLineFunctionTrait => f.afterGraph
+      case _ =>
+    }
     val configReport = globalConfig.getReport
     val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
     configReportFile.getParentFile.mkdir

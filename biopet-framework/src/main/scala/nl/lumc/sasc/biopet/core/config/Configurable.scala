@@ -6,9 +6,9 @@ import org.broadinstitute.gatk.queue.util.Logging
 trait Configurable extends Logging {
   val root: Configurable
   val globalConfig: Config = if (root != null) root.globalConfig else new Config()
-  val configPath: List[String] = if (root != null) root.configFullPath else List()
-  protected val configName = getClass.getSimpleName.toLowerCase
-  protected val configFullPath = configName :: configPath
+  def configPath: List[String] = if (root != null) root.configFullPath else List()
+  protected lazy val configName = getClass.getSimpleName.toLowerCase
+  protected lazy val configFullPath = configName :: configPath
   var defaults: scala.collection.mutable.Map[String,Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray:_*)
                                                           else scala.collection.mutable.Map()
   
@@ -36,7 +36,7 @@ trait Configurable extends Logging {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
 
-      globalConfig.contains(m, p, key, freeVar) || !Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)).isEmpty
+      globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
   }
   

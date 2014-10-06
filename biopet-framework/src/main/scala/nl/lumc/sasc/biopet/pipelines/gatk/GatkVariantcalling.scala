@@ -1,15 +1,17 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand , BiopetCommandLineFunction}
 import java.io.File
-import nl.lumc.sasc.biopet.core.apps.MpileupToVcf
+import nl.lumc.sasc.biopet.core.apps.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator}
+import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator, SelectVariants, CombineVariants}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScript {
+  qscript =>
   def this() = this(null)
 
   val scriptOutput = new GatkVariantcalling.ScriptOutput
@@ -31,8 +33,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   
   var preProcesBams = true
   var variantcalling = true
+  var useAllelesOption: Boolean = _
 
   def init() {
+    useAllelesOption = config("use_alleles_option", default = false)
     if (reference == null) reference = config("reference", required = true)
     if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputName == null && sampleID != null) outputName = sampleID
@@ -71,10 +75,14 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       val hcGvcf = new HaplotypeCaller(this)
       hcGvcf.useGvcf
       hcGvcf.input_file = scriptOutput.bamFiles
-      hcGvcf.out = outputDir + outputName + ".gvcf.vcf"
+      hcGvcf.out = outputDir + outputName + ".gvcf.vcf.gz"
       add(hcGvcf)
       scriptOutput.gvcfFile = hcGvcf.out
 
+      val genotypeGVCFs = GenotypeGVCFs(this, List(hcGvcf.out), outputDir + outputName + ".discovery.vcf.gz")
+      add(genotypeGVCFs)
+      scriptOutput.vcfFile = genotypeGVCFs.out
+      
       // Generate raw vcf
       val bamFile: File = if (scriptOutput.bamFiles.size > 1) {
         val markDub = MarkDuplicates(this, scriptOutput.bamFiles, new File(outputDir + "dedup.bam"))
@@ -90,18 +98,55 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         add(m2v)
         scriptOutput.rawVcfFile = m2v.output
 
-        val hcAlleles = new HaplotypeCaller(this)
-        hcAlleles.input_file = scriptOutput.bamFiles
-        hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
-        hcAlleles.alleles = m2v.output
-        hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
-        add(hcAlleles)
-        scriptOutput.rawGenotypeVcf = hcAlleles.out
+        val vcfFilter = new VcfFilter(this)
+        vcfFilter.defaults ++= Map("min_sample_depth" -> 8, 
+                                   "min_alternate_depth" -> 2, 
+                                   "min_samples_pass" -> 1, 
+                                   "filter_ref_calls" -> true)
+        vcfFilter.inputVcf = m2v.output
+        vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
+        add(vcfFilter)
+        scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
+        
+        if (useAllelesOption) {
+          val alleleOnly = new CommandLineFunction {
+            @Input val input: File = vcfFilter.outputVcf
+            @Output val output: File = outputDir + "raw.allele_only.vcf.gz"
+            @Output val outputindex: File = outputDir + "raw.allele_only.vcf.gz.tbi"
+            def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
+          }
+          add(alleleOnly, isIntermediate = true)
+
+          val hcAlleles = new HaplotypeCaller(this)
+          hcAlleles.input_file = scriptOutput.bamFiles
+          hcAlleles.out = outputDir + outputName + ".genotype_raw_alleles.vcf.gz"
+          hcAlleles.alleles = alleleOnly.output
+          hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
+          add(hcAlleles)
+          scriptOutput.rawGenotypeVcf = hcAlleles.out
+        }
+        
+        def removeNoneVariants(input:File): File = {
+          val output = input.getAbsolutePath.stripSuffix(".vcf.gz") + ".variants_only.vcf.gz"
+          val sv = SelectVariants(this, input, output)
+          sv.excludeFiltered = true
+          sv.excludeNonVariants = true
+          add(sv, isIntermediate = true)
+          sv.out
+        }
+        
+        def mergeList = {
+          val disc = new TaggedFile(removeNoneVariants(genotypeGVCFs.out), "discovery_mode")
+          val raw = new TaggedFile(removeNoneVariants(vcfFilter.outputVcf), "raw_mode")
+          if (useAllelesOption) {
+            val allele = new TaggedFile(removeNoneVariants(scriptOutput.rawGenotypeVcf), "allele_mode")
+            if (config("prio_calls", default = "discovery").getString != "discovery") List(allele, disc, raw)
+            else List(disc, allele, raw)
+        } else List(disc, raw)
+        }
+        val cvFinal = CombineVariants(this, mergeList, outputDir + outputName + ".final.vcf.gz")
+        add(cvFinal)
       }
-      
-      val genotypeGVCFs = GenotypeGVCFs(this, List(hcGvcf.out), outputDir + outputName + ".vcf.gz")
-      add(genotypeGVCFs)
-      scriptOutput.vcfFile = genotypeGVCFs.out
     }
   }
 
@@ -117,6 +162,11 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
   def addBaseRecalibrator(inputBam: File, dir: String, isIntermediate: Boolean = false): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal")) //with gatkArguments {
+    
+    if (baseRecalibrator.knownSites.isEmpty) {
+      logger.warn("No Known site found, skipping base recalibration")
+      return inputBam
+    }
     add(baseRecalibrator)
 
     val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after")) //with gatkArguments {
@@ -141,6 +191,7 @@ object GatkVariantcalling extends PipelineCommand {
     var gvcfFile: File = _
     var vcfFile: File = _
     var rawVcfFile: File = _
+    var rawFilterVcfFile: File = _
     var rawGenotypeVcf: File = _
   }
 }

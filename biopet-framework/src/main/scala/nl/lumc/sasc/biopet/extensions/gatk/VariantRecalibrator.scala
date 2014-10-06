@@ -17,16 +17,20 @@ class VariantRecalibrator(val root: Configurable) extends org.broadinstitute.gat
   
 object VariantRecalibrator {
   def apply(root: Configurable, input:File, recal_file:File, tranches_file:File, indel: Boolean = false): VariantRecalibrator = {
-    val vr = if (indel) new VariantRecalibrator(root) {
-      mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-      defaults ++= Map("ts_filter_level" -> 99.0)
-      if (config.contains("mills")) resource :+= new TaggedFile(config("mills").getString, "known=false,training=true,truth=true,prior=12.0")
-    } else new VariantRecalibrator(root) {
-      mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-      defaults ++= Map("ts_filter_level" -> 99.5)
-      if (config.contains("hapmap")) resource +:= new TaggedFile(config("hapmap").getString, "known=false,training=true,truth=true,prior=15.0")
-      if (config.contains("omni")) resource +:= new TaggedFile(config("omni").getString, "known=false,training=true,truth=true,prior=12.0")
-      if (config.contains("1000G")) resource +:= new TaggedFile(config("1000G").getString, "known=false,training=true,truth=false,prior=10.0")
+    val vr = new VariantRecalibrator(root) {
+      override lazy val configName = "variantrecalibrator"
+      override def configPath:  List[String] = (if (indel) "indel" else "snp") :: super.configPath
+      if (indel) {
+        mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
+        defaults ++= Map("ts_filter_level" -> 99.0)
+        if (config.contains("mills")) resource :+= new TaggedFile(config("mills").getString, "known=false,training=true,truth=true,prior=12.0")
+      } else  {
+        mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
+        defaults ++= Map("ts_filter_level" -> 99.5)
+        if (config.contains("hapmap")) resource +:= new TaggedFile(config("hapmap").getString, "known=false,training=true,truth=true,prior=15.0")
+        if (config.contains("omni")) resource +:= new TaggedFile(config("omni").getString, "known=false,training=true,truth=true,prior=12.0")
+        if (config.contains("1000G")) resource +:= new TaggedFile(config("1000G").getString, "known=false,training=true,truth=false,prior=10.0")
+      }
     }
     vr.input :+= input
     vr.recal_file = recal_file
