@@ -35,7 +35,7 @@ class WipeReadsUnitTest extends Assertions {
   val bed01 = new File(resourcePath("/rrna01.bed"))
   val minArgList = List("-I", sbam01.toString, "-l", bed01.toString, "-o", "mock.bam")
 
-  @Test def rawIntervalBED() = {
+  @Test def testMakeRawIntervalFromBED() = {
     val intervals: Vector[RawInterval] = makeRawIntervalFromFile(bed01).toVector
     assert(intervals.length == 3)
     assert(intervals.head.chrom == "chrQ")

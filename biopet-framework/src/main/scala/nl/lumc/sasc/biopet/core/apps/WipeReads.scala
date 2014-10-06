@@ -170,6 +170,18 @@ object WipeReads {
         }
       }
 
+    /** function to make IntervalTree from our RawInterval objects
+      *
+      * @param ri iterable over RawInterval objects
+      * @return IntervalTree objects, filled with intervals from RawInterval
+      */
+    def makeIntervalTree(ri: Iterable[RawInterval]): IntervalTree = {
+      val ivt = new IntervalTree
+      for (iv: RawInterval <- ri)
+        ivt.insert(new Interval(iv.start, iv.end))
+      ivt
+    }
+
     /**
      * Function to ensure that a SAMRecord overlaps our target regions
      *
@@ -187,7 +199,7 @@ object WipeReads {
       if (rec.getSAMString.split("\t")(5).contains("N")) {
         for (ab: AlignmentBlock <- rec.getAlignmentBlocks.asScala) {
           if (!ivtm(rec.getReferenceName).findOverlapping(
-            new Interval(ab.getReferenceStart, ab.getReferenceStart + ab.getLength - 1, null)).isEmpty)
+            new Interval(ab.getReferenceStart, ab.getReferenceStart + ab.getLength - 1)).isEmpty)
             return true
         }
         false
@@ -212,25 +224,28 @@ object WipeReads {
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
 
-    val intervals = iv.toList
-    val queryIntervals = intervals.flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
-
-    /** interval tree for ensuring that split reads do overlap our target regions */
-    val ivtm = scala.collection.mutable.Map.empty[String, IntervalTree]
-    for (iv: RawInterval <- intervals) {
-      ivtm.getOrElseUpdate(iv.chrom, new IntervalTree).insert(new Interval(iv.start, iv.end))
-    }
+    /* NOTE: the interval vector here should be bypass-able if we can make
+             the BAM query intervals with Interval objects. This is not possible
+             at the moment since we can not retrieve star and end coordinates
+             of an Interval, so we resort to our own RawInterval vector
+    */
+    lazy val intervals = iv.toVector
+    lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
+      .groupBy(x => x.chrom)
+      .map({ case (key, value) => (key, makeIntervalTree(value)) })
+    lazy val queryIntervals = intervals
+      .flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
 
     val filteredOutSet: BF = firstBAM.queryOverlapping(queryIntervals).asScala
       // ensure spliced reads have at least one block overlapping target region
-      .filter(x => alignmentBlockOverlaps(x, ivtm.toMap))
+      .filter(x => alignmentBlockOverlaps(x, intervalTreeMap))
       // filter for MAPQ on target region reads
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
       // TODO: how to directly get SAMRecord and its pairs without multiple flattens?
       .flatMap(x => Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten)
-      // transfrom SAMRecord to string
+      // transform SAMRecord to string
       .map(x => SAMToElem(x))
       // build bloom filter using fold to prevent loading all strings to memory
       .foldLeft(bfm.create())(_.+(_))
