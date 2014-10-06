@@ -17,6 +17,8 @@ class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   class SampleOutput extends AbstractSampleOutput {
   }
   
+  defaults += "ploidy" -> 1
+  
   def init() {
     gatkPipeline.outputDir = outputDir
     gatkPipeline.init
