@@ -9,8 +9,6 @@ import org.broadinstitute.gatk.queue.QScript
 class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
   
-  val gatkPipeline = new GatkPipeline(this)
-  
   class LibraryOutput extends AbstractLibraryOutput {
   }
   
@@ -19,7 +17,10 @@ class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   
   defaults += "ploidy" -> 1
   
+  var gatkPipeline: GatkPipeline = _
+  
   def init() {
+    gatkPipeline = new GatkPipeline(this)
     gatkPipeline.outputDir = outputDir
     gatkPipeline.init
   }
