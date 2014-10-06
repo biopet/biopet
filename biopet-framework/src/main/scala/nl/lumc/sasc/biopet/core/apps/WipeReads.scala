@@ -19,6 +19,7 @@ import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 // TODO: finish implementation for usage in pipelines
@@ -39,7 +40,7 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 }
 
-object WipeReads {
+object WipeReads extends ToolCommand {
 
   /** Container type for command line flags */
   type OptionMap = Map[String, Any]
@@ -392,28 +393,29 @@ object WipeReads {
 
   val usage: String =
     """
-      |usage: java -cp BiopetFramework.jar nl.lumc.sasc.biopet.core.apps.WipeReads [options] -I input -l regions -o output
+      |Usage: java -jar BiopetFramework.jar tool %s [options] -I input -l regions -o output
       |
-      |WipeReads - Tool for reads removal from an indexed BAM file
+      |%s - Tool for reads removal from an indexed BAM file
       |
-      |positional arguments:
-      |  -I,--inputBAM              Input BAM file, must be indexed with '.bam.bai' or 'bai' extension
+      |Positional arguments:
+      |  -I,--inputBAM              Input BAM file, must be indexed with
+      |                             '.bam.bai' or 'bai' extension
       |  -l,--targetRegions         Input BED file
       |  -o,--outputBAM             Output BAM file
       |
-      |optional arguments:
-      |  -RG,--readGroup            Read groups to remove; set multiple read groups using commas
-      |                             (default: all)
+      |Optional arguments:
+      |  -RG,--readGroup            Read groups to remove; set multiple read
+      |                             groups using commas (default: all)
       |  -Q,--minMapQ               Minimum MAPQ value of reads in target region
       |                             (default: 0)
       |  --makeIndex                Write BAM output file index
       |                             (default: true)
-      |  --limitToRegion            Whether to remove only reads in the target regions and and
-      |                             keep the same reads if they map to other regions
-      |                             (default: not set)
+      |  --limitToRegion            Whether to remove only reads in the target
+      |                             regions and and keep the same reads if they
+      |                             map to other regions (default: not set)
       |
       |This tool will remove BAM records that overlaps a set of given regions.
       |By default, if the removed reads are also mapped to other regions outside
       |the given ones, they will also be removed.
-    """.stripMargin
+    """.stripMargin.format(toolName, toolName)
 }

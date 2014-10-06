@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
+import nl.lumc.sasc.biopet.core.apps.WipeReads
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.basty.Basty
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -31,6 +32,7 @@ object BiopetExecutable {
     )
 
   val tools: Map[String, ToolCommand] = Map(
+      "WipeReads" -> WipeReads
     )
 
   /**
