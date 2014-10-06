@@ -5,6 +5,10 @@ import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
   executable = "java"
 
+  override def afterGraph {
+    memoryLimit = config("memory_limit")
+  }
+  
   override def commandLine: String = {
     preCmdInternal
     val cmd = super.commandLine
