@@ -28,6 +28,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   @Argument(doc = "Joint variantcalling", shortName = "jointCalling", required = false)
   var jointVariantcalling = false
   
+  @Argument(doc = "Joint genotyping", shortName = "jointCalling", required = false)
+  var jointGenotyping = false
+  
   var reference: File = _
   var dbsnp: File = _
   var gvcfFiles: List[File] = Nil
@@ -51,6 +54,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
     }
     if (config.contains("joint_variantcalling")) jointVariantcalling = config("joint_variantcalling", default = false)
+    if (config.contains("joint_genotyping")) jointGenotyping = config("joint_genotyping", default = false)
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
         gvcfFiles :+= file.toString
@@ -70,22 +74,14 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       }
 
       if (!skipGenotyping && gvcfFiles.size > 0) {
-        val gatkGenotyping = new GatkGenotyping(this)
-        gatkGenotyping.inputGvcfs = gvcfFiles
-        gatkGenotyping.outputDir = outputDir + "genotyping/"
-        gatkGenotyping.init
-        gatkGenotyping.biopetScript
-        addAll(gatkGenotyping.functions)
-        var vcfFile = gatkGenotyping.outputFile
-
-        if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
-          val recalibration = new GatkVariantRecalibration(this)
-          recalibration.inputVcf = vcfFile
-          recalibration.bamFiles = finalBamFiles
-          recalibration.outputDir = outputDir + "recalibration/"
-          recalibration.init
-          recalibration.biopetScript
-          vcfFile = recalibration.outputVcf
+        if (jointGenotyping) {
+          val gatkGenotyping = new GatkGenotyping(this)
+          gatkGenotyping.inputGvcfs = gvcfFiles
+          gatkGenotyping.outputDir = outputDir + "genotyping/"
+          gatkGenotyping.init
+          gatkGenotyping.biopetScript
+          addAll(gatkGenotyping.functions)
+          var vcfFile = gatkGenotyping.outputFile
         }
       } else logger.warn("No gVCFs to genotype")
       
@@ -152,7 +148,16 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           } else List(disc, raw)
         }
         val cvFinal = CombineVariants(this, mergeList, outputDir + "variantcalling/final.vcf.gz")
-        add(cvFinal)        
+        add(cvFinal)
+        
+        if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
+          val recalibration = new GatkVariantRecalibration(this)
+          recalibration.inputVcf = cvFinal.out
+          recalibration.bamFiles = finalBamFiles
+          recalibration.outputDir = outputDir + "recalibration/"
+          recalibration.init
+          recalibration.biopetScript
+        }
       }
     } else runSingleSampleJobs(onlySample)
   }
