@@ -445,10 +445,10 @@ object WipeReads extends ToolCommand {
   }
 
   val usage: String =
-    """
-      |Usage: java -jar BiopetFramework.jar tool %s [options] -I input -l regions -o output
+    s"""
+      |Usage: java -jar BiopetFramework.jar tool $toolName [options] -I input -l regions -o output
       |
-      |%s - Tool for reads removal from an indexed BAM file
+      |$toolName - Tool for reads removal from an indexed BAM file
       |
       |Positional arguments:
       |  -I,--inputBAM              Input BAM file, must be indexed with
