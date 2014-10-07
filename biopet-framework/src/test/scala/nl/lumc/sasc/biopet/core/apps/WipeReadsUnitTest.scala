@@ -12,6 +12,9 @@ import htsjdk.samtools.{ SAMFileReader, SAMRecord }
 import org.scalatest.Assertions
 import org.testng.annotations.Test
 
+/* TODO: helper function to create SAMRecord from SAM alignment string
+         so we can test as if using real SAMRecords
+*/
 class WipeReadsUnitTest extends Assertions {
 
   import WipeReads._
@@ -99,14 +102,13 @@ class WipeReadsUnitTest extends Assertions {
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10,
       filterOutMulti = false)
-    assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r01\t16\tchrQ\t190\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r03\t16\tchrQ\t690\t60\t10M\t*\t0\t0\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n"))
-    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
-    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
-    assert(isFilteredOut("r01\t16\tchrQ\t290\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
-    assert(isFilteredOut("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r05\t0\tchrQ\t890\t60\t5M200N5M\t*\t0\t0\tGATACGATAC\tFEFEFEFEFE\tRG:Z:001\n"))
+    assert(!isFilteredOut("r02_50"))
+    assert(!isFilteredOut("r01_190"))
+    assert(!isFilteredOut("r03_690"))
+    assert(!isFilteredOut("r06_0"))
+    assert(isFilteredOut("r01_290"))
+    assert(isFilteredOut("r04_450"))
+    assert(!isFilteredOut("r05_890"))
   }
 
   @Test def testSingleBAMFilterMinMapQ() = {
@@ -132,16 +134,16 @@ class WipeReadsUnitTest extends Assertions {
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
       minMapQ = 60, filterOutMulti = false)
-    assert(!isFilteredOut("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r01\t16\tchrQ\t190\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n"))
+    assert(!isFilteredOut("r02_50"))
+    assert(!isFilteredOut("r01_190"))
     // this r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut("r01\t16\tchrQ\t290\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002\n"))
-    assert(!isFilteredOut("r07\t16\tchrQ\t860\t30\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
-    assert(!isFilteredOut("r08\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:002\n"))
-    assert(isFilteredOut("r04\t0\tchrQ\t450\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r01_290"))
+    assert(!isFilteredOut("r07_860"))
+    assert(!isFilteredOut("r06_0"))
+    assert(!isFilteredOut("r08_0"))
+    assert(isFilteredOut("r04_450"))
     // this r07 is not in since filterOuMulti is false
-    assert(isFilteredOut("r07\t16\tchrQ\t460\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(isFilteredOut("r07_460"))
   }
 
   @Test def testSingleBAMFilterReadGroupIDs() = {
@@ -195,20 +197,19 @@ class WipeReadsUnitTest extends Assertions {
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10,
       filterOutMulti = false)
-    assert(!isFilteredOut("r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r01\t163\tchrQ\t150\t60\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n"))
-    assert(!isFilteredOut("r01\t83\tchrQ\t190\t60\t10M\t=\t150\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
-    assert(!isFilteredOut("r03\t163\tchrQ\t650\t60\t10M\t=\t690\t50\tTTTTTCCCCC\tHHHHHHHHHH\tRG:Z:001\n"))
-    assert(!isFilteredOut("r03\t83\tchrQ\t690\t60\t10M\t=\t650\t-50\tCCCCCTTTTT\tHHHHHHHHHH\tRG:Z:001\n"))
-    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001\n"))
-    assert(!isFilteredOut("r06\t4\t*\t0\t0\t*\t*\t0\t0\tGCGCGCGCGC\tHIHIHIHIHI\tRG:Z:001\n"))
-    assert(isFilteredOut("r01\t163\tchrQ\t250\t60\t10M\t=\t290\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001\n"))
-    assert(isFilteredOut("r01\t83\tchrQ\t290\t60\t10M\t=\t250\t-50\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001\n"))
-    assert(isFilteredOut("r04\t99\tchrQ\t450\t60\t10M\t=\t490\t50\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(isFilteredOut("r04\t147\tchrQ\t490\t60\t10M\t=\t450\t-50\tGCATGCATGC\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r05\t99\tchrQ\t850\t60\t5M100N5M\t=\t1140\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001\n"))
-    assert(!isFilteredOut("r05\t147\tchrQ\t1140\t60\t10M\t=\t850\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001\n"))
+    assert(!isFilteredOut("r02_50"))
+    assert(!isFilteredOut("r02_90"))
+    assert(!isFilteredOut("r01_150"))
+    assert(!isFilteredOut("r01_190"))
+    assert(!isFilteredOut("r03_650"))
+    assert(!isFilteredOut("r03_690"))
+    assert(!isFilteredOut("r06_0"))
+    assert(isFilteredOut("r01_250"))
+    assert(isFilteredOut("r01_290"))
+    assert(isFilteredOut("r04_450"))
+    assert(isFilteredOut("r04_490"))
+    assert(!isFilteredOut("r05_850"))
+    assert(!isFilteredOut("r05_1140"))
   }
 
   @Test def testPairBAMFilterMinMapQ() = {

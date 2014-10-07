@@ -8,7 +8,7 @@ import java.io.{ File, IOException }
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-import com.twitter.algebird.{ BF, BloomFilter }
+import com.twitter.algebird.{ BF, BloomFilter, BloomFilterMonoid }
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
@@ -272,11 +272,23 @@ object WipeReads extends ToolCommand {
       if (filterOutMulti)
         (r: SAMRecord) => r.getReadName
       else
-        (r: SAMRecord) => r.getSAMString
+        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart
 
     val firstBAM = prepIndexedInputBAM()
     val secondBAM = prepIndexedInputBAM()
     val bfm = BloomFilter(bloomSize, bloomFp, 13)
+
+    /** Function to make a BloomFilter containing one element from the SAMRecord */
+    def makeBFFromSAM(rec: SAMRecord, bfm: BloomFilterMonoid): BF = {
+      if (filterOutMulti)
+        bfm.create(rec.getReadName)
+      else if (!rec.getReadPairedFlag)
+        bfm.create(SAMToElem(rec))
+      else
+      // to bypass querying for each mate, we store the records that the mate also has
+      // namely, the read name and the alignment start
+        bfm.create(SAMToElem(rec), rec.getReadName + "_" + rec.getMateAlignmentStart)
+    }
 
     /* NOTE: the interval vector here should be bypass-able if we can make
              the BAM query intervals with Interval objects. This is not possible
@@ -300,12 +312,10 @@ object WipeReads extends ToolCommand {
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
-      // TODO: how to directly get SAMRecord and its pairs without multiple flattens?
-      .flatMap(x => Vector(Some(x), monadicMateQuery(secondBAM, x)).flatten)
       // transform SAMRecord to string
-      .map(x => SAMToElem(x))
+      .map(x => makeBFFromSAM(x, bfm))
       // build bloom filter using fold to prevent loading all strings to memory
-      .foldLeft(bfm.create())(_.+(_))
+      .foldLeft(bfm.create())(_.++(_))
 
     if (filterOutMulti)
       (rec: Any) => rec match {
@@ -315,7 +325,9 @@ object WipeReads extends ToolCommand {
       }
     else
       (rec: Any) => rec match {
-        case rec: SAMRecord => filteredOutSet.contains(rec.getSAMString).isTrue
+        case rec: SAMRecord if rec.getReadPairedFlag =>
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue &&
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart).isTrue
         case rec: String    => filteredOutSet.contains(rec).isTrue
         case _              => false
       }
