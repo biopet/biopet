@@ -75,13 +75,12 @@ object BiopetExecutable {
       System.exit(1)
     }
 
-    def retrieveCommand(q: String, cl: List[MainCommand]): Option[MainCommand] = {
-      for (mc <- cl) {
-        if (q == mc.name.toLowerCase)
-          return Some(mc)
+    def retrieveCommand(q: String, cl: List[MainCommand]): Option[MainCommand] =
+      cl match {
+        case head :: tail if head.name.toLowerCase == q   => Some(head)
+        case Nil                                          => None
+        case head :: tail                                 => retrieveCommand(q, tail)
       }
-      None
-    }
 
     args match {
       case Array("pipeline", pipelineName, pipelineArgs @ _*) =>
