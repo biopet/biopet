@@ -194,16 +194,35 @@ object WipeReads extends ToolCommand {
      * @param rec SAMRecord whose mate will be queried
      * @return SAMRecord wrapped in Option
      */
-    def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] =
-      // catching unpaired read here since queryMate will raise an exception if not
-      if (!rec.getReadPairedFlag) {
-        None
-      } else {
-        inBAM.queryMate(rec) match {
-          case null     => None
-          case qres @ _ => Some(qres)
+    def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] = {
+      // adapted from htsjdk's SAMFileReader.queryMate to better deal with multiple-mapped reads
+      if (!rec.getReadPairedFlag)
+        return None
+
+      if (rec.getFirstOfPairFlag == rec.getSecondOfPairFlag)
+        throw new IllegalArgumentException("SAMRecord must either be first or second of pair, but not both")
+
+      val it =
+        if (rec.getMateReferenceIndex == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
+          inBAM.queryUnmapped()
+        else
+          inBAM.queryAlignmentStart(rec.getMateReferenceName, rec.getMateAlignmentStart)
+
+      val qres =
+        try {
+          it.asScala.toList
+            .filter(x => x.getReadPairedFlag
+                         && rec.getAlignmentStart == x.getMateAlignmentStart
+                         && rec.getMateAlignmentStart == x.getAlignmentStart)
+        } finally {
+          it.close()
         }
-      }
+
+      if (qres.length == 1)
+        Some(qres.head)
+      else
+        None
+    }
 
     /** function to make IntervalTree from our RawInterval objects
       *
