@@ -328,6 +328,8 @@ object WipeReads extends MainCommand {
         case rec: SAMRecord if rec.getReadPairedFlag =>
           filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue &&
           filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart).isTrue
+        case rec: SAMRecord if !rec.getReadPairedFlag =>
+            filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue
         case rec: String    => filteredOutSet.contains(rec).isTrue
         case _              => false
       }
