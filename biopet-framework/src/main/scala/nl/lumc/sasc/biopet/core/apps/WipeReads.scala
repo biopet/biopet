@@ -46,9 +46,48 @@ object WipeReads extends ToolCommand {
   type OptionMap = Map[String, Any]
 
   /** Container class for interval parsing results */
-  case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
+  case class RawInterval(chrom: String, start: Int, end: Int) {
+
+    require(start <= end, s"Start coordinate $start is larger than end coordinate $end")
+
+    /** Function to check whether one interval contains the other */
+    def contains(that: RawInterval): Boolean =
+      if (this.chrom != that.chrom)
+        false
+      else
+        this.start <= that.start && this.end >= that.end
+
+    /** Function to check whether two intervals overlap each other */
+    def overlaps(that: RawInterval): Boolean =
+      if (this.chrom != that.chrom)
+        false
+      else
+        this.start <= that.start && this.end >= that.start
+
+    /** Function to merge two overlapping intervals */
+    def merge(that: RawInterval): RawInterval = {
+      if (this.chrom != that.chrom)
+        throw new IllegalArgumentException("Can not merge RawInterval objects from different chromosomes")
+      if (contains(that))
+        this
+      else if (overlaps(that))
+        RawInterval(this.chrom, this.start, that.end)
+      else
+        throw new IllegalArgumentException("Can not merge non-overlapping RawInterval objects")
+    }
 
   }
+
+  def mergeOverlappingIntervals(ri: Iterator[RawInterval]): Iterator[RawInterval] =
+    ri.toList
+      .sortBy(x => (x.chrom, x.start, x.end))
+      .foldLeft(List.empty[RawInterval]) {
+        (acc, i) => acc match {
+          case head :: tail if head.overlaps(i) => head.merge(i) :: tail
+          case _                                => i :: acc
+
+        }}
+      .toIterator
 
   /**
    * Function to create iterator over intervals from input interval file
@@ -87,7 +126,7 @@ object WipeReads extends ToolCommand {
       else
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
-    iterFunc(inFile)
+    mergeOverlappingIntervals(iterFunc(inFile))
   }
 
   // TODO: set minimum fraction for overlap
@@ -230,7 +269,10 @@ object WipeReads extends ToolCommand {
       .groupBy(x => x.chrom)
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
     lazy val queryIntervals = intervals
-      .flatMap(x => monadicMakeQueryInterval(firstBAM, x)).toArray
+      .flatMap(x => monadicMakeQueryInterval(firstBAM, x))
+      // makeQueryInterval only accepts a sorted QUeryInterval list
+      .sortBy(x => (x.referenceIndex, x.start, x.end))
+      .toArray
 
     val filteredOutSet: BF = firstBAM.queryOverlapping(queryIntervals).asScala
       // ensure spliced reads have at least one block overlapping target region

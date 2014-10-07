@@ -38,12 +38,12 @@ class WipeReadsUnitTest extends Assertions {
   @Test def testMakeRawIntervalFromBED() = {
     val intervals: Vector[RawInterval] = makeRawIntervalFromFile(bed01).toVector
     assert(intervals.length == 3)
-    assert(intervals.head.chrom == "chrQ")
-    assert(intervals.head.start == 291)
-    assert(intervals.head.end == 320)
     assert(intervals.last.chrom == "chrQ")
-    assert(intervals.last.start == 991)
-    assert(intervals.last.end == 1000)
+    assert(intervals.last.start == 291)
+    assert(intervals.last.end == 320)
+    assert(intervals.head.chrom == "chrQ")
+    assert(intervals.head.start == 991)
+    assert(intervals.head.end == 1000)
   }
 
   @Test def testSingleBAMDefault() = {
