@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.pipelinetemplate
+package nl.lumc.sasc.biopet.pipelines
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -9,7 +9,6 @@ class PipelineTemplate(val root: Configurable) extends QScript with BiopetQScrip
   def this() = this(null)
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
   }
 
   def biopetScript() {
@@ -17,5 +16,5 @@ class PipelineTemplate(val root: Configurable) extends QScript with BiopetQScrip
 }
 
 object PipelineTemplate extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/pipelinetemplate/PipelineTemplate.class"
+  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/PipelineTemplate.class"
 }
