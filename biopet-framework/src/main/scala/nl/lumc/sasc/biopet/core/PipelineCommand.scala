@@ -1,15 +1,14 @@
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.gatk.queue.util.Logging
 
-trait PipelineCommand extends Logging {
+trait PipelineCommand extends MainCommand {
+
   val pipeline = ""
 
   def main(args: Array[String]): Unit = {
     var argv: Array[String] = Array()
-    //argv ++= Array("-S", tempFile.getAbsolutePath)
     argv ++= Array("-S", pipeline)
     argv ++= args
-    return BiopetQCommandLine.main(argv)
+    BiopetQCommandLine.main(argv)
   }
 }
