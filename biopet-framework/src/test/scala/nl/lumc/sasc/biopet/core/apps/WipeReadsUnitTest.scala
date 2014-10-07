@@ -41,18 +41,16 @@ class WipeReadsUnitTest extends Assertions {
     assert(intervals.head.chrom == "chrQ")
     assert(intervals.head.start == 291)
     assert(intervals.head.end == 320)
-    assert(intervals.head.strand == "+")
     assert(intervals.last.chrom == "chrQ")
     assert(intervals.last.start == 991)
     assert(intervals.last.end == 1000)
-    assert(intervals.last.strand == "+")
   }
 
   @Test def testSingleBAMDefault() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480, "+"), // overlaps r04
-      RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
+      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
+      RawInterval("chrQ", 451, 480), // overlaps r04
+      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
@@ -69,7 +67,7 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMDefaultPartialExonOverlap() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 881, 1000, "+") // overlaps first exon of r05
+      RawInterval("chrQ", 881, 1000) // overlaps first exon of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
     assert(!isFilteredOut("r01"))
@@ -82,7 +80,7 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMDefaultNoExonOverlap() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrP", 881, 1000, "+")
+      RawInterval("chrP", 881, 1000)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10)
     assert(!isFilteredOut("r01"))
@@ -95,9 +93,9 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMFilterOutMultiNotSet() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480, "+"), // overlaps r04
-      RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
+      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
+      RawInterval("chrQ", 451, 480), // overlaps r04
+      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam01, bloomSize = 1000, bloomFp = 1e-10,
       filterOutMulti = false)
@@ -113,8 +111,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMFilterMinMapQ() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"),
-      RawInterval("chrQ", 451, 480, "+")
+      RawInterval("chrQ", 291, 320),
+      RawInterval("chrQ", 451, 480)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
       minMapQ = 60)
@@ -129,8 +127,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMFilterMinMapQFilterOutMultiNotSet() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"),
-      RawInterval("chrQ", 451, 480, "+")
+      RawInterval("chrQ", 291, 320),
+      RawInterval("chrQ", 451, 480)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
       minMapQ = 60, filterOutMulti = false)
@@ -148,8 +146,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testSingleBAMFilterReadGroupIDs() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"),
-      RawInterval("chrQ", 451, 480, "+")
+      RawInterval("chrQ", 291, 320),
+      RawInterval("chrQ", 451, 480)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, sbam02, bloomSize = 1000, bloomFp = 1e-10,
       readGroupIDs = Set("002", "003"))
@@ -163,9 +161,9 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testPairBAMDefault() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480, "+"), // overlaps r04
-      RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
+      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
+      RawInterval("chrQ", 451, 480), // overlaps r04
+      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
     assert(!isFilteredOut("r02"))
@@ -178,7 +176,7 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testPairBAMPartialExonOverlap() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 891, 1000, "+")
+      RawInterval("chrQ", 891, 1000)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10)
     assert(!isFilteredOut("r01"))
@@ -191,9 +189,9 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testPairBAMFilterOutMultiNotSet() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480, "+"), // overlaps r04
-      RawInterval("chrQ", 991, 1000, "+") // overlaps nothing; lies in the spliced region of r05
+      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
+      RawInterval("chrQ", 451, 480), // overlaps r04
+      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam01, bloomSize = 1000, bloomFp = 1e-10,
       filterOutMulti = false)
@@ -215,8 +213,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testPairBAMFilterMinMapQ() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"),
-      RawInterval("chrQ", 451, 480, "+")
+      RawInterval("chrQ", 291, 320),
+      RawInterval("chrQ", 451, 480)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
       minMapQ = 60)
@@ -230,8 +228,8 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testPairBAMFilterReadGroupIDs() = {
     val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320, "+"),
-      RawInterval("chrQ", 451, 480, "+")
+      RawInterval("chrQ", 291, 320),
+      RawInterval("chrQ", 451, 480)
     )
     val isFilteredOut = makeFilterOutFunction(intervals, pbam02, bloomSize = 1000, bloomFp = 1e-10,
       readGroupIDs = Set("002", "003"))
@@ -346,24 +344,6 @@ class WipeReadsUnitTest extends Assertions {
     val argList = List("--minMapQ", "13") ::: minArgList
     val opts = parseOption(Map(), argList)
     assert(opts("minMapQ") == 13)
-  }
-
-  @Test def testOptStrandIdentical() = {
-    val argList = List("--strand", "identical") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Identical)
-  }
-
-  @Test def testOptStrandOpposite() = {
-    val argList = List("--strand", "opposite") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Opposite)
-  }
-
-  @Test def testOptStrandBoth() = {
-    val argList = List("--strand", "both") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("strand") == Strand.Both)
   }
 
   @Test def testOptMakeIndex() = {

@@ -48,10 +48,6 @@ object WipeReads extends ToolCommand {
   /** Container class for interval parsing results */
   case class RawInterval(chrom: String, start: Int, end: Int, strand: String)
 
-  /** Enum type for strand overlap orientation */
-  object Strand extends Enumeration {
-    type Strand = Value
-    val Identical, Opposite, Both = Value
   }
 
   /**
@@ -69,8 +65,7 @@ object WipeReads extends ToolCommand {
         .filterNot(_.trim.isEmpty)
         .dropWhile(_.matches("^track | ^browser "))
         .map(line => line.trim.split("\t") match {
-          case Array(chrom, start, end)                   => new RawInterval(chrom, start.toInt + 1, end.toInt, "")
-          case Array(chrom, start, end, _, _, strand, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt, strand)
+          case Array(chrom, start, end, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt)
         })
 
     // TODO: implementation
@@ -333,9 +328,6 @@ object WipeReads extends ToolCommand {
       // TODO: implementation
       case ("--minOverlapFraction" | "-f") :: value :: tail if !opts.contains("minOverlapFraction")
       => parseOption(opts ++ Map("minOverlapFraction" -> value.toDouble), tail)
-      // TODO: implementation
-      case ("--strand" | "-s") :: (value @ ("identical" | "opposite" | "both")) :: tail if !opts.contains("strand")
-      => parseOption(opts ++ Map("strand" -> Strand.withName(value.capitalize)), tail)
       case option :: tail
           => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
     }
