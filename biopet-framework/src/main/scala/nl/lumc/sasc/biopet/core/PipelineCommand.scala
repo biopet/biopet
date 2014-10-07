@@ -1,8 +1,8 @@
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.gatk.queue.util.Logging
 
-trait PipelineCommand extends Logging {
+trait PipelineCommand extends MainCommand {
+
   val pipeline = ""
 
   def main(args: Array[String]): Unit = {

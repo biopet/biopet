@@ -16,33 +16,30 @@ import nl.lumc.sasc.biopet.pipelines.sage.Sage
 
 object BiopetExecutable {
 
-  val pipelines: Map[String, PipelineCommand] = Map(
-      "flexiprep" -> Flexiprep,
-      "mapping" -> Mapping,
-      "gentrap" -> Gentrap,
-      "bam-metrics" -> BamMetrics,
-      "gatk-benchmark-genotyping" -> GatkBenchmarkGenotyping,
-      "gatk-genotyping" -> GatkGenotyping,
-      "gatk-variantcalling" -> GatkVariantcalling,
-      "gatk-pipeline" -> GatkPipeline,
-      "gatk-variant-recalibration" -> GatkVariantRecalibration,
-      "gatk-vcf-sample-compare" -> GatkVcfSampleCompare,
-      "sage" -> Sage,
-      "basty" -> Basty
-    )
+  val pipelines: List[MainCommand] = List(
+    Flexiprep,
+    Mapping,
+    Gentrap,
+    BamMetrics,
+    GatkBenchmarkGenotyping,
+    GatkGenotyping,
+    GatkVariantcalling,
+    GatkPipeline,
+    GatkVariantRecalibration,
+    GatkVcfSampleCompare,
+    Sage,
+    Basty)
 
-  val tools: Map[String, ToolCommand] = Map(
-      "WipeReads" -> WipeReads
-    )
+  val tools: List[MainCommand] = List(
+    WipeReads)
 
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
 
-    def toBulletedList(m: Map[String, Any], kind: String = "", bullet: String = "-") =
-      "Available %s:\n  ".format(kind) + bullet + " " +
-        m.keys.toVector.sorted.mkString("\n  " + bullet + " ")
+    def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
+      "Available %s:\n  ".format(kind) + bullet + " " + m.map(x => x.name).sorted.mkString("\n  " + bullet + " ")
 
     lazy val pipelineList: String = toBulletedList(pipelines, "pipelines")
 
@@ -78,34 +75,37 @@ object BiopetExecutable {
       System.exit(1)
     }
 
+    def retrieveCommand(q: String, cl: List[MainCommand]): Option[MainCommand] = {
+      for (mc <- cl) {
+        if (q == mc.name.toLowerCase)
+          return Some(mc)
+      }
+      None
+    }
+
     args match {
       case Array("pipeline", pipelineName, pipelineArgs @ _*) =>
-        if (pipelines.contains(pipelineName))
-          if (pipelineArgs.isEmpty) {
-            pipelines(pipelineName).main(Array("--help"))
-            System.exit(1)
-          }
-          else {
-            pipelines(pipelineName).main(pipelineArgs.toArray)
+        retrieveCommand(pipelineName.toLowerCase, pipelines) match {
+          case Some(pipeline)  =>
+            pipeline.main(pipelineArgs.toArray)
             System.exit(0)
-          }
-        else {
-          System.err.println(s"ERROR: pipeline '$pipelineName' does not exist")
-          System.err.println(pipelineUsage)
-          System.exit(1)
+          case None            =>
+            System.err.println(s"ERROR: pipeline '$pipelineName' does not exist")
+            System.err.println(pipelineUsage)
+            System.exit(1)
         }
       case Array("pipeline") =>
         System.err.println(pipelineUsage)
         System.exit(1)
       case Array("tool", toolName, toolArgs @ _*) =>
-        if (tools.contains(toolName)) {
-          tools(toolName).main(toolArgs.toArray)
-          System.exit(0)
-        }
-        else {
-          System.err.println(s"ERROR: tool '$toolName' does not exist")
-          System.err.println(toolUsage)
-          System.exit(1)
+        retrieveCommand(toolName.toLowerCase, tools) match {
+          case Some(tool)  =>
+            tool.main(toolArgs.toArray)
+            System.exit(0)
+          case None            =>
+            System.err.println(s"ERROR: tool '$toolName' does not exist")
+            System.err.println(toolUsage)
+            System.exit(1)
         }
       case Array("tool") =>
         System.err.println(toolUsage)

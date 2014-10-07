@@ -19,7 +19,7 @@ import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.MainCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 // TODO: finish implementation for usage in pipelines
@@ -40,7 +40,7 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 }
 
-object WipeReads extends ToolCommand {
+object WipeReads extends MainCommand {
 
   /** Container type for command line flags */
   type OptionMap = Map[String, Any]
@@ -458,9 +458,9 @@ object WipeReads extends ToolCommand {
 
   val usage: String =
     s"""
-      |Usage: java -jar BiopetFramework.jar tool $toolName [options] -I input -l regions -o output
+      |Usage: java -jar BiopetFramework.jar tool $name [options] -I input -l regions -o output
       |
-      |$toolName - Tool for reads removal from an indexed BAM file
+      |$name - Tool for reads removal from an indexed BAM file
       |
       |Positional arguments:
       |  -I,--inputBAM              Input BAM file, must be indexed with
@@ -482,5 +482,5 @@ object WipeReads extends ToolCommand {
       |This tool will remove BAM records that overlaps a set of given regions.
       |By default, if the removed reads are also mapped to other regions outside
       |the given ones, they will also be removed.
-    """.stripMargin.format(toolName, toolName)
+    """.stripMargin
 }
