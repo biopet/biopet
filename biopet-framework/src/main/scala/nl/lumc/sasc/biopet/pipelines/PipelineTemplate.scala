@@ -15,6 +15,4 @@ class PipelineTemplate(val root: Configurable) extends QScript with BiopetQScrip
   }
 }
 
-object PipelineTemplate extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/PipelineTemplate.class"
-}
+object PipelineTemplate extends PipelineCommand
