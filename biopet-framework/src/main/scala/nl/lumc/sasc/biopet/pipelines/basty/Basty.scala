@@ -55,6 +55,4 @@ class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   }
 }
 
-object Basty extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/basty/Basty.class"  
-}
+object Basty extends PipelineCommand

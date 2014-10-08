@@ -221,8 +221,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 }
 
 object GatkVariantcalling extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkVariantcalling.class"
-  
   class ScriptOutput {
     var bamFiles: List[File] = _
     var gvcfFile: File = _

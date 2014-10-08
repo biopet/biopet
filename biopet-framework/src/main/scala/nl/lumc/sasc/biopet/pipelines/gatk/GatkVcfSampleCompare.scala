@@ -87,6 +87,4 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   }
 }
 
-object GatkVcfSampleCompare extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkVcfSampleCompare.class"
-}
+object GatkVcfSampleCompare extends PipelineCommand

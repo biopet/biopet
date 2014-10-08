@@ -73,6 +73,4 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
   }
 }
 
-object GatkVariantRecalibration extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkVariantRecalibration.class"
-}
+object GatkVariantRecalibration extends PipelineCommand

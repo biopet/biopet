@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.core
 
 trait PipelineCommand extends MainCommand {
 
-  val pipeline = ""
+  def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
 
   def main(args: Array[String]): Unit = {
     var argv: Array[String] = Array()

@@ -76,6 +76,4 @@ class Gentrap(val root: Configurable) extends QScript with BiopetQScript {
   }
 }
 
-object Gentrap extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gentrap/Gentrap.class"
-}
+object Gentrap extends PipelineCommand

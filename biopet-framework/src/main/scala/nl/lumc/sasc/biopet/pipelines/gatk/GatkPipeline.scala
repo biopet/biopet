@@ -214,6 +214,4 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 }
 
-object GatkPipeline extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkPipeline.class"  
-}
+object GatkPipeline extends PipelineCommand

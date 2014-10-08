@@ -58,6 +58,4 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
   }
 }
 
-object GatkBenchmarkGenotyping extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkBenchmarkGenotyping.class"
-}
+object GatkBenchmarkGenotyping extends PipelineCommand
