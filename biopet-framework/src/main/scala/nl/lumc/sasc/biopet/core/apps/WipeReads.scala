@@ -8,13 +8,14 @@ import java.io.{ File, IOException }
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-import com.twitter.algebird.{ BF, BloomFilter, BloomFilterMonoid }
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
+import orestes.bloomfilter.HashProvider.HashMethod
+import orestes.bloomfilter.{ BloomFilter, FilterBuilder }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -276,19 +277,6 @@ object WipeReads extends MainCommand {
 
     val firstBAM = prepIndexedInputBAM()
     val secondBAM = prepIndexedInputBAM()
-    val bfm = BloomFilter(bloomSize, bloomFp, 13)
-
-    /** Function to make a BloomFilter containing one element from the SAMRecord */
-    def makeBFFromSAM(rec: SAMRecord, bfm: BloomFilterMonoid): BF = {
-      if (filterOutMulti)
-        bfm.create(rec.getReadName)
-      else if (!rec.getReadPairedFlag)
-        bfm.create(SAMToElem(rec))
-      else
-      // to bypass querying for each mate, we store the records that the mate also has
-      // namely, the read name and the alignment start
-        bfm.create(SAMToElem(rec), rec.getReadName + "_" + rec.getMateAlignmentStart)
-    }
 
     /* NOTE: the interval vector here should be bypass-able if we can make
              the BAM query intervals with Interval objects. This is not possible
@@ -305,27 +293,36 @@ object WipeReads extends MainCommand {
       .sortBy(x => (x.referenceIndex, x.start, x.end))
       .toArray
 
-    val filteredOutSet: BF = firstBAM.queryOverlapping(queryIntervals).asScala
+    val filteredRecords: Iterator[SAMRecord] = firstBAM.queryOverlapping(queryIntervals).asScala
       // ensure spliced reads have at least one block overlapping target region
       .filter(x => alignmentBlockOverlaps(x, intervalTreeMap))
       // filter for MAPQ on target region reads
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
-      // transform SAMRecord to string
-      .map(x => makeBFFromSAM(x, bfm))
-      // build bloom filter using fold to prevent loading all strings to memory
-      .foldLeft(bfm.create())(_.++(_))
+
+    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize, bloomFp)
+      .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
+      .buildBloomFilter()
+
+    for (rec <- filteredRecords) {
+      if ((!filterOutMulti) && rec.getReadPairedFlag) {
+        filteredOutSet.add(SAMToElem(rec))
+        filteredOutSet.add(rec.getReadName + "_" + rec.getMateAlignmentStart.toString)
+      }
+      else
+        filteredOutSet.add(SAMToElem(rec))
+    }
 
     if (filterOutMulti)
-      (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName).isTrue
+      (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName)
     else
       (rec: SAMRecord) => {
         if (rec.getReadPairedFlag)
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue &&
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart).isTrue
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart) &&
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart)
         else
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart)
       }
   }
 
