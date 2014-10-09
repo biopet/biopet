@@ -79,6 +79,12 @@ object WipeReads extends MainCommand {
 
   }
 
+  /**
+   * Function to create an iterator yielding non-overlapped RawInterval objects
+   *
+   * @param ri iterator yielding RawInterval objects
+   * @return iterator yielding RawInterval objects
+   */
   def mergeOverlappingIntervals(ri: Iterator[RawInterval]): Iterator[RawInterval] =
     ri.toList
       .sortBy(x => (x.chrom, x.start, x.end))
@@ -187,44 +193,6 @@ object WipeReads extends MainCommand {
       else
         None
 
-    // TODO: can we accumulate errors / exceptions instead of ignoring them?
-    /**
-     * Function to query mate from a BAM file
-     *
-     * @param inBAM BAM file to query as SAMFileReader
-     * @param rec SAMRecord whose mate will be queried
-     * @return SAMRecord wrapped in Option
-     */
-    def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] = {
-      // adapted from htsjdk's SAMFileReader.queryMate to better deal with multiple-mapped reads
-      if (!rec.getReadPairedFlag)
-        return None
-
-      if (rec.getFirstOfPairFlag == rec.getSecondOfPairFlag)
-        throw new IllegalArgumentException("SAMRecord must either be first or second of pair, but not both")
-
-      val it =
-        if (rec.getMateReferenceIndex == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
-          inBAM.queryUnmapped()
-        else
-          inBAM.queryAlignmentStart(rec.getMateReferenceName, rec.getMateAlignmentStart)
-
-      val qres =
-        try {
-          it.asScala.toList
-            .filter(x => x.getReadPairedFlag
-                         && rec.getAlignmentStart == x.getMateAlignmentStart
-                         && rec.getMateAlignmentStart == x.getAlignmentStart)
-        } finally {
-          it.close()
-        }
-
-      if (qres.length == 1)
-        Some(qres.head)
-      else
-        None
-    }
-
     /** function to make IntervalTree from our RawInterval objects
       *
       * @param ri iterable over RawInterval objects
@@ -276,7 +244,6 @@ object WipeReads extends MainCommand {
         (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart
 
     val firstBAM = prepIndexedInputBAM()
-    val secondBAM = prepIndexedInputBAM()
 
     /* NOTE: the interval vector here should be bypass-able if we can make
              the BAM query intervals with Interval objects. This is not possible
@@ -289,7 +256,7 @@ object WipeReads extends MainCommand {
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
     lazy val queryIntervals = intervals
       .flatMap(x => monadicMakeQueryInterval(firstBAM, x))
-      // makeQueryInterval only accepts a sorted QUeryInterval list
+      // makeQueryInterval only accepts a sorted QueryInterval list
       .sortBy(x => (x.referenceIndex, x.start, x.end))
       .toArray
 
