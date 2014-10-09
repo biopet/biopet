@@ -149,7 +149,7 @@ object WipeReads extends MainCommand {
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (Any => Boolean) = {
+                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (SAMRecord => Boolean) = {
 
     // TODO: implement optional index creation
     /** Function to check for BAM file index and return a SAMFileReader given a File */
@@ -318,20 +318,14 @@ object WipeReads extends MainCommand {
       .foldLeft(bfm.create())(_.++(_))
 
     if (filterOutMulti)
-      (rec: Any) => rec match {
-        case rec: SAMRecord => filteredOutSet.contains(rec.getReadName).isTrue
-        case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _              => false
-      }
+      (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName).isTrue
     else
-      (rec: Any) => rec match {
-        case rec: SAMRecord if rec.getReadPairedFlag =>
+      (rec: SAMRecord) => {
+        if (rec.getReadPairedFlag)
           filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue &&
           filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart).isTrue
-        case rec: SAMRecord if !rec.getReadPairedFlag =>
-            filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue
-        case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _              => false
+        else
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue
       }
   }
 
