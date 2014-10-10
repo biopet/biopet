@@ -165,6 +165,7 @@ object WipeReads extends MainCommand {
         new SAMFileReader(inBAM, inBAMIndex)
       else {
         val sfr = new SAMFileReader(inBAM)
+        sfr.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
         if (!sfr.hasIndex)
           throw new IllegalStateException("Input BAM file must be indexed")
         else
@@ -312,6 +313,7 @@ object WipeReads extends MainCommand {
       .setCreateIndex(writeIndex)
       .setUseAsyncIo(async)
     val templateBAM = new SAMFileReader(inBAM)
+    templateBAM.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
     val filteredBAM =
       if (filteredOutBAM != null)
