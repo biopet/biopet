@@ -110,7 +110,8 @@ object BiopetFlagstat extends ToolCommand {
     flagstatCollector.addFunction("Mate in same strand", record => record.getReadPairedFlag && record.getReadNegativeStrandFlag && record.getMateNegativeStrandFlag &&
       record.getReferenceIndex == record.getMateReferenceIndex)
     flagstatCollector.addFunction("Mate on other chr", record => record.getReadPairedFlag && record.getReferenceIndex != record.getMateReferenceIndex)
-
+    
+    logger.info("Start reading file: " + commandArgs.inputFile)
     for (record <- iterSam) {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
         logger.info("Reads prosessed: " + flagstatCollector.readsCount)
