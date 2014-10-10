@@ -22,7 +22,7 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
-  override def commandLine = super.commandLine + required("I", input) + " > " + required(output)
+  override def commandLine = super.commandLine + required("-I", input) + " > " + required(output)
 }
 
 object BiopetFlagstat extends ToolCommand {
