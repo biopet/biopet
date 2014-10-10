@@ -17,7 +17,8 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.pipelines.sage.Sage,
       nl.lumc.sasc.biopet.pipelines.basty.Basty),
     "tool" -> List(
-      nl.lumc.sasc.biopet.core.apps.WipeReads)
+      nl.lumc.sasc.biopet.core.apps.WipeReads,
+      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat)
   )
   
   /**
@@ -26,7 +27,7 @@ object BiopetExecutable {
   def main(args: Array[String]): Unit = {
 
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
-      "Available %ss:\n  ".format(kind) + bullet + " " + m.map(x => x.name).sorted.mkString("\n  " + bullet + " ")
+      "Available %ss:\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
 
     def usage(module:String = null): String = {
       if (module != null) checkModule(module)
@@ -53,7 +54,7 @@ object BiopetExecutable {
     
     def getCommand(module:String, name:String) : MainCommand = {
       checkModule(module)
-      val command = modules(module).find(p => p.name.toLowerCase == name.toLowerCase)
+      val command = modules(module).find(p => p.commandName.toLowerCase == name.toLowerCase)
       if (command == None) {
         System.err.println(s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
         System.exit(1)
