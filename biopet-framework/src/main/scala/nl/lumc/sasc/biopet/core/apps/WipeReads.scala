@@ -8,13 +8,14 @@ import java.io.{ File, IOException }
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-import com.twitter.algebird.{ BF, BloomFilter, BloomFilterMonoid }
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
+import orestes.bloomfilter.HashProvider.HashMethod
+import orestes.bloomfilter.{ BloomFilter, FilterBuilder }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -78,6 +79,12 @@ object WipeReads extends MainCommand {
 
   }
 
+  /**
+   * Function to create an iterator yielding non-overlapped RawInterval objects
+   *
+   * @param ri iterator yielding RawInterval objects
+   * @return iterator yielding RawInterval objects
+   */
   def mergeOverlappingIntervals(ri: Iterator[RawInterval]): Iterator[RawInterval] =
     ri.toList
       .sortBy(x => (x.chrom, x.start, x.end))
@@ -149,7 +156,7 @@ object WipeReads extends MainCommand {
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (Any => Boolean) = {
+                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (SAMRecord => Boolean) = {
 
     // TODO: implement optional index creation
     /** Function to check for BAM file index and return a SAMFileReader given a File */
@@ -158,6 +165,7 @@ object WipeReads extends MainCommand {
         new SAMFileReader(inBAM, inBAMIndex)
       else {
         val sfr = new SAMFileReader(inBAM)
+        sfr.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
         if (!sfr.hasIndex)
           throw new IllegalStateException("Input BAM file must be indexed")
         else
@@ -185,44 +193,6 @@ object WipeReads extends MainCommand {
         Some(inBAM.makeQueryInterval("chr" + ri.chrom, ri.start, ri.end))
       else
         None
-
-    // TODO: can we accumulate errors / exceptions instead of ignoring them?
-    /**
-     * Function to query mate from a BAM file
-     *
-     * @param inBAM BAM file to query as SAMFileReader
-     * @param rec SAMRecord whose mate will be queried
-     * @return SAMRecord wrapped in Option
-     */
-    def monadicMateQuery(inBAM: SAMFileReader, rec: SAMRecord): Option[SAMRecord] = {
-      // adapted from htsjdk's SAMFileReader.queryMate to better deal with multiple-mapped reads
-      if (!rec.getReadPairedFlag)
-        return None
-
-      if (rec.getFirstOfPairFlag == rec.getSecondOfPairFlag)
-        throw new IllegalArgumentException("SAMRecord must either be first or second of pair, but not both")
-
-      val it =
-        if (rec.getMateReferenceIndex == SAMRecord.NO_ALIGNMENT_REFERENCE_INDEX)
-          inBAM.queryUnmapped()
-        else
-          inBAM.queryAlignmentStart(rec.getMateReferenceName, rec.getMateAlignmentStart)
-
-      val qres =
-        try {
-          it.asScala.toList
-            .filter(x => x.getReadPairedFlag
-                         && rec.getAlignmentStart == x.getMateAlignmentStart
-                         && rec.getMateAlignmentStart == x.getAlignmentStart)
-        } finally {
-          it.close()
-        }
-
-      if (qres.length == 1)
-        Some(qres.head)
-      else
-        None
-    }
 
     /** function to make IntervalTree from our RawInterval objects
       *
@@ -275,20 +245,6 @@ object WipeReads extends MainCommand {
         (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart
 
     val firstBAM = prepIndexedInputBAM()
-    val secondBAM = prepIndexedInputBAM()
-    val bfm = BloomFilter(bloomSize, bloomFp, 13)
-
-    /** Function to make a BloomFilter containing one element from the SAMRecord */
-    def makeBFFromSAM(rec: SAMRecord, bfm: BloomFilterMonoid): BF = {
-      if (filterOutMulti)
-        bfm.create(rec.getReadName)
-      else if (!rec.getReadPairedFlag)
-        bfm.create(SAMToElem(rec))
-      else
-      // to bypass querying for each mate, we store the records that the mate also has
-      // namely, the read name and the alignment start
-        bfm.create(SAMToElem(rec), rec.getReadName + "_" + rec.getMateAlignmentStart)
-    }
 
     /* NOTE: the interval vector here should be bypass-able if we can make
              the BAM query intervals with Interval objects. This is not possible
@@ -301,37 +257,40 @@ object WipeReads extends MainCommand {
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
     lazy val queryIntervals = intervals
       .flatMap(x => monadicMakeQueryInterval(firstBAM, x))
-      // makeQueryInterval only accepts a sorted QUeryInterval list
+      // makeQueryInterval only accepts a sorted QueryInterval list
       .sortBy(x => (x.referenceIndex, x.start, x.end))
       .toArray
 
-    val filteredOutSet: BF = firstBAM.queryOverlapping(queryIntervals).asScala
+    val filteredRecords: Iterator[SAMRecord] = firstBAM.queryOverlapping(queryIntervals).asScala
       // ensure spliced reads have at least one block overlapping target region
       .filter(x => alignmentBlockOverlaps(x, intervalTreeMap))
       // filter for MAPQ on target region reads
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
-      // transform SAMRecord to string
-      .map(x => makeBFFromSAM(x, bfm))
-      // build bloom filter using fold to prevent loading all strings to memory
-      .foldLeft(bfm.create())(_.++(_))
+
+    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize, bloomFp)
+      .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
+      .buildBloomFilter()
+
+    for (rec <- filteredRecords) {
+      if ((!filterOutMulti) && rec.getReadPairedFlag) {
+        filteredOutSet.add(SAMToElem(rec))
+        filteredOutSet.add(rec.getReadName + "_" + rec.getMateAlignmentStart.toString)
+      }
+      else
+        filteredOutSet.add(SAMToElem(rec))
+    }
 
     if (filterOutMulti)
-      (rec: Any) => rec match {
-        case rec: SAMRecord => filteredOutSet.contains(rec.getReadName).isTrue
-        case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _              => false
-      }
+      (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName)
     else
-      (rec: Any) => rec match {
-        case rec: SAMRecord if rec.getReadPairedFlag =>
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue &&
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart).isTrue
-        case rec: SAMRecord if !rec.getReadPairedFlag =>
-            filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart).isTrue
-        case rec: String    => filteredOutSet.contains(rec).isTrue
-        case _              => false
+      (rec: SAMRecord) => {
+        if (rec.getReadPairedFlag)
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart) &&
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart)
+        else
+          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart)
       }
   }
 
@@ -354,6 +313,7 @@ object WipeReads extends MainCommand {
       .setCreateIndex(writeIndex)
       .setUseAsyncIo(async)
     val templateBAM = new SAMFileReader(inBAM)
+    templateBAM.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
     val filteredBAM =
       if (filteredOutBAM != null)
