@@ -7,7 +7,6 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import org.broadinstitute.gatk.queue.util.Logging
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
