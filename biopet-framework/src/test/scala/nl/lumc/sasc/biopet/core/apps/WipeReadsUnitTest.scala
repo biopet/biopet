@@ -132,6 +132,22 @@ class WipeReadsUnitTest extends Assertions {
     assert(!isFilteredOut(sBAMRecs1(6)))
   }
 
+  @Test def testSingleBAMIntervalWithoutChr() = {
+    val intervals: Iterator[RawInterval] = Iterator(
+      RawInterval("Q", 291, 320),
+      RawInterval("chrQ", 451, 480),
+      RawInterval("P", 191, 480)
+    )
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    assert(!isFilteredOut(sBAMRecs1(0)))
+    assert(isFilteredOut(sBAMRecs1(1)))
+    assert(isFilteredOut(sBAMRecs1(2)))
+    assert(isFilteredOut(sBAMRecs1(3)))
+    assert(!isFilteredOut(sBAMRecs1(4)))
+    assert(!isFilteredOut(sBAMRecs1(5)))
+    assert(!isFilteredOut(sBAMRecs1(6)))
+  }
+
   @Test def testSingleBAMDefaultPartialExonOverlap() = {
     val intervals: Iterator[RawInterval] = Iterator(
       RawInterval("chrQ", 881, 1000) // overlaps first exon of r05
