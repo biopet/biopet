@@ -24,5 +24,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <com-junichi11-netbeans-changelf.lf-kind>CRLF</com-junichi11-netbeans-changelf.lf-kind>
         <com-junichi11-netbeans-changelf.use-global>false</com-junichi11-netbeans-changelf.use-global>
         <netbeans.checkstyle.format>true</netbeans.checkstyle.format>
+        <netbeans.hint.jdkPlatform>JDK_1.8</netbeans.hint.jdkPlatform>
     </properties>
 </project-shared-configuration>

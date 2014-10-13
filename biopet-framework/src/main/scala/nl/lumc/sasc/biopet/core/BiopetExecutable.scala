@@ -1,19 +1,5 @@
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
-import nl.lumc.sasc.biopet.pipelines.basty.Basty
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkBenchmarkGenotyping
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkGenotyping
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantRecalibration
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantcalling
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.pipelines.sage.Sage
-import nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp
-
 object BiopetExecutable {
 
   val modules: Map[String, List[MainCommand]] = Map(
@@ -29,11 +15,14 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantRecalibration,
       nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare,
       nl.lumc.sasc.biopet.pipelines.sage.Sage,
-      nl.lumc.sasc.biopet.pipelines.basty.Basty),
+      nl.lumc.sasc.biopet.pipelines.basty.Basty,
+      nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp),
     "tool" -> List(
       nl.lumc.sasc.biopet.core.apps.WipeReads,
-      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat))
-
+      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat,
+      nl.lumc.sasc.biopet.core.apps.CheckAllelesVcfInBam)
+  )
+  
   /**
    * @param args the command line arguments
    */
