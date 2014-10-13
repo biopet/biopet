@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.scripts.CoverageStats
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.core.apps.{ BedToInterval, BiopetFlagstat }
+import nl.lumc.sasc.biopet.tools.{ BedToInterval, BiopetFlagstat }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics }

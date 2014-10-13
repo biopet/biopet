@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.core.apps
+package nl.lumc.sasc.biopet.tools
 
 import java.io.{ BufferedInputStream, File, FileInputStream, PrintWriter }
 import java.util.zip.GZIPInputStream

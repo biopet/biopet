@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand}
 import java.io.File
-import nl.lumc.sasc.biopet.core.apps.{ MpileupToVcf, VcfFilter }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{AnalyzeCovariates,BaseRecalibrator,GenotypeGVCFs,HaplotypeCaller,IndelRealigner,PrintReads,RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
