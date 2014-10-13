@@ -9,13 +9,12 @@ import java.io.{ File, IOException }
 import scala.collection.JavaConverters._
 
 import htsjdk.samtools._
-import org.scalatest.Assertions
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-/* TODO: helper function to create SAMRecord from SAM alignment string
-         so we can test as if using real SAMRecords
-*/
-class WipeReadsUnitTest extends Assertions {
+
+class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
   import WipeReads._
 
@@ -103,13 +102,13 @@ class WipeReadsUnitTest extends Assertions {
 
   @Test def testMakeRawIntervalFromBED() = {
     val intervals: Vector[RawInterval] = makeRawIntervalFromFile(BEDFile1).toVector
-    assert(intervals.length == 3)
-    assert(intervals.last.chrom == "chrQ")
-    assert(intervals.last.start == 291)
-    assert(intervals.last.end == 320)
-    assert(intervals.head.chrom == "chrQ")
-    assert(intervals.head.start == 991)
-    assert(intervals.head.end == 1000)
+    intervals.length should be (3)
+    intervals.head.chrom should === ("chrQ")
+    intervals.head.start should be (991)
+    intervals.head.end should be (1000)
+    intervals.last.chrom should === ("chrQ")
+    intervals.last.start should be (291)
+    intervals.last.end should be (320)
   }
 
   @Test def testSingleBAMDefault() = {
@@ -368,9 +367,9 @@ class WipeReadsUnitTest extends Assertions {
     val exp = new SAMFileReader(sBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))
-      assert(e.getSAMString === o.getSAMString)
-    assert(outBAM.exists)
-    assert(outBAMIndex.exists)
+      e.getSAMString should === (o.getSAMString)
+    outBAM should be ('exists)
+    outBAMIndex should be ('exists)
   }
 
   @Test def testWriteSingleBAMAndFilteredBAM() = {
@@ -387,11 +386,11 @@ class WipeReadsUnitTest extends Assertions {
     val exp = new SAMFileReader(sBAMFile4).asScala
     val obs = new SAMFileReader(filteredOutBAM).asScala
     for ((e, o) <- exp.zip(obs))
-      assert(e.getSAMString === o.getSAMString)
-    assert(outBAM.exists)
-    assert(outBAMIndex.exists)
-    assert(filteredOutBAM.exists)
-    assert(filteredOutBAMIndex.exists)
+      e.getSAMString should === (o.getSAMString)
+    outBAM should be ('exists)
+    outBAMIndex should be ('exists)
+    filteredOutBAM should be ('exists)
+    filteredOutBAMIndex should be ('exists)
   }
 
   @Test def testWritePairBAMDefault() = {
@@ -404,86 +403,8 @@ class WipeReadsUnitTest extends Assertions {
     val exp = new SAMFileReader(pBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))
-      assert(e.getSAMString === o.getSAMString)
-    assert(outBAM.exists)
-    assert(outBAMIndex.exists)
-  }
-
-  @Test def testOptMinimum() = {
-    val opts = parseOption(Map(), minArgList)
-    assert(opts.contains("inputBAM"))
-    assert(opts.contains("targetRegions"))
-    assert(opts.contains("outputBAM"))
-  }
-
-  @Test def testOptMissingBAI() = {
-    val pathBAM = File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString)
-    assert(pathBAM.exists)
-    val argList = List(
-      "--inputBAM", pathBAM.toPath.toString,
-      "--targetRegions", BEDFile1.getPath,
-      "--outputBAM", "mock.bam")
-    val thrown = intercept[IOException] {
-      parseOption(Map(), argList)
-    }
-    assert(thrown.getMessage === "Index for input BAM file " + pathBAM + " not found")
-    pathBAM.deleteOnExit()
-  }
-
-  @Test def testOptMissingRegions() = {
-    val pathRegion = "/i/dont/exist.bed"
-    val argList = List(
-      "--inputBAM", sBAMFile1.getPath,
-      "--targetRegions", pathRegion,
-      "--outputBAM", "mock.bam"
-    )
-    val thrown = intercept[IOException] {
-      parseOption(Map(), argList)
-    }
-    assert(thrown.getMessage === "Input file " + pathRegion + " not found")
-  }
-
-  @Test def testOptUnexpected() = {
-    val argList = List("--strand", "sense") ::: minArgList
-    val thrown = intercept[IllegalArgumentException] {
-      parseOption(Map(), argList)
-    }
-    assert(thrown.getMessage === "Unexpected or duplicate option flag: --strand")
-  }
-
-  @Test def testOptMinOverlapFraction() = {
-    val argList = List("--minOverlapFraction", "0.8") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("minOverlapFraction") == 0.8)
-  }
-
-  @Test def testOptMinMapQ() = {
-    val argList = List("--minMapQ", "13") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("minMapQ") == 13)
-  }
-
-  @Test def testOptMakeIndex() = {
-    val argList = List("--noMakeIndex") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("noMakeIndex") == true) // why can't we evaluate directly??
-  }
-
-  @Test def testOptLimitToRegion() = {
-    val argList = List("--limitToRegion") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("limitToRegion") == true)
-  }
-
-  @Test def testOptSingleReadGroup() = {
-    val argList = List("--readGroup", "g1") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Set("g1"))
-  }
-
-  @Test def testOptMultipleReadGroup() = {
-    val argList = List("--readGroup", "g1,g2") ::: minArgList
-    val opts = parseOption(Map(), argList)
-    assert(opts("readGroup") == Set("g1", "g2"))
+      e.getSAMString should === (o.getSAMString)
+    outBAM should be ('exists)
+    outBAMIndex should be ('exists)
   }
 }

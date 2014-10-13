@@ -5,6 +5,7 @@
 package nl.lumc.sasc.biopet.core.apps
 
 import java.io.{ File, IOException }
+
 import scala.collection.JavaConverters._
 import scala.io.Source
 
@@ -20,7 +21,7 @@ import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.MainCommand
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 // TODO: finish implementation for usage in pipelines
@@ -41,7 +42,7 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 }
 
-object WipeReads extends MainCommand {
+object WipeReads extends ToolCommand {
 
   /** Container type for command line flags */
   type OptionMap = Map[String, Any]
@@ -333,116 +334,77 @@ object WipeReads extends MainCommand {
     }
   }
 
-  /**
-   * Recursive function to parse command line options
-   *
-   * @param opts OptionMap instance which may contain parsed options
-   * @param list remaining command line arguments
-   * @return OptionMap instance
-   */
-  def parseOption(opts: OptionMap, list: List[String]): OptionMap =
-    // format: OFF
-    list match {
-      case Nil
-          => opts
-      case ("--inputBAM" | "-I") :: value :: tail if !opts.contains("inputBAM")
-          => parseOption(opts ++ Map("inputBAM" -> checkInputBAM(new File(value))), tail)
-      case ("--targetRegions" | "-l") :: value :: tail if !opts.contains("targetRegions")
-          => parseOption(opts ++ Map("targetRegions" -> checkInputFile(new File(value))), tail)
-      case ("--outputBAM" | "-o") :: value :: tail if !opts.contains("outputBAM")
-          => parseOption(opts ++ Map("outputBAM" -> new File(value)), tail)
-      case ("--minMapQ" | "-Q") :: value :: tail if !opts.contains("minMapQ")
-          => parseOption(opts ++ Map("minMapQ" -> value.toInt), tail)
-      // TODO: better way to parse multiple flag values?
-      case ("--readGroup" | "-RG") :: value :: tail if !opts.contains("readGroup")
-      => parseOption(opts ++ Map("readGroup" -> value.split(",").toSet), tail)
-      case ("--noMakeIndex") :: tail
-          => parseOption(opts ++ Map("noMakeIndex" -> true), tail)
-      case ("--limitToRegion" | "-limit") :: tail
-          => parseOption(opts ++ Map("limitToRegion" -> true), tail)
-      // TODO: implementation
-      case ("--minOverlapFraction" | "-f") :: value :: tail if !opts.contains("minOverlapFraction")
-      => parseOption(opts ++ Map("minOverlapFraction" -> value.toDouble), tail)
-      case option :: tail
-          => throw new IllegalArgumentException("Unexpected or duplicate option flag: " + option)
-    }
-  // format: ON
+  case class Args (inputBAM: File = null,
+                   targetRegions: File = null,
+                   outputBAM: File = null,
+                   readGroupIDs: Set[String] = Set.empty[String],
+                   minMapQ: Int = 0,
+                   limitToRegion: Boolean = false,
+                   noMakeIndex: Boolean = false) extends AbstractArgs
 
-  /** Function to validate OptionMap instances */
-  private def validateOption(opts: OptionMap): Unit = {
-    // TODO: better way to check for required arguments ~ use scalaz.Validation?
-    if (opts.get("inputBAM") == None)
-      throw new IllegalArgumentException("Input BAM not supplied")
-    if (opts.get("targetRegions") == None)
-      throw new IllegalArgumentException("Target regions file not supplied")
-  }
+  class OptParser extends AbstractOptParser {
 
-  /** Function that returns the given File if it exists */
-  def checkInputFile(inFile: File): File =
-    if (inFile.exists)
-      inFile
-    else
-      throw new IOException("Input file " + inFile.getPath + " not found")
+    head(
+      s"""
+        |$commandName - Region-based reads removal from an indexed BAM file
+      """.stripMargin)
 
-  /** Function that returns the given BAM file if it exists and is indexed */
-  def checkInputBAM(inBAM: File): File = {
-    // input BAM must have a .bam.bai index
-    if (new File(inBAM.getPath + ".bai").exists || new File(inBAM.getPath + ".bam.bai").exists)
-      checkInputFile(inBAM)
-    else
-      throw new IOException("Index for input BAM file " + inBAM.getPath + " not found")
+    opt[File]('I', "input_file") required() valueName "<bam>" action { (x, c) =>
+      c.copy(inputBAM = x) } validate {
+        x => if (x.exists) success else failure("Input BAM file not found")
+      } text "Input BAM file"
+
+    opt[File]('r', "interval_file") required() valueName "<bed>" action { (x, c) =>
+      c.copy(targetRegions = x) } validate {
+        x => if (x.exists) success else failure("Target regions file not found")
+      } text "Interval BED file"
+
+    opt[File]('o', "output_file") required() valueName "<bam>" action { (x, c) =>
+      c.copy(outputBAM = x) } text "Output BAM file"
+
+    opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
+      c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
+
+    opt[String]('G', "read_group") unbounded() optional() valueName "<rgid>" action { (x, c) =>
+      c.copy(readGroupIDs = c.readGroupIDs + x) } text "Read group IDs to be removed (default: remove reads from all read groups)"
+
+    opt[Boolean]("limit_removal") optional() valueName "" action { (_, c) =>
+      c.copy(limitToRegion = true) } text
+      "Whether to remove multiple-mapped reads outside the target regions (default: yes)"
+
+    opt[Boolean]("no_make_index") optional() valueName "" action { (_, c) =>
+      c.copy(noMakeIndex = true) } text
+      "Whether to index output BAM file or not (default: yes)"
+
+    note(
+      """
+        |This tool will remove BAM records that overlaps a set of given regions.
+        |By default, if the removed reads are also mapped to other regions outside
+        |the given ones, they will also be removed.
+      """.stripMargin)
   }
 
   def main(args: Array[String]): Unit = {
 
-    if (args.length == 0) {
-      println(usage)
-      System.exit(1)
-    }
-    val options = parseOption(Map(), args.toList)
-    validateOption(options)
+    val commandArgs: Args = new OptParser()
+      .parse(args, Args())
+      .getOrElse(sys.exit(1))
 
-    val inputBAM = options("inputBAM").asInstanceOf[File]
-    val outputBAM = options("outputBAM").asInstanceOf[File]
+    val filterFunc = makeFilterOutFunction(
+      iv = makeRawIntervalFromFile(commandArgs.targetRegions),
+      inBAM = commandArgs.inputBAM,
+      filterOutMulti = !commandArgs.limitToRegion,
+      minMapQ = commandArgs.minMapQ,
+      readGroupIDs = commandArgs.readGroupIDs,
+      bloomSize = 70000000,
+      bloomFp = 4e-7
+    )
 
-    val iv = makeRawIntervalFromFile(options("targetRegions").asInstanceOf[File])
-    // limiting bloomSize to 70M and bloomFp to 4e-7 due to Int size limitation set in algebird
-    val filterFunc = makeFilterOutFunction(iv = iv,
-      inBAM = inputBAM,
-      filterOutMulti = !options.getOrElse("limitToRegion", false).asInstanceOf[Boolean],
-      minMapQ = options.getOrElse("minMapQ", 0).asInstanceOf[Int],
-      readGroupIDs = options.getOrElse("readGroupIDs", Set()).asInstanceOf[Set[String]],
-      bloomSize = 70000000, bloomFp = 4e-7)
-
-    writeFilteredBAM(filterFunc, inputBAM, outputBAM,
-      writeIndex = !options.getOrElse("noMakeIndex", false).asInstanceOf[Boolean])
+    writeFilteredBAM(
+      filterFunc,
+      commandArgs.inputBAM,
+      commandArgs.outputBAM,
+      writeIndex = !commandArgs.noMakeIndex
+    )
   }
-
-  val usage: String =
-    s"""
-      |Usage: java -jar BiopetFramework.jar tool $commandName [options] -I input -l regions -o output
-      |
-      |$commandName - Tool for reads removal from an indexed BAM file
-      |
-      |Positional arguments:
-      |  -I,--inputBAM              Input BAM file, must be indexed with
-      |                             '.bam.bai' or 'bai' extension
-      |  -l,--targetRegions         Input BED file
-      |  -o,--outputBAM             Output BAM file
-      |
-      |Optional arguments:
-      |  -RG,--readGroup            Read groups to remove; set multiple read
-      |                             groups using commas (default: all)
-      |  -Q,--minMapQ               Minimum MAPQ value of reads in target region
-      |                             (default: 0)
-      |  --makeIndex                Write BAM output file index
-      |                             (default: true)
-      |  --limitToRegion            Whether to remove only reads in the target
-      |                             regions and and keep the same reads if they
-      |                             map to other regions (default: not set)
-      |
-      |This tool will remove BAM records that overlaps a set of given regions.
-      |By default, if the removed reads are also mapped to other regions outside
-      |the given ones, they will also be removed.
-    """.stripMargin
 }
