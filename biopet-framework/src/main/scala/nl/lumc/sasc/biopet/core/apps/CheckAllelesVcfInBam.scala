@@ -38,15 +38,15 @@ object CheckAllelesVcfInBam extends ToolCommand {
   case class Args (inputFile:File = null, outputFile:File = null, samples:List[String] = Nil, bamFiles:List[File] = Nil, minMapQual:Int = 1) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") unbounded() required() maxOccurs(1) valueName("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
       c.copy(inputFile = x) }
-    opt[File]('o', "outputFile") unbounded() required() maxOccurs(1) valueName("<file>") action { (x, c) =>
+    opt[File]('o', "outputFile") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
       c.copy(outputFile = x) }
-    opt[String]('s', "sample") unbounded() action { (x, c) =>
+    opt[String]('s', "sample") unbounded() minOccurs(1) action { (x, c) =>
       c.copy(samples = x :: c.samples) }
-    opt[File]('b', "bam") unbounded() action { (x, c) =>
+    opt[File]('b', "bam") unbounded() minOccurs(1) action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles) }
-    opt[Int]('m', "min_mapping_quality") unbounded() maxOccurs(1) action { (x, c) =>
+    opt[Int]('m', "min_mapping_quality") maxOccurs(1) action { (x, c) =>
       c.copy(minMapQual = c.minMapQual) }
   }
   
