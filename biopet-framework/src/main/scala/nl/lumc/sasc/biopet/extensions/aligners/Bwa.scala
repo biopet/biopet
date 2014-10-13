@@ -45,7 +45,7 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   var a: Boolean = config("a")
   var C: Boolean = config("C")
   var Y: Boolean = config("Y")
-  var I: String = config("I")  
+  var I: String = config("I")
 
   executable = config("exe", default = "bwa", freeVar = false)
   override val versionRegex = """Version: (.*)""".r
@@ -80,14 +80,14 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-L", L) +
       optional("-U", U) +
       optional("-x", x) +
-      conditional(p, "-p") + 
+      conditional(p, "-p") +
       optional("-v", v) +
       optional("-T", T) +
       optional("-h", h) +
       conditional(a, "-a") +
       conditional(C, "-C") +
       conditional(Y, "-Y") +
-      optional("-I", I) +      
+      optional("-I", I) +
       required(reference) +
       required(R1) +
       optional(R2) +

@@ -1,5 +1,19 @@
 package nl.lumc.sasc.biopet.core
 
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.basty.Basty
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkBenchmarkGenotyping
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkGenotyping
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantRecalibration
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantcalling
+import nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare
+import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap
+import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.pipelines.sage.Sage
+import nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp
+
 object BiopetExecutable {
 
   val modules: Map[String, List[MainCommand]] = Map(
@@ -18,9 +32,8 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.pipelines.basty.Basty),
     "tool" -> List(
       nl.lumc.sasc.biopet.core.apps.WipeReads,
-      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat)
-  )
-  
+      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat))
+
   /**
    * @param args the command line arguments
    */
@@ -29,7 +42,7 @@ object BiopetExecutable {
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
       "Available %ss:\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
 
-    def usage(module:String = null): String = {
+    def usage(module: String = null): String = {
       if (module != null) checkModule(module)
       val usage: String = {
         val set = if (module == null) modules.keySet else Set(module)
@@ -42,17 +55,17 @@ object BiopetExecutable {
         |%s
         |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
-      """.stripMargin.format(modules.keys.mkString(","),usage)
+      """.stripMargin.format(modules.keys.mkString(","), usage)
     }
 
-    def checkModule(module:String) {
+    def checkModule(module: String) {
       if (!modules.contains(module)) {
-          System.err.println(s"ERROR: module '$module' does not exist\n" + usage())
-          System.exit(1)
+        System.err.println(s"ERROR: module '$module' does not exist\n" + usage())
+        System.exit(1)
       }
     }
-    
-    def getCommand(module:String, name:String) : MainCommand = {
+
+    def getCommand(module: String, name: String): MainCommand = {
       checkModule(module)
       val command = modules(module).find(p => p.commandName.toLowerCase == name.toLowerCase)
       if (command == None) {
@@ -61,18 +74,18 @@ object BiopetExecutable {
       }
       return command.get
     }
-    
+
     args match {
       case Array(module, name, passArgs @ _*) => {
-          getCommand(module, name).main(passArgs.toArray)
+        getCommand(module, name).main(passArgs.toArray)
       }
       case Array(module) => {
-          System.err.println(usage(module))
-          System.exit(1)
+        System.err.println(usage(module))
+        System.exit(1)
       }
       case _ => {
-          System.err.println(usage())
-          System.exit(1)
+        System.err.println(usage())
+        System.exit(1)
       }
     }
   }

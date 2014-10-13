@@ -1,5 +1,4 @@
 dependency-reduced-pom.xml
 *~
 *.swp
-/Biopet/nbproject/private/
-/Biopet/build/
+test/
