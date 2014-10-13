@@ -197,6 +197,4 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 }
 
-object Sage extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/sage/Sage.class"
-}
+object Sage extends PipelineCommand

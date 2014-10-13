@@ -15,7 +15,7 @@ class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   class SampleOutput extends AbstractSampleOutput {
   }
   
-  defaults += "ploidy" -> 1
+  defaults ++= Map("ploidy" -> 1, "use_haplotypecaller" -> false, "use_unifiedgenotyper" -> true)
   
   var gatkPipeline: GatkPipeline = _
   
@@ -55,6 +55,4 @@ class Basty (val root: Configurable) extends QScript with MultiSampleQScript {
   }
 }
 
-object Basty extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/basty/Basty.class"  
-}
+object Basty extends PipelineCommand

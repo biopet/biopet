@@ -272,6 +272,4 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   }
 }
 
-object Flexiprep extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/flexiprep/Flexiprep.class"
-}
+object Flexiprep extends PipelineCommand

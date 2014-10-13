@@ -73,8 +73,6 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
 }
 
 object BamMetrics extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/bammetrics/BamMetrics.class"
-
   def apply(root: Configurable, bamFile: File, outputDir: String): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
     bamMetrics.inputBam = bamFile

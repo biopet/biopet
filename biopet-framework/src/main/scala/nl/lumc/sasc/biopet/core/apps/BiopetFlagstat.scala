@@ -4,6 +4,7 @@ import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMRecord
 import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import org.broadinstitute.gatk.queue.util.Logging
@@ -22,10 +23,10 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
-  override def commandLine = super.commandLine + required(input) + " > " + required(output)
+  override def commandLine = super.commandLine + required("I", input) + " > " + required(output)
 }
 
-object BiopetFlagstat extends Logging {
+object BiopetFlagstat extends ToolCommand {
   def apply(root: Configurable, input: File, output: File): BiopetFlagstat = {
     val flagstat = new BiopetFlagstat(root)
     flagstat.input = input
@@ -38,12 +39,32 @@ object BiopetFlagstat extends Logging {
     flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
     return flagstat
   }
+  
+  case class Args (inputFile:File = null, region:Option[String] = None) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
+      c.copy(inputFile = x) } text("out is a required file property")
+    opt[String]('r', "region") valueName("<chr:start-stop>") action { (x, c) =>
+      c.copy(region = Some(x)) } text("out is a required file property")
+  }
+  
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    val inputSam = new SAMFileReader(new File(args(0)))
-
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)    
+    
+    val inputSam = new SAMFileReader(commandArgs.inputFile)
+    val iterSam = if (commandArgs.region == None) inputSam.iterator else {
+      val regionRegex = """(.*):(.*)-(.*)""".r
+      commandArgs.region.get match {
+        case regionRegex(chr, start, stop) => inputSam.query(chr, start.toInt, stop.toInt, false)
+        case _ => sys.error("Region wrong format")
+      }
+    }
+    
     val flagstatCollector = new FlagstatCollector
     flagstatCollector.loadDefaultFunctions
     val m = 10
@@ -89,10 +110,11 @@ object BiopetFlagstat extends Logging {
     flagstatCollector.addFunction("Mate in same strand", record => record.getReadPairedFlag && record.getReadNegativeStrandFlag && record.getMateNegativeStrandFlag &&
       record.getReferenceIndex == record.getMateReferenceIndex)
     flagstatCollector.addFunction("Mate on other chr", record => record.getReadPairedFlag && record.getReferenceIndex != record.getMateReferenceIndex)
-
-    for (record <- inputSam.iterator) {
+    
+    logger.info("Start reading file: " + commandArgs.inputFile)
+    for (record <- iterSam) {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
-        System.err.println("Reads prosessed: " + flagstatCollector.readsCount)
+        logger.info("Reads prosessed: " + flagstatCollector.readsCount)
       flagstatCollector.loadRecord(record)
     }
 

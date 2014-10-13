@@ -57,6 +57,4 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   }
 }
 
-object GatkGenotyping extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/gatk/GatkGenotyping.class"
-}
+object GatkGenotyping extends PipelineCommand
