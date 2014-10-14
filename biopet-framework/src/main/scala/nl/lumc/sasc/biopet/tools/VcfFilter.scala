@@ -5,6 +5,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
@@ -45,44 +46,45 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
     conditional(filterRefCalls, "-filterRefCalls")
 }
 
-object VcfFilter {
-  var inputVcf: File = _
-  var outputVcf: File = _
-  var minSampleDepth = -1
-  var minTotalDepth = -1
-  var minAlternateDepth = -1
-  var minSamplesPass = 0
-  var filterRefCalls = false
+object VcfFilter extends ToolCommand {
+  case class Args (inputVcf:File = null, outputVcf:File = null, minSampleDepth: Int = -1, minTotalDepth: Int = -1,
+                   minAlternateDepth: Int = -1, minSamplesPass: Int = 0, filterRefCalls: Boolean = false) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "inputVcf") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
+      c.copy(inputVcf = x) }
+    opt[File]('o', "outputVcf") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
+      c.copy(outputVcf = x) } text("output file, default to stdout")
+    opt[Int]("minSampleDepth") unbounded() action { (x, c) =>
+      c.copy(minSampleDepth = x ) }
+    opt[Int]("minTotalDepth") unbounded() action { (x, c) =>
+      c.copy(minTotalDepth = x ) }
+    opt[Int]("minAlternateDepth") unbounded() action { (x, c) =>
+      c.copy(minAlternateDepth = x) }
+    opt[Int]("minSamplesPass") unbounded() action { (x, c) =>
+      c.copy(minSamplesPass = x) }
+    opt[Boolean]("filterRefCalls") unbounded() action { (x, c) => 
+      c.copy(filterRefCalls = x) }
+  }
+  
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => inputVcf =  new File(args(t+1))
-        case "-o" => outputVcf = new File(args(t+1))
-        case "-minSampleDepth" => minSampleDepth = args(t+1).toInt
-        case "-minTotalDepth" => minTotalDepth = args(t+1).toInt
-        case "-minAlternateDepth" => minAlternateDepth = args(t+1).toInt
-        case "-minSamplesPass" => minSamplesPass = args(t+1).toInt
-        case "-filterRefCalls" => filterRefCalls = true
-        case _ =>
-      }
-    }
-    if (inputVcf == null) throw new IllegalStateException("No inputVcf, use -I")
-    if (outputVcf == null) throw new IllegalStateException("No outputVcf, use -o")
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
     
-    val reader = new VCFFileReader(inputVcf, false)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(outputVcf).build)
+    val reader = new VCFFileReader(commandArgs.inputVcf, false)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
     writer.writeHeader(reader.getFileHeader)
     for (record <- reader) {
       val genotypes = for (genotype <- record.getGenotypes) yield {
-        genotype.getDP >= minSampleDepth && 
-        List(genotype.getAD:_*).tail.count(_ >= minAlternateDepth) > 0 &&
-        !(filterRefCalls && genotype.isHomRef)
+        genotype.getDP >= commandArgs.minSampleDepth && 
+        List(genotype.getAD:_*).tail.count(_ >= commandArgs.minAlternateDepth) > 0 &&
+        !(commandArgs.filterRefCalls && genotype.isHomRef)
       }
       
-      if (record.getAttributeAsInt("DP", -1) >= minTotalDepth && genotypes.count(_ == true) >= minSamplesPass)
+      if (record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth && genotypes.count(_ == true) >= commandArgs.minSamplesPass)
         writer.add(record)
     }
     reader.close
