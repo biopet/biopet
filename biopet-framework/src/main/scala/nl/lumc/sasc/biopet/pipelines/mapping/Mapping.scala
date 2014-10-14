@@ -36,7 +36,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Skip metrics", shortName = "skipMetrics", required = false)
   var skipMetrics: Boolean = false
 
-  @Argument(doc = "Aligner", shortName = "aln", required = false)
+  @Argument(doc = "Aligner", shortName = "aln", required = false, validation = "bwa|bowtie|stampy|star|star-2pass")
   var aligner: String = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
