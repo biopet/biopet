@@ -20,7 +20,8 @@ object BiopetExecutable {
     "tool" -> List(
       nl.lumc.sasc.biopet.tools.WipeReads,
       nl.lumc.sasc.biopet.tools.BiopetFlagstat,
-      nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam)
+      nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
+      nl.lumc.sasc.biopet.tools.VcfToTsv)
   )
   
   /**
