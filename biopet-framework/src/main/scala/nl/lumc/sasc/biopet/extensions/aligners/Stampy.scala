@@ -24,25 +24,24 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
 
-  
   // options set via API or config
-//  var numrecords: String = config("numrecords", default = "all")
+  //  var numrecords: String = config("numrecords", default = "all")
   var solexa: Boolean = config("solexa", default = false)
   var solexaold: Boolean = config("solexaold", default = false)
   var sanger: Boolean = config("sanger", default = false)
-  
+
   var insertsize: Option[Int] = config("insertsize", default = 250)
   var insertsd: Option[Int] = config("insertsd", default = 60)
   var insertsize2: Option[Int] = config("insertsize2", default = -2000)
   var insertsd2: Option[Int] = config("insertsd2", default = -1)
-  
+
   var sensitive: Boolean = config("sensitive", default = false)
   var fast: Boolean = config("fast", default = false)
-  
+
   var readgroup: String = config("readgroup")
   var verbosity: Option[Int] = config("verbosity", default = 2)
   var logfile: String = config("logfile")
-  
+
   executable = config("exe", default = "stampy.py", freeVar = false)
   override val versionRegex = """stampy v(.*) \(.*\), .*""".r
   override val versionExitcode = List(0, 1)
@@ -52,33 +51,33 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   override def versionCommand = executable + " --help"
-  
-  def cmdLine : String = {
-    var cmd: String = required(executable) +
-    optional("-t", nCoresRequest) +
-    conditional(solexa, "--solexa") +
-    conditional(solexaold, "--solexaold") +
-    conditional(sanger, "--sanger") +
-    optional("--insertsize", insertsize) +
-    optional("--insertsd", insertsd)
 
-    // Optionally start Mate Pair alignment, if set, the aligner will 
-    // assign MP reads as MP, otherwise in PE mode, these reads will 
+  def cmdLine: String = {
+    var cmd: String = required(executable) +
+      optional("-t", nCoresRequest) +
+      conditional(solexa, "--solexa") +
+      conditional(solexaold, "--solexaold") +
+      conditional(sanger, "--sanger") +
+      optional("--insertsize", insertsize) +
+      optional("--insertsd", insertsd)
+
+    // Optionally start Mate Pair alignment, if set, the aligner will
+    // assign MP reads as MP, otherwise in PE mode, these reads will
     // be aligned with the bits RR or FF showing a False Inversion event
-    if ( insertsd2.getOrElse(-1) != -1 ) {
+    if (insertsd2.getOrElse(-1) != -1) {
       cmd += optional("--insertsize2", insertsize2) +
-            optional("--insertsd2", insertsd2)
+        optional("--insertsd2", insertsd2)
     }
-    
+
     cmd += conditional(sensitive, "--sensitive") +
-    conditional(fast, "--fast") +
-    optional("--readgroup", readgroup) +
-    optional("-v", verbosity) +
-    optional("--logfile", logfile) +
-    " -g " + required(genome) +
-    " -h " + required(hash) +
-    " -o " + required(output) +
-    " -M " + required(R1) + optional(R2)
+      conditional(fast, "--fast") +
+      optional("--readgroup", readgroup) +
+      optional("-v", verbosity) +
+      optional("--logfile", logfile) +
+      " -g " + required(genome) +
+      " -h " + required(hash) +
+      " -o " + required(output) +
+      " -M " + required(R1) + optional(R2)
     return cmd
   }
 }

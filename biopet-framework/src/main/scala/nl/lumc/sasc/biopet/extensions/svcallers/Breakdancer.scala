@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.extensions.svcallers
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import org.broadinstitute.gatk.queue.QScript
 import nl.lumc.sasc.biopet.core.BiopetQScript
+import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
@@ -63,7 +64,10 @@ object BreakdancerConfig {
 
 
 
-
+/*
+ * The caller
+ * 
+ **/
 
 
 class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction  {
@@ -77,7 +81,7 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   override def versionCommand = executable
   
   
-  @Input(doc = "Input file (bam)")
+  @Input(doc = "The breakdancer configuration file")
   var input: File = _
   
   @Argument(doc = "Work directory")
@@ -86,12 +90,39 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   @Output(doc = "Breakdancer VCF output")
   var output: File = _
   
-//  var T: Option[Int] = config("T", default = defaultThreads)
-  var f: Boolean = config("f", default = true) // delete work directory before running
-//  var w: String = config("w", default = workdir + "/work")
-  var a: Boolean = config("a", default = false) // don't recompute AS tags
-  var k: Boolean = config("k", default = false) // keep working directory
-  var r: Boolean = config("r", default = false) // take read groups into account
+  /*
+   Options: 
+       -o STRING       operate on a single chromosome [all chromosome]
+       -s INT          minimum length of a region [7]
+       -c INT          cutoff in unit of standard deviation [3]
+       -m INT          maximum SV size [1000000000]
+       -q INT          minimum alternative mapping quality [35]
+       -r INT          minimum number of read pairs required to establish a connection [2]
+       -x INT          maximum threshold of haploid sequence coverage for regions to be ignored [1000]
+       -b INT          buffer size for building connection [100]
+       -t              only detect transchromosomal rearrangement, by default off
+       -d STRING       prefix of fastq files that SV supporting reads will be saved by library
+       -g STRING       dump SVs and supporting reads in BED format for GBrowse
+       -l              analyze Illumina long insert (mate-pair) library
+       -a              print out copy number and support reads per library rather than per bam, by default off
+       -h              print out Allele Frequency column, by default off
+       -y INT          output score filter [30]
+   */
+
+  var s: Option[Int] = config("s", default = 7)
+  var c: Option[Int] = config("c", default = 3)
+  var m: Option[Int] = config("m", default = 1000000000)
+  var q: Option[Int] = config("qs", default = 35)
+  var r: Option[Int] = config("r", default = 2)
+  var x: Option[Int] = config("x", default = 1000)
+  var b: Option[Int] = config("b", default = 100)  
+  var t: Boolean = config("t", default = false)
+  var d: String = config("d")
+  var g: String = config("g")
+  var l: Boolean = config("l", default = false)
+  var a: Boolean = config("a", default = false)
+  var h: Boolean = config("h", default = false)
+  var y: Option[Int] = config("y", default = 30)  
   
   override def beforeCmd {
     if (workdir == null) throw new Exception("Breakdancer :: Workdirectory is not defined")
@@ -99,7 +130,23 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   }
 
   def cmdLine = required(executable) + 
-      required(input) + ">" + required(output)
+      optional("-s", s) +
+      optional("-c", c) +
+      optional("-m", m) +
+      optional("-q", q) +
+      optional("-r", r) +
+      optional("-x", x) +
+      optional("-b", b) +
+      conditional(t ,"-t") +
+      optional("-d", d) +
+      optional("-g", g) +
+      conditional(l ,"-l") +
+      conditional(a ,"-a") +
+      conditional(h ,"-h") +
+      optional("-y", y) +
+      required(input) + 
+      ">" + 
+      required(output)
 }
 
 object BreakdancerCaller {
@@ -124,40 +171,49 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Work directory")
   var workdir: String = _
   
-  @Output(doc = "Breakdancer VCF output")
-  var output: File = _
+//  @Output(doc = "Breakdancer VCF output")
+//  lazy val outputvcf: File = {
+//    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
+//  }
+  
+  @Output(doc = "Breakdancer raw output")
+  lazy val outputraw: File = {
+    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.tsv")
+  }
   
   override def init() {
   }
 
   def biopetScript() {
-    // write the pipeline here
-    // start with QC, alignment, call sambamba, call sv callers, reporting
-
     // read config and set all parameters for the pipeline
-    logger.info("Starting Breakdancer")
+    logger.info("Starting Breakdancer configuration")
     
     val bdcfg = BreakdancerConfig(this, input, workdir)
     outputFiles += ("breakdancer_cfg" -> bdcfg.output )
     add( bdcfg )
     
-    val output_vcf: File = new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.tsv")
-    val breakdancer = BreakdancerCaller( this, input, output_vcf )
-    
+    val output_tsv: File = this.outputraw
+    val breakdancer = BreakdancerCaller( this, bdcfg.output, output_tsv )
+    add( breakdancer )
+    outputFiles += ("breakdancer_tsv" -> breakdancer.output )
+
+//    val output_vcf: File = this.outputvcf
     // convert this tsv to vcf using the python script
     
     
   }
   
-  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".breakdancer.tsv"
+//  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".breakdancer.tsv"
 }
 
-object Breakdancer {
-  def apply(root: Configurable, input: File, reference: File, runDir: String): Breakdancer = {
+object Breakdancer extends PipelineCommand {
+  def apply(root: Configurable, input: File, reference: File, runDir: String): Breakdancer = {    
     val breakdancer = new Breakdancer(root)
     breakdancer.input = input
     breakdancer.reference = reference
     breakdancer.workdir = runDir
+    breakdancer.init
+    breakdancer.biopetScript
     return breakdancer
   }
 }

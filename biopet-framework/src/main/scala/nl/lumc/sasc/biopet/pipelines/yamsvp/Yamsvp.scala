@@ -18,14 +18,11 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.queue.engine.JobRunInfo
 
-
-
 class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   var reference: File = _
   var finalBamFiles: List[File] = Nil
-
 
   class LibraryOutput extends AbstractLibraryOutput {
     var mappedBamFile: File = _
@@ -36,7 +33,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     var mappedBamFile: File = _
   }
 
-  
   override def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     reference = config("reference", required = true)
@@ -53,14 +49,14 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     // read config and set all parameters for the pipeline
     logger.info("Starting YAM SV Pipeline")
     runSamplesJobs
-    // 
+    //
 
   }
 
   override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {
     logger.info("YAM SV Pipeline has run ...............................................................")
   }
-  
+
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
     val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
@@ -88,20 +84,20 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
     val cleverDir = svcallingDir + sampleID + ".clever/"
-    val clever = Clever(this, bamFile, this.reference, cleverDir)
+    val clever = Clever(this, bamFile, this.reference, svcallingDir, cleverDir)
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 
-    //    val breakdancerDir = sampleDir + sampleID + ".breakdancer/"
-    //    val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir )
-    //    outputFiles += ("breakdancer_vcf" -> List(breakdancer.output) )
-    //    addAll(breakdancer.functions)
+    val breakdancerDir = sampleDir + sampleID + ".breakdancer/"
+    val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
+    sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputraw))
+    addAll(breakdancer.functions)
 
     return sampleOutput
   }
 
   // Called for each run from a sample
-  
+
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
     val libraryOutput = new LibraryOutput
     var outputFiles: Map[String, File] = Map()
@@ -111,13 +107,13 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val runDir: String = alignmentDir + "run_" + runID + "/"
     if (runConfig.contains("R1")) {
-//      val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
+      //      val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       val mapping = new Mapping(this)
-      
+
       mapping.defaultAligner = "stampy"
       mapping.skipFlexiprep = false
       mapping.skipMarkduplicates = true // we do the dedup marking using Sambamba
-      
+
       if (runConfig.contains("R1")) mapping.input_R1 = new File(runConfig("R1").toString)
       if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
       mapping.paired = (mapping.input_R2 != null)
@@ -133,16 +129,14 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       addAll(mapping.functions)
 
       // start sambamba dedup
-      
-//      outputFiles += ("final_bam" -> mapping.outputFiles("finalBamFile"))
+
+      //      outputFiles += ("final_bam" -> mapping.outputFiles("finalBamFile"))
       libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     return libraryOutput
-//    logger.debug(outputFiles)
-//    return outputFiles
+    //    logger.debug(outputFiles)
+    //    return outputFiles
   }
 }
 
-object Yamsvp extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/pipelines/yamsvp/Yamsvp.class"
-}
+object Yamsvp extends PipelineCommand

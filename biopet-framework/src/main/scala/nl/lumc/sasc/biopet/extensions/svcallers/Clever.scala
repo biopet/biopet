@@ -29,10 +29,12 @@ class Clever(val root: Configurable) extends BiopetCommandLineFunction  {
   
   @Argument(doc = "Work directory")
   var workdir: String = _
+    
+  var cwd: String = _
   
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
-    new File(workdir + "predictions.vcf")
+    new File(cwd + "predictions.vcf")
   }
   
   @Output(doc = "Clever raw output")
@@ -66,10 +68,11 @@ class Clever(val root: Configurable) extends BiopetCommandLineFunction  {
 }
 
 object Clever {
-  def apply(root: Configurable, input: File, reference: File, runDir: String): Clever = {
+  def apply(root: Configurable, input: File, reference: File, svDir: String, runDir: String): Clever = {
     val clever = new Clever(root)
     clever.input = input
     clever.reference = reference
+    clever.cwd = svDir
     clever.workdir = runDir
     return clever
   }
@@ -89,6 +92,10 @@ class CleverPipeline(val root: Configurable) extends QScript with BiopetQScript 
   @Argument(doc = "Work directory")
   var workdir: String = _
   
+  
+  @Argument(doc = "Current working directory")
+  var cwd: String = _
+  
   override def init() {
   }
 
@@ -97,7 +104,7 @@ class CleverPipeline(val root: Configurable) extends QScript with BiopetQScript 
     logger.info("Starting Clever Pipeline")
     
     /// start clever and then copy the vcf into the root directory "<sample>.clever/"
-    val clever = Clever(this, input, reference, workdir )
+    val clever = Clever(this, input, reference, cwd, workdir )
     outputFiles += ("clever_vcf" -> clever.outputvcf )
     add( clever )
   }
