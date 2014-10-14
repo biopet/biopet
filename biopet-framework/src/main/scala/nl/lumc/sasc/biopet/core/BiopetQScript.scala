@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2014 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
+ * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
+ */
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
@@ -19,19 +23,19 @@ trait BiopetQScript extends Configurable {
 
   var qSettings: QSettings
 
-  def init
-  def biopetScript
+  def init()
+  def biopetScript()
 
   var functions: Seq[QFunction]
-  
+
   final def script() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
-    init
-    biopetScript
+    init()
+    biopetScript()
     for (function <- functions) function match {
-      case f:BiopetCommandLineFunctionTrait => f.afterGraph
-      case _ =>
+      case f: BiopetCommandLineFunctionTrait => f.afterGraph
+      case _                                 =>
     }
     val configReport = globalConfig.getReport
     val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
@@ -47,5 +51,4 @@ trait BiopetQScript extends Configurable {
     function.isIntermediate = isIntermediate
     add(function)
   }
-
 }
