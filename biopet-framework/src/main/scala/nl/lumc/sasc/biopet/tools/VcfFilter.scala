@@ -4,6 +4,7 @@ import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
+import java.util.ArrayList
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -48,7 +49,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object VcfFilter extends ToolCommand {
   case class Args (inputVcf:File = null, outputVcf:File = null, minSampleDepth: Int = -1, minTotalDepth: Int = -1,
-                   minAlternateDepth: Int = -1, minSamplesPass: Int = 0, filterRefCalls: Boolean = false) extends AbstractArgs
+                   minAlternateDepth: Int = -1, minSamplesPass: Int = 0, minBamAlternateDepth: Int = 0, filterRefCalls: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
@@ -63,6 +64,8 @@ object VcfFilter extends ToolCommand {
       c.copy(minAlternateDepth = x) }
     opt[Int]("minSamplesPass") unbounded() action { (x, c) =>
       c.copy(minSamplesPass = x) }
+    opt[Int]("minBamAlternateDepth") unbounded() action { (x, c) =>
+      c.copy(minBamAlternateDepth = x) }
     opt[Boolean]("filterRefCalls") unbounded() action { (x, c) => 
       c.copy(filterRefCalls = x) }
   }
@@ -75,16 +78,40 @@ object VcfFilter extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
     
     val reader = new VCFFileReader(commandArgs.inputVcf, false)
+    val header = reader.getFileHeader
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
-    writer.writeHeader(reader.getFileHeader)
+    writer.writeHeader(header)
+    
+    val bamADFields = (for (line <- header.getInfoHeaderLines if line.getID.startsWith("BAM-AD-")) yield line.getID).toList
+    val bamDPFields = (for (line <- header.getInfoHeaderLines if line.getID.startsWith("BAM-DP-")) yield line.getID).toList
+        
     for (record <- reader) {
       val genotypes = for (genotype <- record.getGenotypes) yield {
-        genotype.getDP >= commandArgs.minSampleDepth && 
-        List(genotype.getAD:_*).tail.count(_ >= commandArgs.minAlternateDepth) > 0 &&
+        val DP = if (genotype.hasDP) genotype.getDP else -1
+        val AD = if (genotype.hasAD) List(genotype.getAD:_*) else Nil
+        DP >= commandArgs.minSampleDepth && 
+        (if (!AD.isEmpty) AD.tail.count(_ >= commandArgs.minAlternateDepth) > 0 else true) &&
         !(commandArgs.filterRefCalls && genotype.isHomRef)
       }
       
-      if (record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth && genotypes.count(_ == true) >= commandArgs.minSamplesPass)
+      val bamADvalues = (for (field <- bamADFields) yield {
+        record.getAttribute(field, new ArrayList) match {
+          case t:ArrayList[_] if t.length > 1 => {
+              for (i <- 1 until t.size) yield {
+                t(i) match {
+                  case a:Int => a > commandArgs.minBamAlternateDepth
+                  case a:String => a.toInt > commandArgs.minBamAlternateDepth
+                  case _ => false
+                }
+              }
+          }
+          case _ => List(false)
+        }
+      }).flatten
+          
+      if (record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth && 
+          genotypes.count(_ == true) >= commandArgs.minSamplesPass &&
+          bamADvalues.count(_ == true) >= commandArgs.minSamplesPass)
         writer.add(record)
     }
     reader.close
