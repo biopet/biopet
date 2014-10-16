@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.core.apps
+package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMSequenceRecord

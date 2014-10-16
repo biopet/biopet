@@ -18,9 +18,9 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.pipelines.basty.Basty,
       nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp),
     "tool" -> List(
-      nl.lumc.sasc.biopet.core.apps.WipeReads,
-      nl.lumc.sasc.biopet.core.apps.BiopetFlagstat,
-      nl.lumc.sasc.biopet.core.apps.CheckAllelesVcfInBam)
+      nl.lumc.sasc.biopet.tools.WipeReads,
+      nl.lumc.sasc.biopet.tools.BiopetFlagstat,
+      nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam)
   )
   
   /**

@@ -2,7 +2,7 @@
  * Copyright (c) 2014 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-package nl.lumc.sasc.biopet.core.apps
+package nl.lumc.sasc.biopet.tools
 
 import java.nio.file.Paths
 import java.io.{ File, IOException }

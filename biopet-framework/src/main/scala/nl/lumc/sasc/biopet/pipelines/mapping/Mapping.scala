@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.core.apps.FastqSplitter
+import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star , Bowtie, Stampy}
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
