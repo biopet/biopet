@@ -37,12 +37,16 @@ object FindRepeatsPacBio extends ToolCommand {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
-    
     val bamReader = new SAMFileReader(commandArgs.inputBam)
     bamReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT)
     val bamHeader = bamReader.getFileHeader
+    
+    val Header = List("chr", "startPos", "oriRepeatLength", "Calculated_repeat_length", "minLength", 
+                      "maxLength", "inserts", "deletions", "notSpan").mkString("\t")
+    println(Header)
     
     for (bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
       val values = bedLine.split("\t"); if values.size >= 3) {
