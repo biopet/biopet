@@ -363,7 +363,16 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+    )
+
     val exp = new SAMFileReader(sBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))
@@ -382,7 +391,16 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val filteredOutBAMIndex = makeTempBAMIndex(filteredOutBAM)
     filteredOutBAM.deleteOnExit()
     filteredOutBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM, filteredOutBAM = filteredOutBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM, filteredOutBAM = filteredOutBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+    )
+
     val exp = new SAMFileReader(sBAMFile4).asScala
     val obs = new SAMFileReader(filteredOutBAM).asScala
     for ((e, o) <- exp.zip(obs))
@@ -399,7 +417,15 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, pBAMFile1, outBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, pBAMFile1, outBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(pBAMFile1.getName, outBAM.getName, 8, 6)
+    )
     val exp = new SAMFileReader(pBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))
