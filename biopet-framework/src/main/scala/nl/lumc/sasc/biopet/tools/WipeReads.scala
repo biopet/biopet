@@ -326,8 +326,7 @@ object WipeReads extends ToolCommand {
     templateBAM.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
 
     lazy val (inclRecords, exclRecords) = templateBAM
-      .asScala
-      .toStream
+      .asScala.iterator
       .partition(rec => !filterFunc(rec))
 
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
