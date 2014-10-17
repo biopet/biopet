@@ -360,6 +360,7 @@ object WipeReads extends ToolCommand {
   case class Args (inputBAM: File = null,
                    targetRegions: File = null,
                    outputBAM: File = null,
+                   filteredOutBAM: File = null,
                    readGroupIDs: Set[String] = Set.empty[String],
                    minMapQ: Int = 0,
                    limitToRegion: Boolean = false,
@@ -384,6 +385,9 @@ object WipeReads extends ToolCommand {
 
     opt[File]('o', "output_file") required() valueName "<bam>" action { (x, c) =>
       c.copy(outputBAM = x) } text "Output BAM file"
+
+    opt[File]('f', "discarded_file") optional() valueName "<bam>" action { (x, c) =>
+      c.copy(filteredOutBAM = x) } text "Discarded reads BAM file (default: none)"
 
     opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
       c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
@@ -427,7 +431,8 @@ object WipeReads extends ToolCommand {
       filterFunc,
       commandArgs.inputBAM,
       commandArgs.outputBAM,
-      writeIndex = !commandArgs.noMakeIndex
+      writeIndex = !commandArgs.noMakeIndex,
+      filteredOutBAM = commandArgs.filteredOutBAM
     )
   }
 }
