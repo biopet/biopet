@@ -239,11 +239,14 @@ object WipeReads extends ToolCommand {
         (r: SAMRecord) => readGroupIDs.contains(r.getReadGroup.getReadGroupId)
 
     /** function to get set element */
-    val SAMToElem =
+    val SAMRecordElement =
       if (filterOutMulti)
         (r: SAMRecord) => r.getReadName
       else
-        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart
+        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart.toString
+
+    val SAMRecordMateElement =
+      (r: SAMRecord)   => r.getReadName + "_" + r.getMateAlignmentStart.toString
 
     val firstBAM = prepIndexedInputBAM()
 
@@ -276,11 +279,11 @@ object WipeReads extends ToolCommand {
 
     for (rec <- filteredRecords) {
       if ((!filterOutMulti) && rec.getReadPairedFlag) {
-        filteredOutSet.add(SAMToElem(rec))
-        filteredOutSet.add(rec.getReadName + "_" + rec.getMateAlignmentStart.toString)
+        filteredOutSet.add(SAMRecordElement(rec))
+        filteredOutSet.add(SAMRecordMateElement(rec))
       }
       else
-        filteredOutSet.add(SAMToElem(rec))
+        filteredOutSet.add(SAMRecordElement(rec))
     }
 
     if (filterOutMulti)
@@ -288,10 +291,10 @@ object WipeReads extends ToolCommand {
     else
       (rec: SAMRecord) => {
         if (rec.getReadPairedFlag)
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart) &&
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart)
+          filteredOutSet.contains(SAMRecordElement(rec)) &&
+          filteredOutSet.contains(SAMRecordMateElement(rec))
         else
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart)
+          filteredOutSet.contains(SAMRecordElement(rec))
       }
   }
 
