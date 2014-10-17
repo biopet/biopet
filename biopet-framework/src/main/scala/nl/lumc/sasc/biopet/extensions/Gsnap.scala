@@ -7,7 +7,9 @@
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
@@ -18,10 +20,11 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** default executable */
-  executable = config("exe", default = "gsnap")
+  executable = config("exe", default = "gsnap", freeVar = false)
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true)
+  //var input: List[File] = _
   var input: List[File] = _
 
   /** output file */
@@ -29,12 +32,12 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   /** genome directory */
-  @Input(doc = "Directory of genome database", required = true)
-  var dir: File = _
+  @Argument(doc = "Directory of genome database", required = true)
+  var dir: File = config("dir")
 
   /** genome database */
-  @Input(doc = "Genome database name", required = true)
-  var db: String = _
+  @Argument(doc = "Genome database name", required = true)
+  var db: String = config("db")
 
   /** whether to use a suffix array, which will give increased speed */
   var use_sarray: Option[Int] = config("use_sarray")
@@ -408,13 +411,14 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
       conditional(no_sam_headers, "--no-sam-headers") +
       optional("--sam-headers-batch", sam_headers_batch) +
       conditional(sam_use_0M, "--sam-use-0M") +
-      optional("--sam-multiple-primaries", sam_multiple_primaries) +
+      conditional(sam_multiple_primaries, "--sam-multiple-primaries") +
       conditional(force_xs_dir, "--force-xs-dir") +
       conditional(md_lowercase_snp, "--md-lowercase-snp") +
       optional("--read-group-id", read_group_id) +
       optional("--read-group-name", read_group_name) +
       optional("--read-group-library", read_group_library) +
       optional("--read-group-platform", read_group_platform) +
+      repeat(input) +
       " > " + required(output)
   }
 }
