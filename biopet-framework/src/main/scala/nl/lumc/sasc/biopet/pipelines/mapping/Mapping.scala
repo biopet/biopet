@@ -5,7 +5,8 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star, Bowtie, Stampy }
+import nl.lumc.sasc.biopet.extensions.aligners.{ Bowtie, Bwa, Stampy, Star }
+import nl.lumc.sasc.biopet.extensions.Gsnap
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -36,7 +37,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Skip metrics", shortName = "skipMetrics", required = false)
   var skipMetrics: Boolean = false
 
-  @Argument(doc = "Aligner", shortName = "aln", required = false, validation = "bwa|bowtie|stampy|star|star-2pass")
+  @Argument(doc = "Aligner", shortName = "aln", required = false, validation = "bwa|bowtie|gsnap|stampy|star|star-2pass")
   var aligner: String = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
@@ -184,6 +185,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       aligner match {
         case "bwa"        => addBwa(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
+        case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
         case "stampy"     => addStampy(R1, R2, outputBam, deps)
         case "star"       => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
@@ -223,6 +225,25 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     val sortSam = SortSam(this, bwaCommand.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
+    sortSam.output
+  }
+
+  def addGsnap(R1: File, R2: File, output: File, deps: List[File]): File = {
+    val gsnapCommand = new Gsnap(this)
+    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
+    gsnapCommand.input = List(R1, R2).filterNot(x => x == null || x.getPath == "")
+    gsnapCommand.deps = deps
+    gsnapCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
+    gsnapCommand.isIntermediate = true
+    add(gsnapCommand)
+
+    val sortSam = new SortSam(this)
+    sortSam.input = gsnapCommand.output
+    sortSam.output = output
+    sortSam.sortOrder = "coordinate"
+    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    add(sortSam)
+
     sortSam.output
   }
 
