@@ -325,10 +325,6 @@ object WipeReads extends ToolCommand {
     val templateBAM = new SAMFileReader(inBAM)
     templateBAM.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
 
-    lazy val (inclRecords, exclRecords) = templateBAM
-      .asScala.iterator
-      .partition(rec => !filterFunc(rec))
-
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
 
     val filteredBAM =
@@ -340,22 +336,19 @@ object WipeReads extends ToolCommand {
     logger.info("Writing output file(s) ...")
 
     try {
-
-      val incl = inclRecords.foldLeft(0) {
-        (acc, rec) => targetBAM.addAlignment(rec); acc + 1
+      var (incl, excl) = (0, 0)
+      for (rec <- templateBAM.asScala) {
+        if (!filterFunc(rec)) {
+          targetBAM.addAlignment(rec)
+          incl += 1
+        }
+        else {
+          excl += 1
+          if (filteredBAM != null) filteredBAM.addAlignment(rec)
+        }
       }
-
-      val excl =
-        if (filteredBAM == null)
-          exclRecords.length
-        else
-          exclRecords.foldLeft(0) {
-            (acc, rec) => filteredBAM.addAlignment(rec); acc + 1
-          }
-
       println(List("input_bam", "output_bam", "count_included", "count_excluded").mkString("\t"))
       println(List(inBAM.getName, outBAM.getName, incl, excl).mkString("\t"))
-
     } finally {
       templateBAM.close()
       targetBAM.close()
