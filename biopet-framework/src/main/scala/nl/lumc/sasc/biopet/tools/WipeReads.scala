@@ -401,11 +401,11 @@ object WipeReads extends ToolCommand {
     opt[String]('G', "read_group") unbounded() optional() valueName "<rgid>" action { (x, c) =>
       c.copy(readGroupIDs = c.readGroupIDs + x) } text "Read group IDs to be removed (default: remove reads from all read groups)"
 
-    opt[Boolean]("limit_removal") optional() valueName "" action { (_, c) =>
+    opt[Unit]("limit_removal") optional() action { (_, c) =>
       c.copy(limitToRegion = true) } text
       "Whether to remove multiple-mapped reads outside the target regions (default: yes)"
 
-    opt[Boolean]("no_make_index") optional() valueName "" action { (_, c) =>
+    opt[Unit]("no_make_index") optional() action { (_, c) =>
       c.copy(noMakeIndex = true) } text
       "Whether to index output BAM file or not (default: yes)"
 
