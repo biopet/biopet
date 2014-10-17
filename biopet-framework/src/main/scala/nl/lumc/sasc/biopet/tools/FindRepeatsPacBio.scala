@@ -44,7 +44,7 @@ object FindRepeatsPacBio extends ToolCommand {
     bamReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT)
     val bamHeader = bamReader.getFileHeader
     
-    val Header = List("chr", "startPos", "oriRepeatLength", "Calculated_repeat_length", "minLength", 
+    val Header = List("chr", "startPos", "stopPos","Repeat_seq", "repeatLength", "original_Repeat_readLength", "Calculated_repeat_readLength", "minLength", 
                       "maxLength", "inserts", "deletions", "notSpan").mkString("\t")
     println(Header)
     
@@ -55,6 +55,14 @@ object FindRepeatsPacBio extends ToolCommand {
       val results = for (samRecord <-bamIter) yield procesSamrecord(samRecord, interval)
       val chr = values(0)
       val startPos = values(1)
+      val stopPos = values(2)
+      
+      val typeRepeat: String =
+        if (values.size >= 15)
+          values(14)
+        else
+          ""     
+      val repeatLength = typeRepeat.length
       val oriRepeatLength = values(2).toInt - values(1).toInt + 1
       var calcRepeatLength: List[Int] = Nil
       var minLength = -1
@@ -75,7 +83,7 @@ object FindRepeatsPacBio extends ToolCommand {
           if (length < minLength || minLength == -1) minLength = length
         }
       }
-      println(List(chr, startPos, oriRepeatLength, calcRepeatLength.mkString(","), minLength, 
+      println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength, 
                       maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
       bamIter.close
     }
