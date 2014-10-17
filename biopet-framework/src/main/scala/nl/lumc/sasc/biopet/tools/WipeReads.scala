@@ -104,6 +104,8 @@ object WipeReads extends ToolCommand {
    */
   def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
 
+    logger.info("Parsing interval file ...")
+
     /** Function to create iterator from BED file */
     def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
       // BED file coordinates are 0-based, half open so we need to do some conversion
@@ -158,6 +160,8 @@ object WipeReads extends ToolCommand {
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
                             bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (SAMRecord => Boolean) = {
+
+    logger.info("Building set of reads to exclude ...")
 
     // TODO: implement optional index creation
     /** Function to check for BAM file index and return a SAMFileReader given a File */
@@ -278,6 +282,7 @@ object WipeReads extends ToolCommand {
       .buildBloomFilter()
 
     for (rec <- filteredRecords) {
+      logger.debug("Adding read " + rec.getReadName + " to set ...")
       if ((!filterOutMulti) && rec.getReadPairedFlag) {
         filteredOutSet.add(SAMRecordElement(rec))
         filteredOutSet.add(SAMRecordMateElement(rec))
@@ -332,6 +337,8 @@ object WipeReads extends ToolCommand {
         factory.makeBAMWriter(templateBAM.getFileHeader, true, filteredOutBAM)
       else
         null
+
+    logger.info("Writing output file(s) ...")
 
     try {
 
