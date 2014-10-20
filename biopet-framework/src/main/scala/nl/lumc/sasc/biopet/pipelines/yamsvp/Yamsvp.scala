@@ -9,8 +9,10 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
-import nl.lumc.sasc.biopet.extensions.svcallers.Breakdancer
-import nl.lumc.sasc.biopet.extensions.svcallers.Clever
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
+import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
+import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
+
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
@@ -54,7 +56,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {
-    logger.info("YAM SV Pipeline has run ...............................................................")
+    logger.info("YAM SV Pipeline has run .......................")
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
@@ -64,22 +66,36 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     var libraryFastqFiles: List[File] = List()
     val sampleID: String = sampleConfig("ID").toString
     val sampleDir: String = outputDir + sampleID + "/"
+    val alignmentDir: String = sampleDir + "alignment/"
+
 
     val svcallingDir: String = sampleDir + "svcalls/"
 
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
     for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
       // this is extending the libraryBamfiles list like '~=' in D or .append in Python or .push_back in C++
-      libraryBamfiles = List(libraryOutput.mappedBamFile)
+      libraryBamfiles ++= List(libraryOutput.mappedBamFile)
     }
+    
+    logger.debug( "We have the following bamfiles for merging" )
+    logger.debug( libraryBamfiles )
 
-    val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-    else if (libraryBamfiles.size > 1) {
-      val mergeSamFiles = MergeSamFiles(this, libraryBamfiles, sampleDir)
-      add(mergeSamFiles)
-      mergeSamFiles.output
-    } else null
+    val bamFile: File = 
+      if (libraryBamfiles.size == 1) libraryBamfiles.head
+      else if (libraryBamfiles.size > 1) {
+        val mergeSamFiles = new SambambaMerge(root)
+        mergeSamFiles.input = libraryBamfiles
+        mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
+        add(mergeSamFiles)
+        
+        val bamIndex = SambambaIndex(root, mergeSamFiles.output)
+        add(bamIndex)
+        
+        mergeSamFiles.output
+      } else null
 
+    logger.debug( bamFile )
+    
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
@@ -88,11 +104,18 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 
-    val breakdancerDir = sampleDir + sampleID + ".breakdancer/"
+    val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
     val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
     sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputraw))
     addAll(breakdancer.functions)
-
+//
+//    
+//    val pindelDir = svcallingDir + sampleID + ".pindel/"
+//    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
+//    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
+//    addAll(pindel.functions)
+//
+//    
     return sampleOutput
   }
 
