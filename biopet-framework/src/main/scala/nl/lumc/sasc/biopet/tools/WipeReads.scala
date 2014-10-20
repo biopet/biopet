@@ -7,13 +7,16 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ File, IOException }
 
 import scala.collection.JavaConverters._
-import scala.io.Source
 
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
+import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
+import htsjdk.tribble.Feature
+import htsjdk.tribble.BasicFeature
+import htsjdk.tribble.bed.BEDCodec
 import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
 import orestes.bloomfilter.HashProvider.HashMethod
 import orestes.bloomfilter.{ BloomFilter, FilterBuilder }
@@ -44,54 +47,44 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object WipeReads extends ToolCommand {
 
-  /** Container class for interval parsing results */
-  case class RawInterval(chrom: String, start: Int, end: Int) {
+  /** Function to check whether one feature contains the other */
+  private def contains(feat1: Feature, feat2: Feature): Boolean =
+    if (feat1.getChr != feat2.getChr)
+      false
+    else
+      feat1.getStart <= feat2.getStart && feat1.getEnd >= feat2.getEnd
 
-    require(start <= end, s"Start coordinate $start is larger than end coordinate $end")
+  /** Function to check whether two features overlap each other */
+  private def overlaps(feat1: Feature, feat2: Feature): Boolean =
+    if (feat1.getChr != feat2.getChr)
+      false
+    else
+      feat1.getStart <= feat2.getStart && feat1.getEnd >= feat2.getStart
 
-    /** Function to check whether one interval contains the other */
-    def contains(that: RawInterval): Boolean =
-      if (this.chrom != that.chrom)
-        false
-      else
-        this.start <= that.start && this.end >= that.end
-
-    /** Function to check whether two intervals overlap each other */
-    def overlaps(that: RawInterval): Boolean =
-      if (this.chrom != that.chrom)
-        false
-      else
-        this.start <= that.start && this.end >= that.start
-
-    /** Function to merge two overlapping intervals */
-    def merge(that: RawInterval): RawInterval = {
-      if (this.chrom != that.chrom)
-        throw new IllegalArgumentException("Can not merge RawInterval objects from different chromosomes")
-      if (contains(that))
-        this
-      else if (overlaps(that))
-        RawInterval(this.chrom, this.start, that.end)
-      else
-        throw new IllegalArgumentException("Can not merge non-overlapping RawInterval objects")
-    }
-
+  /** Function to merge two overlapping intervals
+    * NOTE: we assume subtypes of Feature has a constructor with (chr, start, end) signature */
+  private def merge[T <: Feature](feat1: T, feat2: T): T = {
+    if (feat1.getChr != feat2.getChr)
+      throw new IllegalArgumentException("Can not merge features from different chromosomes")
+    if (contains(feat1, feat2))
+      feat1
+    // FIXME: can we avoid casting here?
+    else if (overlaps(feat1, feat2))
+      new BasicFeature(feat1.getChr, feat1.getStart, feat2.getEnd).asInstanceOf[T]
+    else
+      throw new IllegalArgumentException("Can not merge non-overlapping RawInterval objects")
   }
 
-  /**
-   * Function to create an iterator yielding non-overlapped RawInterval objects
-   *
-   * @param ri iterator yielding RawInterval objects
-   * @return iterator yielding RawInterval objects
-   */
-  def mergeOverlappingIntervals(ri: Iterator[RawInterval]): Iterator[RawInterval] =
+  /** Function to create an iterator yielding non-overlapped Feature objects */
+  private def mergeOverlappingIntervals[T <: Feature](ri: Iterator[T]): Iterator[T] =
     ri.toList
-      .sortBy(x => (x.chrom, x.start, x.end))
-      .foldLeft(List.empty[RawInterval]) {
-        (acc, i) => acc match {
-          case head :: tail if head.overlaps(i) => head.merge(i) :: tail
-          case _                                => i :: acc
+      .sortBy(x => (x.getChr, x.getStart, x.getEnd))
+      .foldLeft(List.empty[T]) {
+      (acc, i) => acc match {
+        case head :: tail if overlaps(head, i)  => merge(head, i) :: tail
+        case _                                  => i :: acc
 
-        }}
+      }}
       .toIterator
 
   /**
@@ -99,37 +92,30 @@ object WipeReads extends ToolCommand {
    *
    * @param inFile input interval file
    */
-  def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
+  def makeFeatureFromFile(inFile: File): Iterator[Feature] = {
 
     logger.info("Parsing interval file ...")
 
     /** Function to create iterator from BED file */
-    def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
-      // BED file coordinates are 0-based, half open so we need to do some conversion
-      Source.fromFile(inFile)
-        .getLines()
-        .filterNot(_.trim.isEmpty)
-        .dropWhile(_.matches("^track | ^browser "))
-        .map(line => line.trim.split("\t") match {
-          case Array(chrom, start, end, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt)
-        })
+    def makeFeatureFromBED(inFile: File): Iterator[Feature] =
+      asScalaIteratorConverter(getFeatureReader(inFile.toPath.toString, new BEDCodec(), false).iterator).asScala
 
     // TODO: implementation
     /** Function to create iterator from refFlat file */
-    def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
+    def makeFeatureFromRefFlat(inFile: File): Iterator[Feature] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
 
     // TODO: implementation
     /** Function to create iterator from GTF file */
-    def makeRawIntervalFromGTF(inFile: File): Iterator[RawInterval] = ???
+    def makeFeatureFromGTF(inFile: File): Iterator[Feature] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
 
     // detect interval file format from extension
-    val iterFunc: (File => Iterator[RawInterval]) =
+    val iterFunc: (File => Iterator[Feature]) =
       if (getExtension(inFile.toString.toLowerCase) == "bed")
-        makeRawIntervalFromBED
+        makeFeatureFromBED
       else
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
@@ -152,7 +138,7 @@ object WipeReads extends ToolCommand {
    * @param bloomFp expected Bloom filter false positive rate
    * @return function that checks whether a SAMRecord or String is to be excluded
    */
-  def makeFilterOutFunction(iv: Iterator[RawInterval],
+  def makeFilterOutFunction(iv: Iterator[Feature],
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
@@ -181,30 +167,30 @@ object WipeReads extends ToolCommand {
      * file contig is prepended with "chr"
      *
      * @param inBAM BAM file to query as SAMFileReader
-     * @param ri raw interval object containing query
+     * @param feat feature object containing query
      * @return QueryInterval wrapped in Option
      */
-    def monadicMakeQueryInterval(inBAM: SAMFileReader, ri: RawInterval): Option[QueryInterval] =
-      if (inBAM.getFileHeader.getSequenceIndex(ri.chrom) > -1)
-        Some(inBAM.makeQueryInterval(ri.chrom, ri.start, ri.end))
-      else if (ri.chrom.startsWith("chr")
-        && inBAM.getFileHeader.getSequenceIndex(ri.chrom.substring(3)) > -1)
-        Some(inBAM.makeQueryInterval(ri.chrom.substring(3), ri.start, ri.end))
-      else if (!ri.chrom.startsWith("chr")
-        && inBAM.getFileHeader.getSequenceIndex("chr" + ri.chrom) > -1)
-        Some(inBAM.makeQueryInterval("chr" + ri.chrom, ri.start, ri.end))
+    def monadicMakeQueryInterval(inBAM: SAMFileReader, feat: Feature): Option[QueryInterval] =
+      if (inBAM.getFileHeader.getSequenceIndex(feat.getChr) > -1)
+        Some(inBAM.makeQueryInterval(feat.getChr, feat.getStart, feat.getEnd))
+      else if (feat.getChr.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex(feat.getChr.substring(3)) > -1)
+        Some(inBAM.makeQueryInterval(feat.getChr.substring(3), feat.getStart, feat.getEnd))
+      else if (!feat.getChr.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex("chr" + feat.getChr) > -1)
+        Some(inBAM.makeQueryInterval("chr" + feat.getChr, feat.getStart, feat.getEnd))
       else
         None
 
     /** function to make IntervalTree from our RawInterval objects
       *
-      * @param ri iterable over RawInterval objects
+      * @param ifeat iterable over feature objects
       * @return IntervalTree objects, filled with intervals from RawInterval
       */
-    def makeIntervalTree(ri: Iterable[RawInterval]): IntervalTree = {
+    def makeIntervalTree[T <: Feature](ifeat: Iterable[T]): IntervalTree = {
       val ivt = new IntervalTree
-      for (iv: RawInterval <- ri)
-        ivt.insert(new Interval(iv.start, iv.end))
+      for (iv <- ifeat)
+        ivt.insert(new Interval(iv.getStart, iv.getEnd))
       ivt
     }
 
@@ -258,7 +244,7 @@ object WipeReads extends ToolCommand {
     */
     lazy val intervals = iv.toVector
     lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
-      .groupBy(x => x.chrom)
+      .groupBy(x => x.getChr)
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
     lazy val queryIntervals = intervals
       .flatMap(x => monadicMakeQueryInterval(firstBAM, x))
@@ -414,7 +400,7 @@ object WipeReads extends ToolCommand {
       .getOrElse(sys.exit(1))
 
     val filterFunc = makeFilterOutFunction(
-      iv = makeRawIntervalFromFile(commandArgs.targetRegions),
+      iv = makeFeatureFromFile(commandArgs.targetRegions),
       inBAM = commandArgs.inputBAM,
       filterOutMulti = !commandArgs.limitToRegion,
       minMapQ = commandArgs.minMapQ,
