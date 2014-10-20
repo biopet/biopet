@@ -1,0 +1,72 @@
+/*
+ * Copyright 2014 wyleung.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package nl.lumc.sasc.biopet.extensions.svcallers.pindel
+
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import java.io.File
+
+class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction  {
+  executable = config("exe", default = "pindel", freeVar = false)
+  
+  override val defaultVmem = "8G"
+  override val defaultThreads = 8
+  
+  override val versionRegex = """Pindel version:? (.*)""".r
+  override val versionExitcode = List(1)
+  override def versionCommand = executable
+  
+  @Input(doc = "The pindel configuration file")
+  var input: File = _
+  
+  @Input(doc = "Fasta reference")
+  var reference: File = config("reference")
+
+  // this is a pointer to where the results files will be stored
+  // inside this directory, we can expect files named:
+  // <prefix>_D
+  // <prefix>_SI
+  // <prefix>_I
+  // <prefix>_TR
+  @Argument(doc = "Work directory")
+  var workdir: String = _
+  
+  @Output(doc = "Pindel VCF output")
+  var output: File = _
+  
+  var window_size: Option[Int] = config("window_size", default = 5)
+  
+  override def beforeCmd {
+  }
+
+  def cmdLine = required(executable) + 
+      "-i " + required(input) +
+      "-f " + required(reference) +
+      "-o " + required(output) +
+      optional("-w", window_size) + 
+      optional("-T", nCoresRequest)
+}
+
+object PindelCaller {
+  def apply(root: Configurable, input: File, output: File): PindelCaller = {
+    val caller = new PindelCaller(root)
+    caller.input = input
+    caller.output = output
+    return caller
+  }
+}
