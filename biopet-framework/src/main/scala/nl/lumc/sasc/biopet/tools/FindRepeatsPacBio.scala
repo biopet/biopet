@@ -44,9 +44,10 @@ object FindRepeatsPacBio extends ToolCommand {
     bamReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT)
     val bamHeader = bamReader.getFileHeader
     
-    val Header = List("chr", "startPos", "stopPos","Repeat_seq", "repeatLength", "original_Repeat_readLength", "Calculated_repeat_readLength", "minLength", 
-                      "maxLength", "inserts", "deletions", "notSpan").mkString("\t")
-    println(Header)
+    val header = List("chr", "startPos", "stopPos","Repeat_seq", "repeatLength", 
+                      "original_Repeat_readLength", "Calculated_repeat_readLength", 
+                      "minLength", "maxLength", "inserts", "deletions", "notSpan")
+    println(header.mkString("\t"))
     
     for (bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
       val values = bedLine.split("\t"); if values.size >= 3) {
@@ -56,12 +57,7 @@ object FindRepeatsPacBio extends ToolCommand {
       val chr = values(0)
       val startPos = values(1)
       val stopPos = values(2)
-      
-      val typeRepeat: String =
-        if (values.size >= 15)
-          values(14)
-        else
-          ""     
+      val typeRepeat: String = if (values.size >= 15) values(14) else ""    
       val repeatLength = typeRepeat.length
       val oriRepeatLength = values(2).toInt - values(1).toInt + 1
       var calcRepeatLength: List[Int] = Nil
