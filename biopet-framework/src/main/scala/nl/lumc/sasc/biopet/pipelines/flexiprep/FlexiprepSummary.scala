@@ -2,8 +2,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.Md5sum
-import nl.lumc.sasc.biopet.scripts.{ FastqSync, Seqstat }
+import nl.lumc.sasc.biopet.extensions.{ Md5sum, Seqstat }
+import nl.lumc.sasc.biopet.scripts.{ FastqSync }
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
@@ -75,7 +75,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     else if (!R2 && after) chunks(chunk).seqstatR1after = seqstat
     else if (R2 && !after) chunks(chunk).seqstatR2 = seqstat
     else if (R2 && after) chunks(chunk).seqstatR2after = seqstat
-    deps ::= seqstat.out
+    deps ::= seqstat.output
     return seqstat
   }
 
