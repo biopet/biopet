@@ -29,7 +29,8 @@ class VcfToTsv {
 
 object VcfToTsv extends ToolCommand {
   case class Args (inputFile:File = null, outputFile:File = null, fields: List[String] = Nil, infoFields: List[String] = Nil,
-                   sampleFileds: List[String] = Nil, disableDefaults: Boolean = false) extends AbstractArgs
+                   sampleFileds: List[String] = Nil, disableDefaults: Boolean = false, 
+                   allInfo:Boolean = false, allFormat:Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
@@ -40,10 +41,14 @@ object VcfToTsv extends ToolCommand {
       c.copy(fields = x :: c.fields) }
     opt[String]('i', "info_field") unbounded() action { (x, c) =>
       c.copy(infoFields = x :: c.infoFields) }
+    opt[Unit]("all_info") unbounded() action { (x, c) =>
+      c.copy(allInfo = true) }
+    opt[Unit]("all_format") unbounded() action { (x, c) =>
+      c.copy(allFormat = true) }
     opt[String]('s', "sample_field") unbounded() action { (x, c) =>
       c.copy(sampleFileds = x :: c.sampleFileds) }
-    opt[Boolean]('d', "disable_defaults") unbounded() action { (x, c) => 
-      c.copy(disableDefaults = x) }
+    opt[Unit]('d', "disable_defaults") unbounded() action { (x, c) => 
+      c.copy(disableDefaults = true) }
   }
   
   val defaultFields = List("chr", "pos", "id", "ref", "alt", "qual")
@@ -56,18 +61,39 @@ object VcfToTsv extends ToolCommand {
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder
     
-    val fields = (if (commandArgs.disableDefaults) Nil else defaultFields) ::: commandArgs.fields ::: commandArgs.infoFields.map("INFO-"+_) ::: {
+    val allInfoFields = header.getInfoHeaderLines.map(_.getID).toList
+    val allFormatFields = header.getFormatHeaderLines.map(_.getID).toList
+        
+    val fields: Set[String] = (if (commandArgs.disableDefaults) Nil else defaultFields).toSet[String] ++ 
+          commandArgs.fields.toSet[String] ++ 
+          (if (commandArgs.allInfo) allInfoFields else commandArgs.infoFields).map("INFO-"+_) ++ {
       val buffer: ListBuffer[String] = ListBuffer()
-      for (f <- commandArgs.sampleFileds; sample <- samples) {
+      for (f <- (if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFileds); sample <- samples) {
         buffer += sample+"-"+f
       }
-      buffer.toList
+      buffer.toSet[String]
     }
     
-    val witter = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
-    else scala.sys.process.stdout
+    val sortedFields = fields.toList.sortWith((a,b) => {
+      val aT = if (a.startsWith("INFO-")) 'i' else if (samples.exists(x => a.startsWith(x+"-"))) 'f' else 'g'
+      val bT = if (b.startsWith("INFO-")) 'i' else if (samples.exists(x => b.startsWith(x+"-"))) 'f' else 'g'
+      if (aT == 'g' && bT == 'g') {
+        val ai = defaultFields.indexOf(a)
+        val bi = defaultFields.indexOf(b)
+        if (bi < 0) true
+        else ai <= bi
+      }
+      else if (aT == 'g') true
+      else if (bT == 'g') false
+      else if (aT == bT) (if (a.compareTo(b) > 0) false else true)
+      else if (aT == 'i') true
+      else false
+    })
     
-    witter.println(fields.mkString("#", "\t", ""))
+    val witter = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
+    else sys.process.stdout
+    
+    witter.println(sortedFields.mkString("#", "\t", ""))
     for (vcfRecord <- reader) {
       val values: Map[String, Any] = Map()
       values += "chr" -> vcfRecord.getChr
@@ -90,6 +116,7 @@ object VcfToTsv extends ToolCommand {
           }
         }
       }
+      
       for (sample <- samples) {
         val genotype = vcfRecord.getGenotype(sample)
         values += sample+"-GT" -> {
@@ -104,7 +131,7 @@ object VcfToTsv extends ToolCommand {
           values += sample+"-"+field -> content
         }
       }
-      val line = for (f <- fields) yield {
+      val line = for (f <- sortedFields) yield {
         if (values.contains(f)) { 
           values(f) 
         } else ""
