@@ -4,21 +4,20 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
-import java.io.{ File, IOException }
-import scala.collection.JavaConverters._
 
 import htsjdk.samtools._
 import htsjdk.tribble._
-import htsjdk.tribble.bed.BEDFeature
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+
+import scala.collection.JavaConverters._
 
 
 class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
-  import WipeReads._
+  import nl.lumc.sasc.biopet.tools.WipeReads._
 
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource(p).toURI).toString
