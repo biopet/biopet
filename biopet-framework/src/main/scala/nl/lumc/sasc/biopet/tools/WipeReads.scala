@@ -44,9 +44,6 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object WipeReads extends ToolCommand {
 
-  /** Container type for command line flags */
-  type OptionMap = Map[String, Any]
-
   /** Container class for interval parsing results */
   case class RawInterval(chrom: String, start: Int, end: Int) {
 
