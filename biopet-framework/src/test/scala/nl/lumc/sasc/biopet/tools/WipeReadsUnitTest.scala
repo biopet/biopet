@@ -11,6 +11,7 @@ import htsjdk.samtools._
 import htsjdk.tribble._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.Test
 
 import scala.collection.JavaConverters._
 
