@@ -40,11 +40,11 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   override def commandLine = super.commandLine + 
     required("-I", inputVcf) + 
     required("-o", outputVcf) +
-    optional("-minSampleDepth", minSampleDepth) +
-    optional("-minTotalDepth", minTotalDepth) +
-    optional("-minAlternateDepth", minAlternateDepth) + 
-    optional("-minSamplesPass", minSamplesPass) +
-    conditional(filterRefCalls, "-filterRefCalls")
+    optional("--minSampleDepth", minSampleDepth) +
+    optional("--minTotalDepth", minTotalDepth) +
+    optional("--minAlternateDepth", minAlternateDepth) + 
+    optional("--minSamplesPass", minSamplesPass) +
+    conditional(filterRefCalls, "--filterRefCalls")
 }
 
 object VcfFilter extends ToolCommand {
