@@ -17,6 +17,7 @@
     <sting.binary-dist.name>SASC-Pipelines</sting.binary-dist.name>
     <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutable</app.main.class>
   </properties>
+  
     <repositories>
         <repository>
             <id>biojava-maven-repo</id>
@@ -84,8 +85,48 @@
                      <include>**/*</include>
                  </includes>
             </resource>
+            <resource>
+                 <directory>src/main/resources</directory>
+                 <includes>
+                     <include>**/*</include>
+                 </includes>
+            </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.1.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                         </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <prefix>git</prefix>
+                    <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
+                    <verbose>false</verbose>
+                    <useNativeGit>false</useNativeGit>
+                    <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
+                    <skipPoms>true</skipPoms>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <abbrevLength>7</abbrevLength>
+                    <skip>false</skip>
+                    <excludeProperties></excludeProperties>
+                    <gitDescribe>
+                        <skip>false</skip>
+                        <always>false</always>
+                        <abbrev>7</abbrev>
+                        <dirty>-dirty</dirty>
+                        <forceLongFormat>false</forceLongFormat>
+                    </gitDescribe>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
@@ -112,7 +153,7 @@
                   <artifactId>maven-shade-plugin</artifactId>
                   <version>2.3</version>
                   <configuration>
-                    <finalName>${project.artifactId}</finalName>
+                    <finalName>Biopet-${project.version}-${git.commit.id.abbrev}</finalName>
                     <transformers>
                       <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                         <manifestEntries>
