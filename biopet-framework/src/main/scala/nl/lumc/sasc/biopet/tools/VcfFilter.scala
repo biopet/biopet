@@ -66,8 +66,8 @@ object VcfFilter extends ToolCommand {
       c.copy(minSamplesPass = x) }
     opt[Int]("minBamAlternateDepth") unbounded() action { (x, c) =>
       c.copy(minBamAlternateDepth = x) }
-    opt[Boolean]("filterRefCalls") unbounded() action { (x, c) => 
-      c.copy(filterRefCalls = x) }
+    opt[Unit]("filterRefCalls") unbounded() action { (x, c) => 
+      c.copy(filterRefCalls = true) }
   }
   
   /**
