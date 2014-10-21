@@ -122,6 +122,14 @@ object WipeReads extends ToolCommand {
     mergeOverlappingIntervals(iterFunc(inFile))
   }
 
+  def bloomParamsOk(bloomSize: Long, bloomFp: Double): Boolean = {
+    val optimalArraySize = FilterBuilder.optimalM(bloomSize, bloomFp)
+    // we are currently limited to maximum integer size
+    // if the optimal array size equals or exceeds it, we assume
+    // that it's a result of a truncation and return false
+    optimalArraySize <= Int.MaxValue
+  }
+
   // TODO: set minimum fraction for overlap
   /**
    * Function to create function to check SAMRecord for exclusion in filtered BAM file.
@@ -142,7 +150,7 @@ object WipeReads extends ToolCommand {
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (SAMRecord => Boolean) = {
+                            bloomSize: Long, bloomFp: Double): (SAMRecord => Boolean) = {
 
     logger.info("Building set of reads to exclude ...")
 
@@ -260,7 +268,7 @@ object WipeReads extends ToolCommand {
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
 
-    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize, bloomFp)
+    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize.toInt, bloomFp)
       .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
       .buildBloomFilter()
 
@@ -346,7 +354,9 @@ object WipeReads extends ToolCommand {
                    readGroupIDs: Set[String] = Set.empty[String],
                    minMapQ: Int = 0,
                    limitToRegion: Boolean = false,
-                   noMakeIndex: Boolean = false) extends AbstractArgs
+                   noMakeIndex: Boolean = false,
+                   bloomSize: Long = 70000000,
+                   bloomFp: Double = 4e-7) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -385,12 +395,27 @@ object WipeReads extends ToolCommand {
       c.copy(noMakeIndex = true) } text
       "Whether to index output BAM file or not (default: yes)"
 
+    note("\nAdvanced options")
+
+    opt[Long]("bloom_size") optional() action { (x, c) =>
+      c.copy(bloomSize = x) } text "expected maximum number of reads in target regions (default: 7e7)"
+
+    opt[Double]("false_positive") optional() action { (x, c) =>
+      c.copy(bloomFp = x) } text "false positive rate (default: 4e-7)"
+
     note(
       """
         |This tool will remove BAM records that overlaps a set of given regions.
         |By default, if the removed reads are also mapped to other regions outside
         |the given ones, they will also be removed.
       """.stripMargin)
+
+    checkConfig { c=>
+      if (!bloomParamsOk(c.bloomSize, c.bloomFp))
+        failure("Bloom parameters combination exceed Int limitation")
+      else
+        success
+    }
   }
 
   def main(args: Array[String]): Unit = {
@@ -405,8 +430,8 @@ object WipeReads extends ToolCommand {
       filterOutMulti = !commandArgs.limitToRegion,
       minMapQ = commandArgs.minMapQ,
       readGroupIDs = commandArgs.readGroupIDs,
-      bloomSize = 70000000,
-      bloomFp = 4e-7
+      bloomSize = commandArgs.bloomSize,
+      bloomFp = commandArgs.bloomFp
     )
 
     writeFilteredBAM(

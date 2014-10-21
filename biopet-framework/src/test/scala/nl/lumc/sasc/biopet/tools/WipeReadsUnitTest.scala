@@ -40,6 +40,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   private def makeTempBAMIndex(bam: File): File =
     new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
 
+  val bloomSize: Long = 1000
+  val bloomFp: Double = 1e-10
+
   val sBAMFile1 = new File(resourcePath("/single01.bam"))
   val sBAMRecs1 = makeSAMs(
     "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
@@ -122,7 +125,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
     //       and only filling the filter with a few items
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     // by default, set elements are SAM record read names
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(isFilteredOut(sBAMRecs1(1)))
@@ -139,7 +142,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480),
       new BasicFeature("P", 191, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(isFilteredOut(sBAMRecs1(1)))
     assert(isFilteredOut(sBAMRecs1(2)))
@@ -153,7 +156,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 881, 1000) // overlaps first exon of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
     assert(!isFilteredOut(sBAMRecs1(2)))
@@ -168,7 +171,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrP", 881, 1000),
       new BasicFeature("chrQ", 900, 920)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
     assert(!isFilteredOut(sBAMRecs1(2)))
@@ -185,7 +188,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
@@ -201,7 +204,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     assert(!isFilteredOut(sBAMRecs2(0)))
     // r01 is not in since it is below the MAPQ threshold
@@ -219,7 +222,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
     assert(!isFilteredOut(sBAMRecs2(0)))
     assert(!isFilteredOut(sBAMRecs2(1)))
@@ -238,7 +241,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIDs = Set("002", "003"))
     assert(!isFilteredOut(sBAMRecs2(0)))
     // only r01 is in the set since it is RG 002
@@ -257,7 +260,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
     assert(isFilteredOut(pBAMRecs1(2)))
@@ -278,7 +281,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 891, 1000)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
     assert(!isFilteredOut(pBAMRecs1(2)))
@@ -301,7 +304,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
@@ -324,7 +327,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
     assert(!isFilteredOut(pBAMRecs2(0)))
@@ -344,7 +347,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIDs = Set("002", "003"))
     // only r01 is in the set since it is RG 002
     assert(!isFilteredOut(pBAMRecs2(0)))
