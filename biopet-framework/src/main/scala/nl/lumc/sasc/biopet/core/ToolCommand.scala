@@ -30,9 +30,15 @@ trait ToolCommand extends MainCommand {
           }
         }
     opt[Unit]('h', "help") foreach { _ =>
-      System.err.println(this.usage); sys.exit(1)} text("Print usage")
+      System.err.println(this.usage)
+      sys.exit(1)
+    } text("Print usage")
+    opt[Unit]('v', "version") foreach { _ =>
+      System.err.println("Version: " + BiopetExecutable.getVersion)
+      sys.exit(1)
+    } text("Print version")
   }
-  
+    
   type Args <: AbstractArgs
   type OptParser <: AbstractOptParser
   
