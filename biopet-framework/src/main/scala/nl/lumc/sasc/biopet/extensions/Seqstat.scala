@@ -1,49 +1,53 @@
-package nl.lumc.sasc.biopet.scripts
+package nl.lumc.sasc.biopet.extensions
 
-import java.io.File
-
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+/*
+ * Wrapper around the seqstat implemented in D
+ * 
+ */
 
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 import scala.io.Source
 import scala.collection.mutable.Map
 
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import java.io.File
 
-class Seqstat(val root: Configurable) extends PythonCommandLineFunction {
-  setPythonScript("__init__.py", "pyfastqc/")
-  setPythonScript("seq_stat.py")
+class Seqstat(val root: Configurable) extends BiopetCommandLineFunction {
+  override val defaultVmem = "4G"
 
-  @Input(doc = "Fastq input", shortName = "fastqc", required = true)
-  var input_fastq: File = _
+  @Input(doc = "Input FastQ", required = true)
+  var input: File = _
 
-  @Output(doc = "Output file", shortName = "out", required = true)
-  var out: File = _
+  @Output(doc = "JSON summary", required = true)
+  var output: File = _
 
-  var fmt: String = _
+  executable = config("exe", default = "fastq-seqstat")
 
-  def cmdLine = {
-    getPythonCommand +
-      optional("--fmt", fmt) +
-      required("-o", out) +
-      required(input_fastq)
-  }
-
+  def cmdLine = required(executable) + required(input) + " > " + required(output)
+  
   def getSummary: Json = {
-    val json = Parse.parseOption(Source.fromFile(out).mkString)
+    val json = Parse.parseOption(Source.fromFile(output).mkString)
     if (json.isEmpty) return jNull
     else return json.get.fieldOrEmptyObject("stats")
   }
 }
 
 object Seqstat {
+  def apply(root: Configurable, input: File, output: File): Seqstat = {
+    val seqstat = new Seqstat(root)
+    seqstat.input = input
+    seqstat.output = output
+    return seqstat
+  }
+  
   def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
     val seqstat = new Seqstat(root)
     val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
-    seqstat.input_fastq = fastqfile
-    seqstat.out = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
+    seqstat.input = fastqfile
+    seqstat.output = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     return seqstat
   }
 
