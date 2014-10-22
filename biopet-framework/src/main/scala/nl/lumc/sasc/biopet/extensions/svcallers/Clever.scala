@@ -20,6 +20,7 @@ class Clever(val root: Configurable) extends BiopetCommandLineFunction  {
   
   override def versionCommand = versionexecutable.getAbsolutePath
   override val versionRegex = """(.*)""".r
+  override val versionExitcode = List(0, 1)
   
   @Input(doc = "Input file (bam)")
   var input: File = _
@@ -92,7 +93,6 @@ class CleverPipeline(val root: Configurable) extends QScript with BiopetQScript 
   @Argument(doc = "Work directory")
   var workdir: String = _
   
-  
   @Argument(doc = "Current working directory")
   var cwd: String = _
   
@@ -117,6 +117,8 @@ object CleverPipeline extends PipelineCommand {
     val cleverpipeline = new CleverPipeline( root )
     cleverpipeline.input = input
     cleverpipeline.workdir = runDir
+    cleverpipeline.init
+    cleverpipeline.biopetScript
     return cleverpipeline
   }
   

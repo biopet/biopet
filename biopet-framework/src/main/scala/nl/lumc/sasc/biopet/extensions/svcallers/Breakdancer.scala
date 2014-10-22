@@ -11,33 +11,34 @@ import java.io.File
 
 class BreakdancerConfig(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "bam2cfg.pl", freeVar = false)
+
   @Input(doc = "Bam File")
   var input: File = _
 
   @Output(doc = "Output File")
   var output: File = _
 
-  var MIN_MQ: Option[Int] = config("min_mq", default = 20) // minimum of MQ to consider for taking read into histogram
-  var USE_MQ: Boolean = config("use_mq", default = false)
-  var MIN_INSERTSIZE: Option[Int] = config("min_insertsize", default = 450)
-  var SOLID_DATA: Boolean = config("solid", default = false)
-  var SD_CUTOFF: Option[Int] = config("sd_cutoff", default = 4) // Cutoff in unit of standard deviation [4]
+  var min_mq: Option[Int] = config("min_mq", default = 20) // minimum of MQ to consider for taking read into histogram
+  var use_mq: Boolean = config("use_mq", default = false)
+  var min_insertsize: Option[Int] = config("min_insertsize", default = 450)
+  var solid_data: Boolean = config("solid", default = false)
+  var sd_cutoff: Option[Int] = config("sd_cutoff", default = 4) // Cutoff in unit of standard deviation [4]
   
   // we set this to a higher number to avoid biases in small numbers in sorted bams
-  var MIN_OBSERVATIONS: Option[Int] = config("min_observations", default = 1000000) //  Number of observation required to estimate mean and s.d. insert size [10_000]
-  var COEFVAR_CUTOFF: Option[Int] = config("coef_cutoff", default = 1) // Cutoff on coefficients of variation [1]
-  var HISTOGRAM_BINS: Option[Int] = config("histogram_bins", default = 50) // Number of bins in the histogram [50]
+  var min_observations: Option[Int] = config("min_observations", default = 10000) //  Number of observation required to estimate mean and s.d. insert size [10_000]
+  var coefvar_cutoff: Option[Int] = config("coef_cutoff", default = 1) // Cutoff on coefficients of variation [1]
+  var histogram_bins: Option[Int] = config("histogram_bins", default = 50) // Number of bins in the histogram [50]
   
   def cmdLine = required(executable) +
-      optional("-q", MIN_MQ) +
-      conditional(USE_MQ, "-m") +
-      optional("-s", MIN_INSERTSIZE) +
-      conditional(SOLID_DATA, "-s") +
-      optional("-c", SD_CUTOFF) +
-      optional("-n", MIN_OBSERVATIONS) +
-      optional("-v", COEFVAR_CUTOFF) +
-      optional("-b", HISTOGRAM_BINS)
-      required(input) + " > " + required(output)
+      optional("-q", min_mq) +
+      conditional(use_mq, "-m") +
+      optional("-s", min_insertsize) +
+      conditional(solid_data, "-s") +
+      optional("-c", sd_cutoff) +
+      optional("-n", min_observations) +
+      optional("-v", coefvar_cutoff) +
+      optional("-b", histogram_bins) +
+      required(input) + " 1> " + required(output)
 }
 
 object BreakdancerConfig {
@@ -74,18 +75,18 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   executable = config("exe", default = "breakdancer-max", freeVar = false)
   
   override val defaultVmem = "4G"
-  override val defaultThreads = 8
+  override val defaultThreads = 1 // breakdancer can only work on 1 single thread
   
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r
-//  override val versionExitcode = List(0, 1)
+  override val versionExitcode = List(1)
   override def versionCommand = executable
   
   
   @Input(doc = "The breakdancer configuration file")
   var input: File = _
   
-  @Argument(doc = "Work directory")
-  var workdir: String = _
+//  @Argument(doc = "Work directory")
+//  var workdir: String = _
   
   @Output(doc = "Breakdancer VCF output")
   var output: File = _
@@ -125,8 +126,6 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   var y: Option[Int] = config("y", default = 30)  
   
   override def beforeCmd {
-    if (workdir == null) throw new Exception("Breakdancer :: Workdirectory is not defined")
-//    if (input.getName.endsWith(".sort.bam")) sorted = true
   }
 
   def cmdLine = required(executable) + 
@@ -176,6 +175,10 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
 //    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
 //  }
   
+  @Output(doc = "Breakdancer config")
+  lazy val configfile: File = {
+    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.cfg")
+  }
   @Output(doc = "Breakdancer raw output")
   lazy val outputraw: File = {
     new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.tsv")
@@ -188,7 +191,7 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
     // read config and set all parameters for the pipeline
     logger.info("Starting Breakdancer configuration")
     
-    val bdcfg = BreakdancerConfig(this, input, workdir)
+    val bdcfg = BreakdancerConfig(this, input, this.configfile)
     outputFiles += ("breakdancer_cfg" -> bdcfg.output )
     add( bdcfg )
     
@@ -202,8 +205,6 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
     
     
   }
-  
-//  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".breakdancer.tsv"
 }
 
 object Breakdancer extends PipelineCommand {

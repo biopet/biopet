@@ -76,9 +76,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       // this is extending the libraryBamfiles list like '~=' in D or .append in Python or .push_back in C++
       libraryBamfiles ++= List(libraryOutput.mappedBamFile)
     }
-    
-    logger.debug( "We have the following bamfiles for merging" )
-    logger.debug( libraryBamfiles )
 
     val bamFile: File = 
       if (libraryBamfiles.size == 1) libraryBamfiles.head
@@ -93,8 +90,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         
         mergeSamFiles.output
       } else null
-
-    logger.debug( bamFile )
     
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
@@ -108,8 +103,8 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
     sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputraw))
     addAll(breakdancer.functions)
-//
-//    
+
+    // for pindel we should use per library config collected into one config file
 //    val pindelDir = svcallingDir + sampleID + ".pindel/"
 //    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
 //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
@@ -123,14 +118,13 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
     val libraryOutput = new LibraryOutput
-    var outputFiles: Map[String, File] = Map()
+    
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
     val alignmentDir: String = outputDir + sampleID + "/alignment/"
-
     val runDir: String = alignmentDir + "run_" + runID + "/"
+    
     if (runConfig.contains("R1")) {
-      //      val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir)
       val mapping = new Mapping(this)
 
       mapping.defaultAligner = "stampy"
@@ -153,7 +147,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
       // start sambamba dedup
 
-      //      outputFiles += ("final_bam" -> mapping.outputFiles("finalBamFile"))
       libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
     } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     return libraryOutput
