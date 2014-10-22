@@ -93,10 +93,6 @@ object ExtractAlignedFastq extends ToolCommand {
     opt[File]("o2") optional() valueName "<fastq>" action { (x, c) =>
       c.copy(outputFastq1 = x) } text "Output FASTQ file 2 (default: none)"
 
-    opt[Int]('N', "max_read_per_interval") optional() valueName "<num>" action { (x, c) =>
-      c.copy(maxReadPerInterval = x)
-    } text "Maximum number of reads to capture per given interval (default: " + Int.MaxValue.toString + ")"
-
     opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
       c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
 
