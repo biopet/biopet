@@ -274,14 +274,16 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   }
 
   private def createQueueHeader(): Seq[String] = {
-    Seq(String.format("Queue v%s, Compiled %s", getQueueVersion, getBuildTimestamp),
-      "Copyright (c) 2012 The Broad Institute",
-      "For support and documentation go to http://www.broadinstitute.org/gatk")
+    Seq("Biopet version: " + BiopetExecutable.getVersion,"",
+                     "Based on GATK Queue",
+//                     String.format("Queue v%s, Compiled %s", getQueueVersion, getBuildTimestamp),
+                     "Copyright (c) 2012 The Broad Institute",
+                     "For support and documentation go to http://www.broadinstitute.org/gatk")
   }
 
   private def getQueueVersion: String = {
     val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
-
+    
     if (stingResources.containsKey("org.broadinstitute.sting.queue.QueueVersion.version")) {
       stingResources.getString("org.broadinstitute.sting.queue.QueueVersion.version")
     } else {
