@@ -19,23 +19,24 @@ import htsjdk.variant.vcf.VCFHeaderLineType
 import htsjdk.variant.vcf.VCFHeaderLineCount
 import scala.math._
 
-class CheckAllelesVcfInBam(val root: Configurable) extends BiopetJavaCommandLineFunction {
-  javaMainClass = getClass.getName
-  
-  @Input(doc = "Input vcf file", shortName = "V", required = true)
-  var inputFile: File = _
-
-  @Input(doc = "Input bam file", shortName = "bam", required = true)
-  var bamFiles: List[File] = Nil
-  
-  @Output(doc = "Output vcf file", shortName = "o", required = true)
-  var output: File = _
-
-  override def commandLine = super.commandLine + required("-V", inputFile) + repeat("-bam", bamFiles) + required(output)
-}
+//class CheckAllelesVcfInBam(val root: Configurable) extends BiopetJavaCommandLineFunction {
+//  javaMainClass = getClass.getName
+//  
+//  @Input(doc = "Input vcf file", shortName = "V", required = true)
+//  var inputFile: File = _
+//
+//  @Input(doc = "Input bam file", shortName = "bam", required = true)
+//  var bamFiles: List[File] = Nil
+//  
+//  @Output(doc = "Output vcf file", shortName = "o", required = true)
+//  var output: File = _
+//
+//  override def commandLine = super.commandLine + required("-V", inputFile) + repeat("-bam", bamFiles) + required(output)
+//}
 
 object CheckAllelesVcfInBam extends ToolCommand {
-  case class Args (inputFile:File = null, outputFile:File = null, samples:List[String] = Nil, bamFiles:List[File] = Nil, minMapQual:Int = 1) extends AbstractArgs
+  case class Args (inputFile:File = null, outputFile:File = null, samples:List[String] = Nil, 
+                   bamFiles:List[File] = Nil, minMapQual:Int = 1) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
@@ -145,19 +146,25 @@ object CheckAllelesVcfInBam extends ToolCommand {
       if (refPos.exists(_ > 0)) allelesInRead -= allele
     }
     
-    // Removal of deletions that are not really in the cigarstring
+    // Removal of alleles that are not really in the cigarstring
     for (allele <- allelesInRead) {
-      val posAfterAllele = samRecord.getReferencePositionAtReadPosition(readStartPos + allele.size + 1)
-      if (!(posAfterAllele == vcfRecord.getStart + refAllele.size)) allelesInRead -= allele
+      val readPosAfterAllele = samRecord.getReferencePositionAtReadPosition(readStartPos + allele.size + 1)
+      val vcfPosAfterAllele = vcfRecord.getStart + refAllele.size
+      if (readPosAfterAllele != vcfPosAfterAllele && 
+          (refAllele.size != allele.size || (refAllele.size == allele.size && readPosAfterAllele < 0))) allelesInRead -= allele
     }
     
-    //if (allelesInRead.size > 1) allelesInRead -= refAllele
+    for (allele <- allelesInRead if allele.size >= refAllele.size) {
+      if (allelesInRead.exists(_.size > allele.size)) allelesInRead -= allele
+    }
+    if (allelesInRead.contains(refAllele) && allelesInRead.exists(_.size < refAllele.size)) allelesInRead -= refAllele
     if (allelesInRead.isEmpty) return None
     else if (allelesInRead.size == 1) return Some(allelesInRead.head)
     else {
       logger.warn("vcfRecord: " + vcfRecord)
-      logger.warn("samRecord: " + samRecord)
+      logger.warn("samRecord: " + samRecord.getSAMString)
       logger.warn("Found multiple options: " + allelesInRead.toString)
+      logger.warn("ReadStartPos: " + readStartPos + "  Read Length: " + samRecord.getReadLength)
       logger.warn("Read skipped, please report this")
       return None
     }
