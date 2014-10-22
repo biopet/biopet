@@ -11,7 +11,8 @@ class BaseRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.q
     super.afterGraph
     
     if (config.contains("scattercount")) scatterCount = config("scattercount")
-    if (config.contains("dbsnp")) knownSites +:= new File(config("dbsnp"))
+    if (config.contains("dbsnp")) knownSites :+= new File(config("dbsnp").getString)
+    if (config.contains("known_sites")) knownSites :+= new File(config("known_sites").getString)
   }
 }
   
@@ -20,6 +21,7 @@ object BaseRecalibrator {
     val br = new BaseRecalibrator(root)
     br.input_file :+= input
     br.out = output
+    br.afterGraph
     return br
   }
 }

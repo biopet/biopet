@@ -20,7 +20,10 @@ object BiopetExecutable {
     "tool" -> List(
       nl.lumc.sasc.biopet.tools.WipeReads,
       nl.lumc.sasc.biopet.tools.BiopetFlagstat,
-      nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam)
+      nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
+      nl.lumc.sasc.biopet.tools.VcfToTsv,
+      nl.lumc.sasc.biopet.tools.VcfFilter,
+      nl.lumc.sasc.biopet.tools.FindRepeatsPacBio)
   )
   
   /**
@@ -39,12 +42,13 @@ object BiopetExecutable {
         u.mkString("\n\n")
       }
       """
-        |Usage: java -jar BiopetFramework.jar {%s} <name> [args]
+        |Usage   : java -jar BiopetFramework.jar {%s} <name> [args]
+        |Version : %s
         |
         |%s
         |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
-      """.stripMargin.format(modules.keys.mkString(","), usage)
+      """.stripMargin.format(modules.keys.mkString(","), getVersion, usage)
     }
 
     def checkModule(module: String) {
@@ -77,5 +81,9 @@ object BiopetExecutable {
         System.exit(1)
       }
     }
+  }
+  
+  def getVersion = {
+    getClass.getPackage.getImplementationVersion
   }
 }
