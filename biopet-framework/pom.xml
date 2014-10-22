@@ -4,7 +4,7 @@
 
   <groupId>nl.lumc.sasc</groupId>
   <artifactId>BiopetFramework</artifactId>
-  <version>0.1.3</version>
+  <version>0.2.0-DEV</version>
   <packaging>jar</packaging>
 
   <name>BiopetFramework</name>
