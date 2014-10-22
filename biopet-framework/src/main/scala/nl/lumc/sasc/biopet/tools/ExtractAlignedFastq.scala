@@ -5,7 +5,13 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import scala.collection.mutable.{ Set => MSet }
+import scala.collection.JavaConverters._
 
+import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.SAMFileReader.QueryInterval
+import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.fastq.FastqRecord
 import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
 
@@ -50,6 +56,65 @@ object ExtractAlignedFastq extends ToolCommand {
         case _                      => throw new IllegalArgumentException("Invalid interval string: " + x)
       })
       .toIterator
+  }
+
+  /**
+   * Function to create function that checks whether a given FASTQ record is mapped
+   * to the given interval or not
+   *
+   * @param iv iterator yielding features to check
+   * @param inAln input SAM/BAM file
+   * @param readGroupIds read group IDs to include (default: all)
+   * @return
+   */
+  def makeMembershipFunction(iv: Iterator[Feature],
+                             inAln: File,
+                             readGroupIds: Set[String]
+                            ): (FastqRecord => Boolean) = {
+
+    /** function to make interval queries for BAM files */
+    def makeQueryInterval(aln: SAMFileReader, feat: Feature): QueryInterval =
+      if (aln.getFileHeader.getSequenceIndex(feat.getChr) > -1)
+        aln.makeQueryInterval(feat.getChr, feat.getStart, feat.getEnd)
+      else if (feat.getChr.startsWith("chr")
+        && aln.getFileHeader.getSequenceIndex(feat.getChr.substring(3)) > -1)
+        aln.makeQueryInterval(feat.getChr.substring(3), feat.getStart, feat.getEnd)
+      else if (!feat.getChr.startsWith("chr")
+        && aln.getFileHeader.getSequenceIndex("chr" + feat.getChr) > -1)
+        aln.makeQueryInterval("chr" + feat.getChr, feat.getStart, feat.getEnd)
+      else
+        throw new IllegalStateException("Unexpected feature: " + feat.toString)
+
+    val inAlnReader = new SAMFileReader(inAln)
+
+    /** filter function for read IDs */
+    val rgFilter =
+      if (readGroupIds.size == 0)
+        (r: SAMRecord) => true
+      else
+        (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
+
+    val queries: Array[QueryInterval] = iv.toList
+      // sort features
+      .sortBy(x => (x.getChr, x.getStart, x.getEnd))
+      // turn them into QueryInterval objects
+      .map(x => makeQueryInterval(inAlnReader, x))
+      // return as an array
+      .toArray
+
+    lazy val selected: MSet[String] = inAlnReader
+      // query BAM file for overlapping reads
+      .queryOverlapping(queries)
+      // for Scala compatibility
+      .asScala
+      // filter based on read group IDs
+      .filter(x => rgFilter(x))
+      // iteratively add read name to the selected set
+      .foldLeft(MSet.empty[String])(
+        (acc, x) => acc += x.getReadName
+       )
+
+    (rec: FastqRecord) => selected.contains(rec.getReadHeader)
   }
 
   case class Args (inputBam: File = null,
