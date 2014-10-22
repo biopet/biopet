@@ -1,5 +1,4 @@
 dependency-reduced-pom.xml
 *~
 *.swp
-test/
 /biopet-framework/src/main/resources/git.properties

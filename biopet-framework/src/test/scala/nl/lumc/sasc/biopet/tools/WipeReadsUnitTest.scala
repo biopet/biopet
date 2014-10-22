@@ -4,19 +4,21 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
-import java.io.{ File, IOException }
-import scala.collection.JavaConverters._
 
 import htsjdk.samtools._
+import htsjdk.tribble._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
+import scala.collection.JavaConverters._
+
 
 class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
-  import WipeReads._
+  import nl.lumc.sasc.biopet.tools.WipeReads._
 
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource(p).toURI).toString
@@ -37,6 +39,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
   private def makeTempBAMIndex(bam: File): File =
     new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
+
+  val bloomSize: Long = 1000
+  val bloomFp: Double = 1e-10
 
   val sBAMFile1 = new File(resourcePath("/single01.bam"))
   val sBAMRecs1 = makeSAMs(
@@ -100,27 +105,27 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   val BEDFile1 = new File(resourcePath("/rrna01.bed"))
   val minArgList = List("-I", sBAMFile1.toString, "-l", BEDFile1.toString, "-o", "mock.bam")
 
-  @Test def testMakeRawIntervalFromBED() = {
-    val intervals: Vector[RawInterval] = makeRawIntervalFromFile(BEDFile1).toVector
+  @Test def testMakeFeatureFromBED() = {
+    val intervals: Vector[Feature] = makeFeatureFromFile(BEDFile1).toVector
     intervals.length should be (3)
-    intervals.head.chrom should === ("chrQ")
-    intervals.head.start should be (991)
-    intervals.head.end should be (1000)
-    intervals.last.chrom should === ("chrQ")
-    intervals.last.start should be (291)
-    intervals.last.end should be (320)
+    intervals.head.getChr should === ("chrQ")
+    intervals.head.getStart should be (991)
+    intervals.head.getEnd should be (1000)
+    intervals.last.getChr should === ("chrQ")
+    intervals.last.getStart should be (291)
+    intervals.last.getEnd should be (320)
   }
 
   @Test def testSingleBAMDefault() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480), // overlaps r04
-      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
+      new BasicFeature("chrQ", 451, 480), // overlaps r04
+      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
     //       and only filling the filter with a few items
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     // by default, set elements are SAM record read names
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(isFilteredOut(sBAMRecs1(1)))
@@ -132,12 +137,12 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMIntervalWithoutChr() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("Q", 291, 320),
-      RawInterval("chrQ", 451, 480),
-      RawInterval("P", 191, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("Q", 291, 320),
+      new BasicFeature("chrQ", 451, 480),
+      new BasicFeature("P", 191, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(isFilteredOut(sBAMRecs1(1)))
     assert(isFilteredOut(sBAMRecs1(2)))
@@ -148,10 +153,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMDefaultPartialExonOverlap() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 881, 1000) // overlaps first exon of r05
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 881, 1000) // overlaps first exon of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
     assert(!isFilteredOut(sBAMRecs1(2)))
@@ -162,11 +167,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMDefaultNoExonOverlap() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrP", 881, 1000),
-      RawInterval("chrQ", 900, 920)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrP", 881, 1000),
+      new BasicFeature("chrQ", 900, 920)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
     assert(!isFilteredOut(sBAMRecs1(2)))
@@ -178,12 +183,12 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMFilterOutMultiNotSet() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480), // overlaps r04
-      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
+      new BasicFeature("chrQ", 451, 480), // overlaps r04
+      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
     assert(!isFilteredOut(sBAMRecs1(0)))
     assert(!isFilteredOut(sBAMRecs1(1)))
@@ -195,11 +200,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMFilterMinMapQ() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320),
-      RawInterval("chrQ", 451, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320),
+      new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     assert(!isFilteredOut(sBAMRecs2(0)))
     // r01 is not in since it is below the MAPQ threshold
@@ -213,11 +218,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMFilterMinMapQFilterOutMultiNotSet() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320),
-      RawInterval("chrQ", 451, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320),
+      new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
     assert(!isFilteredOut(sBAMRecs2(0)))
     assert(!isFilteredOut(sBAMRecs2(1)))
@@ -232,11 +237,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBAMFilterReadGroupIDs() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320),
-      RawInterval("chrQ", 451, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320),
+      new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIDs = Set("002", "003"))
     assert(!isFilteredOut(sBAMRecs2(0)))
     // only r01 is in the set since it is RG 002
@@ -250,12 +255,12 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBAMDefault() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480), // overlaps r04
-      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
+      new BasicFeature("chrQ", 451, 480), // overlaps r04
+      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
     assert(isFilteredOut(pBAMRecs1(2)))
@@ -273,10 +278,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBAMPartialExonOverlap() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 891, 1000)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 891, 1000)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10)
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
     assert(!isFilteredOut(pBAMRecs1(2)))
@@ -294,12 +299,12 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBAMFilterOutMultiNotSet() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320), // overlaps r01, second hit,
-      RawInterval("chrQ", 451, 480), // overlaps r04
-      RawInterval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
+      new BasicFeature("chrQ", 451, 480), // overlaps r04
+      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
     assert(!isFilteredOut(pBAMRecs1(0)))
     assert(!isFilteredOut(pBAMRecs1(1)))
@@ -318,11 +323,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBAMFilterMinMapQ() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320),
-      RawInterval("chrQ", 451, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320),
+      new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
     assert(!isFilteredOut(pBAMRecs2(0)))
@@ -338,11 +343,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBAMFilterReadGroupIDs() = {
-    val intervals: Iterator[RawInterval] = Iterator(
-      RawInterval("chrQ", 291, 320),
-      RawInterval("chrQ", 451, 480)
+    val intervals: Iterator[Feature] = Iterator(
+      new BasicFeature("chrQ", 291, 320),
+      new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = 1000, bloomFp = 1e-10,
+    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIDs = Set("002", "003"))
     // only r01 is in the set since it is RG 002
     assert(!isFilteredOut(pBAMRecs2(0)))
@@ -363,7 +368,16 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+    )
+
     val exp = new SAMFileReader(sBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))
@@ -382,7 +396,16 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val filteredOutBAMIndex = makeTempBAMIndex(filteredOutBAM)
     filteredOutBAM.deleteOnExit()
     filteredOutBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM, filteredOutBAM = filteredOutBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM, filteredOutBAM = filteredOutBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+    )
+
     val exp = new SAMFileReader(sBAMFile4).asScala
     val obs = new SAMFileReader(filteredOutBAM).asScala
     for ((e, o) <- exp.zip(obs))
@@ -399,7 +422,15 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     val outBAMIndex = makeTempBAMIndex(outBAM)
     outBAM.deleteOnExit()
     outBAMIndex.deleteOnExit()
-    writeFilteredBAM(mockFilterOutFunc, pBAMFile1, outBAM)
+
+    val stdout = new java.io.ByteArrayOutputStream
+    Console.withOut(stdout) {
+      writeFilteredBAM(mockFilterOutFunc, pBAMFile1, outBAM)
+    }
+    stdout.toString should === (
+      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
+        .format(pBAMFile1.getName, outBAM.getName, 8, 6)
+    )
     val exp = new SAMFileReader(pBAMFile3).asScala
     val obs = new SAMFileReader(outBAM).asScala
     for ((e, o) <- exp.zip(obs))

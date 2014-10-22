@@ -7,13 +7,16 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ File, IOException }
 
 import scala.collection.JavaConverters._
-import scala.io.Source
 
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
+import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
+import htsjdk.tribble.Feature
+import htsjdk.tribble.BasicFeature
+import htsjdk.tribble.bed.BEDCodec
 import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
 import orestes.bloomfilter.HashProvider.HashMethod
 import orestes.bloomfilter.{ BloomFilter, FilterBuilder }
@@ -44,57 +47,44 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object WipeReads extends ToolCommand {
 
-  /** Container type for command line flags */
-  type OptionMap = Map[String, Any]
+  /** Function to check whether one feature contains the other */
+  private def contains(feat1: Feature, feat2: Feature): Boolean =
+    if (feat1.getChr != feat2.getChr)
+      false
+    else
+      feat1.getStart <= feat2.getStart && feat1.getEnd >= feat2.getEnd
 
-  /** Container class for interval parsing results */
-  case class RawInterval(chrom: String, start: Int, end: Int) {
+  /** Function to check whether two features overlap each other */
+  private def overlaps(feat1: Feature, feat2: Feature): Boolean =
+    if (feat1.getChr != feat2.getChr)
+      false
+    else
+      feat1.getStart <= feat2.getStart && feat1.getEnd >= feat2.getStart
 
-    require(start <= end, s"Start coordinate $start is larger than end coordinate $end")
-
-    /** Function to check whether one interval contains the other */
-    def contains(that: RawInterval): Boolean =
-      if (this.chrom != that.chrom)
-        false
-      else
-        this.start <= that.start && this.end >= that.end
-
-    /** Function to check whether two intervals overlap each other */
-    def overlaps(that: RawInterval): Boolean =
-      if (this.chrom != that.chrom)
-        false
-      else
-        this.start <= that.start && this.end >= that.start
-
-    /** Function to merge two overlapping intervals */
-    def merge(that: RawInterval): RawInterval = {
-      if (this.chrom != that.chrom)
-        throw new IllegalArgumentException("Can not merge RawInterval objects from different chromosomes")
-      if (contains(that))
-        this
-      else if (overlaps(that))
-        RawInterval(this.chrom, this.start, that.end)
-      else
-        throw new IllegalArgumentException("Can not merge non-overlapping RawInterval objects")
-    }
-
+  /** Function to merge two overlapping intervals
+    * NOTE: we assume subtypes of Feature has a constructor with (chr, start, end) signature */
+  private def merge[T <: Feature](feat1: T, feat2: T): T = {
+    if (feat1.getChr != feat2.getChr)
+      throw new IllegalArgumentException("Can not merge features from different chromosomes")
+    if (contains(feat1, feat2))
+      feat1
+    // FIXME: can we avoid casting here?
+    else if (overlaps(feat1, feat2))
+      new BasicFeature(feat1.getChr, feat1.getStart, feat2.getEnd).asInstanceOf[T]
+    else
+      throw new IllegalArgumentException("Can not merge non-overlapping RawInterval objects")
   }
 
-  /**
-   * Function to create an iterator yielding non-overlapped RawInterval objects
-   *
-   * @param ri iterator yielding RawInterval objects
-   * @return iterator yielding RawInterval objects
-   */
-  def mergeOverlappingIntervals(ri: Iterator[RawInterval]): Iterator[RawInterval] =
+  /** Function to create an iterator yielding non-overlapped Feature objects */
+  private def mergeOverlappingIntervals[T <: Feature](ri: Iterator[T]): Iterator[T] =
     ri.toList
-      .sortBy(x => (x.chrom, x.start, x.end))
-      .foldLeft(List.empty[RawInterval]) {
-        (acc, i) => acc match {
-          case head :: tail if head.overlaps(i) => head.merge(i) :: tail
-          case _                                => i :: acc
+      .sortBy(x => (x.getChr, x.getStart, x.getEnd))
+      .foldLeft(List.empty[T]) {
+      (acc, i) => acc match {
+        case head :: tail if overlaps(head, i)  => merge(head, i) :: tail
+        case _                                  => i :: acc
 
-        }}
+      }}
       .toIterator
 
   /**
@@ -102,39 +92,42 @@ object WipeReads extends ToolCommand {
    *
    * @param inFile input interval file
    */
-  def makeRawIntervalFromFile(inFile: File): Iterator[RawInterval] = {
+  def makeFeatureFromFile(inFile: File): Iterator[Feature] = {
+
+    logger.info("Parsing interval file ...")
 
     /** Function to create iterator from BED file */
-    def makeRawIntervalFromBED(inFile: File): Iterator[RawInterval] =
-      // BED file coordinates are 0-based, half open so we need to do some conversion
-      Source.fromFile(inFile)
-        .getLines()
-        .filterNot(_.trim.isEmpty)
-        .dropWhile(_.matches("^track | ^browser "))
-        .map(line => line.trim.split("\t") match {
-          case Array(chrom, start, end, _*) => new RawInterval(chrom, start.toInt + 1, end.toInt)
-        })
+    def makeFeatureFromBED(inFile: File): Iterator[Feature] =
+      asScalaIteratorConverter(getFeatureReader(inFile.toPath.toString, new BEDCodec(), false).iterator).asScala
 
     // TODO: implementation
     /** Function to create iterator from refFlat file */
-    def makeRawIntervalFromRefFlat(inFile: File): Iterator[RawInterval] = ???
+    def makeFeatureFromRefFlat(inFile: File): Iterator[Feature] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
 
     // TODO: implementation
     /** Function to create iterator from GTF file */
-    def makeRawIntervalFromGTF(inFile: File): Iterator[RawInterval] = ???
+    def makeFeatureFromGTF(inFile: File): Iterator[Feature] = ???
     // convert coordinate to 1-based fully closed
     // parse chrom, start blocks, end blocks, strands
 
     // detect interval file format from extension
-    val iterFunc: (File => Iterator[RawInterval]) =
+    val iterFunc: (File => Iterator[Feature]) =
       if (getExtension(inFile.toString.toLowerCase) == "bed")
-        makeRawIntervalFromBED
+        makeFeatureFromBED
       else
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
     mergeOverlappingIntervals(iterFunc(inFile))
+  }
+
+  def bloomParamsOk(bloomSize: Long, bloomFp: Double): Boolean = {
+    val optimalArraySize = FilterBuilder.optimalM(bloomSize, bloomFp)
+    // we are currently limited to maximum integer size
+    // if the optimal array size equals or exceeds it, we assume
+    // that it's a result of a truncation and return false
+    optimalArraySize <= Int.MaxValue
   }
 
   // TODO: set minimum fraction for overlap
@@ -153,11 +146,13 @@ object WipeReads extends ToolCommand {
    * @param bloomFp expected Bloom filter false positive rate
    * @return function that checks whether a SAMRecord or String is to be excluded
    */
-  def makeFilterOutFunction(iv: Iterator[RawInterval],
+  def makeFilterOutFunction(iv: Iterator[Feature],
                             inBAM: File, inBAMIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIDs: Set[String] = Set(),
-                            bloomSize: Int = 100000000, bloomFp: Double = 1e-10): (SAMRecord => Boolean) = {
+                            bloomSize: Long, bloomFp: Double): (SAMRecord => Boolean) = {
+
+    logger.info("Building set of reads to exclude ...")
 
     // TODO: implement optional index creation
     /** Function to check for BAM file index and return a SAMFileReader given a File */
@@ -180,30 +175,30 @@ object WipeReads extends ToolCommand {
      * file contig is prepended with "chr"
      *
      * @param inBAM BAM file to query as SAMFileReader
-     * @param ri raw interval object containing query
+     * @param feat feature object containing query
      * @return QueryInterval wrapped in Option
      */
-    def monadicMakeQueryInterval(inBAM: SAMFileReader, ri: RawInterval): Option[QueryInterval] =
-      if (inBAM.getFileHeader.getSequenceIndex(ri.chrom) > -1)
-        Some(inBAM.makeQueryInterval(ri.chrom, ri.start, ri.end))
-      else if (ri.chrom.startsWith("chr")
-        && inBAM.getFileHeader.getSequenceIndex(ri.chrom.substring(3)) > -1)
-        Some(inBAM.makeQueryInterval(ri.chrom.substring(3), ri.start, ri.end))
-      else if (!ri.chrom.startsWith("chr")
-        && inBAM.getFileHeader.getSequenceIndex("chr" + ri.chrom) > -1)
-        Some(inBAM.makeQueryInterval("chr" + ri.chrom, ri.start, ri.end))
+    def monadicMakeQueryInterval(inBAM: SAMFileReader, feat: Feature): Option[QueryInterval] =
+      if (inBAM.getFileHeader.getSequenceIndex(feat.getChr) > -1)
+        Some(inBAM.makeQueryInterval(feat.getChr, feat.getStart, feat.getEnd))
+      else if (feat.getChr.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex(feat.getChr.substring(3)) > -1)
+        Some(inBAM.makeQueryInterval(feat.getChr.substring(3), feat.getStart, feat.getEnd))
+      else if (!feat.getChr.startsWith("chr")
+        && inBAM.getFileHeader.getSequenceIndex("chr" + feat.getChr) > -1)
+        Some(inBAM.makeQueryInterval("chr" + feat.getChr, feat.getStart, feat.getEnd))
       else
         None
 
     /** function to make IntervalTree from our RawInterval objects
       *
-      * @param ri iterable over RawInterval objects
+      * @param ifeat iterable over feature objects
       * @return IntervalTree objects, filled with intervals from RawInterval
       */
-    def makeIntervalTree(ri: Iterable[RawInterval]): IntervalTree = {
+    def makeIntervalTree[T <: Feature](ifeat: Iterable[T]): IntervalTree = {
       val ivt = new IntervalTree
-      for (iv: RawInterval <- ri)
-        ivt.insert(new Interval(iv.start, iv.end))
+      for (iv <- ifeat)
+        ivt.insert(new Interval(iv.getStart, iv.getEnd))
       ivt
     }
 
@@ -239,11 +234,14 @@ object WipeReads extends ToolCommand {
         (r: SAMRecord) => readGroupIDs.contains(r.getReadGroup.getReadGroupId)
 
     /** function to get set element */
-    val SAMToElem =
+    val SAMRecordElement =
       if (filterOutMulti)
         (r: SAMRecord) => r.getReadName
       else
-        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart
+        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart.toString
+
+    val SAMRecordMateElement =
+      (r: SAMRecord)   => r.getReadName + "_" + r.getMateAlignmentStart.toString
 
     val firstBAM = prepIndexedInputBAM()
 
@@ -254,7 +252,7 @@ object WipeReads extends ToolCommand {
     */
     lazy val intervals = iv.toVector
     lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
-      .groupBy(x => x.chrom)
+      .groupBy(x => x.getChr)
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
     lazy val queryIntervals = intervals
       .flatMap(x => monadicMakeQueryInterval(firstBAM, x))
@@ -270,17 +268,18 @@ object WipeReads extends ToolCommand {
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
 
-    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize, bloomFp)
+    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize.toInt, bloomFp)
       .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
       .buildBloomFilter()
 
     for (rec <- filteredRecords) {
+      logger.debug("Adding read " + rec.getReadName + " to set ...")
       if ((!filterOutMulti) && rec.getReadPairedFlag) {
-        filteredOutSet.add(SAMToElem(rec))
-        filteredOutSet.add(rec.getReadName + "_" + rec.getMateAlignmentStart.toString)
+        filteredOutSet.add(SAMRecordElement(rec))
+        filteredOutSet.add(SAMRecordMateElement(rec))
       }
       else
-        filteredOutSet.add(SAMToElem(rec))
+        filteredOutSet.add(SAMRecordElement(rec))
     }
 
     if (filterOutMulti)
@@ -288,10 +287,10 @@ object WipeReads extends ToolCommand {
     else
       (rec: SAMRecord) => {
         if (rec.getReadPairedFlag)
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart) &&
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getMateAlignmentStart)
+          filteredOutSet.contains(SAMRecordElement(rec)) &&
+          filteredOutSet.contains(SAMRecordMateElement(rec))
         else
-          filteredOutSet.contains(rec.getReadName + "_" + rec.getAlignmentStart)
+          filteredOutSet.contains(SAMRecordElement(rec))
       }
   }
 
@@ -313,20 +312,34 @@ object WipeReads extends ToolCommand {
     val factory = new SAMFileWriterFactory()
       .setCreateIndex(writeIndex)
       .setUseAsyncIo(async)
+
     val templateBAM = new SAMFileReader(inBAM)
     templateBAM.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
+
     val targetBAM = factory.makeBAMWriter(templateBAM.getFileHeader, true, outBAM)
+
     val filteredBAM =
       if (filteredOutBAM != null)
         factory.makeBAMWriter(templateBAM.getFileHeader, true, filteredOutBAM)
       else
         null
 
+    logger.info("Writing output file(s) ...")
+
     try {
-      for (rec: SAMRecord <- templateBAM.asScala) {
-        if (!filterFunc(rec)) targetBAM.addAlignment(rec)
-        else if (filteredBAM != null) filteredBAM.addAlignment(rec)
+      var (incl, excl) = (0, 0)
+      for (rec <- templateBAM.asScala) {
+        if (!filterFunc(rec)) {
+          targetBAM.addAlignment(rec)
+          incl += 1
+        }
+        else {
+          excl += 1
+          if (filteredBAM != null) filteredBAM.addAlignment(rec)
+        }
       }
+      println(List("input_bam", "output_bam", "count_included", "count_excluded").mkString("\t"))
+      println(List(inBAM.getName, outBAM.getName, incl, excl).mkString("\t"))
     } finally {
       templateBAM.close()
       targetBAM.close()
@@ -337,10 +350,13 @@ object WipeReads extends ToolCommand {
   case class Args (inputBAM: File = null,
                    targetRegions: File = null,
                    outputBAM: File = null,
+                   filteredOutBAM: File = null,
                    readGroupIDs: Set[String] = Set.empty[String],
                    minMapQ: Int = 0,
                    limitToRegion: Boolean = false,
-                   noMakeIndex: Boolean = false) extends AbstractArgs
+                   noMakeIndex: Boolean = false,
+                   bloomSize: Long = 70000000,
+                   bloomFp: Double = 4e-7) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -362,19 +378,30 @@ object WipeReads extends ToolCommand {
     opt[File]('o', "output_file") required() valueName "<bam>" action { (x, c) =>
       c.copy(outputBAM = x) } text "Output BAM file"
 
+    opt[File]('f', "discarded_file") optional() valueName "<bam>" action { (x, c) =>
+      c.copy(filteredOutBAM = x) } text "Discarded reads BAM file (default: none)"
+
     opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
       c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
 
     opt[String]('G', "read_group") unbounded() optional() valueName "<rgid>" action { (x, c) =>
       c.copy(readGroupIDs = c.readGroupIDs + x) } text "Read group IDs to be removed (default: remove reads from all read groups)"
 
-    opt[Boolean]("limit_removal") optional() valueName "" action { (_, c) =>
+    opt[Unit]("limit_removal") optional() action { (_, c) =>
       c.copy(limitToRegion = true) } text
       "Whether to remove multiple-mapped reads outside the target regions (default: yes)"
 
-    opt[Boolean]("no_make_index") optional() valueName "" action { (_, c) =>
+    opt[Unit]("no_make_index") optional() action { (_, c) =>
       c.copy(noMakeIndex = true) } text
       "Whether to index output BAM file or not (default: yes)"
+
+    note("\nAdvanced options")
+
+    opt[Long]("bloom_size") optional() action { (x, c) =>
+      c.copy(bloomSize = x) } text "expected maximum number of reads in target regions (default: 7e7)"
+
+    opt[Double]("false_positive") optional() action { (x, c) =>
+      c.copy(bloomFp = x) } text "false positive rate (default: 4e-7)"
 
     note(
       """
@@ -382,6 +409,13 @@ object WipeReads extends ToolCommand {
         |By default, if the removed reads are also mapped to other regions outside
         |the given ones, they will also be removed.
       """.stripMargin)
+
+    checkConfig { c=>
+      if (!bloomParamsOk(c.bloomSize, c.bloomFp))
+        failure("Bloom parameters combination exceed Int limitation")
+      else
+        success
+    }
   }
 
   def main(args: Array[String]): Unit = {
@@ -391,20 +425,21 @@ object WipeReads extends ToolCommand {
       .getOrElse(sys.exit(1))
 
     val filterFunc = makeFilterOutFunction(
-      iv = makeRawIntervalFromFile(commandArgs.targetRegions),
+      iv = makeFeatureFromFile(commandArgs.targetRegions),
       inBAM = commandArgs.inputBAM,
       filterOutMulti = !commandArgs.limitToRegion,
       minMapQ = commandArgs.minMapQ,
       readGroupIDs = commandArgs.readGroupIDs,
-      bloomSize = 70000000,
-      bloomFp = 4e-7
+      bloomSize = commandArgs.bloomSize,
+      bloomFp = commandArgs.bloomFp
     )
 
     writeFilteredBAM(
       filterFunc,
       commandArgs.inputBAM,
       commandArgs.outputBAM,
-      writeIndex = !commandArgs.noMakeIndex
+      writeIndex = !commandArgs.noMakeIndex,
+      filteredOutBAM = commandArgs.filteredOutBAM
     )
   }
 }
