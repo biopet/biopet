@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Maven: org.broadinstitute.gatk:gatk-queue-package-distribution:3.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/broadinstitute/gatk/gatk-queue-package-distribution/3.2/gatk-queue-package-distribution-3.2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/broadinstitute/gatk/gatk-queue-package-distribution/3.2/gatk-queue-package-distribution-3.2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/broadinstitute/gatk/gatk-queue-package-distribution/3.2/gatk-queue-package-distribution-3.2-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../htsjdk/src/java" />
+      <root url="file://$PROJECT_DIR$/../htsjdk/src/tests/java" />
+    </SOURCES>
+  </library>
+</component>
