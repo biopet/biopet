@@ -246,16 +246,18 @@ object WipeReads extends ToolCommand {
              of an Interval, so we resort to our own Feature vector
     */
     lazy val intervals = iv.toVector
-    lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
-      .groupBy(x => x.getChr)
-      .map({ case (key, value) => (key, makeIntervalTree(value)) })
+
     lazy val queryIntervals = intervals
       .flatMap(x => monadicMakeQueryInterval(readyBam, x))
       // makeQueryInterval only accepts a sorted QueryInterval list
       .sortBy(x => (x.referenceIndex, x.start, x.end))
       .toArray
 
-    val filteredRecords: Iterator[SAMRecord] = readyBam
+    lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
+      .groupBy(x => x.getChr)
+      .map({ case (key, value) => (key, makeIntervalTree(value)) })
+
+    lazy val filteredOutSet: BloomFilter[String] = readyBam
       // query BAM file with intervals
       .queryOverlapping(queryIntervals)
       // for compatibility
@@ -266,19 +268,19 @@ object WipeReads extends ToolCommand {
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
-
-    val filteredOutSet: BloomFilter[String] = new FilterBuilder(bloomSize.toInt, bloomFp)
-      .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
-      .buildBloomFilter()
-
-    for (rec <- filteredRecords) {
-      logger.debug("Adding read " + rec.getReadName + " to set ...")
-      if ((!filterOutMulti) && rec.getReadPairedFlag) {
-        filteredOutSet.add(SamRecordElement(rec))
-        filteredOutSet.add(SamRecordMateElement(rec))
-      } else
-        filteredOutSet.add(SamRecordElement(rec))
-    }
+      // fold starting from empty set
+      .foldLeft(new FilterBuilder(bloomSize.toInt, bloomFp)
+        .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
+        .buildBloomFilter(): BloomFilter[String]
+        )((acc, rec) => {
+            logger.debug("Adding read " + rec.getReadName + " to set ...")
+            if ((!filterOutMulti) && rec.getReadPairedFlag) {
+              acc.add(SamRecordElement(rec))
+              acc.add(SamRecordMateElement(rec))
+            } else
+              acc.add(SamRecordElement(rec))
+            acc
+          })
 
     if (filterOutMulti)
       (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName)
