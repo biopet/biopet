@@ -45,10 +45,9 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with Matchers {
     obs.getEnd should === (exp.getEnd)
   }
 
-  @Test def testIntervalError() = {
+  @Test def testIntervalError() =
     intercept[IllegalArgumentException] {
       makeFeatureFromString(List("chr5:1000-")).next()
     }
-  }
 }
 
