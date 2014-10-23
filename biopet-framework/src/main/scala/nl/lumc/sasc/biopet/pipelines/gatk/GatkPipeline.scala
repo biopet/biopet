@@ -8,6 +8,7 @@ import scala.collection.JavaConversions._
 import java.io.File
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
@@ -195,6 +196,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         } else throw new IllegalStateException("Readgroup sample and/or library of input bamfile is not correct, file: " + bamFile + 
             "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
       }
+      addAll(BamMetrics(this, bamFile, runDir + "metrics/").functions)
       
       libraryOutput.mappedBamFile = bamFile
     } else logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
