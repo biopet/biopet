@@ -8,7 +8,6 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
-import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
@@ -84,18 +83,18 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         mergeSamFiles.input = libraryBamfiles
         mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
         add(mergeSamFiles)
-        
-        val bamIndex = SambambaIndex(root, mergeSamFiles.output)
-        add(bamIndex)
-        
         mergeSamFiles.output
       } else null
+      
+    val bamIndex = SambambaIndex(root, bamFile)
+    add(bamIndex)
     
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
     val cleverDir = svcallingDir + sampleID + ".clever/"
     val clever = Clever(this, bamFile, this.reference, svcallingDir, cleverDir)
+    clever.deps = List(bamIndex.output)
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 

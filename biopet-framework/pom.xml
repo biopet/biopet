@@ -111,7 +111,7 @@
                     <verbose>false</verbose>
                     <useNativeGit>true</useNativeGit>
                     <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
-                    <skipPoms>true</skipPoms>
+                    <skipPoms>false</skipPoms>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
                     <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
