@@ -8,7 +8,6 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 
-
 class BreakdancerConfig(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "bam2cfg.pl", freeVar = false)
 
@@ -74,7 +73,7 @@ object BreakdancerConfig {
 class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction  {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
   
-  override val defaultVmem = "4G"
+  override val defaultVmem = "6G"
   override val defaultThreads = 1 // breakdancer can only work on 1 single thread
   
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r
@@ -170,10 +169,12 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
   @Argument(doc = "Work directory")
   var workdir: String = _
   
-//  @Output(doc = "Breakdancer VCF output")
-//  lazy val outputvcf: File = {
-//    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
-//  }
+  var deps : List[File] = Nil
+  
+  @Output(doc = "Breakdancer VCF output")
+  lazy val outputvcf: File = {
+    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
+  }
   
   @Output(doc = "Breakdancer config")
   lazy val configfile: File = {
@@ -192,6 +193,7 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
     logger.info("Starting Breakdancer configuration")
     
     val bdcfg = BreakdancerConfig(this, input, this.configfile)
+    bdcfg.deps = this.deps
     outputFiles += ("breakdancer_cfg" -> bdcfg.output )
     add( bdcfg )
     
@@ -200,10 +202,9 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
     add( breakdancer )
     outputFiles += ("breakdancer_tsv" -> breakdancer.output )
 
-//    val output_vcf: File = this.outputvcf
-    // convert this tsv to vcf using the python script
-    
-    
+    val bdvcf = BreakdancerVCF( this, breakdancer.output, this.outputvcf )
+    add( bdvcf )
+    outputFiles += ("breakdancer_vcf" -> bdvcf.output )
   }
 }
 
