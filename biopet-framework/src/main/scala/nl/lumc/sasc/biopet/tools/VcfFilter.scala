@@ -111,7 +111,7 @@ object VcfFilter extends ToolCommand {
           
       if (record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth && 
           genotypes.count(_ == true) >= commandArgs.minSamplesPass &&
-          bamADvalues.count(_ == true) >= commandArgs.minSamplesPass)
+          (commandArgs.minBamAlternateDepth <= 0 || bamADvalues.count(_ == true) >= commandArgs.minSamplesPass))
         writer.add(record)
     }
     reader.close

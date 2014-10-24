@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
+import java.util.Properties
+
 object BiopetExecutable {
 
   val modules: Map[String, List[MainCommand]] = Map(
@@ -48,6 +50,9 @@ object BiopetExecutable {
         |
         |%s
         |
+        |Subcommands:
+        |  - version
+        |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
       """.stripMargin.format(modules.keys.mkString(","), getVersion, usage)
     }
@@ -70,6 +75,9 @@ object BiopetExecutable {
     }
 
     args match {
+      case Array("version") => {
+          println("version: " + getVersion)
+      }
       case Array(module, name, passArgs @ _*) => {
         getCommand(module, name).main(passArgs.toArray)
       }
@@ -85,6 +93,12 @@ object BiopetExecutable {
   }
   
   def getVersion = {
-    getClass.getPackage.getImplementationVersion
+    getClass.getPackage.getImplementationVersion + " (" + getCommitHash + ")"
+  }
+  
+  def getCommitHash = {
+    val prop = new Properties()
+    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
+    prop.getProperty("git.commit.id.abbrev")
   }
 }

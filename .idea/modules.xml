@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Biopet.iml" filepath="$PROJECT_DIR$/Biopet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/biopet-framework/BiopetFramework.iml" filepath="$PROJECT_DIR$/biopet-framework/BiopetFramework.iml" />
+    </modules>
+  </component>
+</project>
+
