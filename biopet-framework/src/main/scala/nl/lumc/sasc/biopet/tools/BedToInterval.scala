@@ -4,6 +4,7 @@ import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMSequenceRecord
 import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.PrintWriter
@@ -27,7 +28,7 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
   override def commandLine = super.commandLine + required(input) + required(bamFile) + required(output)
 }
 
-object BedToInterval {
+object BedToInterval extends ToolCommand {
   def apply(root: Configurable, inputBed: File, inputBam: File, outputDir: String): BedToInterval = {
     val bedToInterval = new BedToInterval(root)
     bedToInterval.input = inputBed
@@ -44,13 +45,25 @@ object BedToInterval {
     return bedToInterval
   }
 
+  case class Args (inputFile:File = null, outputFile:File = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
+      c.copy(inputFile = x) } text("out is a required file property")
+    opt[File]('o', "output") required() valueName("<file>") action { (x, c) =>
+      c.copy(outputFile = x) } text("out is a required file property")
+  }
+  
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    val writer = new PrintWriter(args(2))
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    
+    val writer = new PrintWriter(commandArgs.outputFile)
 
-    val inputSam = new SAMFileReader(new File(args(1)))
+    val inputSam = new SAMFileReader(commandArgs.inputFile)
     val refs = for (SQ <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) yield {
       val record = SQ.asInstanceOf[SAMSequenceRecord]
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
