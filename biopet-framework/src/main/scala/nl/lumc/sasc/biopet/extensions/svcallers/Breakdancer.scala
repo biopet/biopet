@@ -194,17 +194,17 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
     
     val bdcfg = BreakdancerConfig(this, input, this.configfile)
     bdcfg.deps = this.deps
-    outputFiles += ("breakdancer_cfg" -> bdcfg.output )
+    outputFiles += ("cfg" -> bdcfg.output )
     add( bdcfg )
     
     val output_tsv: File = this.outputraw
     val breakdancer = BreakdancerCaller( this, bdcfg.output, output_tsv )
     add( breakdancer )
-    outputFiles += ("breakdancer_tsv" -> breakdancer.output )
+    outputFiles += ("tsv" -> breakdancer.output )
 
     val bdvcf = BreakdancerVCF( this, breakdancer.output, this.outputvcf )
     add( bdvcf )
-    outputFiles += ("breakdancer_vcf" -> bdvcf.output )
+    outputFiles += ("vcf" -> bdvcf.output )
   }
 }
 

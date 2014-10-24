@@ -101,7 +101,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
     val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
-    sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputraw))
+    sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputvcf))
     addAll(breakdancer.functions)
 
     // for pindel we should use per library config collected into one config file
