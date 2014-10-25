@@ -140,7 +140,7 @@ object WipeReads extends ToolCommand {
    * @param bloomFp expected Bloom filter false positive rate
    * @return function that checks whether a SAMRecord or String is to be excluded
    */
-  def makeFilterOutFunction(iv: Iterator[Feature],
+  def makeFilterNotFunction(iv: Iterator[Feature],
                             inBam: File, inBamIndex: File = null,
                             filterOutMulti: Boolean = true,
                             minMapQ: Int = 0, readGroupIds: Set[String] = Set(),
@@ -439,7 +439,7 @@ object WipeReads extends ToolCommand {
       .parse(args, Args())
       .getOrElse(sys.exit(1))
 
-    val filterFunc = makeFilterOutFunction(
+    val filterFunc = makeFilterNotFunction(
       iv = makeFeatureFromFile(commandArgs.targetRegions),
       inBam = commandArgs.inputBam,
       filterOutMulti = !commandArgs.limitToRegion,

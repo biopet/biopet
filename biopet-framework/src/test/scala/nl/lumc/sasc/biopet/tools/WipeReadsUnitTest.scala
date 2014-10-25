@@ -123,15 +123,15 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
     //       and only filling the filter with a few items
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     // by default, set elements are SAM record read names
-    assert(!isFilteredOut(sBamRecs1(0)))
-    assert(isFilteredOut(sBamRecs1(1)))
-    assert(isFilteredOut(sBamRecs1(2)))
-    assert(isFilteredOut(sBamRecs1(3)))
-    assert(!isFilteredOut(sBamRecs1(4)))
-    assert(!isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(6)))
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe true
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
   @Test def testSingleBamIntervalWithoutChr() = {
@@ -140,28 +140,28 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480),
       new BasicFeature("P", 191, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBamRecs1(0)))
-    assert(isFilteredOut(sBamRecs1(1)))
-    assert(isFilteredOut(sBamRecs1(2)))
-    assert(isFilteredOut(sBamRecs1(3)))
-    assert(!isFilteredOut(sBamRecs1(4)))
-    assert(!isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe true
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
   @Test def testSingleBamDefaultPartialExonOverlap() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 881, 1000) // overlaps first exon of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBamRecs1(0)))
-    assert(!isFilteredOut(sBamRecs1(1)))
-    assert(!isFilteredOut(sBamRecs1(2)))
-    assert(!isFilteredOut(sBamRecs1(3)))
-    assert(!isFilteredOut(sBamRecs1(4)))
-    assert(isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe false
+    filterNotFunc(sBamRecs1(3)) shouldBe false
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe true
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
   @Test def testSingleBamDefaultNoExonOverlap() = {
@@ -169,15 +169,15 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrP", 881, 1000),
       new BasicFeature("chrQ", 900, 920)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBamRecs1(0)))
-    assert(!isFilteredOut(sBamRecs1(1)))
-    assert(!isFilteredOut(sBamRecs1(2)))
-    assert(!isFilteredOut(sBamRecs1(3)))
-    assert(!isFilteredOut(sBamRecs1(4)))
-    assert(!isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe false
+    filterNotFunc(sBamRecs1(3)) shouldBe false
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
   @Test def testSingleBamFilterOutMultiNotSet() = {
@@ -186,15 +186,15 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    assert(!isFilteredOut(sBamRecs1(0)))
-    assert(!isFilteredOut(sBamRecs1(1)))
-    assert(isFilteredOut(sBamRecs1(2)))
-    assert(isFilteredOut(sBamRecs1(3)))
-    assert(!isFilteredOut(sBamRecs1(4)))
-    assert(!isFilteredOut(sBamRecs1(5)))
-    assert(!isFilteredOut(sBamRecs1(6)))
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
   @Test def testSingleBamFilterMinMapQ() = {
@@ -202,17 +202,17 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
-    assert(!isFilteredOut(sBamRecs2(0)))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
     // r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(sBamRecs2(1)))
-    assert(!isFilteredOut(sBamRecs2(2)))
-    assert(isFilteredOut(sBamRecs2(3)))
-    assert(isFilteredOut(sBamRecs2(4)))
-    assert(isFilteredOut(sBamRecs2(5)))
-    assert(!isFilteredOut(sBamRecs2(6)))
-    assert(!isFilteredOut(sBamRecs2(7)))
+    filterNotFunc(sBamRecs2(1)) shouldBe false
+    filterNotFunc(sBamRecs2(2)) shouldBe false
+    filterNotFunc(sBamRecs2(3)) shouldBe true
+    filterNotFunc(sBamRecs2(4)) shouldBe true
+    filterNotFunc(sBamRecs2(5)) shouldBe true
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
   @Test def testSingleBamFilterMinMapQFilterOutMultiNotSet() = {
@@ -220,18 +220,18 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
-    assert(!isFilteredOut(sBamRecs2(0)))
-    assert(!isFilteredOut(sBamRecs2(1)))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
+    filterNotFunc(sBamRecs2(1)) shouldBe false
     // this r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(sBamRecs2(2)))
-    assert(isFilteredOut(sBamRecs2(3)))
-    assert(isFilteredOut(sBamRecs2(4)))
+    filterNotFunc(sBamRecs2(2)) shouldBe false
+    filterNotFunc(sBamRecs2(3)) shouldBe true
+    filterNotFunc(sBamRecs2(4)) shouldBe true
     // this r07 is not in since filterOuMulti is false
-    assert(!isFilteredOut(sBamRecs2(5)))
-    assert(!isFilteredOut(sBamRecs2(6)))
-    assert(!isFilteredOut(sBamRecs2(7)))
+    filterNotFunc(sBamRecs2(5)) shouldBe false
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
   @Test def testSingleBamFilterReadGroupIDs() = {
@@ -239,17 +239,17 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
-    assert(!isFilteredOut(sBamRecs2(0)))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
     // only r01 is in the set since it is RG 002
-    assert(isFilteredOut(sBamRecs2(1)))
-    assert(isFilteredOut(sBamRecs2(2)))
-    assert(!isFilteredOut(sBamRecs2(3)))
-    assert(!isFilteredOut(sBamRecs2(4)))
-    assert(!isFilteredOut(sBamRecs2(5)))
-    assert(!isFilteredOut(sBamRecs2(6)))
-    assert(!isFilteredOut(sBamRecs2(7)))
+    filterNotFunc(sBamRecs2(1)) shouldBe true
+    filterNotFunc(sBamRecs2(2)) shouldBe true
+    filterNotFunc(sBamRecs2(3)) shouldBe false
+    filterNotFunc(sBamRecs2(4)) shouldBe false
+    filterNotFunc(sBamRecs2(5)) shouldBe false
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
   @Test def testPairBamDefault() = {
@@ -258,42 +258,42 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(pBamRecs1(0)))
-    assert(!isFilteredOut(pBamRecs1(1)))
-    assert(isFilteredOut(pBamRecs1(2)))
-    assert(isFilteredOut(pBamRecs1(3)))
-    assert(isFilteredOut(pBamRecs1(4)))
-    assert(isFilteredOut(pBamRecs1(5)))
-    assert(isFilteredOut(pBamRecs1(6)))
-    assert(isFilteredOut(pBamRecs1(7)))
-    assert(!isFilteredOut(pBamRecs1(8)))
-    assert(!isFilteredOut(pBamRecs1(9)))
-    assert(!isFilteredOut(pBamRecs1(10)))
-    assert(!isFilteredOut(pBamRecs1(11)))
-    assert(!isFilteredOut(pBamRecs1(12)))
-    assert(!isFilteredOut(pBamRecs1(13)))
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe true
+    filterNotFunc(pBamRecs1(3)) shouldBe true
+    filterNotFunc(pBamRecs1(4)) shouldBe true
+    filterNotFunc(pBamRecs1(5)) shouldBe true
+    filterNotFunc(pBamRecs1(6)) shouldBe true
+    filterNotFunc(pBamRecs1(7)) shouldBe true
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe false
+    filterNotFunc(pBamRecs1(11)) shouldBe false
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
   @Test def testPairBamPartialExonOverlap() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 891, 1000)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(pBamRecs1(0)))
-    assert(!isFilteredOut(pBamRecs1(1)))
-    assert(!isFilteredOut(pBamRecs1(2)))
-    assert(!isFilteredOut(pBamRecs1(3)))
-    assert(!isFilteredOut(pBamRecs1(4)))
-    assert(!isFilteredOut(pBamRecs1(5)))
-    assert(!isFilteredOut(pBamRecs1(6)))
-    assert(!isFilteredOut(pBamRecs1(7)))
-    assert(!isFilteredOut(pBamRecs1(8)))
-    assert(!isFilteredOut(pBamRecs1(9)))
-    assert(isFilteredOut(pBamRecs1(10)))
-    assert(isFilteredOut(pBamRecs1(11)))
-    assert(!isFilteredOut(pBamRecs1(12)))
-    assert(!isFilteredOut(pBamRecs1(13)))
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe false
+    filterNotFunc(pBamRecs1(3)) shouldBe false
+    filterNotFunc(pBamRecs1(4)) shouldBe false
+    filterNotFunc(pBamRecs1(5)) shouldBe false
+    filterNotFunc(pBamRecs1(6)) shouldBe false
+    filterNotFunc(pBamRecs1(7)) shouldBe false
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe true
+    filterNotFunc(pBamRecs1(11)) shouldBe true
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
   @Test def testPairBamFilterOutMultiNotSet() = {
@@ -302,22 +302,22 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    assert(!isFilteredOut(pBamRecs1(0)))
-    assert(!isFilteredOut(pBamRecs1(1)))
-    assert(!isFilteredOut(pBamRecs1(2)))
-    assert(!isFilteredOut(pBamRecs1(3)))
-    assert(isFilteredOut(pBamRecs1(4)))
-    assert(isFilteredOut(pBamRecs1(5)))
-    assert(isFilteredOut(pBamRecs1(6)))
-    assert(isFilteredOut(pBamRecs1(7)))
-    assert(!isFilteredOut(pBamRecs1(8)))
-    assert(!isFilteredOut(pBamRecs1(9)))
-    assert(!isFilteredOut(pBamRecs1(10)))
-    assert(!isFilteredOut(pBamRecs1(11)))
-    assert(!isFilteredOut(pBamRecs1(12)))
-    assert(!isFilteredOut(pBamRecs1(13)))
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe false
+    filterNotFunc(pBamRecs1(3)) shouldBe false
+    filterNotFunc(pBamRecs1(4)) shouldBe true
+    filterNotFunc(pBamRecs1(5)) shouldBe true
+    filterNotFunc(pBamRecs1(6)) shouldBe true
+    filterNotFunc(pBamRecs1(7)) shouldBe true
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe false
+    filterNotFunc(pBamRecs1(11)) shouldBe false
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
   @Test def testPairBamFilterMinMapQ() = {
@@ -325,19 +325,19 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(pBamRecs2(0)))
-    assert(!isFilteredOut(pBamRecs2(1)))
-    assert(!isFilteredOut(pBamRecs2(2)))
-    assert(!isFilteredOut(pBamRecs2(3)))
-    assert(!isFilteredOut(pBamRecs2(4)))
-    assert(!isFilteredOut(pBamRecs2(5)))
-    assert(isFilteredOut(pBamRecs2(6)))
-    assert(isFilteredOut(pBamRecs2(7)))
-    assert(!isFilteredOut(pBamRecs2(8)))
-    assert(!isFilteredOut(pBamRecs2(9)))
+    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2(1)) shouldBe false
+    filterNotFunc(pBamRecs2(2)) shouldBe false
+    filterNotFunc(pBamRecs2(3)) shouldBe false
+    filterNotFunc(pBamRecs2(4)) shouldBe false
+    filterNotFunc(pBamRecs2(5)) shouldBe false
+    filterNotFunc(pBamRecs2(6)) shouldBe true
+    filterNotFunc(pBamRecs2(7)) shouldBe true
+    filterNotFunc(pBamRecs2(8)) shouldBe false
+    filterNotFunc(pBamRecs2(9)) shouldBe false
   }
 
   @Test def testPairBamFilterReadGroupIDs() = {
@@ -345,19 +345,19 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
     // only r01 is in the set since it is RG 002
-    assert(!isFilteredOut(pBamRecs2(0)))
-    assert(!isFilteredOut(pBamRecs2(1)))
-    assert(isFilteredOut(pBamRecs2(2)))
-    assert(isFilteredOut(pBamRecs2(3)))
-    assert(isFilteredOut(pBamRecs2(4)))
-    assert(isFilteredOut(pBamRecs2(5)))
-    assert(!isFilteredOut(pBamRecs2(6)))
-    assert(!isFilteredOut(pBamRecs2(7)))
-    assert(!isFilteredOut(pBamRecs2(8)))
-    assert(!isFilteredOut(pBamRecs2(9)))
+    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2(1)) shouldBe false
+    filterNotFunc(pBamRecs2(2)) shouldBe true
+    filterNotFunc(pBamRecs2(3)) shouldBe true
+    filterNotFunc(pBamRecs2(4)) shouldBe true
+    filterNotFunc(pBamRecs2(5)) shouldBe true
+    filterNotFunc(pBamRecs2(6)) shouldBe false
+    filterNotFunc(pBamRecs2(7)) shouldBe false
+    filterNotFunc(pBamRecs2(8)) shouldBe false
+    filterNotFunc(pBamRecs2(9)) shouldBe false
   }
 
   @Test def testWriteSingleBamDefault() = {
