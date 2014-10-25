@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMRecord
-import htsjdk.samtools.fastq.FastqRecord
+import htsjdk.samtools.fastq.{BasicFastqWriter, FastqWriter, FastqReader, FastqRecord}
 import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
 
@@ -59,18 +59,20 @@ object ExtractAlignedFastq extends ToolCommand {
   }
 
   /**
-   * Function to create function that checks whether a given FASTQ record is mapped
+   * Function to create object that checks whether a given FASTQ record is mapped
    * to the given interval or not
    *
-   * @param iv iterator yielding features to check
+   * @param iv iterable yielding features to check
    * @param inAln input SAM/BAM file
+   * @param commonSuffixLength length of suffix common to all read pairs
    * @param readGroupIds read group IDs to include (default: all)
    * @return
    */
-  def makeMembershipFunction(iv: Iterator[Feature],
+  def makeMembershipFunction(iv: Iterable[Feature],
                              inAln: File,
-                             readGroupIds: Set[String]
-                            ): (FastqRecord => Boolean) = {
+                             commonSuffixLength: Int = 0,
+                             readGroupIds: Set[String] = Set.empty[String]
+                            ): ((FastqRecord, FastqRecord) => Boolean) = {
 
     /** function to make interval queries for BAM files */
     def makeQueryInterval(aln: SAMFileReader, feat: Feature): QueryInterval =
@@ -111,10 +113,52 @@ object ExtractAlignedFastq extends ToolCommand {
       .filter(x => rgFilter(x))
       // iteratively add read name to the selected set
       .foldLeft(MSet.empty[String])(
-        (acc, x) => acc += x.getReadName
+        (acc, x) => {
+          logger.debug("Adding " + x.getReadName + " to set ...")
+          acc += x.getReadName
+        }
        )
 
-    (rec: FastqRecord) => selected.contains(rec.getReadHeader)
+    (rec1: FastqRecord, rec2: FastqRecord) => rec2 match {
+      case null       => selected.contains(rec1.getReadHeader)
+      case otherwise  =>
+        require (commonSuffixLength < rec1.getReadHeader.length)
+        require (commonSuffixLength < rec2.getReadHeader.length)
+        println(rec1.getReadHeader.dropRight(commonSuffixLength))
+        selected.contains(rec1.getReadHeader.dropRight(commonSuffixLength))
+    }
+  }
+
+  def selectFastqReads(memFunc: (FastqRecord, FastqRecord) => Boolean,
+                       inputFastq1: File,
+                       outputFastq1: File,
+                       inputFastq2: File = null,
+                       outputFastq2: File = null): Unit = {
+
+    val i1 = new FastqReader(inputFastq1).iterator.asScala
+    val o1 = new BasicFastqWriter(outputFastq1)
+    val i2 = inputFastq2 match {
+      case null       => Iterator.continually(null)
+      case otherwise  => new FastqReader(otherwise).iterator.asScala
+    }
+    val o2 = (inputFastq2, outputFastq2) match {
+      case (null, null) => null
+      case (_, null)    => throw new IllegalArgumentException("Missing output FASTQ 2")
+      case (null, _)    => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
+      case (x, y)       => new BasicFastqWriter(outputFastq2)
+    }
+
+    // zip, filter based on function, and write to output file(s)
+    i1.zip(i2)
+      .filter((rec) => memFunc(rec._1, rec._2))
+      .foreach {
+        case (rec1, null) =>
+          o1.write(rec1)
+        case (rec1, rec2) =>
+          o1.write(rec1)
+          o2.write(rec2)
+    }
+
   }
 
   case class Args (inputBam: File = null,
@@ -123,7 +167,6 @@ object ExtractAlignedFastq extends ToolCommand {
                    inputFastq2: File = null,
                    outputFastq1: File = null,
                    outputFastq2: File = null,
-                   maxReadPerInterval: Int = Int.MaxValue,
                    minMapQ: Int = 0) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
