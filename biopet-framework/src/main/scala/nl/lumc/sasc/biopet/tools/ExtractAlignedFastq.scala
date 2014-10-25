@@ -5,13 +5,14 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+
 import scala.collection.mutable.{ Set => MSet }
 import scala.collection.JavaConverters._
 
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
 import htsjdk.samtools.SAMRecord
-import htsjdk.samtools.fastq.{BasicFastqWriter, FastqWriter, FastqReader, FastqRecord}
+import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
 
@@ -19,6 +20,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 
 object ExtractAlignedFastq extends ToolCommand {
 
+  type FastqPair = (FastqRecord, FastqRecord)
   /**
    * Function to create iterator over features given input interval string
    *
@@ -72,7 +74,7 @@ object ExtractAlignedFastq extends ToolCommand {
                              inAln: File,
                              commonSuffixLength: Int = 0,
                              readGroupIds: Set[String] = Set.empty[String]
-                            ): ((FastqRecord, FastqRecord) => Boolean) = {
+                            ): (FastqPair => Boolean) = {
 
     /** function to make interval queries for BAM files */
     def makeQueryInterval(aln: SAMFileReader, feat: Feature): QueryInterval =
@@ -119,17 +121,16 @@ object ExtractAlignedFastq extends ToolCommand {
         }
        )
 
-    (rec1: FastqRecord, rec2: FastqRecord) => rec2 match {
-      case null       => selected.contains(rec1.getReadHeader)
+    (pair: FastqPair) => pair._2 match {
+      case null       => selected.contains(pair._1.getReadHeader)
       case otherwise  =>
-        require (commonSuffixLength < rec1.getReadHeader.length)
-        require (commonSuffixLength < rec2.getReadHeader.length)
-        println(rec1.getReadHeader.dropRight(commonSuffixLength))
-        selected.contains(rec1.getReadHeader.dropRight(commonSuffixLength))
+        require(commonSuffixLength < pair._1.getReadHeader.length)
+        require(commonSuffixLength < pair._2.getReadHeader.length)
+        selected.contains(pair._1.getReadHeader.dropRight(commonSuffixLength))
     }
   }
 
-  def selectFastqReads(memFunc: (FastqRecord, FastqRecord) => Boolean,
+  def selectFastqReads(memFunc: FastqPair => Boolean,
                        inputFastq1: File,
                        outputFastq1: File,
                        inputFastq2: File = null,
