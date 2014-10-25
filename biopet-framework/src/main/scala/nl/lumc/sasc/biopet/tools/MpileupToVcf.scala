@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -50,46 +51,47 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
     } else "") + 
       super.commandLine + 
       required("-o", output) + 
-      optional("-minDP", minDP) + 
-      optional("-minAP", minAP) +
-      optional("-homoFraction", homoFraction) +
-      optional("-ploidy", ploidy) +
-      required("-sample", sample) + 
+      optional("--minDP", minDP) + 
+      optional("--minAP", minAP) +
+      optional("--homoFraction", homoFraction) +
+      optional("--ploidy", ploidy) +
+      required("--sample", sample) + 
       (if (inputBam == null) required("-I", inputMpileup) else "")
   }
 }
 
-object MpileupToVcf {
-  var input: File = _
-  var output: File = _
-  var sample: String = _
-  var minDP = 8
-  var minAP = 2
-  var homoFraction = 0.8
-  var ploidy = 2
+object MpileupToVcf extends ToolCommand {
+  case class Args (input:File = null, output:File = null, sample:String = null, minDP:Int = 8, minAP:Int = 2, 
+                   homoFraction:Double = 0.8, ploidy:Int = 2) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "input") valueName("<file>") action { (x, c) =>
+      c.copy(input = x) }  text("input, default is stdin")
+    opt[File]('o', "output") required() valueName("<file>") action { (x, c) =>
+      c.copy(output = x) } text("out is a required file property")
+    opt[String]('s', "sample") required() action { (x, c) =>
+      c.copy(sample = x) }
+    opt[Int]("minDP") required() action { (x, c) =>
+      c.copy(minDP = x) }
+    opt[Int]("minAP") required() action { (x, c) =>
+      c.copy(minAP = x) }
+    opt[Double]("homoFraction") required() action { (x, c) =>
+      c.copy(homoFraction = x) }
+    opt[Int]("ploidy") required() action { (x, c) =>
+      c.copy(ploidy = x) }
+  }
   
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    
     import scala.collection.mutable.Map
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => input = new File(args(t+1))
-        case "-o" => output = new File(args(t+1))
-        case "-minDP" => minDP = args(t+1).toInt
-        case "-minAP" => minAP = args(t+1).toInt
-        case "-sample" => sample = args(t+1)
-        case "-homoFraction" => homoFraction = args(t+1).toDouble
-        case "-ploidy" => ploidy = args(t+1).toInt
-        case _ =>
-      }
-    }
-    if (input != null && !input.exists) throw new IllegalStateException("Input file does not exist")
-    if (output == null) throw new IllegalStateException("Output file not found, use -o")
-    if (sample == null) throw new IllegalStateException("sample not given, pls use -sample")
+    if (commandArgs.input != null && !commandArgs.input.exists) throw new IllegalStateException("Input file does not exist")
         
-    val writer = new PrintWriter(output)
+    val writer = new PrintWriter(commandArgs.output)
     writer.println("##fileformat=VCFv4.1")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
     writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency, for each ALT allele, in the same order as listed\">")
@@ -101,8 +103,8 @@ object MpileupToVcf {
     writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-    writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + sample)
-    val inputStream = if (input != null) Source.fromFile(input).getLines else Source.stdin.getLines
+    writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
+    val inputStream = if (commandArgs.input != null) Source.fromFile(commandArgs.input).getLines else Source.stdin.getLines
     class Counts(var forward:Int, var reverse:Int)
     for (line <- inputStream; 
          val values = line.split("\t");
@@ -166,7 +168,7 @@ object MpileupToVcf {
       format += ("RFC" -> counts(ref.toUpperCase).forward.toString)
       format += ("RRC" -> counts(ref.toUpperCase).reverse.toString)
       format += ("AD" -> (counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse).toString)
-      if (reads >= minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward+value.reverse >= minAP) {
+      if (reads >= commandArgs.minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward+value.reverse >= commandArgs.minAP) {
         alt += key
         format += ("AD" -> (format("AD") + "," + (value.forward + value.reverse).toString))
         format += ("AFC" -> ( (if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
@@ -180,13 +182,13 @@ object MpileupToVcf {
         var left = reads - dels
         val gt = ArrayBuffer[Int]()
         
-        for (p <- 0 to alt.size if gt.size < ploidy) {
+        for (p <- 0 to alt.size if gt.size < commandArgs.ploidy) {
           var max = -1
           for (a <- 0 until ad.length if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.exists(_ == a)) max = a
           val f = ad(max).toDouble / left
-          for (a <- 0 to floor(f).toInt if gt.size < ploidy) gt.append(max)
-          if (f - floor(f) >= homoFraction) {
-            for (b <- p to ploidy if gt.size < ploidy) gt.append(max)
+          for (a <- 0 to floor(f).toInt if gt.size < commandArgs.ploidy) gt.append(max)
+          if (f - floor(f) >= commandArgs.homoFraction) {
+            for (b <- p to commandArgs.ploidy if gt.size < commandArgs.ploidy) gt.append(max)
           }
           left -= ad(max)
         }
