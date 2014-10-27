@@ -29,11 +29,10 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.BedToInterval,
       nl.lumc.sasc.biopet.tools.MpileupToVcf,
       nl.lumc.sasc.biopet.tools.FastqSplitter,
-      nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts),
-    "sage" -> List(
-      nl.lumc.sasc.biopet.pipelines.sage.CreateTagCounts,
-      nl.lumc.sasc.biopet.pipelines.sage.CreateDeepsageLibrary,
-      nl.lumc.sasc.biopet.pipelines.sage.CountFastq)
+      nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
+      nl.lumc.sasc.biopet.pipelines.sage.SageCountFastq,
+      nl.lumc.sasc.biopet.pipelines.sage.SageCreateLibrary,
+      nl.lumc.sasc.biopet.pipelines.sage.SageCreateTagCounts)
   )
   
   /**

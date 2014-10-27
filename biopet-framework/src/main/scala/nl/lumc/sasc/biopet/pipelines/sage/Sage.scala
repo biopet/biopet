@@ -65,7 +65,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
     
     if (tagsLibrary == null) {
-      val cdl = new CreateDeepsageLibrary(this)
+      val cdl = new SageCreateLibrary(this)
       cdl.input = transcriptome
       cdl.output = outputDir + "taglib/tag.lib"
       cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
@@ -182,12 +182,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   def addTablibCounts(fastq:File, outputPrefix: String, outputDir: String) {
-    val countFastq = new CountFastq(this)
+    val countFastq = new SageCountFastq(this)
     countFastq.input = fastq
     countFastq.output = outputDir + outputPrefix + ".raw.counts"
     add(countFastq)
     
-    val createTagCounts = new CreateTagCounts(this)
+    val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
     createTagCounts.tagLib = tagsLibrary
     createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"

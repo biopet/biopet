@@ -10,7 +10,7 @@ import scala.io.Source
 import scala.collection.mutable.Map
 import scala.collection.SortedMap
 
-class CreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Raw count file", shortName = "input", required = true)
@@ -43,7 +43,7 @@ class CreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunct
     optional("--allantisense", countAllAntiSense)
 }
 
-object CreateTagCounts extends ToolCommand {
+object SageCreateTagCounts extends ToolCommand {
   case class Args (input:File = null, tagLib:File = null, countSense:File = null, countAllSense:File = null, 
                    countAntiSense:File = null, countAllAntiSense:File = null) extends AbstractArgs
 

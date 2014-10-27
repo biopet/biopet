@@ -13,7 +13,7 @@ import scala.collection.mutable.{Map, Set}
 import scala.collection.JavaConversions._
 import scala.util.matching.Regex
 
-class CreateDeepsageLibrary(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
@@ -46,7 +46,7 @@ class CreateDeepsageLibrary(val root: Configurable) extends BiopetJavaCommandLin
     required("-o", output)
 }
 
-object CreateDeepsageLibrary extends ToolCommand {
+object SageCreateLibrary extends ToolCommand {
   case class Args (input:File = null, tag:String = "CATG", length:Int = 17,output:File = null, noTagsOutput:File = null, 
                    noAntiTagsOutput:File = null, allGenesOutput:File = null) extends AbstractArgs
 

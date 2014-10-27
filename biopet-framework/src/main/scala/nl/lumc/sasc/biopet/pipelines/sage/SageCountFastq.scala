@@ -12,7 +12,7 @@ import scala.collection.SortedMap
 import scala.collection.mutable.Map
 import java.io.FileReader
 
-class CountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
@@ -29,7 +29,7 @@ class CountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
     required("-o", output)
 }
 
-object CountFastq extends ToolCommand {
+object SageCountFastq extends ToolCommand {
   case class Args (input:File = null, output:File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
