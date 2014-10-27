@@ -6,14 +6,18 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
+
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest.Matchers
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
-import htsjdk.samtools.fastq.FastqRecord
+import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.tribble._
 
-class ExtractAlignedFastqUnitTest extends TestNGSuite with Matchers {
+class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import ExtractAlignedFastq._
 
@@ -168,5 +172,55 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with Matchers {
         memFunc(rec1, rec2) shouldBe resultMap(key)
       }
     }
+  }
+
+  @Test def testWriteSingleBamDefault() = {
+      val memFunc = (recs: FastqPair) => Set("r01", "r03").contains(recs._1.getReadHeader)
+      val in1 = new FastqReader(resourceFile("/single01.fq"))
+      val mo1 = mock[BasicFastqWriter]
+      selectFastqReads(memFunc, in1, mo1)
+      verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
+      verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
+      verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
+  }
+
+  @Test def testWritePairBamDefault() = {
+    val memFunc = (recs: FastqPair) => Set("r01/1", "r01/2", "r03/1", "r03/2").contains(recs._1.getReadHeader)
+    val in1 = new FastqReader(resourceFile("/paired01a.fq"))
+    val in2 = new FastqReader(resourceFile("/paired01b.fq"))
+    val mo1 = mock[BasicFastqWriter]
+    val mo2 = mock[BasicFastqWriter]
+    selectFastqReads(memFunc, in1, mo1, in2, mo2)
+    verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
+    verify(mo1).write(new FastqRecord("r01/1", "A", "", "H"))
+    verify(mo1).write(new FastqRecord("r03/1", "G", "", "H"))
+    verify(mo2, times(2)).write(anyObject.asInstanceOf[FastqRecord])
+    verify(mo2).write(new FastqRecord("r01/2", "T", "", "I"))
+    verify(mo2).write(new FastqRecord("r03/2", "C", "", "I"))
+  }
+
+  @Test def testWriteNoOutputFastq2() = {
+    val memFunc: (FastqPair => Boolean) = (recs) => true
+    val in1 = mock[FastqReader]
+    val in2 = mock[FastqReader]
+    val out1 = mock[BasicFastqWriter]
+    val thrown = intercept[IllegalArgumentException] {
+      selectFastqReads(memFunc, in1, out1, in2)
+    }
+    thrown.getMessage should === ("Missing output FASTQ 2")
+    verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
+  }
+
+  @Test def testWriteNoInputFastq2() = {
+    val memFunc: (FastqPair => Boolean) = (recs) => true
+    val in1 = mock[FastqReader]
+    val out1 = mock[BasicFastqWriter]
+    val out2 = mock[BasicFastqWriter]
+    val thrown = intercept[IllegalArgumentException] {
+      selectFastqReads(memFunc, in1, out1, outputFastq2 = out2)
+    }
+    thrown.getMessage should === ("Output FASTQ 2 supplied but there is no input FASTQ 2")
+    verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
+    verify(out2, never).write(anyObject.asInstanceOf[FastqRecord])
   }
 }
