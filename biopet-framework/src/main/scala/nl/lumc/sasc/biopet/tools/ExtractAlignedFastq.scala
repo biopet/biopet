@@ -162,7 +162,8 @@ object ExtractAlignedFastq extends ToolCommand {
                    inputFastq2: File = null,
                    outputFastq1: File = null,
                    outputFastq2: File = null,
-                   minMapQ: Int = 0) extends AbstractArgs
+                   minMapQ: Int = 0,
+                   commonSuffixLength: Int = 0) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -198,6 +199,9 @@ object ExtractAlignedFastq extends ToolCommand {
 
     opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
       c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
+
+    opt[Int]('s', "read_suffix_length") optional() action { (x, c) =>
+      c.copy(commonSuffixLength = x) } text "Length of common suffix from each read pair (default: 0)"
 
     note(
       """
