@@ -223,5 +223,17 @@ object ExtractAlignedFastq extends ToolCommand {
     val commandArgs: Args = new OptParser()
       .parse(args, Args())
       .getOrElse(sys.exit(1))
+
+    val memFunc = makeMembershipFunction(
+      iv = makeFeatureFromString(commandArgs.intervals),
+      inAln = commandArgs.inputBam,
+      minMapQ = commandArgs.minMapQ,
+      commonSuffixLength = commandArgs.commonSuffixLength)
+
+    selectFastqReads(memFunc,
+      inputFastq1 = commandArgs.inputFastq1,
+      inputFastq2 = commandArgs.inputFastq2,
+      outputFastq1 = commandArgs.outputFastq1,
+      outputFastq2 = commandArgs.outputFastq2)
   }
 }
