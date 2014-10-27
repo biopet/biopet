@@ -181,20 +181,20 @@ object ExtractAlignedFastq extends ToolCommand {
       // yes, we are appending and yes it's O(n) ~ preserving order is more important than speed here
       c.copy(intervals = c.intervals :+ x) } text "Interval strings"
 
-    opt[File]("f1") required() valueName "<fastq>" action { (x, c) =>
+    opt[File]('i', "in1") required() valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq1 = x) } validate {
       x => if (x.exists) success else failure("Input FASTQ file 1 not found")
     } text "Input FASTQ file 1"
 
-    opt[File]("f2") optional() valueName "<fastq>" action { (x, c) =>
+    opt[File]('j', "in2") optional() valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq1 = x) } validate {
       x => if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2 (default: none)"
 
-    opt[File]("o1") required() valueName "<fastq>" action { (x, c) =>
+    opt[File]('o', "out1") required() valueName "<fastq>" action { (x, c) =>
       c.copy(outputFastq1 = x) } text "Output FASTQ file 1"
 
-    opt[File]("o2") optional() valueName "<fastq>" action { (x, c) =>
+    opt[File]('p', "out2") optional() valueName "<fastq>" action { (x, c) =>
       c.copy(outputFastq1 = x) } text "Output FASTQ file 2 (default: none)"
 
     opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
