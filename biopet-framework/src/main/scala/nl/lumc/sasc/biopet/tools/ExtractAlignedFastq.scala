@@ -10,7 +10,7 @@ import scala.collection.mutable.{ Set => MSet }
 import scala.collection.JavaConverters._
 
 import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.SAMFileReader.QueryInterval
+import htsjdk.samtools.QueryInterval
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.tribble.Feature
