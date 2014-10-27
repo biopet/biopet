@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.QueryInterval
 import htsjdk.samtools.SAMRecord
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
@@ -84,7 +85,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
       val countReports: Map[String,CountReport] = bamReaders.map(x => (x._1, new CountReport))
       val refAllele = vcfRecord.getReference.getBaseString
       for ((sample, bamReader) <- bamReaders) {
-        val queryInterval = new SAMFileReader.QueryInterval(bamHeaders(sample).getSequenceIndex(vcfRecord.getChr), 
+        val queryInterval = new QueryInterval(bamHeaders(sample).getSequenceIndex(vcfRecord.getChr), 
                                                             vcfRecord.getStart, vcfRecord.getStart + refAllele.size - 1)
         val bamIter = bamReader.query(Array(queryInterval), false)
         
