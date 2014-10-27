@@ -11,7 +11,6 @@ import scala.collection.JavaConverters._
 
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
@@ -66,14 +65,14 @@ object ExtractAlignedFastq extends ToolCommand {
    *
    * @param iv iterable yielding features to check
    * @param inAln input SAM/BAM file
+   * @param minMapQ minimum mapping quality of read to include
    * @param commonSuffixLength length of suffix common to all read pairs
-   * @param readGroupIds read group IDs to include (default: all)
    * @return
    */
-  def makeMembershipFunction(iv: Iterable[Feature],
+  def makeMembershipFunction(iv: Iterator[Feature],
                              inAln: File,
-                             commonSuffixLength: Int = 0,
-                             readGroupIds: Set[String] = Set.empty[String]
+                             minMapQ: Int = 0,
+                             commonSuffixLength: Int = 0
                             ): (FastqPair => Boolean) = {
 
     /** function to make interval queries for BAM files */
@@ -90,13 +89,7 @@ object ExtractAlignedFastq extends ToolCommand {
         throw new IllegalStateException("Unexpected feature: " + feat.toString)
 
     val inAlnReader = new SAMFileReader(inAln)
-
-    /** filter function for read IDs */
-    val rgFilter =
-      if (readGroupIds.size == 0)
-        (r: SAMRecord) => true
-      else
-        (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
+    require(inAlnReader.hasIndex)
 
     val queries: Array[QueryInterval] = iv.toList
       // sort features
@@ -111,8 +104,8 @@ object ExtractAlignedFastq extends ToolCommand {
       .queryOverlapping(queries)
       // for Scala compatibility
       .asScala
-      // filter based on read group IDs
-      .filter(x => rgFilter(x))
+      // filter based on mapping quality
+      .filter(x => x.getMappingQuality >= minMapQ)
       // iteratively add read name to the selected set
       .foldLeft(MSet.empty[String])(
         (acc, x) => {
