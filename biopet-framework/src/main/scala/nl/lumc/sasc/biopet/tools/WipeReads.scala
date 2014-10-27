@@ -8,6 +8,7 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 
+import com.google.common.hash.{Funnel, BloomFilter, PrimitiveSink}
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.SAMFileReader.QueryInterval
@@ -18,8 +19,6 @@ import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
 import htsjdk.tribble.bed.BEDCodec
 import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
-import orestes.bloomfilter.HashProvider.HashMethod
-import orestes.bloomfilter.{ BloomFilter, FilterBuilder }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -218,8 +217,32 @@ object WipeReads extends ToolCommand {
             return true
         }
         false
-      } else
-        true
+      } else true
+
+    /** function to create a fake SAMRecord pair ~ hack to limit querying BAM file for real pair */
+    def makeMockPair(rec: SAMRecord): SAMRecord = {
+      require(rec.getReadPairedFlag)
+      val fakePair = rec.clone.asInstanceOf[SAMRecord]
+      fakePair.setAlignmentStart(rec.getMateAlignmentStart)
+      fakePair
+    }
+
+    /** function to create set element from SAMRecord */
+    def elemFromSam(rec: SAMRecord): String = {
+      if (filterOutMulti)
+        rec.getReadName
+      else
+        rec.getReadName + "_" + rec.getAlignmentStart.toString
+    }
+
+    /** object for use by BloomFilter */
+    object SAMFunnel extends Funnel[SAMRecord] {
+      override def funnel(rec: SAMRecord, into: PrimitiveSink): Unit = {
+        val elem = elemFromSam(rec)
+        logger.debug("Adding " + elem + " to set ...")
+        into.putUnencodedChars(elem)
+      }
+    }
 
     /** filter function for read IDs */
     val rgFilter =
@@ -228,15 +251,6 @@ object WipeReads extends ToolCommand {
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
 
-    /** function to get set element */
-    val SamRecordElement =
-      if (filterOutMulti)
-        (r: SAMRecord) => r.getReadName
-      else
-        (r: SAMRecord) => r.getReadName + "_" + r.getAlignmentStart.toString
-
-    val SamRecordMateElement =
-      (r: SAMRecord) => r.getReadName + "_" + r.getMateAlignmentStart.toString
 
     val readyBam = prepIndexedInputBam()
 
@@ -257,7 +271,7 @@ object WipeReads extends ToolCommand {
       .groupBy(x => x.getChr)
       .map({ case (key, value) => (key, makeIntervalTree(value)) })
 
-    lazy val filteredOutSet: BloomFilter[String] = readyBam
+    lazy val filteredOutSet: BloomFilter[SAMRecord] = readyBam
       // query BAM file with intervals
       .queryOverlapping(queryIntervals)
       // for compatibility
@@ -269,28 +283,21 @@ object WipeReads extends ToolCommand {
       // filter on specific read group IDs
       .filter(x => rgFilter(x))
       // fold starting from empty set
-      .foldLeft(new FilterBuilder(bloomSize.toInt, bloomFp)
-        .hashFunction(HashMethod.Murmur3KirschMitzenmacher)
-        .buildBloomFilter(): BloomFilter[String]
+      .foldLeft(BloomFilter.create(SAMFunnel, bloomSize.toInt, bloomFp)
         )((acc, rec) => {
-            logger.debug("Adding read " + rec.getReadName + " to set ...")
-            if ((!filterOutMulti) && rec.getReadPairedFlag) {
-              acc.add(SamRecordElement(rec))
-              acc.add(SamRecordMateElement(rec))
-            } else
-              acc.add(SamRecordElement(rec))
+            acc.put(rec)
+            if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
             acc
           })
 
     if (filterOutMulti)
-      (rec: SAMRecord) => filteredOutSet.contains(rec.getReadName)
+      (rec: SAMRecord) => filteredOutSet.mightContain(rec)
     else
       (rec: SAMRecord) => {
         if (rec.getReadPairedFlag)
-          filteredOutSet.contains(SamRecordElement(rec)) &&
-            filteredOutSet.contains(SamRecordMateElement(rec))
+          filteredOutSet.mightContain(rec) && filteredOutSet.mightContain(makeMockPair(rec))
         else
-          filteredOutSet.contains(SamRecordElement(rec))
+          filteredOutSet.mightContain(rec)
       }
   }
 
@@ -344,13 +351,6 @@ object WipeReads extends ToolCommand {
       if (filteredBam != null) filteredBam.close()
     }
   }
-
-  /** Function to check whether the bloom filter can fulfill size and false positive guarantees
-      As we are currently limited to maximum integer size if the optimal array size equals or
-      exceeds it, we assume that it's a result of a truncation and return false.
-  */
-  def bloomParamsOk(bloomSize: Long, bloomFp: Double): Boolean =
-    FilterBuilder.optimalM(bloomSize, bloomFp) <= Int.MaxValue
 
   case class Args(inputBam: File = null,
                   targetRegions: File = null,
@@ -425,12 +425,6 @@ object WipeReads extends ToolCommand {
         |the given ones, they will also be removed.
       """.stripMargin)
 
-    checkConfig { c =>
-      if (!bloomParamsOk(c.bloomSize, c.bloomFp))
-        failure("Bloom parameters combination exceed Int limitation")
-      else
-        success
-    }
   }
 
   def main(args: Array[String]): Unit = {
