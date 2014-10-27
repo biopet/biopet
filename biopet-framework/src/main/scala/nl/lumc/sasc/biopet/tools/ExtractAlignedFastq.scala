@@ -124,28 +124,28 @@ object ExtractAlignedFastq extends ToolCommand {
   }
 
   def selectFastqReads(memFunc: FastqPair => Boolean,
-                       inputFastq1: File,
-                       outputFastq1: File,
-                       inputFastq2: File = null,
-                       outputFastq2: File = null): Unit = {
+                       inputFastq1: FastqReader,
+                       outputFastq1: BasicFastqWriter,
+                       inputFastq2: FastqReader = null,
+                       outputFastq2: BasicFastqWriter = null): Unit = {
 
-    val i1 = new FastqReader(inputFastq1).iterator.asScala
-    val o1 = new BasicFastqWriter(outputFastq1)
+    val i1 = inputFastq1.iterator.asScala
     val i2 = inputFastq2 match {
       case null       => Iterator.continually(null)
-      case otherwise  => new FastqReader(otherwise).iterator.asScala
+      case otherwise  => otherwise.iterator.asScala
     }
+    val o1 = outputFastq1
     val o2 = (inputFastq2, outputFastq2) match {
       case (null, null) => null
       case (_, null)    => throw new IllegalArgumentException("Missing output FASTQ 2")
       case (null, _)    => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
-      case (x, y)       => new BasicFastqWriter(outputFastq2)
+      case (x, y)       => outputFastq2
     }
 
     logger.info("Writing output file(s) ...")
     // zip, filter based on function, and write to output file(s)
     i1.zip(i2)
-      .filter((rec) => memFunc(rec._1, rec._2))
+      .filter(rec => memFunc(rec._1, rec._2))
       .foreach {
         case (rec1, null) =>
           o1.write(rec1)
@@ -235,9 +235,9 @@ object ExtractAlignedFastq extends ToolCommand {
       commonSuffixLength = commandArgs.commonSuffixLength)
 
     selectFastqReads(memFunc,
-      inputFastq1 = commandArgs.inputFastq1,
-      inputFastq2 = commandArgs.inputFastq2,
-      outputFastq1 = commandArgs.outputFastq1,
-      outputFastq2 = commandArgs.outputFastq2)
+      inputFastq1 = new FastqReader(commandArgs.inputFastq1),
+      inputFastq2 = new FastqReader(commandArgs.inputFastq2),
+      outputFastq1 = new BasicFastqWriter(commandArgs.outputFastq1),
+      outputFastq2 = new BasicFastqWriter(commandArgs.outputFastq2))
   }
 }
