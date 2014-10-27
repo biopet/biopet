@@ -28,7 +28,8 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
       nl.lumc.sasc.biopet.tools.BedToInterval,
       nl.lumc.sasc.biopet.tools.MpileupToVcf,
-      nl.lumc.sasc.biopet.tools.FastqSplitter),
+      nl.lumc.sasc.biopet.tools.FastqSplitter,
+      nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts),
     "sage" -> List(
       nl.lumc.sasc.biopet.pipelines.sage.CreateTagCounts,
       nl.lumc.sasc.biopet.pipelines.sage.CreateDeepsageLibrary,

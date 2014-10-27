@@ -8,6 +8,7 @@ import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.scripts.PrefixFastq
+import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
