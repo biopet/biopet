@@ -142,6 +142,7 @@ object ExtractAlignedFastq extends ToolCommand {
       case (x, y)       => new BasicFastqWriter(outputFastq2)
     }
 
+    logger.info("Writing output file(s) ...")
     // zip, filter based on function, and write to output file(s)
     i1.zip(i2)
       .filter((rec) => memFunc(rec._1, rec._2))
