@@ -31,7 +31,8 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.FastqSplitter),
     "sage" -> List(
       nl.lumc.sasc.biopet.pipelines.sage.CreateTagCounts,
-      nl.lumc.sasc.biopet.pipelines.sage.CreateDeepsageLibrary)
+      nl.lumc.sasc.biopet.pipelines.sage.CreateDeepsageLibrary,
+      nl.lumc.sasc.biopet.pipelines.sage.CountFastq)
   )
   
   /**
