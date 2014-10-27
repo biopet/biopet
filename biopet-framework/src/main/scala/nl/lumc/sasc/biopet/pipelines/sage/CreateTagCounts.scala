@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.sage
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.io.Source
@@ -35,42 +36,43 @@ class CreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunct
     
   override def commandLine = super.commandLine + 
     required("-I", input) + 
-    required("-taglib", tagLib) + 
-    optional("-sense", countSense) + 
-    optional("-allsense", countAllSense) + 
-    optional("-antisense", countAntiSense) + 
-    optional("-allantisense", countAllAntiSense)
+    required("--taglib", tagLib) + 
+    optional("--sense", countSense) + 
+    optional("--allsense", countAllSense) + 
+    optional("--antisense", countAntiSense) + 
+    optional("--allantisense", countAllAntiSense)
 }
 
-object CreateTagCounts {
-  var input: File = _
-  var tagLib: File = _
-  var countSense: File = _
-  var countAllSense: File = _
-  var countAntiSense: File = _
-  var countAllAntiSense: File = _
+object CreateTagCounts extends ToolCommand {
+  case class Args (input:File = null, tagLib:File = null, countSense:File = null, countAllSense:File = null, 
+                   countAntiSense:File = null, countAllAntiSense:File = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "input") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(input = x) }
+    opt[File]('t', "tagLib") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(tagLib = x) }
+    opt[File]("countSense") unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(countSense = x) }
+    opt[File]("countAllSense") unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(countAllSense = x) }
+    opt[File]("countAntiSense") unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(countAntiSense = x) }
+    opt[File]("countAllAntiSense") unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(countAllAntiSense = x) }
+  }
   
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
     
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => input = new File(args(t+1))
-        case "-taglib" => tagLib = new File(args(t+1))
-        case "-sense" => countSense = new File(args(t+1))
-        case "-allsense" => countAllSense = new File(args(t+1))
-        case "-antisense" => countAntiSense = new File(args(t+1))
-        case "-allantisense" => countAllAntiSense = new File(args(t+1))
-        case _ =>
-      }
-    }
-    if (input == null || !input.exists) throw new IllegalStateException("Input file not found, use -I")
-    if (tagLib == null) throw new IllegalStateException("Output file not found, use -o")
+    if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
     
     val rawCounts: Map[String, Long] = Map()
-    for (line <- Source.fromFile(input).getLines) {
+    for (line <- Source.fromFile(commandArgs.input).getLines) {
       val values = line.split("\t")
       val gene = values(0)
       val count = values(1).toLong
@@ -83,7 +85,7 @@ object CreateTagCounts {
     val antiSenseCounts: Map[String, Long] = Map()
     val allAntiSenseCounts: Map[String, Long] = Map()
     
-    for (line <- Source.fromFile(tagLib).getLines if !line.startsWith("#")) {
+    for (line <- Source.fromFile(commandArgs.tagLib).getLines if !line.startsWith("#")) {
       val values = line.split("\t")
       val tag = values(0) 
       val sense = values(1)
@@ -126,9 +128,9 @@ object CreateTagCounts {
         writer.close
       }
     }
-    writeFile(countSense, senseCounts)
-    writeFile(countAllSense, allSenseCounts)
-    writeFile(countAntiSense, antiSenseCounts)
-    writeFile(countAllAntiSense, allAntiSenseCounts)
+    writeFile(commandArgs.countSense, senseCounts)
+    writeFile(commandArgs.countAllSense, allSenseCounts)
+    writeFile(commandArgs.countAntiSense, antiSenseCounts)
+    writeFile(commandArgs.countAllAntiSense, allAntiSenseCounts)
   }
 }
