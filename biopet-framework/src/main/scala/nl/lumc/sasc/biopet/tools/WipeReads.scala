@@ -11,7 +11,8 @@ import scala.collection.JavaConverters._
 import com.google.common.hash.{Funnel, BloomFilter, PrimitiveSink}
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.SAMFileReader.QueryInterval
+import htsjdk.samtools.QueryInterval
+import htsjdk.samtools.ValidationStringency
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
@@ -154,7 +155,7 @@ object WipeReads extends ToolCommand {
         new SAMFileReader(inBam, inBamIndex)
       else {
         val sfr = new SAMFileReader(inBam)
-        sfr.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
+        sfr.setValidationStringency(ValidationStringency.LENIENT)
         if (!sfr.hasIndex)
           throw new IllegalStateException("Input BAM file must be indexed")
         else
@@ -320,7 +321,7 @@ object WipeReads extends ToolCommand {
       .setUseAsyncIo(async)
 
     val templateBam = new SAMFileReader(inBam)
-    templateBam.setValidationStringency(SAMFileReader.ValidationStringency.LENIENT)
+    templateBam.setValidationStringency(ValidationStringency.LENIENT)
 
     val targetBam = factory.makeBAMWriter(templateBam.getFileHeader, true, outBam)
 

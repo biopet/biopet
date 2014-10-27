@@ -16,7 +16,9 @@
 
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.samtools.QueryInterval
 import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.ValidationStringency
 import htsjdk.samtools.SAMRecord
 import java.io.File
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -41,7 +43,7 @@ object FindRepeatsPacBio extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
     val bamReader = new SAMFileReader(commandArgs.inputBam)
-    bamReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT)
+    bamReader.setValidationStringency(ValidationStringency.SILENT)
     val bamHeader = bamReader.getFileHeader
     
     val header = List("chr", "startPos", "stopPos","Repeat_seq", "repeatLength", 
@@ -51,7 +53,7 @@ object FindRepeatsPacBio extends ToolCommand {
     
     for (bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
       val values = bedLine.split("\t"); if values.size >= 3) {
-      val interval = new SAMFileReader.QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
+      val interval = new QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
       val bamIter = bamReader.query(Array(interval), false)
       val results = for (samRecord <-bamIter) yield procesSamrecord(samRecord, interval)
       val chr = values(0)
@@ -100,7 +102,7 @@ object FindRepeatsPacBio extends ToolCommand {
     }
   }
   
-  def procesSamrecord(samRecord:SAMRecord, interval:SAMFileReader.QueryInterval): Option[Result] = {
+  def procesSamrecord(samRecord:SAMRecord, interval:QueryInterval): Option[Result] = {
     val readStartPos = List.range(0, samRecord.getReadBases.length)
           .find(x => samRecord.getReferencePositionAtReadPosition(x) >= interval.start)
     var readPos = if (readStartPos.isEmpty) return None else readStartPos.get
