@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="gatk-protected">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../gatk-protected" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-queue/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-utils/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-engine/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/external-example/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/external-example/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-tools-public/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-tools-public/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/public/gatk-queue-extensions-generator/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/protected/gatk-tools-protected/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../gatk-protected/protected/gatk-tools-protected/src/test/java" />
+    </SOURCES>
+  </library>
+</component>
