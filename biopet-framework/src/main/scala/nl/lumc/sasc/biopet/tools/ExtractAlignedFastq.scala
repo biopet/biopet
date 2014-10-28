@@ -215,11 +215,7 @@ object ExtractAlignedFastq extends ToolCommand {
       """.stripMargin)
 
     checkConfig { c =>
-      if (!c.inputBam.exists)
-        failure("Input BAM file not found")
-      else if (!c.inputFastq1.exists)
-        failure("Input FASTQ file 1 not found")
-      else if (c.inputFastq2 != null && c.outputFastq2 == null)
+      if (c.inputFastq2 != null && c.outputFastq2 == null)
         failure("Missing output FASTQ file 2")
       else if (c.inputFastq2 == null && c.outputFastq2 != null)
         failure("Missing input FASTQ file 2")
