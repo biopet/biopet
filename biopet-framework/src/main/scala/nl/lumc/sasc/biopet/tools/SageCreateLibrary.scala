@@ -1,8 +1,9 @@
-package nl.lumc.sasc.biopet.pipelines.sage
+package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaReaderHelper
@@ -10,8 +11,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.SortedMap
 import scala.collection.mutable.{Map, Set}
 import scala.collection.JavaConversions._
+import scala.util.matching.Regex
 
-class CreateDeepsageLibrary(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
@@ -37,22 +39,35 @@ class CreateDeepsageLibrary(val root: Configurable) extends BiopetJavaCommandLin
     
   override def commandLine = super.commandLine + 
     required("-I", input) + 
-    optional("-tag", tag) + 
-    optional("-length", length) +
-    optional("-notag", noTagsOutput) +
-    optional("-noantitag", noAntiTagsOutput) +
+    optional("--tag", tag) + 
+    optional("--length", length) +
+    optional("--notag", noTagsOutput) +
+    optional("--noantitag", noAntiTagsOutput) +
     required("-o", output)
 }
 
-object CreateDeepsageLibrary {
-  var tag = "CATG"
-  var length = 17
-  var input: File = _
-  var noTagsOutput: File = _
-  var noAntiTagsOutput: File = _
-  var allGenesOutput: File = _
-  var output: File = _
-  lazy val tagRegex = (tag + "[CATG]{" + length + "}").r
+object SageCreateLibrary extends ToolCommand {
+  case class Args (input:File = null, tag:String = "CATG", length:Int = 17,output:File = null, noTagsOutput:File = null, 
+                   noAntiTagsOutput:File = null, allGenesOutput:File = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "input") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(input = x) }
+    opt[File]('o', "output") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(output = x) }
+    opt[String]("tag") required() unbounded() action { (x, c) =>
+      c.copy(tag = x) }
+    opt[Int]("length") required() unbounded() action { (x, c) =>
+      c.copy(length = x) }
+    opt[File]("noTagsOutput") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(noTagsOutput = x) }
+    opt[File]("noAntiTagsOutput") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(noAntiTagsOutput = x) }
+    opt[File]("allGenesOutput") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(allGenesOutput = x) }
+  }
+  
+  var tagRegex: Regex = null
   var geneRegex = """ENSG[0-9]{11}""".r
   
   val tagGenesMap: Map[String, TagGenes] = Map()
@@ -73,24 +88,16 @@ object CreateDeepsageLibrary {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => input = new File(args(t+1))
-        case "-tag" => tag = args(t+1)
-        case "-length" => length = args(t+1).toInt
-        case "-o" => output = new File(args(t+1))
-        case "-notag" => noTagsOutput = new File(args(t+1))
-        case "-noantitag" => noAntiTagsOutput = new File(args(t+1))
-        case "-allgenes" => allGenesOutput = new File(args(t+1))
-        case _ =>
-      }
-    }
-    if (input == null || !input.exists) throw new IllegalStateException("Input file not found, use -I")
-    if (output == null) throw new IllegalStateException("Output file not found, use -o")
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    
+    if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
+    
+    tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
     
     var count = 0
     System.err.println("Reading fasta file")
-    val reader = FastaReaderHelper.readFastaDNASequence(input)
+    val reader = FastaReaderHelper.readFastaDNASequence(commandArgs.input)
     System.err.println("Finding tags")
     for ((name, seq) <- reader) {
       getTags(name, seq)
@@ -103,7 +110,7 @@ object CreateDeepsageLibrary {
     val tagGenesMapSorted:SortedMap[String, TagGenes] = SortedMap(tagGenesMap.toArray:_*)
     
     System.err.println("Writting output files")
-    val writer = new PrintWriter(output)
+    val writer = new PrintWriter(commandArgs.output)
     writer.println("#tag\tfirstTag\tAllTags\tFirstAntiTag\tAllAntiTags")
     for ((tag, genes) <- tagGenesMapSorted) {
       val line = tag + "\t" + genes.firstTag.mkString(",") +
@@ -114,24 +121,24 @@ object CreateDeepsageLibrary {
     }
     writer.close()
     
-    if (noTagsOutput != null) {
-      val writer = new PrintWriter(noTagsOutput)
+    if (commandArgs.noTagsOutput != null) {
+      val writer = new PrintWriter(commandArgs.noTagsOutput)
       for (gene <- allGenes if !tagGenes.contains(gene)) {
         writer.println(gene)
       }
       writer.close
     }
     
-    if (noAntiTagsOutput != null) {
-      val writer = new PrintWriter(noAntiTagsOutput)
+    if (commandArgs.noAntiTagsOutput != null) {
+      val writer = new PrintWriter(commandArgs.noAntiTagsOutput)
       for (gene <- allGenes if !antiTagGenes.contains(gene)) {
         writer.println(gene)
       }
       writer.close
     }
     
-    if (allGenesOutput != null) {
-      val writer = new PrintWriter(allGenesOutput)
+    if (commandArgs.allGenesOutput != null) {
+      val writer = new PrintWriter(commandArgs.allGenesOutput)
       for (gene <- allGenes) {
         writer.println(gene)
       }

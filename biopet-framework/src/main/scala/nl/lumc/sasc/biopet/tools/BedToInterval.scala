@@ -25,7 +25,7 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
-  override def commandLine = super.commandLine + required(input) + required(bamFile) + required(output)
+  override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 
 object BedToInterval extends ToolCommand {
@@ -45,13 +45,15 @@ object BedToInterval extends ToolCommand {
     return bedToInterval
   }
 
-  case class Args (inputFile:File = null, outputFile:File = null) extends AbstractArgs
+  case class Args (inputFile:File = null, outputFile:File = null, bamFile:File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
-      c.copy(inputFile = x) } text("out is a required file property")
+      c.copy(inputFile = x) }
     opt[File]('o', "output") required() valueName("<file>") action { (x, c) =>
-      c.copy(outputFile = x) } text("out is a required file property")
+      c.copy(outputFile = x) }
+    opt[File]('b', "bam") required() valueName("<file>") action { (x, c) =>
+      c.copy(bamFile = x) }
   }
   
   /**
@@ -63,7 +65,7 @@ object BedToInterval extends ToolCommand {
     
     val writer = new PrintWriter(commandArgs.outputFile)
 
-    val inputSam = new SAMFileReader(commandArgs.inputFile)
+    val inputSam = new SAMFileReader(commandArgs.bamFile)
     val refs = for (SQ <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) yield {
       val record = SQ.asInstanceOf[SAMSequenceRecord]
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
@@ -72,7 +74,7 @@ object BedToInterval extends ToolCommand {
     inputSam.close
     val refsMap = Map(refs:_*)
     
-    val bedFile = Source.fromFile(args(0))
+    val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
         line <- bedFile.getLines;
         val split = line.split("\t")

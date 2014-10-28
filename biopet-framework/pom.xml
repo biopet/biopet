@@ -24,10 +24,6 @@
             <name>BioJava repository</name>
             <url>http://www.biojava.org/download/maven/</url>			
         </repository>
-        <repository>
-            <id>orestes-bloom-filter</id>
-            <url>https://raw.githubusercontent.com/Baqend/Orestes-Bloomfilter/master/maven-repo</url>
-        </repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -67,9 +63,9 @@
             <version>3.1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.baqend</groupId>
-            <artifactId>bloom-filter</artifactId>
-            <version>1.02</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
         </dependency>
         <dependency>
                 <groupId>com.github.scopt</groupId>
@@ -114,7 +110,7 @@
                     <prefix>git</prefix>
                     <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
                     <verbose>false</verbose>
-                    <useNativeGit>false</useNativeGit>
+                    <useNativeGit>true</useNativeGit>
                     <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
                     <skipPoms>false</skipPoms>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
