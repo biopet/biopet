@@ -124,20 +124,20 @@ object ExtractAlignedFastq extends ToolCommand {
   def selectFastqReads(memFunc: FastqPair => Boolean,
                        inputFastq1: FastqReader,
                        outputFastq1: BasicFastqWriter,
-                       inputFastq2: FastqReader = null,
-                       outputFastq2: BasicFastqWriter = null): Unit = {
+                       inputFastq2: Option[FastqReader] = None,
+                       outputFastq2: Option[BasicFastqWriter] = None): Unit = {
 
     val i1 = inputFastq1.iterator.asScala
     val i2 = inputFastq2 match {
-      case null      => Iterator.continually(null)
-      case otherwise => otherwise.iterator.asScala
+      case Some(x) => x.iterator.asScala
+      case None    => Iterator.continually(null)
     }
     val o1 = outputFastq1
     val o2 = (inputFastq2, outputFastq2) match {
-      case (null, null) => null
-      case (_, null)    => throw new IllegalArgumentException("Missing output FASTQ 2")
-      case (null, _)    => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
-      case (x, y)       => outputFastq2
+      case (None, None)       => null
+      case (_, None)          => throw new IllegalArgumentException("Missing output FASTQ 2")
+      case (None, _)          => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
+      case (Some(_), Some(x)) => x
     }
 
     logger.info("Writing output file(s) ...")
@@ -154,12 +154,12 @@ object ExtractAlignedFastq extends ToolCommand {
 
   }
 
-  case class Args(inputBam: File = null,
+  case class Args(inputBam: File = new File(""),
                   intervals: List[String] = List.empty[String],
-                  inputFastq1: File = null,
-                  inputFastq2: File = null,
-                  outputFastq1: File = null,
-                  outputFastq2: File = null,
+                  inputFastq1: File = new File(""),
+                  inputFastq2: Option[File] = None,
+                  outputFastq1: File = new File(""),
+                  outputFastq2: Option[File] = None,
                   minMapQ: Int = 0,
                   commonSuffixLength: Int = 0) extends AbstractArgs
 
@@ -188,7 +188,7 @@ object ExtractAlignedFastq extends ToolCommand {
     } text "Input FASTQ file 1"
 
     opt[File]('j', "in2") optional () valueName "<fastq>" action { (x, c) =>
-      c.copy(inputFastq1 = x)
+      c.copy(inputFastq2 = Option(x))
     } validate {
       x => if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2 (default: none)"
@@ -198,7 +198,7 @@ object ExtractAlignedFastq extends ToolCommand {
     } text "Output FASTQ file 1"
 
     opt[File]('p', "out2") optional () valueName "<fastq>" action { (x, c) =>
-      c.copy(outputFastq1 = x)
+      c.copy(outputFastq2 = Option(x))
     } text "Output FASTQ file 2 (default: none)"
 
     opt[Int]('Q', "min_mapq") optional () action { (x, c) =>
@@ -215,9 +215,9 @@ object ExtractAlignedFastq extends ToolCommand {
       """.stripMargin)
 
     checkConfig { c =>
-      if (c.inputFastq2 != null && c.outputFastq2 == null)
+      if (c.inputFastq2 != None && c.outputFastq2 == None)
         failure("Missing output FASTQ file 2")
-      else if (c.inputFastq2 == null && c.outputFastq2 != null)
+      else if (c.inputFastq2 == None && c.outputFastq2 != None)
         failure("Missing input FASTQ file 2")
       else
         success
@@ -238,8 +238,8 @@ object ExtractAlignedFastq extends ToolCommand {
 
     selectFastqReads(memFunc,
       inputFastq1 = new FastqReader(commandArgs.inputFastq1),
-      inputFastq2 = new FastqReader(commandArgs.inputFastq2),
+      inputFastq2 = commandArgs.inputFastq2.map(x => new FastqReader(x)),
       outputFastq1 = new BasicFastqWriter(commandArgs.outputFastq1),
-      outputFastq2 = new BasicFastqWriter(commandArgs.outputFastq2))
+      outputFastq2 = commandArgs.outputFastq2.map(x => new BasicFastqWriter(x)))
   }
 }
