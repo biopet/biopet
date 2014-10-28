@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.sage
+package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter

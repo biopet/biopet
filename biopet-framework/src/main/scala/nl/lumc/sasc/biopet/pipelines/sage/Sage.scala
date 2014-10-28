@@ -10,6 +10,9 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.scripts.PrefixFastq
 import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
+import nl.lumc.sasc.biopet.tools.SageCountFastq
+import nl.lumc.sasc.biopet.tools.SageCreateLibrary
+import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 
