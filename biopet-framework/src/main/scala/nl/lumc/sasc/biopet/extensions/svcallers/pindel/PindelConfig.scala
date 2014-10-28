@@ -23,7 +23,6 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 
-
 class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
   @Input(doc = "Bam File")
@@ -31,13 +30,13 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   @Output(doc = "Output Config file")
   var output: File = _
-  
-  @Argument(doc="Insertsize")
+
+  @Argument(doc = "Insertsize")
   var insertsize: Option[Int] = _
-  
-  override def commandLine = super.commandLine + 
-    "-i" + required(input) + 
-    "-s" + required(insertsize) + 
+
+  override def commandLine = super.commandLine +
+    "-i" + required(input) +
+    "-s" + required(insertsize) +
     "-o" + required(output)
 }
 
@@ -60,28 +59,30 @@ object PindelConfig extends ToolCommand {
   }
 
   private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".pindel.cfg"
-  
-  case class Args (inputbam:File = null, samplelabel:Option[String] = None, insertsize:Option[Int] = None) extends AbstractArgs
+
+  case class Args(inputbam: File = null, samplelabel: Option[String] = None, insertsize: Option[Int] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('i', "inputbam") required() valueName("<bamfile/path>") action { (x, c) =>
-      c.copy(inputbam = x) } text("Please specify the input bam file")
-    opt[String]('l', "samplelabel") valueName("<sample label>") action { (x, c) =>
-      c.copy(samplelabel = Some(x)) } text("Sample label is missing")
-    opt[Int]('s', "insertsize") valueName("<insertsize>") action { (x, c) =>
-      c.copy(insertsize = Some(x)) } text("Insertsize is missing")
+    opt[File]('i', "inputbam") required () valueName ("<bamfile/path>") action { (x, c) =>
+      c.copy(inputbam = x)
+    } text ("Please specify the input bam file")
+    opt[String]('l', "samplelabel") valueName ("<sample label>") action { (x, c) =>
+      c.copy(samplelabel = Some(x))
+    } text ("Sample label is missing")
+    opt[Int]('s', "insertsize") valueName ("<insertsize>") action { (x, c) =>
+      c.copy(insertsize = Some(x))
+    } text ("Insertsize is missing")
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
-    
+
     val input: File = commandArgs.inputbam
 
   }
 }
-
 

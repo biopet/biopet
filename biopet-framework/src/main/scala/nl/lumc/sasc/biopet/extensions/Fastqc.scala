@@ -11,7 +11,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
   var contaminants: File = _
-  
+
   @Input(doc = "Adapters", required = false)
   var adapters: File = _
 
@@ -39,11 +39,11 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
       val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
       val defaultContams = getVersion match {
         case "v0.11.2" => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-        case _ => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+        case _         => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
       }
       val defaultAdapters = getVersion match {
         case "v0.11.2" => new File(fastqcDir + "/Configuration/adapter_list.txt")
-        case _ => null
+        case _         => null
       }
       contaminants = config("contaminants", default = defaultContams)
     }

@@ -8,7 +8,7 @@ import java.io.File
 
 import scala.collection.JavaConverters._
 
-import com.google.common.hash.{Funnel, BloomFilter, PrimitiveSink}
+import com.google.common.hash.{ Funnel, BloomFilter, PrimitiveSink }
 import htsjdk.samtools.AlignmentBlock
 import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.QueryInterval
@@ -106,13 +106,13 @@ object WipeReads extends ToolCommand {
 
     /** Function to create iterator from refFlat file */
     def makeFeatureFromRefFlat(inFile: File): Iterator[Feature] = ???
-      // convert coordinate to 1-based fully closed
-      // parse chrom, start blocks, end blocks, strands
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
 
     /** Function to create iterator from GTF file */
     def makeFeatureFromGtf(inFile: File): Iterator[Feature] = ???
-        // convert coordinate to 1-based fully closed
-        // parse chrom, start blocks, end blocks, strands
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
 
     // detect interval file format from extension
     val iterFunc: (File => Iterator[Feature]) =
@@ -252,7 +252,6 @@ object WipeReads extends ToolCommand {
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
 
-
     val readyBam = prepIndexedInputBam()
 
     /* NOTE: the interval vector here should be bypass-able if we can make
@@ -285,11 +284,11 @@ object WipeReads extends ToolCommand {
       .filter(x => rgFilter(x))
       // fold starting from empty set
       .foldLeft(BloomFilter.create(SAMFunnel, bloomSize.toInt, bloomFp)
-        )((acc, rec) => {
-            acc.put(rec)
-            if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
-            acc
-          })
+      )((acc, rec) => {
+        acc.put(rec)
+        if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
+        acc
+      })
 
     if (filterOutMulti)
       (rec: SAMRecord) => filteredOutSet.mightContain(rec)

@@ -10,16 +10,16 @@ class SamtoolsView(val root: Configurable) extends Samtools {
 
   @Output(doc = "output File")
   var output: File = _
-  
+
   var quality: Option[Int] = config("quality")
   var b: Boolean = config("b")
   var h: Boolean = config("h")
-  
-  def cmdBase = required(executable) + 
-        required("view") +
-        optional("-q", quality) +
-        conditional(b, "-b") +
-        conditional(h, "-h")
+
+  def cmdBase = required(executable) +
+    required("view") +
+    optional("-q", quality) +
+    conditional(b, "-b") +
+    conditional(h, "-h")
   def cmdPipeInput = cmdBase + "-"
   def cmdPipe = cmdBase + required(input)
   def cmdLine = cmdPipe + " > " + required(output)

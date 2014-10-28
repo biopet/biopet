@@ -12,46 +12,46 @@ class SamToFastq(val root: Configurable) extends Picard {
 
   @Output(doc = "R1", required = true)
   var fastqR1: File = _
-  
+
   @Output(doc = "R1", required = false)
   var fastqR2: File = _
-  
+
   @Output(doc = "Unpaired", required = false)
   var fastqUnpaired: File = _
-  
+
   @Argument(doc = "Output per readgroup", required = false)
   var outputPerRg: Boolean = config("outputPerRg", default = false)
-  
+
   @Argument(doc = "Output dir", required = false)
   var outputDir: String = config("outputDir")
-  
+
   @Argument(doc = "re reverse", required = false)
   var reReverse: Boolean = config("reReverse", default = false)
-  
+
   @Argument(doc = "The output file to bam file to", required = false)
   var interleave: Boolean = config("interleave", default = false)
-  
+
   @Argument(doc = "includeNonPjReads", required = false)
   var includeNonPjReads: Boolean = config("includeNonPjReads", default = false)
-  
+
   @Argument(doc = "clippingAtribute", required = false)
   var clippingAtribute: String = config("clippingAtribute")
-  
+
   @Argument(doc = "clippingAction", required = false)
   var clippingAction: String = config("clippingAction")
-  
+
   @Argument(doc = "read1Trim", required = false)
   var read1Trim: Option[Int] = config("read1Trim")
-  
+
   @Argument(doc = "read1MaxBasesToWrite", required = false)
   var read1MaxBasesToWrite: Option[Int] = config("read1MaxBasesToWrite")
-  
+
   @Argument(doc = "read2Trim", required = false)
   var read2Trim: Option[Int] = config("read2Trim")
-  
+
   @Argument(doc = "read2MaxBasesToWrite", required = false)
   var read2MaxBasesToWrite: Option[Int] = config("read2MaxBasesToWrite")
-  
+
   @Argument(doc = "includeNonPrimaryAlignments", required = false)
   var includeNonPrimaryAlignments: Boolean = config("includeNonPrimaryAlignments", default = false)
 

@@ -83,12 +83,12 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   }
 }
 
- object Ln {
-   def apply(root: Configurable, input:File, output:File, relative:Boolean = true): Ln = {
-     val ln = new Ln(root)
-     ln.in = input
-     ln.out = output
-     ln.relative = relative
-     return ln
-   }
- }
+object Ln {
+  def apply(root: Configurable, input: File, output: File, relative: Boolean = true): Ln = {
+    val ln = new Ln(root)
+    ln.in = input
+    ln.out = output
+    ln.relative = relative
+    return ln
+  }
+}

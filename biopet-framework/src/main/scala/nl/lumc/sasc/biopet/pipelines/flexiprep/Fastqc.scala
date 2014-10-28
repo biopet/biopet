@@ -49,8 +49,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       "plot_sequence_length_distribution" -> "Images/sequence_length_distribution.png",
       "fastqc_data" -> "fastqc_data.txt")
     val dir = output.getAbsolutePath.stripSuffix(".zip") + "/"
-    var outputMap:Map[String,Map[String,String]] = Map()
-    for ((k,v) <- subfixs) outputMap += (k -> Map("path" -> (dir+v)))
+    var outputMap: Map[String, Map[String, String]] = Map()
+    for ((k, v) <- subfixs) outputMap += (k -> Map("path" -> (dir + v)))
 
     val temp = ("" := outputMap) ->: jEmptyObject
     return temp.fieldOrEmptyObject("")
