@@ -13,9 +13,9 @@ class SquishBed(val root: Configurable) extends PythonCommandLineFunction {
 
   @Output(doc = "output File")
   var output: File = _
-    
+
   def cmdLine = getPythonCommand +
-    required(input) + 
+    required(input) +
     required(output)
 }
 

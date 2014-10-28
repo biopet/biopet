@@ -13,12 +13,12 @@ class SambambaFlagstat(val root: Configurable) extends Sambamba {
   @Output(doc = "output File")
   var output: File = _
 
-  def cmdLine = required(executable) + 
-  required("flagstat") + 
-  optional("-t", nCoresRequest) +
-  required(input) + 
-  " > " + 
-  required(output)
+  def cmdLine = required(executable) +
+    required("flagstat") +
+    optional("-t", nCoresRequest) +
+    required(input) +
+    " > " +
+    required(output)
 }
 
 object SambambaFlagstat {

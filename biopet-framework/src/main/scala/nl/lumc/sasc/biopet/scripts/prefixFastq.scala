@@ -16,17 +16,17 @@ class PrefixFastq(val root: Configurable) extends PythonCommandLineFunction {
 
   @Argument(doc = "Prefix sequence")
   var prefix: String = "CATG"
-  
+
   @Argument(doc = "Input file is gziped", required = false)
   var gzip: Boolean = _
-  
+
   override def beforeCmd {
     if (input.getName.endsWith(".gzip") || input.getName.endsWith("gz")) gzip = true
   }
-  
+
   def cmdLine = getPythonCommand +
-    required("-o", output) + 
-    required("--prefix", prefix) + 
+    required("-o", output) +
+    required("--prefix", prefix) +
     required(input)
 }
 

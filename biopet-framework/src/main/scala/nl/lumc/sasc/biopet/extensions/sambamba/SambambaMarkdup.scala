@@ -13,26 +13,24 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
   @Output(doc = "Markdup output bam")
   var output: File = _
 
-  
   var remove_duplicates: Boolean = config("remove_duplicates", default = false)
-  
+
   // @doc: compression_level 6 is average, 0 = no compression, 9 = best
-  val compression_level: Option[Int] = config("compression_level", default=6) 
-  val hash_table_size: Option[Int] = config("hash-table-size", default=262144)
-  val overflow_list_size: Option[Int] = config("overflow-list-size", default=200000)
-  val io_buffer_size: Option[Int] = config("io-buffer-size", default=128)
-  
-  
-  def cmdLine = required(executable) + 
-  required("markdup") + 
-  conditional(remove_duplicates, "--remove-duplicates") +
-  optional("-t", nCoresRequest) +
-  optional("-l", compression_level) +
-  optional("--hash-table-size=", hash_table_size, spaceSeparated=false ) +
-  optional("--overflow-list-size=", overflow_list_size, spaceSeparated=false ) +
-  optional("--io-buffer-size=", io_buffer_size, spaceSeparated=false ) +
-  required(input) + 
-  required(output)
+  val compression_level: Option[Int] = config("compression_level", default = 6)
+  val hash_table_size: Option[Int] = config("hash-table-size", default = 262144)
+  val overflow_list_size: Option[Int] = config("overflow-list-size", default = 200000)
+  val io_buffer_size: Option[Int] = config("io-buffer-size", default = 128)
+
+  def cmdLine = required(executable) +
+    required("markdup") +
+    conditional(remove_duplicates, "--remove-duplicates") +
+    optional("-t", nCoresRequest) +
+    optional("-l", compression_level) +
+    optional("--hash-table-size=", hash_table_size, spaceSeparated = false) +
+    optional("--overflow-list-size=", overflow_list_size, spaceSeparated = false) +
+    optional("--io-buffer-size=", io_buffer_size, spaceSeparated = false) +
+    required(input) +
+    required(output)
 }
 
 object SambambaMarkdup {

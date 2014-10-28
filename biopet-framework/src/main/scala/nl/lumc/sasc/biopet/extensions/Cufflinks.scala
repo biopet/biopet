@@ -16,7 +16,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Written based on cufflinks version v2.2.1.
  */
 class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
-  
+
   /** default executable */
   executable = config("exe", default = "cufflinks")
 
@@ -177,7 +177,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable
 
   def cmdLine = {
-      required(executable) +
+    required(executable) +
       required("--output-dir", output_dir) +
       optional("--num-threads", num_threads) +
       optional("--seed", seed) +

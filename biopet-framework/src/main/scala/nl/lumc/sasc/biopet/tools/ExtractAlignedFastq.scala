@@ -83,9 +83,9 @@ object ExtractAlignedFastq extends ToolCommand {
     require(inAlnReader.hasIndex)
 
     def getSequenceIndex(name: String): Int = inAlnReader.getFileHeader.getSequenceIndex(name) match {
-      case x if x >= 0  =>
+      case x if x >= 0 =>
         x
-      case otherwise    =>
+      case otherwise =>
         throw new IllegalArgumentException("Chromosome " + name + " is not found in the alignment file")
     }
 

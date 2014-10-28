@@ -12,37 +12,37 @@ class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
 
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
-  
+
   @Output(doc = "The output file to bam file to", required = true)
   lazy val outputIndex: File = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
 
   @Argument(doc = "Sort order of output file Required. Possible values: {unsorted, queryname, coordinate} ", required = true)
   var sortOrder: String = _
-  
+
   @Argument(doc = "RGID", required = true)
   var RGID: String = _
-  
+
   @Argument(doc = "RGLB", required = true)
   var RGLB: String = _
-  
+
   @Argument(doc = "RGPL", required = true)
   var RGPL: String = _
-  
+
   @Argument(doc = "RGPU", required = true)
   var RGPU: String = _
-  
+
   @Argument(doc = "RGSM", required = true)
   var RGSM: String = _
-  
+
   @Argument(doc = "RGCN", required = false)
   var RGCN: String = _
-  
+
   @Argument(doc = "RGDS", required = false)
   var RGDS: String = _
-  
+
   @Argument(doc = "RGDT", required = false)
   var RGDT: String = _
-  
+
   @Argument(doc = "RGPI", required = false)
   var RGPI: Option[Int] = _
 

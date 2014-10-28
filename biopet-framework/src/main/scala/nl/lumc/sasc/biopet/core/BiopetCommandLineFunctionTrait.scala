@@ -66,13 +66,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         logger.error("executable: '" + executable + "' not found, please check config")
         throw new QException("executable: '" + executable + "' not found, please check config")
       }
-    
+
       val is = new FileInputStream(executable)
       val cnt = is.available
       val bytes = Array.ofDim[Byte](cnt)
       is.read(bytes)
       is.close()
-      val md5: String =  MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+      val md5: String = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
 
       addJobReportBinding("md5sum_exe", md5)
     } catch {
@@ -107,7 +107,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
       line match {
         case versionRegex(m) => return m
-        case _ =>
+        case _               =>
       }
     }
     logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
