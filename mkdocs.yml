@@ -1,0 +1,14 @@
+site_name: Biopet
+pages:
+- ['index.md', 'Home']
+- ['pipelines/basty.md', 'Pipelines', 'Basty']
+- ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
+- ['pipelines/gentrap.md', 'Pipelines', 'Gentrap']
+- ['pipelines/mapping.md', 'Pipelines', 'Mapping']
+- ['pipelines/sage.md', 'Pipelines', 'Sage']
+- ['pipelines/yamsvp.md', 'Pipelines', 'Yamsvp']
+- ['cluster/oge.md', 'OpenGridEngine']
+- ['about.md', 'About']
+- ['license.md', 'License']
+theme: readthedocs
+repo_url: https://git.lumc.nl/biopet/biopet
