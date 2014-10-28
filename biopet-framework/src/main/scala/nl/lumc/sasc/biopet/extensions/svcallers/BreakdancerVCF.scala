@@ -37,15 +37,15 @@ class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
 
   def cmdLine = {
     getPythonCommand +
-    "-i " + required(input) +
-    "-o " + required(output)
+      "-i " + required(input) +
+      "-o " + required(output)
   }
 }
 
 object BreakdancerVCF {
-  def apply(root: Configurable, input:File, output:File): BreakdancerVCF = {
+  def apply(root: Configurable, input: File, output: File): BreakdancerVCF = {
     val bd = new BreakdancerVCF(root)
-    bd.input =input
+    bd.input = input
     bd.output = output
     return bd
   }
