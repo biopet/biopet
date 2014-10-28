@@ -8,6 +8,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
+import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
@@ -96,10 +97,16 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 
+    val clever_vcf = Ln(this, clever.outputvcf, svcallingDir + sampleID + ".clever.vcf", relative = true)
+    add(clever_vcf)
+
     val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
     val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
     sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputvcf))
     addAll(breakdancer.functions)
+
+    val bd_vcf = Ln(this, breakdancer.outputvcf, svcallingDir + sampleID + ".breakdancer.vcf", relative = true)
+    add(bd_vcf)
 
     // for pindel we should use per library config collected into one config file
     //    val pindelDir = svcallingDir + sampleID + ".pindel/"
@@ -107,7 +114,9 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
     //    addAll(pindel.functions)
     //
-    //    
+    //    val pindel_vcf = Ln(this, pindel.outputvcf, svcallingDir + sampleID + ".pindel.vcf", relative = true)
+    //    add(pindel_vcf)
+    //
     return sampleOutput
   }
 
