@@ -21,6 +21,7 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp),
     "tool" -> List(
       nl.lumc.sasc.biopet.tools.WipeReads,
+      nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
       nl.lumc.sasc.biopet.tools.BiopetFlagstat,
       nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
       nl.lumc.sasc.biopet.tools.VcfToTsv,
