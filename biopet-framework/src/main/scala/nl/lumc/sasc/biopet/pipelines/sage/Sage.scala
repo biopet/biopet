@@ -8,7 +8,11 @@ import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.scripts.PrefixFastq
+import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
+import nl.lumc.sasc.biopet.tools.SageCountFastq
+import nl.lumc.sasc.biopet.tools.SageCreateLibrary
+import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 
@@ -64,7 +68,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
     
     if (tagsLibrary == null) {
-      val cdl = new CreateDeepsageLibrary(this)
+      val cdl = new SageCreateLibrary(this)
       cdl.input = transcriptome
       cdl.output = outputDir + "taglib/tag.lib"
       cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
@@ -181,12 +185,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
   
   def addTablibCounts(fastq:File, outputPrefix: String, outputDir: String) {
-    val countFastq = new CountFastq(this)
+    val countFastq = new SageCountFastq(this)
     countFastq.input = fastq
     countFastq.output = outputDir + outputPrefix + ".raw.counts"
     add(countFastq)
     
-    val createTagCounts = new CreateTagCounts(this)
+    val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
     createTagCounts.tagLib = tagsLibrary
     createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"

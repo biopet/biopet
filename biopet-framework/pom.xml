@@ -72,6 +72,11 @@
                 <artifactId>scopt_2.10</artifactId>
                 <version>3.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -105,7 +110,7 @@
                     <prefix>git</prefix>
                     <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
                     <verbose>false</verbose>
-                    <useNativeGit>false</useNativeGit>
+                    <useNativeGit>true</useNativeGit>
                     <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
                     <skipPoms>false</skipPoms>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>

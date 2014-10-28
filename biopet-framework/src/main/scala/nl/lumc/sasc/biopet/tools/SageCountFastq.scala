@@ -1,8 +1,9 @@
-package nl.lumc.sasc.biopet.pipelines.sage
+package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import org.biojava3.sequencing.io.fastq.{SangerFastqReader, StreamListener, Fastq}
@@ -11,7 +12,7 @@ import scala.collection.SortedMap
 import scala.collection.mutable.Map
 import java.io.FileReader
 
-class CountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
@@ -28,29 +29,30 @@ class CountFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
     required("-o", output)
 }
 
-object CountFastq {
-  var input: File = _
-  var output: File = _
+object SageCountFastq extends ToolCommand {
+  case class Args (input:File = null, output:File = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "input") required() valueName("<file>") action { (x, c) =>
+      c.copy(input = x) }
+    opt[File]('o', "output") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(output = x) }
+  }
   
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => input = new File(args(t+1))
-        case "-o" => output = new File(args(t+1))
-        case _ =>
-      }
-    }
-    if (input == null || !input.exists) throw new IllegalStateException("Input file not found, use -I")
-    if (output == null) throw new IllegalStateException("Output file not found, use -o")
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    
+    if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
     
     val counts:Map[String, Long] = Map()
     val reader = new SangerFastqReader
     var count = 0
-    System.err.println("Reading fastq file: " + input)
-    val fileReader = new FileReader(input)
+    logger.info("Reading fastq file: " + commandArgs.input)
+    val fileReader = new FileReader(commandArgs.input)
     reader.stream(fileReader, new StreamListener {
       def fastq(fastq:Fastq) {
         val seq = fastq.getSequence
@@ -60,13 +62,13 @@ object CountFastq {
         if (count % 1000000 == 0) System.err.println(count + " sequences done")
       }
     })
-    System.err.println(count + " sequences done")
+    logger.info(count + " sequences done")
     
-    System.err.println("Sorting")
+    logger.info("Sorting")
     val sortedCounts:SortedMap[String, Long] = SortedMap(counts.toArray:_*)
     
-    System.err.println("Writting outputfile: " + output)
-    val writer = new PrintWriter(output)
+    logger.info("Writting outputfile: " + commandArgs.output)
+    val writer = new PrintWriter(commandArgs.output)
     for ((seq,count) <- sortedCounts) {
       writer.println(seq + "\t" + count)
     }
