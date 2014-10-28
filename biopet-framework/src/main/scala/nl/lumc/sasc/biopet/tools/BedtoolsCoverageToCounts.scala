@@ -1,8 +1,9 @@
-package nl.lumc.sasc.biopet.pipelines.sage
+package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
@@ -27,26 +28,27 @@ class BedtoolsCoverageToCounts(val root: Configurable) extends BiopetJavaCommand
     required("-o", output)
 }
 
-object BedtoolsCoverageToCounts {
-  var input: File = _
-  var output: File = _
+object BedtoolsCoverageToCounts extends ToolCommand {
+  case class Args (input:File = null, output:File = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('I', "input") required() valueName("<file>") action { (x, c) =>
+      c.copy(input = x) }
+    opt[File]('o', "output") required() unbounded() valueName("<file>") action { (x, c) =>
+      c.copy(output = x) }
+  }
   
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    for (t <- 0 until args.size) {
-      args(t) match {
-        case "-I" => input = new File(args(t+1))
-        case "-o" => output = new File(args(t+1))
-        case _ =>
-      }
-    }
-    if (input == null || !input.exists) throw new IllegalStateException("Input file not found, use -I")
-    if (output == null) throw new IllegalStateException("Output file not found, use -o")
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    
+    if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
     
     val counts:Map[String, Long] = Map()
-    for (line <- Source.fromFile(input).getLines) {
+    for (line <- Source.fromFile(commandArgs.input).getLines) {
       val values = line.split("\t")
       val gene = values(3)
       val count = values(6).toLong
@@ -56,7 +58,7 @@ object BedtoolsCoverageToCounts {
   
     val sortedCounts:SortedMap[String, Long] = SortedMap(counts.toArray:_*)
     
-    val writer = new PrintWriter(output)
+    val writer = new PrintWriter(commandArgs.output)
     for ((seq,count) <- sortedCounts) {
       if (count > 0) writer.println(seq + "\t" + count)
     }
