@@ -171,8 +171,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
       
       if (config("bam_to_fastq", default = false).getBoolean) {
-        val samToFastq = SamToFastq(this, bamFile, runDir + sampleID + "-" + runID + ".R1.fastq", runDir + sampleID + "-" + runID + ".R2.fastq")
-        add(samToFastq)
+        val samToFastq = SamToFastq(this, bamFile, runDir + sampleID + "-" + runID + ".R1.fastq", 
+                                    runDir + sampleID + "-" + runID + ".R2.fastq")
+        add(samToFastq, isIntermediate = true)
         val mapping = Mapping.loadFromLibraryConfig(this, runConfig, sampleConfig, runDir, startJobs = false)
         mapping.input_R1 = samToFastq.fastqR1
         mapping.input_R2 = samToFastq.fastqR2
