@@ -6,6 +6,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
+import scala.collection.JavaConverters._
 
 import htsjdk.samtools._
 import htsjdk.tribble._
@@ -13,17 +14,14 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import scala.collection.JavaConverters._
-
-
 class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
-  import nl.lumc.sasc.biopet.tools.WipeReads._
+  import WipeReads._
 
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource(p).toURI).toString
 
-  private lazy val samP: SAMLineParser = {
+  private val samP: SAMLineParser = {
     val samh = new SAMFileHeader
     samh.addSequence(new SAMSequenceRecord("chrQ", 10000))
     samh.addReadGroup(new SAMReadGroupRecord("001"))
@@ -31,20 +29,20 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     new SAMLineParser(samh)
   }
 
-  private def makeSAMs(raws: String*): Seq[SAMRecord] =
+  private def makeSams(raws: String*): Seq[SAMRecord] =
     raws.map(s => samP.parseLine(s))
 
-  private def makeTempBAM(): File =
+  private def makeTempBam(): File =
     File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
 
-  private def makeTempBAMIndex(bam: File): File =
+  private def makeTempBamIndex(bam: File): File =
     new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
 
   val bloomSize: Long = 1000
   val bloomFp: Double = 1e-10
 
-  val sBAMFile1 = new File(resourcePath("/single01.bam"))
-  val sBAMRecs1 = makeSAMs(
+  val sBamFile1 = new File(resourcePath("/single01.bam"))
+  val sBamRecs1 = makeSams(
     "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
     "r01\t16\tchrQ\t190\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
     "r01\t16\tchrQ\t290\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001",
@@ -54,8 +52,8 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     "r06\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001"
   )
 
-  val sBAMFile2 = new File(resourcePath("/single02.bam"))
-  val sBAMRecs2 = makeSAMs(
+  val sBamFile2 = new File(resourcePath("/single02.bam"))
+  val sBamRecs2 = makeSams(
     "r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
     "r01\t16\tchrQ\t190\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002",
     "r01\t16\tchrQ\t290\t30\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:002",
@@ -66,11 +64,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     "r08\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:002"
   )
 
-  val sBAMFile3 = new File(resourcePath("/single03.bam"))
-  val sBAMFile4 = new File(resourcePath("/single04.bam"))
+  val sBamFile3 = new File(resourcePath("/single03.bam"))
+  val sBamFile4 = new File(resourcePath("/single04.bam"))
 
-  val pBAMFile1 = new File(resourcePath("/paired01.bam"))
-  val pBAMRecs1 = makeSAMs(
+  val pBamFile1 = new File(resourcePath("/paired01.bam"))
+  val pBamRecs1 = makeSams(
     "r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
     "r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001",
     "r01\t163\tchrQ\t150\t60\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:001",
@@ -87,8 +85,8 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     "r06\t4\t*\t0\t0\t*\t*\t0\t0\tGCGCGCGCGC\tHIHIHIHIHI\tRG:Z:001"
   )
 
-  val pBAMFile2 = new File(resourcePath("/paired02.bam"))
-  val pBAMRecs2 = makeSAMs(
+  val pBamFile2 = new File(resourcePath("/paired02.bam"))
+  val pBamRecs2 = makeSams(
     "r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
     "r02\t147\tchrQ\t90\t60\t10M\t=\t50\t-50\tATGCATGCAT\tEEFFGGHHII\tRG:Z:001",
     "r01\t163\tchrQ\t150\t30\t10M\t=\t190\t50\tAAAAAGGGGG\tGGGGGGGGGG\tRG:Z:002",
@@ -101,22 +99,22 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     "r08\t4\t*\t0\t0\t*\t*\t0\t0\tGCGCGCGCGC\tHIHIHIHIHI\tRG:Z:002"
   )
 
-  val pBAMFile3 = new File(resourcePath("/paired03.bam"))
-  val BEDFile1 = new File(resourcePath("/rrna01.bed"))
-  val minArgList = List("-I", sBAMFile1.toString, "-l", BEDFile1.toString, "-o", "mock.bam")
+  val pBamFile3 = new File(resourcePath("/paired03.bam"))
+  val BedFile1 = new File(resourcePath("/rrna01.bed"))
+  val minArgList = List("-I", sBamFile1.toString, "-l", BedFile1.toString, "-o", "mock.bam")
 
-  @Test def testMakeFeatureFromBED() = {
-    val intervals: Vector[Feature] = makeFeatureFromFile(BEDFile1).toVector
-    intervals.length should be (3)
-    intervals.head.getChr should === ("chrQ")
-    intervals.head.getStart should be (991)
-    intervals.head.getEnd should be (1000)
-    intervals.last.getChr should === ("chrQ")
-    intervals.last.getStart should be (291)
-    intervals.last.getEnd should be (320)
+  @Test def testMakeFeatureFromBed() = {
+    val intervals: Vector[Feature] = makeFeatureFromFile(BedFile1).toVector
+    intervals.length should be(3)
+    intervals.head.getChr should ===("chrQ")
+    intervals.head.getStart should be(991)
+    intervals.head.getEnd should be(1000)
+    intervals.last.getChr should ===("chrQ")
+    intervals.last.getStart should be(291)
+    intervals.last.getEnd should be(320)
   }
 
-  @Test def testSingleBAMDefault() = {
+  @Test def testSingleBamDefault() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
       new BasicFeature("chrQ", 451, 480), // overlaps r04
@@ -125,317 +123,317 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
     //       and only filling the filter with a few items
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     // by default, set elements are SAM record read names
-    assert(!isFilteredOut(sBAMRecs1(0)))
-    assert(isFilteredOut(sBAMRecs1(1)))
-    assert(isFilteredOut(sBAMRecs1(2)))
-    assert(isFilteredOut(sBAMRecs1(3)))
-    assert(!isFilteredOut(sBAMRecs1(4)))
-    assert(!isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(6)))
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe true
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
-  @Test def testSingleBAMIntervalWithoutChr() = {
+  @Test def testSingleBamIntervalWithoutChr() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("Q", 291, 320),
       new BasicFeature("chrQ", 451, 480),
       new BasicFeature("P", 191, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBAMRecs1(0)))
-    assert(isFilteredOut(sBAMRecs1(1)))
-    assert(isFilteredOut(sBAMRecs1(2)))
-    assert(isFilteredOut(sBAMRecs1(3)))
-    assert(!isFilteredOut(sBAMRecs1(4)))
-    assert(!isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe true
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
-  @Test def testSingleBAMDefaultPartialExonOverlap() = {
+  @Test def testSingleBamDefaultPartialExonOverlap() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 881, 1000) // overlaps first exon of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBAMRecs1(0)))
-    assert(!isFilteredOut(sBAMRecs1(1)))
-    assert(!isFilteredOut(sBAMRecs1(2)))
-    assert(!isFilteredOut(sBAMRecs1(3)))
-    assert(!isFilteredOut(sBAMRecs1(4)))
-    assert(isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe false
+    filterNotFunc(sBamRecs1(3)) shouldBe false
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe true
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
-  @Test def testSingleBAMDefaultNoExonOverlap() = {
+  @Test def testSingleBamDefaultNoExonOverlap() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrP", 881, 1000),
       new BasicFeature("chrQ", 900, 920)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(sBAMRecs1(0)))
-    assert(!isFilteredOut(sBAMRecs1(1)))
-    assert(!isFilteredOut(sBAMRecs1(2)))
-    assert(!isFilteredOut(sBAMRecs1(3)))
-    assert(!isFilteredOut(sBAMRecs1(4)))
-    assert(!isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(6)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe false
+    filterNotFunc(sBamRecs1(3)) shouldBe false
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
-  @Test def testSingleBAMFilterOutMultiNotSet() = {
+  @Test def testSingleBamFilterOutMultiNotSet() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    assert(!isFilteredOut(sBAMRecs1(0)))
-    assert(!isFilteredOut(sBAMRecs1(1)))
-    assert(isFilteredOut(sBAMRecs1(2)))
-    assert(isFilteredOut(sBAMRecs1(3)))
-    assert(!isFilteredOut(sBAMRecs1(4)))
-    assert(!isFilteredOut(sBAMRecs1(5)))
-    assert(!isFilteredOut(sBAMRecs1(6)))
+    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1(1)) shouldBe false
+    filterNotFunc(sBamRecs1(2)) shouldBe true
+    filterNotFunc(sBamRecs1(3)) shouldBe true
+    filterNotFunc(sBamRecs1(4)) shouldBe false
+    filterNotFunc(sBamRecs1(5)) shouldBe false
+    filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
-  @Test def testSingleBAMFilterMinMapQ() = {
+  @Test def testSingleBamFilterMinMapQ() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
-    assert(!isFilteredOut(sBAMRecs2(0)))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
     // r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(sBAMRecs2(1)))
-    assert(!isFilteredOut(sBAMRecs2(2)))
-    assert(isFilteredOut(sBAMRecs2(3)))
-    assert(isFilteredOut(sBAMRecs2(4)))
-    assert(isFilteredOut(sBAMRecs2(5)))
-    assert(!isFilteredOut(sBAMRecs2(6)))
-    assert(!isFilteredOut(sBAMRecs2(7)))
+    filterNotFunc(sBamRecs2(1)) shouldBe false
+    filterNotFunc(sBamRecs2(2)) shouldBe false
+    filterNotFunc(sBamRecs2(3)) shouldBe true
+    filterNotFunc(sBamRecs2(4)) shouldBe true
+    filterNotFunc(sBamRecs2(5)) shouldBe true
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
-  @Test def testSingleBAMFilterMinMapQFilterOutMultiNotSet() = {
+  @Test def testSingleBamFilterMinMapQFilterOutMultiNotSet() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
-    assert(!isFilteredOut(sBAMRecs2(0)))
-    assert(!isFilteredOut(sBAMRecs2(1)))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
+    filterNotFunc(sBamRecs2(1)) shouldBe false
     // this r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(sBAMRecs2(2)))
-    assert(isFilteredOut(sBAMRecs2(3)))
-    assert(isFilteredOut(sBAMRecs2(4)))
+    filterNotFunc(sBamRecs2(2)) shouldBe false
+    filterNotFunc(sBamRecs2(3)) shouldBe true
+    filterNotFunc(sBamRecs2(4)) shouldBe true
     // this r07 is not in since filterOuMulti is false
-    assert(!isFilteredOut(sBAMRecs2(5)))
-    assert(!isFilteredOut(sBAMRecs2(6)))
-    assert(!isFilteredOut(sBAMRecs2(7)))
+    filterNotFunc(sBamRecs2(5)) shouldBe false
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
-  @Test def testSingleBAMFilterReadGroupIDs() = {
+  @Test def testSingleBamFilterReadGroupIDs() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, sBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
-      readGroupIDs = Set("002", "003"))
-    assert(!isFilteredOut(sBAMRecs2(0)))
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+      readGroupIds = Set("002", "003"))
+    filterNotFunc(sBamRecs2(0)) shouldBe false
     // only r01 is in the set since it is RG 002
-    assert(isFilteredOut(sBAMRecs2(1)))
-    assert(isFilteredOut(sBAMRecs2(2)))
-    assert(!isFilteredOut(sBAMRecs2(3)))
-    assert(!isFilteredOut(sBAMRecs2(4)))
-    assert(!isFilteredOut(sBAMRecs2(5)))
-    assert(!isFilteredOut(sBAMRecs2(6)))
-    assert(!isFilteredOut(sBAMRecs2(7)))
+    filterNotFunc(sBamRecs2(1)) shouldBe true
+    filterNotFunc(sBamRecs2(2)) shouldBe true
+    filterNotFunc(sBamRecs2(3)) shouldBe false
+    filterNotFunc(sBamRecs2(4)) shouldBe false
+    filterNotFunc(sBamRecs2(5)) shouldBe false
+    filterNotFunc(sBamRecs2(6)) shouldBe false
+    filterNotFunc(sBamRecs2(7)) shouldBe false
   }
 
-  @Test def testPairBAMDefault() = {
+  @Test def testPairBamDefault() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(pBAMRecs1(0)))
-    assert(!isFilteredOut(pBAMRecs1(1)))
-    assert(isFilteredOut(pBAMRecs1(2)))
-    assert(isFilteredOut(pBAMRecs1(3)))
-    assert(isFilteredOut(pBAMRecs1(4)))
-    assert(isFilteredOut(pBAMRecs1(5)))
-    assert(isFilteredOut(pBAMRecs1(6)))
-    assert(isFilteredOut(pBAMRecs1(7)))
-    assert(!isFilteredOut(pBAMRecs1(8)))
-    assert(!isFilteredOut(pBAMRecs1(9)))
-    assert(!isFilteredOut(pBAMRecs1(10)))
-    assert(!isFilteredOut(pBAMRecs1(11)))
-    assert(!isFilteredOut(pBAMRecs1(12)))
-    assert(!isFilteredOut(pBAMRecs1(13)))
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe true
+    filterNotFunc(pBamRecs1(3)) shouldBe true
+    filterNotFunc(pBamRecs1(4)) shouldBe true
+    filterNotFunc(pBamRecs1(5)) shouldBe true
+    filterNotFunc(pBamRecs1(6)) shouldBe true
+    filterNotFunc(pBamRecs1(7)) shouldBe true
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe false
+    filterNotFunc(pBamRecs1(11)) shouldBe false
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
-  @Test def testPairBAMPartialExonOverlap() = {
+  @Test def testPairBamPartialExonOverlap() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 891, 1000)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    assert(!isFilteredOut(pBAMRecs1(0)))
-    assert(!isFilteredOut(pBAMRecs1(1)))
-    assert(!isFilteredOut(pBAMRecs1(2)))
-    assert(!isFilteredOut(pBAMRecs1(3)))
-    assert(!isFilteredOut(pBAMRecs1(4)))
-    assert(!isFilteredOut(pBAMRecs1(5)))
-    assert(!isFilteredOut(pBAMRecs1(6)))
-    assert(!isFilteredOut(pBAMRecs1(7)))
-    assert(!isFilteredOut(pBAMRecs1(8)))
-    assert(!isFilteredOut(pBAMRecs1(9)))
-    assert(isFilteredOut(pBAMRecs1(10)))
-    assert(isFilteredOut(pBAMRecs1(11)))
-    assert(!isFilteredOut(pBAMRecs1(12)))
-    assert(!isFilteredOut(pBAMRecs1(13)))
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe false
+    filterNotFunc(pBamRecs1(3)) shouldBe false
+    filterNotFunc(pBamRecs1(4)) shouldBe false
+    filterNotFunc(pBamRecs1(5)) shouldBe false
+    filterNotFunc(pBamRecs1(6)) shouldBe false
+    filterNotFunc(pBamRecs1(7)) shouldBe false
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe true
+    filterNotFunc(pBamRecs1(11)) shouldBe true
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
-  @Test def testPairBAMFilterOutMultiNotSet() = {
+  @Test def testPairBamFilterOutMultiNotSet() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
       new BasicFeature("chrQ", 451, 480), // overlaps r04
       new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile1, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    assert(!isFilteredOut(pBAMRecs1(0)))
-    assert(!isFilteredOut(pBAMRecs1(1)))
-    assert(!isFilteredOut(pBAMRecs1(2)))
-    assert(!isFilteredOut(pBAMRecs1(3)))
-    assert(isFilteredOut(pBAMRecs1(4)))
-    assert(isFilteredOut(pBAMRecs1(5)))
-    assert(isFilteredOut(pBAMRecs1(6)))
-    assert(isFilteredOut(pBAMRecs1(7)))
-    assert(!isFilteredOut(pBAMRecs1(8)))
-    assert(!isFilteredOut(pBAMRecs1(9)))
-    assert(!isFilteredOut(pBAMRecs1(10)))
-    assert(!isFilteredOut(pBAMRecs1(11)))
-    assert(!isFilteredOut(pBAMRecs1(12)))
-    assert(!isFilteredOut(pBAMRecs1(13)))
+    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1(1)) shouldBe false
+    filterNotFunc(pBamRecs1(2)) shouldBe false
+    filterNotFunc(pBamRecs1(3)) shouldBe false
+    filterNotFunc(pBamRecs1(4)) shouldBe true
+    filterNotFunc(pBamRecs1(5)) shouldBe true
+    filterNotFunc(pBamRecs1(6)) shouldBe true
+    filterNotFunc(pBamRecs1(7)) shouldBe true
+    filterNotFunc(pBamRecs1(8)) shouldBe false
+    filterNotFunc(pBamRecs1(9)) shouldBe false
+    filterNotFunc(pBamRecs1(10)) shouldBe false
+    filterNotFunc(pBamRecs1(11)) shouldBe false
+    filterNotFunc(pBamRecs1(12)) shouldBe false
+    filterNotFunc(pBamRecs1(13)) shouldBe false
   }
 
-  @Test def testPairBAMFilterMinMapQ() = {
+  @Test def testPairBamFilterMinMapQ() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
-    assert(!isFilteredOut(pBAMRecs2(0)))
-    assert(!isFilteredOut(pBAMRecs2(1)))
-    assert(!isFilteredOut(pBAMRecs2(2)))
-    assert(!isFilteredOut(pBAMRecs2(3)))
-    assert(!isFilteredOut(pBAMRecs2(4)))
-    assert(!isFilteredOut(pBAMRecs2(5)))
-    assert(isFilteredOut(pBAMRecs2(6)))
-    assert(isFilteredOut(pBAMRecs2(7)))
-    assert(!isFilteredOut(pBAMRecs2(8)))
-    assert(!isFilteredOut(pBAMRecs2(9)))
+    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2(1)) shouldBe false
+    filterNotFunc(pBamRecs2(2)) shouldBe false
+    filterNotFunc(pBamRecs2(3)) shouldBe false
+    filterNotFunc(pBamRecs2(4)) shouldBe false
+    filterNotFunc(pBamRecs2(5)) shouldBe false
+    filterNotFunc(pBamRecs2(6)) shouldBe true
+    filterNotFunc(pBamRecs2(7)) shouldBe true
+    filterNotFunc(pBamRecs2(8)) shouldBe false
+    filterNotFunc(pBamRecs2(9)) shouldBe false
   }
 
-  @Test def testPairBAMFilterReadGroupIDs() = {
+  @Test def testPairBamFilterReadGroupIDs() = {
     val intervals: Iterator[Feature] = Iterator(
       new BasicFeature("chrQ", 291, 320),
       new BasicFeature("chrQ", 451, 480)
     )
-    val isFilteredOut = makeFilterOutFunction(intervals, pBAMFile2, bloomSize = bloomSize, bloomFp = bloomFp,
-      readGroupIDs = Set("002", "003"))
+    val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
+      readGroupIds = Set("002", "003"))
     // only r01 is in the set since it is RG 002
-    assert(!isFilteredOut(pBAMRecs2(0)))
-    assert(!isFilteredOut(pBAMRecs2(1)))
-    assert(isFilteredOut(pBAMRecs2(2)))
-    assert(isFilteredOut(pBAMRecs2(3)))
-    assert(isFilteredOut(pBAMRecs2(4)))
-    assert(isFilteredOut(pBAMRecs2(5)))
-    assert(!isFilteredOut(pBAMRecs2(6)))
-    assert(!isFilteredOut(pBAMRecs2(7)))
-    assert(!isFilteredOut(pBAMRecs2(8)))
-    assert(!isFilteredOut(pBAMRecs2(9)))
+    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2(1)) shouldBe false
+    filterNotFunc(pBamRecs2(2)) shouldBe true
+    filterNotFunc(pBamRecs2(3)) shouldBe true
+    filterNotFunc(pBamRecs2(4)) shouldBe true
+    filterNotFunc(pBamRecs2(5)) shouldBe true
+    filterNotFunc(pBamRecs2(6)) shouldBe false
+    filterNotFunc(pBamRecs2(7)) shouldBe false
+    filterNotFunc(pBamRecs2(8)) shouldBe false
+    filterNotFunc(pBamRecs2(9)) shouldBe false
   }
 
-  @Test def testWriteSingleBAMDefault() = {
+  @Test def testWriteSingleBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBAM = makeTempBAM()
-    val outBAMIndex = makeTempBAMIndex(outBAM)
-    outBAM.deleteOnExit()
-    outBAMIndex.deleteOnExit()
+    val outBam = makeTempBam()
+    val outBamIndex = makeTempBamIndex(outBam)
+    outBam.deleteOnExit()
+    outBamIndex.deleteOnExit()
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM)
+      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam)
     }
-    stdout.toString should === (
+    stdout.toString should ===(
       "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+        .format(sBamFile1.getName, outBam.getName, 4, 3)
     )
 
-    val exp = new SAMFileReader(sBAMFile3).asScala
-    val obs = new SAMFileReader(outBAM).asScala
+    val exp = new SAMFileReader(sBamFile3).asScala
+    val obs = new SAMFileReader(outBam).asScala
     for ((e, o) <- exp.zip(obs))
-      e.getSAMString should === (o.getSAMString)
-    outBAM should be ('exists)
-    outBAMIndex should be ('exists)
+      e.getSAMString should ===(o.getSAMString)
+    outBam should be('exists)
+    outBamIndex should be('exists)
   }
 
-  @Test def testWriteSingleBAMAndFilteredBAM() = {
+  @Test def testWriteSingleBamAndFilteredBAM() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBAM = makeTempBAM()
-    val outBAMIndex = makeTempBAMIndex(outBAM)
-    outBAM.deleteOnExit()
-    outBAMIndex.deleteOnExit()
-    val filteredOutBAM = makeTempBAM()
-    val filteredOutBAMIndex = makeTempBAMIndex(filteredOutBAM)
-    filteredOutBAM.deleteOnExit()
-    filteredOutBAMIndex.deleteOnExit()
+    val outBam = makeTempBam()
+    val outBamIndex = makeTempBamIndex(outBam)
+    outBam.deleteOnExit()
+    outBamIndex.deleteOnExit()
+    val filteredOutBam = makeTempBam()
+    val filteredOutBamIndex = makeTempBamIndex(filteredOutBam)
+    filteredOutBam.deleteOnExit()
+    filteredOutBamIndex.deleteOnExit()
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBAM(mockFilterOutFunc, sBAMFile1, outBAM, filteredOutBAM = filteredOutBAM)
+      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam, filteredOutBam = filteredOutBam)
     }
-    stdout.toString should === (
+    stdout.toString should ===(
       "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBAMFile1.getName, outBAM.getName, 4, 3)
+        .format(sBamFile1.getName, outBam.getName, 4, 3)
     )
 
-    val exp = new SAMFileReader(sBAMFile4).asScala
-    val obs = new SAMFileReader(filteredOutBAM).asScala
+    val exp = new SAMFileReader(sBamFile4).asScala
+    val obs = new SAMFileReader(filteredOutBam).asScala
     for ((e, o) <- exp.zip(obs))
-      e.getSAMString should === (o.getSAMString)
-    outBAM should be ('exists)
-    outBAMIndex should be ('exists)
-    filteredOutBAM should be ('exists)
-    filteredOutBAMIndex should be ('exists)
+      e.getSAMString should ===(o.getSAMString)
+    outBam should be('exists)
+    outBamIndex should be('exists)
+    filteredOutBam should be('exists)
+    filteredOutBamIndex should be('exists)
   }
 
-  @Test def testWritePairBAMDefault() = {
+  @Test def testWritePairBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBAM = makeTempBAM()
-    val outBAMIndex = makeTempBAMIndex(outBAM)
-    outBAM.deleteOnExit()
-    outBAMIndex.deleteOnExit()
+    val outBam = makeTempBam()
+    val outBamIndex = makeTempBamIndex(outBam)
+    outBam.deleteOnExit()
+    outBamIndex.deleteOnExit()
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBAM(mockFilterOutFunc, pBAMFile1, outBAM)
+      writeFilteredBam(mockFilterOutFunc, pBamFile1, outBam)
     }
-    stdout.toString should === (
+    stdout.toString should ===(
       "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(pBAMFile1.getName, outBAM.getName, 8, 6)
+        .format(pBamFile1.getName, outBam.getName, 8, 6)
     )
-    val exp = new SAMFileReader(pBAMFile3).asScala
-    val obs = new SAMFileReader(outBAM).asScala
+    val exp = new SAMFileReader(pBamFile3).asScala
+    val obs = new SAMFileReader(outBam).asScala
     for ((e, o) <- exp.zip(obs))
-      e.getSAMString should === (o.getSAMString)
-    outBAM should be ('exists)
-    outBAMIndex should be ('exists)
+      e.getSAMString should ===(o.getSAMString)
+    outBam should be('exists)
+    outBamIndex should be('exists)
   }
 }
