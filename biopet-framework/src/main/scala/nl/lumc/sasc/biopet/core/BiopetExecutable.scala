@@ -28,7 +28,11 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
       nl.lumc.sasc.biopet.tools.BedToInterval,
       nl.lumc.sasc.biopet.tools.MpileupToVcf,
-      nl.lumc.sasc.biopet.tools.FastqSplitter)
+      nl.lumc.sasc.biopet.tools.FastqSplitter,
+      nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
+      nl.lumc.sasc.biopet.tools.SageCountFastq,
+      nl.lumc.sasc.biopet.tools.SageCreateLibrary,
+      nl.lumc.sasc.biopet.tools.SageCreateTagCounts)
   )
   
   /**
@@ -37,7 +41,7 @@ object BiopetExecutable {
   def main(args: Array[String]): Unit = {
 
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
-      "Available %ss:\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
+      "Available %s(s):\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
 
     def usage(module: String = null): String = {
       if (module != null) checkModule(module)
