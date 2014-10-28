@@ -14,8 +14,8 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
+import htsjdk.samtools.util.Interval
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
-import htsjdk.tribble._
 
 class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
@@ -24,8 +24,8 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   private def resourceFile(p: String): File =
     new File(Paths.get(getClass.getResource(p).toURI).toString)
 
-  private def makeFeature(chr: String, start: Int, end: Int): Feature =
-    new BasicFeature(chr, start ,end)
+  private def makeInterval(chr: String, start: Int, end: Int): Interval =
+    new Interval(chr, start, end)
 
   private def makeRecord(header: String): FastqRecord =
     new FastqRecord(header, "ATGC", "", "HIHI")
@@ -40,41 +40,52 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     tName + " on " + f.getName + ", read " + rName + ": "
 
   @Test def testIntervalStartEnd() = {
-    val obs = makeFeatureFromString(List("chr5:1000-1100")).next()
-    val exp = new BasicFeature("chr5", 1000, 1100)
-    obs.getChr should === (exp.getChr)
+    val obs = makeIntervalFromString(List("chr5:1000-1100")).next()
+    val exp = new Interval("chr5", 1000, 1100)
+    obs.getSequence should === (exp.getSequence)
     obs.getStart should === (exp.getStart)
     obs.getEnd should === (exp.getEnd)
   }
 
   @Test def testIntervalStartEndComma() = {
-    val obs = makeFeatureFromString(List("chr5:1,000-1,100")).next()
-    val exp = new BasicFeature("chr5", 1000, 1100)
-    obs.getChr should === (exp.getChr)
+    val obs = makeIntervalFromString(List("chr5:1,000-1,100")).next()
+    val exp = new Interval("chr5", 1000, 1100)
+    obs.getSequence should === (exp.getSequence)
     obs.getStart should === (exp.getStart)
     obs.getEnd should === (exp.getEnd)
   }
 
   @Test def testIntervalStartEndDot() = {
-    val obs = makeFeatureFromString(List("chr5:1.000-1.100")).next()
-    val exp = new BasicFeature("chr5", 1000, 1100)
-    obs.getChr should === (exp.getChr)
+    val obs = makeIntervalFromString(List("chr5:1.000-1.100")).next()
+    val exp = new Interval("chr5", 1000, 1100)
+    obs.getSequence should === (exp.getSequence)
     obs.getStart should === (exp.getStart)
     obs.getEnd should === (exp.getEnd)
   }
 
   @Test def testIntervalStart() = {
-    val obs = makeFeatureFromString(List("chr5:1000")).next()
-    val exp = new BasicFeature("chr5", 1000, 1000)
-    obs.getChr should === (exp.getChr)
+    val obs = makeIntervalFromString(List("chr5:1000")).next()
+    val exp = new Interval("chr5", 1000, 1000)
+    obs.getSequence should === (exp.getSequence)
     obs.getStart should === (exp.getStart)
     obs.getEnd should === (exp.getEnd)
   }
 
-  @Test def testIntervalError() =
-    intercept[IllegalArgumentException] {
-      makeFeatureFromString(List("chr5:1000-")).next()
+  @Test def testIntervalError() = {
+    val thrown = intercept[IllegalArgumentException] {
+      makeIntervalFromString(List("chr5:1000-")).next()
     }
+    thrown.getMessage should === ("Invalid interval string: chr5:1000-")
+  }
+
+  @Test def testMemFuncIntervalError() = {
+    val iv = Iterator(new Interval("chrP", 1, 1000))
+    val inAln = resourceFile("/single01.bam")
+    val thrown = intercept[IllegalArgumentException] {
+      makeMembershipFunction(iv, inAln)
+    }
+    thrown.getMessage should === ("Chromosome chrP is not found in the alignment file")
+  }
 
   @DataProvider(name = "singleAlnProvider1", parallel = true)
   def singleAlnProvider1() = {
@@ -84,20 +95,20 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
     Array(
       Array("adjacent left",
-        makeFeature("chrQ", 30, 49), sBam01, sFastq1, sFastq1Default),
+        makeInterval("chrQ", 30, 49), sBam01, sFastq1, sFastq1Default),
       Array("adjacent right",
-        makeFeature("chrQ", 200, 210), sBam01, sFastq1, sFastq1Default),
+        makeInterval("chrQ", 200, 210), sBam01, sFastq1, sFastq1Default),
       Array("no overlap",
-        makeFeature("chrQ", 220, 230), sBam01, sFastq1, sFastq1Default),
+        makeInterval("chrQ", 220, 230), sBam01, sFastq1, sFastq1Default),
       Array("partial overlap",
-        makeFeature("chrQ", 430, 460), sBam01, sFastq1, sFastq1Default.updated("r04", true)),
+        makeInterval("chrQ", 430, 460), sBam01, sFastq1, sFastq1Default.updated("r04", true)),
       Array("enveloped",
-        makeFeature("chrQ", 693, 698), sBam01, sFastq1, sFastq1Default.updated("r03", true))
+        makeInterval("chrQ", 693, 698), sBam01, sFastq1, sFastq1Default.updated("r03", true))
     )
   }
 
   @Test(dataProvider = "singleAlnProvider1")
-  def testSingleBamDefault(name: String, feat: Feature, inAln: File,
+  def testSingleBamDefault(name: String, feat: Interval, inAln: File,
                            fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln)
@@ -116,16 +127,16 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
     Array(
       Array("less than minimum MAPQ",
-        makeFeature("chrQ", 830, 890), sBam02, 60, sFastq2, sFastq2Default),
+        makeInterval("chrQ", 830, 890), sBam02, 60, sFastq2, sFastq2Default),
       Array("greater than minimum MAPQ",
-        makeFeature("chrQ", 830, 890), sBam02, 20, sFastq2, sFastq2Default.updated("r07", true)),
+        makeInterval("chrQ", 830, 890), sBam02, 20, sFastq2, sFastq2Default.updated("r07", true)),
       Array("equal to minimum MAPQ",
-        makeFeature("chrQ", 260, 320), sBam02, 30, sFastq2, sFastq2Default.updated("r01", true))
+        makeInterval("chrQ", 260, 320), sBam02, 30, sFastq2, sFastq2Default.updated("r01", true))
     )
   }
 
   @Test(dataProvider = "singleAlnProvider2")
-  def testSingleBamMinMapQ(name: String, feat: Feature, inAln: File, minMapQ: Int,
+  def testSingleBamMinMapQ(name: String, feat: Interval, inAln: File, minMapQ: Int,
                            fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln, minMapQ)
@@ -148,22 +159,22 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
     Array(
       Array("adjacent left",
-        makeFeature("chrQ", 30, 49), pBam01, pFastq1, pFastq1Default),
+        makeInterval("chrQ", 30, 49), pBam01, pFastq1, pFastq1Default),
       Array("adjacent right",
-        makeFeature("chrQ", 200, 210), pBam01, pFastq1, pFastq1Default),
+        makeInterval("chrQ", 200, 210), pBam01, pFastq1, pFastq1Default),
       Array("no overlap",
-        makeFeature("chrQ", 220, 230), pBam01, pFastq1, pFastq1Default),
+        makeInterval("chrQ", 220, 230), pBam01, pFastq1, pFastq1Default),
       Array("partial overlap",
-        makeFeature("chrQ", 430, 460), pBam01, pFastq1, pFastq1Default.updated("r04", true)),
+        makeInterval("chrQ", 430, 460), pBam01, pFastq1, pFastq1Default.updated("r04", true)),
       Array("enveloped",
-        makeFeature("chrQ", 693, 698), pBam01, pFastq1, pFastq1Default.updated("r03", true)),
+        makeInterval("chrQ", 693, 698), pBam01, pFastq1, pFastq1Default.updated("r03", true)),
       Array("in intron",
-        makeFeature("chrQ", 900, 999), pBam01, pFastq1, pFastq1Default.updated("r05", true))
+        makeInterval("chrQ", 900, 999), pBam01, pFastq1, pFastq1Default.updated("r05", true))
     )
   }
 
   @Test(dataProvider = "pairAlnProvider1")
-  def testPairBamDefault(name: String, feat: Feature, inAln: File,
+  def testPairBamDefault(name: String, feat: Interval, inAln: File,
                          fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln, commonSuffixLength = 2)
@@ -175,13 +186,13 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   }
 
   @Test def testWriteSingleBamDefault() = {
-      val memFunc = (recs: FastqPair) => Set("r01", "r03").contains(recs._1.getReadHeader)
-      val in1 = new FastqReader(resourceFile("/single01.fq"))
-      val mo1 = mock[BasicFastqWriter]
-      selectFastqReads(memFunc, in1, mo1)
-      verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
-      verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
-      verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
+    val memFunc = (recs: FastqPair) => Set("r01", "r03").contains(recs._1.getReadHeader)
+    val in1 = new FastqReader(resourceFile("/single01.fq"))
+    val mo1 = mock[BasicFastqWriter]
+    selectFastqReads(memFunc, in1, mo1)
+    verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
+    verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
+    verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
   }
 
   @Test def testWritePairBamDefault() = {

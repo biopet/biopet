@@ -9,19 +9,20 @@ import java.io.File
 import scala.collection.mutable.{ Set => MSet }
 import scala.collection.JavaConverters._
 
-import htsjdk.samtools.SAMFileReader
 import htsjdk.samtools.QueryInterval
+import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.ValidationStringency
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
-import htsjdk.tribble.Feature
-import htsjdk.tribble.BasicFeature
+import htsjdk.samtools.util.Interval
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 
 object ExtractAlignedFastq extends ToolCommand {
 
   type FastqPair = (FastqRecord, FastqRecord)
+
   /**
-   * Function to create iterator over features given input interval string
+   * Function to create iterator over Interval given input interval string
    *
    * Valid interval strings are either of these:
    *    - chr5:10000-11000
@@ -38,7 +39,7 @@ object ExtractAlignedFastq extends ToolCommand {
    *
    * @param inStrings iterable yielding input interval string
    */
-  def makeFeatureFromString(inStrings: Iterable[String]): Iterator[Feature] = {
+  def makeIntervalFromString(inStrings: Iterable[String]): Iterator[Interval] = {
 
     // FIXME: can we combine these two patterns into one regex?
     // matches intervals with start and end coordinates
@@ -47,15 +48,16 @@ object ExtractAlignedFastq extends ToolCommand {
     val ptn2 = """([\w_-]+):([\d.,]+)""".r
     // make ints from coordinate strings
     // NOTE: while it is possible for coordinates to exceed Int.MaxValue, we are limited
-    // by the BasicFeature constructor only accepting ints
+    // by the Interval constructor only accepting ints
     def intFromCoord(s: String): Int = s.replaceAll(",", "").replaceAll("\\.", "").toInt
 
     inStrings.map(x => x match {
-        case ptn1(chr, start, end)  => new BasicFeature(chr, intFromCoord(start), intFromCoord(end))
-        case ptn2(chr, start)       => val startCoord = intFromCoord(start)
-                                       new BasicFeature(chr, startCoord, startCoord)
-        case _                      => throw new IllegalArgumentException("Invalid interval string: " + x)
-      })
+      case ptn1(chr, start, end) => new Interval(chr, intFromCoord(start), intFromCoord(end))
+      case ptn2(chr, start) =>
+        val startCoord = intFromCoord(start)
+        new Interval(chr, startCoord, startCoord)
+      case _ => throw new IllegalArgumentException("Invalid interval string: " + x)
+    })
       .toIterator
   }
 
@@ -69,34 +71,30 @@ object ExtractAlignedFastq extends ToolCommand {
    * @param commonSuffixLength length of suffix common to all read pairs
    * @return
    */
-  def makeMembershipFunction(iv: Iterator[Feature],
+  def makeMembershipFunction(iv: Iterator[Interval],
                              inAln: File,
                              minMapQ: Int = 0,
-                             commonSuffixLength: Int = 0
-                            ): (FastqPair => Boolean) = {
+                             commonSuffixLength: Int = 0): (FastqPair => Boolean) = {
 
-    /** function to make interval queries for BAM files */
-    def makeQueryInterval(aln: SAMFileReader, feat: Feature): QueryInterval =
-      if (aln.getFileHeader.getSequenceIndex(feat.getChr) > -1)
-        aln.makeQueryInterval(feat.getChr, feat.getStart, feat.getEnd)
-      else if (feat.getChr.startsWith("chr")
-        && aln.getFileHeader.getSequenceIndex(feat.getChr.substring(3)) > -1)
-        aln.makeQueryInterval(feat.getChr.substring(3), feat.getStart, feat.getEnd)
-      else if (!feat.getChr.startsWith("chr")
-        && aln.getFileHeader.getSequenceIndex("chr" + feat.getChr) > -1)
-        aln.makeQueryInterval("chr" + feat.getChr, feat.getStart, feat.getEnd)
-      else
-        throw new IllegalStateException("Unexpected feature: " + feat.toString)
-
-    val inAlnReader = new SAMFileReader(inAln)
+    val inAlnReader = SamReaderFactory
+      .make()
+      .validationStringency(ValidationStringency.LENIENT)
+      .open(inAln)
     require(inAlnReader.hasIndex)
 
+    def getSequenceIndex(name: String): Int = inAlnReader.getFileHeader.getSequenceIndex(name) match {
+      case x if x >= 0  =>
+        x
+      case otherwise    =>
+        throw new IllegalArgumentException("Chromosome " + name + " is not found in the alignment file")
+    }
+
     val queries: Array[QueryInterval] = iv.toList
-      // sort features
-      .sortBy(x => (x.getChr, x.getStart, x.getEnd))
-      // turn them into QueryInterval objects
-      .map(x => makeQueryInterval(inAlnReader, x))
-      // return as an array
+      // sort Interval
+      .sortBy(x => (x.getSequence, x.getStart, x.getEnd))
+      // transform to QueryInterval
+      .map(x => new QueryInterval(getSequenceIndex(x.getSequence), x.getStart, x.getEnd))
+      // cast to array
       .toArray
 
     lazy val selected: MSet[String] = inAlnReader
@@ -112,11 +110,11 @@ object ExtractAlignedFastq extends ToolCommand {
           logger.debug("Adding " + x.getReadName + " to set ...")
           acc += x.getReadName
         }
-       )
+      )
 
     (pair: FastqPair) => pair._2 match {
-      case null       => selected.contains(pair._1.getReadHeader)
-      case otherwise  =>
+      case null => selected.contains(pair._1.getReadHeader)
+      case otherwise =>
         require(commonSuffixLength < pair._1.getReadHeader.length)
         require(commonSuffixLength < pair._2.getReadHeader.length)
         selected.contains(pair._1.getReadHeader.dropRight(commonSuffixLength))
@@ -131,8 +129,8 @@ object ExtractAlignedFastq extends ToolCommand {
 
     val i1 = inputFastq1.iterator.asScala
     val i2 = inputFastq2 match {
-      case null       => Iterator.continually(null)
-      case otherwise  => otherwise.iterator.asScala
+      case null      => Iterator.continually(null)
+      case otherwise => otherwise.iterator.asScala
     }
     val o1 = outputFastq1
     val o2 = (inputFastq2, outputFastq2) match {
@@ -152,18 +150,18 @@ object ExtractAlignedFastq extends ToolCommand {
         case (rec1, rec2) =>
           o1.write(rec1)
           o2.write(rec2)
-    }
+      }
 
   }
 
-  case class Args (inputBam: File = null,
-                   intervals: List[String] = List.empty[String],
-                   inputFastq1: File = null,
-                   inputFastq2: File = null,
-                   outputFastq1: File = null,
-                   outputFastq2: File = null,
-                   minMapQ: Int = 0,
-                   commonSuffixLength: Int = 0) extends AbstractArgs
+  case class Args(inputBam: File = null,
+                  intervals: List[String] = List.empty[String],
+                  inputFastq1: File = null,
+                  inputFastq2: File = null,
+                  outputFastq1: File = null,
+                  outputFastq2: File = null,
+                  minMapQ: Int = 0,
+                  commonSuffixLength: Int = 0) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -172,36 +170,44 @@ object ExtractAlignedFastq extends ToolCommand {
         |$commandName - Select aligned FASTQ records
       """.stripMargin)
 
-    opt[File]('I', "input_file") required() valueName "<bam>" action { (x, c) =>
-      c.copy(inputBam = x) } validate {
+    opt[File]('I', "input_file") required () valueName "<bam>" action { (x, c) =>
+      c.copy(inputBam = x)
+    } validate {
       x => if (x.exists) success else failure("Input BAM file not found")
     } text "Input BAM file"
 
-    opt[String]('r', "interval") required() unbounded() valueName "<interval>" action { (x, c) =>
+    opt[String]('r', "interval") required () unbounded () valueName "<interval>" action { (x, c) =>
       // yes, we are appending and yes it's O(n) ~ preserving order is more important than speed here
-      c.copy(intervals = c.intervals :+ x) } text "Interval strings"
+      c.copy(intervals = c.intervals :+ x)
+    } text "Interval strings"
 
-    opt[File]('i', "in1") required() valueName "<fastq>" action { (x, c) =>
-      c.copy(inputFastq1 = x) } validate {
+    opt[File]('i', "in1") required () valueName "<fastq>" action { (x, c) =>
+      c.copy(inputFastq1 = x)
+    } validate {
       x => if (x.exists) success else failure("Input FASTQ file 1 not found")
     } text "Input FASTQ file 1"
 
-    opt[File]('j', "in2") optional() valueName "<fastq>" action { (x, c) =>
-      c.copy(inputFastq1 = x) } validate {
+    opt[File]('j', "in2") optional () valueName "<fastq>" action { (x, c) =>
+      c.copy(inputFastq1 = x)
+    } validate {
       x => if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2 (default: none)"
 
-    opt[File]('o', "out1") required() valueName "<fastq>" action { (x, c) =>
-      c.copy(outputFastq1 = x) } text "Output FASTQ file 1"
+    opt[File]('o', "out1") required () valueName "<fastq>" action { (x, c) =>
+      c.copy(outputFastq1 = x)
+    } text "Output FASTQ file 1"
 
-    opt[File]('p', "out2") optional() valueName "<fastq>" action { (x, c) =>
-      c.copy(outputFastq1 = x) } text "Output FASTQ file 2 (default: none)"
+    opt[File]('p', "out2") optional () valueName "<fastq>" action { (x, c) =>
+      c.copy(outputFastq1 = x)
+    } text "Output FASTQ file 2 (default: none)"
 
-    opt[Int]('Q', "min_mapq") optional() action { (x, c) =>
-      c.copy(minMapQ = x) } text "Minimum MAPQ of reads in target region to remove (default: 0)"
+    opt[Int]('Q', "min_mapq") optional () action { (x, c) =>
+      c.copy(minMapQ = x)
+    } text "Minimum MAPQ of reads in target region to remove (default: 0)"
 
-    opt[Int]('s', "read_suffix_length") optional() action { (x, c) =>
-      c.copy(commonSuffixLength = x) } text "Length of common suffix from each read pair (default: 0)"
+    opt[Int]('s', "read_suffix_length") optional () action { (x, c) =>
+      c.copy(commonSuffixLength = x)
+    } text "Length of common suffix from each read pair (default: 0)"
 
     note(
       """
@@ -229,7 +235,7 @@ object ExtractAlignedFastq extends ToolCommand {
       .getOrElse(sys.exit(1))
 
     val memFunc = makeMembershipFunction(
-      iv = makeFeatureFromString(commandArgs.intervals),
+      iv = makeIntervalFromString(commandArgs.intervals),
       inAln = commandArgs.inputBam,
       minMapQ = commandArgs.minMapQ,
       commonSuffixLength = commandArgs.commonSuffixLength)
