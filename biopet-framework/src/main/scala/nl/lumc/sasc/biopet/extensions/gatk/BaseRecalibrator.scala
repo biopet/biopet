@@ -6,18 +6,18 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class BaseRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.BaseRecalibrator with GatkGeneral {
   memoryLimit = Option(4)
   override val defaultVmem = "8G"
-  
+
   override def afterGraph {
     super.afterGraph
-    
+
     if (config.contains("scattercount")) scatterCount = config("scattercount")
     if (config.contains("dbsnp")) knownSites :+= new File(config("dbsnp").getString)
     if (config.contains("known_sites")) knownSites :+= new File(config("known_sites").getString)
   }
 }
-  
+
 object BaseRecalibrator {
-  def apply(root: Configurable, input:File, output:File): BaseRecalibrator = {
+  def apply(root: Configurable, input: File, output: File): BaseRecalibrator = {
     val br = new BaseRecalibrator(root)
     br.input_file :+= input
     br.out = output

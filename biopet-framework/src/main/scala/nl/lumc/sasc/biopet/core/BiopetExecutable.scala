@@ -35,7 +35,7 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.SageCreateLibrary,
       nl.lumc.sasc.biopet.tools.SageCreateTagCounts)
   )
-  
+
   /**
    * @param args the command line arguments
    */
@@ -83,7 +83,7 @@ object BiopetExecutable {
 
     args match {
       case Array("version") => {
-          println("version: " + getVersion)
+        println("version: " + getVersion)
       }
       case Array(module, name, passArgs @ _*) => {
         getCommand(module, name).main(passArgs.toArray)
@@ -98,11 +98,11 @@ object BiopetExecutable {
       }
     }
   }
-  
+
   def getVersion = {
     getClass.getPackage.getImplementationVersion + " (" + getCommitHash + ")"
   }
-  
+
   def getCommitHash = {
     val prop = new Properties()
     prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))

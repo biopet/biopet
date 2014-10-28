@@ -24,22 +24,24 @@ class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunctio
 }
 
 object FastqSplitter extends ToolCommand {
-  case class Args (inputFile:File = null, outputFile:List[File] = Nil) extends AbstractArgs
+  case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
-      c.copy(inputFile = x) } text("out is a required file property")
-    opt[File]('o', "output") required() unbounded() valueName("<file>") action { (x, c) =>
-      c.copy(outputFile = x :: c.outputFile) } text("out is a required file property")
+    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+      c.copy(inputFile = x)
+    } text ("out is a required file property")
+    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+      c.copy(outputFile = x :: c.outputFile)
+    } text ("out is a required file property")
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)  
-    
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+
     val groupsize = 100
     val output = for (file <- commandArgs.outputFile) yield new PrintWriter(file)
     val inputStream = {

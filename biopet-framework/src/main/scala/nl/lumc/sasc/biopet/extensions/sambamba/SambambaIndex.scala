@@ -13,11 +13,11 @@ class SambambaIndex(val root: Configurable) extends Sambamba {
   @Output(doc = "Output .bai file to")
   var output: File = _
 
-  def cmdLine = required(executable) + 
-  required("index") + 
-  optional("-t", nCoresRequest) +
-  required(input) + 
-  required(output)
+  def cmdLine = required(executable) +
+    required("index") +
+    optional("-t", nCoresRequest) +
+    required(input) +
+    required(output)
 }
 
 object SambambaIndex {

@@ -44,9 +44,9 @@ class Config(var map: Map[String, Any]) extends Logging {
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
 
   def contains(s: String): Boolean = map.contains(s)
-  def contains(requestedIndex: ConfigValueIndex, freeVar:Boolean): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
+  def contains(requestedIndex: ConfigValueIndex, freeVar: Boolean): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
   def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, true)
-  def contains(module: String, path: List[String], key: String, freeVar:Boolean = true): Boolean = {
+  def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
     if (notFoundCache.contains(requestedIndex)) return false
     else if (foundCache.contains(requestedIndex)) return true
@@ -62,7 +62,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
   }
 
-  protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar:Boolean = true): ConfigValue = {
+  protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key)
     if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
     else if (default != null) {
@@ -133,7 +133,7 @@ object Config {
   }
 
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
-  
+
   private def jsonToMap(json: Json): Map[String, Any] = {
     var output: Map[String, Any] = Map()
     if (json.isObject) {
@@ -159,8 +159,8 @@ object Config {
       else return num.toLong
     } else throw new IllegalStateException("Config value type not supported, value: " + json)
   }
-  
-  private def getMapFromPath(map:Map[String,Any], path: List[String]): Map[String, Any] = {
+
+  private def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
     var returnMap: Map[String, Any] = map
     for (m <- path) {
       if (!returnMap.contains(m)) return Map()
@@ -168,8 +168,8 @@ object Config {
     }
     return returnMap
   }
-  
-  def getValueFromMap(map:Map[String,Any], index:ConfigValueIndex): Option[ConfigValue] = {
+
+  def getValueFromMap(map: Map[String, Any], index: ConfigValueIndex): Option[ConfigValue] = {
     var submodules = index.path.reverse
     while (!submodules.isEmpty) {
       var submodules2 = submodules
