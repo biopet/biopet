@@ -224,11 +224,14 @@ object ExtractAlignedFastq extends ToolCommand {
     }
   }
 
-  def main(args: Array[String]): Unit = {
-
-    val commandArgs: Args = new OptParser()
+  def parseArgs(args: Array[String]): Args =
+    new OptParser()
       .parse(args, Args())
       .getOrElse(sys.exit(1))
+
+  def main(args: Array[String]): Unit = {
+
+    val commandArgs: Args = parseArgs(args)
 
     val memFunc = makeMembershipFunction(
       iv = makeIntervalFromString(commandArgs.intervals),

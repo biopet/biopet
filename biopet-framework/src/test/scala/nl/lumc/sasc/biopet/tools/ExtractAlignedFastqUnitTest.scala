@@ -22,7 +22,10 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   import ExtractAlignedFastq._
 
   private def resourceFile(p: String): File =
-    new File(Paths.get(getClass.getResource(p).toURI).toString)
+    new File(resourcePath(p))
+
+  private def resourcePath(p: String): String =
+    Paths.get(getClass.getResource(p).toURI).toString
 
   private def makeInterval(chr: String, start: Int, end: Int): Interval =
     new Interval(chr, start, end)
@@ -233,5 +236,19 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     thrown.getMessage should ===("Output FASTQ 2 supplied but there is no input FASTQ 2")
     verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
     verify(out2.get, never).write(anyObject.asInstanceOf[FastqRecord])
+  }
+
+  @Test def testMainMinimum() = {
+    val args = Array(
+      "-I", resourcePath("/single01.bam"),
+      "--interval", "chrQ:1-400",
+      "-i", resourcePath("/single01.fq"),
+      "-o", "/tmp/tm1.fq"
+    )
+    val parsed = parseArgs(args)
+    parsed.inputBam.getPath should ===(resourcePath("/single01.bam"))
+    parsed.intervals shouldBe List("chrQ:1-400")
+    parsed.inputFastq1.getPath should ===(resourcePath("/single01.fq"))
+    parsed.outputFastq1.getPath should ===("/tmp/tm1.fq")
   }
 }
