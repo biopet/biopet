@@ -19,7 +19,7 @@ import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
 import htsjdk.tribble.Feature
 import htsjdk.tribble.BasicFeature
 import htsjdk.tribble.bed.BEDCodec
-import htsjdk.tribble.index.interval.{ Interval, IntervalTree }
+import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -190,10 +190,10 @@ object WipeReads extends ToolCommand {
      * @param ifeat iterable over feature objects
      * @return IntervalTree objects, filled with intervals from Feature
      */
-    def makeIntervalTree[T <: Feature](ifeat: Iterable[T]): IntervalTree = {
-      val ivt = new IntervalTree
+    def makeIntervalTree[T <: Feature](ifeat: Iterable[T]): IntervalTreeMap[String] = {
+      val ivt = new IntervalTreeMap[String]
       for (iv <- ifeat)
-        ivt.insert(new Interval(iv.getStart, iv.getEnd))
+        ivt.put(new Interval(iv.getChr, iv.getStart, iv.getEnd), iv.getChr)
       ivt
     }
 
@@ -207,14 +207,13 @@ object WipeReads extends ToolCommand {
      * @param ivtm mutable mapping of a chromosome and its interval tree
      * @return
      */
-    def alignmentBlockOverlaps(rec: SAMRecord, ivtm: Map[String, IntervalTree]): Boolean =
+    def alignmentBlockOverlaps(rec: SAMRecord, ivtm: IntervalTreeMap[String]): Boolean =
       // if SAMRecord is not spliced, assume queryOverlap has done its job
       // otherwise check for alignment block overlaps in our interval list
       // using raw SAMString to bypass cigar string decoding
       if (rec.getSAMString.split("\t")(5).contains("N")) {
         for (ab: AlignmentBlock <- rec.getAlignmentBlocks.asScala) {
-          if (!ivtm(rec.getReferenceName).findOverlapping(
-            new Interval(ab.getReferenceStart, ab.getReferenceStart + ab.getLength - 1)).isEmpty)
+          if (ivtm.containsOverlapping(new Interval(rec.getReferenceName, ab.getReferenceStart, ab.getReferenceStart + ab.getLength - 1)))
             return true
         }
         false
@@ -268,9 +267,13 @@ object WipeReads extends ToolCommand {
       .sortBy(x => (x.referenceIndex, x.start, x.end))
       .toArray
 
-    lazy val intervalTreeMap: Map[String, IntervalTree] = intervals
+    val ivtm = new IntervalTreeMap[String]
+    /*
+    lazy val ivtm: IntervalTreeMap[String] = intervals
       .groupBy(x => x.getChr)
-      .map({ case (key, value) => (key, makeIntervalTree(value)) })
+      .foreach((k, v) => v.foreach(x => ))
+      */
+    intervals.foreach(x => ivtm.put(new Interval(x.getChr, x.getStart, x.getEnd), x.getChr))
 
     lazy val filteredOutSet: BloomFilter[SAMRecord] = readyBam
       // query BAM file with intervals
@@ -278,7 +281,7 @@ object WipeReads extends ToolCommand {
       // for compatibility
       .asScala
       // ensure spliced reads have at least one block overlapping target region
-      .filter(x => alignmentBlockOverlaps(x, intervalTreeMap))
+      .filter(x => alignmentBlockOverlaps(x, ivtm))
       // filter for MAPQ on target region reads
       .filter(x => x.getMappingQuality >= minMapQ)
       // filter on specific read group IDs
