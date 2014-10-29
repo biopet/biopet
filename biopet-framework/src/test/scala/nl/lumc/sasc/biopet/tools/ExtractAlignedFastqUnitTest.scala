@@ -33,11 +33,11 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   private def makeRecord(header: String): FastqRecord =
     new FastqRecord(header, "ATGC", "", "HIHI")
 
-  private def makeSingleRecords(headers: String*): Map[String, FastqPair] =
-    headers.map(x => (x, (makeRecord(x), null))).toMap
+  private def makeSingleRecords(headers: String*): Map[String, FastqInput] =
+    headers.map(x => (x, (makeRecord(x), None))).toMap
 
-  private def makePairRecords(headers: (String, (String, String))*): Map[String, FastqPair] =
-    headers.map(x => (x._1, (makeRecord(x._2._1), makeRecord(x._2._2)))).toMap
+  private def makePairRecords(headers: (String, (String, String))*): Map[String, FastqInput] =
+    headers.map(x => (x._1, (makeRecord(x._2._1), Some(makeRecord(x._2._2))))).toMap
 
   private def makeClue(tName: String, f: File, rName: String): String =
     tName + " on " + f.getName + ", read " + rName + ": "
@@ -112,7 +112,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
   @Test(dataProvider = "singleAlnProvider1")
   def testSingleBamDefault(name: String, feat: Interval, inAln: File,
-                           fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
+                           fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -140,7 +140,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
   @Test(dataProvider = "singleAlnProvider2")
   def testSingleBamMinMapQ(name: String, feat: Interval, inAln: File, minMapQ: Int,
-                           fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
+                           fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln, minMapQ)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -178,7 +178,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
   @Test(dataProvider = "pairAlnProvider1")
   def testPairBamDefault(name: String, feat: Interval, inAln: File,
-                         fastqMap: Map[String, FastqPair], resultMap: Map[String, Boolean]) = {
+                         fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
     val memFunc = makeMembershipFunction(Iterator(feat), inAln, commonSuffixLength = 2)
     for ((key, (rec1, rec2)) <- fastqMap) {
@@ -189,53 +189,28 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   }
 
   @Test def testWriteSingleBamDefault() = {
-    val memFunc = (recs: FastqPair) => Set("r01", "r03").contains(recs._1.getReadHeader)
+    val memFunc = (recs: FastqInput) => Set("r01", "r03").contains(recs._1.getReadHeader)
     val in1 = new FastqReader(resourceFile("/single01.fq"))
     val mo1 = mock[BasicFastqWriter]
-    selectFastqReads(memFunc, in1, mo1)
+    extractReads(memFunc, in1, mo1)
     verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
     verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
     verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
   }
 
   @Test def testWritePairBamDefault() = {
-    val memFunc = (recs: FastqPair) => Set("r01/1", "r01/2", "r03/1", "r03/2").contains(recs._1.getReadHeader)
+    val memFunc = (recs: FastqInput) => Set("r01/1", "r01/2", "r03/1", "r03/2").contains(recs._1.getReadHeader)
     val in1 = new FastqReader(resourceFile("/paired01a.fq"))
-    val in2 = Some(new FastqReader(resourceFile("/paired01b.fq")))
+    val in2 = new FastqReader(resourceFile("/paired01b.fq"))
     val mo1 = mock[BasicFastqWriter]
-    val mo2 = Some(mock[BasicFastqWriter])
-    selectFastqReads(memFunc, in1, mo1, in2, mo2)
+    val mo2 = mock[BasicFastqWriter]
+    extractReads(memFunc, in1, mo1, in2, mo2)
     verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
     verify(mo1).write(new FastqRecord("r01/1", "A", "", "H"))
     verify(mo1).write(new FastqRecord("r03/1", "G", "", "H"))
-    verify(mo2.get, times(2)).write(anyObject.asInstanceOf[FastqRecord])
-    verify(mo2.get).write(new FastqRecord("r01/2", "T", "", "I"))
-    verify(mo2.get).write(new FastqRecord("r03/2", "C", "", "I"))
-  }
-
-  @Test def testWriteNoOutputFastq2() = {
-    val memFunc: (FastqPair => Boolean) = (recs) => true
-    val in1 = mock[FastqReader]
-    val in2 = Some(mock[FastqReader])
-    val out1 = mock[BasicFastqWriter]
-    val thrown = intercept[IllegalArgumentException] {
-      selectFastqReads(memFunc, in1, out1, in2)
-    }
-    thrown.getMessage should ===("Missing output FASTQ 2")
-    verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
-  }
-
-  @Test def testWriteNoInputFastq2() = {
-    val memFunc: (FastqPair => Boolean) = (recs) => true
-    val in1 = mock[FastqReader]
-    val out1 = mock[BasicFastqWriter]
-    val out2 = Some(mock[BasicFastqWriter])
-    val thrown = intercept[IllegalArgumentException] {
-      selectFastqReads(memFunc, in1, out1, outputFastq2 = out2)
-    }
-    thrown.getMessage should ===("Output FASTQ 2 supplied but there is no input FASTQ 2")
-    verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
-    verify(out2.get, never).write(anyObject.asInstanceOf[FastqRecord])
+    verify(mo2, times(2)).write(anyObject.asInstanceOf[FastqRecord])
+    verify(mo2).write(new FastqRecord("r01/2", "T", "", "I"))
+    verify(mo2).write(new FastqRecord("r03/2", "C", "", "I"))
   }
 
   @Test def testMainMinimum() = {

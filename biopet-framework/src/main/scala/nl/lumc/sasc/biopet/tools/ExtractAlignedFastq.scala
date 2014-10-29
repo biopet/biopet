@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 
 object ExtractAlignedFastq extends ToolCommand {
 
-  type FastqPair = (FastqRecord, FastqRecord)
+  type FastqInput = (FastqRecord, Option[FastqRecord])
 
   /**
    * Function to create iterator over Interval given input interval string
@@ -74,7 +74,7 @@ object ExtractAlignedFastq extends ToolCommand {
   def makeMembershipFunction(iv: Iterator[Interval],
                              inAln: File,
                              minMapQ: Int = 0,
-                             commonSuffixLength: Int = 0): (FastqPair => Boolean) = {
+                             commonSuffixLength: Int = 0): (FastqInput => Boolean) = {
 
     val inAlnReader = SamReaderFactory
       .make()
@@ -112,47 +112,32 @@ object ExtractAlignedFastq extends ToolCommand {
         }
       )
 
-    (pair: FastqPair) => pair._2 match {
-      case null => selected.contains(pair._1.getReadHeader)
-      case otherwise =>
+    (pair: FastqInput) => pair._2 match {
+      case None => selected.contains(pair._1.getReadHeader)
+      case Some(x) =>
         require(commonSuffixLength < pair._1.getReadHeader.length)
-        require(commonSuffixLength < pair._2.getReadHeader.length)
+        require(commonSuffixLength < x.getReadHeader.length)
         selected.contains(pair._1.getReadHeader.dropRight(commonSuffixLength))
     }
   }
 
-  def selectFastqReads(memFunc: FastqPair => Boolean,
-                       inputFastq1: FastqReader,
-                       outputFastq1: BasicFastqWriter,
-                       inputFastq2: Option[FastqReader] = None,
-                       outputFastq2: Option[BasicFastqWriter] = None): Unit = {
-
-    val i1 = inputFastq1.iterator.asScala
-    val i2 = inputFastq2 match {
-      case Some(x) => x.iterator.asScala
-      case None    => Iterator.continually(null)
-    }
-    val o1 = outputFastq1
-    val o2 = (inputFastq2, outputFastq2) match {
-      case (None, None)       => null
-      case (_, None)          => throw new IllegalArgumentException("Missing output FASTQ 2")
-      case (None, _)          => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
-      case (Some(_), Some(x)) => x
-    }
-
-    logger.info("Writing output file(s) ...")
-    // zip, filter based on function, and write to output file(s)
-    i1.zip(i2)
+  def extractReads(memFunc: FastqInput => Boolean,
+                       inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
+    inputFastq1.iterator.asScala
+      .zip(Iterator.continually(None))
       .filter(rec => memFunc(rec._1, rec._2))
-      .foreach {
-        case (rec1, null) =>
-          o1.write(rec1)
-        case (rec1, rec2) =>
-          o1.write(rec1)
-          o2.write(rec2)
-      }
+      .foreach(rec => outputFastq1.write(rec._1))
 
-  }
+  def extractReads(memFunc: FastqInput => Boolean,
+                       inputFastq1: FastqReader, outputFastq1: BasicFastqWriter,
+                       inputFastq2:FastqReader, outputFastq2: BasicFastqWriter): Unit =
+    inputFastq1.iterator.asScala
+      .zip(inputFastq2.iterator.asScala)
+      .filter(rec => memFunc(rec._1, Some(rec._2)))
+      .foreach(rec => {
+        outputFastq1.write(rec._1)
+        outputFastq2.write(rec._2)
+      })
 
   case class Args(inputBam: File = new File(""),
                   intervals: List[String] = List.empty[String],
@@ -239,10 +224,19 @@ object ExtractAlignedFastq extends ToolCommand {
       minMapQ = commandArgs.minMapQ,
       commonSuffixLength = commandArgs.commonSuffixLength)
 
-    selectFastqReads(memFunc,
-      inputFastq1 = new FastqReader(commandArgs.inputFastq1),
-      inputFastq2 = commandArgs.inputFastq2.map(x => new FastqReader(x)),
-      outputFastq1 = new BasicFastqWriter(commandArgs.outputFastq1),
-      outputFastq2 = commandArgs.outputFastq2.map(x => new BasicFastqWriter(x)))
+    (commandArgs.inputFastq2, commandArgs.outputFastq2) match {
+
+      case (None, None) => extractReads(memFunc,
+        new FastqReader(commandArgs.inputFastq1),
+        new BasicFastqWriter(commandArgs.inputFastq1))
+
+      case (Some(i2), Some(o2)) => extractReads(memFunc,
+        new FastqReader(commandArgs.inputFastq1),
+        new BasicFastqWriter(commandArgs.outputFastq1),
+        new FastqReader(i2),
+        new BasicFastqWriter(o2))
+
+      case _  => // handled by the command line config check above
+    }
   }
 }
