@@ -251,4 +251,26 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     parsed.inputFastq1.getPath should ===(resourcePath("/single01.fq"))
     parsed.outputFastq1.getPath should ===("/tmp/tm1.fq")
   }
+
+  @Test def testMainMaximum() = {
+    val args = Array(
+      "-I", resourcePath("/paired01.bam"),
+      "--interval", "chrQ:1-400",
+      "-i", resourcePath("/paired01a.fq"),
+      "-j", resourcePath("/paired01b.fq"),
+      "-o", "/tmp/tm1.fq",
+      "-p", "/tmp/tm2.fq",
+      "-s", "2",
+      "-Q", "30"
+    )
+    val parsed = parseArgs(args)
+    parsed.inputBam.getPath should ===(resourcePath("/paired01.bam"))
+    parsed.intervals shouldBe List("chrQ:1-400")
+    parsed.inputFastq1.getPath should ===(resourcePath("/paired01a.fq"))
+    parsed.inputFastq2.get.getPath should ===(resourcePath("/paired01b.fq"))
+    parsed.outputFastq1.getPath should ===("/tmp/tm1.fq")
+    parsed.outputFastq2.get.getPath should ===("/tmp/tm2.fq")
+    parsed.commonSuffixLength shouldBe 2
+    parsed.minMapQ shouldBe 30
+  }
 }
