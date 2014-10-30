@@ -334,14 +334,10 @@ object WipeReads extends ToolCommand {
 
     opt[File]('o', "output_file") required () valueName "<bam>" action { (x, c) =>
       c.copy(outputBam = x)
-    } validate {
-      x => if (x.canWrite) success else failure("Can not write to output BAM file")
     } text "Output BAM file"
 
     opt[File]('f', "discarded_file") optional () valueName "<bam>" action { (x, c) =>
       c.copy(filteredOutBam = Some(x))
-    } validate {
-      x => if (x.canWrite) success else failure("Can not write to filtered BAM file")
     } text "Discarded reads BAM file (default: none)"
 
     opt[Int]('Q', "min_mapq") optional () action { (x, c) =>

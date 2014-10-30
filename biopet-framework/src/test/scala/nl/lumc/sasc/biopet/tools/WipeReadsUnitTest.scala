@@ -448,4 +448,42 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     outBam should be('exists)
     outBamIndex should be('exists)
   }
+
+  @Test def testArgsMinimum() = {
+    val parsed = parseArgs(Array(
+      "-I", sBamFile1.getPath,
+      "-r", BedFile1.getPath,
+      "-o", "/tmp/wr.bam"
+    ))
+    parsed.inputBam shouldBe sBamFile1
+    parsed.targetRegions shouldBe BedFile1
+    parsed.outputBam shouldBe new File("/tmp/wr.bam")
+  }
+
+  @Test def testArgsMaximum() = {
+    val parsed = parseArgs(Array(
+      "-I", pBamFile1.getPath,
+      "-r", BedFile1.getPath,
+      "-o", "/tmp/wr.bam",
+      "-f", "/tmp/wrf.bam",
+      "-Q", "30",
+      "-G", "001",
+      "-G", "002",
+      "--limit_removal",
+      "--no_make_index",
+      "--bloom_size", "10000",
+      "--false_positive", "1e-8"
+    ))
+    parsed.inputBam shouldBe pBamFile1
+    parsed.targetRegions shouldBe BedFile1
+    parsed.outputBam shouldBe new File("/tmp/wr.bam")
+    parsed.filteredOutBam shouldBe Some(new File("/tmp/wrf.bam"))
+    parsed.minMapQ shouldBe 30
+    parsed.readGroupIds should contain("001")
+    parsed.readGroupIds should contain("002")
+    parsed.limitToRegion shouldBe true
+    parsed.noMakeIndex shouldBe true
+    parsed.bloomSize shouldBe 10000
+    parsed.bloomFp shouldBe 1e-8
+  }
 }
