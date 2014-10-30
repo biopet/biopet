@@ -8,7 +8,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import org.mockito.Matchers._
-import org.mockito.Mockito._
+import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -188,32 +188,35 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     }
   }
 
-  @Test def testWriteSingleBamDefault() = {
+  @Test def testWriteSingleFastqDefault() = {
     val memFunc = (recs: FastqInput) => Set("r01", "r03").contains(recs._1.getReadHeader)
     val in1 = new FastqReader(resourceFile("/single01.fq"))
     val mo1 = mock[BasicFastqWriter]
+    val obs = inOrd(mo1)
     extractReads(memFunc, in1, mo1)
     verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
-    verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
-    verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
+    obs.verify(mo1).write(new FastqRecord("r01", "A", "", "H"))
+    obs.verify(mo1).write(new FastqRecord("r03", "G", "", "H"))
   }
 
-  @Test def testWritePairBamDefault() = {
-    val memFunc = (recs: FastqInput) => Set("r01/1", "r01/2", "r03/1", "r03/2").contains(recs._1.getReadHeader)
+  @Test def testWritePairFastqDefault() = {
+    val mockSet = Set("r01/1", "r01/2", "r03/1", "r03/2")
+    val memFunc = (recs: FastqInput) => mockSet.contains(recs._1.getReadHeader) || mockSet.contains(recs._2.get.getReadHeader)
     val in1 = new FastqReader(resourceFile("/paired01a.fq"))
     val in2 = new FastqReader(resourceFile("/paired01b.fq"))
     val mo1 = mock[BasicFastqWriter]
     val mo2 = mock[BasicFastqWriter]
+    val obs = inOrd(mo1, mo2)
     extractReads(memFunc, in1, mo1, in2, mo2)
+    obs.verify(mo1).write(new FastqRecord("r01/1", "A", "", "H"))
+    obs.verify(mo2).write(new FastqRecord("r01/2", "T", "", "I"))
+    obs.verify(mo1).write(new FastqRecord("r03/1", "G", "", "H"))
+    obs.verify(mo2).write(new FastqRecord("r03/2", "C", "", "I"))
     verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
-    verify(mo1).write(new FastqRecord("r01/1", "A", "", "H"))
-    verify(mo1).write(new FastqRecord("r03/1", "G", "", "H"))
     verify(mo2, times(2)).write(anyObject.asInstanceOf[FastqRecord])
-    verify(mo2).write(new FastqRecord("r01/2", "T", "", "I"))
-    verify(mo2).write(new FastqRecord("r03/2", "C", "", "I"))
   }
 
-  @Test def testMainMinimum() = {
+  @Test def testArgsMinimum() = {
     val args = Array(
       "-I", resourcePath("/single01.bam"),
       "--interval", "chrQ:1-400",
@@ -221,16 +224,17 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
       "-o", "/tmp/tm1.fq"
     )
     val parsed = parseArgs(args)
-    parsed.inputBam.getPath should ===(resourcePath("/single01.bam"))
+    parsed.inputBam shouldBe resourceFile("/single01.bam")
     parsed.intervals shouldBe List("chrQ:1-400")
-    parsed.inputFastq1.getPath should ===(resourcePath("/single01.fq"))
-    parsed.outputFastq1.getPath should ===("/tmp/tm1.fq")
+    parsed.inputFastq1 shouldBe resourceFile("/single01.fq")
+    parsed.outputFastq1 shouldBe new File("/tmp/tm1.fq")
   }
 
-  @Test def testMainMaximum() = {
+  @Test def testArgsMaximum() = {
     val args = Array(
       "-I", resourcePath("/paired01.bam"),
       "--interval", "chrQ:1-400",
+      "--interval", "chrP:1000-4000",
       "-i", resourcePath("/paired01a.fq"),
       "-j", resourcePath("/paired01b.fq"),
       "-o", "/tmp/tm1.fq",
@@ -239,12 +243,12 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
       "-Q", "30"
     )
     val parsed = parseArgs(args)
-    parsed.inputBam.getPath should ===(resourcePath("/paired01.bam"))
-    parsed.intervals shouldBe List("chrQ:1-400")
-    parsed.inputFastq1.getPath should ===(resourcePath("/paired01a.fq"))
-    parsed.inputFastq2.get.getPath should ===(resourcePath("/paired01b.fq"))
-    parsed.outputFastq1.getPath should ===("/tmp/tm1.fq")
-    parsed.outputFastq2.get.getPath should ===("/tmp/tm2.fq")
+    parsed.inputBam shouldBe resourceFile("/paired01.bam")
+    parsed.intervals shouldBe List("chrQ:1-400", "chrP:1000-4000")
+    parsed.inputFastq1 shouldBe resourceFile("/paired01a.fq")
+    parsed.inputFastq2.get shouldBe resourceFile("/paired01b.fq")
+    parsed.outputFastq1 shouldBe new File("/tmp/tm1.fq")
+    parsed.outputFastq2.get shouldBe new File("/tmp/tm2.fq")
     parsed.commonSuffixLength shouldBe 2
     parsed.minMapQ shouldBe 30
   }
