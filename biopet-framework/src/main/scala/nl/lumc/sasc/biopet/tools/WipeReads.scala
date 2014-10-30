@@ -267,24 +267,18 @@ object WipeReads extends ToolCommand {
    */
   def writeFilteredBam(filterFunc: (SAMRecord => Boolean), inBam: File, outBam: File,
                        writeIndex: Boolean = true, async: Boolean = true,
-                       filteredOutBam: File = null) = {
+                       filteredOutBam: Option[File] = None) = {
 
     val factory = new SAMFileWriterFactory()
       .setCreateIndex(writeIndex)
       .setUseAsyncIo(async)
 
     val templateBam = prepBam(inBam)
-
     val targetBam = factory.makeBAMWriter(templateBam.getFileHeader, true, outBam)
-
-    val filteredBam =
-      if (filteredOutBam != null)
-        factory.makeBAMWriter(templateBam.getFileHeader, true, filteredOutBam)
-      else
-        null
+    val filteredBam = filteredOutBam
+      .map(x => factory.makeBAMWriter(templateBam.getFileHeader, true, x))
 
     logger.info("Writing output file(s) ...")
-
     try {
       var (incl, excl) = (0, 0)
       for (rec <- templateBam.asScala) {
@@ -293,7 +287,10 @@ object WipeReads extends ToolCommand {
           incl += 1
         } else {
           excl += 1
-          if (filteredBam != null) filteredBam.addAlignment(rec)
+          filteredBam match {
+            case None     =>
+            case Some(x)  => x.addAlignment(rec)
+          }
         }
       }
       println(List("input_bam", "output_bam", "count_included", "count_excluded").mkString("\t"))
@@ -301,14 +298,14 @@ object WipeReads extends ToolCommand {
     } finally {
       templateBam.close()
       targetBam.close()
-      if (filteredBam != null) filteredBam.close()
+      filteredBam.foreach(x => x.close())
     }
   }
 
-  case class Args(inputBam: File = null,
-                  targetRegions: File = null,
-                  outputBam: File = null,
-                  filteredOutBam: File = null,
+  case class Args(inputBam: File = new File(""),
+                  targetRegions: File = new File(""),
+                  outputBam: File = new File(""),
+                  filteredOutBam: Option[File] = None,
                   readGroupIds: Set[String] = Set.empty[String],
                   minMapQ: Int = 0,
                   limitToRegion: Boolean = false,
@@ -337,10 +334,14 @@ object WipeReads extends ToolCommand {
 
     opt[File]('o', "output_file") required () valueName "<bam>" action { (x, c) =>
       c.copy(outputBam = x)
+    } validate {
+      x => if (x.canWrite) success else failure("Can not write to output BAM file")
     } text "Output BAM file"
 
     opt[File]('f', "discarded_file") optional () valueName "<bam>" action { (x, c) =>
-      c.copy(filteredOutBam = x)
+      c.copy(filteredOutBam = Some(x))
+    } validate {
+      x => if (x.canWrite) success else failure("Can not write to filtered BAM file")
     } text "Discarded reads BAM file (default: none)"
 
     opt[Int]('Q', "min_mapq") optional () action { (x, c) =>
@@ -380,11 +381,19 @@ object WipeReads extends ToolCommand {
 
   }
 
+  /**
+   * Parses the command line argument
+   *
+   * @param args Array of arguments
+   * @return
+   */
+  def parseArgs(args: Array[String]): Args = new OptParser()
+    .parse(args, Args())
+    .getOrElse(sys.exit(1))
+
   def main(args: Array[String]): Unit = {
 
-    val commandArgs: Args = new OptParser()
-      .parse(args, Args())
-      .getOrElse(sys.exit(1))
+    val commandArgs: Args = parseArgs(args)
 
     val filterFunc = makeFilterNotFunction(
       ivl = makeIntervalFromFile(commandArgs.targetRegions),

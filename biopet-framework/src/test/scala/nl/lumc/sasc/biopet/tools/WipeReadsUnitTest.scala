@@ -409,7 +409,7 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam, filteredOutBam = filteredOutBam)
+      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam, filteredOutBam = Some(filteredOutBam))
     }
     stdout.toString should ===(
       "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
