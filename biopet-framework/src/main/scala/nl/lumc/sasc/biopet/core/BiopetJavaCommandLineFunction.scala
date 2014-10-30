@@ -8,7 +8,7 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   override def afterGraph {
     memoryLimit = config("memory_limit")
   }
-  
+
   override def commandLine: String = {
     preCmdInternal
     val cmd = super.commandLine

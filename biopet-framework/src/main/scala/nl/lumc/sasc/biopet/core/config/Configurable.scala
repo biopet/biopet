@@ -9,13 +9,13 @@ trait Configurable extends Logging {
   def configPath: List[String] = if (root != null) root.configFullPath else List()
   protected lazy val configName = getClass.getSimpleName.toLowerCase
   protected lazy val configFullPath = configName :: configPath
-  var defaults: scala.collection.mutable.Map[String,Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray:_*)
-                                                          else scala.collection.mutable.Map()
-  
+  var defaults: scala.collection.mutable.Map[String, Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
+  else scala.collection.mutable.Map()
+
   val config = new ConfigFuntions
-  
+
   protected class ConfigFuntions {
-    def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar:Boolean = true): ConfigValue = {
+    def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true): ConfigValue = {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
       val d = {
@@ -31,15 +31,15 @@ trait Configurable extends Logging {
       if (d == null) return globalConfig(m, p, key, freeVar)
       else return globalConfig(m, p, key, d, freeVar)
     }
-    
-    def contains(key: String, submodule: String = null, freeVar:Boolean = true) = {
+
+    def contains(key: String, submodule: String = null, freeVar: Boolean = true) = {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
 
       globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
   }
-  
+
   implicit def configValue2file(value: ConfigValue): File = if (value != null) new File(Configurable.any2string(value.value)) else null
   implicit def configValue2string(value: ConfigValue): String = if (value != null) Configurable.any2string(value.value) else null
   implicit def configValue2long(value: ConfigValue): Long = if (value != null) Configurable.any2long(value.value) else 0
@@ -104,7 +104,7 @@ object Configurable extends Logging {
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
-  
+
   def any2float(any: Any): Float = {
     any match {
       case f: Double => return f.toFloat

@@ -15,12 +15,12 @@ import scala.collection.mutable.Map
 class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
   @Input(doc = "Fastq contams file", required = false)
   var contams_file: File = _
-  
+
   override def beforeCmd() {
     super.beforeCmd
     getContamsFromFile
   }
-  
+
   override def cmdLine = {
     if (!opt_adapter.isEmpty || !opt_anywhere.isEmpty || !opt_front.isEmpty) {
       analysisName = getClass.getSimpleName
@@ -30,7 +30,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
       Ln(this, fastq_input, fastq_output, relative = true).cmd
     }
   }
-  
+
   def getContamsFromFile {
     if (contams_file != null) {
       if (contams_file.exists()) {
@@ -48,23 +48,23 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
       } else logger.warn("File : " + contams_file + " does not exist")
     }
   }
-  
+
   def getSummary: Json = {
     val trimR = """.*Trimmed reads: *(\d*) .*""".r
     val tooShortR = """.*Too short reads: *(\d*) .*""".r
     val tooLongR = """.*Too long reads: *(\d*) .*""".r
     val adapterR = """Adapter '([C|T|A|G]*)'.*trimmed (\d*) times.""".r
-    
+
     var stats: Map[String, Int] = Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
     var adapter_stats: Map[String, Int] = Map()
-    
+
     if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
       line match {
-        case trimR(m) => stats += ("trimmed" -> m.toInt)
-        case tooShortR(m) => stats += ("tooshort" -> m.toInt)
-        case tooLongR(m) => stats += ("toolong" -> m.toInt)
-        case adapterR(adapter, count) =>  adapter_stats += (adapter -> count.toInt)
-        case _ => 
+        case trimR(m)                 => stats += ("trimmed" -> m.toInt)
+        case tooShortR(m)             => stats += ("tooshort" -> m.toInt)
+        case tooLongR(m)              => stats += ("toolong" -> m.toInt)
+        case adapterR(adapter, count) => adapter_stats += (adapter -> count.toInt)
+        case _                        =>
       }
     }
     return ("num_reads_affected" := stats("trimmed")) ->:
@@ -76,25 +76,25 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
 }
 
 object Cutadapt {
-  def apply(root: Configurable, input:File, output:File): Cutadapt = {
+  def apply(root: Configurable, input: File, output: File): Cutadapt = {
     val cutadapt = new Cutadapt(root)
     cutadapt.fastq_input = input
     cutadapt.fastq_output = output
     cutadapt.stats_output = new File(output.getAbsolutePath.substring(0, output.getAbsolutePath.lastIndexOf(".")) + ".stats")
     return cutadapt
   }
-  
+
   def mergeSummaries(jsons: List[Json]): Json = {
     var affected = 0
     var tooShort = 0
     var tooLong = 0
     var adapter_stats: Map[String, Int] = Map()
-    
+
     for (json <- jsons) {
       affected += json.field("num_reads_affected").get.numberOrZero.toInt
       tooShort += json.field("num_reads_discarded_too_short").get.numberOrZero.toInt
       tooLong += json.field("num_reads_discarded_too_long").get.numberOrZero.toInt
-      
+
       val adapters = json.fieldOrEmptyObject("adapters")
       for (key <- adapters.objectFieldsOrEmpty) {
         val number = adapters.field(key).get.numberOrZero.toInt
@@ -102,7 +102,7 @@ object Cutadapt {
         else adapter_stats += (key -> number)
       }
     }
-    
+
     return ("num_reads_affected" := affected) ->:
       ("num_reads_discarded_too_short" := tooShort) ->:
       ("num_reads_discarded_too_long" := tooLong) ->:

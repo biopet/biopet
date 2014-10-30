@@ -16,10 +16,10 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
   @Argument(doc = "dept", required = false)
   var depth: Boolean = false
-  
+
   @Argument(doc = "sameStrand", required = false)
   var sameStrand: Boolean = false
-  
+
   @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
 

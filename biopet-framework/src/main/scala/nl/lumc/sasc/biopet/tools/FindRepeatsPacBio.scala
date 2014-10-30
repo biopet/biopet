@@ -16,7 +16,9 @@
 
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.samtools.QueryInterval
 import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.ValidationStringency
 import htsjdk.samtools.SAMRecord
 import java.io.File
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -24,40 +26,44 @@ import scala.io.Source
 import scala.collection.JavaConversions._
 
 object FindRepeatsPacBio extends ToolCommand {
-  case class Args (inputBam:File = null, inputBed:File = null) extends AbstractArgs
+  case class Args(inputBam: File = null, inputBed: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputBam") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
-      c.copy(inputBam = x) }
-    opt[File]('b', "inputBed") required() maxOccurs(1) valueName("<file>") action { (x, c) =>
-      c.copy(inputBed = x) } text("output file, default to stdout")
+    opt[File]('I', "inputBam") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+      c.copy(inputBam = x)
+    }
+    opt[File]('b', "inputBed") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+      c.copy(inputBed = x)
+    } text ("output file, default to stdout")
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
-    
+
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
     val bamReader = new SAMFileReader(commandArgs.inputBam)
-    bamReader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT)
+    bamReader.setValidationStringency(ValidationStringency.SILENT)
     val bamHeader = bamReader.getFileHeader
-    
-    val header = List("chr", "startPos", "stopPos","Repeat_seq", "repeatLength", 
-                      "original_Repeat_readLength", "Calculated_repeat_readLength", 
-                      "minLength", "maxLength", "inserts", "deletions", "notSpan")
+
+    val header = List("chr", "startPos", "stopPos", "Repeat_seq", "repeatLength",
+      "original_Repeat_readLength", "Calculated_repeat_readLength",
+      "minLength", "maxLength", "inserts", "deletions", "notSpan")
     println(header.mkString("\t"))
-    
-    for (bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
-      val values = bedLine.split("\t"); if values.size >= 3) {
-      val interval = new SAMFileReader.QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
+
+    for (
+      bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
+      val values = bedLine.split("\t"); if values.size >= 3
+    ) {
+      val interval = new QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
       val bamIter = bamReader.query(Array(interval), false)
-      val results = for (samRecord <-bamIter) yield procesSamrecord(samRecord, interval)
+      val results = for (samRecord <- bamIter) yield procesSamrecord(samRecord, interval)
       val chr = values(0)
       val startPos = values(1)
       val stopPos = values(2)
-      val typeRepeat: String = if (values.size >= 15) values(14) else ""    
+      val typeRepeat: String = if (values.size >= 15) values(14) else ""
       val repeatLength = typeRepeat.length
       val oriRepeatLength = values(2).toInt - values(1).toInt + 1
       var calcRepeatLength: List[Int] = Nil
@@ -66,48 +72,48 @@ object FindRepeatsPacBio extends ToolCommand {
       var inserts: List[String] = Nil
       var deletions: List[String] = Nil
       var notSpan = 0
-      
+
       for (result <- results) {
         if (result.isEmpty) notSpan += 1
         else {
           inserts ::= result.get.ins.map(_.insert).mkString(",")
           deletions ::= result.get.dels.map(_.length).mkString(",")
-          val length = oriRepeatLength - result.get.beginDel - result.get.endDel - 
-                ((0 /: result.get.dels.map(_.length)) (_ + _)) + ((0 /: result.get.ins.map(_.insert.size)) (_ + _))
+          val length = oriRepeatLength - result.get.beginDel - result.get.endDel -
+            ((0 /: result.get.dels.map(_.length))(_ + _)) + ((0 /: result.get.ins.map(_.insert.size))(_ + _))
           calcRepeatLength ::= length
           if (length > maxLength) maxLength = length
           if (length < minLength || minLength == -1) minLength = length
         }
       }
-      println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength, 
-                      maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
+      println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength,
+        maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
       bamIter.close
     }
   }
-  
-  case class Del(pos:Int, length:Int)
-  case class Ins(pos:Int, insert:String)
-  
+
+  case class Del(pos: Int, length: Int)
+  case class Ins(pos: Int, insert: String)
+
   class Result() {
     var beginDel = 0
     var endDel = 0
     var dels: List[Del] = Nil
     var ins: List[Ins] = Nil
     var samRecord: SAMRecord = _
-    
+
     override def toString = {
-      "id: " + samRecord.getReadName + "  beginDel: " + beginDel + "  endDel: " + endDel + "  dels: "  + dels + "  ins: "  + ins
+      "id: " + samRecord.getReadName + "  beginDel: " + beginDel + "  endDel: " + endDel + "  dels: " + dels + "  ins: " + ins
     }
   }
-  
-  def procesSamrecord(samRecord:SAMRecord, interval:SAMFileReader.QueryInterval): Option[Result] = {
+
+  def procesSamrecord(samRecord: SAMRecord, interval: QueryInterval): Option[Result] = {
     val readStartPos = List.range(0, samRecord.getReadBases.length)
-          .find(x => samRecord.getReferencePositionAtReadPosition(x) >= interval.start)
+      .find(x => samRecord.getReferencePositionAtReadPosition(x) >= interval.start)
     var readPos = if (readStartPos.isEmpty) return None else readStartPos.get
     if (samRecord.getAlignmentEnd < interval.end) return None
     if (samRecord.getAlignmentStart > interval.start) return None
     var refPos = samRecord.getReferencePositionAtReadPosition(readPos)
-    
+
     val result = new Result
     result.samRecord = samRecord
     result.beginDel = interval.start - refPos
@@ -117,19 +123,19 @@ object FindRepeatsPacBio extends ToolCommand {
       do {
         readPos += 1
         refPos = samRecord.getReferencePositionAtReadPosition(readPos)
-      } while(refPos < oldReadPos)
+      } while (refPos < oldReadPos)
       val readDiff = readPos - oldReadPos
       val refDiff = refPos - oldRefPos
       if (refPos > interval.end) {
         result.endDel = interval.end - oldRefPos
       } else if (readDiff > refDiff) { //Insertion
-        val insert = for (t <- oldReadPos+1 until readPos) yield samRecord.getReadBases()(t-1).toChar
+        val insert = for (t <- oldReadPos + 1 until readPos) yield samRecord.getReadBases()(t - 1).toChar
         result.ins ::= Ins(oldRefPos, insert.mkString)
       } else if (readDiff < refDiff) { // Deletion
         result.dels ::= Del(oldRefPos, refDiff - readDiff)
       }
     }
-    
+
     return Some(result)
   }
 }

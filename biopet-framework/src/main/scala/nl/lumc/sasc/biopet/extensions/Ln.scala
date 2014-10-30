@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
-import scala.sys.process.Process
+import scala.sys.process.{ Process, ProcessLogger }
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -71,24 +71,30 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
     if (relative) {
       // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
-      "ln -s '" + inRelative + "' '" + outCanonical + "'"
+      "ln -s " + inRelative + " " + outCanonical
     } else {
-      "ln -s '" + inCanonical + "' '" + outCanonical + "'"
+      "ln -s " + inCanonical + " " + outCanonical
     }
   }
 
   override def run {
-    val process = Process(cmd).run
-    logger.info("cmd: '" + cmd + "', exitcode: " + process.exitValue)
+    val stdout = new StringBuffer()
+    val stderr = new StringBuffer()
+    val process = Process(cmd).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
+    val exitcode = process.exitValue
+    if (exitcode != 0) {
+      throw new Exception("Error creating symbolic link, this was the original message: \n" + stderr)
+    }
+    logger.info("cmd: '" + cmd + "', exitcode: " + exitcode)
   }
 }
 
- object Ln {
-   def apply(root: Configurable, input:File, output:File, relative:Boolean = true): Ln = {
-     val ln = new Ln(root)
-     ln.in = input
-     ln.out = output
-     ln.relative = relative
-     return ln
-   }
- }
+object Ln {
+  def apply(root: Configurable, input: File, output: File, relative: Boolean = true): Ln = {
+    val ln = new Ln(root)
+    ln.in = input
+    ln.out = output
+    ln.relative = relative
+    return ln
+  }
+}
