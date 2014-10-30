@@ -37,10 +37,11 @@ object ParseSamples extends ToolCommand {
 
     for (((sample, library), values) <- librariesValues) {
       println("sample=" + sample + ", library=" + library + " = " + values)
+      // format: OFF
       val summary =
         ("samples" := (sample :=
           ("libraries" := (library := (
-            jEmptyObject))))) ->: jEmptyObject
+            jEmptyObject)) ->: jEmptyObject)->: jEmptyObject) ->: jEmptyObject) ->: jEmptyObject
       // format: ON
       val summeryText = summary.spaces2
       println(summeryText)
@@ -50,5 +51,24 @@ object ParseSamples extends ToolCommand {
       //writer.close()
       //logger.debug("Stop")
     }
+
+    def getSampleJson(sample: String): Json = {
+      val libraries = (for (((s, l), values) <- librariesValues if s == sample) yield getLibraryJson(sample, l)).toList
+      (sample := libraries) ->: jEmptyObject
+    }
+
+    def getLibraryJson(sample: String, library: String): Json = {
+      (library := "bla") ->: jEmptyObject
+    }
+
+    val samples = (for (((s, l), values) <- librariesValues) yield s).toSet
+
+    val samplesJson = (for (s <- samples) yield getSampleJson(s))
+
+    val summary = ("samples" := samplesJson) ->: jEmptyObject
+
+    println(summary.spaces2)
+
   }
+
 }
