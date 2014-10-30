@@ -33,7 +33,8 @@ object BiopetExecutable {
       nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
       nl.lumc.sasc.biopet.tools.SageCountFastq,
       nl.lumc.sasc.biopet.tools.SageCreateLibrary,
-      nl.lumc.sasc.biopet.tools.SageCreateTagCounts)
+      nl.lumc.sasc.biopet.tools.SageCreateTagCounts,
+      nl.lumc.sasc.biopet.tools.BastyGenerateFasta)
   )
 
   /**
