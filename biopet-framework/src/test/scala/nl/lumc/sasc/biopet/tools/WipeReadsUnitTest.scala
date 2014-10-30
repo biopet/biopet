@@ -9,6 +9,7 @@ import java.nio.file.Paths
 import scala.collection.JavaConverters._
 
 import htsjdk.samtools.SAMFileHeader
+import htsjdk.samtools.SAMFileWriter
 import htsjdk.samtools.SAMLineParser
 import htsjdk.samtools.SAMReadGroupRecord
 import htsjdk.samtools.SAMRecord
@@ -18,10 +19,13 @@ import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.ValidationStringency
 import htsjdk.samtools.util.Interval
 import org.scalatest.Matchers
+import org.mockito.Matchers._
+import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-class WipeReadsUnitTest extends TestNGSuite with Matchers {
+class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import WipeReads._
 
@@ -371,82 +375,67 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     filterNotFunc(pBamRecs2(8)) shouldBe false
     filterNotFunc(pBamRecs2(9)) shouldBe false
   }
-
   @Test def testWriteSingleBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam)
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(sBamFile1), outBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBamFile1.getName, outBam.getName, 4, 3)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(4, 3)
     )
 
-    val exp = makeSamReader(sBamFile3).asScala
-    val obs = makeSamReader(outBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
+    val exp = makeSamReader(sBamFile3).asScala.toList
+    verify(outBam, times(4)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(outBam)
+    exp.foreach(x => {
+      obs.verify(outBam).addAlignment(x)
+    })
   }
 
   @Test def testWriteSingleBamAndFilteredBAM() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
-    val filteredOutBam = makeTempBam()
-    val filteredOutBamIndex = makeTempBamIndex(filteredOutBam)
-    filteredOutBam.deleteOnExit()
-    filteredOutBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
+    val filtBam = Some(mock[SAMFileWriter])
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam, filteredOutBam = Some(filteredOutBam))
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(sBamFile1), outBam, filteredOutBam = filtBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBamFile1.getName, outBam.getName, 4, 3)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(4, 3)
     )
 
     val exp = makeSamReader(sBamFile4).asScala
-    val obs = makeSamReader(filteredOutBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
-    filteredOutBam should be('exists)
-    filteredOutBamIndex should be('exists)
+    verify(filtBam.get, times(3)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(filtBam.get)
+    exp.foreach(x => {
+      obs.verify(filtBam.get).addAlignment(x)
+    })
   }
 
   @Test def testWritePairBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, pBamFile1, outBam)
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(pBamFile1), outBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(pBamFile1.getName, outBam.getName, 8, 6)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(8, 6)
     )
-    val exp = makeSamReader(pBamFile3).asScala
-    val obs = makeSamReader(outBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
+    val exp = makeSamReader(pBamFile3).asScala.toList
+    verify(outBam, times(8)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(outBam)
+    exp.foreach(x => {
+      obs.verify(outBam).addAlignment(x)
+    })
   }
 
   @Test def testArgsMinimum() = {

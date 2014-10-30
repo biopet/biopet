@@ -13,6 +13,7 @@ import htsjdk.samtools.SamReader
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.QueryInterval
 import htsjdk.samtools.ValidationStringency
+import htsjdk.samtools.SAMFileWriter
 import htsjdk.samtools.SAMFileWriterFactory
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
@@ -51,7 +52,7 @@ object WipeReads extends ToolCommand {
    * @param inBam input BAM file
    * @return
    */
-  private def prepBam(inBam: File): SamReader = {
+  private def prepInBam(inBam: File): SamReader = {
     val bam = SamReaderFactory
       .make()
       .validationStringency(ValidationStringency.LENIENT)
@@ -59,6 +60,13 @@ object WipeReads extends ToolCommand {
     require(bam.hasIndex)
     bam
   }
+
+  private def prepOutBam(outBam: File, templateBam: File,
+                         writeIndex: Boolean = true, async: Boolean = true): SAMFileWriter =
+    new SAMFileWriterFactory()
+      .setCreateIndex(writeIndex)
+      .setUseAsyncIo(async)
+      .makeBAMWriter(prepInBam(templateBam).getFileHeader, true, outBam)
 
   /**
    * Creates a list of intervals given an input File
@@ -208,7 +216,7 @@ object WipeReads extends ToolCommand {
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)
 
-    val readyBam = prepBam(inBam)
+    val readyBam = prepInBam(inBam)
 
     val queryIntervals = ivl
       .flatMap(x => makeQueryInterval(readyBam, x))
@@ -261,44 +269,29 @@ object WipeReads extends ToolCommand {
    * @param filterFunc filter function that evaluates true for excluded SAMRecord
    * @param inBam input BAM file
    * @param outBam output BAM file
-   * @param writeIndex whether to write index for output BAM file
-   * @param async whether to write asynchronously
    * @param filteredOutBam whether to write excluded SAMRecords to their own BAM file
    */
-  def writeFilteredBam(filterFunc: (SAMRecord => Boolean), inBam: File, outBam: File,
-                       writeIndex: Boolean = true, async: Boolean = true,
-                       filteredOutBam: Option[File] = None) = {
-
-    val factory = new SAMFileWriterFactory()
-      .setCreateIndex(writeIndex)
-      .setUseAsyncIo(async)
-
-    val templateBam = prepBam(inBam)
-    val targetBam = factory.makeBAMWriter(templateBam.getFileHeader, true, outBam)
-    val filteredBam = filteredOutBam
-      .map(x => factory.makeBAMWriter(templateBam.getFileHeader, true, x))
+  def writeFilteredBam(filterFunc: (SAMRecord => Boolean), inBam: SamReader, outBam: SAMFileWriter,
+                       filteredOutBam: Option[SAMFileWriter] = None) = {
 
     logger.info("Writing output file(s) ...")
     try {
       var (incl, excl) = (0, 0)
-      for (rec <- templateBam.asScala) {
+      for (rec <- inBam.asScala) {
         if (!filterFunc(rec)) {
-          targetBam.addAlignment(rec)
+          outBam.addAlignment(rec)
           incl += 1
         } else {
           excl += 1
-          filteredBam match {
-            case None     =>
-            case Some(x)  => x.addAlignment(rec)
-          }
+          filteredOutBam.foreach(x => x.addAlignment(rec))
         }
       }
-      println(List("input_bam", "output_bam", "count_included", "count_excluded").mkString("\t"))
-      println(List(inBam.getName, outBam.getName, incl, excl).mkString("\t"))
+      println(List("count_included", "count_excluded").mkString("\t"))
+      println(List(incl, excl).mkString("\t"))
     } finally {
-      templateBam.close()
-      targetBam.close()
-      filteredBam.foreach(x => x.close())
+      inBam.close()
+      outBam.close()
+      filteredOutBam.foreach(x => x.close())
     }
   }
 
@@ -391,6 +384,7 @@ object WipeReads extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
+    // cannot use SamReader as inBam directly since it only allows one active iterator at any given time
     val filterFunc = makeFilterNotFunction(
       ivl = makeIntervalFromFile(commandArgs.targetRegions),
       inBam = commandArgs.inputBam,
@@ -403,10 +397,9 @@ object WipeReads extends ToolCommand {
 
     writeFilteredBam(
       filterFunc,
-      commandArgs.inputBam,
-      commandArgs.outputBam,
-      writeIndex = !commandArgs.noMakeIndex,
-      filteredOutBam = commandArgs.filteredOutBam
+      prepInBam(commandArgs.inputBam),
+      prepOutBam(commandArgs.outputBam, commandArgs.inputBam, writeIndex = !commandArgs.noMakeIndex),
+      commandArgs.filteredOutBam.map(x => prepOutBam(x, commandArgs.inputBam, writeIndex = !commandArgs.noMakeIndex))
     )
   }
 }
