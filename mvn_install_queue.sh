@@ -1,4 +1,4 @@
-JAR=/data/DIV5/SASC/common/programs/Queue-3.2-2/Queue.jar
+JAR=/media/ahbbollen/DATADRIVE1/Queue.jar
 ID=gatk-queue-package-distribution
 VERSION=3.2
 GROUP=org.broadinstitute.gatk
