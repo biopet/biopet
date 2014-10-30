@@ -6,7 +6,7 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import org.biojava3.sequencing.io.fastq.{SangerFastqReader, StreamListener, Fastq}
+import org.biojava3.sequencing.io.fastq.{ SangerFastqReader, StreamListener, Fastq }
 import scala.collection.JavaConversions._
 import scala.collection.SortedMap
 import scala.collection.mutable.Map
@@ -17,44 +17,46 @@ class SageCountFastq(val root: Configurable) extends BiopetJavaCommandLineFuncti
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
   var input: File = _
-  
+
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
-  
+
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
-    
-  override def commandLine = super.commandLine + 
-    required("-I", input) + 
+
+  override def commandLine = super.commandLine +
+    required("-I", input) +
     required("-o", output)
 }
 
 object SageCountFastq extends ToolCommand {
-  case class Args (input:File = null, output:File = null) extends AbstractArgs
+  case class Args(input: File = null, output: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") required() valueName("<file>") action { (x, c) =>
-      c.copy(input = x) }
-    opt[File]('o', "output") required() unbounded() valueName("<file>") action { (x, c) =>
-      c.copy(output = x) }
+    opt[File]('I', "input") required () valueName ("<file>") action { (x, c) =>
+      c.copy(input = x)
+    }
+    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+      c.copy(output = x)
+    }
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
-    
+
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
-    
-    val counts:Map[String, Long] = Map()
+
+    val counts: Map[String, Long] = Map()
     val reader = new SangerFastqReader
     var count = 0
     logger.info("Reading fastq file: " + commandArgs.input)
     val fileReader = new FileReader(commandArgs.input)
     reader.stream(fileReader, new StreamListener {
-      def fastq(fastq:Fastq) {
+      def fastq(fastq: Fastq) {
         val seq = fastq.getSequence
         if (counts.contains(seq)) counts(seq) += 1
         else counts += (seq -> 1)
@@ -63,13 +65,13 @@ object SageCountFastq extends ToolCommand {
       }
     })
     logger.info(count + " sequences done")
-    
+
     logger.info("Sorting")
-    val sortedCounts:SortedMap[String, Long] = SortedMap(counts.toArray:_*)
-    
+    val sortedCounts: SortedMap[String, Long] = SortedMap(counts.toArray: _*)
+
     logger.info("Writting outputfile: " + commandArgs.output)
     val writer = new PrintWriter(commandArgs.output)
-    for ((seq,count) <- sortedCounts) {
+    for ((seq, count) <- sortedCounts) {
       writer.println(seq + "\t" + count)
     }
     writer.close

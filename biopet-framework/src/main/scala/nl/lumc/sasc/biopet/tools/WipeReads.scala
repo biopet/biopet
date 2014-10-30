@@ -246,11 +246,11 @@ object WipeReads extends ToolCommand {
       .filter(x => rgFilter(x))
       // fold starting from empty set
       .foldLeft(BloomFilter.create(SAMFunnel, bloomSize.toInt, bloomFp)
-        )((acc, rec) => {
-            acc.put(rec)
-            if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
-            acc
-          })
+      )((acc, rec) => {
+        acc.put(rec)
+        if (rec.getReadPairedFlag) acc.put(makeMockPair(rec))
+        acc
+      })
 
     if (filterOutMulti)
       (rec: SAMRecord) => filteredOutSet.mightContain(rec)

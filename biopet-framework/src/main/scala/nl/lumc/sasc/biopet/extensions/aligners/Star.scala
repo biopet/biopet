@@ -81,7 +81,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
 }
 
 object Star {
-  def apply(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps:List[File] = Nil): Star = {
+  def apply(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
     if (R2 != null) star.R2 = R2
@@ -92,7 +92,7 @@ object Star {
     return star
   }
 
-  def _2pass(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps:List[File] = Nil): (File, List[Star]) = {
+  def _2pass(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps: List[File] = Nil): (File, List[Star]) = {
     val outDir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, outDir + "aln-pass1/")
     starCommand_pass1.isIntermediate = isIntermediate

@@ -7,9 +7,9 @@ class VariantAnnotator(val root: Configurable) extends org.broadinstitute.gatk.q
   if (config.contains("scattercount")) scatterCount = config("scattercount")
   dbsnp = config("dbsnp")
 }
-  
+
 object VariantAnnotator {
-  def apply(root: Configurable, input:File, bamFiles:List[File], output:File): VariantAnnotator = {
+  def apply(root: Configurable, input: File, bamFiles: List[File], output: File): VariantAnnotator = {
     val va = new VariantAnnotator(root)
     va.variant = input
     va.input_file = bamFiles

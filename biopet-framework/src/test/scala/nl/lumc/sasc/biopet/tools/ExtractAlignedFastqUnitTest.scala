@@ -42,40 +42,40 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   @Test def testIntervalStartEnd() = {
     val obs = makeIntervalFromString(List("chr5:1000-1100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should === (exp.getSequence)
-    obs.getStart should === (exp.getStart)
-    obs.getEnd should === (exp.getEnd)
+    obs.getSequence should ===(exp.getSequence)
+    obs.getStart should ===(exp.getStart)
+    obs.getEnd should ===(exp.getEnd)
   }
 
   @Test def testIntervalStartEndComma() = {
     val obs = makeIntervalFromString(List("chr5:1,000-1,100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should === (exp.getSequence)
-    obs.getStart should === (exp.getStart)
-    obs.getEnd should === (exp.getEnd)
+    obs.getSequence should ===(exp.getSequence)
+    obs.getStart should ===(exp.getStart)
+    obs.getEnd should ===(exp.getEnd)
   }
 
   @Test def testIntervalStartEndDot() = {
     val obs = makeIntervalFromString(List("chr5:1.000-1.100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should === (exp.getSequence)
-    obs.getStart should === (exp.getStart)
-    obs.getEnd should === (exp.getEnd)
+    obs.getSequence should ===(exp.getSequence)
+    obs.getStart should ===(exp.getStart)
+    obs.getEnd should ===(exp.getEnd)
   }
 
   @Test def testIntervalStart() = {
     val obs = makeIntervalFromString(List("chr5:1000")).next()
     val exp = new Interval("chr5", 1000, 1000)
-    obs.getSequence should === (exp.getSequence)
-    obs.getStart should === (exp.getStart)
-    obs.getEnd should === (exp.getEnd)
+    obs.getSequence should ===(exp.getSequence)
+    obs.getStart should ===(exp.getStart)
+    obs.getEnd should ===(exp.getEnd)
   }
 
   @Test def testIntervalError() = {
     val thrown = intercept[IllegalArgumentException] {
       makeIntervalFromString(List("chr5:1000-")).next()
     }
-    thrown.getMessage should === ("Invalid interval string: chr5:1000-")
+    thrown.getMessage should ===("Invalid interval string: chr5:1000-")
   }
 
   @Test def testMemFuncIntervalError() = {
@@ -84,7 +84,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     val thrown = intercept[IllegalArgumentException] {
       makeMembershipFunction(iv, inAln)
     }
-    thrown.getMessage should === ("Chromosome chrP is not found in the alignment file")
+    thrown.getMessage should ===("Chromosome chrP is not found in the alignment file")
   }
 
   @DataProvider(name = "singleAlnProvider1", parallel = true)
@@ -218,7 +218,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     val thrown = intercept[IllegalArgumentException] {
       selectFastqReads(memFunc, in1, out1, in2)
     }
-    thrown.getMessage should === ("Missing output FASTQ 2")
+    thrown.getMessage should ===("Missing output FASTQ 2")
     verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
   }
 
@@ -230,7 +230,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
     val thrown = intercept[IllegalArgumentException] {
       selectFastqReads(memFunc, in1, out1, outputFastq2 = out2)
     }
-    thrown.getMessage should === ("Output FASTQ 2 supplied but there is no input FASTQ 2")
+    thrown.getMessage should ===("Output FASTQ 2 supplied but there is no input FASTQ 2")
     verify(out1, never).write(anyObject.asInstanceOf[FastqRecord])
     verify(out2, never).write(anyObject.asInstanceOf[FastqRecord])
   }

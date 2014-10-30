@@ -5,8 +5,8 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star , Bowtie, Stampy}
-import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups}
+import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star, Bowtie, Stampy }
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import org.broadinstitute.gatk.queue.QScript
@@ -34,7 +34,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   @Argument(doc = "Skip metrics", shortName = "skipmetrics", required = false)
   var skipMetrics: Boolean = false
-  
+
   @Argument(doc = "Aligner", shortName = "ALN", required = false)
   var aligner: String = _
 
@@ -43,7 +43,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   @Argument(doc = "Chunking", shortName = "chunking", required = false)
   var chunking: Boolean = false
-  
+
   @ClassType(classOf[Int])
   @Argument(doc = "Number of chunks, when not defined pipeline will automatic calculate number of chunks", shortName = "numberChunks", required = false)
   var numberChunks: Option[Int] = None
@@ -79,7 +79,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var paired: Boolean = false
   var defaultAligner = "bwa"
   val flexiprep = new Flexiprep(this)
-  
+
   def init() {
     for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (aligner == null) aligner = config("aligner", default = defaultAligner)
@@ -112,7 +112,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         else {
           val chunkSize: Int = config("chunksize", (1 << 30))
           val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3
-                         else input_R1.length
+          else input_R1.length
           numberChunks = Option(ceil(filesize.toDouble / chunkSize).toInt)
         }
       }
@@ -146,8 +146,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val chunkDir = outputDir + "chunks/" + t + "/"
       chunks += (chunkDir -> (removeGz(chunkDir + fastq_R1.getName),
         if (paired) removeGz(chunkDir + fastq_R2.getName) else ""))
-    } else chunks += (outputDir -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
-                        flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
+    }
+    else chunks += (outputDir -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
+      flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -176,16 +177,16 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         fastq_R1_output :+= R1
         fastq_R2_output :+= R2
       }
-      
+
       val outputBam = new File(chunkDir + outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa" => addBwa(R1, R2, outputBam, deps)
-        case "bowtie" => addBowtie(R1, R2, outputBam, deps)
-        case "stampy" => addStampy(R1, R2, outputBam, deps)
-        case "star" => addStar(R1, R2, outputBam, deps)
+        case "bwa"        => addBwa(R1, R2, outputBam, deps)
+        case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
+        case "stampy"     => addStampy(R1, R2, outputBam, deps)
+        case "star"       => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
-        case _ => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
+        case _            => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
       }
       if (config("chunk_metrics", default = false))
         addAll(BamMetrics(this, outputBam, chunkDir + "metrics/").functions)
@@ -204,13 +205,13 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
-    
+
     if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions)
-    
+
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-  def addBwa(R1:File, R2:File, output:File, deps:List[File]): File = {
+  def addBwa(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaCommand = new Bwa(this)
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
@@ -223,9 +224,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     add(sortSam)
     return sortSam.output
   }
-  
-  def addStampy(R1:File, R2:File, output:File, deps:List[File]): File = {
-    
+
+  def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
+
     var RG: String = "ID:" + RGID + ","
     RG += "SM:" + RGSM + ","
     RG += "LB:" + RGLB + ","
@@ -249,8 +250,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     add(sortSam)
     return sortSam.output
   }
-  
-  def addBowtie(R1:File, R2:File, output:File, deps:List[File]): File = {
+
+  def addBowtie(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
     if (paired) bowtie.R2 = R2
@@ -259,19 +260,19 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     add(bowtie, isIntermediate = true)
     return addAddOrReplaceReadGroups(bowtie.output, output)
   }
-  
-  def addStar(R1:File, R2:File, output:File, deps:List[File]): File = {
+
+  def addStar(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
     return addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
-  
-  def addStar2pass(R1:File, R2:File, output:File, deps:List[File]): File = {
+
+  def addStar2pass(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star._2pass(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
     return addAddOrReplaceReadGroups(starCommand._1, output)
   }
-  
+
   def addAddOrReplaceReadGroups(input: File, output: File): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
@@ -305,7 +306,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 }
 
 object Mapping extends PipelineCommand {
-  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any], runDir: String): Mapping = {
+  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any],
+                            runDir: String, startJobs: Boolean = true): Mapping = {
     val mapping = new Mapping(root)
 
     logger.debug("Mapping runconfig: " + runConfig)
@@ -323,8 +325,10 @@ object Mapping extends PipelineCommand {
     if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
     mapping.outputDir = runDir
 
-    mapping.init
-    mapping.biopetScript
+    if (startJobs) {
+      mapping.init
+      mapping.biopetScript
+    }
     return mapping
   }
 }

@@ -38,41 +38,43 @@ object BiopetFlagstat extends ToolCommand {
     flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
     return flagstat
   }
-  
-  case class Args (inputFile:File = null, region:Option[String] = None) extends AbstractArgs
+
+  case class Args(inputFile: File = null, region: Option[String] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
-      c.copy(inputFile = x) } text("out is a required file property")
-    opt[String]('r', "region") valueName("<chr:start-stop>") action { (x, c) =>
-      c.copy(region = Some(x)) } text("out is a required file property")
+    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+      c.copy(inputFile = x)
+    } text ("out is a required file property")
+    opt[String]('r', "region") valueName ("<chr:start-stop>") action { (x, c) =>
+      c.copy(region = Some(x))
+    } text ("out is a required file property")
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)    
-    
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+
     val inputSam = new SAMFileReader(commandArgs.inputFile)
     val iterSam = if (commandArgs.region == None) inputSam.iterator else {
       val regionRegex = """(.*):(.*)-(.*)""".r
       commandArgs.region.get match {
         case regionRegex(chr, start, stop) => inputSam.query(chr, start.toInt, stop.toInt, false)
-        case _ => sys.error("Region wrong format")
+        case _                             => sys.error("Region wrong format")
       }
     }
-    
+
     val flagstatCollector = new FlagstatCollector
     flagstatCollector.loadDefaultFunctions
     val m = 10
     val max = 60
     for (t <- 0 to (max / m))
       flagstatCollector.addFunction("MAPQ>" + (t * m), record => record.getMappingQuality > (t * m))
-    flagstatCollector.addFunction("First normal, second read inverted (paired end orientation)", record => { 
-      if (record.getReadPairedFlag && 
-          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
+    flagstatCollector.addFunction("First normal, second read inverted (paired end orientation)", record => {
+      if (record.getReadPairedFlag &&
+        record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -80,8 +82,8 @@ object BiopetFlagstat extends ToolCommand {
       else false
     })
     flagstatCollector.addFunction("First normal, second read normal", record => {
-      if (record.getReadPairedFlag && 
-          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag &&
+        record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -89,8 +91,8 @@ object BiopetFlagstat extends ToolCommand {
       else false
     })
     flagstatCollector.addFunction("First inverted, second read inverted", record => {
-      if (record.getReadPairedFlag && 
-          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag &&
+        record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag == record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -98,8 +100,8 @@ object BiopetFlagstat extends ToolCommand {
       else false
     })
     flagstatCollector.addFunction("First inverted, second read normal", record => {
-      if (record.getReadPairedFlag && 
-          record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
+      if (record.getReadPairedFlag &&
+        record.getReferenceIndex == record.getMateReferenceIndex && record.getReadNegativeStrandFlag != record.getMateNegativeStrandFlag &&
         ((record.getFirstOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
           (record.getFirstOfPairFlag && !record.getReadNegativeStrandFlag && record.getAlignmentStart > record.getMateAlignmentStart) ||
           (record.getSecondOfPairFlag && record.getReadNegativeStrandFlag && record.getAlignmentStart < record.getMateAlignmentStart) ||
@@ -109,7 +111,7 @@ object BiopetFlagstat extends ToolCommand {
     flagstatCollector.addFunction("Mate in same strand", record => record.getReadPairedFlag && record.getReadNegativeStrandFlag && record.getMateNegativeStrandFlag &&
       record.getReferenceIndex == record.getMateReferenceIndex)
     flagstatCollector.addFunction("Mate on other chr", record => record.getReadPairedFlag && record.getReferenceIndex != record.getMateReferenceIndex)
-    
+
     logger.info("Start reading file: " + commandArgs.inputFile)
     for (record <- iterSam) {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
