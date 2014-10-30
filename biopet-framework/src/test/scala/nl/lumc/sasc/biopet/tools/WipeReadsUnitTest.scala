@@ -8,13 +8,24 @@ import java.io.File
 import java.nio.file.Paths
 import scala.collection.JavaConverters._
 
-import htsjdk.samtools._
-import htsjdk.tribble._
+import htsjdk.samtools.SAMFileHeader
+import htsjdk.samtools.SAMFileWriter
+import htsjdk.samtools.SAMLineParser
+import htsjdk.samtools.SAMReadGroupRecord
+import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.SAMSequenceRecord
+import htsjdk.samtools.SamReader
+import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.ValidationStringency
+import htsjdk.samtools.util.Interval
 import org.scalatest.Matchers
+import org.mockito.Matchers._
+import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-class WipeReadsUnitTest extends TestNGSuite with Matchers {
+class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import WipeReads._
 
@@ -37,6 +48,11 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
 
   private def makeTempBamIndex(bam: File): File =
     new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
+
+  private def makeSamReader(f: File): SamReader = SamReaderFactory
+    .make()
+    .validationStringency(ValidationStringency.LENIENT)
+    .open(f)
 
   val bloomSize: Long = 1000
   val bloomFp: Double = 1e-10
@@ -104,21 +120,21 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   val minArgList = List("-I", sBamFile1.toString, "-l", BedFile1.toString, "-o", "mock.bam")
 
   @Test def testMakeFeatureFromBed() = {
-    val intervals: Vector[Feature] = makeFeatureFromFile(BedFile1).toVector
+    val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
     intervals.length should be(3)
-    intervals.head.getChr should ===("chrQ")
+    intervals.head.getSequence should ===("chrQ")
     intervals.head.getStart should be(991)
     intervals.head.getEnd should be(1000)
-    intervals.last.getChr should ===("chrQ")
+    intervals.last.getSequence should ===("chrQ")
     intervals.last.getStart should be(291)
     intervals.last.getEnd should be(320)
   }
 
   @Test def testSingleBamDefault() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
-      new BasicFeature("chrQ", 451, 480), // overlaps r04
-      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320), // overlaps r01, second hit,
+      new Interval("chrQ", 451, 480), // overlaps r04
+      new Interval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     // NOTE: while it's possible to have our filter produce false positives
     //       it is highly unlikely in our test cases as we are setting a very low FP rate
@@ -135,10 +151,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamIntervalWithoutChr() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("Q", 291, 320),
-      new BasicFeature("chrQ", 451, 480),
-      new BasicFeature("P", 191, 480)
+    val intervals: List[Interval] = List(
+      new Interval("Q", 291, 320),
+      new Interval("chrQ", 451, 480),
+      new Interval("P", 191, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     filterNotFunc(sBamRecs1(0)) shouldBe false
@@ -151,8 +167,8 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamDefaultPartialExonOverlap() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 881, 1000) // overlaps first exon of r05
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 881, 1000) // overlaps first exon of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     filterNotFunc(sBamRecs1(0)) shouldBe false
@@ -165,9 +181,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamDefaultNoExonOverlap() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrP", 881, 1000),
-      new BasicFeature("chrQ", 900, 920)
+    val intervals: List[Interval] = List(
+      new Interval("chrP", 881, 1000),
+      new Interval("chrQ", 900, 920)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     filterNotFunc(sBamRecs1(0)) shouldBe false
@@ -181,10 +197,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamFilterOutMultiNotSet() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
-      new BasicFeature("chrQ", 451, 480), // overlaps r04
-      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320), // overlaps r01, second hit,
+      new Interval("chrQ", 451, 480), // overlaps r04
+      new Interval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
@@ -198,9 +214,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamFilterMinMapQ() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320),
-      new BasicFeature("chrQ", 451, 480)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320),
+      new Interval("chrQ", 451, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
@@ -216,9 +232,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamFilterMinMapQFilterOutMultiNotSet() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320),
-      new BasicFeature("chrQ", 451, 480)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320),
+      new Interval("chrQ", 451, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
@@ -235,9 +251,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testSingleBamFilterReadGroupIDs() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320),
-      new BasicFeature("chrQ", 451, 480)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320),
+      new Interval("chrQ", 451, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
@@ -253,10 +269,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBamDefault() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
-      new BasicFeature("chrQ", 451, 480), // overlaps r04
-      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320), // overlaps r01, second hit,
+      new Interval("chrQ", 451, 480), // overlaps r04
+      new Interval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     filterNotFunc(pBamRecs1(0)) shouldBe false
@@ -276,8 +292,8 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBamPartialExonOverlap() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 891, 1000)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 891, 1000)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     filterNotFunc(pBamRecs1(0)) shouldBe false
@@ -297,10 +313,10 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBamFilterOutMultiNotSet() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320), // overlaps r01, second hit,
-      new BasicFeature("chrQ", 451, 480), // overlaps r04
-      new BasicFeature("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320), // overlaps r01, second hit,
+      new Interval("chrQ", 451, 480), // overlaps r04
+      new Interval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
@@ -321,9 +337,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBamFilterMinMapQ() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320),
-      new BasicFeature("chrQ", 451, 480)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320),
+      new Interval("chrQ", 451, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
@@ -341,9 +357,9 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
   }
 
   @Test def testPairBamFilterReadGroupIDs() = {
-    val intervals: Iterator[Feature] = Iterator(
-      new BasicFeature("chrQ", 291, 320),
-      new BasicFeature("chrQ", 451, 480)
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 291, 320),
+      new Interval("chrQ", 451, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
@@ -359,81 +375,104 @@ class WipeReadsUnitTest extends TestNGSuite with Matchers {
     filterNotFunc(pBamRecs2(8)) shouldBe false
     filterNotFunc(pBamRecs2(9)) shouldBe false
   }
-
   @Test def testWriteSingleBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam)
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(sBamFile1), outBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBamFile1.getName, outBam.getName, 4, 3)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(4, 3)
     )
 
-    val exp = new SAMFileReader(sBamFile3).asScala
-    val obs = new SAMFileReader(outBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
+    val exp = makeSamReader(sBamFile3).asScala.toList
+    verify(outBam, times(4)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(outBam)
+    exp.foreach(x => {
+      obs.verify(outBam).addAlignment(x)
+    })
   }
 
   @Test def testWriteSingleBamAndFilteredBAM() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
-    val filteredOutBam = makeTempBam()
-    val filteredOutBamIndex = makeTempBamIndex(filteredOutBam)
-    filteredOutBam.deleteOnExit()
-    filteredOutBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
+    val filtBam = Some(mock[SAMFileWriter])
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, sBamFile1, outBam, filteredOutBam = filteredOutBam)
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(sBamFile1), outBam, filteredOutBam = filtBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(sBamFile1.getName, outBam.getName, 4, 3)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(4, 3)
     )
 
-    val exp = new SAMFileReader(sBamFile4).asScala
-    val obs = new SAMFileReader(filteredOutBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
-    filteredOutBam should be('exists)
-    filteredOutBamIndex should be('exists)
+    val exp = makeSamReader(sBamFile4).asScala
+    verify(filtBam.get, times(3)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(filtBam.get)
+    exp.foreach(x => {
+      obs.verify(filtBam.get).addAlignment(x)
+    })
   }
 
   @Test def testWritePairBamDefault() = {
     val mockFilterOutFunc = (r: SAMRecord) => Set("r03", "r04", "r05").contains(r.getReadName)
-    val outBam = makeTempBam()
-    val outBamIndex = makeTempBamIndex(outBam)
-    outBam.deleteOnExit()
-    outBamIndex.deleteOnExit()
+    val outBam = mock[SAMFileWriter]
 
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeFilteredBam(mockFilterOutFunc, pBamFile1, outBam)
+      writeFilteredBam(mockFilterOutFunc, makeSamReader(pBamFile1), outBam)
     }
     stdout.toString should ===(
-      "input_bam\toutput_bam\tcount_included\tcount_excluded\n%s\t%s\t%d\t%d\n"
-        .format(pBamFile1.getName, outBam.getName, 8, 6)
+      "count_included\tcount_excluded\n%d\t%d\n"
+        .format(8, 6)
     )
-    val exp = new SAMFileReader(pBamFile3).asScala
-    val obs = new SAMFileReader(outBam).asScala
-    for ((e, o) <- exp.zip(obs))
-      e.getSAMString should ===(o.getSAMString)
-    outBam should be('exists)
-    outBamIndex should be('exists)
+    val exp = makeSamReader(pBamFile3).asScala.toList
+    verify(outBam, times(8)).addAlignment(anyObject.asInstanceOf[SAMRecord])
+    val obs = inOrd(outBam)
+    exp.foreach(x => {
+      obs.verify(outBam).addAlignment(x)
+    })
+  }
+
+  @Test def testArgsMinimum() = {
+    val parsed = parseArgs(Array(
+      "-I", sBamFile1.getPath,
+      "-r", BedFile1.getPath,
+      "-o", "/tmp/wr.bam"
+    ))
+    parsed.inputBam shouldBe sBamFile1
+    parsed.targetRegions shouldBe BedFile1
+    parsed.outputBam shouldBe new File("/tmp/wr.bam")
+  }
+
+  @Test def testArgsMaximum() = {
+    val parsed = parseArgs(Array(
+      "-I", pBamFile1.getPath,
+      "-r", BedFile1.getPath,
+      "-o", "/tmp/wr.bam",
+      "-f", "/tmp/wrf.bam",
+      "-Q", "30",
+      "-G", "001",
+      "-G", "002",
+      "--limit_removal",
+      "--no_make_index",
+      "--bloom_size", "10000",
+      "--false_positive", "1e-8"
+    ))
+    parsed.inputBam shouldBe pBamFile1
+    parsed.targetRegions shouldBe BedFile1
+    parsed.outputBam shouldBe new File("/tmp/wr.bam")
+    parsed.filteredOutBam shouldBe Some(new File("/tmp/wrf.bam"))
+    parsed.minMapQ shouldBe 30
+    parsed.readGroupIds should contain("001")
+    parsed.readGroupIds should contain("002")
+    parsed.limitToRegion shouldBe true
+    parsed.noMakeIndex shouldBe true
+    parsed.bloomSize shouldBe 10000
+    parsed.bloomFp shouldBe 1e-8
   }
 }
