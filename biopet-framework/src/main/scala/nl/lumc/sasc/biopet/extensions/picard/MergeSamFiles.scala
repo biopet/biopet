@@ -18,16 +18,16 @@ class MergeSamFiles(val root: Configurable) extends Picard {
 
   @Argument(doc = "ASSUME_SORTED", required = false)
   var assumeSorted: Boolean = config("assumesorted", default = false)
-  
+
   @Argument(doc = "MERGE_SEQUENCE_DICTIONARIES", required = false)
   var mergeSequenceDictionaries: Boolean = config("merge_sequence_dictionaries", default = false)
-  
+
   @Argument(doc = "USE_THREADING", required = false)
   var useThreading: Boolean = config("use_threading", default = false)
-  
+
   @Argument(doc = "COMMENT", required = false)
   var comment: String = config("comment")
-  
+
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +

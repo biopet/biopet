@@ -22,7 +22,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
-  
+
   override val defaultVmem = "6G"
   override val defaultThreads = 8
 
@@ -36,7 +36,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var maxbts: Option[Int] = config("maxbts")
   var strata: Boolean = config("strata")
   var maqerr: Option[Int] = config("maqerr")
-  
+
   def cmdLine = {
     required(executable) +
       optional("--threads", nCoresRequest) +

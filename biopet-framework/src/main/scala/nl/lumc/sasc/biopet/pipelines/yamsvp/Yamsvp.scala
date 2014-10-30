@@ -12,7 +12,6 @@ import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
 
-
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
 import org.broadinstitute.gatk.queue.QScript
@@ -67,7 +66,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val sampleDir: String = outputDir + sampleID + "/"
     val alignmentDir: String = sampleDir + "alignment/"
 
-
     val svcallingDir: String = sampleDir + "svcalls/"
 
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
@@ -76,7 +74,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       libraryBamfiles ++= List(libraryOutput.mappedBamFile)
     }
 
-    val bamFile: File = 
+    val bamFile: File =
       if (libraryBamfiles.size == 1) libraryBamfiles.head
       else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = new SambambaMerge(root)
@@ -85,10 +83,10 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         add(mergeSamFiles)
         mergeSamFiles.output
       } else null
-      
+
     val bamIndex = SambambaIndex(root, bamFile)
     add(bamIndex)
-    
+
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
@@ -104,12 +102,12 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     addAll(breakdancer.functions)
 
     // for pindel we should use per library config collected into one config file
-//    val pindelDir = svcallingDir + sampleID + ".pindel/"
-//    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
-//    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
-//    addAll(pindel.functions)
-//
-//    
+    //    val pindelDir = svcallingDir + sampleID + ".pindel/"
+    //    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
+    //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
+    //    addAll(pindel.functions)
+    //
+    //    
     return sampleOutput
   }
 
@@ -117,12 +115,12 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
     val libraryOutput = new LibraryOutput
-    
+
     val runID: String = runConfig("ID").toString
     val sampleID: String = sampleConfig("ID").toString
     val alignmentDir: String = outputDir + sampleID + "/alignment/"
     val runDir: String = alignmentDir + "run_" + runID + "/"
-    
+
     if (runConfig.contains("R1")) {
       val mapping = new Mapping(this)
 

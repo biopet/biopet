@@ -45,24 +45,27 @@ object BedToInterval extends ToolCommand {
     return bedToInterval
   }
 
-  case class Args (inputFile:File = null, outputFile:File = null, bamFile:File = null) extends AbstractArgs
+  case class Args(inputFile: File = null, outputFile: File = null, bamFile: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required() valueName("<file>") action { (x, c) =>
-      c.copy(inputFile = x) }
-    opt[File]('o', "output") required() valueName("<file>") action { (x, c) =>
-      c.copy(outputFile = x) }
-    opt[File]('b', "bam") required() valueName("<file>") action { (x, c) =>
-      c.copy(bamFile = x) }
+    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+      c.copy(inputFile = x)
+    }
+    opt[File]('o', "output") required () valueName ("<file>") action { (x, c) =>
+      c.copy(outputFile = x)
+    }
+    opt[File]('b', "bam") required () valueName ("<file>") action { (x, c) =>
+      c.copy(bamFile = x)
+    }
   }
-  
+
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
-    
+
     val writer = new PrintWriter(commandArgs.outputFile)
 
     val inputSam = new SAMFileReader(commandArgs.bamFile)
@@ -72,19 +75,16 @@ object BedToInterval extends ToolCommand {
       record.getSequenceName -> record.getSequenceLength
     }
     inputSam.close
-    val refsMap = Map(refs:_*)
-    
+    val refsMap = Map(refs: _*)
+
     val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
-        line <- bedFile.getLines;
-        val split = line.split("\t")
-        if split.size >= 3;
-        val chr = split(0);
-        val start = split(1);
-        val stop = split(2)
-        if start forall Character.isDigit
-        if stop forall Character.isDigit
-      ) {
+      line <- bedFile.getLines;
+      val split = line.split("\t") if split.size >= 3;
+      val chr = split(0);
+      val start = split(1);
+      val stop = split(2) if start forall Character.isDigit if stop forall Character.isDigit
+    ) {
       if (!refsMap.contains(chr)) throw new IllegalStateException("Chr '" + chr + "' in bed file not found in bam file")
       writer.write(chr + "\t" + start + "\t" + stop + "\t")
       if (split.length >= 6 && (split(5) == "+" || split(5) == "-")) writer.write(split(5))

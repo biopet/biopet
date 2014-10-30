@@ -12,20 +12,20 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
     if (fastqc != null && Q == None) {
       val encoding = fastqc.getEncoding
       Q = encoding match {
-        case null => None
+        case null                                       => None
         case s if (s.contains("Sanger / Illumina 1.9")) => None
-        case s if (s.contains("Illumina <1.3")) => Option(64)
-        case s if (s.contains("Illumina 1.3")) => Option(64)
-        case s if (s.contains("Illumina 1.5")) => Option(64)
+        case s if (s.contains("Illumina <1.3"))         => Option(64)
+        case s if (s.contains("Illumina 1.3"))          => Option(64)
+        case s if (s.contains("Illumina 1.5"))          => Option(64)
       }
       if (Q != None) V = true
     }
   }
-  
+
   override def afterGraph {
     if (fastqc != null) deps ::= fastqc.output
   }
-  
+
   override def cmdLine = {
     if (Q != None) {
       analysisName = getClass.getSimpleName
@@ -38,7 +38,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
 }
 
 object SeqtkSeq {
-  def apply(root: Configurable, input:File, output:File, fastqc:Fastqc = null): SeqtkSeq = {
+  def apply(root: Configurable, input: File, output: File, fastqc: Fastqc = null): SeqtkSeq = {
     val seqtkSeq = new SeqtkSeq(root)
     seqtkSeq.input = input
     seqtkSeq.output = output
