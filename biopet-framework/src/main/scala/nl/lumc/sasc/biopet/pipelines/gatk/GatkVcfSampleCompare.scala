@@ -7,7 +7,6 @@ import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
 import nl.lumc.sasc.biopet.extensions.gatk.VariantEval
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQScript {
@@ -28,10 +27,6 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   var vcfFile: File = _
   var sampleVcfs: Map[String, File] = Map()
   def generalSampleDir = outputDir + "samples/"
-
-  trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = reference
-  }
 
   def init() {
     if (reference == null) reference = config("reference")
