@@ -125,6 +125,13 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   val RefFlatFile1 = new File(resourcePath("/rrna01.refFlat"))
   val GtfFile1 = new File(resourcePath("/rrna01.gtf"))
 
+  @Test def testMakeIntervalFromUnknown() = {
+    val thrown = intercept[IllegalArgumentException] {
+      makeIntervalFromFile(new File("false.bam"))
+    }
+    thrown.getMessage should ===("Unexpected interval file type: false.bam")
+  }
+
   @Test def testMakeIntervalFromBed() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
     intervals.length shouldBe 3
