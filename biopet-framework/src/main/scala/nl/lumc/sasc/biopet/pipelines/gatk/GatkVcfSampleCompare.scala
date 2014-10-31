@@ -5,8 +5,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.SelectVariants
+import nl.lumc.sasc.biopet.extensions.gatk.VariantEval
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CommandLineGATK, VariantEval }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQScript {
@@ -27,12 +27,6 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   var vcfFile: File = _
   var sampleVcfs: Map[String, File] = Map()
   def generalSampleDir = outputDir + "samples/"
-
-  trait gatkArguments extends CommandLineGATK {
-    this.reference_sequence = reference
-    this.memoryLimit = 2
-    this.jobResourceRequests :+= "h_vmem=4G"
-  }
 
   def init() {
     if (reference == null) reference = config("reference")
@@ -70,14 +64,13 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
     for ((sample, sampleVcf) <- sampleVcfs) {
       val sampleDir = generalSampleDir + sample + File.separator
       for ((compareSample, compareSampleVcf) <- sampleVcfs) {
-        val variantEval = new VariantEval with gatkArguments
-        variantEval.eval = Seq(sampleVcf)
-        variantEval.comp = Seq(compareSampleVcf)
-        variantEval.out = new File(sampleDir + sample + "-" + compareSample + ".eval.txt")
-        variantEval.noST = true
-        variantEval.ST = Seq("VariantType", "CompRod")
-        variantEval.noEV = true
-        variantEval.EV = Seq("CompOverlap")
+        val variantEval = VariantEval(this,
+          sampleVcf,
+          compareSampleVcf,
+          new File(sampleDir + sample + "-" + compareSample + ".eval.txt"),
+          Seq("VariantType", "CompRod"),
+          Seq("CompOverlap")
+        )
         if (targetBed != null) variantEval.L = targetBed
         add(variantEval)
         sampleCompareMetrics.deps ::= variantEval.out
