@@ -27,8 +27,11 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   private def resourcePath(p: String): String =
     Paths.get(getClass.getResource(p).toURI).toString
 
-  private def makeInterval(chr: String, start: Int, end: Int): Interval =
-    new Interval(chr, start, end)
+  private def makeInterval(chr: String, start: Int, end: Int): Iterator[Interval] =
+    Iterator(new Interval(chr, start, end))
+
+  private def makeInterval(ivs: Iterable[(String, Int, Int)]): Iterator[Interval] =
+    ivs.map(x => new Interval(x._1, x._2, x._3)).toIterator
 
   private def makeRecord(header: String): FastqRecord =
     new FastqRecord(header, "ATGC", "", "HIHI")
@@ -106,15 +109,18 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
       Array("partial overlap",
         makeInterval("chrQ", 430, 460), sBam01, sFastq1, sFastq1Default.updated("r04", true)),
       Array("enveloped",
-        makeInterval("chrQ", 693, 698), sBam01, sFastq1, sFastq1Default.updated("r03", true))
+        makeInterval("chrQ", 693, 698), sBam01, sFastq1, sFastq1Default.updated("r03", true)),
+      Array("partial overlap and enveloped",
+        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))), sBam01,
+        sFastq1, sFastq1Default.updated("r03", true).updated("r04", true))
     )
   }
 
   @Test(dataProvider = "singleAlnProvider1")
-  def testSingleBamDefault(name: String, feat: Interval, inAln: File,
+  def testSingleBamDefault(name: String, feats: Iterator[Interval], inAln: File,
                            fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
-    val memFunc = makeMembershipFunction(Iterator(feat), inAln)
+    val memFunc = makeMembershipFunction(feats, inAln)
     for ((key, (rec1, rec2)) <- fastqMap) {
       withClue(makeClue(name, inAln, key)) {
         memFunc(rec1, rec2) shouldBe resultMap(key)
@@ -139,10 +145,10 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   }
 
   @Test(dataProvider = "singleAlnProvider2")
-  def testSingleBamMinMapQ(name: String, feat: Interval, inAln: File, minMapQ: Int,
+  def testSingleBamMinMapQ(name: String, feats: Iterator[Interval], inAln: File, minMapQ: Int,
                            fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
-    val memFunc = makeMembershipFunction(Iterator(feat), inAln, minMapQ)
+    val memFunc = makeMembershipFunction(feats, inAln, minMapQ)
     for ((key, (rec1, rec2)) <- fastqMap) {
       withClue(makeClue(name, inAln, key)) {
         memFunc(rec1, rec2) shouldBe resultMap(key)
@@ -172,15 +178,18 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
       Array("enveloped",
         makeInterval("chrQ", 693, 698), pBam01, pFastq1, pFastq1Default.updated("r03", true)),
       Array("in intron",
-        makeInterval("chrQ", 900, 999), pBam01, pFastq1, pFastq1Default.updated("r05", true))
+        makeInterval("chrQ", 900, 999), pBam01, pFastq1, pFastq1Default.updated("r05", true)),
+      Array("partial overlap and enveloped",
+        makeInterval(List(("chrQ", 693, 698), ("chrQ", 430, 460))), pBam01,
+        pFastq1, pFastq1Default.updated("r03", true).updated("r04", true))
     )
   }
 
   @Test(dataProvider = "pairAlnProvider1")
-  def testPairBamDefault(name: String, feat: Interval, inAln: File,
+  def testPairBamDefault(name: String, feats: Iterator[Interval], inAln: File,
                          fastqMap: Map[String, FastqInput], resultMap: Map[String, Boolean]) = {
     require(resultMap.keySet == fastqMap.keySet)
-    val memFunc = makeMembershipFunction(Iterator(feat), inAln, commonSuffixLength = 2)
+    val memFunc = makeMembershipFunction(feats, inAln, commonSuffixLength = 2)
     for ((key, (rec1, rec2)) <- fastqMap) {
       withClue(makeClue(name, inAln, key)) {
         memFunc(rec1, rec2) shouldBe resultMap(key)
