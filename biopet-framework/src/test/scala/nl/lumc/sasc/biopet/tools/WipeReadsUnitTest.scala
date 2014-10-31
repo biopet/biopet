@@ -148,13 +148,13 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     val intervals: List[Interval] = makeIntervalFromFile(RefFlatFile1)
     intervals.length shouldBe 5
     intervals.head.getSequence should ===("chrS")
-    intervals.head.getStart shouldBe 100
+    intervals.head.getStart shouldBe 101
     intervals.head.getEnd shouldBe 500
     intervals(2).getSequence should ===("chrQ")
-    intervals(2).getStart shouldBe 800
+    intervals(2).getStart shouldBe 801
     intervals(2).getEnd shouldBe 1000
     intervals.last.getSequence should ===("chrQ")
-    intervals.last.getStart shouldBe 100
+    intervals.last.getStart shouldBe 101
     intervals.last.getEnd shouldBe 200
   }
 

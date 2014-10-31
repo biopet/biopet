@@ -106,8 +106,8 @@ object WipeReads extends ToolCommand {
         .map(x => (x._1, x._2.map(y => y.split(","))))
         // zip exonStarts and exonEnds, note the index was reversed because we did .reverse above
         .map(x => (x._1, x._2(1).zip(x._2(0))))
-        // make Intervals
-        .map(x => x._2.map(y => new Interval(x._1, y._1.toInt, y._2.toInt)))
+        // make Intervals, accounting for the fact that refFlat coordinates are 0-based
+        .map(x => x._2.map(y => new Interval(x._1, y._1.toInt + 1, y._2.toInt)))
         // flatten sublist
         .flatten
 
