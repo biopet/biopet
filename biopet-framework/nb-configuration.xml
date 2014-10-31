@@ -25,6 +25,5 @@ Any value defined here will override the pom.xml file value but is only applicab
         <com-junichi11-netbeans-changelf.use-global>false</com-junichi11-netbeans-changelf.use-global>
         <com-junichi11-netbeans-changelf.show-dialog>true</com-junichi11-netbeans-changelf.show-dialog>
         <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
-        <netbeans.hint.jdkPlatform>JDK_1.8</netbeans.hint.jdkPlatform>
     </properties>
 </project-shared-configuration>
