@@ -35,6 +35,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   private val samP: SAMLineParser = {
     val samh = new SAMFileHeader
     samh.addSequence(new SAMSequenceRecord("chrQ", 10000))
+    samh.addSequence(new SAMSequenceRecord("chrR", 10000))
     samh.addReadGroup(new SAMReadGroupRecord("001"))
     samh.addReadGroup(new SAMReadGroupRecord("002"))
     new SAMLineParser(samh)
@@ -82,6 +83,15 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   val sBamFile3 = new File(resourcePath("/single03.bam"))
   val sBamFile4 = new File(resourcePath("/single04.bam"))
+
+  val sBamFile5 = new File(resourcePath("/single05.bam"))
+  val sBamRecs5 = makeSams(
+    "r02\t16\tchrR\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
+    "r04\t0\tchrQ\t500\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001",
+    "r01\t0\tchrR\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
+    "r03\t16\tchrQ\t500\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001",
+    "r05\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001"
+  )
 
   val pBamFile1 = new File(resourcePath("/paired01.bam"))
   val pBamRecs1 = makeSams(
@@ -194,6 +204,19 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     filterNotFunc(sBamRecs1(5)) shouldBe false
     filterNotFunc(sBamRecs1(5)) shouldBe false
     filterNotFunc(sBamRecs1(6)) shouldBe false
+  }
+
+  @Test def testSingleBamDifferentChromosomes() = {
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 50, 55),
+      new Interval("chrR", 500, 505)
+    )
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile5, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs5(0)) shouldBe true
+    filterNotFunc(sBamRecs5(1)) shouldBe false
+    filterNotFunc(sBamRecs5(2)) shouldBe false
+    filterNotFunc(sBamRecs5(3)) shouldBe true
+    filterNotFunc(sBamRecs5(4)) shouldBe false
   }
 
   @Test def testSingleBamFilterOutMultiNotSet() = {
