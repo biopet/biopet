@@ -93,10 +93,10 @@ object ExtractAlignedFastq extends ToolCommand {
     }
 
     val queries: Array[QueryInterval] = iv.toList
-      // sort Interval
-      .sortBy(x => (x.getSequence, x.getStart, x.getEnd))
       // transform to QueryInterval
       .map(x => new QueryInterval(getSequenceIndex(x.getSequence), x.getStart, x.getEnd))
+      // sort Interval
+      .sortBy(x => (x.referenceIndex, x.start, x.end))
       // cast to array
       .toArray
 
