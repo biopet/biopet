@@ -44,12 +44,6 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   private def makeSams(raws: String*): Seq[SAMRecord] =
     raws.map(s => samP.parseLine(s))
 
-  private def makeTempBam(): File =
-    File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
-
-  private def makeTempBamIndex(bam: File): File =
-    new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
-
   private def makeSamReader(f: File): SamReader = SamReaderFactory
     .make()
     .validationStringency(ValidationStringency.LENIENT)
@@ -144,15 +138,15 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testMakeIntervalFromRefFlat() = {
     val intervals: List[Interval] = makeIntervalFromFile(RefFlatFile1)
     intervals.length shouldBe 5
-    intervals.last.getSequence should ===("chrQ")
-    intervals.last.getStart shouldBe 100
-    intervals.last.getEnd shouldBe 200
-    intervals(2).getSequence should ===("chrQ")
-    intervals(2).getStart shouldBe 800
-    intervals(2).getEnd shouldBe 1000
     intervals.head.getSequence should ===("chrS")
     intervals.head.getStart shouldBe 100
     intervals.head.getEnd shouldBe 500
+    intervals(2).getSequence should ===("chrQ")
+    intervals(2).getStart shouldBe 800
+    intervals(2).getEnd shouldBe 1000
+    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getStart shouldBe 100
+    intervals.last.getEnd shouldBe 200
   }
 
   @Test def testSingleBamDefault() = {
@@ -282,7 +276,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     filterNotFunc(sBamRecs2(2)) shouldBe false
     filterNotFunc(sBamRecs2(3)) shouldBe true
     filterNotFunc(sBamRecs2(4)) shouldBe true
-    // this r07 is not in since filterOuMulti is false
+    // this r07 is not in since filterOutMulti is false
     filterNotFunc(sBamRecs2(5)) shouldBe false
     filterNotFunc(sBamRecs2(6)) shouldBe false
     filterNotFunc(sBamRecs2(7)) shouldBe false

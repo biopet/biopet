@@ -378,11 +378,11 @@ object WipeReads extends ToolCommand {
 
     opt[Long]("bloom_size") optional () action { (x, c) =>
       c.copy(bloomSize = x)
-    } text "expected maximum number of reads in target regions (default: 7e7)"
+    } text "Expected maximum number of reads in target regions (default: 7e7)"
 
     opt[Double]("false_positive") optional () action { (x, c) =>
       c.copy(bloomFp = x)
-    } text "false positive rate (default: 4e-7)"
+    } text "False positive rate (default: 4e-7)"
 
     note(
       """
