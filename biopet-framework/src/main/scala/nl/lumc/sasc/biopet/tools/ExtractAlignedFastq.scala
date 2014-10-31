@@ -21,6 +21,9 @@ object ExtractAlignedFastq extends ToolCommand {
 
   type FastqInput = (FastqRecord, Option[FastqRecord])
 
+  /** function to get FastqRecord ID */
+  def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
+
   /**
    * Function to create iterator over Interval given input interval string
    *
@@ -113,11 +116,12 @@ object ExtractAlignedFastq extends ToolCommand {
       )
 
     (pair: FastqInput) => pair._2 match {
-      case None => selected.contains(pair._1.getReadHeader)
+      case None => selected.contains(fastqId(pair._1))
       case Some(x) =>
-        require(commonSuffixLength < pair._1.getReadHeader.length)
-        require(commonSuffixLength < x.getReadHeader.length)
-        selected.contains(pair._1.getReadHeader.dropRight(commonSuffixLength))
+        val rec1Id = fastqId(pair._1)
+        require(commonSuffixLength < rec1Id.length)
+        require(commonSuffixLength < fastqId(x).length)
+        selected.contains(rec1Id.dropRight(commonSuffixLength))
     }
   }
 
@@ -224,6 +228,7 @@ object ExtractAlignedFastq extends ToolCommand {
       minMapQ = commandArgs.minMapQ,
       commonSuffixLength = commandArgs.commonSuffixLength)
 
+    logger.info("Writing to output file(s) ...")
     (commandArgs.inputFastq2, commandArgs.outputFastq2) match {
 
       case (None, None) => extractReads(memFunc,

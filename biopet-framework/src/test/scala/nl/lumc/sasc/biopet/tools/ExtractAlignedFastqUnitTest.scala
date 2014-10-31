@@ -189,7 +189,7 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
   }
 
   @Test def testWriteSingleFastqDefault() = {
-    val memFunc = (recs: FastqInput) => Set("r01", "r03").contains(recs._1.getReadHeader)
+    val memFunc = (recs: FastqInput) => Set("r01", "r03").contains(fastqId(recs._1))
     val in1 = new FastqReader(resourceFile("/single01.fq"))
     val mo1 = mock[BasicFastqWriter]
     val obs = inOrd(mo1)
@@ -201,15 +201,15 @@ class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Mat
 
   @Test def testWritePairFastqDefault() = {
     val mockSet = Set("r01/1", "r01/2", "r03/1", "r03/2")
-    val memFunc = (recs: FastqInput) => mockSet.contains(recs._1.getReadHeader) || mockSet.contains(recs._2.get.getReadHeader)
+    val memFunc = (recs: FastqInput) => mockSet.contains(fastqId(recs._1)) || mockSet.contains(fastqId(recs._2.get))
     val in1 = new FastqReader(resourceFile("/paired01a.fq"))
     val in2 = new FastqReader(resourceFile("/paired01b.fq"))
     val mo1 = mock[BasicFastqWriter]
     val mo2 = mock[BasicFastqWriter]
     val obs = inOrd(mo1, mo2)
     extractReads(memFunc, in1, mo1, in2, mo2)
-    obs.verify(mo1).write(new FastqRecord("r01/1", "A", "", "H"))
-    obs.verify(mo2).write(new FastqRecord("r01/2", "T", "", "I"))
+    obs.verify(mo1).write(new FastqRecord("r01/1 hello", "A", "", "H"))
+    obs.verify(mo2).write(new FastqRecord("r01/2 hello", "T", "", "I"))
     obs.verify(mo1).write(new FastqRecord("r03/1", "G", "", "H"))
     obs.verify(mo2).write(new FastqRecord("r03/2", "C", "", "I"))
     verify(mo1, times(2)).write(anyObject.asInstanceOf[FastqRecord])
