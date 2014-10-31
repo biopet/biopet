@@ -126,18 +126,33 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   )
 
   val pBamFile3 = new File(resourcePath("/paired03.bam"))
-  val BedFile1 = new File(resourcePath("/rrna01.bed"))
-  val minArgList = List("-I", sBamFile1.toString, "-l", BedFile1.toString, "-o", "mock.bam")
 
-  @Test def testMakeFeatureFromBed() = {
+  val BedFile1 = new File(resourcePath("/rrna01.bed"))
+  val RefFlatFile1 = new File(resourcePath("/rrna01.refFlat"))
+
+  @Test def testMakeIntervalFromBed() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
-    intervals.length should be(3)
+    intervals.length shouldBe 3
     intervals.head.getSequence should ===("chrQ")
-    intervals.head.getStart should be(991)
-    intervals.head.getEnd should be(1000)
+    intervals.head.getStart shouldBe 991
+    intervals.head.getEnd shouldBe 1000
     intervals.last.getSequence should ===("chrQ")
-    intervals.last.getStart should be(291)
-    intervals.last.getEnd should be(320)
+    intervals.last.getStart shouldBe 291
+    intervals.last.getEnd shouldBe 320
+  }
+
+  @Test def testMakeIntervalFromRefFlat() = {
+    val intervals: List[Interval] = makeIntervalFromFile(RefFlatFile1)
+    intervals.length shouldBe 5
+    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getStart shouldBe 100
+    intervals.last.getEnd shouldBe 200
+    intervals(2).getSequence should ===("chrQ")
+    intervals(2).getStart shouldBe 800
+    intervals(2).getEnd shouldBe 1000
+    intervals.head.getSequence should ===("chrS")
+    intervals.head.getStart shouldBe 100
+    intervals.head.getEnd shouldBe 500
   }
 
   @Test def testSingleBamDefault() = {

@@ -6,6 +6,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import scala.collection.JavaConverters._
+import scala.io.Source
 import scala.math.{ max, min }
 
 import com.google.common.hash.{ Funnel, BloomFilter, PrimitiveSink }
@@ -83,20 +84,42 @@ object WipeReads extends ToolCommand {
         .asScala
         .map(x => new Interval(x.getChr, x.getStart, x.getEnd))
 
-    /** Function to create iterator from refFlat file */
-    def makeIntervalFromRefFlat(inFile: File): Iterator[Interval] = ???
-      // convert coordinate to 1-based fully closed
-      // parse chrom, start blocks, end blocks, strands
+    /**
+     * Parses a refFlat file to yield Interval objects
+     *
+     * Format description:
+     * http://genome.csdb.cn/cgi-bin/hgTables?hgsid=6&hgta_doSchemaDb=hg18&hgta_doSchemaTable=refFlat
+     *
+     * @param inFile input refFlat file
+     */
+    def makeIntervalFromRefFlat(inFile: File): Iterator[Interval] =
+      Source.fromFile(inFile)
+        // read each line
+        .getLines()
+        // skip all empty lines
+        .filterNot(x => x.trim.isEmpty)
+        // split per column
+        .map(line => line.trim.split("\t"))
+        // take chromosome and exonEnds and exonStars
+        .map(x => (x(2), x.reverse.take(2)))
+        // split starts and ends based on comma
+        .map(x => (x._1, x._2.map(y => y.split(","))))
+        // zip exonStarts and exonEnds, note the index was reversed because we did .reverse above
+        .map(x => (x._1, x._2(1).zip(x._2(0))))
+        // make Intervals
+        .map(x => x._2.map(y => new Interval(x._1, y._1.toInt, y._2.toInt)))
+        // flatten sublist
+        .flatten
 
     /** Function to create iterator from GTF file */
     def makeIntervalFromGtf(inFile: File): Iterator[Interval] = ???
-        // convert coordinate to 1-based fully closed
-        // parse chrom, start blocks, end blocks, strands
 
     // detect interval file format from extension
     val iterFunc: (File => Iterator[Interval]) =
       if (getExtension(inFile.toString.toLowerCase) == "bed")
         makeIntervalFromBed
+      else if (getExtension(inFile.toString.toLowerCase) == "refflat")
+        makeIntervalFromRefFlat
       else
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
@@ -319,7 +342,7 @@ object WipeReads extends ToolCommand {
       x => if (x.exists) success else failure("Input BAM file not found")
     } text "Input BAM file"
 
-    opt[File]('r', "interval_file") required () valueName "<bed>" action { (x, c) =>
+    opt[File]('r', "interval_file") required () valueName "<bed/refflat>" action { (x, c) =>
       c.copy(targetRegions = x)
     } validate {
       x => if (x.exists) success else failure("Target regions file not found")
