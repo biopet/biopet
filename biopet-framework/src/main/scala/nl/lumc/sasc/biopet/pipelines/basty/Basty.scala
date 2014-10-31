@@ -57,7 +57,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(raxmlMl)
 
       val raxmlBoot = new Raxml(this)
-      raxmlMl.input = input
+      raxmlBoot.input = input
       raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlBoot.p = config("seed", default = seed)
       raxmlBoot.b = config("seed", default = seed)
@@ -66,11 +66,12 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(raxmlBoot)
 
       val raxmlBi = new Raxml(this)
-      raxmlMl.input = input
+      raxmlBi.input = input
       raxmlBi.t = raxmlMl.getBestTree
       raxmlBi.z = raxmlBoot.getBootstrap
       raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlBi.p = config("seed", default = seed)
+      raxmlBi.f = "b"
       raxmlBi.n = outputName + "_bi"
       raxmlBi.w = outputDir
       add(raxmlBi)
