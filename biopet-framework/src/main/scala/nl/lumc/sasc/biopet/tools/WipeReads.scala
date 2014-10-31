@@ -74,7 +74,7 @@ object WipeReads extends ToolCommand {
    *
    * @param inFile input interval file
    */
-  def makeIntervalFromFile(inFile: File): List[Interval] = {
+  def makeIntervalFromFile(inFile: File, gtfFeatureType: String = "exon"): List[Interval] = {
 
     logger.info("Parsing interval file ...")
 
@@ -111,8 +111,26 @@ object WipeReads extends ToolCommand {
         // flatten sublist
         .flatten
 
-    /** Function to create iterator from GTF file */
-    def makeIntervalFromGtf(inFile: File): Iterator[Interval] = ???
+    /**
+     * Parses a GTF file to yield Interval objects
+     *
+     * @param inFile input GTF file
+     * @return
+     */
+    def makeIntervalFromGtf(inFile: File): Iterator[Interval] =
+      Source.fromFile(inFile)
+        // read each line
+        .getLines()
+        // skip all empty lines
+        .filterNot(x => x.trim.isEmpty)
+        // skip all UCSC track lines and/or ensembl comment lines
+        .dropWhile(x => x.matches("^track | ^browser | ^#"))
+        // split to columns
+        .map(x => x.split("\t"))
+        // exclude intervals whose type is different from the supplied one
+        .filter(x => x(2) == gtfFeatureType)
+        // and finally create the interval objects
+        .map(x => new Interval(x(0), x(3).toInt, x(4).toInt))
 
     // detect interval file format from extension
     val iterFunc: (File => Iterator[Interval]) =
@@ -120,6 +138,8 @@ object WipeReads extends ToolCommand {
         makeIntervalFromBed
       else if (getExtension(inFile.toString.toLowerCase) == "refflat")
         makeIntervalFromRefFlat
+      else if (getExtension(inFile.toString.toLowerCase) == "gtf")
+        makeIntervalFromGtf
       else
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
@@ -130,7 +150,7 @@ object WipeReads extends ToolCommand {
           acc match {
             case head :: tail if x.intersects(head) =>
               new Interval(x.getSequence, min(x.getStart, head.getStart), max(x.getEnd, head.getEnd)) :: tail
-            case  _ => x :: acc
+            case _ => x :: acc
           }
         }
       )
@@ -173,12 +193,10 @@ object WipeReads extends ToolCommand {
       else if (iv.getSequence.startsWith("chr") && getIndex(iv.getSequence.substring(3)) > -1) {
         logger.warn("Removing 'chr' prefix from interval " + iv.toString)
         Some(new QueryInterval(getIndex(iv.getSequence.substring(3)), iv.getStart, iv.getEnd))
-      }
-      else if (!iv.getSequence.startsWith("chr") && getIndex("chr" + iv.getSequence) > -1) {
+      } else if (!iv.getSequence.startsWith("chr") && getIndex("chr" + iv.getSequence) > -1) {
         logger.warn("Adding 'chr' prefix to interval " + iv.toString)
         Some(new QueryInterval(getIndex("chr" + iv.getSequence), iv.getStart, iv.getEnd))
-      }
-      else {
+      } else {
         logger.warn("Sequence " + iv.getSequence + " does not exist in alignment")
         None
       }
@@ -326,6 +344,7 @@ object WipeReads extends ToolCommand {
                   minMapQ: Int = 0,
                   limitToRegion: Boolean = false,
                   noMakeIndex: Boolean = false,
+                  featureType: String = "exon",
                   bloomSize: Long = 70000000,
                   bloomFp: Double = 4e-7) extends AbstractArgs
 
@@ -342,7 +361,7 @@ object WipeReads extends ToolCommand {
       x => if (x.exists) success else failure("Input BAM file not found")
     } text "Input BAM file"
 
-    opt[File]('r', "interval_file") required () valueName "<bed/refflat>" action { (x, c) =>
+    opt[File]('r', "interval_file") required () valueName "<bed/gtf/refflat>" action { (x, c) =>
       c.copy(targetRegions = x)
     } validate {
       x => if (x.exists) success else failure("Target regions file not found")
@@ -374,7 +393,13 @@ object WipeReads extends ToolCommand {
     } text
       "Whether to index output BAM file or not (default: yes)"
 
-    note("\nAdvanced options")
+    note("\nGTF-only options:")
+
+    opt[String]('t', "feature_type") optional () valueName "<gtf_feature_type>" action { (x, c) =>
+      c.copy(featureType = x)
+    } text "GTF feature containing intervals (default: exon)"
+
+    note("\nAdvanced options:")
 
     opt[Long]("bloom_size") optional () action { (x, c) =>
       c.copy(bloomSize = x)
@@ -409,7 +434,7 @@ object WipeReads extends ToolCommand {
 
     // cannot use SamReader as inBam directly since it only allows one active iterator at any given time
     val filterFunc = makeFilterNotFunction(
-      ivl = makeIntervalFromFile(commandArgs.targetRegions),
+      ivl = makeIntervalFromFile(commandArgs.targetRegions, gtfFeatureType = commandArgs.featureType),
       inBam = commandArgs.inputBam,
       filterOutMulti = !commandArgs.limitToRegion,
       minMapQ = commandArgs.minMapQ,

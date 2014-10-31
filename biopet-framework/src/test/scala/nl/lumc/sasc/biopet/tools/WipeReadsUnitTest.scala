@@ -123,6 +123,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   val BedFile1 = new File(resourcePath("/rrna01.bed"))
   val RefFlatFile1 = new File(resourcePath("/rrna01.refFlat"))
+  val GtfFile1 = new File(resourcePath("/rrna01.gtf"))
 
   @Test def testMakeIntervalFromBed() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
@@ -147,6 +148,17 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     intervals.last.getSequence should ===("chrQ")
     intervals.last.getStart shouldBe 100
     intervals.last.getEnd shouldBe 200
+  }
+
+  @Test def testMakeIntervalFromGtf() = {
+    val intervals: List[Interval] = makeIntervalFromFile(GtfFile1, "exon")
+    intervals.length shouldBe 3
+    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getStart shouldBe 669
+    intervals.head.getEnd shouldBe 778
+    intervals.last.getSequence should ===("chrP")
+    intervals.last.getStart shouldBe 2949
+    intervals.last.getEnd shouldBe 3063
   }
 
   @Test def testSingleBamDefault() = {
@@ -492,6 +504,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
       "-G", "002",
       "--limit_removal",
       "--no_make_index",
+      "--feature_type", "gene",
       "--bloom_size", "10000",
       "--false_positive", "1e-8"
     ))
@@ -504,6 +517,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     parsed.readGroupIds should contain("002")
     parsed.limitToRegion shouldBe true
     parsed.noMakeIndex shouldBe true
+    parsed.featureType should ===("gene")
     parsed.bloomSize shouldBe 10000
     parsed.bloomFp shouldBe 1e-8
   }
