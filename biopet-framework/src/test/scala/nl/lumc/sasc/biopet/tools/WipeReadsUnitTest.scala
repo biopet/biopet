@@ -122,6 +122,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   val pBamFile3 = new File(resourcePath("/paired03.bam"))
 
   val BedFile1 = new File(resourcePath("/rrna01.bed"))
+  val BedFile2 = new File(resourcePath("/rrna02.bed"))
   val RefFlatFile1 = new File(resourcePath("/rrna01.refFlat"))
   val GtfFile1 = new File(resourcePath("/rrna01.gtf"))
 
@@ -166,6 +167,17 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     intervals.last.getSequence should ===("chrP")
     intervals.last.getStart shouldBe 2949
     intervals.last.getEnd shouldBe 3063
+  }
+
+  @Test def testMakeIntervalFromBedOverlap() = {
+    val intervals: List[Interval] = makeIntervalFromFile(BedFile2)
+    intervals.length shouldBe 4
+    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getStart shouldBe 451
+    intervals.head.getEnd shouldBe 480
+    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getStart shouldBe 2
+    intervals.last.getEnd shouldBe 250
   }
 
   @Test def testSingleBamDefault() = {
