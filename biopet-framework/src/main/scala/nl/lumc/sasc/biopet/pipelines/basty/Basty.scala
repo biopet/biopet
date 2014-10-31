@@ -1,9 +1,11 @@
 package nl.lumc.sasc.biopet.pipelines.basty
 
+import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Cat
+import nl.lumc.sasc.biopet.extensions.Raxml
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import org.broadinstitute.gatk.queue.QScript
@@ -38,8 +40,43 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
     runSamplesJobs()
 
-    add(Cat(this, refVariants :: samplesOutput.map(_._2.outputVariants).toList, outputDir + "fastas/variant.fasta"))
-    add(Cat(this, refVariantSnps :: samplesOutput.map(_._2.outputVariantsSnps).toList, outputDir + "fastas/variant.snps_only.fasta"))
+    val catVariants = Cat(this, refVariants :: samplesOutput.map(_._2.outputVariants).toList, outputDir + "fastas/variant.fasta")
+    add(catVariants)
+    val catVariantsSnps = Cat(this, refVariantSnps :: samplesOutput.map(_._2.outputVariantsSnps).toList, outputDir + "fastas/variant.snps_only.fasta")
+    add(catVariantsSnps)
+
+    val seed = scala.util.Random.nextInt
+    def addRaxml(input: File, outputDir: String, outputName: String) {
+      val raxmlMl = new Raxml(this)
+      raxmlMl.input = input
+      raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
+      raxmlMl.p = config("seed", default = seed)
+      raxmlMl.n = outputName + "_ml"
+      raxmlMl.w = outputDir
+      raxmlMl.N = config("ml_runs", default = 20, submodule = "raxml")
+      add(raxmlMl)
+
+      val raxmlBoot = new Raxml(this)
+      raxmlMl.input = input
+      raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
+      raxmlBoot.p = config("seed", default = seed)
+      raxmlBoot.b = config("seed", default = seed)
+      raxmlBoot.w = outputDir
+      raxmlBoot.n = outputName + "_boot"
+      add(raxmlBoot)
+
+      val raxmlBi = new Raxml(this)
+      raxmlMl.input = input
+      raxmlBi.t = raxmlMl.getBestTree
+      raxmlBi.z = raxmlBoot.getBootstrap
+      raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
+      raxmlBi.p = config("seed", default = seed)
+      raxmlBi.n = outputName + "_bi"
+      raxmlBi.w = outputDir
+      add(raxmlBi)
+    }
+
+    addRaxml(catVariantsSnps.output, outputDir + "raxml", "snps")
   }
 
   // Called for each sample
