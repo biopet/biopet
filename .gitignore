@@ -1,4 +1,10 @@
+# Project-related
 dependency-reduced-pom.xml
-*~
-*.swp
 /biopet-framework/src/main/resources/git.properties
+
+# gedit
+*~
+# Vim
+*.swp
+# IntelliJ
+.idea/workspace.xml

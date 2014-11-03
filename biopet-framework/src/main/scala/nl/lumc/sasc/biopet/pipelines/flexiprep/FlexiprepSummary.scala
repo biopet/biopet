@@ -48,8 +48,8 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   var flexiprep: Flexiprep = if (root.isInstanceOf[Flexiprep]) root.asInstanceOf[Flexiprep] else {
     throw new IllegalStateException("Root is no instance of Flexiprep")
   }
-  
-  var resources:Map[String, Json] = Map()
+
+  var resources: Map[String, Json] = Map()
 
   def addFastqc(fastqc: Fastqc, R2: Boolean = false, after: Boolean = false): Fastqc = {
     if (!R2 && !after) this.fastqcR1 = fastqc
@@ -135,7 +135,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   def seqstatSummary(): Option[Json] = {
     val R1_chunks = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
     val R1: Json = Seqstat.mergeSummaries(R1_chunks.toList)
-    
+
     val R2: Option[Json] = if (!flexiprep.paired) None
     else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.getSummary)
     else {
@@ -166,7 +166,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     val R2_raw = md5Summary(md5R2)
     val R1_proc = md5Summary(md5R1after)
     val R2_proc = md5Summary(md5R2after)
-    
+
     if (!R1_raw.isEmpty) resources += ("fastq_R1_raw" -> R1_raw.get)
     if (!R2_raw.isEmpty) resources += ("fastq_R2_raw" -> R2_raw.get)
     if (!R1_proc.isEmpty) resources += ("fastq_R1_proc" -> R1_proc.get)
@@ -178,12 +178,12 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     else return Option(md5sum.getSummary)
   }
 
-  def getResources(fastqc:Fastqc, md5sum:Md5sum): Option[Json] = {
+  def getResources(fastqc: Fastqc, md5sum: Md5sum): Option[Json] = {
     if (fastqc == null || md5sum == null) return None
     val fastqcSum = fastqcSummary(fastqc).get
     return Option(("fastq" := md5Summary(md5sum)) ->: fastqcSum)
   }
-  
+
   def fastqcSummary(fastqc: Fastqc): Option[Json] = {
     if (fastqc == null) return None
     else return Option(fastqc.getSummary)

@@ -328,7 +328,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 }
 
 object Mapping extends PipelineCommand {
-  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any], runDir: String): Mapping = {
+  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any],
+                            runDir: String, startJobs: Boolean = true): Mapping = {
     val mapping = new Mapping(root)
 
     logger.debug("Mapping runconfig: " + runConfig)
@@ -346,8 +347,10 @@ object Mapping extends PipelineCommand {
     if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
     mapping.outputDir = runDir
 
-    mapping.init()
-    mapping.biopetScript()
-    mapping
+    if (startJobs) {
+      mapping.init
+      mapping.biopetScript
+    }
+    return mapping
   }
 }

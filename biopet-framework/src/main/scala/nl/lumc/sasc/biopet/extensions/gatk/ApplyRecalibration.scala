@@ -6,21 +6,22 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.ApplyRecalibration with GatkGeneral {
   override def afterGraph {
     super.afterGraph
-    
+
     if (config.contains("scattercount")) scatterCount = config("scattercount")
-  
+
     nt = Option(getThreads(3))
     memoryLimit = Option(nt.getOrElse(1) * 2)
     ts_filter_level = config("ts_filter_level")
   }
 }
-  
+
 object ApplyRecalibration {
-  def apply(root: Configurable, input:File, output:File, recal_file:File, tranches_file:File, indel: Boolean = false): ApplyRecalibration = {
+  def apply(root: Configurable, input: File, output: File, recal_file: File, tranches_file: File, indel: Boolean = false): ApplyRecalibration = {
     val ar = if (indel) new ApplyRecalibration(root) {
       mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
       defaults ++= Map("ts_filter_level" -> 99.0)
-    } else new ApplyRecalibration(root) {
+    }
+    else new ApplyRecalibration(root) {
       mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
       defaults ++= Map("ts_filter_level" -> 99.5)
     }

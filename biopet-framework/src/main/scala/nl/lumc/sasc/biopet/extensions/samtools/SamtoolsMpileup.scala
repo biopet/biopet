@@ -13,21 +13,21 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
 
   @Input(doc = "Reference fasta")
   var reference: File = config("reference")
-  
+
   @Input(doc = "Interval bed")
   var intervalBed: File = config("interval_bed")
-  
+
   var disableBaq: Boolean = config("disable_baq")
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
-  
-  def cmdBase = required(executable) + 
-        required("mpileup") +
-        optional("-f", reference) +
-        optional("-l", intervalBed) + 
-        optional("-q", minMapQuality) + 
-        optional("-Q", minBaseQuality) + 
-        conditional(disableBaq, "-B")
+
+  def cmdBase = required(executable) +
+    required("mpileup") +
+    optional("-f", reference) +
+    optional("-l", intervalBed) +
+    optional("-q", minMapQuality) +
+    optional("-Q", minBaseQuality) +
+    conditional(disableBaq, "-B")
   def cmdPipeInput = cmdBase + "-"
   def cmdPipe = cmdBase + required(input)
   def cmdLine = cmdPipe + " > " + required(output)
