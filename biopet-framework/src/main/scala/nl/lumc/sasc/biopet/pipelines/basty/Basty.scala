@@ -45,32 +45,42 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     val catVariantsSnps = Cat(this, refVariantSnps :: samplesOutput.map(_._2.outputVariantsSnps).toList, outputDir + "fastas/variant.snps_only.fasta")
     add(catVariantsSnps)
 
-    val seed = scala.util.Random.nextInt
+    val seed: Int = config("seed", default = 12345)
     def addRaxml(input: File, outputDir: String, outputName: String) {
       val raxmlMl = new Raxml(this)
       raxmlMl.input = input
       raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
-      raxmlMl.p = config("seed", default = seed)
+      raxmlMl.p = seed
       raxmlMl.n = outputName + "_ml"
       raxmlMl.w = outputDir
       raxmlMl.N = config("ml_runs", default = 20, submodule = "raxml")
       add(raxmlMl)
 
-      val raxmlBoot = new Raxml(this)
-      raxmlBoot.input = input
-      raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
-      raxmlBoot.p = config("seed", default = seed)
-      raxmlBoot.b = config("seed", default = seed)
-      raxmlBoot.w = outputDir
-      raxmlBoot.n = outputName + "_boot"
-      add(raxmlBoot)
+      val r = new scala.util.Random(seed)
+      val numBoot = config("boot_runs", default = 100, submodule = "raxml").getInt
+      val bootList = for (t <- 0 until numBoot) yield {
+        val raxmlBoot = new Raxml(this)
+        raxmlBoot.threads = 1
+        raxmlBoot.input = input
+        raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
+        raxmlBoot.p = seed
+        raxmlBoot.b = math.abs(r.nextInt)
+        raxmlBoot.w = outputDir
+        raxmlBoot.N = 1
+        raxmlBoot.n = outputName + "_boot_" + t
+        add(raxmlBoot)
+        raxmlBoot.getBootstrapFile
+      }
+
+      val cat = Cat(this, bootList.toList, outputDir + "/boot_list")
+      add(cat)
 
       val raxmlBi = new Raxml(this)
       raxmlBi.input = input
-      raxmlBi.t = raxmlMl.getBestTree
-      raxmlBi.z = raxmlBoot.getBootstrap
+      raxmlBi.t = raxmlMl.getBestTreeFile
+      raxmlBi.z = cat.output
       raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
-      raxmlBi.p = config("seed", default = seed)
+      raxmlBi.p = seed
       raxmlBi.f = "b"
       raxmlBi.n = outputName + "_bi"
       raxmlBi.w = outputDir
@@ -105,12 +115,13 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     return libraryOutput
   }
 
-  def addGenerateFasta(sampleName: String, outputDir: String, snpsOnly: Boolean = false): File = {
+  def addGenerateFasta(sampleName: String, outputDir: String, snpsOnly: Boolean = false, reference: Boolean = false): File = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.inputVcf = gatkPipeline.multisampleVariantcalling.scriptOutput.finalVcfFile
     bastyGenerateFasta.outputVariants = outputDir + sampleName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
+    bastyGenerateFasta.reference = reference
     add(bastyGenerateFasta)
     return bastyGenerateFasta.outputVariants
   }
