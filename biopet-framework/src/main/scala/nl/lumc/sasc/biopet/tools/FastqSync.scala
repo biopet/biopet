@@ -43,15 +43,13 @@ object FastqSync extends ToolCommand {
   }
 
   /**
-   * Result of syncing FastqRecords
+   * Counts from syncing FastqRecords
    *
-   * @param result Iterator containing tuples of FastqRecord from read 1 and read 2
    * @param numDiscard1 Number of reads discarded from the initial read 1
    * @param numDiscard2 Number of reads discarded from the initial read 2
    * @param numKept Number of items in result
    */
-  case class SyncResult(result: Stream[(FastqRecord, FastqRecord)],
-                        numDiscard1: Int, numDiscard2: Int, numKept: Int)
+  case class SyncCounts(numDiscard1: Int, numDiscard2: Int, numKept: Int)
 
   /**
    * Filters out FastqRecord that are not present in the input iterators, using
@@ -62,7 +60,7 @@ object FastqSync extends ToolCommand {
    * @param seqB FastqReader over read 2
    * @return
    */
-  def syncFastq(pre: FastqReader, seqA: FastqReader, seqB: FastqReader): SyncResult = {
+  def syncFastq(pre: FastqReader, seqA: FastqReader, seqB: FastqReader): (Stream[(FastqRecord, FastqRecord)], SyncCounts) = {
     // counters for discarded A and B seqections + total kept
     // NOTE: we are reasigning values to these variables in the recursion below
     var (numDiscA, numDiscB, numKept) = (0, 0, 0)
@@ -122,25 +120,23 @@ object FastqSync extends ToolCommand {
           syncIter(pre.tail, nextA, nextB, nextAcc)
       }
 
-    SyncResult(
-      syncIter(pre.iterator.asScala.toStream,
-        seqA.iterator.asScala.toStream,
-        seqB.iterator.asScala.toStream,
-        Stream.empty[(FastqRecord, FastqRecord)]),
-      numDiscA, numDiscB, numKept)
+    (syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream,
+      Stream.empty[(FastqRecord, FastqRecord)]),
+      SyncCounts(numDiscA, numDiscB, numKept))
   }
 
-  def writeSyncedFastq(sync: SyncResult,
+  def writeSyncedFastq(sync: Stream[(FastqRecord, FastqRecord)],
+                       counts: SyncCounts,
                        outputFastq1: BasicFastqWriter,
                        outputFastq2: BasicFastqWriter): Unit = {
-    sync.result.foreach {
+    sync.foreach {
       case (rec1, rec2) =>
         outputFastq1.write(rec1)
         outputFastq2.write(rec2)
     }
-    println("Filtered %d reads from first read file.".format(sync.numDiscard1))
-    println("Filtered %d reads from second read file.".format(sync.numDiscard2))
-    println("Synced read files contain %d reads.".format(sync.numKept))
+    println("Filtered %d reads from first read file.".format(counts.numDiscard1))
+    println("Filtered %d reads from second read file.".format(counts.numDiscard2))
+    println("Synced read files contain %d reads.".format(counts.numKept))
   }
 
   case class Args(refFastq: File = new File(""),
@@ -197,12 +193,12 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    val synced = syncFastq(
+    val (synced, counts) = syncFastq(
       new FastqReader(commandArgs.refFastq),
       new FastqReader(commandArgs.inputFastq1),
       new FastqReader(commandArgs.inputFastq2))
 
-    writeSyncedFastq(synced,
+    writeSyncedFastq(synced, counts,
       new BasicFastqWriter(commandArgs.outputFastq1),
       new BasicFastqWriter(commandArgs.outputFastq2)
     )

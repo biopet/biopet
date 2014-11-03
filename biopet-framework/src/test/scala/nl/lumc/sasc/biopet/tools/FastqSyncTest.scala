@@ -41,14 +41,14 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(bMock.iterator) thenReturn recordsOver("1", "2", "3")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 3
-    sync.result(0) shouldBe (new FastqRecord("1", "A", "", "H"), new FastqRecord("1", "A", "", "H"))
-    sync.result(1) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
-    sync.result(2) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
-    sync.numDiscard1 shouldBe 0
-    sync.numDiscard2 shouldBe 0
-    sync.numKept shouldBe 3
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 3
+    sync(0) shouldBe (new FastqRecord("1", "A", "", "H"), new FastqRecord("1", "A", "", "H"))
+    sync(1) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
+    sync(2) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
+    counts.numDiscard1 shouldBe 0
+    counts.numDiscard2 shouldBe 0
+    counts.numKept shouldBe 3
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -69,11 +69,11 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver()
     when(bMock.iterator) thenReturn recordsOver("1", "2", "3")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 0
-    sync.numDiscard1 shouldBe 0
-    sync.numDiscard2 shouldBe 3
-    sync.numKept shouldBe 0
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 0
+    counts.numDiscard1 shouldBe 0
+    counts.numDiscard2 shouldBe 3
+    counts.numKept shouldBe 0
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -82,11 +82,11 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("1", "2", "3")
     when(bMock.iterator) thenReturn recordsOver()
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 0
-    sync.numDiscard1 shouldBe 3
-    sync.numDiscard2 shouldBe 0
-    sync.numKept shouldBe 0
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 0
+    counts.numDiscard1 shouldBe 3
+    counts.numDiscard2 shouldBe 0
+    counts.numKept shouldBe 0
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -95,13 +95,13 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2", "3")
     when(bMock.iterator) thenReturn recordsOver("1", "2", "3")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 2
-    sync.result(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
-    sync.result(1) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
-    sync.numDiscard1 shouldBe 0
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 2
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 2
+    sync(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
+    sync(1) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
+    counts.numDiscard1 shouldBe 0
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 2
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -110,13 +110,13 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2", "3")
     when(bMock.iterator) thenReturn recordsOver("1", "2", "3")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 2
-    sync.result(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
-    sync.result(1) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
-    sync.numDiscard1 shouldBe 0
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 2
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 2
+    sync(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
+    sync(1) shouldBe (new FastqRecord("3", "A", "", "H"), new FastqRecord("3", "A", "", "H"))
+    counts.numDiscard1 shouldBe 0
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 2
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -125,12 +125,12 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2", "3")
     when(bMock.iterator) thenReturn recordsOver("1", "2")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 1
-    sync.result(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
-    sync.numDiscard1 shouldBe 1
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 1
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 1
+    sync(0) shouldBe (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "A", "", "H"))
+    counts.numDiscard1 shouldBe 1
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 1
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -139,12 +139,12 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2/1", "3/1")
     when(bMock.iterator) thenReturn recordsOver("1/2", "2/2")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 1
-    sync.result(0) shouldBe (new FastqRecord("2/1", "A", "", "H"), new FastqRecord("2/2", "A", "", "H"))
-    sync.numDiscard1 shouldBe 1
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 1
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 1
+    sync(0) shouldBe (new FastqRecord("2/1", "A", "", "H"), new FastqRecord("2/2", "A", "", "H"))
+    counts.numDiscard1 shouldBe 1
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 1
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -153,12 +153,12 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2_1", "3_1")
     when(bMock.iterator) thenReturn recordsOver("1_2", "2_2")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 1
-    sync.result(0) shouldBe (new FastqRecord("2_1", "A", "", "H"), new FastqRecord("2_2", "A", "", "H"))
-    sync.numDiscard1 shouldBe 1
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 1
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 1
+    sync(0) shouldBe (new FastqRecord("2_1", "A", "", "H"), new FastqRecord("2_2", "A", "", "H"))
+    counts.numDiscard1 shouldBe 1
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 1
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -167,12 +167,12 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("2 desc2a", "3 desc3a")
     when(bMock.iterator) thenReturn recordsOver("1 desc1b", "2 desc2b")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 1
-    sync.result(0) shouldBe (new FastqRecord("2 desc2a", "A", "", "H"), new FastqRecord("2 desc2b", "A", "", "H"))
-    sync.numDiscard1 shouldBe 1
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 1
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 1
+    sync(0) shouldBe (new FastqRecord("2 desc2a", "A", "", "H"), new FastqRecord("2 desc2b", "A", "", "H"))
+    counts.numDiscard1 shouldBe 1
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 1
   }
 
   @Test(dataProvider = "mockReaderProvider")
@@ -181,26 +181,26 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     when(aMock.iterator) thenReturn recordsOver("1/1 yep", "2/1 yep", "4/1 yep")
     when(bMock.iterator) thenReturn recordsOver("1/2 yep", "3/2 yep", "4/2 yep")
 
-    val sync = syncFastq(refMock, aMock, bMock)
-    sync.result.length shouldBe 2
-    sync.result(0) shouldBe (new FastqRecord("1/1 yep", "A", "", "H"), new FastqRecord("1/2 yep", "A", "", "H"))
-    sync.result(1) shouldBe (new FastqRecord("4/1 yep", "A", "", "H"), new FastqRecord("4/2 yep", "A", "", "H"))
-    sync.numDiscard1 shouldBe 1
-    sync.numDiscard2 shouldBe 1
-    sync.numKept shouldBe 2
+    val (sync, counts) = syncFastq(refMock, aMock, bMock)
+    sync.length shouldBe 2
+    sync(0) shouldBe (new FastqRecord("1/1 yep", "A", "", "H"), new FastqRecord("1/2 yep", "A", "", "H"))
+    sync(1) shouldBe (new FastqRecord("4/1 yep", "A", "", "H"), new FastqRecord("4/2 yep", "A", "", "H"))
+    counts.numDiscard1 shouldBe 1
+    counts.numDiscard2 shouldBe 1
+    counts.numKept shouldBe 2
   }
 
   @Test def testWriteSynced() = {
     val aMock = mock[BasicFastqWriter]
     val bMock = mock[BasicFastqWriter]
-    val sync = SyncResult(Stream(
+    val sync = Stream(
       (new FastqRecord("1", "A", "", "H"), new FastqRecord("1", "T", "", "E")),
-      (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "T", "", "E"))),
-      4, 3, 2)
+      (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "T", "", "E")))
+    val counts = SyncCounts(4, 3, 2)
     val obs = inOrd(aMock, bMock)
     val stdout = new java.io.ByteArrayOutputStream
     Console.withOut(stdout) {
-      writeSyncedFastq(sync, aMock, bMock)
+      writeSyncedFastq(sync, counts, aMock, bMock)
     }
     stdout.toString should ===(List(
       "Filtered 4 reads from first read file.",
