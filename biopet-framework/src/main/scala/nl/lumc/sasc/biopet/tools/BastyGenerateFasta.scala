@@ -33,6 +33,7 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
+  var reference = false
 
   override def commandLine = super.commandLine +
     optional("--inputVcf", inputVcf) +
@@ -40,7 +41,8 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
     optional("--outputVariants", outputVariants) +
     conditional(snpsOnly, "--snpsOnly") +
     optional("--sampleName", sampleName) +
-    optional("--minAD", minAD)
+    optional("--minAD", minAD) +
+    conditional(reference, "--reference")
 }
 
 object BastyGenerateFasta extends ToolCommand {
@@ -49,7 +51,8 @@ object BastyGenerateFasta extends ToolCommand {
                   bamFile: File = null,
                   snpsOnly: Boolean = false,
                   sampleName: String = null,
-                  minAD: Int = 8) extends AbstractArgs
+                  minAD: Int = 8,
+                  reference: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('V', "inputVcf") unbounded () valueName ("<file>") action { (x, c) =>
@@ -69,6 +72,9 @@ object BastyGenerateFasta extends ToolCommand {
     }
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
+    }
+    opt[Unit]("reference") unbounded () action { (x, c) =>
+      c.copy(reference = true)
     }
   }
 
@@ -103,10 +109,11 @@ object BastyGenerateFasta extends ToolCommand {
     val maxSize = vcfRecord.getAlleles()(longestAlleleID).getBases.length
 
     def fill(bases: String) = bases + (Array.fill[Char](maxSize - bases.size)('N')).mkString
+    if (commandArgs.reference) return fill(vcfRecord.getReference.getBaseString)
 
-    if (genotype == null) return fill(vcfRecord.getReference.getBaseString)
+    if (genotype == null) return fill("")
     val AD = genotype.getAD
-    if (AD == null) return fill(vcfRecord.getReference.getBaseString)
+    if (AD == null) return fill("")
     val maxADid = AD.zipWithIndex.maxBy(_._1)._2
     if (AD(maxADid) < commandArgs.minAD) return fill("")
     return fill(vcfRecord.getAlleles()(maxADid).getBaseString)
