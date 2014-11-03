@@ -37,7 +37,7 @@ object FindRepeatsPacBio extends ToolCommand {
 
     for (
       bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
-      val values = bedLine.split("\t"); if values.size >= 3
+      values = bedLine.split("\t"); if values.size >= 3
     ) {
       val interval = new QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
       val bamIter = bamReader.query(Array(interval), false)

@@ -79,10 +79,10 @@ object BedToInterval extends ToolCommand {
     val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
       line <- bedFile.getLines;
-      val split = line.split("\t") if split.size >= 3;
-      val chr = split(0);
-      val start = split(1);
-      val stop = split(2) if start forall Character.isDigit if stop forall Character.isDigit
+      split = line.split("\t") if split.size >= 3;
+      chr = split(0);
+      start = split(1);
+      stop = split(2) if start forall Character.isDigit if stop forall Character.isDigit
     ) {
       if (!refsMap.contains(chr)) throw new IllegalStateException("Chr '" + chr + "' in bed file not found in bam file")
       writer.write(chr + "\t" + start + "\t" + stop + "\t")

@@ -115,7 +115,7 @@ object MpileupToVcf extends ToolCommand {
     class Counts(var forward: Int, var reverse: Int)
     for (
       line <- inputStream;
-      val values = line.split("\t");
+      values = line.split("\t");
       if values.size > 5
     ) {
       val chr = values(0)
