@@ -52,6 +52,14 @@ class MarkDuplicates(val root: Configurable) extends Picard {
   @Argument(doc = "OPTICAL_DUPLICATE_PIXEL_DISTANCE", required = false)
   var opticalDuplicatePixelDistance: Option[Int] = config("opticalDuplicatePixelDistance")
 
+  @Output(doc = "Bam Index", required = true)
+  private var outputIndex: File = _
+  
+  override def afterGraph {
+    super.afterGraph
+    if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+  }
+  
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
