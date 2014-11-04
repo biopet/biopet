@@ -19,7 +19,10 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 
 object ExtractAlignedFastq extends ToolCommand {
 
-  type FastqPair = (FastqRecord, FastqRecord)
+  type FastqInput = (FastqRecord, Option[FastqRecord])
+
+  /** function to get FastqRecord ID */
+  def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
 
   /**
    * Function to create iterator over Interval given input interval string
@@ -74,7 +77,7 @@ object ExtractAlignedFastq extends ToolCommand {
   def makeMembershipFunction(iv: Iterator[Interval],
                              inAln: File,
                              minMapQ: Int = 0,
-                             commonSuffixLength: Int = 0): (FastqPair => Boolean) = {
+                             commonSuffixLength: Int = 0): (FastqInput => Boolean) = {
 
     val inAlnReader = SamReaderFactory
       .make()
@@ -90,10 +93,10 @@ object ExtractAlignedFastq extends ToolCommand {
     }
 
     val queries: Array[QueryInterval] = iv.toList
-      // sort Interval
-      .sortBy(x => (x.getSequence, x.getStart, x.getEnd))
       // transform to QueryInterval
       .map(x => new QueryInterval(getSequenceIndex(x.getSequence), x.getStart, x.getEnd))
+      // sort Interval
+      .sortBy(x => (x.referenceIndex, x.start, x.end))
       // cast to array
       .toArray
 
@@ -112,54 +115,40 @@ object ExtractAlignedFastq extends ToolCommand {
         }
       )
 
-    (pair: FastqPair) => pair._2 match {
-      case null => selected.contains(pair._1.getReadHeader)
-      case otherwise =>
-        require(commonSuffixLength < pair._1.getReadHeader.length)
-        require(commonSuffixLength < pair._2.getReadHeader.length)
-        selected.contains(pair._1.getReadHeader.dropRight(commonSuffixLength))
+    (pair: FastqInput) => pair._2 match {
+      case None => selected.contains(fastqId(pair._1))
+      case Some(x) =>
+        val rec1Id = fastqId(pair._1)
+        require(commonSuffixLength < rec1Id.length)
+        require(commonSuffixLength < fastqId(x).length)
+        selected.contains(rec1Id.dropRight(commonSuffixLength))
     }
   }
 
-  def selectFastqReads(memFunc: FastqPair => Boolean,
-                       inputFastq1: FastqReader,
-                       outputFastq1: BasicFastqWriter,
-                       inputFastq2: FastqReader = null,
-                       outputFastq2: BasicFastqWriter = null): Unit = {
-
-    val i1 = inputFastq1.iterator.asScala
-    val i2 = inputFastq2 match {
-      case null      => Iterator.continually(null)
-      case otherwise => otherwise.iterator.asScala
-    }
-    val o1 = outputFastq1
-    val o2 = (inputFastq2, outputFastq2) match {
-      case (null, null) => null
-      case (_, null)    => throw new IllegalArgumentException("Missing output FASTQ 2")
-      case (null, _)    => throw new IllegalArgumentException("Output FASTQ 2 supplied but there is no input FASTQ 2")
-      case (x, y)       => outputFastq2
-    }
-
-    logger.info("Writing output file(s) ...")
-    // zip, filter based on function, and write to output file(s)
-    i1.zip(i2)
+  def extractReads(memFunc: FastqInput => Boolean,
+                   inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
+    inputFastq1.iterator.asScala
+      .zip(Iterator.continually(None))
       .filter(rec => memFunc(rec._1, rec._2))
-      .foreach {
-        case (rec1, null) =>
-          o1.write(rec1)
-        case (rec1, rec2) =>
-          o1.write(rec1)
-          o2.write(rec2)
-      }
+      .foreach(rec => outputFastq1.write(rec._1))
 
-  }
+  def extractReads(memFunc: FastqInput => Boolean,
+                   inputFastq1: FastqReader, outputFastq1: BasicFastqWriter,
+                   inputFastq2: FastqReader, outputFastq2: BasicFastqWriter): Unit =
+    inputFastq1.iterator.asScala
+      .zip(inputFastq2.iterator.asScala)
+      .filter(rec => memFunc(rec._1, Some(rec._2)))
+      .foreach(rec => {
+        outputFastq1.write(rec._1)
+        outputFastq2.write(rec._2)
+      })
 
-  case class Args(inputBam: File = null,
+  case class Args(inputBam: File = new File(""),
                   intervals: List[String] = List.empty[String],
-                  inputFastq1: File = null,
-                  inputFastq2: File = null,
-                  outputFastq1: File = null,
-                  outputFastq2: File = null,
+                  inputFastq1: File = new File(""),
+                  inputFastq2: Option[File] = None,
+                  outputFastq1: File = new File(""),
+                  outputFastq2: Option[File] = None,
                   minMapQ: Int = 0,
                   commonSuffixLength: Int = 0) extends AbstractArgs
 
@@ -188,7 +177,7 @@ object ExtractAlignedFastq extends ToolCommand {
     } text "Input FASTQ file 1"
 
     opt[File]('j', "in2") optional () valueName "<fastq>" action { (x, c) =>
-      c.copy(inputFastq1 = x)
+      c.copy(inputFastq2 = Option(x))
     } validate {
       x => if (x.exists) success else failure("Input FASTQ file 2 not found")
     } text "Input FASTQ file 2 (default: none)"
@@ -198,7 +187,7 @@ object ExtractAlignedFastq extends ToolCommand {
     } text "Output FASTQ file 1"
 
     opt[File]('p', "out2") optional () valueName "<fastq>" action { (x, c) =>
-      c.copy(outputFastq1 = x)
+      c.copy(outputFastq2 = Option(x))
     } text "Output FASTQ file 2 (default: none)"
 
     opt[Int]('Q', "min_mapq") optional () action { (x, c) =>
@@ -215,24 +204,23 @@ object ExtractAlignedFastq extends ToolCommand {
       """.stripMargin)
 
     checkConfig { c =>
-      if (!c.inputBam.exists)
-        failure("Input BAM file not found")
-      else if (!c.inputFastq1.exists)
-        failure("Input FASTQ file 1 not found")
-      else if (c.inputFastq2 != null && c.outputFastq2 == null)
+      if (c.inputFastq2 != None && c.outputFastq2 == None)
         failure("Missing output FASTQ file 2")
-      else if (c.inputFastq2 == null && c.outputFastq2 != null)
+      else if (c.inputFastq2 == None && c.outputFastq2 != None)
         failure("Missing input FASTQ file 2")
       else
         success
     }
   }
 
-  def main(args: Array[String]): Unit = {
-
-    val commandArgs: Args = new OptParser()
+  def parseArgs(args: Array[String]): Args =
+    new OptParser()
       .parse(args, Args())
       .getOrElse(sys.exit(1))
+
+  def main(args: Array[String]): Unit = {
+
+    val commandArgs: Args = parseArgs(args)
 
     val memFunc = makeMembershipFunction(
       iv = makeIntervalFromString(commandArgs.intervals),
@@ -240,10 +228,20 @@ object ExtractAlignedFastq extends ToolCommand {
       minMapQ = commandArgs.minMapQ,
       commonSuffixLength = commandArgs.commonSuffixLength)
 
-    selectFastqReads(memFunc,
-      inputFastq1 = new FastqReader(commandArgs.inputFastq1),
-      inputFastq2 = new FastqReader(commandArgs.inputFastq2),
-      outputFastq1 = new BasicFastqWriter(commandArgs.outputFastq1),
-      outputFastq2 = new BasicFastqWriter(commandArgs.outputFastq2))
+    logger.info("Writing to output file(s) ...")
+    (commandArgs.inputFastq2, commandArgs.outputFastq2) match {
+
+      case (None, None) => extractReads(memFunc,
+        new FastqReader(commandArgs.inputFastq1),
+        new BasicFastqWriter(commandArgs.inputFastq1))
+
+      case (Some(i2), Some(o2)) => extractReads(memFunc,
+        new FastqReader(commandArgs.inputFastq1),
+        new BasicFastqWriter(commandArgs.outputFastq1),
+        new FastqReader(i2),
+        new BasicFastqWriter(o2))
+
+      case _ => // handled by the command line config check above
+    }
   }
 }

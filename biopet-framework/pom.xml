@@ -1,41 +1,47 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>nl.lumc.sasc</groupId>
-  <artifactId>BiopetFramework</artifactId>
-  <version>0.2.0-DEV</version>
-  <packaging>jar</packaging>
+    <groupId>nl.lumc.sasc</groupId>
+    <artifactId>BiopetFramework</artifactId>
+    <version>0.2.0-DEV</version>
+    <packaging>jar</packaging>
 
-  <name>BiopetFramework</name>
-  <url>http://maven.apache.org</url>
+    <name>BiopetFramework</name>
+    <url>http://maven.apache.org</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sting.unpack.phase>prepare-package</sting.unpack.phase>
-    <sting.shade.phase>package</sting.shade.phase>
-    <sting.binary-dist.name>SASC-Pipelines</sting.binary-dist.name>
-    <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutable</app.main.class>
-  </properties>
-  
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <sting.unpack.phase>prepare-package</sting.unpack.phase>
+        <sting.shade.phase>package</sting.shade.phase>
+        <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutable</app.main.class>
+    </properties>
+
     <repositories>
         <repository>
             <id>biojava-maven-repo</id>
             <name>BioJava repository</name>
-            <url>http://www.biojava.org/download/maven/</url>			
+            <url>http://www.biojava.org/download/maven/</url>
         </repository>
     </repositories>
     <dependencies>
         <dependency>
-          <groupId>org.testng</groupId>
-          <artifactId>testng</artifactId>
-          <version>6.8</version>
-          <scope>test</scope>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.11</artifactId>
             <version>2.2.1</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -68,29 +74,24 @@
             <version>18.0</version>
         </dependency>
         <dependency>
-                <groupId>com.github.scopt</groupId>
-                <artifactId>scopt_2.10</artifactId>
-                <version>3.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.9.5</version>
+            <groupId>com.github.scopt</groupId>
+            <artifactId>scopt_2.10</artifactId>
+            <version>3.2.0</version>
         </dependency>
     </dependencies>
     <build>
         <resources>
             <resource>
-                 <directory>src/main/scripts</directory>
-                 <includes>
-                     <include>**/*</include>
-                 </includes>
+                <directory>src/main/scripts</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </resource>
             <resource>
-                 <directory>src/main/resources</directory>
-                 <includes>
-                     <include>**/*</include>
-                 </includes>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </resource>
         </resources>
         <plugins>
@@ -102,7 +103,7 @@
                     <execution>
                         <goals>
                             <goal>revision</goal>
-                         </goals>
+                        </goals>
                     </execution>
                 </executions>
 
@@ -141,9 +142,10 @@
                         </goals>
                         <configuration>
                             <args>
-<!--                                <arg>-make:transitive</arg>-->
                                 <arg>-dependencyfile</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
+                                <arg>-deprecation</arg>
+                                <arg>-feature</arg>
                             </args>
                         </configuration>
                     </execution>
@@ -154,7 +156,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.5</version>
                 <configuration>
-                    <archive>                   
+                    <archive>
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
@@ -163,50 +165,50 @@
                 </configuration>
             </plugin>
             <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-shade-plugin</artifactId>
-                  <version>2.3</version>
-                  <configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
                     <finalName>Biopet-${project.version}-${git.commit.id.abbrev}</finalName>
                     <transformers>
-                      <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                        <manifestEntries>
-                          <Main-Class>${app.main.class}</Main-Class>
-                          <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
-                          <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
-                        </manifestEntries>
-                      </transformer>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>${app.main.class}</Main-Class>
+                                <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
+                                <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
+                            </manifestEntries>
+                        </transformer>
                     </transformers>
                     <filters>
                         <filter>
-                          <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
-                          <includes>
-                            <include>*/**</include>
-                            <include>org/simpleframework/**</include>
-                            <include>org/jets3t/**</include>
-                            <include>com/sun/**</include>
-                            <include>org/ggf/**</include>
-                            <include>picard/**</include>
-                            <include>htsjdk/**</include>
-                            <include>javassist/**</include>
-                            <include>com/google/**</include>
-                            <include>org/reflections/</include>
-                            <include>org/jgrapht/**</include>
-                            <include>org/broadinstitute/**</include>
-                            <include>org/apache/**</include>
-                            <include>scala/tools/nsc/reporters/**</include>
-                          </includes>
+                            <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
+                            <includes>
+                                <include>*/**</include>
+                                <include>org/simpleframework/**</include>
+                                <include>org/jets3t/**</include>
+                                <include>com/sun/**</include>
+                                <include>org/ggf/**</include>
+                                <include>picard/**</include>
+                                <include>htsjdk/**</include>
+                                <include>javassist/**</include>
+                                <include>com/google/**</include>
+                                <include>org/reflections/</include>
+                                <include>org/jgrapht/**</include>
+                                <include>org/broadinstitute/**</include>
+                                <include>org/apache/**</include>
+                                <include>scala/tools/nsc/reporters/**</include>
+                            </includes>
                         </filter>
                     </filters>
-                  </configuration>
-              <executions>
-                <execution>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>shade</goal>
-                  </goals>
-                </execution>
-              </executions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -221,33 +223,35 @@
                 <artifactId>scalariform-maven-plugin</artifactId>
                 <version>0.1.4</version>
                 <executions>
-                  <execution>
-                    <phase>process-sources</phase>
-                    <goals>
-                      <goal>format</goal>
-                    </goals>
-                    <configuration>
-                      <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                      <alignParameters>true</alignParameters>
-                      <alignSingleLineCaseStatements_maxArrowIndent>40</alignSingleLineCaseStatements_maxArrowIndent>
-                      <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
-                      <compactStringConcatenation>false</compactStringConcatenation>
-                      <compactControlReadability>false</compactControlReadability>
-                      <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
-                      <formatXml>true</formatXml>
-                      <indentLocalDefs>false</indentLocalDefs>
-                      <indentPackageBlocks>true</indentPackageBlocks>
-                      <indentSpaces>2</indentSpaces>
-                      <placeScaladocAsterisksBeneathSecondAsterisk>false</placeScaladocAsterisksBeneathSecondAsterisk>
-                      <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
-                      <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
-                      <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                      <spaceBeforeColon>false</spaceBeforeColon>
-                      <spaceInsideBrackets>false</spaceInsideBrackets>
-                      <spaceInsideParentheses>false</spaceInsideParentheses>
-                      <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
-                    </configuration>
-                  </execution>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <configuration>
+                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
+                            <alignParameters>true</alignParameters>
+                            <alignSingleLineCaseStatements_maxArrowIndent>40
+                            </alignSingleLineCaseStatements_maxArrowIndent>
+                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
+                            <compactStringConcatenation>false</compactStringConcatenation>
+                            <compactControlReadability>false</compactControlReadability>
+                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
+                            <formatXml>true</formatXml>
+                            <indentLocalDefs>false</indentLocalDefs>
+                            <indentPackageBlocks>true</indentPackageBlocks>
+                            <indentSpaces>2</indentSpaces>
+                            <placeScaladocAsterisksBeneathSecondAsterisk>false
+                            </placeScaladocAsterisksBeneathSecondAsterisk>
+                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
+                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
+                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
+                            <spaceBeforeColon>false</spaceBeforeColon>
+                            <spaceInsideBrackets>false</spaceInsideBrackets>
+                            <spaceInsideParentheses>false</spaceInsideParentheses>
+                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

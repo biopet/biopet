@@ -10,6 +10,7 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import scala.collection.SortedMap
+import scala.language.reflectiveCalls
 
 class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -83,6 +84,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
     if (variantcalling) {
       var mergBuffer: SortedMap[String, File] = SortedMap()
+      def mergeList = mergBuffer map { case (key, file) => TaggedFile(removeNoneVariants(file), "name=" + key) }
 
       if (sampleID != null && (useHaplotypecaller.get || config("joint_genotyping", default = false).getBoolean)) {
         val hcGvcf = new HaplotypeCaller(this)
@@ -140,10 +142,17 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
 
       if (useAllelesOption.get) {
+        val tempFile = if (mergeList.toList.size > 1) {
+          val allelesTemp = CombineVariants(this, mergeList.toList, outputDir + outputName + ".alleles_temp.vcf.gz")
+          allelesTemp.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
+          add(allelesTemp, isIntermediate = true)
+          allelesTemp.out
+        } else mergeList.toList.head
+
         val alleleOnly = new CommandLineFunction {
-          @Input val input: File = scriptOutput.rawFilterVcfFile
+          @Input val input: File = tempFile
           @Output val output: File = outputDir + "raw.allele_only.vcf.gz"
-          @Output val outputindex: File = outputDir + "raw.allele_only.vcf.gz.tbi"
+          @Output val outputindex: File = outputDir + "raw.allele__temp_only.vcf.gz.tbi"
           def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
         }
         add(alleleOnly, isIntermediate = true)
@@ -180,8 +189,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         sv.out
       }
 
-      def mergeList = mergBuffer map { case (key, file) => TaggedFile(removeNoneVariants(file), "name=" + key) }
       val cvFinal = CombineVariants(this, mergeList.toList, outputDir + outputName + ".final.vcf.gz")
+      cvFinal.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
       add(cvFinal)
       scriptOutput.finalVcfFile = cvFinal.out
     }
