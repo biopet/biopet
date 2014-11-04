@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
 import org.broadinstitute.gatk.queue.util.Logging
+import scala.language.implicitConversions
 
 trait Configurable extends Logging {
   val root: Configurable

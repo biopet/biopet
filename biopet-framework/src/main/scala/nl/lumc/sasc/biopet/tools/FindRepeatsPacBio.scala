@@ -1,25 +1,6 @@
-/*
- * Copyright 2014 pjvan_thof.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.ValidationStringency
-import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import java.io.File
 import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.io.Source
@@ -44,8 +25,9 @@ object FindRepeatsPacBio extends ToolCommand {
 
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
-    val bamReader = new SAMFileReader(commandArgs.inputBam)
-    bamReader.setValidationStringency(ValidationStringency.SILENT)
+    val bamReader = SamReaderFactory.makeDefault
+      .validationStringency(ValidationStringency.SILENT)
+      .open(commandArgs.inputBam)
     val bamHeader = bamReader.getFileHeader
 
     val header = List("chr", "startPos", "stopPos", "Repeat_seq", "repeatLength",
@@ -55,7 +37,7 @@ object FindRepeatsPacBio extends ToolCommand {
 
     for (
       bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
-      val values = bedLine.split("\t"); if values.size >= 3
+      values = bedLine.split("\t"); if values.size >= 3
     ) {
       val interval = new QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
       val bamIter = bamReader.query(Array(interval), false)
