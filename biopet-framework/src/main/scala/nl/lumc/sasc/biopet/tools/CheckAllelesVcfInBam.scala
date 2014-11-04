@@ -1,8 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.{ QueryInterval, SamReaderFactory, SAMRecord, SamReader }
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
@@ -69,7 +67,8 @@ object CheckAllelesVcfInBam extends ToolCommand {
 
     if (commandArgs.bamFiles.size != commandArgs.samples.size)
       logger.warn("Number of samples is diffrent then number of bam files, left over will be removed")
-    val bamReaders: Map[String, SAMFileReader] = Map(commandArgs.samples zip commandArgs.bamFiles.map(x => new SAMFileReader(x)): _*)
+    val samReaderFactory = SamReaderFactory.makeDefault
+    val bamReaders: Map[String, SamReader] = Map(commandArgs.samples zip commandArgs.bamFiles.map(x => samReaderFactory.open(x)): _*)
     val bamHeaders = bamReaders.map(x => (x._1, x._2.getFileHeader))
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)

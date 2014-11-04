@@ -1,7 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.SAMSequenceRecord
+import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
 import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -68,7 +67,7 @@ object BedToInterval extends ToolCommand {
 
     val writer = new PrintWriter(commandArgs.outputFile)
 
-    val inputSam = new SAMFileReader(commandArgs.bamFile)
+    val inputSam = SamReaderFactory.makeDefault.open(commandArgs.bamFile)
     val refs = for (SQ <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) yield {
       val record = SQ.asInstanceOf[SAMSequenceRecord]
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
@@ -80,10 +79,10 @@ object BedToInterval extends ToolCommand {
     val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
       line <- bedFile.getLines;
-      val split = line.split("\t") if split.size >= 3;
-      val chr = split(0);
-      val start = split(1);
-      val stop = split(2) if start forall Character.isDigit if stop forall Character.isDigit
+      split = line.split("\t") if split.size >= 3;
+      chr = split(0);
+      start = split(1);
+      stop = split(2) if start forall Character.isDigit if stop forall Character.isDigit
     ) {
       if (!refsMap.contains(chr)) throw new IllegalStateException("Chr '" + chr + "' in bed file not found in bam file")
       writer.write(chr + "\t" + start + "\t" + stop + "\t")
