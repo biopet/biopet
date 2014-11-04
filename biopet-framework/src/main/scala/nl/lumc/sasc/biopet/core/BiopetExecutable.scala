@@ -115,7 +115,10 @@ object BiopetExecutable extends Logging {
     prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
     val describeShort = prop.getProperty("git.commit.id.describe-short")
     if (describeShort.endsWith("-dirty")) {
-      logger.warn("This is a dirty build")
+      logger.warn("**********************************************************")
+      logger.warn("* This JAR was built while there are uncommited changes. *")
+      logger.warn("* Reproducible results are *not* guaranteed.             *")
+      logger.warn("**********************************************************")
     }
   }
   checkDirtyBuild(logger)
