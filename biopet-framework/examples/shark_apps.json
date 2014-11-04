@@ -1,9 +1,4 @@
 {
-    "mapping": {
-        "chunking": true,
-        "chunk_metrics": true,
-        "aligner": "bwa"
-    },
     "bwa": {
         "exe": "/usr/local/bwa/bwa-0.7.10/bwa",
         "M": false
