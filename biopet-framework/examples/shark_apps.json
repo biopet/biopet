@@ -1,7 +1,6 @@
 {
     "bwa": {
-        "exe": "/usr/local/bwa/bwa-0.7.10/bwa",
-        "M": false
+        "exe": "/usr/local/bwa/bwa-0.7.10/bwa"
     },
     "seqtk": {
         "exe":"/data/DIV5/SASC/common/programs/seqtk/seqtk/seqtk"
@@ -17,25 +16,19 @@
         "exe": "/data/DIV5/SASC/common/programs/pindel/pindel-0.2.5/pindel"
     },
     "breakdancerconfig": {
-        "exe": "/data/DIV5/SASC/common/programs/breakdancer/breakdancer-v1.4.4/lib/breakdancer-max1.4.4/bam2cfg.pl",
-        "min_observations": 50000
+        "exe": "/data/DIV5/SASC/common/programs/breakdancer/breakdancer-v1.4.4/lib/breakdancer-max1.4.4/bam2cfg.pl"
     },
     "breakdancercaller": {
-        "exe": "/data/DIV5/SASC/common/programs/breakdancer/breakdancer-v1.4.4/bin/breakdancer-max",
-        "vmem": "6G"
+        "exe": "/data/DIV5/SASC/common/programs/breakdancer/breakdancer-v1.4.4/bin/breakdancer-max"
     },
     "fastqc": {
         "exe": "/usr/local/FastQC/FastQC_v0.10.1/fastqc"
-    },
-    "picard": {
-        "compressionlevel": 9
     },
     "seqstat": {
         "exe": "/data/DIV5/SASC/common/programs/dQual/fastq-seqstat"
     },
     "stampy": {
-        "exe": "/usr/local/stampy/stampy-1.0.23/stampy.py",
-        "verbosity": 2
+        "exe": "/usr/local/stampy/stampy-1.0.23/stampy.py"
     },
     "sambamba": {
         "exe": "/data/DIV5/SASC/common/programs/sambamba/sambamba-0.4.7/build/sambamba"
