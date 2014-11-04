@@ -1,8 +1,9 @@
 package nl.lumc.sasc.biopet.core
 
 import java.util.Properties
+import org.apache.log4j.Logger
 
-object BiopetExecutable {
+object BiopetExecutable extends Logging {
 
   val modules: Map[String, List[MainCommand]] = Map(
     "pipeline" -> List(
@@ -108,4 +109,14 @@ object BiopetExecutable {
     prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
     prop.getProperty("git.commit.id.abbrev")
   }
+
+  def checkDirtyBuild(logger: Logger) {
+    val prop = new Properties()
+    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
+    val describeShort = prop.getProperty("git.commit.id.describe-short")
+    if (describeShort.endsWith("-dirty")) {
+      logger.warn("This is a dirty build")
+    }
+  }
+  checkDirtyBuild(logger)
 }
