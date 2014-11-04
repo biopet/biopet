@@ -92,7 +92,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected def versionCommand: String = null
   protected val versionRegex: Regex = null
   protected val versionExitcode = List(0) // Can select multiple
-  def getVersion: String = {
+  private def getVersionInternal: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
@@ -114,6 +114,12 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     return "N/A"
   }
 
+  def getVersion: String = {
+    if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
+      BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
+    return BiopetCommandLineFunctionTrait.versionCache(executable)
+  }
+
   def getThreads(default: Int): Int = {
     val maxThreads: Int = config("maxthreads", default = 8)
     val threads: Int = config("threads", default = default)
@@ -127,4 +133,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (maxThreads > threads) return threads
     else return maxThreads
   }
+}
+
+object BiopetCommandLineFunctionTrait {
+  import scala.collection.mutable.Map
+  private val versionCache: Map[String, String] = Map()
 }

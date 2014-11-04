@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import htsjdk.samtools.SAMFileReader
+import htsjdk.samtools.SamReaderFactory
 import scala.collection.JavaConversions._
 import java.io.File
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
@@ -186,7 +186,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
       } else {
         var readGroupOke = true
-        val inputSam = new SAMFileReader(bamFile)
+        val inputSam = SamReaderFactory.makeDefault.open(bamFile)
         val header = inputSam.getFileHeader.getReadGroups
         for (readGroup <- inputSam.getFileHeader.getReadGroups) {
           if (readGroup.getSample != sampleID) logger.warn("Sample ID readgroup in bam file is not the same")
