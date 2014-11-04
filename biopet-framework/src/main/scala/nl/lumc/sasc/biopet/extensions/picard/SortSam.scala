@@ -18,12 +18,12 @@ class SortSam(val root: Configurable) extends Picard {
 
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
-  
+
   override def afterGraph {
     super.afterGraph
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
-  
+
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +

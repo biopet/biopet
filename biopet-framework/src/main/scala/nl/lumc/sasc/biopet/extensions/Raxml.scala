@@ -10,7 +10,7 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 4
   override def versionCommand = executable + " -v"
   override val versionRegex = """.*version \w* .*""".r
-  
+
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _
 
@@ -28,35 +28,35 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Argument(doc = "Name of output files", required = true)
   var n: String = _
-  
+
   @Argument(doc = "Name of output files", required = true)
   var f: String = "d"
 
   @Argument(doc = "Output directory", required = false)
   var w: String = jobLocalDir.getAbsolutePath
-  
+
   @Input(required = false)
   var t: File = _
-  
+
   @Input(required = false)
   var z: File = _
-  
+
   @Output(doc = "Output files", required = false)
   private var out: List[File] = Nil
-  
+
   executable = config("exe", default = "raxmlHPC")
 
   override def afterGraph {
     super.afterGraph
     f match {
-      case "d" if b.isEmpty => out +:= getBestTree
+      case "d" if b.isEmpty   => out +:= getBestTree
       case "d" if b.isDefined => out +:= getBootstrap
     }
   }
-  
+
   def getBestTree: File = new File(w + File.separator + "RAxML_bestTree." + n)
   def getBootstrap: File = new File(w + File.separator + "RAxML_bootstrap." + n)
-  
+
   def cmdLine = required(executable) +
     required("-m", m) +
     required("-s", input) +
