@@ -24,7 +24,7 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package nl.lumc.sasc.biopet.core.broad
+package nl.lumc.sasc.biopet.core.workaround
 
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline._
