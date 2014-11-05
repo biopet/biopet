@@ -81,7 +81,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   val flexiprep = new Flexiprep(this)
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (aligner == null) aligner = config("aligner", default = defaultAligner)
     if (reference == null) reference = config("reference")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")

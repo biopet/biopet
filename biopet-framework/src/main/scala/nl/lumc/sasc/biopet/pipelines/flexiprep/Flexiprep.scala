@@ -43,7 +43,6 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   val summary = new FlexiprepSummary(this)
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
     if (!skipTrim) skipTrim = config("skiptrim", default = false)
     if (!skipClip) skipClip = config("skipclip", default = false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")

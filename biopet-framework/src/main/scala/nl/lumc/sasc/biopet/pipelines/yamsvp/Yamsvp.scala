@@ -34,7 +34,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   override def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
     reference = config("reference", required = true)
     if (outputDir == null)
       throw new IllegalStateException("Output directory is not specified in the config / argument")
