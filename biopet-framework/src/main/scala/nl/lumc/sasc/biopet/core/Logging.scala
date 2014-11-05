@@ -7,9 +7,13 @@ import org.apache.log4j.WriterAppender
 import org.apache.log4j.helpers.DateLayout
 
 trait Logging {
-  protected val logger = Logger.getLogger(getClass.getSimpleName.split("\\$").last)
+  def logger = Logging.logger
+}
 
-  private[core] val logLayout = new DateLayout() {
+object Logging {
+  val logger = Logger.getLogger("Logging")
+
+  val logLayout = new DateLayout() {
     val ignoresThrowable = false
     def format(event: org.apache.log4j.spi.LoggingEvent): String = {
       val calendar: Calendar = Calendar.getInstance
@@ -18,10 +22,13 @@ trait Logging {
       val formattedDate: String = formatter.format(calendar.getTime)
       var logLevel = event.getLevel.toString
       while (logLevel.size < 6) logLevel += " "
-      logLevel + " [" + formattedDate + "] [" + event.getLoggerName + "] " + event.getMessage + "\n"
+      val className = event.getLocationInformation.getClassName.split("\\.").last.split("\\$").head
+      logLevel + " [" + formattedDate + "] [" + className + "] " + event.getMessage + "\n"
     }
   }
-  private[core] val stderrAppender = new WriterAppender(logLayout, sys.process.stderr)
+
+  val stderrAppender = new WriterAppender(logLayout, sys.process.stderr)
+
   logger.setLevel(org.apache.log4j.Level.INFO)
-  logger.addAppender(stderrAppender)
+  logger.addAppender(Logging.stderrAppender)
 }
