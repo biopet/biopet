@@ -105,6 +105,8 @@ class Config(var map: Map[String, Any]) extends Logging {
 }
 
 object Config {
+  val global = new Config
+
   def valueToMap(input: Any): Map[String, Any] = {
     input match {
       case m: Map[_, _] => return m.asInstanceOf[Map[String, Any]]

@@ -6,7 +6,7 @@ import scala.language.implicitConversions
 
 trait Configurable extends Logging {
   val root: Configurable
-  val globalConfig: Config = if (root != null) root.globalConfig else new Config()
+  //val globalConfig: Config = if (root != null) root.globalConfig else new Config()
   def configPath: List[String] = if (root != null) root.configFullPath else List()
   protected lazy val configName = getClass.getSimpleName.toLowerCase
   protected lazy val configFullPath = configName :: configPath
@@ -29,15 +29,15 @@ trait Configurable extends Logging {
           throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
         } else return null
       }
-      if (d == null) return globalConfig(m, p, key, freeVar)
-      else return globalConfig(m, p, key, d, freeVar)
+      if (d == null) return Config.global(m, p, key, freeVar)
+      else return Config.global(m, p, key, d, freeVar)
     }
 
     def contains(key: String, submodule: String = null, freeVar: Boolean = true) = {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
 
-      globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
+      Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
   }
 

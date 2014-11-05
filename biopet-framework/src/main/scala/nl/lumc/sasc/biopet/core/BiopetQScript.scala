@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -25,7 +25,7 @@ trait BiopetQScript extends Configurable {
   var functions: Seq[QFunction]
 
   final def script() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
+    for (file <- configfiles) Config.global.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
@@ -33,7 +33,7 @@ trait BiopetQScript extends Configurable {
       case f: BiopetCommandLineFunctionTrait => f.afterGraph
       case _                                 =>
     }
-    val configReport = globalConfig.getReport
+    val configReport = Config.global.getReport
     val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
     configReportFile.getParentFile.mkdir
     val writer = new PrintWriter(configReportFile)
