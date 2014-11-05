@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
-import org.broadinstitute.gatk.queue.util.Logging
+import nl.lumc.sasc.biopet.core.Logging
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 
@@ -104,7 +104,7 @@ class Config(var map: Map[String, Any]) extends Logging {
   override def toString(): String = map.toString
 }
 
-object Config {
+object Config extends Logging {
   val global = new Config
 
   def valueToMap(input: Any): Map[String, Any] = {
