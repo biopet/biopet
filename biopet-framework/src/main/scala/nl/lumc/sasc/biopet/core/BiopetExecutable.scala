@@ -1,6 +1,8 @@
 package nl.lumc.sasc.biopet.core
 
+import java.io.File
 import java.util.Properties
+import nl.lumc.sasc.biopet.core.config.Config
 import org.apache.log4j.Logger
 
 object BiopetExecutable extends Logging {
@@ -80,6 +82,11 @@ object BiopetExecutable extends Logging {
         System.exit(1)
       }
       return command.get
+    }
+
+    // Read config files
+    for (t <- 0 until args.size) {
+      if (args(t) == "-config" || args(t) == "--config_ile") Config.global.loadConfigFile(new File(args(t + 1)))
     }
 
     args match {

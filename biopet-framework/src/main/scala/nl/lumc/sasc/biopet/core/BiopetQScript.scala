@@ -25,7 +25,6 @@ trait BiopetQScript extends Configurable {
   var functions: Seq[QFunction]
 
   final def script() {
-    for (file <- configfiles) Config.global.loadConfigFile(file)
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
