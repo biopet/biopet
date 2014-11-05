@@ -13,9 +13,9 @@ trait Configurable extends Logging {
   var defaults: scala.collection.mutable.Map[String, Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
   else scala.collection.mutable.Map()
 
-  val config = new ConfigFuntions
+  val config = new ConfigFunctions
 
-  protected class ConfigFuntions {
+  protected class ConfigFunctions {
     def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true): ConfigValue = {
       val m = if (submodule != null) submodule else configName
       val p = if (submodule != null) configName :: configPath else configPath
