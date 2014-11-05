@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.queue.engine.JobRunInfo
 class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
-  var reference: File = _
+  var reference: File = config("reference", required = true)
   var finalBamFiles: List[File] = Nil
 
   class LibraryOutput extends AbstractLibraryOutput {
@@ -34,7 +34,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   override def init() {
-    reference = config("reference", required = true)
     if (outputDir == null)
       throw new IllegalStateException("Output directory is not specified in the config / argument")
     else if (!outputDir.endsWith("/"))
@@ -123,7 +122,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     if (runConfig.contains("R1")) {
       val mapping = new Mapping(this)
 
-      mapping.defaultAligner = "stampy"
+      mapping.aligner = config("aligner", default = "stampy")
       mapping.skipFlexiprep = false
       mapping.skipMarkduplicates = true // we do the dedup marking using Sambamba
 
