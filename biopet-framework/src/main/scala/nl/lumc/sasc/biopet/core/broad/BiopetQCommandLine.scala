@@ -24,7 +24,7 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-package nl.lumc.sasc.biopet.core
+package nl.lumc.sasc.biopet.core.broad
 
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline._
@@ -32,6 +32,7 @@ import org.broadinstitute.gatk.queue.util._
 import org.broadinstitute.gatk.queue.QCommandPlugin
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.QScriptManager
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
 import collection.JavaConversions._
 import org.broadinstitute.gatk.utils.classloader.PluginManager
@@ -43,11 +44,12 @@ import java.net.URL
 import java.util.{ ResourceBundle, Arrays }
 import org.broadinstitute.gatk.utils.text.TextFormattingUtils
 import org.apache.commons.io.FilenameUtils
+import nl.lumc.sasc.biopet.core.BiopetExecutable
 
 /**
  * Entry point of Queue.  Compiles and runs QScripts passed in to the command line.
  */
-object BiopetQCommandLine extends Logging {
+object BiopetQCommandLine extends GatkLogging {
   /**
    * Main.
    * @param argv Arguments.
