@@ -6,6 +6,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class SamToFastq(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.SamToFastq"
+  javaGCThreads = config("gcthreads", default = 2)
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _
