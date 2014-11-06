@@ -35,6 +35,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   private val samP: SAMLineParser = {
     val samh = new SAMFileHeader
     samh.addSequence(new SAMSequenceRecord("chrQ", 10000))
+    samh.addSequence(new SAMSequenceRecord("chrR", 10000))
     samh.addReadGroup(new SAMReadGroupRecord("001"))
     samh.addReadGroup(new SAMReadGroupRecord("002"))
     new SAMLineParser(samh)
@@ -42,12 +43,6 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
 
   private def makeSams(raws: String*): Seq[SAMRecord] =
     raws.map(s => samP.parseLine(s))
-
-  private def makeTempBam(): File =
-    File.createTempFile("WipeReads", java.util.UUID.randomUUID.toString + ".bam")
-
-  private def makeTempBamIndex(bam: File): File =
-    new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
 
   private def makeSamReader(f: File): SamReader = SamReaderFactory
     .make()
@@ -83,6 +78,15 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   val sBamFile3 = new File(resourcePath("/single03.bam"))
   val sBamFile4 = new File(resourcePath("/single04.bam"))
 
+  val sBamFile5 = new File(resourcePath("/single05.bam"))
+  val sBamRecs5 = makeSams(
+    "r02\t16\tchrR\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
+    "r04\t0\tchrQ\t500\t60\t10M\t*\t0\t0\tCGTACGTACG\tEEFFGGHHII\tRG:Z:001",
+    "r01\t0\tchrR\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
+    "r03\t16\tchrQ\t500\t60\t10M\t*\t0\t0\tGGGGGAAAAA\tGGGGGGGGGG\tRG:Z:001",
+    "r05\t4\t*\t0\t0\t*\t*\t0\t0\tATATATATAT\tHIHIHIHIHI\tRG:Z:001"
+  )
+
   val pBamFile1 = new File(resourcePath("/paired01.bam"))
   val pBamRecs1 = makeSams(
     "r02\t99\tchrQ\t50\t60\t10M\t=\t90\t50\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001",
@@ -116,18 +120,64 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
   )
 
   val pBamFile3 = new File(resourcePath("/paired03.bam"))
-  val BedFile1 = new File(resourcePath("/rrna01.bed"))
-  val minArgList = List("-I", sBamFile1.toString, "-l", BedFile1.toString, "-o", "mock.bam")
 
-  @Test def testMakeFeatureFromBed() = {
+  val BedFile1 = new File(resourcePath("/rrna01.bed"))
+  val BedFile2 = new File(resourcePath("/rrna02.bed"))
+  val RefFlatFile1 = new File(resourcePath("/rrna01.refFlat"))
+  val GtfFile1 = new File(resourcePath("/rrna01.gtf"))
+
+  @Test def testMakeIntervalFromUnknown() = {
+    val thrown = intercept[IllegalArgumentException] {
+      makeIntervalFromFile(new File("false.bam"))
+    }
+    thrown.getMessage should ===("Unexpected interval file type: false.bam")
+  }
+
+  @Test def testMakeIntervalFromBed() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
-    intervals.length should be(3)
+    intervals.length shouldBe 3
     intervals.head.getSequence should ===("chrQ")
-    intervals.head.getStart should be(991)
-    intervals.head.getEnd should be(1000)
+    intervals.head.getStart shouldBe 991
+    intervals.head.getEnd shouldBe 1000
     intervals.last.getSequence should ===("chrQ")
-    intervals.last.getStart should be(291)
-    intervals.last.getEnd should be(320)
+    intervals.last.getStart shouldBe 291
+    intervals.last.getEnd shouldBe 320
+  }
+
+  @Test def testMakeIntervalFromRefFlat() = {
+    val intervals: List[Interval] = makeIntervalFromFile(RefFlatFile1)
+    intervals.length shouldBe 5
+    intervals.head.getSequence should ===("chrS")
+    intervals.head.getStart shouldBe 101
+    intervals.head.getEnd shouldBe 500
+    intervals(2).getSequence should ===("chrQ")
+    intervals(2).getStart shouldBe 801
+    intervals(2).getEnd shouldBe 1000
+    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getStart shouldBe 101
+    intervals.last.getEnd shouldBe 200
+  }
+
+  @Test def testMakeIntervalFromGtf() = {
+    val intervals: List[Interval] = makeIntervalFromFile(GtfFile1, "exon")
+    intervals.length shouldBe 3
+    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getStart shouldBe 669
+    intervals.head.getEnd shouldBe 778
+    intervals.last.getSequence should ===("chrP")
+    intervals.last.getStart shouldBe 2949
+    intervals.last.getEnd shouldBe 3063
+  }
+
+  @Test def testMakeIntervalFromBedOverlap() = {
+    val intervals: List[Interval] = makeIntervalFromFile(BedFile2)
+    intervals.length shouldBe 4
+    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getStart shouldBe 451
+    intervals.head.getEnd shouldBe 480
+    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getStart shouldBe 2
+    intervals.last.getEnd shouldBe 250
   }
 
   @Test def testSingleBamDefault() = {
@@ -196,6 +246,19 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     filterNotFunc(sBamRecs1(6)) shouldBe false
   }
 
+  @Test def testSingleBamDifferentChromosomes() = {
+    val intervals: List[Interval] = List(
+      new Interval("chrQ", 50, 55),
+      new Interval("chrR", 500, 505)
+    )
+    val filterNotFunc = makeFilterNotFunction(intervals, sBamFile5, bloomSize = bloomSize, bloomFp = bloomFp)
+    filterNotFunc(sBamRecs5(0)) shouldBe true
+    filterNotFunc(sBamRecs5(1)) shouldBe false
+    filterNotFunc(sBamRecs5(2)) shouldBe false
+    filterNotFunc(sBamRecs5(3)) shouldBe true
+    filterNotFunc(sBamRecs5(4)) shouldBe false
+  }
+
   @Test def testSingleBamFilterOutMultiNotSet() = {
     val intervals: List[Interval] = List(
       new Interval("chrQ", 291, 320), // overlaps r01, second hit,
@@ -244,7 +307,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     filterNotFunc(sBamRecs2(2)) shouldBe false
     filterNotFunc(sBamRecs2(3)) shouldBe true
     filterNotFunc(sBamRecs2(4)) shouldBe true
-    // this r07 is not in since filterOuMulti is false
+    // this r07 is not in since filterOutMulti is false
     filterNotFunc(sBamRecs2(5)) shouldBe false
     filterNotFunc(sBamRecs2(6)) shouldBe false
     filterNotFunc(sBamRecs2(7)) shouldBe false
@@ -460,6 +523,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
       "-G", "002",
       "--limit_removal",
       "--no_make_index",
+      "--feature_type", "gene",
       "--bloom_size", "10000",
       "--false_positive", "1e-8"
     ))
@@ -472,6 +536,7 @@ class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
     parsed.readGroupIds should contain("002")
     parsed.limitToRegion shouldBe true
     parsed.noMakeIndex shouldBe true
+    parsed.featureType should ===("gene")
     parsed.bloomSize shouldBe 10000
     parsed.bloomFp shouldBe 1e-8
   }

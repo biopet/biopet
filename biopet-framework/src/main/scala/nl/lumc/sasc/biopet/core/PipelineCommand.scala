@@ -1,8 +1,9 @@
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.gatk.queue.util.Logging
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 
-trait PipelineCommand extends MainCommand with Logging {
+trait PipelineCommand extends MainCommand with GatkLogging {
 
   def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
 

@@ -1,7 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.SAMFileReader
-import htsjdk.samtools.SAMRecord
+import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
 import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -57,7 +56,7 @@ object BiopetFlagstat extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val inputSam = new SAMFileReader(commandArgs.inputFile)
+    val inputSam = SamReaderFactory.makeDefault.open(commandArgs.inputFile)
     val iterSam = if (commandArgs.region == None) inputSam.iterator else {
       val regionRegex = """(.*):(.*)-(.*)""".r
       commandArgs.region.get match {
