@@ -64,7 +64,7 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --help"
 
   def cmdLine = {
-      required(executable) +
+    required(executable) +
       optional("--format", format) +
       optional("--order", order) +
       optional("--stranded", stranded) +

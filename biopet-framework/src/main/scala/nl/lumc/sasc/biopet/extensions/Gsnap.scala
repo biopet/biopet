@@ -23,8 +23,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "gsnap", freeVar = false)
 
   /** input file */
-  @Input(doc = "Input FASTQ file(s)", required = true)
-  //var input: List[File] = _
+  @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
   var input: List[File] = _
 
   /** output file */
@@ -322,7 +321,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
 
   def cmdLine = {
-      required(executable) +
+    required(executable) +
       optional("--dir", dir) +
       optional("--db", db) +
       optional("--use-sarray", use_sarray) +

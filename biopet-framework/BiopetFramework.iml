@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
-    <facet type="scala" name="Scala">
-      <configuration>
-        <option name="compilerLibraryLevel" value="Project" />
-        <option name="compilerLibraryName" value="Maven: org.scala-lang:scala-compiler-bundle:2.11.2" />
-        <option name="compilerOptions" value="-dependencyfile $MODULE_DIR$/target/.scala_dependencies -feature" />
-        <option name="deprecationWarnings" value="true" />
-        <option name="languageLevel" value="Scala 2.11" />
-        <option name="vmOptions" value="" />
-      </configuration>
-    </facet>
     <facet type="Python" name="Python">
       <configuration sdkName="" />
     </facet>
@@ -40,7 +30,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.scalatest:scalatest_2.11:2.2.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.scala-lang:scala-reflect:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.broadinstitute.gatk:gatk-queue-package-distribution:3.3" level="project" />
     <orderEntry type="library" name="Maven: io.argonaut:argonaut_2.11:6.1-M4" level="project" />
     <orderEntry type="library" name="Maven: org.scalaz:scalaz-core_2.11:7.1.0" level="project" />
@@ -50,5 +39,8 @@
     <orderEntry type="library" name="Maven: org.biojava:biojava3-sequencing:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.scopt:scopt_2.10:3.2.0" level="project" />
+    <orderEntry type="library" name="scala-sdk-2.11.1" level="application" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.2" level="project" />
   </component>
 </module>
+

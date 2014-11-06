@@ -33,9 +33,9 @@ class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
   def cmdLine = {
     // TODO: how to check that at least -G or -E is set?
     RScriptCommand +
-    required("-I", inputRawCounts.mkString(":")) +
-    required("-N", inputLabels.mkString(":")) +
-    optional("-G", outputGeneLevelCount) +
-    optional("-E", outputExonLevelCount)
+      required("-I", inputRawCounts.mkString(":")) +
+      required("-N", inputLabels.mkString(":")) +
+      optional("-G", outputGeneLevelCount) +
+      optional("-E", outputExonLevelCount)
   }
 }
