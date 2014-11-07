@@ -27,10 +27,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var mergeGvcfs: Boolean = false
 
   @Argument(doc = "Joint variantcalling", shortName = "jointVariantCalling", required = false)
-  var jointVariantcalling = config("joint_variantcalling", default = false)
+  var jointVariantcalling: Boolean = config("joint_variantcalling", default = false)
 
   @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
-  var jointGenotyping = config("joint_genotyping", default = false)
+  var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
   var singleSampleCalling = config("single_sample_calling", default = true)
   var reference: File = config("reference", required = true)
