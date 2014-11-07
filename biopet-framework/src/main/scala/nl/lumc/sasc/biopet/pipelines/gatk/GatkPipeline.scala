@@ -27,17 +27,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var mergeGvcfs: Boolean = false
 
   @Argument(doc = "Joint variantcalling", shortName = "jointVariantCalling", required = false)
-  var jointVariantcalling = false
+  var jointVariantcalling = config("joint_variantcalling", default = false)
 
   @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
-  var jointGenotyping = false
+  var jointGenotyping = config("joint_genotyping", default = false)
 
-  var singleSampleCalling = true
-  var reference: File = _
-  var dbsnp: File = _
+  var singleSampleCalling = config("single_sample_calling", default = true)
+  var reference: File = config("reference", required = true)
+  var dbsnp: File = config("dbsnp")
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
-  var useAllelesOption: Boolean = _
+  var useAllelesOption: Boolean = config("use_alleles_option", default = false)
 
   class LibraryOutput extends AbstractLibraryOutput {
     var mappedBamFile: File = _
@@ -49,15 +49,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def init() {
-    useAllelesOption = config("use_alleles_option", default = false)
-    reference = config("reference", required = true)
-    dbsnp = config("dbsnp")
     if (config.contains("target_bed")) {
       defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
     }
-    jointVariantcalling = config("joint_variantcalling", default = false)
-    jointGenotyping = config("joint_genotyping", default = false)
-    singleSampleCalling = config("single_sample_calling", default = true)
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
         gvcfFiles :+= file.toString
