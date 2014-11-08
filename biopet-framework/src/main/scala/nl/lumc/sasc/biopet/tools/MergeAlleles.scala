@@ -10,6 +10,8 @@ import htsjdk.variant.vcf.VCFFileReader
 import htsjdk.variant.vcf.VCFHeader
 import java.io.File
 import nl.lumc.sasc.biopet.core.ToolCommand
+import scala.collection.SortedMap
+import scala.collection.immutable.SortedSet
 import scala.collection.mutable.{ Map, Set }
 import scala.collection.JavaConversions._
 
@@ -37,6 +39,7 @@ object MergeAlleles extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
+    val readers = commandArgs.inputFiles.map(new VCFFileReader(_, true))
     val referenceFile = new FastaSequenceFile(commandArgs.reference, true)
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
     val header = new VCFHeader
@@ -45,7 +48,6 @@ object MergeAlleles extends ToolCommand {
     writer.writeHeader(header)
 
     for (chr <- referenceDict.getSequences; chunk <- (0 to (chr.getSequenceLength / chunkSize))) {
-      val readers = commandArgs.inputFiles.map(new VCFFileReader(_, true))
       val output: Map[Int, List[VariantContext]] = Map()
 
       val chrName = chr.getSequenceName
@@ -55,16 +57,18 @@ object MergeAlleles extends ToolCommand {
         if (e > chr.getSequenceLength) chr.getSequenceLength else e
       }
 
-      for (reader <- readers.par; variant <- reader.query(chrName, begin, end)) {
+      for (reader <- readers; variant <- reader.query(chrName, begin, end)) {
         val start = variant.getStart
         if (output.contains(start)) output += variant.getStart -> (variant :: output(start))
         else output += variant.getStart -> List(variant)
       }
 
-      for ((_, l) <- output) {
-        writer.add(mergeAlleles(l))
+      for ((k, v) <- SortedMap(output.toSeq: _*)) {
+        writer.add(mergeAlleles(v))
       }
     }
+    writer.close
+    readers.foreach(_.close)
   }
 
   def mergeAlleles(records: List[VariantContext]): VariantContext = {
@@ -73,7 +77,7 @@ object MergeAlleles extends ToolCommand {
       for (a <- records.map(_.getReference.getBases) if (a.length > l.size)) l = a
       Allele.create(l, true)
     }
-    val alleles: Set[Allele] = Set(longestRef)
+    val alleles: Set[Allele] = Set()
     val builder = new VariantContextBuilder
     builder.chr(records.head.getChr)
     builder.start(records.head.getStart)
@@ -85,7 +89,8 @@ object MergeAlleles extends ToolCommand {
         for (r <- record.getAlternateAlleles) alleles += Allele.create(r.getBaseString + suffix)
       }
     }
-    builder.alleles(alleles.toSeq)
+    builder.alleles(longestRef :: alleles.toList)
+    builder.computeEndFromAlleles(longestRef :: alleles.toList, records.head.getStart)
     builder.make
   }
 }
