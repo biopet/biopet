@@ -9,11 +9,31 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
 import htsjdk.variant.vcf.VCFHeader
 import java.io.File
+import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.collection.SortedMap
-import scala.collection.immutable.SortedSet
 import scala.collection.mutable.{ Map, Set }
+import nl.lumc.sasc.biopet.core.config.Configurable
 import scala.collection.JavaConversions._
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+
+class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction {
+  javaMainClass = getClass.getName
+
+  @Input(doc = "Input vcf files", shortName = "input", required = true)
+  var input: List[File] = Nil
+
+  @Output(doc = "Output fastq files", shortName = "output", required = true)
+  var output: File = _
+
+  @Argument
+  var reference: File = config("reference")
+
+  override def commandLine = super.commandLine +
+    repeat("-I", input) +
+    required("-o", output) +
+    required("-R", reference)
+}
 
 object MergeAlleles extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil, outputFile: File = null, reference: File = null) extends AbstractArgs
