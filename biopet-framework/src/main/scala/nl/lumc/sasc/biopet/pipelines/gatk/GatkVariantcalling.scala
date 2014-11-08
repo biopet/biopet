@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter , MergeAlleles}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
@@ -135,26 +135,14 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
 
       if (useAllelesOption.get) {
-        val tempFile = if (mergeList.toList.size > 1) {
-          val allelesTemp = CombineVariants(this, mergeList.toList, outputDir + outputName + ".alleles_temp.vcf.gz")
-          allelesTemp.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
-          add(allelesTemp, isIntermediate = true)
-          allelesTemp.out
-        } else mergeList.toList.head
-
-        val alleleOnly = new CommandLineFunction {
-          @Input val input: File = tempFile
-          @Output val output: File = outputDir + "raw.allele_only.vcf.gz"
-          @Output val outputindex: File = outputDir + "raw.allele__temp_only.vcf.gz.tbi"
-          def commandLine = "zcat " + input + " | cut -f1,2,3,4,5,6,7,8 | bgzip -c > " + output + " && tabix -pvcf " + output
-        }
-        add(alleleOnly, isIntermediate = true)
+        val mergeAlleles = MergeAlleles(this,mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz.tbi")
+        add(mergeAlleles, isIntermediate = true)
 
         if (useHaplotypecaller.get) {
           val hcAlleles = new HaplotypeCaller(this)
           hcAlleles.input_file = scriptOutput.bamFiles
           hcAlleles.out = outputDir + outputName + ".hc.allele.vcf.gz"
-          hcAlleles.alleles = alleleOnly.output
+          hcAlleles.alleles = mergeAlleles.output
           hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(hcAlleles)
           scriptOutput.hcAlleleVcf = hcAlleles.out
@@ -165,7 +153,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           val ugAlleles = new UnifiedGenotyper(this)
           ugAlleles.input_file = scriptOutput.bamFiles
           ugAlleles.out = outputDir + outputName + ".ug.allele.vcf.gz"
-          ugAlleles.alleles = alleleOnly.output
+          ugAlleles.alleles = mergeAlleles.output
           ugAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(ugAlleles)
           scriptOutput.ugAlleleVcf = ugAlleles.out
