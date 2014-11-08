@@ -15,7 +15,7 @@ import scala.collection.SortedMap
 import scala.collection.mutable.{ Map, Set }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import scala.collection.JavaConversions._
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -23,11 +23,13 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
   @Input(doc = "Input vcf files", shortName = "input", required = true)
   var input: List[File] = Nil
 
-  @Output(doc = "Output fastq files", shortName = "output", required = true)
+  @Output(doc = "Output vcf file", shortName = "output", required = true)
   var output: File = _
 
-  @Argument
   var reference: File = config("reference")
+
+  override val defaultVmem = "8G"
+  memoryLimit = Option(4)
 
   override def commandLine = super.commandLine +
     repeat("-I", input) +
