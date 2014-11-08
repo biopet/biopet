@@ -5,7 +5,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Config
 
-object ParseSamples extends ToolCommand {
+object SamplesTsvToJson extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
