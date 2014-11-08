@@ -135,7 +135,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
 
       if (useAllelesOption.get) {
-        val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz.tbi")
+        val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz")
         add(mergeAlleles, isIntermediate = true)
 
         if (useHaplotypecaller.get) {
