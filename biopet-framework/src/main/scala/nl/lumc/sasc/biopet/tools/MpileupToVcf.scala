@@ -74,16 +74,16 @@ object MpileupToVcf extends ToolCommand {
     opt[String]('s', "sample") required () action { (x, c) =>
       c.copy(sample = x)
     }
-    opt[Int]("minDP") required () action { (x, c) =>
+    opt[Int]("minDP") action { (x, c) =>
       c.copy(minDP = x)
     }
-    opt[Int]("minAP") required () action { (x, c) =>
+    opt[Int]("minAP") action { (x, c) =>
       c.copy(minAP = x)
     }
-    opt[Double]("homoFraction") required () action { (x, c) =>
+    opt[Double]("homoFraction") action { (x, c) =>
       c.copy(homoFraction = x)
     }
-    opt[Int]("ploidy") required () action { (x, c) =>
+    opt[Int]("ploidy") action { (x, c) =>
       c.copy(ploidy = x)
     }
   }

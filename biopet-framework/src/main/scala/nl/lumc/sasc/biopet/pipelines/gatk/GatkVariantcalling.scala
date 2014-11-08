@@ -24,10 +24,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var rawVcfInput: File = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = _
+  var reference: File = config("reference", required = true)
 
   @Argument(doc = "Dbsnp", shortName = "dbsnp", required = false)
-  var dbsnp: File = _
+  var dbsnp: File = config("dbsnp")
 
   @Argument(doc = "OutputName", required = false)
   var outputName: String = _
@@ -35,21 +35,14 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   @Argument(doc = "Sample name", required = false)
   var sampleID: String = _
 
-  var preProcesBams: Option[Boolean] = None
+  var preProcesBams: Option[Boolean] = config("pre_proces_bams", default = true)
   var variantcalling: Boolean = true
-  var doublePreProces: Option[Boolean] = None
-  var useHaplotypecaller: Option[Boolean] = None
-  var useUnifiedGenotyper: Option[Boolean] = None
-  var useAllelesOption: Option[Boolean] = None
+  var doublePreProces: Option[Boolean] = config("double_pre_proces", default = true)
+  var useHaplotypecaller: Option[Boolean] = config("use_haplotypecaller", default = true)
+  var useUnifiedGenotyper: Option[Boolean] = config("use_unifiedgenotyper", default = false)
+  var useAllelesOption: Option[Boolean] = config("use_alleles_option", default = false)
 
   def init() {
-    if (useAllelesOption == None) useAllelesOption = config("use_alleles_option", default = false)
-    if (preProcesBams == None) preProcesBams = config("pre_proces_bams", default = true)
-    if (doublePreProces == None) doublePreProces = config("double_pre_proces", default = true)
-    if (useHaplotypecaller == None) useHaplotypecaller = config("use_haplotypecaller", default = true)
-    if (useUnifiedGenotyper == None) useUnifiedGenotyper = config("use_unifiedgenotyper", default = false)
-    if (reference == null) reference = config("reference", required = true)
-    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputName == null && sampleID != null) outputName = sampleID
     else if (outputName == null) outputName = "noname"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")

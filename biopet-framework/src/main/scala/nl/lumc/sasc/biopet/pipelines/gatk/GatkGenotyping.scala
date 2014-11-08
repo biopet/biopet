@@ -13,10 +13,10 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   var inputGvcfs: List[File] = Nil
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = _
+  var reference: File = config("reference")
 
   @Argument(doc = "Dbsnp", shortName = "dbsnp", required = false)
-  var dbsnp: File = _
+  var dbsnp: File = config("dbsnp")
 
   @Argument(doc = "OutputName", required = false)
   var outputName: String = "genotype"
@@ -28,8 +28,6 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   var samples: List[String] = Nil
 
   def init() {
-    if (reference == null) reference = config("reference")
-    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputFile == null) outputFile = outputDir + outputName + ".vcf.gz"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
