@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter , MergeAlleles}
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
@@ -135,7 +135,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
 
       if (useAllelesOption.get) {
-        val mergeAlleles = MergeAlleles(this,mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz.tbi")
+        val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz.tbi")
         add(mergeAlleles, isIntermediate = true)
 
         if (useHaplotypecaller.get) {
