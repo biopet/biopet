@@ -36,6 +36,13 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
 }
 
 object MergeAlleles extends ToolCommand {
+  def apply(root: Configurable, input: List[File], output: File): MergeAlleles = {
+    val mergeAlleles = new MergeAlleles(root)
+    mergeAlleles.input = input
+    mergeAlleles.output = output
+    return mergeAlleles
+  }
+
   case class Args(inputFiles: List[File] = Nil, outputFile: File = null, reference: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
