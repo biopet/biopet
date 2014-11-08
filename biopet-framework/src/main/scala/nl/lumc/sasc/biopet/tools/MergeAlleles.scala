@@ -26,10 +26,19 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
   @Output(doc = "Output vcf file", shortName = "output", required = true)
   var output: File = _
 
+  @Output(doc = "Output vcf file index", shortName = "output", required = true)
+  private var outputIndex: File = _
+
   var reference: File = config("reference")
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4)
+
+  override def afterGraph {
+    super.afterGraph
+    if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
+    if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
+  }
 
   override def commandLine = super.commandLine +
     repeat("-I", input) +
