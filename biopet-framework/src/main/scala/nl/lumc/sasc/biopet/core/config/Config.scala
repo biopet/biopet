@@ -199,4 +199,28 @@ object Config extends Logging {
       return None
     }
   }
+
+  def mapToJson(map: Map[String, Any]): Json = {
+    map.foldLeft(jEmptyObject)((acc, kv) => (kv._1 := {
+      kv._2 match {
+        case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
+        case _            => anyToJson(kv._2)
+      }
+    }) ->: acc)
+  }
+
+  def anyToJson(any: Any): Json = {
+    any match {
+      case j: Json      => j
+      case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
+      case l: List[_]   => Json.array(l.map(anyToJson(_)): _*)
+      case n: Int       => Json.jNumberOrString(n)
+      case n: Double    => Json.jNumberOrString(n)
+      case n: Long      => Json.jNumberOrString(n)
+      case n: Short     => Json.jNumberOrString(n)
+      case n: Float     => Json.jNumberOrString(n)
+      case n: Byte      => Json.jNumberOrString(n)
+      case _            => jString(any.toString)
+    }
+  }
 }

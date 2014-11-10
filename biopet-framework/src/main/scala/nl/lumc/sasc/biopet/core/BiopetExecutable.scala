@@ -37,7 +37,8 @@ object BiopetExecutable extends Logging {
       nl.lumc.sasc.biopet.tools.SageCountFastq,
       nl.lumc.sasc.biopet.tools.SageCreateLibrary,
       nl.lumc.sasc.biopet.tools.SageCreateTagCounts,
-      nl.lumc.sasc.biopet.tools.MergeAlleles)
+      nl.lumc.sasc.biopet.tools.MergeAlleles,
+      nl.lumc.sasc.biopet.tools.SamplesTsvToJson)
   )
 
   /**
