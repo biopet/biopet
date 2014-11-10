@@ -85,16 +85,19 @@ object BiopetExecutable extends Logging {
       return command.get
     }
 
-    // Read config files
-    for (t <- 0 until args.size) {
-      if (args(t) == "-config" || args(t) == "--config_ile") Config.global.loadConfigFile(new File(args(t + 1)))
-    }
-
     args match {
       case Array("version") => {
         println("version: " + getVersion)
       }
       case Array(module, name, passArgs @ _*) => {
+        // Reading config files
+        val argsSize = passArgs.size
+        for (t <- 0 until argsSize) {
+          if (passArgs(t) == "-config" || args(t) == "--config_file") {
+            if (t >= argsSize) throw new IllegalStateException("-config needs a value")
+            Config.global.loadConfigFile(new File(passArgs(t + 1)))
+          }
+        }
         getCommand(module, name).main(passArgs.toArray)
       }
       case Array(module) => {
