@@ -54,29 +54,43 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
 
   protected def checkExecutable {
-    try if (executable != null) {
-      val buffer = new StringBuffer()
-      val cmd = Seq("which", executable)
-      val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
-      if (process.exitValue == 0) {
-        executable = buffer.toString
-        val file = new File(executable)
-        executable = file.getCanonicalPath
-      } else {
-        logger.error("executable: '" + executable + "' not found, please check config")
-        throw new QException("executable: '" + executable + "' not found, please check config")
+    if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
+      try if (executable != null) {
+        if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
+          val oldExecutable = executable
+          val buffer = new StringBuffer()
+          val cmd = Seq("which", executable)
+          val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
+          if (process.exitValue == 0) {
+            executable = buffer.toString
+            val file = new File(executable)
+            executable = file.getCanonicalPath
+          } else {
+            logger.error("executable: '" + executable + "' not found, please check config")
+            throw new QException("executable: '" + executable + "' not found, please check config")
+          }
+          BiopetCommandLineFunctionTrait.executableCache += oldExecutable -> executable
+          BiopetCommandLineFunctionTrait.executableCache += executable -> executable
+        } else {
+          executable = BiopetCommandLineFunctionTrait.executableCache(executable)
+        }
+
+        if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
+          val is = new FileInputStream(executable)
+          val cnt = is.available
+          val bytes = Array.ofDim[Byte](cnt)
+          is.read(bytes)
+          is.close()
+          val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+          BiopetCommandLineFunctionTrait.executableMd5Cache += executable -> temp
+        }
+
+        addJobReportBinding("md5sum_exe", BiopetCommandLineFunctionTrait.executableMd5Cache(executable))
+      } catch {
+        case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
       }
-
-      val is = new FileInputStream(executable)
-      val cnt = is.available
-      val bytes = Array.ofDim[Byte](cnt)
-      is.read(bytes)
-      is.close()
-      val md5: String = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
-
-      addJobReportBinding("md5sum_exe", md5)
-    } catch {
-      case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
+    } else {
+      addJobReportBinding("md5sum_exe", BiopetCommandLineFunctionTrait.executableMd5Cache(executable))
     }
   }
 
@@ -138,4 +152,6 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
   private val versionCache: Map[String, String] = Map()
+  private val executableMd5Cache: Map[String, String] = Map()
+  private val executableCache: Map[String, String] = Map()
 }

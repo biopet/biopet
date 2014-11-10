@@ -18,10 +18,10 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var input_R2: File = _
 
   @Argument(doc = "Skip Trim fastq files", shortName = "skiptrim", required = false)
-  var skipTrim: Boolean = false
+  var skipTrim: Boolean = config("skiptrim", default = false)
 
   @Argument(doc = "Skip Clip fastq files", shortName = "skipclip", required = false)
-  var skipClip: Boolean = false
+  var skipClip: Boolean = config("skipclip", default = false)
 
   @Argument(doc = "Sample name", shortName = "sample", required = true)
   var sampleName: String = _
@@ -43,9 +43,6 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   val summary = new FlexiprepSummary(this)
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
-    if (!skipTrim) skipTrim = config("skiptrim", default = false)
-    if (!skipClip) skipClip = config("skipclip", default = false)
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
     if (sampleName == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
