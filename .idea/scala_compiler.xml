@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <option name="deprecationWarnings" value="true" />
+    <parameters>
+      <parameter value="-dependencyfile" />
+      <parameter value="$MODULE_DIR$/target/.scala_dependencies" />
+      <parameter value="-feature" />
+    </parameters>
+  </component>
+</project>

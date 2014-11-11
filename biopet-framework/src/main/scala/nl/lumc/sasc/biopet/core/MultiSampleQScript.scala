@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
 
 trait MultiSampleQScript extends BiopetQScript {
   type LibraryOutput <: AbstractLibraryOutput
@@ -20,7 +20,7 @@ trait MultiSampleQScript extends BiopetQScript {
   final def runSamplesJobs() {
     samplesConfig = config("samples")
     if (samplesConfig == null) samplesConfig = Map()
-    if (globalConfig.contains("samples")) for ((key, value) <- samplesConfig) {
+    if (Config.global.contains("samples")) for ((key, value) <- samplesConfig) {
       var sample = Configurable.any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {

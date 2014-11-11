@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 
 trait PipelineCommand extends MainCommand with GatkLogging {
 

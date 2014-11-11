@@ -69,7 +69,7 @@ class Gentrap(val root: Configurable) extends QScript with BiopetQScript {
   var cExonBase: Boolean = _
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
+
   }
 
   def biopetScript() {
