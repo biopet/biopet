@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
-import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
+import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever, Delly }
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
@@ -107,6 +107,14 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val bd_vcf = Ln(this, breakdancer.outputvcf, svcallingDir + sampleID + ".breakdancer.vcf", relative = true)
     add(bd_vcf)
+
+    val dellyDir = svcallingDir + sampleID + ".delly/"
+    val delly = Delly(this, bamFile, dellyDir)
+    sampleOutput.vcf += ("delly" -> List(delly.outputvcf))
+    addAll(delly.functions)
+
+    val delly_vcf = Ln(this, delly.outputvcf, svcallingDir + sampleID + ".delly.vcf", relative = true)
+    add(delly_vcf)
 
     // for pindel we should use per library config collected into one config file
     //    val pindelDir = svcallingDir + sampleID + ".pindel/"
