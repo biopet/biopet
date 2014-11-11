@@ -1,6 +1,8 @@
 package nl.lumc.sasc.biopet.core
 
+import java.io.File
 import java.util.Properties
+import nl.lumc.sasc.biopet.core.config.Config
 import org.apache.log4j.Logger
 
 object BiopetExecutable extends Logging {
@@ -34,7 +36,9 @@ object BiopetExecutable extends Logging {
       nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
       nl.lumc.sasc.biopet.tools.SageCountFastq,
       nl.lumc.sasc.biopet.tools.SageCreateLibrary,
-      nl.lumc.sasc.biopet.tools.SageCreateTagCounts)
+      nl.lumc.sasc.biopet.tools.SageCreateTagCounts,
+      nl.lumc.sasc.biopet.tools.MergeAlleles,
+      nl.lumc.sasc.biopet.tools.SamplesTsvToJson)
   )
 
   /**
@@ -87,6 +91,14 @@ object BiopetExecutable extends Logging {
         println("version: " + getVersion)
       }
       case Array(module, name, passArgs @ _*) => {
+        // Reading config files
+        val argsSize = passArgs.size
+        for (t <- 0 until argsSize) {
+          if (passArgs(t) == "-config" || args(t) == "--config_file") {
+            if (t >= argsSize) throw new IllegalStateException("-config needs a value")
+            Config.global.loadConfigFile(new File(passArgs(t + 1)))
+          }
+        }
         getCommand(module, name).main(passArgs.toArray)
       }
       case Array(module) => {

@@ -9,10 +9,10 @@ trait ToolCommand extends MainCommand with Logging {
 
   abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
     opt[Unit]("log_nostderr") foreach { _ =>
-      logger.removeAppender(stderrAppender)
+      logger.removeAppender(Logging.stderrAppender)
     } text ("No output to stderr")
     opt[File]("log_file") foreach { x =>
-      logger.addAppender(new WriterAppender(logLayout, new java.io.PrintStream(x)))
+      logger.addAppender(new WriterAppender(Logging.logLayout, new java.io.PrintStream(x)))
     } text ("Log file") valueName ("<file>")
     opt[String]('l', "log_level") foreach { x =>
       x.toLowerCase match {
