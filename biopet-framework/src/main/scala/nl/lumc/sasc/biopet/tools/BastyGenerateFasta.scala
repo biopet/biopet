@@ -9,6 +9,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import scala.collection.JavaConversions._
+import nl.lumc.sasc.biopet.util.VcfUtils._
 
 class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -92,6 +93,8 @@ object BastyGenerateFasta extends ToolCommand {
   }
 
   def writeVariantsOnly() {
+    if (commandArgs.inputVcf == null) throw new IllegalStateException("To write outputVariants input vcf is required, please use --outputVariants option")
+    if (!commandArgs.inputVcf.exists) throw new IllegalStateException("File does not exist: " + commandArgs.inputVcf)
     val writer = new PrintWriter(commandArgs.outputVariants)
     writer.println(">" + commandArgs.sampleName)
     val vcfReader = new VCFFileReader(commandArgs.inputVcf, false)
@@ -105,8 +108,7 @@ object BastyGenerateFasta extends ToolCommand {
 
   def getMaxAllele(vcfRecord: VariantContext, sample: String): String = {
     val genotype = vcfRecord.getGenotype(sample)
-    val longestAlleleID = vcfRecord.getAlleles.map(_.getBases.length).zipWithIndex.maxBy(_._1)._2
-    val maxSize = vcfRecord.getAlleles()(longestAlleleID).getBases.length
+    val maxSize = getLongestAllele(vcfRecord).getBases.length
 
     def fill(bases: String) = bases + (Array.fill[Char](maxSize - bases.size)('N')).mkString
     if (commandArgs.reference) return fill(vcfRecord.getReference.getBaseString)
