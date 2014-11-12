@@ -1,5 +1,9 @@
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.reference.FastaSequenceFile
+import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.reference.ReferenceSequenceFileWalker
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
@@ -49,11 +53,14 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
 object BastyGenerateFasta extends ToolCommand {
   case class Args(inputVcf: File = null,
                   outputVariants: File = null,
+                  outputConsensus: File = null,
+                  outputConsensusVariants: File = null,
                   bamFile: File = null,
                   snpsOnly: Boolean = false,
                   sampleName: String = null,
                   minAD: Int = 8,
-                  reference: Boolean = false) extends AbstractArgs
+                  minDepth: Int = 8,
+                  reference: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('V', "inputVcf") unbounded () valueName ("<file>") action { (x, c) =>
@@ -65,6 +72,12 @@ object BastyGenerateFasta extends ToolCommand {
     opt[File]("outputVariants") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputVariants = x)
     }
+    opt[File]("outputConsensus") unbounded () valueName ("<file>") action { (x, c) =>
+      c.copy(outputConsensus = x)
+    }
+    opt[File]("outputConsensusVariants") unbounded () valueName ("<file>") action { (x, c) =>
+      c.copy(outputConsensusVariants = x)
+    }
     opt[Unit]("snpsOnly") unbounded () action { (x, c) =>
       c.copy(snpsOnly = true)
     }
@@ -74,50 +87,122 @@ object BastyGenerateFasta extends ToolCommand {
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
     }
-    opt[Unit]("reference") unbounded () action { (x, c) =>
-      c.copy(reference = true)
+    opt[Int]("minDepth") unbounded () action { (x, c) =>
+      c.copy(minDepth = x)
+    }
+    opt[File]("reference") unbounded () action { (x, c) =>
+      c.copy(reference = x)
     }
   }
 
-  var commandArgs: Args = _
+  protected var cmdArgs: Args = _
+  private val chunkSize = 100000
 
   /**
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    commandArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    if (commandArgs.outputVariants != null) writeVariantsOnly()
-
+    if (cmdArgs.outputVariants != null) writeVariantsOnly()
+    if (cmdArgs.outputConsensus != null || cmdArgs.outputConsensusVariants != null) writeConsensus()
   }
 
-  def writeVariantsOnly() {
-    if (commandArgs.inputVcf == null) throw new IllegalStateException("To write outputVariants input vcf is required, please use --outputVariants option")
-    if (!commandArgs.inputVcf.exists) throw new IllegalStateException("File does not exist: " + commandArgs.inputVcf)
-    val writer = new PrintWriter(commandArgs.outputVariants)
-    writer.println(">" + commandArgs.sampleName)
-    val vcfReader = new VCFFileReader(commandArgs.inputVcf, false)
-    for (vcfRecord <- vcfReader if (!commandArgs.snpsOnly || vcfRecord.isSNP)) yield {
-      writer.print(getMaxAllele(vcfRecord, commandArgs.sampleName))
+  protected def writeConsensus() {
+    if (cmdArgs.reference == null)
+      throw new IllegalStateException("No reference suplied")
+    if (cmdArgs.outputConsensusVariants != null) {
+      if (cmdArgs.inputVcf == null)
+        throw new IllegalStateException("To write outputVariants input vcf is required, please use --inputVcf option")
+      if (!cmdArgs.inputVcf.exists)
+        throw new IllegalStateException("File does not exist: " + cmdArgs.inputVcf)
+    }
+    if (cmdArgs.sampleName == null) {
+      if (cmdArgs.bamFile == null)
+        throw new IllegalStateException("To write Consensus input bam file is required, please use --bamFile option")
+      if (!cmdArgs.bamFile.exists)
+        throw new IllegalStateException("File does not exist: " + cmdArgs.bamFile)
+    }
+
+    logger.info(cmdArgs.reference)
+
+    val referenceFile = new IndexedFastaSequenceFile(cmdArgs.reference)
+    val referenceDict = referenceFile.getSequenceDictionary
+
+    for (chr <- referenceDict.getSequences) {
+      val chunks = (for (chunk <- (0 to (chr.getSequenceLength / chunkSize)).par) yield {
+        val chrName = chr.getSequenceName
+        val begin = chunk * chunkSize + 1
+        val end = {
+          val e = (chunk + 1) * chunkSize
+          if (e > chr.getSequenceLength) chr.getSequenceLength else e
+        }
+
+        logger.info("begin on: chrName: " + chrName + "  begin: " + begin + "  end: " + end)
+
+        val referenceSequence = referenceFile.getSubsequenceAt(chrName, begin, end)
+
+        val variants: Map[(Int, Int), VariantContext] = if (cmdArgs.inputVcf != null) {
+          val reader = new VCFFileReader(cmdArgs.inputVcf, true)
+          (for (variant <- reader.query(chrName, begin, end)) yield {
+            (variant.getStart, variant.getEnd) -> variant
+          }).toMap
+        } else Map()
+
+        val coverage: Array[Int] = Array.fill(end - begin + 1)(0)
+        if (cmdArgs.bamFile != null) {
+          val inputSam = SamReaderFactory.makeDefault.open(cmdArgs.bamFile)
+          for (r <- inputSam.query(chr.getSequenceName, begin, end, false)) {
+            val s = if (r.getAlignmentStart < begin) begin else r.getAlignmentStart
+            val e = if (r.getAlignmentEnd > end) end else r.getAlignmentEnd
+            for (t <- s to e) coverage(t - begin) += 1
+          }
+        }
+
+        val consensus = for (t <- 0 until coverage.length) yield {
+          if (coverage(t) >= cmdArgs.minDepth) referenceSequence.getBases()(t).toChar
+          else 'N'
+        }
+        
+        (chunk -> consensus)
+      }).toMap
+      val writer = new PrintWriter(cmdArgs.outputConsensus)
+      writer.println(">" + cmdArgs.sampleName)
+      for (c <- chunks.keySet.toList.sortWith(_ < _)) {
+        writer.print(chunks(c).map(_.toChar).mkString)
+      }
+      writer.close
+    }
+  }
+
+  protected def writeVariantsOnly() {
+    if (cmdArgs.inputVcf == null)
+      throw new IllegalStateException("To write outputVariants input vcf is required, please use --inputVcf option")
+    if (!cmdArgs.inputVcf.exists)
+      throw new IllegalStateException("File does not exist: " + cmdArgs.inputVcf)
+    val writer = new PrintWriter(cmdArgs.outputVariants)
+    writer.println(">" + cmdArgs.sampleName)
+    val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
+    for (vcfRecord <- vcfReader if (!cmdArgs.snpsOnly || vcfRecord.isSNP)) yield {
+      writer.print(getMaxAllele(vcfRecord))
     }
     writer.println()
     writer.close
     vcfReader.close
   }
 
-  def getMaxAllele(vcfRecord: VariantContext, sample: String): String = {
-    val genotype = vcfRecord.getGenotype(sample)
+  protected def getMaxAllele(vcfRecord: VariantContext): String = {
     val maxSize = getLongestAllele(vcfRecord).getBases.length
 
-    def fill(bases: String) = bases + (Array.fill[Char](maxSize - bases.size)('N')).mkString
-    if (commandArgs.reference) return fill(vcfRecord.getReference.getBaseString)
+    if (cmdArgs.sampleName == null) return fillAllele(vcfRecord.getReference.getBaseString, maxSize)
 
-    if (genotype == null) return fill("")
+    val genotype = vcfRecord.getGenotype(cmdArgs.sampleName)
+    if (genotype == null) return fillAllele("", maxSize)
     val AD = genotype.getAD
-    if (AD == null) return fill("")
+    if (AD == null) return fillAllele("", maxSize)
     val maxADid = AD.zipWithIndex.maxBy(_._1)._2
-    if (AD(maxADid) < commandArgs.minAD) return fill("")
-    return fill(vcfRecord.getAlleles()(maxADid).getBaseString)
+    if (AD(maxADid) < cmdArgs.minAD) return fillAllele("", maxSize)
+    return fillAllele(vcfRecord.getAlleles()(maxADid).getBaseString, maxSize)
   }
 }
