@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.util
+package nl.lumc.sasc.biopet.utils
 
 import htsjdk.variant.variantcontext.VariantContext
 import scala.collection.JavaConversions._

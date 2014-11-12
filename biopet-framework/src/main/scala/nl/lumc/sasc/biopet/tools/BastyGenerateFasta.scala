@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
-import nl.lumc.sasc.biopet.util.VcfUtils._
+import nl.lumc.sasc.biopet.utils.VcfUtils._
 
 class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
