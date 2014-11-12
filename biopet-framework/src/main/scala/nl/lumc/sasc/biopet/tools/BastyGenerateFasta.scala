@@ -9,7 +9,7 @@ import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.util.VcfUtils._
 
@@ -22,30 +22,39 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
   @Input(doc = "Bam File", required = false)
   var bamFile: File = _
 
+  @Input(doc = "reference", required = false)
+  var reference: File = config("reference")
+
   @Output(doc = "Output fasta, variants only", required = false)
   var outputVariants: File = _
 
-  @Argument(doc = "Output interval list", required = false)
+  @Output(doc = "Output fasta, variants only", required = false)
+  var outputConsensus: File = _
+
+  @Output(doc = "Output fasta, variants only", required = false)
+  var outputConsensusVariants: File = _
+
   var snpsOnly: Boolean = config("snps_only", default = false)
-
-  @Argument(doc = "Sample name", required = false)
   var sampleName: String = _
-
-  @Argument(doc = "minAD", required = false)
   var minAD: Int = config("min_ad", default = 8)
+  var minDepth: Int = config("min_depth", default = 8)
+  var outputName: String = _
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
-  var reference = false
 
   override def commandLine = super.commandLine +
     optional("--inputVcf", inputVcf) +
     optional("--bamFile", bamFile) +
     optional("--outputVariants", outputVariants) +
+    optional("--outputVariants", outputConsensus) +
+    optional("--outputVariants", outputConsensusVariants) +
     conditional(snpsOnly, "--snpsOnly") +
     optional("--sampleName", sampleName) +
+    required("--outputName", outputName) +
     optional("--minAD", minAD) +
-    conditional(reference, "--reference")
+    optional("--minDepth", minDepth) +
+    optional("--reference", reference)
 }
 
 object BastyGenerateFasta extends ToolCommand {
