@@ -22,9 +22,10 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     var outputSnps: FastaOutput = _
   }
 
-  defaults ++= Map("ploidy" -> 1, "use_haplotypecaller" -> false, "use_unifiedgenotyper" -> true)
+  defaults ++= Map("ploidy" -> 1, "use_haplotypecaller" -> false, "use_unifiedgenotyper" -> true, "joint_variantcalling" -> true)
 
   var gatkPipeline: GatkPipeline = _
+  gatkPipeline.jointVariantcalling = true
 
   def init() {
     gatkPipeline = new GatkPipeline(this)
