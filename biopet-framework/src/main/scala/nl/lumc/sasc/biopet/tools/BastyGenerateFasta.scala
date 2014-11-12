@@ -1,9 +1,7 @@
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.SamReaderFactory
-import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import htsjdk.samtools.reference.ReferenceSequenceFileWalker
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
@@ -58,6 +56,7 @@ object BastyGenerateFasta extends ToolCommand {
                   bamFile: File = null,
                   snpsOnly: Boolean = false,
                   sampleName: String = null,
+                  outputName: String = null,
                   minAD: Int = 8,
                   minDepth: Int = 8,
                   reference: File = null) extends AbstractArgs
@@ -83,6 +82,9 @@ object BastyGenerateFasta extends ToolCommand {
     }
     opt[String]("sampleName") unbounded () action { (x, c) =>
       c.copy(sampleName = x)
+    }
+    opt[String]("outputName") required () unbounded () action { (x, c) =>
+      c.copy(outputName = x)
     }
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
@@ -118,7 +120,7 @@ object BastyGenerateFasta extends ToolCommand {
       if (!cmdArgs.inputVcf.exists)
         throw new IllegalStateException("File does not exist: " + cmdArgs.inputVcf)
     }
-    if (cmdArgs.sampleName == null) {
+    if (cmdArgs.sampleName != null) {
       if (cmdArgs.bamFile == null)
         throw new IllegalStateException("To write Consensus input bam file is required, please use --bamFile option")
       if (!cmdArgs.bamFile.exists)
@@ -145,7 +147,7 @@ object BastyGenerateFasta extends ToolCommand {
 
         val variants: Map[(Int, Int), VariantContext] = if (cmdArgs.inputVcf != null) {
           val reader = new VCFFileReader(cmdArgs.inputVcf, true)
-          (for (variant <- reader.query(chrName, begin, end)) yield {
+          (for (variant <- reader.query(chrName, begin, end) if (!cmdArgs.snpsOnly || variant.isSNP)) yield {
             (variant.getStart, variant.getEnd) -> variant
           }).toMap
         } else Map()
@@ -158,21 +160,53 @@ object BastyGenerateFasta extends ToolCommand {
             val e = if (r.getAlignmentEnd > end) end else r.getAlignmentEnd
             for (t <- s to e) coverage(t - begin) += 1
           }
+        } else {
+          for (t <- 0 until coverage.length) coverage(t) = cmdArgs.minDepth
         }
 
         val consensus = for (t <- 0 until coverage.length) yield {
           if (coverage(t) >= cmdArgs.minDepth) referenceSequence.getBases()(t).toChar
           else 'N'
         }
-        
-        (chunk -> consensus)
+
+        val buffer: StringBuilder = new StringBuilder()
+        if (cmdArgs.outputConsensusVariants != null) {
+          var consensusPos = 0
+          while (consensusPos < consensus.size) {
+            val genomePos = consensusPos + begin
+            val variant = variants.find(a => a._1._1 >= genomePos && a._1._2 <= genomePos)
+            if (variant.isDefined) {
+              logger.info(variant.get._2)
+              val stripPrefix = if (variant.get._1._1 < begin) begin - variant.get._1._1 else 0
+              val stripSufix = if (variant.get._1._2 > end) variant.get._1._2 - end else 0
+              val allele = getMaxAllele(variant.get._2)
+              consensusPos += variant.get._2.getReference.getBases.length
+              buffer.append(allele.substring(stripPrefix, allele.size - stripSufix))
+            } else {
+              buffer.append(consensus(consensusPos))
+              consensusPos += 1
+            }
+          }
+        }
+
+        (chunk -> (consensus.mkString.toUpperCase, buffer.toString.toUpperCase))
       }).toMap
-      val writer = new PrintWriter(cmdArgs.outputConsensus)
-      writer.println(">" + cmdArgs.sampleName)
-      for (c <- chunks.keySet.toList.sortWith(_ < _)) {
-        writer.print(chunks(c).map(_.toChar).mkString)
+      if (cmdArgs.outputConsensus != null) {
+        val writer = new PrintWriter(cmdArgs.outputConsensus)
+        writer.println(">" + cmdArgs.outputName)
+        for (c <- chunks.keySet.toList.sortWith(_ < _)) {
+          writer.print(chunks(c)._1)
+        }
+        writer.close
       }
-      writer.close
+      if (cmdArgs.outputConsensusVariants != null) {
+        val writer = new PrintWriter(cmdArgs.outputConsensusVariants)
+        writer.println(">" + cmdArgs.outputName)
+        for (c <- chunks.keySet.toList.sortWith(_ < _)) {
+          writer.print(chunks(c)._2)
+        }
+        writer.close
+      }
     }
   }
 
