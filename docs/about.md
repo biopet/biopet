@@ -6,12 +6,9 @@ We develop tools and pipelines for several purposes in analysis. Most of them
 share the same methods. So the basic idea is to let them work on the same 
 platform and reduce code duplication and increase maintainability.
 
-## Compute Cluster support
-
-
 ## The Team
 SASC:
-Currently our team excists out of 5 members
+Currently our team exists out of 5 members
 
 - Leon Mei (LUMC-SASC) 
 - Wibowo Arindrarto (LUMC-SASC)
