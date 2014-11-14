@@ -10,8 +10,17 @@ platform and reduce code duplication and increase maintainability.
 
 
 ## The Team
+SASC:
+Currently our team excists out of 5 members
 
+- Leon Mei (LUMC-SASC) 
+- Wibowo Arindrarto (LUMC-SASC)
+- Peter van 't Hof (LUMC-SASC)
+- Wai Yi Leung (LUMC-SASC)
+- Sander van der Zeeuw (LUMC-SASC)
 
 ## Contact
 
-We even have a website: https://sasc.lumc.nl/
+check our website at: [SASC](https://sasc.lumc.nl/)
+
+We are also reachable through email: [SASC mail](mailto:SASC@lumc.nl)
