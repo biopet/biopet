@@ -18,7 +18,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   def this() = this(null)
 
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
-  val onlySample: String = ""
+  val onlySample: List[String] = Nil
 
   @Argument(doc = "Skip Genotyping step", shortName = "skipgenotyping", required = false)
   var skipGenotyping: Boolean = false
@@ -115,7 +115,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           recalibration.biopetScript
         }
       }
-    } else runSingleSampleJobs(onlySample)
+    } else for (sample <- onlySample) runSingleSampleJobs(sample)
   }
 
   // Called for each sample
