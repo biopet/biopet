@@ -37,8 +37,8 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     gatkPipeline.biopetScript
     addAll(gatkPipeline.functions)
 
-    val refVariants = addGenerateFasta(null, outputDir + "reference/", "reference")
-    val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", "reference", snpsOnly = true)
+    val refVariants = addGenerateFasta(null, outputDir + "reference/", outputName = "reference")
+    val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", outputName = "reference", snpsOnly = true)
 
     runSamplesJobs()
 
@@ -105,8 +105,8 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
 
-    sampleOutput.output = addGenerateFasta(sampleID, sampleDir, sampleID)
-    sampleOutput.outputSnps = addGenerateFasta(sampleID, sampleDir, sampleID, snpsOnly = true)
+    sampleOutput.output = addGenerateFasta(sampleID, sampleDir)
+    sampleOutput.outputSnps = addGenerateFasta(sampleID, sampleDir, snpsOnly = true)
 
     return sampleOutput
   }
@@ -122,18 +122,18 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     return libraryOutput
   }
 
-  def addGenerateFasta(sampleName: String, outputDir: String, outputName: String,
+  def addGenerateFasta(sampleName: String, outputDir: String, outputName: String = null,
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
+    bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
     bastyGenerateFasta.inputVcf = gatkPipeline.multisampleVariantcalling.scriptOutput.finalVcfFile
     if (gatkPipeline.samplesOutput.contains(sampleName)) {
       bastyGenerateFasta.bamFile = gatkPipeline.samplesOutput(sampleName).variantcalling.bamFiles.head
     }
-    bastyGenerateFasta.outputVariants = outputDir + sampleName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
-    bastyGenerateFasta.outputConsensus = outputDir + sampleName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
-    bastyGenerateFasta.outputConsensusVariants = outputDir + sampleName + ".consensus_variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
+    bastyGenerateFasta.outputVariants = outputDir + bastyGenerateFasta.outputName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
+    bastyGenerateFasta.outputConsensus = outputDir + bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
+    bastyGenerateFasta.outputConsensusVariants = outputDir + bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
     bastyGenerateFasta.sampleName = sampleName
-    bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
     add(bastyGenerateFasta)
     return FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
