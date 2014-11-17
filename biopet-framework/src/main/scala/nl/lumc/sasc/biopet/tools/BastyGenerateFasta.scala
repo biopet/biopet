@@ -206,6 +206,7 @@ object BastyGenerateFasta extends ToolCommand {
         for (c <- chunks.keySet.toList.sortWith(_ < _)) {
           writer.print(chunks(c)._1)
         }
+        writer.println()
         writer.close
       }
       if (cmdArgs.outputConsensusVariants != null) {
@@ -214,6 +215,7 @@ object BastyGenerateFasta extends ToolCommand {
         for (c <- chunks.keySet.toList.sortWith(_ < _)) {
           writer.print(chunks(c)._2)
         }
+        writer.println()
         writer.close
       }
     }
