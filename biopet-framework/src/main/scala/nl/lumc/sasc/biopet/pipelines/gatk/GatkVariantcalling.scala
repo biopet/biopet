@@ -41,6 +41,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var useHaplotypecaller: Option[Boolean] = config("use_haplotypecaller", default = true)
   var useUnifiedGenotyper: Option[Boolean] = config("use_unifiedgenotyper", default = false)
   var useAllelesOption: Option[Boolean] = config("use_alleles_option", default = false)
+  var useMpileup: Option[Boolean] = config("use_mpileup", default = true)
 
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
@@ -113,27 +114,30 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       }
 
       // Generate raw vcf
-      if (sampleID != null && scriptOutput.bamFiles.size == 1) {
-        val m2v = new MpileupToVcf(this)
-        m2v.inputBam = scriptOutput.bamFiles.head
-        m2v.sample = sampleID
-        m2v.output = outputDir + outputName + ".raw.vcf"
-        add(m2v)
-        scriptOutput.rawVcfFile = m2v.output
+      if (useMpileup) {
+        if (sampleID != null && scriptOutput.bamFiles.size == 1) {
+          val m2v = new MpileupToVcf(this)
+          m2v.inputBam = scriptOutput.bamFiles.head
+          m2v.sample = sampleID
+          m2v.output = outputDir + outputName + ".raw.vcf"
+          add(m2v)
+          scriptOutput.rawVcfFile = m2v.output
 
-        val vcfFilter = new VcfFilter(this)
-        vcfFilter.defaults ++= Map("min_sample_depth" -> 8,
-          "min_alternate_depth" -> 2,
-          "min_samples_pass" -> 1,
-          "filter_ref_calls" -> true)
-        vcfFilter.inputVcf = m2v.output
-        vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
-        add(vcfFilter)
-        scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
-      } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
-      if (scriptOutput.rawFilterVcfFile == null) throw new IllegalStateException("Files can't be empty")
-      mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
+          val vcfFilter = new VcfFilter(this)
+          vcfFilter.defaults ++= Map("min_sample_depth" -> 8,
+            "min_alternate_depth" -> 2,
+            "min_samples_pass" -> 1,
+            "filter_ref_calls" -> true)
+          vcfFilter.inputVcf = m2v.output
+          vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
+          add(vcfFilter)
+          scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
+        } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
+        if (scriptOutput.rawFilterVcfFile == null) throw new IllegalStateException("Files can't be empty")
+        mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
+      }
 
+      // Allele mode
       if (useAllelesOption.get) {
         val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz")
         add(mergeAlleles, isIntermediate = true)

@@ -89,17 +89,20 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         ) yield file
         val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
 
-        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
-        add(cvRaw)
-
         val gatkVariantcalling = new GatkVariantcalling(this) {
           override protected lazy val configName = "gatkvariantcalling"
           override def configPath: List[String] = "multisample" :: super.configPath
         }
+
+        if (gatkVariantcalling.useMpileup) {
+          val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
+          add(cvRaw)
+          gatkVariantcalling.rawVcfInput = cvRaw.out
+        }
+
         gatkVariantcalling.preProcesBams = Some(false)
         gatkVariantcalling.doublePreProces = Some(false)
         gatkVariantcalling.inputBams = allBamfiles.toList
-        gatkVariantcalling.rawVcfInput = cvRaw.out
         gatkVariantcalling.outputDir = outputDir + "variantcalling"
         gatkVariantcalling.outputName = "multisample"
         gatkVariantcalling.init
