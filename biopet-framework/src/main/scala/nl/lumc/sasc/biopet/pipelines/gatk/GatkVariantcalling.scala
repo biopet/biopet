@@ -8,7 +8,7 @@ import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import scala.collection.SortedMap
 import scala.language.reflectiveCalls
 
