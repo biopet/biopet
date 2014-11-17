@@ -8,7 +8,7 @@ import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import scala.collection.SortedMap
 import scala.language.reflectiveCalls
 
@@ -41,25 +41,32 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var useHaplotypecaller: Option[Boolean] = config("use_haplotypecaller", default = true)
   var useUnifiedGenotyper: Option[Boolean] = config("use_unifiedgenotyper", default = false)
   var useAllelesOption: Option[Boolean] = config("use_alleles_option", default = false)
+  var useIndelRealigner: Boolean = config("use_indel_realign", default = true)
+  var useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
 
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
     else if (outputName == null) outputName = "noname"
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
+
+    val baseRecalibrator = new BaseRecalibrator(this)
+    if (preProcesBams && useBaseRecalibration && baseRecalibrator.knownSites.isEmpty) {
+      logger.warn("No Known site found, skipping base recalibration")
+      useBaseRecalibration = false
+    }
   }
 
   private def doublePreProces(files: List[File]): List[File] = {
     if (files.size == 1) return files
     if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
     if (!doublePreProces.get) return files
-    val markDub = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
-    if (dbsnp != null) {
-      add(markDub, isIntermediate = true)
-      List(addIndelRealign(markDub.output, outputDir, isIntermediate = false))
+    val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
+    add(markDup, isIntermediate = useIndelRealigner)
+    if (useIndelRealigner) {
+      List(addIndelRealign(markDup.output, outputDir, isIntermediate = false))
     } else {
-      add(markDub, isIntermediate = true)
-      List(markDub.output)
+      List(markDup.output)
     }
   }
 
@@ -67,8 +74,14 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     scriptOutput.bamFiles = if (preProcesBams.get) {
       var bamFiles: List[File] = Nil
       for (inputBam <- inputBams) {
-        var bamFile = addIndelRealign(inputBam, outputDir)
-        bamFiles :+= addBaseRecalibrator(bamFile, outputDir, isIntermediate = bamFiles.size > 1)
+        var bamFile = inputBam
+        if (useIndelRealigner) {
+          bamFile = addIndelRealign(bamFile, outputDir, isIntermediate = useBaseRecalibration)
+        }
+        if (useBaseRecalibration) {
+          bamFile = addBaseRecalibrator(bamFile, outputDir, isIntermediate = bamFiles.size > 1)
+        }
+        bamFiles :+= bamFile
       }
       doublePreProces(bamFiles)
     } else if (inputBams.size > 1 && doublePreProces.get) {
@@ -188,7 +201,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   }
 
   def addBaseRecalibrator(inputBam: File, dir: String, isIntermediate: Boolean = false): File = {
-    val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal")) //with gatkArguments {
+    val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
     if (baseRecalibrator.knownSites.isEmpty) {
       logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
@@ -196,7 +209,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     }
     add(baseRecalibrator)
 
-    val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after")) //with gatkArguments {
+    val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
     baseRecalibratorAfter.BQSR = baseRecalibrator.o
     add(baseRecalibratorAfter)
 

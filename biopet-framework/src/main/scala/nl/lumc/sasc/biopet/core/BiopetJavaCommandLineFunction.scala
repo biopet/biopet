@@ -9,6 +9,8 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
   javaGCTimeLimit = config("java_gc_timelimit")
 
+  override def javaOpts = super.javaOpts + optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
+
   override def afterGraph {
     memoryLimit = config("memory_limit")
   }

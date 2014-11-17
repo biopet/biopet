@@ -59,6 +59,11 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
+  val multisampleVariantcalling = new GatkVariantcalling(this) {
+    override protected lazy val configName = "gatkvariantcalling"
+    override def configPath: List[String] = "multisample" :: super.configPath
+  }
+
   def biopetScript() {
     if (onlySample.isEmpty) {
       runSamplesJobs
@@ -92,23 +97,19 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
         add(cvRaw)
 
-        val gatkVariantcalling = new GatkVariantcalling(this) {
-          override protected lazy val configName = "gatkvariantcalling"
-          override def configPath: List[String] = "multisample" :: super.configPath
-        }
-        gatkVariantcalling.preProcesBams = Some(false)
-        gatkVariantcalling.doublePreProces = Some(false)
-        gatkVariantcalling.inputBams = allBamfiles.toList
-        gatkVariantcalling.rawVcfInput = cvRaw.out
-        gatkVariantcalling.outputDir = outputDir + "variantcalling"
-        gatkVariantcalling.outputName = "multisample"
-        gatkVariantcalling.init
-        gatkVariantcalling.biopetScript
-        addAll(gatkVariantcalling.functions)
+        multisampleVariantcalling.preProcesBams = false
+        multisampleVariantcalling.doublePreProces = false
+        multisampleVariantcalling.inputBams = allBamfiles.toList
+        multisampleVariantcalling.rawVcfInput = cvRaw.out
+        multisampleVariantcalling.outputDir = outputDir + "variantcalling"
+        multisampleVariantcalling.outputName = "multisample"
+        multisampleVariantcalling.init
+        multisampleVariantcalling.biopetScript
+        addAll(multisampleVariantcalling.functions)
 
         if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
           val recalibration = new GatkVariantRecalibration(this)
-          recalibration.inputVcf = gatkVariantcalling.scriptOutput.finalVcfFile
+          recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
           recalibration.bamFiles = finalBamFiles
           recalibration.outputDir = outputDir + "recalibration/"
           recalibration.init
@@ -134,10 +135,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
-      gatkVariantcalling.preProcesBams = Some(false)
+      gatkVariantcalling.preProcesBams = false
       if (!singleSampleCalling) {
-        gatkVariantcalling.useHaplotypecaller = Some(false)
-        gatkVariantcalling.useUnifiedGenotyper = Some(false)
+        gatkVariantcalling.useHaplotypecaller = false
+        gatkVariantcalling.useUnifiedGenotyper = false
       }
       gatkVariantcalling.sampleID = sampleID
       gatkVariantcalling.init
