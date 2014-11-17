@@ -17,7 +17,7 @@ object VcfUtils {
     alleles(longestAlleleId)
   }
 
-  def fillAllele(bases: String, newSize: Int, fillWith: Char = 'N'): String = {
+  def fillAllele(bases: String, newSize: Int, fillWith: Char = '-'): String = {
     bases + (Array.fill[Char](newSize - bases.size)(fillWith)).mkString
   }
 }
