@@ -47,8 +47,8 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
     optional("--inputVcf", inputVcf) +
     optional("--bamFile", bamFile) +
     optional("--outputVariants", outputVariants) +
-    optional("--outputVariants", outputConsensus) +
-    optional("--outputVariants", outputConsensusVariants) +
+    optional("--outputConsensus", outputConsensus) +
+    optional("--outputConsensusVariants", outputConsensusVariants) +
     conditional(snpsOnly, "--snpsOnly") +
     optional("--sampleName", sampleName) +
     required("--outputName", outputName) +
