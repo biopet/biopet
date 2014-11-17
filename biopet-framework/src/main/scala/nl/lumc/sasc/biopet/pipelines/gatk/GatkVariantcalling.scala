@@ -51,7 +51,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     else if (!outputDir.endsWith("/")) outputDir += "/"
 
     val baseRecalibrator = new BaseRecalibrator(this)
-    if (useBaseRecalibration && baseRecalibrator.knownSites.isEmpty) {
+    if (preProcesBams && useBaseRecalibration && baseRecalibrator.knownSites.isEmpty) {
       logger.warn("No Known site found, skipping base recalibration")
       useBaseRecalibration = false
     }
