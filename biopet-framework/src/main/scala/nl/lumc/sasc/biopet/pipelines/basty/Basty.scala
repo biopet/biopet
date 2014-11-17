@@ -47,6 +47,11 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     val catVariantsSnps = Cat(this, refVariantSnps.variants :: samplesOutput.map(_._2.outputSnps.variants).toList, outputDir + "fastas/variant.snps_only.fasta")
     add(catVariantsSnps)
 
+    val catConsensus = Cat(this, refVariants.consensus :: samplesOutput.map(_._2.output.consensus).toList, outputDir + "fastas/consensus.fasta")
+    add(catConsensus)
+    val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samplesOutput.map(_._2.outputSnps.consensus).toList, outputDir + "fastas/consensus.snps_only.fasta")
+    add(catConsensusSnps)
+    
     val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samplesOutput.map(_._2.output.consensusVariants).toList, outputDir + "fastas/consensus.variant.fasta")
     add(catConsensusVariants)
     val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samplesOutput.map(_._2.outputSnps.consensusVariants).toList, outputDir + "fastas/consensus.variant.snps_only.fasta")
