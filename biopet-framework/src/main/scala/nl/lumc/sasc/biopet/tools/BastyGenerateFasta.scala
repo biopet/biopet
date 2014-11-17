@@ -73,37 +73,37 @@ object BastyGenerateFasta extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('V', "inputVcf") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(inputVcf = x)
-    }
+    } text ("vcf file, needed for outputVariants and outputConsensusVariants")
     opt[File]("bamFile") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(bamFile = x)
-    }
-    opt[File]("outputVariants") unbounded () valueName ("<file>") action { (x, c) =>
+    } text ("bam file, needed for outputConsensus and outputConsensusVariants")
+    opt[File]("outputVariants") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputVariants = x)
-    }
-    opt[File]("outputConsensus") unbounded () valueName ("<file>") action { (x, c) =>
+    } text ("fasta with only variants from vcf file")
+    opt[File]("outputConsensus") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputConsensus = x)
-    }
-    opt[File]("outputConsensusVariants") unbounded () valueName ("<file>") action { (x, c) =>
+    } text ("Consensus fasta from bam, always reference bases else 'N'")
+    opt[File]("outputConsensusVariants") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputConsensusVariants = x)
-    }
+    } text ("Consensus fasta from bam with variants from vcf file, always reference bases else 'N'")
     opt[Unit]("snpsOnly") unbounded () action { (x, c) =>
       c.copy(snpsOnly = true)
-    }
+    } text ("Only use snps from vcf file")
     opt[String]("sampleName") unbounded () action { (x, c) =>
       c.copy(sampleName = x)
-    }
+    } text ("Sample name in vcf file")
     opt[String]("outputName") required () unbounded () action { (x, c) =>
       c.copy(outputName = x)
-    }
+    } text ("Output name in fasta file header")
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
-    }
+    } text ("min AD value in vcf file for sample")
     opt[Int]("minDepth") unbounded () action { (x, c) =>
       c.copy(minDepth = x)
-    }
+    } text ("min detp in bam file")
     opt[File]("reference") unbounded () action { (x, c) =>
       c.copy(reference = x)
-    }
+    } text ("Indexed reference fasta file")
   }
 
   protected var cmdArgs: Args = _
