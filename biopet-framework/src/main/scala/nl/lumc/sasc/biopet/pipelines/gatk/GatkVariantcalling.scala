@@ -61,12 +61,12 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (files.size == 1) return files
     if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
     if (!doublePreProces.get) return files
-    val markDub = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
-    add(markDub, isIntermediate = useIndelRealigner)
+    val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
+    add(markDup, isIntermediate = useIndelRealigner)
     if (useIndelRealigner) {
-      List(addIndelRealign(markDub.output, outputDir, isIntermediate = false))
+      List(addIndelRealign(markDup.output, outputDir, isIntermediate = false))
     } else {
-      List(markDub.output)
+      List(markDup.output)
     }
   }
 
