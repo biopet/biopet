@@ -97,8 +97,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
         add(cvRaw)
 
-        multisampleVariantcalling.preProcesBams = Some(false)
-        multisampleVariantcalling.doublePreProces = Some(false)
+        multisampleVariantcalling.preProcesBams = false
+        multisampleVariantcalling.doublePreProces = false
         multisampleVariantcalling.inputBams = allBamfiles.toList
         multisampleVariantcalling.rawVcfInput = cvRaw.out
         multisampleVariantcalling.outputDir = outputDir + "variantcalling"
@@ -135,10 +135,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
-      gatkVariantcalling.preProcesBams = Some(false)
+      gatkVariantcalling.preProcesBams = false
       if (!singleSampleCalling) {
-        gatkVariantcalling.useHaplotypecaller = Some(false)
-        gatkVariantcalling.useUnifiedGenotyper = Some(false)
+        gatkVariantcalling.useHaplotypecaller = false
+        gatkVariantcalling.useUnifiedGenotyper = false
       }
       gatkVariantcalling.sampleID = sampleID
       gatkVariantcalling.init
