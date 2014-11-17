@@ -12,6 +12,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.utils.VcfUtils._
+import scala.collection.mutable.ListBuffer
 
 class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -73,10 +74,14 @@ object BastyGenerateFasta extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('V', "inputVcf") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(inputVcf = x)
-    } text ("vcf file, needed for outputVariants and outputConsensusVariants")
+    } text ("vcf file, needed for outputVariants and outputConsensusVariants") validate { x =>
+      if (x.exists) success else failure("File does not exist: " + x)
+    }
     opt[File]("bamFile") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(bamFile = x)
-    } text ("bam file, needed for outputConsensus and outputConsensusVariants")
+    } text ("bam file, needed for outputConsensus and outputConsensusVariants") validate { x =>
+      if (x.exists) success else failure("File does not exist: " + x)
+    }
     opt[File]("outputVariants") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputVariants = x)
     } text ("fasta with only variants from vcf file")
@@ -103,7 +108,32 @@ object BastyGenerateFasta extends ToolCommand {
     } text ("min detp in bam file")
     opt[File]("reference") unbounded () action { (x, c) =>
       c.copy(reference = x)
-    } text ("Indexed reference fasta file")
+    } text ("Indexed reference fasta file") validate { x =>
+      if (x.exists) success else failure("File does not exist: " + x)
+    }
+
+    checkConfig { c =>
+      {
+        val err: ListBuffer[String] = ListBuffer()
+        if (c.outputConsensus != null || c.outputConsensusVariants != null) {
+          if (c.reference == null)
+            err.add("No reference suplied")
+          else {
+            val index = new File(c.reference.getAbsolutePath + ".fai")
+            if (!index.exists) err.add("Reference does not have index")
+          }
+          if (c.outputConsensusVariants != null && c.inputVcf == null)
+            err.add("To write outputVariants input vcf is required, please use --inputVcf option")
+          if (c.sampleName != null && c.bamFile == null)
+            err.add("To write Consensus input bam file is required, please use --bamFile option")
+        }
+        if (c.outputVariants != null && c.inputVcf == null)
+          err.add("To write outputVariants input vcf is required, please use --inputVcf option")
+        if (c.outputVariants == null && c.outputConsensus == null && c.outputConsensusVariants == null)
+          err.add("No output file selected")
+        if (err.isEmpty) success else failure(err.mkString("", "\nError: ", "\n"))
+      }
+    }
   }
 
   protected var cmdArgs: Args = _
@@ -121,23 +151,6 @@ object BastyGenerateFasta extends ToolCommand {
   }
 
   protected def writeConsensus() {
-    if (cmdArgs.reference == null)
-      throw new IllegalStateException("No reference suplied")
-    if (cmdArgs.outputConsensusVariants != null) {
-      if (cmdArgs.inputVcf == null)
-        throw new IllegalStateException("To write outputVariants input vcf is required, please use --inputVcf option")
-      if (!cmdArgs.inputVcf.exists)
-        throw new IllegalStateException("File does not exist: " + cmdArgs.inputVcf)
-    }
-    if (cmdArgs.sampleName != null) {
-      if (cmdArgs.bamFile == null)
-        throw new IllegalStateException("To write Consensus input bam file is required, please use --bamFile option")
-      if (!cmdArgs.bamFile.exists)
-        throw new IllegalStateException("File does not exist: " + cmdArgs.bamFile)
-    }
-
-    logger.info(cmdArgs.reference)
-
     val referenceFile = new IndexedFastaSequenceFile(cmdArgs.reference)
     val referenceDict = referenceFile.getSequenceDictionary
 
@@ -222,10 +235,6 @@ object BastyGenerateFasta extends ToolCommand {
   }
 
   protected def writeVariantsOnly() {
-    if (cmdArgs.inputVcf == null)
-      throw new IllegalStateException("To write outputVariants input vcf is required, please use --inputVcf option")
-    if (!cmdArgs.inputVcf.exists)
-      throw new IllegalStateException("File does not exist: " + cmdArgs.inputVcf)
     val writer = new PrintWriter(cmdArgs.outputVariants)
     writer.println(">" + cmdArgs.sampleName)
     val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
