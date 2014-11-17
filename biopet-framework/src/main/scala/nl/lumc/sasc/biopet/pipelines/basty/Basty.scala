@@ -24,11 +24,10 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   defaults ++= Map("ploidy" -> 1, "use_haplotypecaller" -> false, "use_unifiedgenotyper" -> true, "joint_variantcalling" -> true)
 
-  var gatkPipeline: GatkPipeline = _
+  var gatkPipeline: GatkPipeline = new GatkPipeline(this)
   gatkPipeline.jointVariantcalling = true
 
   def init() {
-    gatkPipeline = new GatkPipeline(this)
     gatkPipeline.outputDir = outputDir
     gatkPipeline.init
   }
@@ -51,7 +50,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     add(catConsensus)
     val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samplesOutput.map(_._2.outputSnps.consensus).toList, outputDir + "fastas/consensus.snps_only.fasta")
     add(catConsensusSnps)
-    
+
     val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samplesOutput.map(_._2.output.consensusVariants).toList, outputDir + "fastas/consensus.variant.fasta")
     add(catConsensusVariants)
     val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samplesOutput.map(_._2.outputSnps.consensusVariants).toList, outputDir + "fastas/consensus.variant.snps_only.fasta")
