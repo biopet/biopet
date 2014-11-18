@@ -1,9 +1,12 @@
 library(gsalib)
+library(grid)
 library(ggplot2)
 library(gplots)
 library(tools)
 library(reshape)
 library(plyr)
+
+# Modified version, loading `grid` manually. Ggplot2 doesn't load this
 
 #
 # Standard command line switch.  Can we loaded interactively for development
