@@ -28,10 +28,6 @@ class Config(var map: Map[String, Any]) extends Logging {
     loadConfigEnv("BIOPET_CONFIG")
   }
 
-  def loadDefaultScatterConfig() {
-    loadConfigEnv("BIOPET_CONFIG_SCATTER")
-  }
-
   def loadConfigFile(configFile: File) {
     logger.debug("Jsonfile: " + configFile)
     val jsonText = scala.io.Source.fromFile(configFile).mkString
