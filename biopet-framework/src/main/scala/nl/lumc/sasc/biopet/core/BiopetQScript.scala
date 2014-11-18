@@ -15,7 +15,7 @@ trait BiopetQScript extends Configurable {
   @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
   var outputDir: String = _
 
-  @Argument(doc = "Use scatter defaults, env vale BIOPET_CONFIG_SCATTER", shortName = "SC", required = false)
+  @Argument(doc = "Use scatter defaults, env value BIOPET_CONFIG_SCATTER", shortName = "SC", required = false)
   var useScatterDefault: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
