@@ -68,12 +68,12 @@
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-utils</artifactId>
             <version>3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.broadinstitute.gatk</groupId>
-            <artifactId>gsalib</artifactId>
-            <version>3.3</version>
-            <type>tar.gz</type>
+            <exclusions>
+                <exclusion>
+                  <groupId>org.broadinstitute.gatk</groupId>
+                  <artifactId>gsalib</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.argonaut</groupId>
