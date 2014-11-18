@@ -36,13 +36,13 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var skipMetrics: Boolean = false
 
   @Argument(doc = "Aligner", shortName = "ALN", required = false)
-  var aligner: String = _
+  var aligner: String = config("aligner", default = "bwa")
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = _
+  var reference: File = config("reference")
 
   @Argument(doc = "Chunking", shortName = "chunking", required = false)
-  var chunking: Boolean = false
+  var chunking: Boolean = config("chunking", false)
 
   @ClassType(classOf[Int])
   @Argument(doc = "Number of chunks, when not defined pipeline will automatic calculate number of chunks", shortName = "numberChunks", required = false)
@@ -50,62 +50,48 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   // Readgroup items
   @Argument(doc = "Readgroup ID", shortName = "RGID", required = false)
-  var RGID: String = _
+  var RGID: String = config("RGID")
 
   @Argument(doc = "Readgroup Library", shortName = "RGLB", required = false)
-  var RGLB: String = _
+  var RGLB: String = config("RGLB")
 
   @Argument(doc = "Readgroup Platform", shortName = "RGPL", required = false)
-  var RGPL: String = _
+  var RGPL: String = config("RGPL", default = "illumina")
 
   @Argument(doc = "Readgroup platform unit", shortName = "RGPU", required = false)
-  var RGPU: String = _
+  var RGPU: String = config("RGPU", default = "na")
 
   @Argument(doc = "Readgroup sample", shortName = "RGSM", required = false)
-  var RGSM: String = _
+  var RGSM: String = config("RGSM")
 
   @Argument(doc = "Readgroup sequencing center", shortName = "RGCN", required = false)
-  var RGCN: String = _
+  var RGCN: String = config("RGCN")
 
   @Argument(doc = "Readgroup description", shortName = "RGDS", required = false)
-  var RGDS: String = _
+  var RGDS: String = config("RGDS")
 
   @Argument(doc = "Readgroup sequencing date", shortName = "RGDT", required = false)
   var RGDT: Date = _
 
   @Argument(doc = "Readgroup predicted insert size", shortName = "RGPI", required = false)
-  var RGPI: Int = _
+  var RGPI: Int = config("RGPI")
 
   var paired: Boolean = false
-  var defaultAligner = "bwa"
   val flexiprep = new Flexiprep(this)
 
   def init() {
-    for (file <- configfiles) globalConfig.loadConfigFile(file)
-    if (aligner == null) aligner = config("aligner", default = defaultAligner)
-    if (reference == null) reference = config("reference")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
     paired = (input_R2 != null)
 
-    if (RGLB == null && config.contains("RGLB")) RGLB = config("RGLB")
-    else if (RGLB == null) throw new IllegalStateException("Missing Readgroup library on mapping module")
-    if (RGSM == null && config.contains("RGSM")) RGSM = config("RGSM")
-    else if (RGLB == null) throw new IllegalStateException("Missing Readgroup sample on mapping module")
-    if (RGID == null && config.contains("RGID")) RGID = config("RGID")
-    else if (RGID == null && RGSM != null && RGLB != null) RGID = RGSM + "-" + RGLB
+    if (RGLB == null) throw new IllegalStateException("Missing Readgroup library on mapping module")
+    if (RGLB == null) throw new IllegalStateException("Missing Readgroup sample on mapping module")
+    if (RGID == null && RGSM != null && RGLB != null) RGID = RGSM + "-" + RGLB
     else if (RGID == null) throw new IllegalStateException("Missing Readgroup ID on mapping module")
-
-    if (RGPL == null) RGPL = config("RGPL", "illumina")
-    if (RGPU == null) RGPU = config("RGPU", "na")
-    if (RGCN == null && config.contains("RGCN")) RGCN = config("RGCN")
-    if (RGDS == null && config.contains("RGDS")) RGDS = config("RGDS")
 
     if (outputName == null) outputName = RGID
 
-    if (!chunking && numberChunks.isDefined) chunking = true
-    if (!chunking) chunking = config("chunking", false)
     if (chunking) {
       if (numberChunks.isEmpty) {
         if (config.contains("numberchunks")) numberChunks = config("numberchunks", default = None)
@@ -311,10 +297,6 @@ object Mapping extends PipelineCommand {
     val mapping = new Mapping(root)
 
     logger.debug("Mapping runconfig: " + runConfig)
-    var inputType = ""
-    if (runConfig.contains("inputtype")) inputType = runConfig("inputtype").toString
-    else inputType = root.config("inputtype", "dna").getString
-    if (inputType == "rna") mapping.defaultAligner = "star-2pass"
     if (runConfig.contains("R1")) mapping.input_R1 = new File(runConfig("R1").toString)
     if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
     mapping.paired = (mapping.input_R2 != null)

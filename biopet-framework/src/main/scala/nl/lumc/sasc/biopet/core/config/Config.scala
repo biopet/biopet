@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
-import org.broadinstitute.gatk.queue.util.Logging
+import nl.lumc.sasc.biopet.core.Logging
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 
@@ -104,7 +104,9 @@ class Config(var map: Map[String, Any]) extends Logging {
   override def toString(): String = map.toString
 }
 
-object Config {
+object Config extends Logging {
+  val global = new Config
+
   def valueToMap(input: Any): Map[String, Any] = {
     input match {
       case m: Map[_, _] => return m.asInstanceOf[Map[String, Any]]
@@ -195,6 +197,30 @@ object Config {
       return Option(ConfigValue(index, ConfigValueIndex("", Nil, index.key), map(index.key)))
     } else { // At this point key is not found on the path
       return None
+    }
+  }
+
+  def mapToJson(map: Map[String, Any]): Json = {
+    map.foldLeft(jEmptyObject)((acc, kv) => (kv._1 := {
+      kv._2 match {
+        case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
+        case _            => anyToJson(kv._2)
+      }
+    }) ->: acc)
+  }
+
+  def anyToJson(any: Any): Json = {
+    any match {
+      case j: Json      => j
+      case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
+      case l: List[_]   => Json.array(l.map(anyToJson(_)): _*)
+      case n: Int       => Json.jNumberOrString(n)
+      case n: Double    => Json.jNumberOrString(n)
+      case n: Long      => Json.jNumberOrString(n)
+      case n: Short     => Json.jNumberOrString(n)
+      case n: Float     => Json.jNumberOrString(n)
+      case n: Byte      => Json.jNumberOrString(n)
+      case _            => jString(any.toString)
     }
   }
 }

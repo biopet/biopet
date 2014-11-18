@@ -208,9 +208,9 @@ class Coverage(object):
         for x in itertools.chain(bp['boxes'], bp['medians'], bp['whiskers'],
                 bp['caps']):
             x.set(color=BLUE, linewidth=1.6)
-        bp['fliers'][0].set(color=RED, alpha=0.5)
-        bp['fliers'][1].set(color=GREEN, alpha=0.5)
-
+        for flier in bp['fliers']:
+            plt.setp(flier, color='GREEN', alpha=0.5)
+        
         upper_limit = np.percentile(self.cov_counts, percentile_show)
         if x_data:
             space = (upper_limit - min(x_data)) / 40

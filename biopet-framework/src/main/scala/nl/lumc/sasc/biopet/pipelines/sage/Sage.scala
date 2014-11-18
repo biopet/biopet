@@ -20,15 +20,15 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   @Input(doc = "countBed", required = false)
-  var countBed: File = _
+  var countBed: File = config("count_bed")
 
   @Input(doc = "squishedCountBed, by suppling this file the auto squish job will be skipped", required = false)
-  var squishedCountBed: File = _
+  var squishedCountBed: File = config("squished_count_bed")
 
   @Input(doc = "Transcriptome, used for generation of tag library", required = false)
-  var transcriptome: File = _
+  var transcriptome: File = config("transcriptome")
 
-  var tagsLibrary: File = _
+  var tagsLibrary: File = config("tags_library")
 
   defaults ++= Map("bowtie" -> Map(
     "m" -> 1,
@@ -50,10 +50,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
-    if (countBed == null) countBed = config("count_bed")
-    if (squishedCountBed == null) squishedCountBed = config("squished_count_bed")
-    if (tagsLibrary == null) tagsLibrary = config("tags_library")
-    if (transcriptome == null) transcriptome = config("transcriptome")
     if (transcriptome == null && tagsLibrary == null)
       throw new IllegalStateException("No transcriptome or taglib found")
     if (countBed == null && squishedCountBed == null)
@@ -140,7 +136,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val mapping = new Mapping(this)
       mapping.skipFlexiprep = true
       mapping.skipMarkduplicates = true
-      mapping.defaultAligner = "bowtie"
+      mapping.aligner = config("aligner", default = "bowtie")
       mapping.input_R1 = prefixFastq.output
       mapping.RGLB = runConfig("ID").toString
       mapping.RGSM = sampleConfig("ID").toString

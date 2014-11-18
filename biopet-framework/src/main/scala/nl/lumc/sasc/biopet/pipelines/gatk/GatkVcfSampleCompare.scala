@@ -16,7 +16,7 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   var vcfFiles: List[File] = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = _
+  var reference: File = config("reference")
 
   @Argument(doc = "Target bed", shortName = "targetBed", required = false)
   var targetBed: List[File] = Nil
@@ -29,7 +29,6 @@ class GatkVcfSampleCompare(val root: Configurable) extends QScript with BiopetQS
   def generalSampleDir = outputDir + "samples/"
 
   def init() {
-    if (reference == null) reference = config("reference")
     if (config.contains("target_bed"))
       for (bed <- config("target_bed").getList)
         targetBed :+= bed.toString

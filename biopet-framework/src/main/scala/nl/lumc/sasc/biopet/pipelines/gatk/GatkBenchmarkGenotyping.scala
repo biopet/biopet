@@ -18,18 +18,15 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
   @Input(doc = "Gvcf files", shortName = "I", required = false)
   var gvcfFiles: List[File] = Nil
 
-  @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = _
+  var reference: File = config("reference")
 
   @Argument(doc = "Dbsnp", shortName = "dbsnp", required = false)
-  var dbsnp: File = _
+  var dbsnp: File = config("dbsnp")
 
   def init() {
     if (config.contains("gvcffiles")) for (file <- config("gvcffiles").getList) {
       gvcfFiles ::= file.toString
     }
-    if (reference == null) reference = config("reference")
-    if (dbsnp == null) dbsnp = config("dbsnp")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }

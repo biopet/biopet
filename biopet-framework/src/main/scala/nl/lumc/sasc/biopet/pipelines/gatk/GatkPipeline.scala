@@ -18,7 +18,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   def this() = this(null)
 
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
-  val onlySample: String = ""
+  val onlySample: List[String] = Nil
 
   @Argument(doc = "Skip Genotyping step", shortName = "skipgenotyping", required = false)
   var skipGenotyping: Boolean = false
@@ -27,17 +27,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var mergeGvcfs: Boolean = false
 
   @Argument(doc = "Joint variantcalling", shortName = "jointVariantCalling", required = false)
-  var jointVariantcalling = false
+  var jointVariantcalling: Boolean = config("joint_variantcalling", default = false)
 
   @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
-  var jointGenotyping = false
+  var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
-  var singleSampleCalling = true
-  var reference: File = _
-  var dbsnp: File = _
+  var singleSampleCalling = config("single_sample_calling", default = true)
+  var reference: File = config("reference", required = true)
+  var dbsnp: File = config("dbsnp")
   var gvcfFiles: List[File] = Nil
   var finalBamFiles: List[File] = Nil
-  var useAllelesOption: Boolean = _
+  var useAllelesOption: Boolean = config("use_alleles_option", default = false)
 
   class LibraryOutput extends AbstractLibraryOutput {
     var mappedBamFile: File = _
@@ -49,20 +49,19 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def init() {
-    useAllelesOption = config("use_alleles_option", default = false)
-    reference = config("reference", required = true)
-    dbsnp = config("dbsnp")
     if (config.contains("target_bed")) {
       defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
     }
-    jointVariantcalling = config("joint_variantcalling", default = false)
-    jointGenotyping = config("joint_genotyping", default = false)
-    singleSampleCalling = config("single_sample_calling", default = true)
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").getList)
         gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
+  }
+
+  val multisampleVariantcalling = new GatkVariantcalling(this) {
+    override protected lazy val configName = "gatkvariantcalling"
+    override def configPath: List[String] = "multisample" :: super.configPath
   }
 
   def biopetScript() {
@@ -95,33 +94,36 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         ) yield file
         val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
 
-        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
-        add(cvRaw)
-
         val gatkVariantcalling = new GatkVariantcalling(this) {
           override protected lazy val configName = "gatkvariantcalling"
           override def configPath: List[String] = "multisample" :: super.configPath
         }
-        gatkVariantcalling.preProcesBams = Some(false)
-        gatkVariantcalling.doublePreProces = Some(false)
-        gatkVariantcalling.inputBams = allBamfiles.toList
-        gatkVariantcalling.rawVcfInput = cvRaw.out
-        gatkVariantcalling.outputDir = outputDir + "variantcalling"
-        gatkVariantcalling.outputName = "multisample"
-        gatkVariantcalling.init
-        gatkVariantcalling.biopetScript
-        addAll(gatkVariantcalling.functions)
+
+        if (gatkVariantcalling.useMpileup) {
+          val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
+          add(cvRaw)
+          gatkVariantcalling.rawVcfInput = cvRaw.out
+        }
+
+        multisampleVariantcalling.preProcesBams = false
+        multisampleVariantcalling.doublePreProces = false
+        multisampleVariantcalling.inputBams = allBamfiles.toList
+        multisampleVariantcalling.outputDir = outputDir + "variantcalling"
+        multisampleVariantcalling.outputName = "multisample"
+        multisampleVariantcalling.init
+        multisampleVariantcalling.biopetScript
+        addAll(multisampleVariantcalling.functions)
 
         if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
           val recalibration = new GatkVariantRecalibration(this)
-          recalibration.inputVcf = gatkVariantcalling.scriptOutput.finalVcfFile
+          recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
           recalibration.bamFiles = finalBamFiles
           recalibration.outputDir = outputDir + "recalibration/"
           recalibration.init
           recalibration.biopetScript
         }
       }
-    } else runSingleSampleJobs(onlySample)
+    } else for (sample <- onlySample) runSingleSampleJobs(sample)
   }
 
   // Called for each sample
@@ -140,10 +142,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val gatkVariantcalling = new GatkVariantcalling(this)
       gatkVariantcalling.inputBams = libraryBamfiles
       gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
-      gatkVariantcalling.preProcesBams = Some(false)
+      gatkVariantcalling.preProcesBams = false
       if (!singleSampleCalling) {
-        gatkVariantcalling.useHaplotypecaller = Some(false)
-        gatkVariantcalling.useUnifiedGenotyper = Some(false)
+        gatkVariantcalling.useHaplotypecaller = false
+        gatkVariantcalling.useUnifiedGenotyper = false
       }
       gatkVariantcalling.sampleID = sampleID
       gatkVariantcalling.init

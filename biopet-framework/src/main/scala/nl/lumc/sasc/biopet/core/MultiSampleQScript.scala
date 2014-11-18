@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
 
 trait MultiSampleQScript extends BiopetQScript {
   type LibraryOutput <: AbstractLibraryOutput
@@ -13,14 +13,13 @@ trait MultiSampleQScript extends BiopetQScript {
     def getLibrary(key: String) = libraries(key)
   }
 
-  var samplesConfig: Map[String, Any] = Map()
+  var samplesConfig: Map[String, Any] = config("samples")
   var samplesOutput: Map[String, SampleOutput] = Map()
   def globalSampleDir: String = outputDir + "samples/"
 
   final def runSamplesJobs() {
-    samplesConfig = config("samples")
     if (samplesConfig == null) samplesConfig = Map()
-    if (globalConfig.contains("samples")) for ((key, value) <- samplesConfig) {
+    if (Config.global.contains("samples")) for ((key, value) <- samplesConfig) {
       var sample = Configurable.any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
@@ -32,7 +31,11 @@ trait MultiSampleQScript extends BiopetQScript {
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
   def runSingleSampleJobs(sample: String): SampleOutput = {
-    return runSingleSampleJobs(Configurable.any2map(samplesConfig(sample)))
+    var map = Configurable.any2map(samplesConfig(sample))
+    if (map.contains("ID") && map("ID") != sample)
+      throw new IllegalStateException("ID in config not the same as the key")
+    else map += ("ID" -> sample)
+    return runSingleSampleJobs(map)
   }
 
   final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, LibraryOutput] = {
