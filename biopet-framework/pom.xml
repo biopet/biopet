@@ -49,10 +49,31 @@
             <artifactId>scala-library</artifactId>
             <version>2.11.2</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-package-distribution</artifactId>
             <version>3.3</version>
+        </dependency>-->
+        <dependency>
+            <groupId>org.broadinstitute.gatk</groupId>
+            <artifactId>gatk-queue</artifactId>
+            <version>3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.broadinstitute.gatk</groupId>
+            <artifactId>gatk-queue-extensions-distribution</artifactId>
+            <version>3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.broadinstitute.gatk</groupId>
+            <artifactId>gatk-utils</artifactId>
+            <version>3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.broadinstitute.gatk</groupId>
+            <artifactId>gsalib</artifactId>
+            <version>3.3</version>
+            <type>tar.gz</type>
         </dependency>
         <dependency>
             <groupId>io.argonaut</groupId>
@@ -206,7 +227,7 @@
                         </transformer>
                     </transformers>
                     <filters>
-                        <filter>
+<!--                        <filter>
                             <artifact>org.broadinstitute.gatk:gatk-queue-package-distribution</artifact>
                             <includes>
                                 <include>*/**</include>
@@ -224,7 +245,7 @@
                                 <include>org/apache/**</include>
                                 <include>scala/tools/nsc/reporters/**</include>
                             </includes>
-                        </filter>
+                        </filter>-->
                     </filters>
                 </configuration>
                 <executions>
