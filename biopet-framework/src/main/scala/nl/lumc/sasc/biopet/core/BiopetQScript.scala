@@ -15,6 +15,9 @@ trait BiopetQScript extends Configurable {
   @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
   var outputDir: String = _
 
+  @Argument(doc = "Use scatter defaults, env vale BIOPET_CONFIG_SCATTER", shortName = "SC", required = false)
+  var useScatterDefault: Boolean = false
+
   var outputFiles: Map[String, File] = Map()
 
   var qSettings: QSettings
@@ -25,6 +28,7 @@ trait BiopetQScript extends Configurable {
   var functions: Seq[QFunction]
 
   final def script() {
+    if (useScatterDefault) Config.global.loadDefaultScatterConfig
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript

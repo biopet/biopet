@@ -12,15 +12,24 @@ class Config(var map: Map[String, Any]) extends Logging {
     loadDefaultConfig()
   }
 
-  def loadDefaultConfig() {
-    var globalFile: String = System.getenv("BIOPET_CONFIG")
-    if (globalFile != null) {
+  def loadConfigEnv(valueName: String) {
+    var globalFiles = System.getenv(valueName).split(":")
+    for (globalFile <- globalFiles) {
       var file: File = new File(globalFile)
       if (file.exists()) {
         logger.info("Loading config file: " + file)
         loadConfigFile(file)
-      } else logger.warn("BIOPET_CONFIG value found but file does not exist, no global config is loaded")
-    } else logger.info("BIOPET_CONFIG value not found, no global config is loaded")
+      } else logger.warn(valueName + " value found but file does not exist, no global config is loaded")
+    }
+    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
+  }
+
+  def loadDefaultConfig() {
+    loadConfigEnv("BIOPET_CONFIG")
+  }
+
+  def loadDefaultScatterConfig() {
+    loadConfigEnv("BIOPET_CONFIG_SCATTER")
   }
 
   def loadConfigFile(configFile: File) {
