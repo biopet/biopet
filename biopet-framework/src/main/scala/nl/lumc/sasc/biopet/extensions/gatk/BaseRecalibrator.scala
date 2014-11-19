@@ -7,13 +7,9 @@ class BaseRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.q
   memoryLimit = Option(4)
   override val defaultVmem = "8G"
 
-  override def afterGraph {
-    super.afterGraph
-
-    if (config.contains("scattercount")) scatterCount = config("scattercount")
-    if (config.contains("dbsnp")) knownSites :+= new File(config("dbsnp").getString)
-    if (config.contains("known_sites")) knownSites :+= new File(config("known_sites").getString)
-  }
+  if (config.contains("scattercount")) scatterCount = config("scattercount")
+  if (config.contains("dbsnp")) knownSites :+= new File(config("dbsnp").getString)
+  if (config.contains("known_sites")) knownSites :+= new File(config("known_sites").getString)
 }
 
 object BaseRecalibrator {
