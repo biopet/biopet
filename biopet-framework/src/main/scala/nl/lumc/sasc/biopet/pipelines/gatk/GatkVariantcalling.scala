@@ -213,7 +213,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     }
     add(baseRecalibrator)
 
-    if (config("use_Analyze_covariates", default = false).getBoolean) {
+    if (config("use_analyze_covariates", default = false).getBoolean) {
       val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
       baseRecalibratorAfter.BQSR = baseRecalibrator.o
       add(baseRecalibratorAfter)
