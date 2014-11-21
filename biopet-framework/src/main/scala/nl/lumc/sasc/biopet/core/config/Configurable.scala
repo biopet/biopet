@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
-import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplictConversions
+import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
-trait Configurable extends ImplictConversions {
+trait Configurable extends ImplicitConversions {
   val root: Configurable
   def configPath: List[String] = if (root != null) root.configFullPath else List()
   protected lazy val configName = getClass.getSimpleName.toLowerCase

@@ -174,7 +174,7 @@ object ConfigUtils extends Logging {
     }
   }
 
-  trait ImplictConversions {
+  trait ImplicitConversions {
     import scala.language.implicitConversions
 
     implicit def configValue2file(value: ConfigValue): File = {
