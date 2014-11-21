@@ -13,7 +13,8 @@ class Config(var map: Map[String, Any]) extends Logging {
   }
 
   def loadConfigEnv(valueName: String) {
-    var globalFiles = System.getenv(valueName).split(":")
+    val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
+    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
     for (globalFile <- globalFiles) {
       var file: File = new File(globalFile)
       if (file.exists()) {
@@ -21,7 +22,6 @@ class Config(var map: Map[String, Any]) extends Logging {
         loadConfigFile(file)
       } else logger.warn(valueName + " value found but file does not exist, no global config is loaded")
     }
-    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
   }
 
   def loadDefaultConfig() {
