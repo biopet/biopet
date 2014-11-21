@@ -2,8 +2,7 @@ package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
+import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 class Config(var map: Map[String, Any]) extends Logging {
   logger.debug("Init phase of config")
@@ -29,18 +28,10 @@ class Config(var map: Map[String, Any]) extends Logging {
   }
 
   def loadConfigFile(configFile: File) {
-    logger.debug("Jsonfile: " + configFile)
-    val jsonText = scala.io.Source.fromFile(configFile).mkString
-    val json = Parse.parseOption(jsonText)
-    if (json == None) {
-      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
-    }
-    logger.debug(json)
-    val configJson = Config.jsonToMap(json.get)
-    logger.debug("Contain: " + configJson)
+    val configMap = fileToConfigMap(configFile)
 
-    if (map.isEmpty) map = configJson
-    else map = Config.mergeMaps(configJson, map)
+    if (map.isEmpty) map = configMap
+    else map = mergeMaps(configMap, map)
     logger.debug("New config: " + map)
   }
 
@@ -112,66 +103,13 @@ class Config(var map: Map[String, Any]) extends Logging {
 object Config extends Logging {
   val global = new Config
 
-  def valueToMap(input: Any): Map[String, Any] = {
-    input match {
-      case m: Map[_, _] => return m.asInstanceOf[Map[String, Any]]
-      case _            => throw new IllegalStateException("Value '" + input + "' is not an Map")
-    }
-  }
-
-  def mergeMaps(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
-    var newMap: Map[String, Any] = Map()
-    for (key <- map1.keySet.++(map2.keySet)) {
-      if (map1.contains(key) && !map2.contains(key)) newMap += (key -> map1(key))
-      else if (!map1.contains(key) && map2.contains(key)) newMap += (key -> map2(key))
-      else if (map1.contains(key) && map2.contains(key)) {
-        map1(key) match {
-          case m1: Map[_, _] => {
-            map2(key) match {
-              case m2: Map[_, _] => newMap += (key -> mergeMaps(Config.valueToMap(m1), Config.valueToMap(m2)))
-              case _             => newMap += (key -> map1(key))
-            }
-          }
-          case _ => newMap += (key -> map1(key))
-        }
-      }
-    }
-    return newMap
-  }
-
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
-
-  private def jsonToMap(json: Json): Map[String, Any] = {
-    var output: Map[String, Any] = Map()
-    if (json.isObject) {
-      for (key <- json.objectFieldsOrEmpty) {
-        val value: Any = jsonToAny(json.field(key).get)
-        output += (key -> value)
-      }
-    } else return null
-    return output
-  }
-
-  private def jsonToAny(json: Json): Any = {
-    if (json.isObject) return jsonToMap(json)
-    else if (json.isArray) {
-      var list: List[Any] = List()
-      for (value <- json.array.get) list ::= jsonToAny(value)
-      return list
-    } else if (json.isBool) return json.bool.get
-    else if (json.isString) return json.string.get.toString
-    else if (json.isNumber) {
-      val num = json.number.get
-      if (num.toString.contains(".")) return num.toDouble
-      else return num.toLong
-    } else throw new IllegalStateException("Config value type not supported, value: " + json)
-  }
 
   private def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
     var returnMap: Map[String, Any] = map
     for (m <- path) {
       if (!returnMap.contains(m)) return Map()
-      else returnMap = Config.valueToMap(returnMap(m))
+      else returnMap = any2map(returnMap(m))
     }
     return returnMap
   }
@@ -202,30 +140,6 @@ object Config extends Logging {
       return Option(ConfigValue(index, ConfigValueIndex("", Nil, index.key), map(index.key)))
     } else { // At this point key is not found on the path
       return None
-    }
-  }
-
-  def mapToJson(map: Map[String, Any]): Json = {
-    map.foldLeft(jEmptyObject)((acc, kv) => (kv._1 := {
-      kv._2 match {
-        case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
-        case _            => anyToJson(kv._2)
-      }
-    }) ->: acc)
-  }
-
-  def anyToJson(any: Any): Json = {
-    any match {
-      case j: Json      => j
-      case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
-      case l: List[_]   => Json.array(l.map(anyToJson(_)): _*)
-      case n: Int       => Json.jNumberOrString(n)
-      case n: Double    => Json.jNumberOrString(n)
-      case n: Long      => Json.jNumberOrString(n)
-      case n: Short     => Json.jNumberOrString(n)
-      case n: Float     => Json.jNumberOrString(n)
-      case n: Byte      => Json.jNumberOrString(n)
-      case _            => jString(any.toString)
     }
   }
 }

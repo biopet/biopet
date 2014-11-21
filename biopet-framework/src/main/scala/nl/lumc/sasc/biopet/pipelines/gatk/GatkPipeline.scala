@@ -50,10 +50,10 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   def init() {
     if (config.contains("target_bed")) {
-      defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").getStringList)))
+      defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").asStringList)))
     }
     if (config.contains("gvcfFiles"))
-      for (file <- config("gvcfFiles").getList)
+      for (file <- config("gvcfFiles").asList)
         gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
@@ -114,7 +114,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         multisampleVariantcalling.biopetScript
         addAll(multisampleVariantcalling.functions)
 
-        if (config("inputtype", default = "dna").getString != "rna" && config("recalibration", default = false).getBoolean) {
+        if (config("inputtype", default = "dna").asString != "rna" && config("recalibration", default = false).asBoolean) {
           val recalibration = new GatkVariantRecalibration(this)
           recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
           recalibration.bamFiles = finalBamFiles
@@ -174,7 +174,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       var bamFile = new File(runConfig("bam").toString)
       if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
 
-      if (config("bam_to_fastq", default = false).getBoolean) {
+      if (config("bam_to_fastq", default = false).asBoolean) {
         val samToFastq = SamToFastq(this, bamFile, runDir + sampleID + "-" + runID + ".R1.fastq",
           runDir + sampleID + "-" + runID + ".R2.fastq")
         add(samToFastq, isIntermediate = true)

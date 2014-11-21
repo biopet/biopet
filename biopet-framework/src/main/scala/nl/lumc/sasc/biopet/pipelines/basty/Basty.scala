@@ -68,7 +68,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(raxmlMl)
 
       val r = new scala.util.Random(seed)
-      val numBoot = config("boot_runs", default = 100, submodule = "raxml").getInt
+      val numBoot = config("boot_runs", default = 100, submodule = "raxml").asInt
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
         raxmlBoot.threads = 1

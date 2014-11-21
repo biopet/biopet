@@ -10,9 +10,9 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
 
   override val defaultVmem = "7G"
 
-  if (config.contains("intervals", submodule = "gatk")) intervals = config("intervals", submodule = "gatk").getFileList
-  if (config.contains("exclude_intervals", submodule = "gatk")) excludeIntervals = config("exclude_intervals", submodule = "gatk").getFileList
+  if (config.contains("intervals", submodule = "gatk")) intervals = config("intervals", submodule = "gatk").asFileList
+  if (config.contains("exclude_intervals", submodule = "gatk")) excludeIntervals = config("exclude_intervals", submodule = "gatk").asFileList
   reference_sequence = config("reference", submodule = "gatk")
   gatk_key = config("gatk_key", submodule = "gatk")
-  if (config.contains("pedigree", submodule = "gatk")) pedigree = config("pedigree", submodule = "gatk").getFileList
+  if (config.contains("pedigree", submodule = "gatk")) pedigree = config("pedigree", submodule = "gatk").asFileList
 }

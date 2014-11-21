@@ -21,11 +21,11 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
 
   var default_clip_mode: String = config("default_clip_mode", default = "3")
   var opt_adapter: Set[String] = Set()
-  if (config.contains("adapter")) for (adapter <- config("adapter").getList) opt_adapter += adapter.toString
+  if (config.contains("adapter")) for (adapter <- config("adapter").asList) opt_adapter += adapter.toString
   var opt_anywhere: Set[String] = Set()
-  if (config.contains("anywhere")) for (adapter <- config("anywhere").getList) opt_anywhere += adapter.toString
+  if (config.contains("anywhere")) for (adapter <- config("anywhere").asList) opt_anywhere += adapter.toString
   var opt_front: Set[String] = Set()
-  if (config.contains("front")) for (adapter <- config("front").getList) opt_front += adapter.toString
+  if (config.contains("front")) for (adapter <- config("front").asList) opt_front += adapter.toString
 
   var opt_discard: Boolean = config("discard")
   var opt_minimum_length: String = config("minimum_length", 1)

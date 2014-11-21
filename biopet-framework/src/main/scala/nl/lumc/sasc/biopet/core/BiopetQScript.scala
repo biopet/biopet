@@ -7,8 +7,9 @@ import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
-trait BiopetQScript extends Configurable {
+trait BiopetQScript extends Configurable with GatkLogging {
 
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil

@@ -9,7 +9,7 @@ class RealignerTargetCreator(val root: Configurable) extends org.broadinstitute.
 
   if (config.contains("scattercount")) scatterCount = config("scattercount")
 
-  if (config.contains("known")) known ++= config("known").getFileList
+  if (config.contains("known")) known ++= config("known").asFileList
 }
 
 object RealignerTargetCreator {
