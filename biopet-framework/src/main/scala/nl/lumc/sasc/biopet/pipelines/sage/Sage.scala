@@ -148,7 +148,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.biopetScript
       addAll(mapping.functions)
 
-      if (config("library_counts", default = false).getBoolean) {
+      if (config("library_counts", default = false).asBoolean) {
         addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
         addTablibCounts(prefixFastq.output, sampleID + "-" + runID, runDir)
       }

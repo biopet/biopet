@@ -4,14 +4,14 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValueIndex, val value: Any, val default: Boolean) {
-  def getString = any2string(value)
-  def getInt = any2int(value)
-  def getDouble = any2double(value)
-  def getList = any2list(value)
-  def getFileList: List[File] = for (file <- any2stringList(value)) yield new File(file)
-  def getStringList: List[String] = any2stringList(value)
-  def getMap = any2map(value)
-  def getBoolean = any2boolean(value)
+  def asString = any2string(value)
+  def asInt = any2int(value)
+  def asDouble = any2double(value)
+  def asList = any2list(value)
+  def asFileList: List[File] = for (file <- any2stringList(value)) yield new File(file)
+  def asStringList: List[String] = any2stringList(value)
+  def asMap = any2map(value)
+  def asBoolean = any2boolean(value)
 
   override def toString: String = {
     var output = "key = " + requestIndex.key
