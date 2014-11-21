@@ -13,17 +13,23 @@ trait GatkGeneral extends BiopetJavaCommandLineFunction {
   override val defaultVmem = "7G"
 
   @Input(required = false)
-  var intervals: List[File] = config("intervals", submodule = "gatk").getFileList
+  var intervals: List[File] = Nil
+  if (config.contains("intervals", submodule = "gatk"))
+    intervals = config("intervals", submodule = "gatk").getFileList
 
   @Input(required = false)
-  var excludeIntervals: List[File] = config("exclude_intervals", submodule = "gatk").getFileList
+  var excludeIntervals: List[File] = Nil
+  if (config.contains("exclude_intervals", submodule = "gatk"))
+    excludeIntervals = config("exclude_intervals", submodule = "gatk").getFileList
 
   var reference_sequence: File = config("reference", submodule = "gatk")
 
   var gatkKey: File = config("gatk_key", submodule = "gatk")
 
   @Input(required = false)
-  var pedigree: List[File] = config("pedigree", submodule = "gatk").getFileList
+  var pedigree: List[File] = Nil
+  if (config.contains("pedigree", submodule = "gatk"))
+    config("pedigree", submodule = "gatk").getFileList
 
   override def commandLine = super.commandLine +
     required("--analysis_type", analysis) +

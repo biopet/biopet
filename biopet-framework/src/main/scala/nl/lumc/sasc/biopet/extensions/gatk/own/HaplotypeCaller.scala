@@ -22,7 +22,7 @@ class HaplotypeCaller(val root: Configurable) extends GatkGeneral with ScatterGa
 
   @Output(required = true)
   @Gather(classOf[CatVariantsGatherer])
-  var output: File = _
+  var out: File = _
 
   var samplePloidy: Option[Int] = config("ploidy")
 
@@ -39,7 +39,7 @@ class HaplotypeCaller(val root: Configurable) extends GatkGeneral with ScatterGa
 
   override def commandLine = super.commandLine +
     repeat("-I", input) +
-    required("-o", output) +
+    required("-o", out) +
     optional("--sample_ploidy", samplePloidy) +
     conditional(allSitePLs, "--allSitePLs") +
     optional("--stand_call_conf", standCallConf) +
