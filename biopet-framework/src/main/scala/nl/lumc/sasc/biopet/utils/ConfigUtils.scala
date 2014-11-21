@@ -27,6 +27,19 @@ object ConfigUtils extends Logging {
     return newMap
   }
 
+  def fileToConfigMap(configFile: File): Map[String, Any] = {
+    logger.debug("Jsonfile: " + configFile)
+    val jsonText = scala.io.Source.fromFile(configFile).mkString
+    val json = Parse.parseOption(jsonText)
+    if (json == None) {
+      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
+    }
+    logger.debug(json)
+    val configJson = jsonToMap(json.get)
+    logger.debug("Contain: " + configJson)
+    return configJson
+  }
+
   def jsonToMap(json: Json): Map[String, Any] = {
     var output: Map[String, Any] = Map()
     if (json.isObject) {

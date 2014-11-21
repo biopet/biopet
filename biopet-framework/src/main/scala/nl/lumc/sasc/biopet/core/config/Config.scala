@@ -3,8 +3,6 @@ package nl.lumc.sasc.biopet.core.config
 import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
 
 class Config(var map: Map[String, Any]) extends Logging {
   logger.debug("Init phase of config")
@@ -30,18 +28,10 @@ class Config(var map: Map[String, Any]) extends Logging {
   }
 
   def loadConfigFile(configFile: File) {
-    logger.debug("Jsonfile: " + configFile)
-    val jsonText = scala.io.Source.fromFile(configFile).mkString
-    val json = Parse.parseOption(jsonText)
-    if (json == None) {
-      throw new IllegalStateException("The config JSON file is either not properly formatted or not a JSON file, file: " + configFile)
-    }
-    logger.debug(json)
-    val configJson = jsonToMap(json.get)
-    logger.debug("Contain: " + configJson)
+    val configMap = fileToConfigMap(configFile)
 
-    if (map.isEmpty) map = configJson
-    else map = mergeMaps(configJson, map)
+    if (map.isEmpty) map = configMap
+    else map = mergeMaps(configMap, map)
     logger.debug("New config: " + map)
   }
 
