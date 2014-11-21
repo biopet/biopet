@@ -122,9 +122,9 @@ object Config extends Logging {
   def mergeMaps(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
     var newMap: Map[String, Any] = Map()
     for (key <- map1.keySet.++(map2.keySet)) {
-      if (map1.contains(key) && !map2.contains(key)) newMap += (key -> map1(key))
-      else if (!map1.contains(key) && map2.contains(key)) newMap += (key -> map2(key))
-      else if (map1.contains(key) && map2.contains(key)) {
+      if (!map2.contains(key)) newMap += (key -> map1(key))
+      else if (!map1.contains(key)) newMap += (key -> map2(key))
+      else {
         map1(key) match {
           case m1: Map[_, _] => {
             map2(key) match {
