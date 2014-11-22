@@ -8,6 +8,7 @@
     <packaging>pom</packaging>
     <name>Biopet</name>
     <modules>
-        <module>biopet-framework</module>
+        <module>public</module>
+        <module>protected</module>
     </modules>
 </project>
