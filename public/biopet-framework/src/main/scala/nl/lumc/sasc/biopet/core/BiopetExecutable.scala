@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.core
 import java.util.Properties
 import org.apache.log4j.Logger
 
-object BiopetExecutable extends Logging {
+trait BiopetExecutable extends Logging {
 
   val pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
@@ -107,15 +107,9 @@ object BiopetExecutable extends Logging {
     }
   }
 
-  def getVersion = {
-    getClass.getPackage.getImplementationVersion + " (" + getCommitHash + ")"
-  }
+  def getVersion = BiopetExecutable.getVersion
 
-  def getCommitHash = {
-    val prop = new Properties()
-    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
-    prop.getProperty("git.commit.id.abbrev")
-  }
+  def getCommitHash = BiopetExecutable.getCommitHash
 
   def checkDirtyBuild(logger: Logger) {
     val prop = new Properties()
@@ -129,4 +123,16 @@ object BiopetExecutable extends Logging {
     }
   }
   checkDirtyBuild(logger)
+}
+
+object BiopetExecutable {
+  def getVersion = {
+    getClass.getPackage.getImplementationVersion + " (" + getCommitHash + ")"
+  }
+
+  def getCommitHash = {
+    val prop = new Properties()
+    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
+    prop.getProperty("git.commit.id.abbrev")
+  }
 }

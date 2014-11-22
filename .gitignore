@@ -1,6 +1,6 @@
 # Project-related
 dependency-reduced-pom.xml
-/biopet-framework/src/main/resources/git.properties
+git.properties
 
 # gedit
 *~
