@@ -8,6 +8,9 @@
     </parent>
     <artifactId>protected</artifactId>
     <packaging>pom</packaging>
+    <modules>
+        <module>biopet-gatk-extensions</module>
+    </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
