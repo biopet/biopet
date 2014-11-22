@@ -25,6 +25,36 @@
             <artifactId>BiopetFramework</artifactId>
             <version>0.2.0-DEV</version>
         </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Flexiprep</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Mapping</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BamMetrics</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Gentrap</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Sage</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Yamsvp</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
