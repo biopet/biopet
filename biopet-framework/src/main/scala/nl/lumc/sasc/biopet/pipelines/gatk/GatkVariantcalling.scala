@@ -108,8 +108,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           add(genotypeGVCFs)
           scriptOutput.hcVcfFile = genotypeGVCFs.out
         } else {
-          val hcGvcf = new nl.lumc.sasc.biopet.extensions.gatk.own.HaplotypeCaller(this)
-          hcGvcf.input = scriptOutput.bamFiles
+          val hcGvcf = new HaplotypeCaller(this)
+          hcGvcf.input_file = scriptOutput.bamFiles
           hcGvcf.out = outputDir + outputName + ".hc.discovery.vcf.gz"
           add(hcGvcf)
           scriptOutput.hcVcfFile = hcGvcf.out
