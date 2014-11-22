@@ -29,7 +29,7 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on BamMetrics module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     if (config.contains("target_bed")) {
-      for (file <- config("target_bed").getList) {
+      for (file <- config("target_bed").asList) {
         bedFiles +:= new File(file.toString)
       }
     }

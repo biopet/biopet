@@ -17,7 +17,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
     if (config.contains("output_mode")) {
       import org.broadinstitute.gatk.tools.walkers.genotyper.OutputMode._
-      config("output_mode").getString match {
+      config("output_mode").asString match {
         case "EMIT_ALL_CONFIDENT_SITES" => output_mode = EMIT_ALL_CONFIDENT_SITES
         case "EMIT_ALL_SITES"           => output_mode = EMIT_ALL_SITES
         case "EMIT_VARIANTS_ONLY"       => output_mode = EMIT_VARIANTS_ONLY
@@ -25,7 +25,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
       }
     }
 
-    if (config("inputtype", default = "dna").getString == "rna") {
+    if (config("inputtype", default = "dna").asString == "rna") {
       dontUseSoftClippedBases = config("dontusesoftclippedbases", default = true)
       stand_call_conf = config("stand_call_conf", default = 5)
       stand_emit_conf = config("stand_emit_conf", default = 0)

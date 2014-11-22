@@ -4,6 +4,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 object SamplesTsvToJson extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil) extends AbstractArgs
@@ -37,10 +38,10 @@ object SamplesTsvToJson extends ToolCommand {
         }
         map
       }
-      librariesValues.foldLeft(Map[String, Any]())((acc, kv) => Config.mergeMaps(acc, kv))
+      librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     }
-    val map = fileMaps.foldLeft(Map[String, Any]())((acc, kv) => Config.mergeMaps(acc, kv))
-    val json = Config.mapToJson(map)
+    val map = fileMaps.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
+    val json = mapToJson(map)
     println(json.spaces2)
   }
 }

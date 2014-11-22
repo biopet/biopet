@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
 import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 trait MultiSampleQScript extends BiopetQScript {
   type LibraryOutput <: AbstractLibraryOutput
@@ -20,7 +21,7 @@ trait MultiSampleQScript extends BiopetQScript {
   final def runSamplesJobs() {
     if (samplesConfig == null) samplesConfig = Map()
     if (Config.global.contains("samples")) for ((key, value) <- samplesConfig) {
-      var sample = Configurable.any2map(value)
+      var sample = any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
         samplesOutput += key -> runSingleSampleJobs(sample)
@@ -31,7 +32,7 @@ trait MultiSampleQScript extends BiopetQScript {
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
   def runSingleSampleJobs(sample: String): SampleOutput = {
-    var map = Configurable.any2map(samplesConfig(sample))
+    var map = any2map(samplesConfig(sample))
     if (map.contains("ID") && map("ID") != sample)
       throw new IllegalStateException("ID in config not the same as the key")
     else map += ("ID" -> sample)
@@ -42,9 +43,9 @@ trait MultiSampleQScript extends BiopetQScript {
     var output: Map[String, LibraryOutput] = Map()
     val sampleID = sampleConfig("ID").toString
     if (sampleConfig.contains("libraries")) {
-      val runs = Configurable.any2map(sampleConfig("libraries"))
+      val runs = any2map(sampleConfig("libraries"))
       for ((key, value) <- runs) {
-        var library = Configurable.any2map(value)
+        var library = any2map(value)
         if (!library.contains("ID")) library += ("ID" -> key)
         if (library("ID") == key) {
           output += key -> runSingleLibraryJobs(library, sampleConfig)

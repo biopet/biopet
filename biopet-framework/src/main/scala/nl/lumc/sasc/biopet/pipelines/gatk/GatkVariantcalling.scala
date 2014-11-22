@@ -93,7 +93,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       var mergBuffer: SortedMap[String, File] = SortedMap()
       def mergeList = mergBuffer map { case (key, file) => TaggedFile(removeNoneVariants(file), "name=" + key) }
 
-      if (sampleID != null && (useHaplotypecaller.get || config("joint_genotyping", default = false).getBoolean)) {
+      if (sampleID != null && (useHaplotypecaller.get || config("joint_genotyping", default = false).asBoolean)) {
         val hcGvcf = new HaplotypeCaller(this)
         hcGvcf.useGvcf
         hcGvcf.input_file = scriptOutput.bamFiles
@@ -213,11 +213,13 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     }
     add(baseRecalibrator)
 
-    val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
-    baseRecalibratorAfter.BQSR = baseRecalibrator.o
-    add(baseRecalibratorAfter)
+    if (config("use_analyze_covariates", default = false).asBoolean) {
+      val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
+      baseRecalibratorAfter.BQSR = baseRecalibrator.o
+      add(baseRecalibratorAfter)
 
-    add(AnalyzeCovariates(this, baseRecalibrator.o, baseRecalibratorAfter.o, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
+      add(AnalyzeCovariates(this, baseRecalibrator.o, baseRecalibratorAfter.o, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
+    }
 
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
     printReads.BQSR = baseRecalibrator.o
