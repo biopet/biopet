@@ -22,7 +22,7 @@
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetFramework</artifactId>
-            <version>0.2.0-DEV</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>
