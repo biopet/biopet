@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>biopet-gatk-extensions</module>
+        <module>biopet-gatk-pipelines</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
