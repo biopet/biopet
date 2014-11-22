@@ -25,6 +25,16 @@
             <artifactId>BiopetFramework</artifactId>
             <version>0.2.0-DEV</version>
         </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetGatkPipelines</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Basty</artifactId>
+            <version>0.2.0-DEV</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
