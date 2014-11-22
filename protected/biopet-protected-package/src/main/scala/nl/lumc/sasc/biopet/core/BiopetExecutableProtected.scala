@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
-trait BiopetExecutableProtected extends BiopetExecutablePublic {
-  override def pipelines: List[MainCommand] = super.pipelines ::: List(
+object BiopetExecutableProtected extends BiopetExecutable {
+  def pipelines: List[MainCommand] = BiopetExecutablePublic.pipelines ::: List(
     nl.lumc.sasc.biopet.pipelines.gatk.GatkBenchmarkGenotyping,
     nl.lumc.sasc.biopet.pipelines.gatk.GatkGenotyping,
     nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantcalling,
@@ -9,4 +9,6 @@ trait BiopetExecutableProtected extends BiopetExecutablePublic {
     nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantRecalibration,
     nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare,
     nl.lumc.sasc.biopet.pipelines.basty.Basty)
+  
+  def tools = BiopetExecutablePublic.tools
 }

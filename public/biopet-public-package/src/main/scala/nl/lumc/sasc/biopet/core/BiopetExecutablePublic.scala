@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
-trait BiopetExecutablePublic extends BiopetExecutable {
+object BiopetExecutablePublic extends BiopetExecutable {
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
