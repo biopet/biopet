@@ -12,6 +12,7 @@
         <module>biopet-gatk-extensions</module>
         <module>biopet-gatk-pipelines</module>
         <module>basty</module>
+        <module>biopet-protected-package</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
