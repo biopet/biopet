@@ -5,9 +5,9 @@ import org.apache.log4j.Logger
 
 trait BiopetExecutable extends Logging {
 
-  val pipelines: List[MainCommand]
+  def pipelines: List[MainCommand]
 
-  val tools: List[MainCommand]
+  def tools: List[MainCommand]
 
   val modules: Map[String, List[MainCommand]] = Map(
     "pipeline" -> pipelines,

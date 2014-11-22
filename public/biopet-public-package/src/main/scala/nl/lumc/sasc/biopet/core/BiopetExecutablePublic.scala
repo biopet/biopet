@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.core
 
-object BiopetExecutablePublic extends BiopetExecutable {
-  lazy val pipelines: List[MainCommand] = List(
+trait BiopetExecutablePublic extends BiopetExecutable {
+  def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
     nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
@@ -9,7 +9,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
     nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp)
 
-  lazy val tools: List[MainCommand] = List(
+  def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.WipeReads,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.BiopetFlagstat,
