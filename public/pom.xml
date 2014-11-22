@@ -14,5 +14,11 @@
     <modules>
         <module>biopet-framework</module>
         <module>biopet-public-package</module>
+        <module>bammetrics</module>
+        <module>flexiprep</module>
+        <module>gentrap</module>
+        <module>mapping</module>
+        <module>sage</module>
+        <module>yamsvp</module>
     </modules>
 </project>
