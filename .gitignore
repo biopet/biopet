@@ -8,3 +8,6 @@ git.properties
 *.swp
 # IntelliJ
 .idea/workspace.xml
+/target/
+/public/target/
+/protected/target/

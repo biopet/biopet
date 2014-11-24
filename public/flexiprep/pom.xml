@@ -4,19 +4,17 @@
 
     <groupId>nl.lumc.sasc</groupId>
     <artifactId>Flexiprep</artifactId>
-    <version>0.2.0-DEV</version>
     <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.2.0-DEV</version>
+        <relativePath>../</relativePath>
+    </parent>
     
     <inceptionYear>2014</inceptionYear>
     <name>Flexiprep</name>
-    <url>http://maven.apache.org</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sting.unpack.phase>prepare-package</sting.unpack.phase>
-        <sting.shade.phase>package</sting.shade.phase>
-        <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutable</app.main.class>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -25,59 +23,4 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
-                    <execution>
-                        <id>scala-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <args>
-                                <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
-                                <arg>-deprecation</arg>
-                                <arg>-feature</arg>
-                            </args>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <showDeprecation>true</showDeprecation>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

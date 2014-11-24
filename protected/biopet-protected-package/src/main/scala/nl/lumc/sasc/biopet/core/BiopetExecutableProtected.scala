@@ -9,6 +9,6 @@ object BiopetExecutableProtected extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gatk.GatkVariantRecalibration,
     nl.lumc.sasc.biopet.pipelines.gatk.GatkVcfSampleCompare,
     nl.lumc.sasc.biopet.pipelines.basty.Basty)
-  
+
   def tools = BiopetExecutablePublic.tools
 }

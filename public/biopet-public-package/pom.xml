@@ -4,16 +4,20 @@
 
     <groupId>nl.lumc.sasc</groupId>
     <artifactId>BiopetPublicPackage</artifactId>
-    <version>0.2.0-DEV</version>
     <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.2.0-DEV</version>
+        <relativePath>../</relativePath>
+    </parent>
     
     <inceptionYear>2014</inceptionYear>
     <name>BiopetPublicPackage</name>
     <url>http://maven.apache.org</url>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sting.unpack.phase>prepare-package</sting.unpack.phase>
         <sting.shade.phase>package</sting.shade.phase>
         <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutablePublic</app.main.class>
     </properties>
@@ -57,84 +61,7 @@
         </dependency>
     </dependencies>
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
         <plugins>
-            <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
-                    <execution>
-                        <id>scala-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <args>
-                                <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
-                                <arg>-deprecation</arg>
-                                <arg>-feature</arg>
-                            </args>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
-                <version>2.1.10</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-                <configuration>
-                    <prefix>git</prefix>
-                    <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
-                    <verbose>false</verbose>
-                    <useNativeGit>true</useNativeGit>
-                    <dotGitDirectory>${project.basedir}/../../.git</dotGitDirectory>
-                    <skipPoms>false</skipPoms>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
-                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
-                    <abbrevLength>7</abbrevLength>
-                    <skip>false</skip>
-                    <excludeProperties></excludeProperties>
-                    <gitDescribe>
-                        <skip>false</skip>
-                        <always>false</always>
-                        <abbrev>7</abbrev>
-                        <dirty>-dirty</dirty>
-                        <forceLongFormat>false</forceLongFormat>
-                    </gitDescribe>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
