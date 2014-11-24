@@ -50,7 +50,17 @@ object VEPNormalizer extends ToolCommand {
    * @param output output VCF file
    */
   def explode(input: File, output: File) = {
-    val reader = new VCFFileReader(input, false)
+    var reader: VCFFileReader = null
+    // this can give a codec error if malformed VCF
+    //
+    try {
+      reader = new VCFFileReader(input, false)
+    } catch {
+      case e: Exception =>
+        logger.error("Malformed VCF file! VCFv3 not supported!")
+        throw e
+    }
+
     val header = reader.getFileHeader
     logger.debug("Checking for CSQ tag")
     csq_check(header)
@@ -106,7 +116,13 @@ object VEPNormalizer extends ToolCommand {
    * @param output output VCF file
    */
   def standard(input: File, output: File) = {
-    val reader = new VCFFileReader(input, false)
+    var reader: VCFFileReader = null
+    try {
+      reader = new VCFFileReader(input, false)
+    } catch {
+      case e: Exception => logger.error("Malformed VCF file! VCFv3 not supported!", new VEPException(_))
+    }
+
     val header = reader.getFileHeader
     logger.debug("Checking for CSQ tag")
     csq_check(header)
@@ -159,7 +175,8 @@ object VEPNormalizer extends ToolCommand {
    */
   def csq_check(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
-      logger.error("No CSQ info tag found! Is this file VEP-annotated?", new VEPException(_))
+      logger.error("No CSQ info tag found! Is this file VEP-annotated?")
+      throw new VEPException("")
     }
   }
 
@@ -179,7 +196,8 @@ object VEPNormalizer extends ToolCommand {
     }
     val version = VCFHeaderVersion.toHeaderVersion(format)
     if (!version.isAtLeastAsRecentAs(VCFHeaderVersion.VCF4_0)) {
-      logger.error(s"""version $version is not supported""", new VCFVersionException(_))
+      logger.error(s"""version $version is not supported""")
+      throw new VEPException("")
     }
   }
 
