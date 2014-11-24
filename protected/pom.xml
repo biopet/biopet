@@ -3,10 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nl.lumc.sasc</groupId>
-        <artifactId>Biopet</artifactId>
+        <artifactId>BiopetRoot</artifactId>
         <version>0.2.0-DEV</version>
+        <relativePath>../</relativePath>
     </parent>
-    <artifactId>protected</artifactId>
+    <artifactId>BiopetGatk</artifactId>
+    <name>BiopetGatk</name>
     <packaging>pom</packaging>
     <modules>
         <module>biopet-gatk-extensions</module>

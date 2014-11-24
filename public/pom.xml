@@ -3,10 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>nl.lumc.sasc</groupId>
-        <artifactId>Biopet</artifactId>
+        <artifactId>BiopetRoot</artifactId>
         <version>0.2.0-DEV</version>
+        <relativePath>../</relativePath>
     </parent>
-    <artifactId>public</artifactId>
+    <artifactId>Biopet</artifactId>
+    <name>Biopet</name>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
