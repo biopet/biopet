@@ -6,7 +6,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import collection.mutable.{ Map => MMap }
 import collection.JavaConverters._
 import htsjdk.variant.vcf._
-import htsjdk.variant.variantcontext.{VariantContextBuilder, VariantContext}
+import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 
 /**
@@ -33,16 +33,12 @@ object VEPNormalizer extends ToolCommand {
       logger.info(s"""Input VCF is $input""")
       logger.info(s"""Output VCF is $output""")
       explode(commandArgs.inputVCF, commandArgs.outputVCF)
-    }
-
-    else if (commandArgs.mode == "standard") {
+    } else if (commandArgs.mode == "standard") {
       logger.info("You have selected standard mode")
       logger.info(s"""Input VCF is $input""")
       logger.info(s"""Output VCF is $output""")
       standard(commandArgs.inputVCF, commandArgs.outputVCF)
-    }
-
-    else {
+    } else {
       // this should be impossible, but should nevertheless be checked
       logger.error("impossibru!", new IllegalArgumentException)
     }
@@ -66,8 +62,8 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Parsing header")
     val new_infos = parse_csq(header)
     header.setWriteCommandLine(true)
-    for (info <- new_infos){
-      val tmpheaderline = new VCFInfoHeaderLine(info,VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
+    for (info <- new_infos) {
+      val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
       header.addMetaDataLine(tmpheaderline)
     }
     logger.debug("Header parsing done")
@@ -83,15 +79,15 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Wrote header to file")
 
     logger.info("Start processing records")
-    var nprocessed_records : Int = 0
+    var nprocessed_records: Int = 0
     var nwritten_records: Int = 0
-    for ((record, i) <- reader.iterator().zipWithIndex){
+    for ((record, i) <- reader.iterator().zipWithIndex) {
       nprocessed_records += 1
-      if (i % 1000 == 0){
+      if (i % 1000 == 0) {
         logger.info(s"""Read $i records \t Wrote $nwritten_records records""")
       }
       val new_records = explode_transcripts(record, new_infos)
-      for (vc <- new_records){
+      for (vc <- new_records) {
         writer.add(vc)
       }
       nwritten_records += new_records.length
@@ -122,8 +118,8 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Parsing header")
     val new_infos = parse_csq(header)
     header.setWriteCommandLine(true)
-    for (info <- new_infos){
-      val tmpheaderline = new VCFInfoHeaderLine(info,VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
+    for (info <- new_infos) {
+      val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
       header.addMetaDataLine(tmpheaderline)
     }
     logger.debug("Header parsing done")
@@ -139,11 +135,11 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Wrote header to file")
 
     logger.info("Start processing records")
-    var nprocessed_records : Int = 0
+    var nprocessed_records: Int = 0
     var nwritten_records: Int = 0
-    for ((record, i) <- reader.iterator().zipWithIndex){
+    for ((record, i) <- reader.iterator().zipWithIndex) {
       nprocessed_records += 1
-      if (i % 1000 == 0){
+      if (i % 1000 == 0) {
         logger.info(s"""Read $i records \t Wrote $nwritten_records records""")
       }
       writer.add(standardTranscripts(record, new_infos))
@@ -157,7 +153,6 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Closed reader")
   }
 
-
   /**
    * Checks whether header has a CSQ tag
    * @param header VCF header
@@ -165,7 +160,7 @@ object VEPNormalizer extends ToolCommand {
   def csq_check(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
       logger.error("No CSQ info tag found! Is this file VEP-annotated?", new VEPException(_))
-      }
+    }
   }
 
   /**
@@ -205,8 +200,8 @@ object VEPNormalizer extends ToolCommand {
    * @param record the record as a VariantContext object
    * @param csq_infos An array with names of new info tags
    * @return An array with the new records
-  */
-  def explode_transcripts(record : VariantContext, csq_infos: Array[String]) : Array[VariantContext]= {
+   */
+  def explode_transcripts(record: VariantContext, csq_infos: Array[String]): Array[VariantContext] = {
     val csq = record.getAttributeAsString("CSQ", "unknown")
     val attributes = record.getAttributes.toMap
 
@@ -214,11 +209,11 @@ object VEPNormalizer extends ToolCommand {
       stripPrefix("[").
       stripSuffix("]").
       split(",").
-      map(x => attributes ++ csq_infos.zip(x.split("""\|""",-1))).
+      map(x => attributes ++ csq_infos.zip(x.split("""\|""", -1))).
       map(x => new VariantContextBuilder(record).attributes(x).make())
   }
 
-  def standardTranscripts(record: VariantContext, csqInfos: Array[String]) : VariantContext = {
+  def standardTranscripts(record: VariantContext, csqInfos: Array[String]): VariantContext = {
     val csq = record.getAttributeAsString("CSQ", "unknown")
     val attributes = record.getAttributes.toMap
 
@@ -227,13 +222,13 @@ object VEPNormalizer extends ToolCommand {
       stripSuffix("]").
       split(",").
       // This makes a list of lists with each annotation for every transcript in a top-level list element
-      foldLeft(List.fill(csqInfos.length){ List.empty[String] })(
+      foldLeft(List.fill(csqInfos.length) { List.empty[String] })(
         (acc, x) => {
           val broken = x.split("""\|""", -1)
-          acc.zip(broken).map( x => x._2 :: x._1)
+          acc.zip(broken).map(x => x._2 :: x._1)
         }
       ).
-      map(x => x.mkString(",")))
+        map(x => x.mkString(",")))
 
     new VariantContextBuilder(record).attributes(new_attrs).make()
   }
@@ -249,7 +244,6 @@ object VEPNormalizer extends ToolCommand {
    */
   class VCFVersionException(msg: String) extends RuntimeException(msg)
 
-
   case class Args(inputVCF: File = null,
                   outputVCF: File = null,
                   mode: String = "standard") extends AbstractArgs
@@ -258,17 +252,23 @@ object VEPNormalizer extends ToolCommand {
 
     head(s"""|$commandName - Parse VEP-annotated VCF to standard VCF format """)
 
-    opt[File]('I', "InputFile") required() valueName "<vcf>" action { (x ,c ) =>
-    c.copy(inputVCF = x )} validate {
-    x => if (x.exists) success else failure("Input VCF not found")} text "Input VCF file"
+    opt[File]('I', "InputFile") required () valueName "<vcf>" action { (x, c) =>
+      c.copy(inputVCF = x)
+    } validate {
+      x => if (x.exists) success else failure("Input VCF not found")
+    } text "Input VCF file"
 
-    opt[File]('O', "OutputFile") required() valueName "<vcf>" action { (x, c) =>
-    c.copy(outputVCF = x)} validate {
-      x => if (x.exists) success else success } text "Output VCF file"
+    opt[File]('O', "OutputFile") required () valueName "<vcf>" action { (x, c) =>
+      c.copy(outputVCF = x)
+    } validate {
+      x => if (x.exists) success else success
+    } text "Output VCF file"
 
-    opt[String]('m', "mode") required() valueName "<mode>" action {(x, c) =>
-    c.copy(mode = x)} validate {
-      x => if (x == "explode") success else if (x == "standard") success else failure("Unsupported mode")} text "Mode"
+    opt[String]('m', "mode") required () valueName "<mode>" action { (x, c) =>
+      c.copy(mode = x)
+    } validate {
+      x => if (x == "explode") success else if (x == "standard") success else failure("Unsupported mode")
+    } text "Mode"
   }
 }
 

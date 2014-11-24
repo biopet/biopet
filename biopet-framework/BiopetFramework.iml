@@ -29,7 +29,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="com.twitter:algebird-core_2.10:0.8.1" level="project" />
     <orderEntry type="library" name="gatk-protected" level="project" />
-    <orderEntry type="library" name="Maven: org.mockito:mockito-all:1.9.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.8" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
@@ -37,9 +36,9 @@
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.27" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.yaml:snakeyaml:1.6" level="project" />
     <orderEntry type="library" name="Maven: org.scalatest:scalatest_2.11:2.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-reflect:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.broadinstitute.gatk:gatk-queue-package-distribution:3.3" level="project" />
     <orderEntry type="library" name="Maven: io.argonaut:argonaut_2.11:6.1-M4" level="project" />
     <orderEntry type="library" name="Maven: org.scalaz:scalaz-core_2.11:7.1.0" level="project" />
@@ -52,3 +51,4 @@
     <orderEntry type="library" name="Maven: org.mockito:mockito-all:1.9.5" level="project" />
   </component>
 </module>
+

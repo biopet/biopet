@@ -85,13 +85,13 @@ object WipeReads extends ToolCommand {
 
     /** Function to create iterator from refFlat file */
     def makeIntervalFromRefFlat(inFile: File): Iterator[Interval] = ???
-      // convert coordinate to 1-based fully closed
-      // parse chrom, start blocks, end blocks, strands
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
 
     /** Function to create iterator from GTF file */
     def makeIntervalFromGtf(inFile: File): Iterator[Interval] = ???
-        // convert coordinate to 1-based fully closed
-        // parse chrom, start blocks, end blocks, strands
+    // convert coordinate to 1-based fully closed
+    // parse chrom, start blocks, end blocks, strands
 
     // detect interval file format from extension
     val iterFunc: (File => Iterator[Interval]) =
@@ -107,7 +107,7 @@ object WipeReads extends ToolCommand {
           acc match {
             case head :: tail if x.intersects(head) =>
               new Interval(x.getSequence, min(x.getStart, head.getStart), max(x.getEnd, head.getEnd)) :: tail
-            case  _ => x :: acc
+            case _ => x :: acc
           }
         }
       )
@@ -150,12 +150,10 @@ object WipeReads extends ToolCommand {
       else if (iv.getSequence.startsWith("chr") && getIndex(iv.getSequence.substring(3)) > -1) {
         logger.warn("Removing 'chr' prefix from interval " + iv.toString)
         Some(new QueryInterval(getIndex(iv.getSequence.substring(3)), iv.getStart, iv.getEnd))
-      }
-      else if (!iv.getSequence.startsWith("chr") && getIndex("chr" + iv.getSequence) > -1) {
+      } else if (!iv.getSequence.startsWith("chr") && getIndex("chr" + iv.getSequence) > -1) {
         logger.warn("Adding 'chr' prefix to interval " + iv.toString)
         Some(new QueryInterval(getIndex("chr" + iv.getSequence), iv.getStart, iv.getEnd))
-      }
-      else {
+      } else {
         logger.warn("Sequence " + iv.getSequence + " does not exist in alignment")
         None
       }
