@@ -1,0 +1,72 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>nl.lumc.sasc</groupId>
+    <artifactId>BiopetProtectedPackage</artifactId>
+    <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>BiopetGatk</artifactId>
+        <version>0.2.0-DEV</version>
+        <relativePath>../</relativePath>
+    </parent>
+    
+    <inceptionYear>2014</inceptionYear>
+    <name>BiopetProtectedPackage</name>
+    
+    <dependencies>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetFramework</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetPublicPackage</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetGatkPipelines</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Basty</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <finalName>Biopet-${project.version}-${git.commit.id.abbrev}</finalName>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>${app.main.class}</Main-Class>
+                                <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
+                                <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
+                            </manifestEntries>
+                        </transformer>
+                    </transformers>
+                    <filters>
+                    </filters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
