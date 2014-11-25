@@ -4,9 +4,6 @@ import java.io.File
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 

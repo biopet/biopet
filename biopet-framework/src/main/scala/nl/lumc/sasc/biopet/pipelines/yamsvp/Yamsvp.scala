@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
-import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever, Delly }
+import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Delly, CleverCaller }
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
@@ -90,7 +90,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
     val cleverDir = svcallingDir + sampleID + ".clever/"
-    val clever = Clever(this, bamFile, this.reference, svcallingDir, cleverDir)
+    val clever = CleverCaller(this, bamFile, this.reference, svcallingDir, cleverDir)
     clever.deps = List(bamIndex.output)
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
