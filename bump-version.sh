@@ -13,5 +13,8 @@ if [ ! $1 ] ; then
     exit 1
 fi
 
-mvn -f $DIR/pom.xml versions:set -DnewVersion=$1 -DgenerateBackupPoms=false
-mvn -f $DIR/biopet-framework/pom.xml versions:set -DnewVersion=$1 -DgenerateBackupPoms=false
+for POM in `find $DIR -name "pom.xml"`
+do
+	mvn -f $POM versions:set -DnewVersion=$1 -DgenerateBackupPoms=false
+done
+

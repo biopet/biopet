@@ -1,0 +1,28 @@
+This file is part of ${project.name}.
+
+${project.name} is built on top of GATK Queue for building bioinformatic 
+pipelines. It is mainly intended to support LUMC SHARK cluster which is running 
+SGE. But other types of HPC that are supported by GATK Queue (such as PBS) 
+should also be able to execute Biopet tools and pipelines.
+
+Copyright ${project.inceptionYear} ${owner}
+
+Contact us at: ${email}
+
+A dual licensing mode is applied. The source code within this project that are 
+not part of GATK Queue is freely available for non-commercial use under an AGPL 
+license; For commercial users or users who do not want to follow the AGPL 
+license, please contact us to obtain a separate license.
+
+${project.name} is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+${project.name} is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with ${project.name}. If not, see <http://www.gnu.org/licenses/>.
