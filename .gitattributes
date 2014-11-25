@@ -1,1 +1,2 @@
-public/.gitattributes
+*.bam binary
+*.bam.bai binary

@@ -122,23 +122,23 @@
                         </goals>
                     </execution>
                 </executions>
-
                 <configuration>
                     <prefix>git</prefix>
                     <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
                     <verbose>false</verbose>
+                    <dotGitDirectory>${basedir}/../../.git</dotGitDirectory>
                     <useNativeGit>true</useNativeGit>
                     <skipPoms>false</skipPoms>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
                     <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
-                    <abbrevLength>7</abbrevLength>
+                    <abbrevLength>8</abbrevLength>
                     <skip>false</skip>
                     <excludeProperties></excludeProperties>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>
-                        <abbrev>7</abbrev>
+                        <abbrev>8</abbrev>
                         <dirty>-dirty</dirty>
                         <forceLongFormat>false</forceLongFormat>
                     </gitDescribe>
