@@ -18,13 +18,13 @@ For end-users:
 
  * Java 7 JVM
  * Minimum 2 GB RAM, more when analysis is also run on this machine.
- * [Cran R 2.15.3](http://cran.r-project.org/)
+ * [Cran R 3.1.1](http://cran.r-project.org/)
 
 For developers:
 
  * OpenJDK 7 or Oracle-Java JDK 7
  * Minimum of 4 GB RAM {todo: provide more accurate estimation on building}
- * [Cran R 2.15.3](http://cran.r-project.org/)
+ * [Cran R 3.1.1](http://cran.r-project.org/)
  * Maven 3
  * [GATK + Queue](https://www.broadinstitute.org/gatk/download)
  * IntelliJ or Netbeans 8.0 for development
@@ -48,7 +48,7 @@ In the SHARK compute cluster, a module is available to load the necessary depend
 
     $ module load biopet/v0.2.0
 
-Using this option, the `java -jar Biopet-<version>.jar` can be omnited and `biopet` can be started using:
+Using this option, the `java -jar Biopet-<version>.jar` can be ommited and `biopet` can be started using:
 
     $ biopet
 
@@ -73,7 +73,16 @@ Using this option, the `java -jar Biopet-<version>.jar` can be omnited and `biop
 - [Sage](pipelines/sage)
 - Yamsvp (Under development)
 
-__Note that each pipeline needs a config file written in JSON format__
+__Note that each pipeline needs a config file written in JSON format see [config](config) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
+
+
+There are multiple configs that can be passed to a pipeline, for example the sample, settings and executables wherefrom sample and settings are mandatory.
+
+- [Here](config) one can find how to create a sample and settings config
+- More info can be found here: [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config)
+
+
+
 
 
 ### Running a tool
@@ -96,7 +105,6 @@ __Note that each pipeline needs a config file written in JSON format__
   - WipeReads
 
 
-- More info can be found here: [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config)
 
 ## Developers
 
@@ -105,8 +113,8 @@ __Note that each pipeline needs a config file written in JSON format__
 1. Clone biopet with `git clone git@git.lumc.nl:biopet/biopet.git biopet`
 2. Go to biopet directory
 3. run mvn_install_queue.sh, this install queue jars into the local maven repository
-3. alternatively download the `queue.jar` from the GATK website
-4. run `mvn verify` to compile and package or do `mvn install` to install the jars also in local maven repository
+4. alternatively download the `queue.jar` from the GATK website
+5. run `mvn verify` to compile and package or do `mvn install` to install the jars also in local maven repository
 
 
 
