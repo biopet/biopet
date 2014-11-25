@@ -2,109 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>nl.lumc.sasc</groupId>
     <artifactId>BiopetRoot</artifactId>
-    <version>0.2.0-DEV</version>
     <packaging>pom</packaging>
     <name>BiopetRoot</name>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.2.0-DEV</version>
+        <relativePath>public</relativePath>
+    </parent>
+    
     <modules>
         <module>public</module>
         <module>protected</module>
     </modules>
-    
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
-                <version>2.15.2</version>
-                <executions>
-                    <execution>
-                        <id>scala-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <args>
-                                <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
-                                <arg>-deprecation</arg>
-                                <arg>-feature</arg>
-                            </args>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <showDeprecation>true</showDeprecation>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.scalariform</groupId>
-                <artifactId>scalariform-maven-plugin</artifactId>
-                <version>0.1.4</version>
-                <executions>
-                    <execution>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                        <configuration>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <alignParameters>true</alignParameters>
-                            <alignSingleLineCaseStatements_maxArrowIndent>40
-                            </alignSingleLineCaseStatements_maxArrowIndent>
-                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
-                            <compactStringConcatenation>false</compactStringConcatenation>
-                            <compactControlReadability>false</compactControlReadability>
-                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
-                            <formatXml>true</formatXml>
-                            <indentLocalDefs>false</indentLocalDefs>
-                            <indentPackageBlocks>true</indentPackageBlocks>
-                            <indentSpaces>2</indentSpaces>
-                            <placeScaladocAsterisksBeneathSecondAsterisk>false
-                            </placeScaladocAsterisksBeneathSecondAsterisk>
-                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
-                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
-                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
-                            <spaceBeforeColon>false</spaceBeforeColon>
-                            <spaceInsideBrackets>false</spaceInsideBrackets>
-                            <spaceInsideParentheses>false</spaceInsideParentheses>
-                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
