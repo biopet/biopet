@@ -1,7 +1,9 @@
 package nl.lumc.sasc.biopet.core
 
 import java.util.Properties
+import nl.lumc.sasc.biopet.core.BiopetExecutable._
 import org.apache.log4j.Logger
+import scala.io.Source
 
 trait BiopetExecutable extends Logging {
 
@@ -37,6 +39,7 @@ trait BiopetExecutable extends Logging {
         |
         |Subcommands:
         |  - version
+        |  - license
         |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
       """.stripMargin.format(modules.keys.mkString(","), getVersion, usage)
@@ -56,12 +59,15 @@ trait BiopetExecutable extends Logging {
         System.err.println(s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
         System.exit(1)
       }
-      return command.get
+      command.get
     }
 
     args match {
       case Array("version") => {
         println("version: " + getVersion)
+      }
+      case Array("license") => {
+        println(getLicense)
       }
       case Array(module, name, passArgs @ _*) => {
         getCommand(module, name).main(passArgs.toArray)
@@ -76,10 +82,6 @@ trait BiopetExecutable extends Logging {
       }
     }
   }
-
-  def getVersion = BiopetExecutable.getVersion
-
-  def getCommitHash = BiopetExecutable.getCommitHash
 
   def checkDirtyBuild(logger: Logger) {
     val prop = new Properties()
@@ -104,5 +106,10 @@ object BiopetExecutable {
     val prop = new Properties()
     prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
     prop.getProperty("git.commit.id.abbrev")
+  }
+
+  def getLicense: String = {
+    val stream = getClass.getClassLoader.getResourceAsStream("nl/lumc/sasc/biopet/License.txt")
+    Source.fromInputStream(stream).getLines().mkString("\n", "\n", "\n")
   }
 }
