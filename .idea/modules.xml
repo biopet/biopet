@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/public/bammetrics/BamMetrics.iml" filepath="$PROJECT_DIR$/public/bammetrics/BamMetrics.iml" />
+      <module fileurl="file://$PROJECT_DIR$/protected/basty/Basty.iml" filepath="$PROJECT_DIR$/protected/basty/Basty.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/Biopet.iml" filepath="$PROJECT_DIR$/public/Biopet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/biopet-framework/BiopetFramework.iml" filepath="$PROJECT_DIR$/public/biopet-framework/BiopetFramework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/protected/BiopetGatk.iml" filepath="$PROJECT_DIR$/protected/BiopetGatk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/protected/biopet-gatk-extensions/BiopetGatkExtensions.iml" filepath="$PROJECT_DIR$/protected/biopet-gatk-extensions/BiopetGatkExtensions.iml" />
+      <module fileurl="file://$PROJECT_DIR$/protected/biopet-gatk-pipelines/BiopetGatkPipelines.iml" filepath="$PROJECT_DIR$/protected/biopet-gatk-pipelines/BiopetGatkPipelines.iml" />
+      <module fileurl="file://$PROJECT_DIR$/protected/biopet-protected-package/BiopetProtectedPackage.iml" filepath="$PROJECT_DIR$/protected/biopet-protected-package/BiopetProtectedPackage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/biopet-public-package/BiopetPublicPackage.iml" filepath="$PROJECT_DIR$/public/biopet-public-package/BiopetPublicPackage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/BiopetRoot.iml" filepath="$PROJECT_DIR$/BiopetRoot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/flexiprep/Flexiprep.iml" filepath="$PROJECT_DIR$/public/flexiprep/Flexiprep.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/gentrap/Gentrap.iml" filepath="$PROJECT_DIR$/public/gentrap/Gentrap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/mapping/Mapping.iml" filepath="$PROJECT_DIR$/public/mapping/Mapping.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/sage/Sage.iml" filepath="$PROJECT_DIR$/public/sage/Sage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/public/yamsvp/Yamsvp.iml" filepath="$PROJECT_DIR$/public/yamsvp/Yamsvp.iml" />
+    </modules>
+  </component>
+</project>

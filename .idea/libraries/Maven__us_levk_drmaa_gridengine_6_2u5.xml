@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: us.levk:drmaa-gridengine:6.2u5">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/us/levk/drmaa-gridengine/6.2u5/drmaa-gridengine-6.2u5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/us/levk/drmaa-gridengine/6.2u5/drmaa-gridengine-6.2u5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/us/levk/drmaa-gridengine/6.2u5/drmaa-gridengine-6.2u5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
