@@ -1,38 +1,33 @@
 /**
- * Copyright (c) 2014 Leiden University Medical Center
- *
- * @author  Wibowo Arindrarto
+ * Copyright (c) 2014 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
+ * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-
 package nl.lumc.sasc.biopet.extensions
 
-import java.io.File
-import org.testng.{ Assert, SkipException }
-import org.testng.annotations.{ BeforeClass, Test }
 import scala.sys.process.{ Process, ProcessLogger }
 
-class HtseqCountUnitTest {
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+import org.testng.SkipException
+import org.testng.annotations.{ BeforeClass, Test }
 
-  @BeforeClass
-  def checkExecutable() {
+class HtseqCountTest extends TestNGSuite with Matchers {
+
+  @BeforeClass def checkExecutable() = {
     val wrapper = new HtseqCount(null)
     val proc = Process(wrapper.versionCommand)
-    var exitCode = 0
-    try {
-      val run = proc.run(ProcessLogger(lines => (), lines => ()))
-      exitCode = run.exitValue
-    } catch {
-      case e: java.io.IOException => exitCode = -1;
-      // rethrow if it's not IOException (we only expect IOException if the executable is missing)
-      case e: Exception           => throw e
-    }
+    val exitCode =
+      try {
+        proc.run(ProcessLogger(lines => (), lines => ())).exitValue()
+      } catch {
+        case e: java.io.IOException => -1
+        // rethrow if it's not IOException (we only expect IOException if the executable is missing)
+        case e: Exception           => throw e
+      }
     if (exitCode != 0)
       throw new SkipException("Skipping htseq-count test because the executable can not be found")
   }
 
-  @Test(description = "Version number capture from executable")
-  def testVersion() {
-    var wrapper = new HtseqCount(null)
-    Assert.assertNotEquals("N/A", wrapper.getVersion)
-  }
+  @Test(description = "htseq-count version number capture from executable")
+  def testVersion() = new HtseqCount(null).getVersion should not be "N/A"
 }
