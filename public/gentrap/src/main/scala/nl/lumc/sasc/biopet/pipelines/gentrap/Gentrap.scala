@@ -95,7 +95,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
   def init() {}
 
   def biopetScript() {
-    configfiles.foreach(x => globalConfig.loadConfigFile(x))
     // validation
     /*
     inputR1 = inputR1 match {
@@ -143,7 +142,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
     mapping.skipFlexiprep = config("skipFlexiprep", default = false)
     mapping.skipMetrics = config("skipMetrics", default = true)
     mapping.skipMarkduplicates = config("skipMarkDuplicates", default = true)
-    mapping.defaultAligner = "gsnap"
+    mapping.aligner = config("aligner", default = "gsnap")
     // TODO: handle more than 2 files in mapping?
     mapping.input_R1 =
       if (libConfig.contains("R1")) {
