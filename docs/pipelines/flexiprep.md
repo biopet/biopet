@@ -6,6 +6,7 @@ QC pipeline for fastq files
 
 ### Commandline options
 
+
 | Argument | Explain |
 | -------- | ------- |
 | -R1,--input_r1 <input_r1> | R1 fastq file (gzipped allowed) |
@@ -19,6 +20,7 @@ QC pipeline for fastq files
 
 ### Config options
 
+
 | Config Name | Name |  Type | Default | Function |
 | ----------- | ---- | ----- | ------- | -------- |
 | flexiprep | skip_native_link |  Boolean | false | Do not make a link to the final file with name: <sample>.qc.<fastq extension> |
@@ -28,6 +30,7 @@ QC pipeline for fastq files
 ---
 
 ### sub Module options
+
 
 This can be used in the root of the config or within the flexiprep, within flexiprep got prio over the root value
 

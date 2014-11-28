@@ -1,6 +1,8 @@
-site_name: Biopet
+site_name: Biopet user manual
 pages:
 - ['index.md', 'Home']
+- ['config.md', 'Config']
+- ['tools/SamplesTsvToJson.md','tools','SamplesTsvToJson']
 - ['pipelines/basty.md', 'Pipelines', 'Basty']
 - ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
 - ['pipelines/gentrap.md', 'Pipelines', 'Gentrap']
