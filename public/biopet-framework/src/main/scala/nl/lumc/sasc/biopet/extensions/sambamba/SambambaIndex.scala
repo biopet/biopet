@@ -22,10 +22,10 @@ class SambambaIndex(val root: Configurable) extends Sambamba {
 
 object SambambaIndex {
   def apply(root: Configurable, input: File, output: File): SambambaIndex = {
-    val flagstat = new SambambaIndex(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
+    val indexer = new SambambaIndex(root)
+    indexer.input = input
+    indexer.output = output
+    return indexer
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SambambaIndex = {

@@ -9,7 +9,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge, SambambaMarkdup }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Delly, CleverCaller }
 
@@ -79,19 +79,25 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         val mergeSamFiles = new SambambaMerge(root)
         mergeSamFiles.input = libraryBamfiles
         mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
-        add(mergeSamFiles)
+        add(mergeSamFiles, isIntermediate = true)
         mergeSamFiles.output
       } else null
 
-    val bamIndex = SambambaIndex(root, bamFile)
-    add(bamIndex)
+    // TODO: Check whether sambamba reaches release version v0.5.0 which includes
+    // automatic indexing of the bam file.
+    val bamMarkDup = SambambaMarkdup(root, bamFile)
+    add(bamMarkDup)
+
+    val analysisBam: File = bamMarkDup.output
+    val analysisBamIndex = SambambaIndex(root, analysisBam)
+    add(analysisBamIndex)
 
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
     val cleverDir = svcallingDir + sampleID + ".clever/"
-    val clever = CleverCaller(this, bamFile, this.reference, svcallingDir, cleverDir)
-    clever.deps = List(bamIndex.output)
+    val clever = CleverCaller(this, analysisBam, this.reference, svcallingDir, cleverDir)
+    clever.deps = List(analysisBamIndex.output)
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 
@@ -99,7 +105,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     add(clever_vcf)
 
     val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
-    val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
+    val breakdancer = Breakdancer(this, analysisBam, this.reference, breakdancerDir)
     sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputvcf))
     addAll(breakdancer.functions)
 
@@ -107,7 +113,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     add(bd_vcf)
 
     val dellyDir = svcallingDir + sampleID + ".delly/"
-    val delly = Delly(this, bamFile, dellyDir)
+    val delly = Delly(this, analysisBam, dellyDir)
     sampleOutput.vcf += ("delly" -> List(delly.outputvcf))
     addAll(delly.functions)
 
@@ -116,7 +122,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     // for pindel we should use per library config collected into one config file
     //    val pindelDir = svcallingDir + sampleID + ".pindel/"
-    //    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
+    //    val pindel = Pindel(this, analysisBam, this.reference, pindelDir)
     //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
     //    addAll(pindel.functions)
     //
@@ -139,7 +145,10 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     if (runConfig.contains("R1")) {
       val mapping = new Mapping(this)
 
-      mapping.aligner = config("aligner", default = "stampy")
+      // TODO: check and test config[aligner] in json
+      // yamsvp/aligner -> value
+      // this setting causes error if not defined?
+      mapping.aligner = config("aligner", default = "bwa")
       mapping.skipFlexiprep = false
       mapping.skipMarkduplicates = true // we do the dedup marking using Sambamba
 

@@ -35,10 +35,10 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
 
 object SambambaMarkdup {
   def apply(root: Configurable, input: File, output: File): SambambaMarkdup = {
-    val flagstat = new SambambaMarkdup(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
+    val markdup = new SambambaMarkdup(root)
+    markdup.input = input
+    markdup.output = output
+    return markdup
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SambambaMarkdup = {
