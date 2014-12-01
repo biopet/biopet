@@ -34,6 +34,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def afterGraph: Unit = {
     super.afterGraph
+    jobLocalDir = new File(outputDirectory)
     if (prefix == null) prefix = fastafile.getName
     val out: List[String] = List(".recombination_predictions.embl",
       ".recombination_predictions.gff",
