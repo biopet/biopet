@@ -72,6 +72,7 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
 
   def getBestTreeFile: File = new File(w + File.separator + "RAxML_bestTree." + n)
   def getBootstrapFile: File = new File(w + File.separator + "RAxML_bootstrap." + n)
+  def getBipartitionsFile: File = new File(w + File.separator + "RAxML_bipartitions." + n)
   def getInfoFile: File = new File(w + File.separator + "RAxML_info." + n)
 
   def cmdLine = required(executable) +
