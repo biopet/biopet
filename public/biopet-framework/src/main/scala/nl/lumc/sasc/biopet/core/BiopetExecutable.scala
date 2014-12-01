@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.core
 
+import java.io.{ PrintWriter, StringWriter }
 import java.util.Properties
 import nl.lumc.sasc.biopet.core.BiopetExecutable._
 import org.apache.log4j.Logger
@@ -70,15 +71,33 @@ trait BiopetExecutable extends Logging {
         println(getLicense)
       }
       case Array(module, name, passArgs @ _*) => {
-        getCommand(module, name).main(passArgs.toArray)
+        try {
+          getCommand(module, name).main(passArgs.toArray)
+        } catch {
+          case e: Exception => {
+            val sWriter = new StringWriter()
+            val pWriter = new PrintWriter(sWriter)
+            e.printStackTrace(pWriter)
+            pWriter.close()
+            val trace = (sWriter.toString.split("\n"))
+
+            if (!logger.isDebugEnabled) {
+              logger.error(trace.head)
+              logger.error("For more info please run with -l debug")
+            } else {
+              trace.foreach(logger.debug(_))
+            }
+            sys.exit(1)
+          }
+        }
       }
       case Array(module) => {
         System.err.println(usage(module))
-        System.exit(1)
+        sys.exit(1)
       }
       case _ => {
         System.err.println(usage())
-        System.exit(1)
+        sys.exit(1)
       }
     }
   }
