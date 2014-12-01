@@ -4,8 +4,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.Cat
-import nl.lumc.sasc.biopet.extensions.Raxml
+import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import org.broadinstitute.gatk.queue.QScript
@@ -96,6 +95,12 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       raxmlBi.n = outputName + "_bi"
       raxmlBi.w = outputDir
       add(raxmlBi)
+
+      val gubbins = new RunGubbins(this)
+      gubbins.fastafile = input
+      gubbins.startingTree = raxmlBi.getBipartitionsFile
+      gubbins.outputDirectory = outputDir + "/gubbins/"
+      add(gubbins)
     }
 
     addRaxml(catVariantsSnps.output, outputDir + "raxml", "snps")
