@@ -1,6 +1,6 @@
 # Introduction
 
-# [Flexiprep](https://git.lumc.nl/biopet/biopet/tree/master/flexiprep)
+# [Flexiprep](https://git.lumc.nl/biopet/biopet/tree/develop/public/flexiprep/src/main/scala/nl/lumc/sasc/biopet/pipelines/flexiprep)
 
 QC pipeline for fastq files
 
