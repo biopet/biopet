@@ -22,7 +22,6 @@
         <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutablePublic</app.main.class>
     </properties>
 
-    
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>

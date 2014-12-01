@@ -15,7 +15,12 @@
     
     <inceptionYear>2014</inceptionYear>
     <name>BiopetProtectedPackage</name>
-    
+
+    <properties>
+        <sting.shade.phase>package</sting.shade.phase>
+        <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutableProtected</app.main.class>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
@@ -56,6 +61,12 @@
                         </transformer>
                     </transformers>
                     <filters>
+                        <filter>
+                            <artifact>nl.lumc.sasc:BiopetFramework</artifact>
+                            <excludes>
+                                <exclude>nl/lumc/sasc/biopet/License.txt</exclude>
+                            </excludes>
+                        </filter>
                     </filters>
                 </configuration>
                 <executions>
