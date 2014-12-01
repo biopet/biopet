@@ -73,7 +73,7 @@ Using this option, the `java -jar Biopet-<version>.jar` can be ommited and `biop
 - [Sage](pipelines/sage)
 - Yamsvp (Under development)
 
-__Note that each pipeline needs a config file written in JSON format see [config](config) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
+__Note that each pipeline needs a config file written in JSON format see [config](config.md) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
 
 
 There are multiple configs that can be passed to a pipeline, for example the sample, settings and executables wherefrom sample and settings are mandatory.
