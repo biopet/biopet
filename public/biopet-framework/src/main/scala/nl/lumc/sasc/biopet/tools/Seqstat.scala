@@ -10,8 +10,8 @@ import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
-import scalaz._
-import Scalaz._
+import scalaz._, Scalaz._
+import argonaut._, Argonaut._
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -23,13 +23,13 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * @param root Configuration object for the pipeline
  */
 class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
-
   javaMainClass = getClass.getName
-
 }
 
-// TODO: implement reading from gzipped files
 object Seqstat extends ToolCommand {
+
+  var phred_encoding: String = "sanger"
+  var phred_correction: Int = 33
 
   /**
    * Reads a FastQ file and counts:
@@ -42,14 +42,17 @@ object Seqstat extends ToolCommand {
    *
    * @param fqf FastqReader of the source FastQ file
    */
-  def startStatistics(fqf: FastqReader): (Int, Int, Int, Int, Map[Int, Int]) = {
+  def startStatistics(fqf: FastqReader): (Int, Int, Int, Int, Map[Int, Int], Map[Int, Int], Int, Int) = {
     var (numRecords, numRecordsWithN, numBases, numBasesWithN) = (0, 0, 0, 0)
+
     var baseQuals: Map[Int, Int] = Map(0 -> 0)
+    var readQuals: Map[Int, Int] = Map(0 -> 0)
+
+    var readlength_min: Int = Int.MaxValue
+    var readlength_max: Int = Int.MinValue
 
     val it = fqf.iterator.asScala
-    //    for (bla <- fqf.iterator.asScala.par) {
-    //
-    //    }
+
     while (it.hasNext) {
       val record = it.next()
 
@@ -68,10 +71,21 @@ object Seqstat extends ToolCommand {
       baseQuals = baseQuals |+| qualStat
 
       // compute the per read avg quality
+      val AvgReadQual = qualStat.view.map { case (k, v) => k * v }.toList.foldLeft(0)(_ + _) / qualStat.values.sum
+      readQuals = readQuals |+| Map(AvgReadQual -> 1)
+
+      readlength_max = if (record.length() > readlength_max) record.length() else readlength_max;
+      readlength_min = if (record.length() < readlength_min) record.length() else readlength_min;
 
     }
 
-    (numRecords, numRecordsWithN, numBases, numBasesWithN, baseQuals)
+    // set the Phred encoding
+    detectPhredEncoding(baseQuals)
+    // transform the keys
+    baseQuals = transformPhredEncoding(baseQuals)
+    readQuals = transformPhredEncoding(readQuals)
+
+    (numRecords, numRecordsWithN, numBases, numBasesWithN, baseQuals, readQuals, readlength_max, readlength_min)
   }
 
   /**
@@ -113,27 +127,93 @@ object Seqstat extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
+  def detectPhredEncoding(qualMap: Map[Int, Int]): Unit = {
+    val l_qual = qualMap.keys.min
+    val h_qual = qualMap.keys.max
+
+    if (h_qual > 74) {
+      phred_correction = 64
+      phred_encoding = "solexa"
+    } else if (l_qual < 59) {
+      phred_correction = 33
+      phred_encoding = "sanger"
+    }
+  }
+
+  def transformPhredEncoding(qualMap: Map[Int, Int]): (Map[Int, Int]) = {
+    qualMap map { case (k, v) => (k - phred_correction, v) }
+  }
+
   def main(args: Array[String]): Unit = {
 
     val commandArgs: Args = parseArgs(args)
-    val (numRecords, numRecordsWithN, numBases, numBasesWithN, baseHistogram) = startStatistics(
+    val (numRecords, numRecordsWithN,
+      numBases, numBasesWithN,
+      baseHistogram, readHistogram,
+      readlength_max, readlength_min) = startStatistics(
       new FastqReader(commandArgs.fastq)
     )
-    println("Number of records:" + numRecords)
-    println("Number of N records:" + numRecordsWithN)
-    println("Number of bases:" + numBases)
-    println("Number of N bases:" + numBasesWithN)
-    println(baseHistogram)
 
-    //
-    //    val (synced, counts) = syncFastq(
-    //      new FastqReader(commandArgs.refFastq),
-    //      new FastqReader(commandArgs.inputFastq1),
-    //      new FastqReader(commandArgs.inputFastq2))
-    //
-    //    writeSyncedFastq(synced, counts,
-    //      new BasicFastqWriter(commandArgs.outputFastq1),
-    //      new BasicFastqWriter(commandArgs.outputFastq2)
-    //    )
+    //    println("Detected encoding: " + phred_encoding)
+    //    println("Apply correction: " + phred_correction)
+    //    println("Number of records:" + numRecords)
+    //    println("Number of N records:" + numRecordsWithN)
+    //    println("Number of bases:" + numBases)
+    //    println("Number of N bases:" + numBasesWithN)
+    //    println(baseHistogram)
+    //    println(readHistogram)
+
+    val reportValues = List(1, 10, 20, 30, 40, 50, 60)
+
+    val baseHistMap = reportValues map (t => t -> baseHistogram.filterKeys(k => k >= t).values.sum) toMap
+    val readHistMap = reportValues map (t => t -> readHistogram.filterKeys(k => k >= t).values.sum) toMap
+
+    //    println(baseHistMap)
+    //    println(readHistMap)
+
+    val stats = ("bases" := (
+      ("num_n" := numBasesWithN) ->:
+      ("num_total" := numBases) ->:
+      ("num_qual_gte" := (
+        ("1" := baseHistMap(1)) ->:
+        ("10" := baseHistMap(10)) ->:
+        ("20" := baseHistMap(20)) ->:
+        ("30" := baseHistMap(30)) ->:
+        ("40" := baseHistMap(40)) ->:
+        ("50" := baseHistMap(50)) ->:
+        ("60" := baseHistMap(60)) ->:
+        jEmptyObject
+      )) ->: jEmptyObject)) ->:
+        ("reads" := (
+          ("num_with_n" := numRecordsWithN) ->:
+          ("num_total" := numRecords) ->:
+          ("len_min" := readlength_min) ->:
+          ("len_max" := readlength_max) ->:
+          ("num_mean_qual_gte" := (
+            ("1" := readHistMap(1)) ->:
+            ("10" := readHistMap(10)) ->:
+            ("20" := readHistMap(20)) ->:
+            ("30" := readHistMap(30)) ->:
+            ("40" := readHistMap(40)) ->:
+            ("50" := readHistMap(50)) ->:
+            ("60" := readHistMap(60)) ->:
+            jEmptyObject
+          )) ->: jEmptyObject)) ->:
+            ("qual_encoding" := phred_encoding) ->:
+            jEmptyObject
+
+    val json = ("stats" := stats) ->:
+      ("files" := (
+        "fastq" := (
+          ("checksum_sha1" := "") ->:
+          ("path" := commandArgs.fastq.getCanonicalPath.toString) ->:
+          jEmptyObject
+        )
+      ) ->:
+          jEmptyObject
+      ) ->:
+          jEmptyObject
+
+    println(json.spaces2)
   }
 }
