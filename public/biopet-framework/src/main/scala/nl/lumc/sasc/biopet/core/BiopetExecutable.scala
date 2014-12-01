@@ -21,6 +21,7 @@ trait BiopetExecutable extends Logging {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    checkDirtyBuild(logger)
 
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
       "Available %s(s):\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
@@ -113,7 +114,6 @@ trait BiopetExecutable extends Logging {
       logger.warn("**********************************************************")
     }
   }
-  checkDirtyBuild(logger)
 }
 
 object BiopetExecutable {
