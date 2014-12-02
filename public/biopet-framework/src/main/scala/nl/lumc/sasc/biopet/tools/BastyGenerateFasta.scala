@@ -102,10 +102,10 @@ object BastyGenerateFasta extends ToolCommand {
     } text ("Output name in fasta file header")
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
-    } text ("min AD value in vcf file for sample")
+    } text ("min AD value in vcf file for sample. Defaults to: 8")
     opt[Int]("minDepth") unbounded () action { (x, c) =>
       c.copy(minDepth = x)
-    } text ("min detp in bam file")
+    } text ("min depth in bam file. Defaults to: 8")
     opt[File]("reference") unbounded () action { (x, c) =>
       c.copy(reference = x)
     } text ("Indexed reference fasta file") validate { x =>
