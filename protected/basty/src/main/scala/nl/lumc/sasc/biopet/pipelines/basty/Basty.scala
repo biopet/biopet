@@ -56,12 +56,12 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     add(catConsensusVariantsSnps)
 
     val seed: Int = config("seed", default = 12345)
-    def addTreeJobs(input: File, outputDir: String, outputName: String) {
+    def addTreeJobs(variants: File, concensusVariants: File, outputDir: String, outputName: String) {
       val dirSufixRaxml = if (outputDir.endsWith(File.separator)) "raxml" else File.separator + "raxml"
       val dirSufixGubbins = if (outputDir.endsWith(File.separator)) "gubbins" else File.separator + "gubbins"
 
       val raxmlMl = new Raxml(this)
-      raxmlMl.input = input
+      raxmlMl.input = variants
       raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlMl.p = seed
       raxmlMl.n = outputName + "_ml"
@@ -74,7 +74,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
         raxmlBoot.threads = 1
-        raxmlBoot.input = input
+        raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = seed
         raxmlBoot.b = math.abs(r.nextInt)
@@ -89,7 +89,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(cat)
 
       val raxmlBi = new Raxml(this)
-      raxmlBi.input = input
+      raxmlBi.input = concensusVariants
       raxmlBi.t = raxmlMl.getBestTreeFile
       raxmlBi.z = cat.output
       raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
@@ -100,14 +100,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(raxmlBi)
 
       val gubbins = new RunGubbins(this)
-      gubbins.fastafile = input
+      gubbins.fastafile = concensusVariants
       gubbins.startingTree = raxmlBi.getBipartitionsFile
       gubbins.outputDirectory = outputDir + dirSufixGubbins
       add(gubbins)
     }
 
-    addTreeJobs(catVariantsSnps.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
-    addTreeJobs(catVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
+    addTreeJobs(catVariantsSnps.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
+    addTreeJobs(catVariants.output, catConsensusVariantsSnps.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
   }
 
   // Called for each sample
