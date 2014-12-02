@@ -4,8 +4,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.Cat
-import nl.lumc.sasc.biopet.extensions.Raxml
+import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import org.broadinstitute.gatk.queue.QScript
@@ -57,13 +56,16 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     add(catConsensusVariantsSnps)
 
     val seed: Int = config("seed", default = 12345)
-    def addRaxml(input: File, outputDir: String, outputName: String) {
+    def addTreeJobs(input: File, outputDir: String, outputName: String) {
+      val dirSufixRaxml = if (outputDir.endsWith(File.separator)) "raxml" else File.separator + "raxml"
+      val dirSufixGubbins = if (outputDir.endsWith(File.separator)) "gubbins" else File.separator + "gubbins"
+
       val raxmlMl = new Raxml(this)
       raxmlMl.input = input
       raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlMl.p = seed
       raxmlMl.n = outputName + "_ml"
-      raxmlMl.w = outputDir
+      raxmlMl.w = outputDir + dirSufixRaxml
       raxmlMl.N = config("ml_runs", default = 20, submodule = "raxml")
       add(raxmlMl)
 
@@ -76,7 +78,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = seed
         raxmlBoot.b = math.abs(r.nextInt)
-        raxmlBoot.w = outputDir
+        raxmlBoot.w = outputDir + dirSufixRaxml
         raxmlBoot.N = 1
         raxmlBoot.n = outputName + "_boot_" + t
         add(raxmlBoot)
@@ -94,11 +96,18 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       raxmlBi.p = seed
       raxmlBi.f = "b"
       raxmlBi.n = outputName + "_bi"
-      raxmlBi.w = outputDir
+      raxmlBi.w = outputDir + dirSufixRaxml
       add(raxmlBi)
+
+      val gubbins = new RunGubbins(this)
+      gubbins.fastafile = input
+      gubbins.startingTree = raxmlBi.getBipartitionsFile
+      gubbins.outputDirectory = outputDir + dirSufixGubbins
+      add(gubbins)
     }
 
-    addRaxml(catVariantsSnps.output, outputDir + "raxml", "snps")
+    addTreeJobs(catVariantsSnps.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
+    addTreeJobs(catVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
   }
 
   // Called for each sample

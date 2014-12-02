@@ -236,7 +236,7 @@ object BastyGenerateFasta extends ToolCommand {
 
   protected def writeVariantsOnly() {
     val writer = new PrintWriter(cmdArgs.outputVariants)
-    writer.println(">" + cmdArgs.sampleName)
+    writer.println(">" + cmdArgs.outputName)
     val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
     for (vcfRecord <- vcfReader if (!cmdArgs.snpsOnly || vcfRecord.isSNP)) yield {
       writer.print(getMaxAllele(vcfRecord))
