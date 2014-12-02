@@ -146,8 +146,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           add(vcfFilter)
           scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
-        if (scriptOutput.rawFilterVcfFile == null) throw new IllegalStateException("Files can't be empty")
-        mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
+        if (scriptOutput.rawFilterVcfFile != null) mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
       }
 
       // Allele mode
