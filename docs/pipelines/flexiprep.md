@@ -60,13 +60,8 @@ This can be used in the root of the config or within the flexiprep, within flexi
 
 A dual licensing model is applied. The source code within this project is freely available for non-commercial use under an AGPL license; For commercial users or users who do not want to follow the AGPL license, please contact sasc@lumc.nl to purchase a separate license.
 
-
-
-
-
-# Invocation
-
 # Example
+Note that one should first create the appropriate [configs](../config.md).
 
 # Testcase A
 

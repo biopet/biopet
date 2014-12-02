@@ -3,6 +3,7 @@
 # Invocation
 
 # Example
+Note that one should first create the appropriate [configs](../config.md).
 
 # Testcase A
 

@@ -1,3 +1,5 @@
+# SamplesTsvToJson
+
 This tool enables a user to create a full sample sheet in JSON format suitable for all our Queue pipelines.
 The tool can be started as follows:
 
@@ -68,6 +70,7 @@ To get the above example out of the tool one should provide 2 TSV files as follo
 
 The second TSV file can contain as much properties as you would like. Possible option would be: gender, age and family.
 Basically anything you want to pass to your pipeline is possible.
+
 ----
 
 | sample      | treatment |
