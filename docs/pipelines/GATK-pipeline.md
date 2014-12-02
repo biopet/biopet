@@ -3,7 +3,7 @@
 ## Introduction
 
 The GATK-pipeline is build for variant calling on NGS data (preferably Illumina data).
-It uses the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of there approach to variant calling.
+It is based on the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of there approach to variant calling.
 The pipeline accepts ```.fastq & .bam``` files as input.
 
 ## Tools for this pipeline
@@ -46,16 +46,69 @@ To run the pipeline:
 ~~~
 java -jar Biopet.0.2.0.jar pipeline gatkPipeline -run -config MySamples.json -config MySettings.json -outDir myOutDir
 ~~~
-
-For LUMC/researchSHARK users there is a module available that sets all your environment settings and default executables/settings.
+To check if your pipeline can create all the jobs (dry run) remove the `-run`:
 ~~~
-module load Biopet/0.2.0
-biopet pipeline gatkPipeline -run -config MySamples.json -config MySettings.json -outDir myOutDir
+java -jar Biopet.0.2.0.jar pipeline gatkPipeline -config MySamples.json -config MySettings.json -outDir myOutDir
 ~~~
 
-## Examine results
+## Results
 
 ### Result files
+~~~
+.
+└── samples
+    ├── my_sample1
+    │   ├── run_lib1
+    │   │   ├── chunks
+    │   │   │   ├── 1
+    │   │   │       └── flexiprep
+    │   │   │
+    │   │   │
+    │   │   │
+    │   │   ├── flexiprep
+    │   │   │   ├── input.R1.fastqc
+    │   │   │   │   └── input.R1_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   ├── input.R1.qc.fastqc
+    │   │   │   │   └── input.R1.qc_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   ├── input.R2.fastqc
+    │   │   │   │   └── input.R2_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   └── input.R2.qc.fastqc
+    │   │   │       └── input.R2.qc_fastqc
+    │   │   │           ├── Icons
+    │   │   │           └── Images
+    │   │   └── metrics
+    │   ├── run_lib2
+    │   │   ├── chunks
+    │   │   │   ├── 1
+    │   │   │       └── flexiprep
+    │   │   │
+    │   │   ├── flexiprep
+    │   │   │   ├── input.R1.fastqc
+    │   │   │   │   └── input.R1_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   ├── input.R1.qc.fastqc
+    │   │   │   │   └── input.R1.qc_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   ├── input.R2.fastqc
+    │   │   │   │   └── input.R2_fastqc
+    │   │   │   │       ├── Icons
+    │   │   │   │       └── Images
+    │   │   │   └── input.R2.qc.fastqc
+    │   │   │       └── input.R2.qc_fastqc
+    │   │   │           ├── Icons
+    │   │   │           └── Images
+    │   │   └── metrics
+    │   └── variantcalling
+~~~
+
 
 ### Best practice
 

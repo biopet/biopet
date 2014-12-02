@@ -57,25 +57,6 @@ java -jar Biopet-0.2.0.jar tool BastyGenerateFasta --inputVcf myVCF.vcf --bamFil
 --outputName NiceTool --outputConsensusVariants myConsensusVariants.fasta
 ~~~
 
-For LUMC/researchSHARK users there is a module available that sets all your environment settings and default executables/settings.
-
-~~~
-module load Biopet/0.2.0
-
-# Minimal example for option: outputVariants (VCF based)
-
-biopet tool BastyGenerateFasta --inputVcf myVCF.vcf \
---outputName NiceTool --outputVariants myVariants.fasta
-
-# Minimal example for option: outputConsensus (BAM based)
-biopet tool BastyGenerateFasta --bamFile myBam.bam \
---outputName NiceTool --outputConsensus myConsensus.fasta
-
-# Minimal example for option: outputConsensusVariants
-biopet tool BastyGenerateFasta --inputVcf myVCF.vcf --bamFile myBam.bam \
---outputName NiceTool --outputConsensusVariants myConsensusVariants.fasta
-~~~
-
 ## Output
 
 * FASTA containing variants only

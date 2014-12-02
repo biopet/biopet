@@ -16,31 +16,43 @@ Biopet is build on top of GATK Queue, which requires having `java` installed on 
 
 For end-users:
 
- * Java 7 JVM
- * Minimum 2 GB RAM, more when analysis is also run on this machine.
+ * [Java 7 JVM](http://www.oracle.com/technetwork/java/javase/downloads/index.html) or [OpenJDK 7](http://openjdk.java.net/install/) 
  * [Cran R 3.1.1](http://cran.r-project.org/)
+ * [GATK](https://www.broadinstitute.org/gatk/download)
 
 For developers:
 
- * OpenJDK 7 or Oracle-Java JDK 7
- * Minimum of 4 GB RAM {todo: provide more accurate estimation on building}
+ * [OpenJDK 7](http://openjdk.java.net/install/) 
  * [Cran R 3.1.1](http://cran.r-project.org/)
- * Maven 3
+ * [Maven 3.2](http://maven.apache.org/download.cgi)
  * [GATK + Queue](https://www.broadinstitute.org/gatk/download)
- * IntelliJ or Netbeans 8.0 for development
+ * [IntelliJ](https://www.jetbrains.com/idea/) or [Netbeans > 8.0](https://netbeans.org/)
 
 ## How to use
 
 ### Running a pipeline
 
-- Help: `java -jar Biopet(version).jar (pipeline of interest) -h`
-- Local: `java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -run`
-- Cluster: `java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -qsub -jobParaEnv BWA -run`
-- DryRun: `java -jar Biopet(version).jar (pipeline of interest) (pipeline options)` 
-- DryRun (shark): `java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -qsub -jobParaEnv BWA`
-
+- Help:
+~~~
+java -jar Biopet(version).jar (pipeline of interest) -h
+~~~
+- Local:
+~~~
+java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -run
+~~~
+- Cluster:
+    - Note that `-qsub` is cluster specific (SunGrid Engine)
+~~~
+java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -qsub* -jobParaEnv YoureParallelEnv -run
+~~~
+- DryRun:
     - A dry run can be performed to see if the scheduling and creating of the pipelines jobs performs well. Nothing will be executed only the job commands are created. If this succeeds it's a good indication you actual run will be successful as well.
     - Each pipeline can be found as an options inside the jar file Biopet[version].jar which is located in the target directory and can be started with `java -jar <pipelineJarFile>`
+
+~~~
+java -jar Biopet(version).jar (pipeline of interest) (pipeline options) 
+~~~
+    
 
 ### Shark Compute Cluster specific
 
@@ -104,8 +116,6 @@ There are multiple configs that can be passed to a pipeline, for example the sam
   - VcfToTsv
   - WipeReads
 
-
-
 ## Developers
 
 ### Compiling Biopet
@@ -117,10 +127,9 @@ There are multiple configs that can be passed to a pipeline, for example the sam
 5. run `mvn verify` to compile and package or do `mvn install` to install the jars also in local maven repository
 
 
-
 ## About 
 Go to the [about page](about)
 
 ## License
 
-See: [License](license)
+See: [License](license.md)
