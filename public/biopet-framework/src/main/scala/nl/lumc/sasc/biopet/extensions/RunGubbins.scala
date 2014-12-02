@@ -47,7 +47,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
     for (t <- out) outputFiles ::= new File(outputDirectory + File.separator + prefix + t)
   }
 
-  def cmdLine = required(executable) +
+  def cmdLine = required("cd", outputDirectory) + " && " + required(executable) +
     optional("--outgroup", outgroup) +
     optional("--starting_tree", startingTree) +
     optional("--filter_percentage", filterPercentage) +
