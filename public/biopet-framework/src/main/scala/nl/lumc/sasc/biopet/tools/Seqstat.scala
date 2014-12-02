@@ -73,12 +73,15 @@ object Seqstat extends ToolCommand {
     var baseQuals: Map[Int, Int] = Map(0 -> 0)
     var readQuals: Map[Int, Int] = Map(0 -> 0)
 
+    // fixed the memory problem by removing .toList after .asScala
+    // currently this implementation is as fast as the while-loop version (1st or 2nd commit)
     val result: ReadStats = fqf.iterator
-      .asScala.toList
+      .asScala
       .map(record => analyseFastQRecord(record)).reduceLeft(statReducer)
 
     // the qualities are in the 'char' format, convert to int first
-    baseQuals = result.qualstat
+    result.qualstat.foreach { case (key, value) => baseQuals += (key.toInt -> value) }
+    //    baseQuals = result.qualstat
     readQuals = result.avg_qual
 
     // detect and set the Phred encoding
@@ -161,8 +164,7 @@ object Seqstat extends ToolCommand {
       res.total_reads + nxt.total_reads,
       res.length_max max nxt.length_max,
       res.length_min min nxt.length_min,
-      res.bases_total + nxt.bases_total
-    )
+      res.bases_total + nxt.bases_total)
   }
 
   def transformPhredEncoding(qualMap: Map[Int, Int]): (Map[Int, Int]) = {
@@ -173,8 +175,7 @@ object Seqstat extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
     val (readstats, baseHistogram, readHistogram) = startStatistics(
-      new FastqReader(commandArgs.fastq)
-    )
+      new FastqReader(commandArgs.fastq))
 
     val reportValues = List(1, 10, 20, 30, 40, 50, 60)
 
@@ -192,8 +193,7 @@ object Seqstat extends ToolCommand {
         ("40" := baseHistMap(40)) ->:
         ("50" := baseHistMap(50)) ->:
         ("60" := baseHistMap(60)) ->:
-        jEmptyObject
-      )) ->: jEmptyObject)) ->:
+        jEmptyObject)) ->: jEmptyObject)) ->:
         ("reads" := (
           ("num_with_n" := readstats.has_N) ->:
           ("num_total" := readstats.total_reads) ->:
@@ -207,8 +207,7 @@ object Seqstat extends ToolCommand {
             ("40" := readHistMap(40)) ->:
             ("50" := readHistMap(50)) ->:
             ("60" := readHistMap(60)) ->:
-            jEmptyObject
-          )) ->: jEmptyObject)) ->:
+            jEmptyObject)) ->: jEmptyObject)) ->:
             ("qual_encoding" := phred_encoding) ->:
             jEmptyObject
 
@@ -217,11 +216,8 @@ object Seqstat extends ToolCommand {
         "fastq" := (
           ("checksum_sha1" := "") ->:
           ("path" := commandArgs.fastq.getCanonicalPath.toString) ->:
-          jEmptyObject
-        )
-      ) ->:
-          jEmptyObject
-      ) ->:
+          jEmptyObject)) ->:
+          jEmptyObject) ->:
           jEmptyObject
 
     println(json.spaces2)
