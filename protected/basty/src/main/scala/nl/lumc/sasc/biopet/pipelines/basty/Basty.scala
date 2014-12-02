@@ -106,8 +106,8 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       add(gubbins)
     }
 
-    addTreeJobs(catVariantsSnps.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
-    addTreeJobs(catVariants.output, catConsensusVariantsSnps.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
+    addTreeJobs(catVariantsSnps.output, catConsensusVariantsSnps.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
+    addTreeJobs(catVariants.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
   }
 
   // Called for each sample
