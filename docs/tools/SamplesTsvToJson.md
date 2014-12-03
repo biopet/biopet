@@ -10,8 +10,10 @@ java -Xmx2G -jar Biopet-0.2.0.jar tool SamplesTsvToJson
 
 __-Xmx2G__ defines the amount of memory used to run the tool. Usually one should not change this value since 2G is more than enough. 
 
+To open the help:
 
 ~~~
+java -Xmx2G -jar Biopet-0.2.0.jar tool SamplesTsvToJson -h
 Usage: SamplesTsvToJson [options]
 
   -l <value> | --log_level <value>

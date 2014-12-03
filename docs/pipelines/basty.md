@@ -1,6 +1,8 @@
+## <a href="https://git.lumc.nl/biopet/biopet/tree/develop/protected/basty/src/main/scala/nl/lumc/sasc/biopet/pipelines/basty" target="_blank">Basty</a>
+
 # Introduction
 
-## <a href="https://git.lumc.nl/biopet/biopet/tree/develop/protected/basty/src/main/scala/nl/lumc/sasc/biopet/pipelines/basty" target="_blank">Basty</a>
+
 A pipeline for aligning bacterial genomes and detect structural variations on the level of SNPs. Basty will output phylogenetic trees.
 Which makes it very easy to look at the variations between certain species or strains.
 
@@ -45,6 +47,66 @@ The output files this pipeline produces are:
     * FASTA containing all the consensus sequences based on min. coverage (default:8) but can be modified in the config
 * A phylogenetic tree based on the variants called with the GATK-pipeline generated with the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 
+
+~~~
+.
+├── fastas
+│   ├── consensus.fasta
+│   ├── consensus.snps_only.fasta
+│   ├── consensus.variant.fasta
+│   ├── consensus.variant.snps_only.fasta
+│   ├── variant.fasta
+│   ├── variant.fasta.reduced
+│   ├── variant.snps_only.fasta
+│   └── variant.snps_only.fasta.reduced
+│
+├── reference
+│   ├── reference.consensus.fasta
+│   ├── reference.consensus.snps_only.fasta
+│   ├── reference.consensus_variants.fasta
+│   ├── reference.consensus_variants.snps_only.fasta
+│   ├── reference.variants.fasta
+│   └── reference.variants.snps_only.fasta
+│
+├── samples
+│   ├── 078NET024
+│   │   ├── 078NET024.consensus.fasta
+│   │   ├── 078NET024.consensus.snps_only.fasta
+│   │   ├── 078NET024.consensus_variants.fasta
+│   │   ├── 078NET024.consensus_variants.snps_only.fasta
+│   │   ├── 078NET024.variants.fasta
+│   │   ├── 078NET024.variants.snps_only.fasta
+│   │   ├── run_8080_2
+│   │   └── variantcalling
+│   ├── 078NET025
+│       ├── 078NET025.consensus.fasta
+│       ├── 078NET025.consensus.snps_only.fasta
+│       ├── 078NET025.consensus_variants.fasta
+│       ├── 078NET025.consensus_variants.snps_only.fasta
+│       ├── 078NET025.variants.fasta
+│       ├── 078NET025.variants.snps_only.fasta
+│       ├── run_8080_2
+│       └── variantcalling
+│
+├── trees
+│   ├── snps_indels
+│   │   ├── boot_list
+│   │   ├── gubbins
+│   │   └── raxml
+│   └── snps_only
+│       ├── boot_list
+│       ├── gubbins
+│       └── raxml
+└── variantcalling
+    ├── multisample.final.vcf.gz
+    ├── multisample.final.vcf.gz.tbi
+    ├── multisample.raw.variants_only.vcf.gz.tbi
+    ├── multisample.raw.vcf.gz
+    ├── multisample.raw.vcf.gz.tbi
+    ├── multisample.ug.discovery.variants_only.vcf.gz.tbi
+    ├── multisample.ug.discovery.vcf.gz
+    └── multisample.ug.discovery.vcf.gz.tbi
+~~~
 ## Best practice
 
 
