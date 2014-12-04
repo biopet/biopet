@@ -51,6 +51,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 object VcfFilter extends ToolCommand {
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
+                  minQualscore: Option[Double] = None,
                   minSampleDepth: Int = -1,
                   minTotalDepth: Int = -1,
                   minAlternateDepth: Int = -1,
@@ -105,6 +106,9 @@ object VcfFilter extends ToolCommand {
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
       c.copy(filterNoCalls = true)
     } text ("Filter when there are only no calls")
+    opt[Double]("minQualscore") unbounded () action { (x, c) =>
+      c.copy(minQualscore = Some(x))
+    } text ("Min qual score")
   }
 
   var commandArgs: Args = _
@@ -122,7 +126,8 @@ object VcfFilter extends ToolCommand {
     writer.writeHeader(header)
 
     for (record <- reader) {
-      if (filterRefCalls(record) &&
+      if (minQualscore(record) &&
+        filterRefCalls(record) &&
         filterNoCalls(record) &&
         minTotalDepth(record) &&
         minSampleDepth(record) &&
@@ -137,6 +142,11 @@ object VcfFilter extends ToolCommand {
     }
     reader.close
     writer.close
+  }
+
+  def minQualscore(record: VariantContext): Boolean = {
+    if (commandArgs.minQualscore.isEmpty) return true
+    record.getPhredScaledQual >= commandArgs.minQualscore.get
   }
 
   def filterRefCalls(record: VariantContext): Boolean = {
