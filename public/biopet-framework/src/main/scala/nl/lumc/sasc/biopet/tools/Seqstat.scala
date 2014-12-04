@@ -8,6 +8,10 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+import scala.collection.parallel.mutable.ParMap
+import scala.collection.mutable.{ Map => MutMap }
 import scala.language.postfixOps
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
@@ -171,9 +175,52 @@ object Seqstat extends ToolCommand {
     qualMap map { case (k, v) => (k - phred_correction, v) }
   }
 
+  case class BaseStat(qual: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer(),
+                      nuc: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer())
+
+  val baseStats: mutable.ArrayBuffer[BaseStat] = mutable.ArrayBuffer()
+  val readQuals: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+
+  def prosesRead(record: FastqRecord): Unit = {
+    if (baseStats.length < record.length()) {
+      baseStats ++= mutable.ArrayBuffer.fill(record.length - baseStats.length)(BaseStat())
+    }
+
+    val qual = record.getBaseQualityString
+    val nuc = record.getReadString
+    for (t <- 0 until record.length()) {
+      if (baseStats(t).qual.length <= qual(t)) {
+        for (_ <- 0 to qual(t).toInt - baseStats(t).qual.length) baseStats(t).qual.append(0)
+      }
+      if (baseStats(t).nuc.length <= nuc(t)) {
+        for (_ <- 0 to nuc(t).toInt - baseStats(t).nuc.length) baseStats(t).nuc.append(0)
+      }
+      val qualLength = baseStats(t).qual.length
+      val nucLength = baseStats(t).nuc.length
+      baseStats(t).qual(qual(t)) += 1
+      baseStats(t).nuc(nuc(t)) += 1
+    }
+    val avgQual: Char = (qual.foldLeft(0)(_ + _) / qual.length).toChar
+    if (readQuals.length <= avgQual) {
+      for (_ <- 0 to avgQual.toInt - readQuals.length) readQuals.append(0)
+    }
+    readQuals(avgQual) += 1
+  }
+
   def main(args: Array[String]): Unit = {
 
     val commandArgs: Args = parseArgs(args)
+
+    logger.info("Start")
+    val reader = new FastqReader(commandArgs.fastq)
+    for (read <- reader.iterator.asScala) {
+      prosesRead(read)
+    }
+
+    logger.info("Done")
+
+    sys.exit()
+
     val (readstats, baseHistogram, readHistogram) = startStatistics(
       new FastqReader(commandArgs.fastq))
 
