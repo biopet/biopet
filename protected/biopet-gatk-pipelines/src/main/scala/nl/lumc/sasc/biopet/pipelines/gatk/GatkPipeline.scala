@@ -49,9 +49,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def init() {
-    if (config.contains("target_bed")) {
-      defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").asStringList)))
-    }
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").asList)
         gvcfFiles :+= file.toString

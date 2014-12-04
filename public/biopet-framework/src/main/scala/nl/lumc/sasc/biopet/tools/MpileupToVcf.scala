@@ -35,8 +35,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override val defaultVmem = "6G"
   memoryLimit = Option(2.0)
 
-  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed").asStringList.head,
-    "disable_baq" -> true, "min_map_quality" -> 1))
+  defaults ++= Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
 
   override def afterGraph {
     super.afterGraph
