@@ -55,14 +55,13 @@ object ExtractAlignedFastq extends ToolCommand {
     // by the Interval constructor only accepting ints
     def intFromCoord(s: String): Int = s.replaceAll(",", "").replaceAll("\\.", "").toInt
 
-    inStrings.map(x => x match {
+    inStrings.map {
       case ptn1(chr, start, end) => new Interval(chr, intFromCoord(start), intFromCoord(end))
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
       case _ => throw new IllegalArgumentException("Invalid interval string: " + x)
-    })
-      .toIterator
+    }.toIterator
   }
 
   /**
