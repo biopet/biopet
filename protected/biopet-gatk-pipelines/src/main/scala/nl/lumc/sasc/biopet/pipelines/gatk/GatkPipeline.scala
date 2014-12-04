@@ -207,8 +207,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             if (runConfig.contains("CN")) aorrg.RGCN = runConfig("CN").toString
             add(aorrg, isIntermediate = true)
             bamFile = aorrg.output
-          } else throw new IllegalStateException("Readgroup sample and/or library of input bamfile is not correct, file: " + bamFile +
-            "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
+          } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
+            "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
         }
         addAll(BamMetrics(this, bamFile, runDir + "metrics/").functions)
 
