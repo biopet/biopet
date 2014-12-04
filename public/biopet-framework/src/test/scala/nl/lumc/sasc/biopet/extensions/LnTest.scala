@@ -11,7 +11,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-class LnUnitTest extends TestNGSuite with Matchers {
+class LnTest extends TestNGSuite with Matchers {
 
   @Test(description = "Target and link in the same directory, relative set to true")
   def testSameLevelRelative() {

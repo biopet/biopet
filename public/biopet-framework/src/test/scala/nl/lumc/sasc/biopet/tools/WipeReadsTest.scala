@@ -25,7 +25,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-class WipeReadsUnitTest extends TestNGSuite with MockitoSugar with Matchers {
+class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import WipeReads._
 

@@ -17,7 +17,7 @@ import org.testng.annotations.{ DataProvider, Test }
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 
-class ExtractAlignedFastqUnitTest extends TestNGSuite with MockitoSugar with Matchers {
+class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import ExtractAlignedFastq._
 
