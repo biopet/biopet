@@ -4,7 +4,7 @@
 
 The GATK-pipeline is build for variant calling on NGS data (preferably Illumina data).
 It is based on the <a href="https://www.broadinstitute.org/gatk/guide/best-practices" target="_blank">best practices</a>) of GATK in terms of there approach to variant calling.
-The pipeline accepts ```.fastq & .bam``` files as <samplename>.
+The pipeline accepts ```.fastq & .bam``` files as input.
 
 ----
 

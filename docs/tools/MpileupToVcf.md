@@ -11,13 +11,13 @@ so usually one does not want to safe these files.
 ## Example
 To start the tool:
 ~~~
-java -jar Biopet-0.2.0-DEV-801b72ed.jar tool mpileupToVcf
+java -jar Biopet-0.2.0.jar tool mpileupToVcf
 ~~~
 
 
 To open the help:
 ~~~bash
-java -jar Biopet-0.2.0-DEV-801b72ed.jar tool mpileupToVcf -h
+java -jar Biopet-0.2.0.jar tool mpileupToVcf -h
 Usage: MpileupToVcf [options]
 
   -l <value> | --log_level <value>
