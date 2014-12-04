@@ -58,47 +58,49 @@ object VcfFilter extends ToolCommand {
                   minBamAlternateDepth: Int = 0,
                   mustHaveVariant: List[String] = Nil,
                   denovoInSample: String = null,
-                  notSameGenotype: List[(String, String)] = Nil,
+                  diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   filterRefCalls: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(inputVcf = x)
-    }
+    } text ("Input vcf file")
     opt[File]('o', "outputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputVcf = x)
-    } text ("output file, default to stdout")
-    opt[Int]("minSampleDepth") unbounded () action { (x, c) =>
+    } text ("Output vcf file")
+    opt[Int]("minSampleDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSampleDepth = x)
-    }
-    opt[Int]("minTotalDepth") unbounded () action { (x, c) =>
+    } text ("Min value for DP in genotype fields")
+    opt[Int]("minTotalDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minTotalDepth = x)
-    }
-    opt[Int]("minAlternateDepth") unbounded () action { (x, c) =>
+    } text ("Min value of DP field in INFO fields")
+    opt[Int]("minAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minAlternateDepth = x)
-    }
-    opt[Int]("minSamplesPass") unbounded () action { (x, c) =>
+    } text ("Min value of AD field in genotype fields")
+    opt[Int]("minSamplesPass") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSamplesPass = x)
-    }
-    opt[Int]("minBamAlternateDepth") unbounded () action { (x, c) =>
+    } text ("Min number opf samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
+    opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minBamAlternateDepth = x)
-    }
-    opt[String]("denovoInSample") maxOccurs (1) unbounded () action { (x, c) =>
+    } // TODO: Convert this to more generic filter
+    opt[String]("denovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(denovoInSample = x)
-    }
-    opt[String]("mustHaveVariant") unbounded () action { (x, c) =>
+    } text ("Only show variants that contain unique alleles in compete set for given sample")
+    opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
-    }
-    opt[String]("notSameGenotype") unbounded () action { (x, c) =>
-      c.copy(notSameGenotype = (x.split(":")(0), x.split(":")(1)) :: c.notSameGenotype)
-    } validate { x => if (x.split(":").length == 2) success else failure("--notSameGenotype should be in this format: sample:sample") }
-    opt[String]("filterHetVarToHomVar") unbounded () action { (x, c) =>
+    } text ("Given sample must have 1 alternative allele")
+    opt[String]("diffGenotype") unbounded () valueName ("<sample:sample>") action { (x, c) =>
+      c.copy(diffGenotype = (x.split(":")(0), x.split(":")(1)) :: c.diffGenotype)
+    } validate { x => if (x.split(":").length == 2) success else failure("--notSameGenotype should be in this format: sample:sample")
+    } text ("Given samples must have a different genotype")
+    opt[String]("filterHetVarToHomVar") unbounded () valueName ("<sample:sample>") action { (x, c) =>
       c.copy(filterHetVarToHomVar = (x.split(":")(0), x.split(":")(1)) :: c.filterHetVarToHomVar)
-    } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample") }
+    } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
+    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filterd")
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
       c.copy(filterRefCalls = true)
-    }
+    } text ("Filter when there are only ref calls")
   }
 
   var commandArgs: Args = _
@@ -132,8 +134,9 @@ object VcfFilter extends ToolCommand {
         mustHaveVariant(record) &&
         notSameGenotype(record) &&
         filterHetVarToHomVar(record) &&
-        denovoInSample(record))
+        denovoInSample(record)) {
         writer.add(record)
+      }
     }
     reader.close
     writer.close
@@ -165,7 +168,7 @@ object VcfFilter extends ToolCommand {
   }
 
   def notSameGenotype(record: VariantContext): Boolean = {
-    for ((sample1, sample2) <- commandArgs.notSameGenotype) {
+    for ((sample1, sample2) <- commandArgs.diffGenotype) {
       val genotype1 = record.getGenotype(sample1)
       val genotype2 = record.getGenotype(sample2)
       if (genotype1.sameGenotype(genotype2)) return false
