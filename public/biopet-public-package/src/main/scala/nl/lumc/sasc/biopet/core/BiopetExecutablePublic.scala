@@ -4,10 +4,11 @@ object BiopetExecutablePublic extends BiopetExecutable {
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
-    nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
+    //nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
-    nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp)
+    //nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp
+  )
 
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.WipeReads,
