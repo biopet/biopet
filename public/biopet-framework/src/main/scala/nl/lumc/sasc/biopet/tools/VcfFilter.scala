@@ -60,7 +60,8 @@ object VcfFilter extends ToolCommand {
                   denovoInSample: String = null,
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
-                  filterRefCalls: Boolean = false) extends AbstractArgs
+                  filterRefCalls: Boolean = false,
+                  filterNoCalls: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -101,6 +102,9 @@ object VcfFilter extends ToolCommand {
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
       c.copy(filterRefCalls = true)
     } text ("Filter when there are only ref calls")
+    opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
+      c.copy(filterNoCalls = true)
+    } text ("Filter when there are only no calls")
   }
 
   var commandArgs: Args = _
@@ -117,19 +121,12 @@ object VcfFilter extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
     writer.writeHeader(header)
 
-    val bamDPFields = (for (line <- header.getInfoHeaderLines if line.getID.startsWith("BAM-DP-")) yield line.getID).toList
-
     for (record <- reader) {
-      val genotypes = for (genotype <- record.getGenotypes) yield {
-        val DP = if (genotype.hasDP) genotype.getDP else -1
-        val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
-        DP >= commandArgs.minSampleDepth &&
-          (if (!AD.isEmpty) AD.tail.count(_ >= commandArgs.minAlternateDepth) > 0 else true) &&
-          !(commandArgs.filterRefCalls && genotype.isHomRef)
-      }
-
-      if (record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth &&
-        genotypes.count(_ == true) >= commandArgs.minSamplesPass &&
+      if (filterRefCalls(record) &&
+        filterNoCalls(record) &&
+        minTotalDepth(record) &&
+        minSampleDepth(record) &&
+        minAlternateDepth(record) &&
         minBamAlternateDepth(record, header) &&
         mustHaveVariant(record) &&
         notSameGenotype(record) &&
@@ -140,6 +137,34 @@ object VcfFilter extends ToolCommand {
     }
     reader.close
     writer.close
+  }
+
+  def filterRefCalls(record: VariantContext): Boolean = {
+    if (commandArgs.filterNoCalls) record.getGenotypes.exists(g => !g.isHomRef)
+    else true
+  }
+
+  def filterNoCalls(record: VariantContext): Boolean = {
+    if (commandArgs.filterNoCalls) record.getGenotypes.exists(g => !g.isNoCall)
+    else true
+  }
+
+  def minTotalDepth(record: VariantContext): Boolean = {
+    record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth
+  }
+
+  def minSampleDepth(record: VariantContext): Boolean = {
+    record.getGenotypes.count(genotype => {
+      val DP = if (genotype.hasDP) genotype.getDP else -1
+      DP >= commandArgs.minSampleDepth
+    }) >= commandArgs.minSamplesPass
+  }
+
+  def minAlternateDepth(record: VariantContext): Boolean = {
+    record.getGenotypes.count(genotype => {
+      val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
+      if (!AD.isEmpty) AD.tail.count(_ >= commandArgs.minAlternateDepth) > 0 else true
+    }) >= commandArgs.minSamplesPass
   }
 
   def minBamAlternateDepth(record: VariantContext, header: VCFHeader): Boolean = {
