@@ -60,7 +60,7 @@ object ExtractAlignedFastq extends ToolCommand {
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
-      case _ => throw new IllegalArgumentException("Invalid interval string: " + x)
+      case otherwise => throw new IllegalArgumentException("Invalid interval string: " + otherwise)
     }.toIterator
   }
 
