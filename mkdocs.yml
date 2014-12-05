@@ -9,6 +9,8 @@ pages:
 - ['pipelines/sage.md', 'Pipelines', 'Sage']
 - ['tools/SamplesTsvToJson.md','tools','SamplesTsvToJson']
 - ['tools/BastyGenerateFasta.md','tools','BastyGenerateFasta']
+- ['tools/bedtointerval.md','tools','BedToInterval']
+- ['tools/bedtoolscoveragetocounts.md','tools','BedtoolsCoverageToCounts']
 - ['tools/MpileupToVcf.md', 'tools', 'MpileupToVcf']
 - ['tools/sagetools.md', 'tools', 'Sagetools']
 - ['cluster/oge.md', 'OpenGridEngine']
