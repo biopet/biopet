@@ -1,8 +1,10 @@
 # SAGE tools
-
+These tools are written to create the appropriate files for the SAGE pipeline. 
+Note that these tools are already implemented in the pipeline.
 
 ## SageCountFastq
 ~~~
+java -jar Biopet-0.2.0.jar tool SageCreateLibrary -h
 Usage: SageCountFastq [options]
 
   -l <value> | --log_level <value>
@@ -18,6 +20,7 @@ Usage: SageCountFastq [options]
 
 ## SageCreateLibrary
 ~~~
+java -jar Biopet-0.2.0.jar tool SageCreateLibrary -h
 Usage: SageCreateLibrary [options]
 
   -l <value> | --log_level <value>
@@ -44,6 +47,7 @@ Usage: SageCreateLibrary [options]
 
 ## SageCreateTagCounts
 ~~~
+java -jar Biopet-0.2.0.jar tool SageCreateTagCounts -h
 Usage: SageCreateTagCounts [options]
 
   -l <value> | --log_level <value>

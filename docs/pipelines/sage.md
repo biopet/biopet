@@ -6,13 +6,15 @@ The Sage pipeline has been created to process SAGE data, which requires a differ
 
 * [Flexiprep](flexiprep.md)
 * [Mapping](mapping.md)
-* [SageCountFastq](sagetools.md)
-* [SageCreateLibrary](sagetools.md)
-* [SageCreateTagCounts](sagetools.md)
+* [SageCountFastq](../tools/sagetools.md)
+* [SageCreateLibrary](../tools/sagetools.md)
+* [SageCreateTagCounts](../tools/sagetools.md)
 
 
 # Example
 Note that one should first create the appropriate [configs](../config.md).
+
+To get the help menu:
 ~~~
 java -jar Biopet-0.2.0.jar pipeline Sage -h
 Arguments for Sage:
@@ -23,6 +25,11 @@ Arguments for Sage:
  --transcriptome <transcriptome>                 Transcriptome, used for generation of tag library
  -config,--config_file <config_file>             JSON config file(s)
  -DSC,--disablescatterdefault                    Disable all scatters
+~~~
+
+To run the pipeline:
+~~~
+ java -jar Biopet-0.2.0-DEV-801b72ed.jar pipeline Sage -run --config MySamples.json --config --MySettings.json
 ~~~
 
 

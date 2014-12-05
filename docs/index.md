@@ -52,7 +52,7 @@ java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -qsub* -
 ~~~
 java -jar Biopet(version).jar (pipeline of interest) (pipeline options) 
 ~~~
-    
+If one performs a dry run the config report will be generated. From this config report you can identify all configurable options.
 
 ### Shark Compute Cluster specific
 
@@ -92,10 +92,6 @@ There are multiple configs that can be passed to a pipeline, for example the sam
 
 - [Here](config) one can find how to create a sample and settings config
 - More info can be found here: [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config)
-
-
-
-
 
 ### Running a tool
 

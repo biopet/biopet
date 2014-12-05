@@ -1,71 +1,42 @@
-# Introduction
+# Flexiprep
 
-# [Flexiprep](https://git.lumc.nl/biopet/biopet/tree/develop/public/flexiprep/src/main/scala/nl/lumc/sasc/biopet/pipelines/flexiprep)
-
-QC pipeline for fastq files
-
-### Commandline options
-
-
-| Argument | Explain |
-| -------- | ------- |
-| -R1,--input_r1 <input_r1> | R1 fastq file (gzipped allowed) |
-| -outputDir,--outputdir <outputdir> | Output directory |
-| -config,--configfiles <configfiles> | Config Json file |
-| -R2,--input_r2 <input_r2> | R2 fastq file (gzipped allowed) |
-| -skiptrim,--skiptrim | Skip Trim fastq files |
-| -skipclip,--skipclip | Skip Clip fastq files |
-
----
-
-### Config options
+## Introduction
+Flexiprep is out quality control pipeline. This pipeline checks for possible barcode contamination, clips reads, trims reads and runs
+the tool <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">Fastqc</a>.
+The adapter clipping is performed by <a href="https://github.com/marcelm/cutadapt" target="_blank">Cutadapt</a>.
+For the quality trimming we use: <a href="https://github.com/najoshi/sickle" target="_blank">Sickle</a>. Flexiprep works on `.fastq` files.
 
 
-| Config Name | Name |  Type | Default | Function |
-| ----------- | ---- | ----- | ------- | -------- |
-| flexiprep | skip_native_link |  Boolean | false | Do not make a link to the final file with name: <sample>.qc.<fastq extension> |
-| flexiprep | skiptrim | Boolean | false |  |
-| flexiprep | skiptrim | Boolean | false |  |
+## Example
 
----
+To get the help menu:
+~~~
+java -jar Biopet-0.2.0-DEV.jar pipeline Flexiprep -h
+Arguments for Flexiprep:
+ -R1,--input_r1 <input_r1>                       R1 fastq file (gzipped allowed)
+ -sample,--samplename <samplename>               Sample name
+ -library,--libraryname <libraryname>            Library name
+ -outDir,--output_directory <output_directory>   Output directory
+ -R2,--input_r2 <input_r2>                       R2 fastq file (gzipped allowed)
+ -skiptrim,--skiptrim                            Skip Trim fastq files
+ -skipclip,--skipclip                            Skip Clip fastq files
+ -config,--config_file <config_file>             JSON config file(s)
+ -DSC,--disablescatterdefault                    Disable all scatters
+~~~
 
-### sub Module options
+As we can see in the above example we provide the options to skip trimming or clipping 
+since sometimes you want to have the possibility to not perform these tasks e.g.
+if there are no adapters present in your .fastq. Note that the pipeline also works on unpaired reads where one should only provide R1.+
 
 
-This can be used in the root of the config or within the flexiprep, within flexiprep got prio over the root value
+To start the pipeline (remove `-run` for a dry run):
+~~~bash
+java -jar Biopet-0.2.0.jar pipeline Flexiprep -run -outDir myDir \
+-R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
+-library myLibname -config mySettings.json
+~~~
 
-| Config Name | Name | Type | Default | Function |
-| ----------- | ---- | ---- | ------- | -------- |
-| cutadapt | exe |  String | cutadapt | Excuteble for cutadapt |
-| cutadapt | default_clip_mode |  String | 3 | Do not make a link with name: <sample>.qc.<fastq extension> |
-| cutadapt | adapter |  Array[String] |  |  |
-| cutadapt | anywhere |  Array[String] |  |  |
-| cutadapt | front |  Array[String] |  |  |
-| cutadapt | discard |  Boolean | false |  |
-| cutadapt | opt_minimum_length |  Int | 1 |  |
-| cutadapt | opt_maximum_length | Int |  |  |
-| fastqc | exe | String | fastqc | Excuteble for fastqc |
-| fastqc->java | kmers |  String | java | Excuteble for java for fastqc |
-| fastqc | kmers | Int | 5 |  |
-| fastqc | quiet | Boolean | false |  |
-| fastqc | noextract | Boolean | false |  |
-| fastqc | nogroup | Boolean | false |  |
-| sickle | exe | String | sickle | Excuteble for sickle |
-| sickle | qualitytype | String |  |  |
-| sickle | defaultqualitytype | String | sanger | use this when quality type can't be found at fastqc |
 
----
-
-### License
-
-A dual licensing model is applied. The source code within this project is freely available for non-commercial use under an AGPL license; For commercial users or users who do not want to follow the AGPL license, please contact sasc@lumc.nl to purchase a separate license.
-
-# Example
-Note that one should first create the appropriate [configs](../config.md).
-
-# Testcase A
-
-# Testcase B
 
 # Examine results
 
