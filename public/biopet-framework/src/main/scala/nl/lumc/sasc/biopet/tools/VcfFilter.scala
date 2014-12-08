@@ -97,13 +97,13 @@ object VcfFilter extends ToolCommand {
     } text ("Min value of AD field in genotype fields")
     opt[Int]("minSamplesPass") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSamplesPass = x)
-    } text ("Min number opf samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
+    } text ("Min number off samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
     opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minBamAlternateDepth = x)
     } // TODO: Convert this to more generic filter
     opt[String]("denovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(denovoInSample = x)
-    } text ("Only show variants that contain unique alleles in compete set for given sample")
+    } text ("Only show variants that contain unique alleles in complete set for given sample")
     opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
     } text ("Given sample must have 1 alternative allele")
@@ -114,7 +114,7 @@ object VcfFilter extends ToolCommand {
     opt[String]("filterHetVarToHomVar") unbounded () valueName ("<sample:sample>") action { (x, c) =>
       c.copy(filterHetVarToHomVar = (x.split(":")(0), x.split(":")(1)) :: c.filterHetVarToHomVar)
     } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
-    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filterd")
+    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered")
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
       c.copy(filterRefCalls = true)
     } text ("Filter when there are only ref calls")
