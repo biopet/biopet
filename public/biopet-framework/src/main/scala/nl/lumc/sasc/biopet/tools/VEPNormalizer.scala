@@ -8,9 +8,6 @@ import collection.JavaConverters._
 import htsjdk.variant.vcf._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import java.lang.{Exception, String}
-import scala.Predef.String
-import scala.Exception
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
@@ -122,8 +119,9 @@ object VEPNormalizer extends ToolCommand {
     val reader: VCFFileReader = try {
       new VCFFileReader(input, false)
     } catch {
-      case e: Exception => logger.error("Malformed VCF file! VCFv3 not supported!")
-      throw e
+      case e: Exception =>
+        logger.error("Malformed VCF file! VCFv3 not supported!")
+        throw e
     }
 
     val header = reader.getFileHeader
