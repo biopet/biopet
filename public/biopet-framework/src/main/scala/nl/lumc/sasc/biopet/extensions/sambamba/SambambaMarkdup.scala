@@ -41,15 +41,9 @@ object SambambaMarkdup {
     return markdup
   }
 
-  def apply(root: Configurable, input: File, outputDir: String): SambambaMarkdup = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
-  }
-
   def apply(root: Configurable, input: File): SambambaMarkdup = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    return apply(root, input, new File(swapExtension(input.getCanonicalPath)))
   }
 
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"
+  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".dedup.bam"
 }
