@@ -1,0 +1,2 @@
+** This part of Biopet can only be used inside the LUMC **
+

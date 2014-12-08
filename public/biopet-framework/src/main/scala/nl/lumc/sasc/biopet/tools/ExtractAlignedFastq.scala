@@ -19,9 +19,10 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 
 object ExtractAlignedFastq extends ToolCommand {
 
+  /** type alias for Fastq input (may or may not be paired) */
   type FastqInput = (FastqRecord, Option[FastqRecord])
 
-  /** function to get FastqRecord ID */
+  /** Get the FastqRecord ID */
   def fastqId(rec: FastqRecord) = rec.getReadHeader.split(" ")(0)
 
   /**
@@ -54,14 +55,13 @@ object ExtractAlignedFastq extends ToolCommand {
     // by the Interval constructor only accepting ints
     def intFromCoord(s: String): Int = s.replaceAll(",", "").replaceAll("\\.", "").toInt
 
-    inStrings.map(x => x match {
+    inStrings.map {
       case ptn1(chr, start, end) => new Interval(chr, intFromCoord(start), intFromCoord(end))
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
-      case _ => throw new IllegalArgumentException("Invalid interval string: " + x)
-    })
-      .toIterator
+      case otherwise => throw new IllegalArgumentException("Invalid interval string: " + otherwise)
+    }.toIterator
   }
 
   /**
@@ -125,6 +125,13 @@ object ExtractAlignedFastq extends ToolCommand {
     }
   }
 
+  /**
+   * Extracts reads from the given input Fastq file and writes to a new output Fastq file
+   *
+   * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
+   * @param inputFastq1 Input [[FastqReader]] object.
+   * @param outputFastq1 Output [[BasicFastqWriter]] object.
+   */
   def extractReads(memFunc: FastqInput => Boolean,
                    inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
     inputFastq1.iterator.asScala
@@ -132,6 +139,15 @@ object ExtractAlignedFastq extends ToolCommand {
       .filter(rec => memFunc(rec._1, rec._2))
       .foreach(rec => outputFastq1.write(rec._1))
 
+  /**
+   * Extracts reads from the given input Fastq pairs and writes to new output Fastq pair files
+   *
+   * @param memFunc Predicate for extracting reads. If evaluates to true, the read is extracted.
+   * @param inputFastq1 Input [[FastqReader]] object for pair 1.
+   * @param outputFastq1 Input [[FastqReader]] object for pair 2.
+   * @param inputFastq2 Output [[BasicFastqWriter]] object for pair 1.
+   * @param outputFastq2 Output [[BasicFastqWriter]] object for pair 2.
+   */
   def extractReads(memFunc: FastqInput => Boolean,
                    inputFastq1: FastqReader, outputFastq1: BasicFastqWriter,
                    inputFastq2: FastqReader, outputFastq2: BasicFastqWriter): Unit =
@@ -143,6 +159,7 @@ object ExtractAlignedFastq extends ToolCommand {
         outputFastq2.write(rec._2)
       })
 
+  /** Default arguments */
   case class Args(inputBam: File = new File(""),
                   intervals: List[String] = List.empty[String],
                   inputFastq1: File = new File(""),
@@ -152,6 +169,7 @@ object ExtractAlignedFastq extends ToolCommand {
                   minMapQ: Int = 0,
                   commonSuffixLength: Int = 0) extends AbstractArgs
 
+  /** Command line argument parser */
   class OptParser extends AbstractOptParser {
 
     head(
@@ -213,6 +231,7 @@ object ExtractAlignedFastq extends ToolCommand {
     }
   }
 
+  /** Parses the command line argument */
   def parseArgs(args: Array[String]): Args =
     new OptParser()
       .parse(args, Args())
