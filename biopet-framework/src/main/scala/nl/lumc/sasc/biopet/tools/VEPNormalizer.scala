@@ -116,11 +116,11 @@ object VEPNormalizer extends ToolCommand {
    * @param output output VCF file
    */
   def standard(input: File, output: File) = {
-    var reader: VCFFileReader = null
-    try {
-      reader = new VCFFileReader(input, false)
+    val reader: VCFFileReader = try {
+      new VCFFileReader(input, false)
     } catch {
-      case e: Exception => logger.error("Malformed VCF file! VCFv3 not supported!", new VEPException(_))
+      case e: Exception => logger.error("Malformed VCF file! VCFv3 not supported!")
+      throw e
     }
 
     val header = reader.getFileHeader
