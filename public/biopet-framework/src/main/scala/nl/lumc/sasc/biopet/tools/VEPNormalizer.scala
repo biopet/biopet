@@ -2,12 +2,14 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, IOException }
 import scala.collection.JavaConversions._
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, ToolCommand}
 import collection.mutable.{ Map => MMap }
 import collection.JavaConverters._
 import htsjdk.variant.vcf._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
@@ -18,6 +20,19 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
  * 2) standard - parse as a standard VCF, where multiple transcripts occur in the same line
  * Created by ahbbollen on 10/27/14.
  */
+
+class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
+  javaMainClass = getClass.getName
+
+  @Input(doc="Input VCF, may be indexed", shortname="InputFile", required=true)
+  var InputVCF: File = _
+
+  //TODO: Add flags?
+
+  @Output(doc="Output VCF", shortname="OutputFile", reuqired=true)
+  var OutputVCF: File = _
+}
+
 object VEPNormalizer extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
