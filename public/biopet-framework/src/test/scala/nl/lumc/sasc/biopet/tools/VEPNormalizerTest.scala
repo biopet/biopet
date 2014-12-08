@@ -10,6 +10,8 @@ import htsjdk.variant.vcf.VCFFileReader
 import htsjdk.tribble.TribbleException
 import scala.collection.JavaConversions._
 import htsjdk.variant.variantcontext.VariantContext
+import java.lang.String
+import scala.Predef.String
 
 /**
  * This class tests the VEPNormalizer

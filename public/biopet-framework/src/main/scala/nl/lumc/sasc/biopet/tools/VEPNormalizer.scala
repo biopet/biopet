@@ -8,6 +8,9 @@ import collection.JavaConverters._
 import htsjdk.variant.vcf._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
+import java.lang.{Exception, String}
+import scala.Predef.String
+import scala.Exception
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
