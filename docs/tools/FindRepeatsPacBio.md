@@ -9,7 +9,7 @@ those regions with the BAM file. On those extracted regions the tool will perfor
 ## Example
 To get the help menu:
 ~~~
- java -jar Biopet-0.2.0-DEV-801b72ed.jar tool FindRepeatsPacBio -h
+java -jar Biopet-0.2.0.jar tool FindRepeatsPacBio -h
 Usage: FindRepeatsPacBio [options]
 
   -l <value> | --log_level <value>
@@ -26,7 +26,7 @@ Usage: FindRepeatsPacBio [options]
 
 To run the tool:
 ~~~
- java -jar Biopet-0.2.0.jar tool FindRepeatsPacBio --inputBam myInputbam.bam \
+java -jar Biopet-0.2.0.jar tool FindRepeatsPacBio --inputBam myInputbam.bam \
 --inputBed myRepeatRegions.bed > mySummary.txt
 ~~~
 Since the default output of the program is printed in stdout we can use > to write the output to a text file.

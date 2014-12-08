@@ -12,7 +12,7 @@ The Sage pipeline has been created to process SAGE data, which requires a differ
 
 
 # Example
-Note that one should first create the appropriate [configs](../config.md).
+Note that one should first create the appropriate [configs](../general/config.md).
 
 To get the help menu:
 ~~~

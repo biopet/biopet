@@ -19,7 +19,7 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
 ----
 
 ## Example
-Note that one should first create the appropriate [configs](../config.md).
+Note that one should first create the appropriate [configs](../general/config.md).
 
 For the help menu:
 ~~~
