@@ -1,0 +1,19 @@
+{
+	"vcfs" : {
+		"REF_1000G_SNP": "/data/DIV5/KG/common/annotation/1000g/ALL.wgs.phase1.projectConsensus.snps.sites.vcf.gz",
+		"REF_1000G_INDEL": "/data/DIV5/KG/common/annotation/1000g/indel1000g.vcf.gz",
+		"REF_DBSNP": "/data/DIV5/KG/common/annotation/dbsnp135/00-All.vcf.gz",
+		"REF_EVS": "/data/DIV5/KG/common/annotation/EVS/EVS6500all.vcf.gz",
+		"REF_GONL": "/data/DIV5/KG/common/annotation/GONL/merged20110920_stripped.vcf.gz",
+		"REF_INDB_UG": "/data/DIV5/KG/gwesanten/kginhdb/klingeninhousedb.vcf.gz",
+		"REF_INDB_HC": "/data/DIV5/KG/gwesanten/kginhdbGATK2.2/klingeninhousedb.vcf.gz"
+	},
+	"tabixfiles": {
+		"REF_DBNSFP" : "/data/DIV5/KG/common/annotation/dbNSFP/dbNSFP2.4.vcf.gz",
+		"REF_HGMD": "/data/DIV5/KG/common/annotation/HGMD/hgmd.vcf.gz"
+	},
+	"BigWig": {
+		"REF_PHYLOP_DIR" : "/data/DIV5/KG/common/annotation/phylop"
+	}
+}
+
