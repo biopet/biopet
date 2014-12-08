@@ -1,0 +1,10 @@
+chrQ	ensembl	gene	669	778	.	-	.	gene_id "ENSG00000252956";
+chrQ	ensembl	transcript	669	778	.	-	.	gene_id "ENSG00000252956";
+chrQ	ensembl	exon	669	778	.	-	.	gene_id "ENSG00000252956";
+chrQ	ensembl	gene	184	284	.	-	.	gene_id "ENSG00000222952";
+chrQ	ensembl	transcript	184	284	.	-	.	gene_id "ENSG00000222952";
+chrQ	ensembl	exon	184	284	.	-	.	gene_id "ENSG00000222952";
+chrP	ensembl	gene	2949	3063	.	+	.	gene_id "ENSG00000201148";
+chrP	ensembl	transcript	2949	3063	.	+	.	gene_id "ENSG00000201148";
+chrP	ensembl	exon	2949	3063	.	+	.	gene_id "ENSG00000201148";
+chrP	ensembl	gene	677	786	.	-	.	gene_id "ENSG00000252368";
