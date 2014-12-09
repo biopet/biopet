@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
+import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.utils.ConfigUtils.jsonToMap
 import java.io.File
@@ -55,17 +56,38 @@ object VCFFreqAnnotator extends ToolCommand {
    * @return Attribute map of variant context with new annotations
    */
   def fetchAnnotations(vc: VariantContext, sources: Map[String, Any]): Map[String, Any] = {
-    return Map[String, Any]
+    val dummy: Map[String, Any] = Map("a" -> "a")
+    return dummy
   }
 
   /**
    * This function takes a VariantContext and returns the frequency of its variant in source
    * @param vc input VariantContext
    * @param source VCFFileReader source
-   * @return float with frequency
+   * @param column Column name in source containing allele frequency
+   * @return Double with frequency
    */
-  def fetchVCFFrequency(vc: VariantContext, source: VCFFileReader): Float = {
-    return 0.0
+  def fetchVCFFrequency(vc: VariantContext, source: VCFFileReader, column: String): Double = {
+    if (vc.isVariant) {
+      val source_vcs = source.query(vc.getChr, vc.getStart, vc.getEnd)
+      var default = 0.0
+
+      for (svc <- source_vcs) {
+        val s1 = Set(vc.getAlternateAlleles.map(x => x.toString))
+        val s2 = Set(svc.getAlternateAlleles.map(x => x.toString))
+        if (vc.getReference.toString == svc.getReference.toString && s1 == s2) {
+          val freq = svc.getAttribute(column)
+          if (freq != None) {
+            default = freq.asInstanceOf[Double]
+          } else {
+            return 0.0
+          }
+        }
+      }
+      return default
+    } else {
+      return 0.0
+    }
   }
 
   case class Args(inputVCF: File = null,
