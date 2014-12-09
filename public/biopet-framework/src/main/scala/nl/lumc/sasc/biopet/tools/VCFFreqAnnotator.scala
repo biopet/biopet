@@ -78,9 +78,7 @@ object VCFFreqAnnotator extends ToolCommand {
         if (vc.getReference.toString == svc.getReference.toString && s1 == s2) {
           val freq = svc.getAttribute(column)
           if (freq != None) {
-            default = freq.asInstanceOf[Double]
-          } else {
-            return 0.0
+            return freq.asInstanceOf[Double]
           }
         }
       }
@@ -88,6 +86,39 @@ object VCFFreqAnnotator extends ToolCommand {
     } else {
       return 0.0
     }
+  }
+
+  /**
+   * This function takes a VariantContext and returns IDs found for this variant in source
+   * This is useful for VCFs that provide IDs in stead or in addition to frequency data
+   * Returns "unknown" by default
+   * @param vc input VariantContext
+   * @param source source VCFFileReader
+   * @param column the column containing the ID
+   * @return a String of the ID (e.g. rs000001)
+   */
+  def fetchVCFIDs(vc: VariantContext, source: VCFFileReader, column: String): String = {
+    var value = "unknown"
+
+    if (vc.isVariant) {
+      val source_vcs = source.query(vc.getChr, vc.getStart, vc.getEnd)
+
+      for (svc <- source_vcs) {
+        val s1 = Set(vc.getAlternateAlleles.map(x => x.toString))
+        val s2 = Set(svc.getAlternateAlleles.map(x => x.toString))
+
+        if (vc.getReference == svc.getReference && s1 == s2) {
+          val id = svc.getAttribute(column)
+          if (id != None) {
+            return id.asInstanceOf[String]
+          }
+        }
+      }
+    } else {
+      value = "unknown"
+    }
+
+    value
   }
 
   case class Args(inputVCF: File = null,
