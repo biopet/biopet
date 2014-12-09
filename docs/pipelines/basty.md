@@ -30,7 +30,7 @@ java -jar Biopet.0.2.0.jar pipeline basty -h
 ~~~
 
 #### Run the pipeline:
-Note that one should first create the appropriate [configs](../config.md).
+Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~
 java -jar Biopet.0.2.0.jar pipeline basty -run -config MySamples.json -config MySettings.json -outDir myOutDir

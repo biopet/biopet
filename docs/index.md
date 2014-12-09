@@ -52,7 +52,7 @@ java -jar Biopet(version).jar (pipeline of interest) (pipeline options) -qsub* -
 ~~~
 java -jar Biopet(version).jar (pipeline of interest) (pipeline options) 
 ~~~
-    
+If one performs a dry run the config report will be generated. From this config report you can identify all configurable options.
 
 ### Shark Compute Cluster specific
 
@@ -85,17 +85,13 @@ Using this option, the `java -jar Biopet-<version>.jar` can be ommited and `biop
 - [Sage](pipelines/sage)
 - Yamsvp (Under development)
 
-__Note that each pipeline needs a config file written in JSON format see [config](config.md) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
+__Note that each pipeline needs a config file written in JSON format see [config](general/config.md) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
 
 
 There are multiple configs that can be passed to a pipeline, for example the sample, settings and executables wherefrom sample and settings are mandatory.
 
-- [Here](config) one can find how to create a sample and settings config
+- [Here](general/config.md) one can find how to create a sample and settings config
 - More info can be found here: [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config)
-
-
-
-
 
 ### Running a tool
 

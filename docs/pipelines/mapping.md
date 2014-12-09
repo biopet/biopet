@@ -19,7 +19,7 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
 ----
 
 ## Example
-Note that one should first create the appropriate [configs](../config.md).
+Note that one should first create the appropriate [configs](../general/config.md).
 
 For the help menu:
 ~~~
@@ -52,9 +52,11 @@ Arguments for Mapping:
 
 To run the pipeline:
 ~~~
-java -jar Biopet.0.2.0.jar pipeline mapping -run --config mySamples.json --config mySettings.json
+java -jar Biopet.0.2.0.jar pipeline mapping -run --config mySettings.json \
+-R1 myReads1.fastq -R2 myReads2.fastq -outDir myOutDir -OutputName myReadsOutput \
+-R hg19.fasta -RGSM mySampleName -RGLB myLib1
 ~~~
-__Note that the pipeline also accepts sample specification through command line but we encourage you to use the sample config__
+Note that removing -R2 causes the pipeline to be able of handlind single end `.fastq` files.
 
 To perform a dry run simply remove `-run` from the commandline call.
 
