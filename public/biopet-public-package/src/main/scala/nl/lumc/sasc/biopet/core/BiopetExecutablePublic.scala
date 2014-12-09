@@ -19,9 +19,9 @@ object BiopetExecutablePublic extends BiopetExecutable {
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
-    //nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
+    nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
-    //nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp,
+    nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp,
     nl.lumc.sasc.biopet.pipelines.sage.Sage
   )
 
@@ -41,6 +41,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SageCreateLibrary,
     nl.lumc.sasc.biopet.tools.SageCreateTagCounts,
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
-    //nl.lumc.sasc.biopet.tools.MergeAlleles,
+    nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson)
 }
