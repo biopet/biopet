@@ -91,8 +91,7 @@ object Seqstat {
         ("40" := basesTotal("40")) ->:
         ("50" := basesTotal("50")) ->:
         ("60" := basesTotal("60")) ->:
-        jEmptyObject
-      )) ->: jEmptyObject)) ->:
+        jEmptyObject)) ->: jEmptyObject)) ->:
         ("reads" := (
           ("num_with_n" := readsTotal("num_with_n")) ->:
           ("num_total" := readsTotal("num_total")) ->:
@@ -106,8 +105,7 @@ object Seqstat {
             ("40" := readsTotal("40")) ->:
             ("50" := readsTotal("50")) ->:
             ("60" := readsTotal("60")) ->:
-            jEmptyObject
-          )) ->: jEmptyObject)) ->:
+            jEmptyObject)) ->: jEmptyObject)) ->:
             ("qual_encoding" := encoding.head) ->:
             jEmptyObject
   }
