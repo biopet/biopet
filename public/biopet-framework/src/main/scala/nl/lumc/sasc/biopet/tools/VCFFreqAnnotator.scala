@@ -1,7 +1,12 @@
 package nl.lumc.sasc.biopet.tools
 
 import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.utils.ConfigUtils.jsonToMap
 import java.io.File
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
+import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.vcf.VCFFileReader
 
 /**
  * This tool annotates frequencies of variants in the input VCF with information from several sources
@@ -25,6 +30,42 @@ object VCFFreqAnnotator extends ToolCommand {
     logger.info(s"""Output VCF - $outputvcf""")
     logger.info(s"""Sources JSON - $sourcesjson""")
 
+    val jsondict = sourcesJsonToMap(sourcesjson)
+
+  }
+
+  /**
+   * This function parses a json file to a scala map
+   * @param json a File object to json file
+   * @return a scala map
+   */
+  def sourcesJsonToMap(json: File): Map[String, Any] = {
+    val jsontext = scala.io.Source.fromFile(json).mkString
+    val json_obj = Parse.parseOption(jsontext)
+    if (json_obj == None) {
+      throw new IllegalStateException("The sources JSON file is either not properly formatted or not a JSON file")
+    }
+    jsonToMap(json_obj.get)
+  }
+
+  /**
+   * This function takes a VariantContext and annotates it with frequency of sources
+   * @param vc input VariantContext
+   * @param sources input sources as in Map( column_name -> vcf_reader )
+   * @return Attribute map of variant context with new annotations
+   */
+  def fetchAnnotations(vc: VariantContext, sources: Map[String, Any]): Map[String, Any] = {
+    return Map[String, Any]
+  }
+
+  /**
+   * This function takes a VariantContext and returns the frequency of its variant in source
+   * @param vc input VariantContext
+   * @param source VCFFileReader source
+   * @return float with frequency
+   */
+  def fetchVCFFrequency(vc: VariantContext, source: VCFFileReader): Float = {
+    return 0.0
   }
 
   case class Args(inputVCF: File = null,
