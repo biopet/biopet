@@ -11,26 +11,45 @@ import java.io.File
  * Created by ahbbollen on 12/8/14.
  */
 object VCFFreqAnnotator extends ToolCommand {
+  def main(args: Array[String]): Unit = {
+    val commandArgs: Args = new OptParser()
+      .parse(args, Args())
+      .getOrElse(sys.exit(1))
+
+    val inputvcf = commandArgs.inputVCF
+    val outputvcf = commandArgs.inputVCF
+    val sourcesjson = commandArgs.sourcesJSON
+
+    logger.info("Starting VCFFreqAnnotator with following flags:")
+    logger.info(s"""Input VCF - $inputvcf""")
+    logger.info(s"""Output VCF - $outputvcf""")
+    logger.info(s"""Sources JSON - $sourcesjson""")
+
+  }
+
+  case class Args(inputVCF: File = null,
+                  outputVCF: File = null,
+                  sourcesJSON: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     head(s"""$commandName - Annotate input VCF with frequency information from various sources""")
 
-    opt[File]('I', "InputFile") required() valueName "<vcf>" action{ (x, c) =>
-    c.copy(inputVCF=x)
-    } validate{
-      x => if(x.exists) success else failure("Input VCF not found")
-    } text "Input VCF"
+    opt[File]('I', "InputFile") required () valueName "<vcf>" action { (x, c) =>
+      c.copy(inputVCF = x)
+    } validate {
+      x => if (x.exists) success else failure("Input VCF not found")
+    } text "Input VCF file"
 
-    opt[File]('j', "json") required() valueName "<json>" action{ (x, c) =>
-    c.copy(sourcesJSON=x)
-    } validate{
-      x => if(x.exists) success else failure("Sources JSON not found")
+    opt[File]('j', "json") required () valueName "<json>" action { (x, c) =>
+      c.copy(sourcesJSON = x)
+    } validate {
+      x => if (x.exists) success else failure("Sources JSON not found")
     } text "Sources JSON"
 
-    opt[File]('O', "OutputFile") required() valueName "<vcf>" action{ (x,c) =>
-    c.copy(OutputVCF=x)
-    } validate{
-      x => if(x.exists) success else success
+    opt[File]('O', "OutputFile") required () valueName "<vcf>" action { (x, c) =>
+      c.copy(outputVCF = x)
+    } validate {
+      x => if (x.exists) success else success
     } text "Output VCF"
   }
 
