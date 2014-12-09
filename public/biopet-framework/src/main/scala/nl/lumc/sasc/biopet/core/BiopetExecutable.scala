@@ -1,7 +1,25 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.core
 
+import java.io.{ PrintWriter, StringWriter }
 import java.util.Properties
+import nl.lumc.sasc.biopet.core.BiopetExecutable._
 import org.apache.log4j.Logger
+import scala.io.Source
 
 trait BiopetExecutable extends Logging {
 
@@ -18,6 +36,7 @@ trait BiopetExecutable extends Logging {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    checkDirtyBuild(logger)
 
     def toBulletedList(m: List[MainCommand], kind: String = "", bullet: String = "-") =
       "Available %s(s):\n  ".format(kind) + bullet + " " + m.map(x => x.commandName).sorted.mkString("\n  " + bullet + " ")
@@ -37,6 +56,7 @@ trait BiopetExecutable extends Logging {
         |
         |Subcommands:
         |  - version
+        |  - license
         |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
       """.stripMargin.format(modules.keys.mkString(","), getVersion, usage)
@@ -56,30 +76,47 @@ trait BiopetExecutable extends Logging {
         System.err.println(s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
         System.exit(1)
       }
-      return command.get
+      command.get
     }
 
     args match {
       case Array("version") => {
         println("version: " + getVersion)
       }
+      case Array("license") => {
+        println(getLicense)
+      }
       case Array(module, name, passArgs @ _*) => {
-        getCommand(module, name).main(passArgs.toArray)
+        try {
+          getCommand(module, name).main(passArgs.toArray)
+        } catch {
+          case e: Exception => {
+            val sWriter = new StringWriter()
+            val pWriter = new PrintWriter(sWriter)
+            e.printStackTrace(pWriter)
+            pWriter.close()
+            val trace = (sWriter.toString.split("\n"))
+
+            if (!logger.isDebugEnabled) {
+              logger.error(trace.head)
+              logger.error("For more info please run with -l debug")
+            } else {
+              trace.foreach(logger.debug(_))
+            }
+            sys.exit(1)
+          }
+        }
       }
       case Array(module) => {
         System.err.println(usage(module))
-        System.exit(1)
+        sys.exit(1)
       }
       case _ => {
         System.err.println(usage())
-        System.exit(1)
+        sys.exit(1)
       }
     }
   }
-
-  def getVersion = BiopetExecutable.getVersion
-
-  def getCommitHash = BiopetExecutable.getCommitHash
 
   def checkDirtyBuild(logger: Logger) {
     val prop = new Properties()
@@ -92,7 +129,6 @@ trait BiopetExecutable extends Logging {
       logger.warn("**********************************************************")
     }
   }
-  checkDirtyBuild(logger)
 }
 
 object BiopetExecutable {
@@ -104,5 +140,10 @@ object BiopetExecutable {
     val prop = new Properties()
     prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
     prop.getProperty("git.commit.id.abbrev")
+  }
+
+  def getLicense: String = {
+    val stream = getClass.getClassLoader.getResourceAsStream("nl/lumc/sasc/biopet/License.txt")
+    Source.fromInputStream(stream).getLines().mkString("\n", "\n", "\n")
   }
 }

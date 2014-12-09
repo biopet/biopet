@@ -1,3 +1,8 @@
+/**
+ * Due to the license issue with GATK, this part of Biopet can only be used inside the
+ * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
+ * on how to use this protected part of biopet or contact us at sasc@lumc.nl
+ */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
@@ -49,9 +54,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def init() {
-    if (config.contains("target_bed")) {
-      defaults ++= Map("gatk" -> Map(("intervals" -> config("target_bed").asStringList)))
-    }
     if (config.contains("gvcfFiles"))
       for (file <- config("gvcfFiles").asList)
         gvcfFiles :+= file.toString
@@ -210,8 +212,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             if (runConfig.contains("CN")) aorrg.RGCN = runConfig("CN").toString
             add(aorrg, isIntermediate = true)
             bamFile = aorrg.output
-          } else throw new IllegalStateException("Readgroup sample and/or library of input bamfile is not correct, file: " + bamFile +
-            "\nPossible to set 'correct_readgroups' to true on config to automatic fix this")
+          } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
+            "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
         }
         addAll(BamMetrics(this, bamFile, runDir + "metrics/").functions)
 

@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.SamReaderFactory
@@ -102,10 +117,10 @@ object BastyGenerateFasta extends ToolCommand {
     } text ("Output name in fasta file header")
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
-    } text ("min AD value in vcf file for sample")
+    } text ("min AD value in vcf file for sample. Defaults to: 8")
     opt[Int]("minDepth") unbounded () action { (x, c) =>
       c.copy(minDepth = x)
-    } text ("min detp in bam file")
+    } text ("min depth in bam file. Defaults to: 8")
     opt[File]("reference") unbounded () action { (x, c) =>
       c.copy(reference = x)
     } text ("Indexed reference fasta file") validate { x =>
@@ -236,7 +251,7 @@ object BastyGenerateFasta extends ToolCommand {
 
   protected def writeVariantsOnly() {
     val writer = new PrintWriter(cmdArgs.outputVariants)
-    writer.println(">" + cmdArgs.sampleName)
+    writer.println(">" + cmdArgs.outputName)
     val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
     for (vcfRecord <- vcfReader if (!cmdArgs.snpsOnly || vcfRecord.isSNP)) yield {
       writer.print(getMaxAllele(vcfRecord))

@@ -1,3 +1,8 @@
+/**
+ * Due to the license issue with GATK, this part of Biopet can only be used inside the
+ * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
+ * on how to use this protected part of biopet or contact us at sasc@lumc.nl
+ */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
@@ -146,8 +151,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           add(vcfFilter)
           scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
-        if (scriptOutput.rawFilterVcfFile == null) throw new IllegalStateException("Files can't be empty")
-        mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
+        if (scriptOutput.rawFilterVcfFile != null) mergBuffer += ("9.raw" -> scriptOutput.rawFilterVcfFile)
       }
 
       // Allele mode
