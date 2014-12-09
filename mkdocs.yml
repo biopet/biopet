@@ -1,0 +1,27 @@
+site_name: Biopet User Manual
+pages:
+- ['index.md', 'Home']
+- ['general/config.md', 'General', 'Config']
+- ['pipelines/basty.md', 'Pipelines', 'Basty']
+- ['pipelines/GATK-pipeline.md', 'Pipelines', 'GATK-pipeline']
+- ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
+- ['pipelines/mapping.md', 'Pipelines', 'Mapping']
+- ['pipelines/sage.md', 'Pipelines', 'Sage']
+- ['tools/SamplesTsvToJson.md','Tools','SamplesTsvToJson']
+- ['tools/BastyGenerateFasta.md','Tools','BastyGenerateFasta']
+- ['tools/bedtointerval.md','Tools','BedToInterval']
+- ['tools/bedtoolscoveragetocounts.md','Tools','BedtoolsCoverageToCounts']
+- ['tools/BiopetFlagstat.md','Tools','BiopetFlagstat']
+- ['tools/CheckAllelesVcfInBam.md','Tools','CheckAllelesVcfInBam']
+- ['tools/ExtractAlignedFastq.md','Tools','ExtractAlignedFastq']
+- ['tools/FastqSplitter.md', 'Tools','FastqSplitter']
+- ['tools/FindRepeatsPacBio.md','Tools','FindRepeatsPacBio']
+- ['tools/VcfFilter.md','Tools','VcfFilter']
+- ['tools/MpileupToVcf.md', 'Tools', 'MpileupToVcf']
+- ['tools/sagetools.md', 'Tools', 'Sagetools']
+- ['tools/WipeReads.md', 'Tools', 'WipeReads']
+#- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
+- ['about.md', 'About']
+- ['license.md', 'License']
+#theme: readthedocs
+repo_url: https://git.lumc.nl/biopet/biopet
