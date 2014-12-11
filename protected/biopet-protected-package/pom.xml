@@ -1,3 +1,10 @@
+<!--
+
+    Due to the license issue with GATK, this part of Biopet can only be used inside the
+    LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
+    on how to use this protected part of biopet or contact us at sasc@lumc.nl
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -9,13 +16,18 @@
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>BiopetGatk</artifactId>
-        <version>0.2.0-DEV</version>
+        <version>0.3.0-DEV</version>
         <relativePath>../</relativePath>
     </parent>
     
     <inceptionYear>2014</inceptionYear>
     <name>BiopetProtectedPackage</name>
-    
+
+    <properties>
+        <sting.shade.phase>package</sting.shade.phase>
+        <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutableProtected</app.main.class>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
@@ -56,6 +68,12 @@
                         </transformer>
                     </transformers>
                     <filters>
+                        <filter>
+                            <artifact>nl.lumc.sasc:BiopetFramework</artifact>
+                            <excludes>
+                                <exclude>nl/lumc/sasc/biopet/License.txt</exclude>
+                            </excludes>
+                        </filter>
                     </filters>
                 </configuration>
                 <executions>

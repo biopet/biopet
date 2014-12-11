@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
@@ -35,8 +50,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override val defaultVmem = "6G"
   memoryLimit = Option(2.0)
 
-  if (config.contains("target_bed")) defaults ++= Map("samtoolsmpileup" -> Map("interval_bed" -> config("target_bed").asStringList.head,
-    "disable_baq" -> true, "min_map_quality" -> 1))
+  defaults ++= Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
 
   override def afterGraph {
     super.afterGraph
