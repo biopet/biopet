@@ -74,7 +74,13 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     }
 
     val bamFile: File =
-      if (libraryBamfiles.size == 1) libraryBamfiles.head
+      if (libraryBamfiles.size == 1) {
+        // When the sample has only 1 run, make a link in the main alignment directory
+        val alignmentlink = Ln( root, libraryBamfiles.head,
+          alignmentDir + sampleID + ".merged.bam", true )
+        add(alignmentlink, isIntermediate = true)
+        alignmentlink.out
+      }
       else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = new SambambaMerge(root)
         mergeSamFiles.input = libraryBamfiles
@@ -83,21 +89,18 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         mergeSamFiles.output
       } else null
 
-    // TODO: Check whether sambamba reaches release version v0.5.0 which includes
-    // automatic indexing of the bam file.
     val bamMarkDup = SambambaMarkdup(root, bamFile)
     add(bamMarkDup)
 
-    val analysisBam: File = bamMarkDup.output
-    val analysisBamIndex = SambambaIndex(root, analysisBam)
-    add(analysisBamIndex)
+//    val analysisBam: File = bamMarkDup.output
+//    val analysisBamIndex = SambambaIndex(root, analysisBam)
+//    add(analysisBamIndex)
 
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
 
     val cleverDir = svcallingDir + sampleID + ".clever/"
-    val clever = CleverCaller(this, analysisBam, this.reference, svcallingDir, cleverDir)
-    clever.deps = List(analysisBamIndex.output)
+    val clever = CleverCaller(this, bamMarkDup.output, this.reference, svcallingDir, cleverDir)
     sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
     add(clever)
 
@@ -105,7 +108,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     add(clever_vcf)
 
     val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
-    val breakdancer = Breakdancer(this, analysisBam, this.reference, breakdancerDir)
+    val breakdancer = Breakdancer(this, bamMarkDup.output, this.reference, breakdancerDir)
     sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputvcf))
     addAll(breakdancer.functions)
 
@@ -113,7 +116,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     add(bd_vcf)
 
     val dellyDir = svcallingDir + sampleID + ".delly/"
-    val delly = Delly(this, analysisBam, dellyDir)
+    val delly = Delly(this, bamMarkDup.output, dellyDir)
     sampleOutput.vcf += ("delly" -> List(delly.outputvcf))
     addAll(delly.functions)
 
