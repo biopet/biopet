@@ -169,8 +169,8 @@ object ConfigUtils extends Logging {
    */
   def any2int(any: Any): Int = {
     any match {
-      case i: Double => i.toInt
       case i: Int    => i
+      case i: Double => i.toInt
       case i: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         i.toInt
@@ -207,11 +207,12 @@ object ConfigUtils extends Logging {
       case d: Double => d
       case d: Float  => d.toDouble
       case d: Int    => d.toDouble
+      case f: Long   => f.toDouble
       case d: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         return d.toDouble
       }
-      case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
+      case _ => throw new IllegalStateException("Value '" + any + "' is not an number")
     }
   }
 
@@ -224,12 +225,13 @@ object ConfigUtils extends Logging {
     any match {
       case f: Double => f.toFloat
       case f: Int    => f.toFloat
+      case f: Long   => f.toFloat
       case f: Float  => f
       case f: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         f.toFloat
       }
-      case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
+      case _ => throw new IllegalStateException("Value '" + any + "' is not an number")
     }
   }
 
@@ -272,6 +274,7 @@ object ConfigUtils extends Logging {
    * @return
    */
   def any2stringList(any: Any): List[String] = {
+    if (any == null) return null
     any2list(any).map(_.toString)
   }
 
@@ -283,7 +286,7 @@ object ConfigUtils extends Logging {
   def any2map(any: Any): Map[String, Any] = {
     if (any == null) return null
     any match {
-      case m: Map[_, _] => m.asInstanceOf[Map[String, Any]]
+      case m: Map[_, _] => m.map(x => x._1.toString -> x._2)
       case _            => throw new IllegalStateException("Value '" + any + "' is not an Map")
     }
   }
@@ -300,8 +303,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2file(value: ConfigValue): File = {
-      if (value != null) new File(any2string(value.value))
-      else null
+      if (value != null && value.value != null) new File(any2string(value.value)) else null
     }
 
     /**
@@ -310,8 +312,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2string(value: ConfigValue): String = {
-      if (value != null) any2string(value.value)
-      else null
+      if (value != null) any2string(value.value) else null
     }
 
     /**
@@ -320,8 +321,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2long(value: ConfigValue): Long = {
-      if (value != null) any2long(value.value)
-      else 0
+      if (value != null) any2long(value.value) else 0
     }
 
     /**
@@ -330,8 +330,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionLong(value: ConfigValue): Option[Long] = {
-      if (value != null) Option(any2long(value.value))
-      else None
+      if (value != null) Option(any2long(value.value)) else None
     }
 
     /**
@@ -340,8 +339,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2int(value: ConfigValue): Int = {
-      if (value != null) any2int(value.value)
-      else 0
+      if (value != null) any2int(value.value) else 0
     }
 
     /**
@@ -350,8 +348,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionInt(value: ConfigValue): Option[Int] = {
-      if (value != null) Option(any2int(value.value))
-      else None
+      if (value != null) Option(any2int(value.value)) else None
     }
 
     /**
@@ -360,8 +357,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2double(value: ConfigValue): Double = {
-      if (value != null) any2double(value.value)
-      else 0
+      if (value != null) any2double(value.value) else 0
     }
 
     /**
@@ -370,8 +366,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionDouble(value: ConfigValue): Option[Double] = {
-      if (value != null) Option(any2double(value.value))
-      else None
+      if (value != null) Option(any2double(value.value)) else None
     }
 
     /**
@@ -380,8 +375,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2float(value: ConfigValue): Float = {
-      if (value != null) any2float(value.value)
-      else 0
+      if (value != null) any2float(value.value) else 0
     }
 
     /**
@@ -390,8 +384,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionFloat(value: ConfigValue): Option[Float] = {
-      if (value != null) Option(any2float(value.value))
-      else None
+      if (value != null) Option(any2float(value.value)) else None
     }
 
     /**
@@ -400,8 +393,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2boolean(value: ConfigValue): Boolean = {
-      if (value != null) any2boolean(value.value)
-      else false
+      if (value != null) any2boolean(value.value) else false
     }
 
     /**
@@ -410,8 +402,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionBoolean(value: ConfigValue): Option[Boolean] = {
-      if (value != null) Option(any2boolean(value.value))
-      else None
+      if (value != null) Option(any2boolean(value.value)) else None
     }
 
     /**
@@ -420,8 +411,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2list(value: ConfigValue): List[Any] = {
-      if (value != null) any2list(value.value)
-      else null
+      if (value != null) any2list(value.value) else null
     }
 
     /**
@@ -430,8 +420,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringList(value: ConfigValue): List[String] = {
-      if (value != null) any2stringList(value.value)
-      else null
+      if (value != null) any2stringList(value.value) else null
     }
 
     /**
@@ -440,8 +429,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
-      if (value != null) any2stringList(value.value).toSet
-      else null
+      if (value != null && value.value != null) any2stringList(value.value).toSet else null
     }
 
     /**
@@ -450,8 +438,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2map(value: ConfigValue): Map[String, Any] = {
-      if (value != null) any2map(value.value)
-      else null
+      if (value != null) any2map(value.value) else null
     }
   }
 }
