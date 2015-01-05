@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge, SambambaMarkdup }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Delly, CleverCaller }
@@ -91,20 +92,24 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val bamFile: File =
       if (libraryBamfiles.size == 1) {
         // When the sample has only 1 run, make a link in the main alignment directory
-        val alignmentlink = Ln(root, libraryBamfiles.head,
+        val alignmentlink = Ln(this, libraryBamfiles.head,
           alignmentDir + sampleID + ".merged.bam", true)
         add(alignmentlink, isIntermediate = true)
         alignmentlink.out
       } else if (libraryBamfiles.size > 1) {
-        val mergeSamFiles = new SambambaMerge(root)
+        val mergeSamFiles = new SambambaMerge(this)
         mergeSamFiles.input = libraryBamfiles
         mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
         add(mergeSamFiles, isIntermediate = true)
         mergeSamFiles.output
       } else null
 
-    val bamMarkDup = SambambaMarkdup(root, bamFile)
+    val bamMarkDup = SambambaMarkdup(this, bamFile)
     add(bamMarkDup)
+
+    // create an IGV TDF file
+    val tdfCount = IGVToolsCount(this, bamMarkDup.output, config("genomename", default = "hg19"))
+    add(tdfCount)
 
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
