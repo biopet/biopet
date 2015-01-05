@@ -19,13 +19,26 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
+/**
+ * This class can store nested config values
+ * @param map Map with value for new config
+ * @constructor Load config with existing map
+ */
 class Config(var map: Map[String, Any]) extends Logging {
   logger.debug("Init phase of config")
+
+  /**
+   * Default constructor
+   */
   def this() = {
     this(Map())
     loadDefaultConfig()
   }
 
+  /**
+   * Loading a environmental variable as location of config files to merge into the config
+   * @param valueName Name of value
+   */
   def loadConfigEnv(valueName: String) {
     val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
     if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
@@ -38,10 +51,17 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
   }
 
+  /**
+   * Loading default value for biopet
+   */
   def loadDefaultConfig() {
     loadConfigEnv("BIOPET_CONFIG")
   }
 
+  /**
+   * Merge a json file into the config
+   * @param configFile Location of file
+   */
   def loadConfigFile(configFile: File) {
     val configMap = fileToConfigMap(configFile)
 
@@ -54,9 +74,40 @@ class Config(var map: Map[String, Any]) extends Logging {
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
 
+  /**
+   * Check if value exist in root of config
+   * @deprecated
+   * @param s key
+   * @return True if exist
+   */
   def contains(s: String): Boolean = map.contains(s)
-  def contains(requestedIndex: ConfigValueIndex, freeVar: Boolean): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
-  def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, true)
+
+  /**
+   * Checks if value exist in config
+   * @deprecated freeVar is now inside index
+   * @param requestedIndex Index to value
+   * @param freeVar Default true, if set false value must exist in module
+   * @return True if exist
+   */
+  def contains(requestedIndex: ConfigValueIndex, freeVar: Boolean): Boolean =
+    contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
+
+  /**
+   * Checks if value exist in config
+   * @param requestedIndex Index to value
+   * @return True if exist
+   */
+  def contains(requestedIndex: ConfigValueIndex): Boolean =
+    contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, requestedIndex.freeVar)
+
+  /**
+   * Checks if value exist in config
+   * @param module Name of module
+   * @param path Path to start searching
+   * @param key Name of value
+   * @param freeVar Default true, if set false value must exist in module
+   * @return True if exist
+   */
   def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
     if (notFoundCache.contains(requestedIndex)) return false
@@ -73,6 +124,15 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
   }
 
+  /**
+   * Find value in config
+   * @param module Name of module
+   * @param path Path to start searching
+   * @param key Name of value
+   * @param default Default value when no value is found
+   * @param freeVar Default true, if set false value must exist in module
+   * @return Config value
+   */
   protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key)
     if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
@@ -85,6 +145,11 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
   }
 
+  //TODO: New version of report is needed
+  /**
+   * Makes report for all used values
+   * @return Config report
+   */
   def getReport: String = {
     var output: StringBuilder = new StringBuilder
     output.append("Config report, sorted on module:\n")
@@ -118,8 +183,20 @@ class Config(var map: Map[String, Any]) extends Logging {
 object Config extends Logging {
   val global = new Config
 
+  /**
+   * Merge 2 config objects
+   * @param config1 prio over config 2
+   * @param config2
+   * @return Merged config
+   */
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
 
+  /**
+   * Get nested map
+   * @param map Map to search in
+   * @param path Nested path to get from map
+   * @return Nested map
+   */
   private def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
     var returnMap: Map[String, Any] = map
     for (m <- path) {
@@ -129,6 +206,12 @@ object Config extends Logging {
     return returnMap
   }
 
+  /**
+   * Search for value in index position in a map
+   * @param map Map to search in
+   * @param index Config index
+   * @return Value
+   */
   def getValueFromMap(map: Map[String, Any], index: ConfigValueIndex): Option[ConfigValue] = {
     var submodules = index.path.reverse
     while (!submodules.isEmpty) {
