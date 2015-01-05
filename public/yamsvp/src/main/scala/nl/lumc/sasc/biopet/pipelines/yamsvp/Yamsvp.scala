@@ -76,12 +76,11 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     val bamFile: File =
       if (libraryBamfiles.size == 1) {
         // When the sample has only 1 run, make a link in the main alignment directory
-        val alignmentlink = Ln( root, libraryBamfiles.head,
-          alignmentDir + sampleID + ".merged.bam", true )
+        val alignmentlink = Ln(root, libraryBamfiles.head,
+          alignmentDir + sampleID + ".merged.bam", true)
         add(alignmentlink, isIntermediate = true)
         alignmentlink.out
-      }
-      else if (libraryBamfiles.size > 1) {
+      } else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = new SambambaMerge(root)
         mergeSamFiles.input = libraryBamfiles
         mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
@@ -91,10 +90,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val bamMarkDup = SambambaMarkdup(root, bamFile)
     add(bamMarkDup)
-
-//    val analysisBam: File = bamMarkDup.output
-//    val analysisBamIndex = SambambaIndex(root, analysisBam)
-//    add(analysisBamIndex)
 
     /// bamfile will be used as input for the SV callers. First run Clever
     //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
