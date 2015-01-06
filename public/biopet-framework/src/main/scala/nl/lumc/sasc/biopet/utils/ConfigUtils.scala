@@ -91,7 +91,7 @@ object ConfigUtils extends Logging {
         val value: Any = jsonToAny(json.field(key).get)
         output += (key -> value)
       }
-    } else return null
+    } else throw new IllegalStateException("Given value is no json object: " + json)
     return output
   }
 
@@ -105,12 +105,12 @@ object ConfigUtils extends Logging {
     else if (json.isArray) {
       var list: List[Any] = List()
       for (value <- json.array.get) list ::= jsonToAny(value)
-      return list
+      return list.reverse
     } else if (json.isBool) return json.bool.get
     else if (json.isString) return json.string.get.toString
     else if (json.isNumber) {
       val num = json.number.get
-      if (num.toString.contains(".")) return num.toDouble
+      if (num % 1 > 0) return num.toDouble
       else return num.toLong
     } else throw new IllegalStateException("Config value type not supported, value: " + json)
   }
