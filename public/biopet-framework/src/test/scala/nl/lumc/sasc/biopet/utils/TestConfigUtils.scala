@@ -1,7 +1,9 @@
 package nl.lumc.sasc.biopet.utils
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 
+import argonaut.Argonaut._
+import argonaut.Json
 import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, ConfigValue }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -13,7 +15,57 @@ import org.testng.annotations.Test
  */
 class TestConfigUtils extends TestNGSuite with MockitoSugar with Matchers {
   import ConfigUtils._
+  import TestConfigUtils._
 
+  // Merge maps
+  @Test def testMergeMaps: Unit = {
+    val mergedMap = mergeMaps(map1, map2)
+    //TODO: more tests needed
+  }
+
+  // Json to scala values
+  @Test def testFileToJson: Unit = {
+    fileToJson(file1) shouldBe json1
+    fileToJson(file2) shouldBe json2
+    intercept[IllegalStateException] {
+      fileToJson(corruptFile)
+    }
+  }
+
+  @Test def testJsonToMap: Unit = {
+    jsonToMap(json1) shouldBe map1
+    jsonToMap(json2) shouldBe map2
+    intercept[IllegalStateException] {
+      jsonToMap(Json.jNumberOrString(1337))
+    }
+  }
+
+  @Test def testFileToConfigMap: Unit = {
+    fileToConfigMap(file1) shouldBe map1
+    fileToConfigMap(file2) shouldBe map2
+  }
+
+  // Any/scala values to Json objects
+  @Test def testAnyToJson: Unit = {
+    anyToJson("bla") shouldBe jString("bla")
+    anyToJson(1337) shouldBe Json.jNumberOrString(1337)
+    anyToJson(13.37) shouldBe Json.jNumberOrString(13.37)
+    anyToJson(1337L) shouldBe Json.jNumberOrString(1337L)
+    anyToJson(13.37f) shouldBe Json.jNumberOrString(13.37f)
+    anyToJson(List("bla")) shouldBe Json.array(anyToJson("bla"))
+    anyToJson(anyToJson("bla")) shouldBe anyToJson("bla")
+    anyToJson(Map()) shouldBe jEmptyObject
+    anyToJson(Map("bla" -> 1337)) shouldBe ("bla" := 1337) ->: jEmptyObject
+  }
+
+  @Test def testMapToJson: Unit = {
+    mapToJson(Map()) shouldBe jEmptyObject
+    mapToJson(Map("bla" -> 1337)) shouldBe ("bla" := 1337) ->: jEmptyObject
+    mapToJson(Map("bla" -> Map())) shouldBe ("bla" := jEmptyObject) ->: jEmptyObject
+    mapToJson(Map("bla" -> Map("nested" -> 1337))) shouldBe ("bla" := (("nested" := 1337) ->: jEmptyObject)) ->: jEmptyObject
+  }
+
+  // Any to scala values
   @Test def testAny2string: Unit = {
     any2string("bla") shouldBe "bla"
     any2string(1337) shouldBe "1337"
@@ -168,4 +220,82 @@ class TestConfigUtils extends TestNGSuite with MockitoSugar with Matchers {
       file = ConfigValue(index, index, null)
     }
   }
+}
+object TestConfigUtils {
+  def writeTemp(text: String): File = {
+    val file = File.createTempFile("TestConfigUtils.", ".json")
+    val w = new PrintWriter(file)
+    w.write(text)
+    w.close()
+    return file
+  }
+
+  val jsonText1 =
+    """
+       |{
+       | "int": 1337,
+       | "double": 13.37,
+       | "string": "bla",
+       | "nested": {
+       |   "1": 1,
+       |   "2": 1
+       | },
+       | "list": ["a", "b", "c"],
+       | "dummy": { "dummy": 1}
+       |}
+     """.stripMargin
+
+  val file1 = writeTemp(jsonText1)
+
+  val json1 = {
+    ("int" := 1337) ->:
+      ("double" := 13.37) ->:
+      ("string" := "bla") ->:
+      ("nested" := (("1" := 1) ->: ("2" := 1) ->: jEmptyObject)) ->:
+      ("list" := List("a", "b", "c")) ->:
+      ("dummy" := ("dummy" := 1) ->: jEmptyObject) ->:
+      jEmptyObject
+  }
+
+  val map1 = Map("int" -> 1337,
+    "double" -> 13.37,
+    "string" -> "bla",
+    "nested" -> Map("1" -> 1, "2" -> 1),
+    "list" -> List("a", "b", "c"),
+    "dummy" -> Map("dummy" -> 1))
+
+  val jsonText2 =
+    """
+       |{
+       | "int": 7331,
+       | "nested": {
+       |   "2": 2,
+       |   "3": 2
+       | },
+       | "dummy": 1
+       |}
+     """.stripMargin
+
+  val file2 = writeTemp(jsonText2)
+
+  val json2 = {
+    ("int" := 7331) ->:
+      ("nested" := (("2" := 2) ->: ("3" := 2) ->: jEmptyObject)) ->:
+      ("dummy" := 1) ->:
+      jEmptyObject
+  }
+
+  val map2 = Map("int" -> 7331,
+    "nested" -> Map("2" -> 2, "3" -> 2),
+    "dummy" -> 1)
+
+  val corruptJson =
+    """
+       |{
+       | "int": 1337
+       | "double": 13.37
+       |}
+     """.stripMargin
+
+  val corruptFile = writeTemp(corruptJson)
 }
