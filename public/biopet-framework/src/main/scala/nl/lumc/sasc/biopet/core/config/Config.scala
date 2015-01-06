@@ -192,21 +192,6 @@ object Config extends Logging {
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
 
   /**
-   * Get nested map
-   * @param map Map to search in
-   * @param path Nested path to get from map
-   * @return Nested map
-   */
-  private def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
-    var returnMap: Map[String, Any] = map
-    for (m <- path) {
-      if (!returnMap.contains(m)) return Map()
-      else returnMap = any2map(returnMap(m))
-    }
-    return returnMap
-  }
-
-  /**
    * Search for value in index position in a map
    * @param map Map to search in
    * @param index Config index

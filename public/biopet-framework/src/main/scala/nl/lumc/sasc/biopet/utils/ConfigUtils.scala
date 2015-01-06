@@ -53,6 +53,21 @@ object ConfigUtils extends Logging {
   }
 
   /**
+   * Get nested map
+   * @param map Map to search in
+   * @param path Nested path to get from map
+   * @return Nested map
+   */
+  def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
+    var returnMap: Map[String, Any] = map
+    for (m <- path) {
+      if (!returnMap.contains(m)) return Map()
+      else returnMap = any2map(returnMap(m))
+    }
+    return returnMap
+  }
+
+  /**
    * Make json aboject from a file
    * @param configFile Input file
    * @return Json object
