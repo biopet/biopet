@@ -73,16 +73,12 @@ object ConfigUtils extends Logging {
    * @return Some(value) or None if not found
    */
   def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
-    Some(path.foldLeft(map.asInstanceOf[Any])((m, s) => {
-      m match {
-        case map: Map[_, _] => {
-          val mp = map.asInstanceOf[Map[String, Any]]
-          if (!mp.contains(s)) return None
-          mp(s)
-        }
-        case _ => return None
-      }
-    }))
+    val value = map.get(path.head)
+    if (path.tail == Nil || value == None) value
+    else value.get match {
+      case map: Map[_, _] => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
+      case _              => None
+    }
   }
 
   /**
