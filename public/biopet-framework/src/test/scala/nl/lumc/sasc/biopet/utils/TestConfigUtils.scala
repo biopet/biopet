@@ -17,10 +17,28 @@ class TestConfigUtils extends TestNGSuite with MockitoSugar with Matchers {
   import ConfigUtils._
   import TestConfigUtils._
 
+  @Test def testGetValueFromPath: Unit = {
+    getValueFromPath(map1, List("dummy")) shouldBe Some(Map("dummy" -> 1))
+    getValueFromPath(map1, List("dummy", "dummy")) shouldBe Some(1)
+    getValueFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
+    getValueFromPath(map1, List("notexist", "dummy")) shouldBe None
+    getValueFromPath(map1, List("dummy", "notexist")) shouldBe None
+  }
+
+  @Test def testGetMapFromPath: Unit = {
+    getMapFromPath(map1, List("dummy")) shouldBe Map("dummy" -> 1)
+    getMapFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Map("dummy" -> 1)
+    intercept[IllegalStateException] {
+      getMapFromPath(map1, List("dummy", "dummy"))
+    }
+  }
+
   // Merge maps
   @Test def testMergeMaps: Unit = {
     val mergedMap = mergeMaps(map1, map2)
-    //TODO: more tests needed
+    getValueFromPath(mergedMap, List("nested", "1")) shouldBe Some(1)
+    getValueFromPath(mergedMap, List("nested", "2")) shouldBe Some(1)
+    getValueFromPath(mergedMap, List("nested", "3")) shouldBe Some(2)
   }
 
   // Json to scala values
@@ -241,7 +259,8 @@ object TestConfigUtils {
        |   "2": 1
        | },
        | "list": ["a", "b", "c"],
-       | "dummy": { "dummy": 1}
+       | "dummy": { "dummy": 1},
+       | "nested3": { "nested2": { "nested1": { "dummy": 1 } } }
        |}
      """.stripMargin
 
@@ -254,6 +273,7 @@ object TestConfigUtils {
       ("nested" := (("1" := 1) ->: ("2" := 1) ->: jEmptyObject)) ->:
       ("list" := List("a", "b", "c")) ->:
       ("dummy" := ("dummy" := 1) ->: jEmptyObject) ->:
+      ("nested3" := ("nested2" := ("nested1" := ("dummy" := 1) ->: jEmptyObject) ->: jEmptyObject) ->: jEmptyObject) ->:
       jEmptyObject
   }
 
@@ -262,7 +282,8 @@ object TestConfigUtils {
     "string" -> "bla",
     "nested" -> Map("1" -> 1, "2" -> 1),
     "list" -> List("a", "b", "c"),
-    "dummy" -> Map("dummy" -> 1))
+    "dummy" -> Map("dummy" -> 1),
+    "nested3" -> Map("nested2" -> Map("nested1" -> Map("dummy" -> 1))))
 
   val jsonText2 =
     """
@@ -285,7 +306,7 @@ object TestConfigUtils {
       jEmptyObject
   }
 
-  val map2 = Map("int" -> 7331,
+  val map2: Map[String, Any] = Map("int" -> 7331,
     "nested" -> Map("2" -> 2, "3" -> 2),
     "dummy" -> 1)
 
