@@ -13,9 +13,9 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 1/5/15.
  */
-class TestConfigUtils extends TestNGSuite with MockitoSugar with Matchers {
+class ConfigUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
   import ConfigUtils._
-  import TestConfigUtils._
+  import ConfigUtilsTest._
 
   @Test def testGetValueFromPath: Unit = {
     getValueFromPath(map1, List("dummy")) shouldBe Some(Map("dummy" -> 1))
@@ -239,7 +239,7 @@ class TestConfigUtils extends TestNGSuite with MockitoSugar with Matchers {
     }
   }
 }
-object TestConfigUtils {
+object ConfigUtilsTest {
   def writeTemp(text: String): File = {
     val file = File.createTempFile("TestConfigUtils.", ".json")
     val w = new PrintWriter(file)
