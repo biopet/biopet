@@ -59,12 +59,24 @@ object ConfigUtils extends Logging {
    * @return Nested map
    */
   def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
-    var returnMap: Map[String, Any] = map
-    for (m <- path) {
-      if (!returnMap.contains(m)) return Map()
-      else returnMap = any2map(returnMap(m))
+    val value = getValueFromPath(map, path) getOrElse { return null }
+    value match {
+      case m: Map[_, _] => m.asInstanceOf[Map[String, Any]]
+      case _            => throw new IllegalStateException("Value is not a map: " + value)
     }
-    return returnMap
+  }
+
+  def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
+    Some(path.foldLeft(map.asInstanceOf[Any])((m, s) => {
+      m match {
+        case map: Map[_, _] => {
+          val mp = map.asInstanceOf[Map[String, Any]]
+          if (!mp.contains(s)) return None
+          mp(s)
+        }
+        case _ => return None
+      }
+    }))
   }
 
   /**
