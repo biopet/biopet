@@ -26,8 +26,8 @@ class ConfigUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testGetMapFromPath: Unit = {
-    getMapFromPath(map1, List("dummy")) shouldBe Map("dummy" -> 1)
-    getMapFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Map("dummy" -> 1)
+    getMapFromPath(map1, List("dummy")) shouldBe Some(Map("dummy" -> 1))
+    getMapFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
     intercept[IllegalStateException] {
       getMapFromPath(map1, List("dummy", "dummy"))
     }

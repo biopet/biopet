@@ -58,10 +58,10 @@ object ConfigUtils extends Logging {
    * @param path Nested path to get from map
    * @return Nested map
    */
-  def getMapFromPath(map: Map[String, Any], path: List[String]): Map[String, Any] = {
-    val value = getValueFromPath(map, path) getOrElse { return null }
+  def getMapFromPath(map: Map[String, Any], path: List[String]): Option[Map[String, Any]] = {
+    val value = getValueFromPath(map, path) getOrElse { return None }
     value match {
-      case m: Map[_, _] => m.asInstanceOf[Map[String, Any]]
+      case m: Map[_, _] => Some(m.asInstanceOf[Map[String, Any]])
       case _            => throw new IllegalStateException("Value is not a map: " + value)
     }
   }
