@@ -32,7 +32,7 @@ trait Configurable extends ImplicitConversions {
   protected class ConfigFunctions {
     def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true): ConfigValue = {
       val m = if (submodule != null) submodule else configName
-      val p = if (submodule != null) configName :: configPath else configPath
+      val p = (if (submodule != null) configName :: configPath else configPath).reverse
       val d = {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -49,7 +49,7 @@ trait Configurable extends ImplicitConversions {
 
     def contains(key: String, submodule: String = null, freeVar: Boolean = true) = {
       val m = if (submodule != null) submodule else configName
-      val p = if (submodule != null) configName :: configPath else configPath
+      val p = (if (submodule != null) configName :: configPath else configPath).reverse
 
       Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }

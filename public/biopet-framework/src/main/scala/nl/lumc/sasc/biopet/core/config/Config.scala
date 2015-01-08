@@ -43,7 +43,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
     if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
     for (globalFile <- globalFiles) {
-      var file: File = new File(globalFile)
+      val file: File = new File(globalFile)
       if (file.exists()) {
         logger.info("Loading config file: " + file)
         loadConfigFile(file)
@@ -139,10 +139,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue.apply(requestedIndex, null, default, true))
       return defaultCache(requestedIndex)
-    } else {
-      logger.error("Value in config could not be found but it seems required, index: " + requestedIndex)
-      throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
-    }
+    } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
   }
 
   //TODO: New version of report is needed
@@ -151,7 +148,7 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @return Config report
    */
   def getReport: String = {
-    var output: StringBuilder = new StringBuilder
+    val output: StringBuilder = new StringBuilder
     output.append("Config report, sorted on module:\n")
     var modules: Map[String, StringBuilder] = Map()
     for ((key, value) <- foundCache) {
@@ -198,16 +195,16 @@ object Config extends Logging {
    * @return Value
    */
   def getValueFromMap(map: Map[String, Any], index: ConfigValueIndex): Option[ConfigValue] = {
-    var submodules = index.path.reverse
+    var submodules = index.path
     while (!submodules.isEmpty) {
       var submodules2 = submodules
       while (!submodules2.isEmpty) {
-        val p = getMapFromPath(map, submodules2 ::: index.module :: Nil)
+        val p = getMapFromPath(map, submodules2 ::: index.module :: Nil) getOrElse Map()
         if (p.contains(index.key)) {
           return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key), p(index.key)))
         }
         if (index.freeVar) {
-          val p2 = getMapFromPath(map, submodules2)
+          val p2 = getMapFromPath(map, submodules2) getOrElse Map()
           if (p2.contains(index.key)) {
             return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key), p2(index.key)))
           }
@@ -216,7 +213,7 @@ object Config extends Logging {
       }
       submodules = submodules.tail
     }
-    val p = getMapFromPath(map, index.module :: Nil)
+    val p = getMapFromPath(map, index.module :: Nil) getOrElse Map()
     if (p.contains(index.key)) { // Module is not nested
       return Option(ConfigValue(index, ConfigValueIndex(index.module, Nil, index.key), p(index.key)))
     } else if (map.contains(index.key) && index.freeVar) { // Root value of json
