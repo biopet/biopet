@@ -66,6 +66,12 @@ object ConfigUtils extends Logging {
     }
   }
 
+  /**
+   * Get nested value
+   * @param map Map to search in
+   * @param path Path to the value
+   * @return Some(value) or None if not found
+   */
   def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
     Some(path.foldLeft(map.asInstanceOf[Any])((m, s) => {
       m match {
