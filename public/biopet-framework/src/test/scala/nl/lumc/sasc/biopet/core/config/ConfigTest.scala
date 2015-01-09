@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.core.config
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -43,6 +44,13 @@ class ConfigTest extends TestNGSuite with MockitoSugar with Matchers with Config
   @Test def testToString: Unit = {
     val map1 = Map("1" -> 1)
     new Config(map1).toString() shouldBe map1.toString()
+  }
+
+  @Test def testSkipNested: Unit = {
+    val map = Map("1" -> Map("2" -> Map("4" -> Map("5" -> Map("k1" -> "v1")))))
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1")).get.asString shouldBe "v1"
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1")).get.asString shouldBe "v1"
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
   }
 
   @Test def testGetValueFromMap: Unit = {

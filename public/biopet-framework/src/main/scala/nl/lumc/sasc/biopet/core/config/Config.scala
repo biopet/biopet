@@ -186,35 +186,49 @@ object Config extends Logging {
   /**
    * Search for value in index position in a map
    * @param map Map to search in
-   * @param index Config index
+   * @param startIndex Config index
    * @return Value
    */
-  def getValueFromMap(map: Map[String, Any], index: ConfigValueIndex): Option[ConfigValue] = {
-    var submodules = index.path
-    while (!submodules.isEmpty) {
-      var submodules2 = submodules
-      while (!submodules2.isEmpty) {
-        val p = getMapFromPath(map, submodules2 ::: index.module :: Nil) getOrElse Map()
-        if (p.contains(index.key)) {
-          return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key, freeVar = false), p(index.key)))
-        }
-        if (index.freeVar) {
-          val p2 = getMapFromPath(map, submodules2) getOrElse Map()
-          if (p2.contains(index.key)) {
-            return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key, freeVar = true), p2(index.key)))
-          }
-        }
-        submodules2 = submodules2.init
+  def getValueFromMap(map: Map[String, Any], startIndex: ConfigValueIndex): Option[ConfigValue] = {
+    def getFromPath(path: List[String]): Option[ConfigValue] = {
+      val p = getValueFromPath(map, path ::: startIndex.module :: startIndex.key :: Nil)
+      if (p.isDefined) Option(ConfigValue(startIndex, ConfigValueIndex(startIndex.module, path, startIndex.key, freeVar = false), p.get))
+      else if (startIndex.freeVar) {
+        val p = getValueFromPath(map, path ::: startIndex.key :: Nil)
+        if (p.isDefined) Option(ConfigValue(startIndex, ConfigValueIndex(startIndex.module, path, startIndex.key, freeVar = true), p.get))
+        else None
+      } else None
+    }
+
+    def tailSearch(path: List[String]): Option[ConfigValue] = {
+      val p = getFromPath(path)
+      if (p != None) p
+      else if (path == Nil) None
+      else {
+        val p = initSearch(path)
+        if (p.isDefined) p
+        else tailSearch(path.tail)
       }
-      submodules = submodules.tail
     }
-    val p = getMapFromPath(map, index.module :: Nil) getOrElse Map()
-    if (p.contains(index.key)) { // Module is not nested
-      return Option(ConfigValue(index, ConfigValueIndex(index.module, Nil, index.key, freeVar = false), p(index.key)))
-    } else if (map.contains(index.key) && index.freeVar) { // Root value of json
-      return Option(ConfigValue(index, ConfigValueIndex("", Nil, index.key, freeVar = true), map(index.key)))
-    } else { // At this point key is not found on the path
-      return None
+
+    def initSearch(path: List[String], tail: List[String] = Nil): Option[ConfigValue] = {
+      val p = getFromPath(path)
+      if (p.isDefined) p
+      else if (path == Nil) None
+      else {
+        val p = skipNested(path, tail)
+        if (p.isDefined) p
+        else initSearch(path.init, path.last :: tail)
+      }
     }
+
+    def skipNested(path: List[String], tail: List[String] = Nil): Option[ConfigValue] = {
+      val p = getFromPath(path ::: tail)
+      if (p.isDefined) p
+      else if (tail == Nil) None
+      else skipNested(path, tail.tail)
+    }
+
+    return tailSearch(startIndex.path)
   }
 }
