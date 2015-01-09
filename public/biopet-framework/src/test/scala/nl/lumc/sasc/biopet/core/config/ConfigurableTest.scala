@@ -36,12 +36,22 @@ class ConfigurableTest extends TestNGSuite with MockitoSugar with Matchers {
     classC.get("k1", freeVar = false).asString shouldBe "c1"
     classC.classB.get("k1", freeVar = false).asString shouldBe "b1"
     classC.classB.classA.get("k1", freeVar = false).asString shouldBe "a1"
+
+    classC.get("bla", sample = "sample1", library = "library1").asString shouldBe "bla"
+    classC.get("test", sample = "sample1", library = "library1").asString shouldBe "test"
+    classC.get("test", sample = "sample1").asString shouldBe "test"
   }
 }
 
 abstract class Cfg extends Configurable {
-  def get(key: String, default: String = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true) = {
-    config(key, default, submodule, required, freeVar = freeVar)
+  def get(key: String,
+          default: String = null,
+          submodule: String = null,
+          required: Boolean = false,
+          freeVar: Boolean = true,
+          sample: String = null,
+          library: String = null) = {
+    config(key, default, submodule, required, freeVar = freeVar, sample = sample, library = library)
   }
 }
 
@@ -64,6 +74,15 @@ object ConfigurableTest {
       "k1" -> "b1"
     ), "classc" -> Map(
       "k1" -> "c1"
+    ), "samples" -> Map(
+      "sample1" -> Map(
+        "test" -> "test",
+        "libraries" -> Map(
+          "library1" -> Map(
+            "bla" -> "bla"
+          )
+        )
+      )
     )
   )
 
