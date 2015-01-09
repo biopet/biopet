@@ -15,13 +15,13 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedInputStream, File, FileInputStream, PrintWriter }
-import java.util.zip.GZIPInputStream
+import java.io.File
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, BasicFastqWriter }
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import scala.io.Source
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import scala.collection.JavaConversions._
 
 class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -58,25 +58,19 @@ object FastqSplitter extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val groupsize = 100
-    val output = for (file <- commandArgs.outputFile) yield new PrintWriter(file)
-    val inputStream = {
-      if (commandArgs.inputFile.getName.endsWith(".gz") || commandArgs.inputFile.getName.endsWith(".gzip")) Source.fromInputStream(
-        new GZIPInputStream(
-          new BufferedInputStream(
-            new FileInputStream(commandArgs.inputFile)))).bufferedReader
-      else Source.fromFile(commandArgs.inputFile).bufferedReader
-    }
-    while (inputStream.ready) {
-      for (writter <- output) {
-        for (t <- 1 to groupsize) {
-          for (t <- 1 to (4)) {
-            if (inputStream.ready) {
-              writter.write(inputStream.readLine + "\n")
-            }
-          }
+    val output = for (file <- commandArgs.outputFile) yield new AsyncFastqWriter(new BasicFastqWriter(file), groupsize)
+    val reader = new FastqReader(commandArgs.inputFile)
+
+    logger.info("Starting to split fatsq file: " + commandArgs.inputFile)
+    logger.info("Output files: " + commandArgs.outputFile.mkString(", "))
+
+    while (reader.hasNext) {
+      for (writer <- output) {
+        for (t <- 1 to groupsize if reader.hasNext) {
+          writer.write(reader.next())
         }
       }
     }
-    for (writter <- output) writter.close
+    for (writer <- output) writer.close
   }
 }
