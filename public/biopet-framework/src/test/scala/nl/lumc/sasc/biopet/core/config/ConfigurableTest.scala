@@ -31,6 +31,7 @@ class ConfigurableTest extends TestNGSuite with MockitoSugar with Matchers {
     intercept[IllegalStateException] {
       classC.get("notexist", required = true)
     }
+    classC.get("notexist", default = "default").asString shouldBe "default"
 
     classC.get("k1", freeVar = false).asString shouldBe "c1"
     classC.classB.get("k1", freeVar = false).asString shouldBe "b1"
@@ -42,7 +43,6 @@ abstract class Cfg extends Configurable {
   def get(key: String, default: String = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true) = {
     config(key, default, submodule, required, freeVar = freeVar)
   }
-
 }
 
 class ClassA(val root: Configurable) extends Cfg
