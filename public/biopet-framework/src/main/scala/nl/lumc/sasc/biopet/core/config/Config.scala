@@ -73,6 +73,11 @@ class Config(var map: Map[String, Any]) extends Logging {
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
+  protected[config] def clearCache: Unit = {
+    notFoundCache = List()
+    foundCache = Map()
+    defaultCache = Map()
+  }
 
   /**
    * Check if value exist in root of config
@@ -84,32 +89,10 @@ class Config(var map: Map[String, Any]) extends Logging {
 
   /**
    * Checks if value exist in config
-   * @deprecated freeVar is now inside index
-   * @param requestedIndex Index to value
-   * @param freeVar Default true, if set false value must exist in module
-   * @return True if exist
-   */
-  def contains(requestedIndex: ConfigValueIndex, freeVar: Boolean): Boolean =
-    contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, freeVar)
-
-  /**
-   * Checks if value exist in config
    * @param requestedIndex Index to value
    * @return True if exist
    */
   def contains(requestedIndex: ConfigValueIndex): Boolean =
-    contains(requestedIndex.module, requestedIndex.path, requestedIndex.key, requestedIndex.freeVar)
-
-  /**
-   * Checks if value exist in config
-   * @param module Name of module
-   * @param path Path to start searching
-   * @param key Name of value
-   * @param freeVar Default true, if set false value must exist in module
-   * @return True if exist
-   */
-  def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
-    val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
     if (notFoundCache.contains(requestedIndex)) return false
     else if (foundCache.contains(requestedIndex)) return true
     else {
@@ -122,6 +105,18 @@ class Config(var map: Map[String, Any]) extends Logging {
         return false
       }
     }
+
+  /**
+   * Checks if value exist in config
+   * @param module Name of module
+   * @param path Path to start searching
+   * @param key Name of value
+   * @param freeVar Default true, if set false value must exist in module
+   * @return True if exist
+   */
+  def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
+    val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
+    contains(requestedIndex)
   }
 
   /**
@@ -134,10 +129,10 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @return Config value
    */
   protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
-    val requestedIndex = ConfigValueIndex(module, path, key)
-    if (contains(requestedIndex, freeVar)) return foundCache(requestedIndex)
+    val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
+    if (contains(requestedIndex)) return foundCache(requestedIndex)
     else if (default != null) {
-      defaultCache += (requestedIndex -> ConfigValue.apply(requestedIndex, null, default, true))
+      defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
       return defaultCache(requestedIndex)
     } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
   }
@@ -201,12 +196,12 @@ object Config extends Logging {
       while (!submodules2.isEmpty) {
         val p = getMapFromPath(map, submodules2 ::: index.module :: Nil) getOrElse Map()
         if (p.contains(index.key)) {
-          return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key), p(index.key)))
+          return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key, freeVar = false), p(index.key)))
         }
         if (index.freeVar) {
           val p2 = getMapFromPath(map, submodules2) getOrElse Map()
           if (p2.contains(index.key)) {
-            return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key), p2(index.key)))
+            return Option(ConfigValue(index, ConfigValueIndex(index.module, submodules2, index.key, freeVar = true), p2(index.key)))
           }
         }
         submodules2 = submodules2.init
@@ -215,9 +210,9 @@ object Config extends Logging {
     }
     val p = getMapFromPath(map, index.module :: Nil) getOrElse Map()
     if (p.contains(index.key)) { // Module is not nested
-      return Option(ConfigValue(index, ConfigValueIndex(index.module, Nil, index.key), p(index.key)))
+      return Option(ConfigValue(index, ConfigValueIndex(index.module, Nil, index.key, freeVar = false), p(index.key)))
     } else if (map.contains(index.key) && index.freeVar) { // Root value of json
-      return Option(ConfigValue(index, ConfigValueIndex("", Nil, index.key), map(index.key)))
+      return Option(ConfigValue(index, ConfigValueIndex("", Nil, index.key, freeVar = true), map(index.key)))
     } else { // At this point key is not found on the path
       return None
     }
