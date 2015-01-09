@@ -200,6 +200,7 @@ object ConfigUtils extends Logging {
     any match {
       case i: Int    => i
       case i: Double => i.toInt
+      case i: Long   => i.toInt
       case i: String => {
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         i.toInt

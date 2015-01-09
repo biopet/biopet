@@ -21,9 +21,9 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
   val root: Configurable
-  lazy val configPath: List[String] = if (root != null) root.configFullPath else List()
-  protected[config] lazy val configName = getClass.getSimpleName.toLowerCase
-  protected[config] lazy val configFullPath: List[String] = configPath ::: configName :: Nil
+  def configPath: List[String] = if (root != null) root.configFullPath else List()
+  protected[core] def configName = getClass.getSimpleName.toLowerCase
+  protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
   var defaults: scala.collection.mutable.Map[String, Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
   else scala.collection.mutable.Map()
 

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 trait MultiSampleQScript extends BiopetQScript {
@@ -39,7 +39,9 @@ trait MultiSampleQScript extends BiopetQScript {
       var sample = any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
+        setCurrentSample(key)
         samplesOutput += key -> runSingleSampleJobs(sample)
+        unsetCurrentSample()
       } else logger.warn("Key is not the same as ID on value for sample")
     }
     else logger.warn("No Samples found in config")
@@ -63,11 +65,58 @@ trait MultiSampleQScript extends BiopetQScript {
         var library = any2map(value)
         if (!library.contains("ID")) library += ("ID" -> key)
         if (library("ID") == key) {
+          setCurrentLibrary(key)
           output += key -> runSingleLibraryJobs(library, sampleConfig)
+          unsetCurrentLibrary()
         } else logger.warn("Key is not the same as ID on value for run of sample: " + sampleID)
       }
     } else logger.warn("No runs found in config for sample: " + sampleID)
     return output
   }
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput
+
+  private var currentSample: String = null
+  private var currentLibrary: String = null
+
+  def setCurrentSample(sample: String) {
+    currentSample = sample
+  }
+
+  def unsetCurrentSample() {
+    currentSample = null
+  }
+
+  def setCurrentLibrary(library: String) {
+    currentLibrary = library
+  }
+
+  def unsetCurrentLibrary() {
+    currentLibrary = null
+  }
+
+  override protected[core] def configFullPath: List[String] = {
+    (if (currentSample != null) "samples" :: currentSample :: Nil else Nil) :::
+      (if (currentLibrary != null) "libraries" :: currentLibrary :: Nil else Nil) :::
+      super.configFullPath
+  }
+
+  protected class ConfigFunctions extends super.ConfigFunctions {
+    override def apply(key: String,
+                       default: Any = null,
+                       submodule: String = null,
+                       required: Boolean = false,
+                       freeVar: Boolean = true,
+                       sample: String = currentSample,
+                       library: String = currentLibrary): ConfigValue = {
+      super.apply(key, default, submodule, required, freeVar, sample, library)
+    }
+
+    override def contains(key: String,
+                          submodule: String = null,
+                          freeVar: Boolean = true,
+                          sample: String = currentSample,
+                          library: String = currentLibrary) = {
+      super.contains(key, submodule, freeVar, sample, library)
+    }
+  }
 }
