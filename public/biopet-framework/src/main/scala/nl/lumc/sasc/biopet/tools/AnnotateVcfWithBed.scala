@@ -71,13 +71,7 @@ object AnnotateVcfWithBed extends ToolCommand {
 
     // Sort records when needed
     for ((chr, record) <- bedRecords) {
-      bedRecords(chr) = record.sortWith((first, second) => {
-        if (first._1 > second._1) true
-        else if (first._1 < second._1) false
-        else if (first._2 > second._2) true
-        else if (first._2 < second._2) false
-        else true
-      })
+      bedRecords(chr) = record.sortBy(x => (x._1, x._2))
     }
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
