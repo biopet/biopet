@@ -57,20 +57,24 @@ object FastqSplitter extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val groupsize = 100
-    val output = for (file <- commandArgs.outputFile) yield new AsyncFastqWriter(new BasicFastqWriter(file), groupsize)
+    val groupSize = 100
+    val output = for (file <- commandArgs.outputFile) yield new AsyncFastqWriter(new BasicFastqWriter(file), groupSize)
     val reader = new FastqReader(commandArgs.inputFile)
 
     logger.info("Starting to split fatsq file: " + commandArgs.inputFile)
     logger.info("Output files: " + commandArgs.outputFile.mkString(", "))
 
+    var counter: Long = 0
     while (reader.hasNext) {
       for (writer <- output) {
-        for (t <- 1 to groupsize if reader.hasNext) {
+        for (t <- 1 to groupSize if reader.hasNext) {
           writer.write(reader.next())
+          counter += 1
+          if (counter % 1000000 == 0) logger.info(counter + " reads processed")
         }
       }
     }
     for (writer <- output) writer.close
+    logger.info("Done, " + counter + " reads processed")
   }
 }
