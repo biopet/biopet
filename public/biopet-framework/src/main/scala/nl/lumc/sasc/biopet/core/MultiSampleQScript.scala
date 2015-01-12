@@ -29,13 +29,15 @@ trait MultiSampleQScript extends BiopetQScript {
     def getLibrary(key: String) = libraries(key)
   }
 
-  var samplesConfig: Map[String, Any] = config("samples")
-  var samplesOutput: Map[String, SampleOutput] = Map()
+  if (!config.contains("samples")) logger.warn("No Samples found in config")
+  val getSamplesConfig: Map[String, Any] = config("samples", default = Map())
+  val getSamples: Set[String] = getSamplesConfig.keySet
   def globalSampleDir: String = outputDir + "samples/"
 
+  var samplesOutput: Map[String, SampleOutput] = Map()
+
   final def runSamplesJobs() {
-    if (samplesConfig == null) samplesConfig = Map()
-    if (Config.global.contains("samples")) for ((key, value) <- samplesConfig) {
+    for ((key, value) <- getSamplesConfig) {
       var sample = any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
@@ -44,12 +46,11 @@ trait MultiSampleQScript extends BiopetQScript {
         unsetCurrentSample()
       } else logger.warn("Key is not the same as ID on value for sample")
     }
-    else logger.warn("No Samples found in config")
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
   def runSingleSampleJobs(sample: String): SampleOutput = {
-    var map = any2map(samplesConfig(sample))
+    var map = any2map(getSamplesConfig(sample))
     if (map.contains("ID") && map("ID") != sample)
       throw new IllegalStateException("ID in config not the same as the key")
     else map += ("ID" -> sample)
@@ -82,6 +83,8 @@ trait MultiSampleQScript extends BiopetQScript {
     currentSample = sample
   }
 
+  def getCurrentSample = currentSample
+
   def unsetCurrentSample() {
     currentSample = null
   }
@@ -89,6 +92,8 @@ trait MultiSampleQScript extends BiopetQScript {
   def setCurrentLibrary(library: String) {
     currentLibrary = library
   }
+
+  def getCurrentLibrary = currentLibrary
 
   def unsetCurrentLibrary() {
     currentLibrary = null
