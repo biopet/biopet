@@ -29,6 +29,13 @@ class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction 
 }
 
 object PrefixFastq extends ToolCommand {
+  def apply(root: Configurable, input: File, outputDir: String): PrefixFastq = {
+    val prefixFastq = new PrefixFastq(root)
+    prefixFastq.inputFastq = input
+    prefixFastq.outputFastq = new File(outputDir, input.getName + ".prefix.fastq")
+    return prefixFastq
+  }
+
   case class Args(input: File = null, output: File = null, seq: String = "CATG") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
