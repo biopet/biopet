@@ -9,6 +9,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 import scala.collection.JavaConversions._
 
 /**
+ * Queue class for PrefixFastq tool
+ *
  * Created by pjvan_thof on 1/13/15.
  */
 class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
@@ -23,6 +25,10 @@ class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Argument(doc = "Prefix seq", required = true)
   var prefixSeq: String = _
 
+  /**
+   * Creates command to execute extension
+   * @return
+   */
   override def commandLine = super.commandLine +
     required("-i", inputFastq) +
     required("-o", outputFastq) +
@@ -30,6 +36,14 @@ class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction 
 }
 
 object PrefixFastq extends ToolCommand {
+  /**
+   * Create a PrefixFastq class object with a sufix ".prefix.fastq" in the output folder
+   *
+   * @param root parent object
+   * @param input input file
+   * @param outputDir outputFolder
+   * @return PrefixFastq class object
+   */
   def apply(root: Configurable, input: File, outputDir: String): PrefixFastq = {
     val prefixFastq = new PrefixFastq(root)
     prefixFastq.inputFastq = input
@@ -37,6 +51,12 @@ object PrefixFastq extends ToolCommand {
     return prefixFastq
   }
 
+  /**
+   * Args for commandline program
+   * @param input input fastq file (can be zipper)
+   * @param output output fastq file (can be zipper)
+   * @param seq Seq to prefix the reads with
+   */
   case class Args(input: File = null, output: File = null, seq: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -52,6 +72,8 @@ object PrefixFastq extends ToolCommand {
   }
 
   /**
+   * Program will prefix reads with a given seq
+   *
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
