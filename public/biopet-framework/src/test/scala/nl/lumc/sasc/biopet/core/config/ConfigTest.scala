@@ -5,7 +5,7 @@ import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvan_thof on 1/8/15.
@@ -53,49 +53,55 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
     Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
   }
 
-  @Test def testGetValueFromMap: Unit = {
+  @DataProvider(name = "testGetValueFromMapProvider", parallel = true)
+  def testGetValueFromMapProvider() = {
+    Array(
+      Array("m1", Nil, "k1", true, "v2"),
+      Array("m1", List("bla"), "k1", true, "v2"),
+      Array("m1", List("bla", "bla2"), "k1", true, "v2"),
+      Array("m2", List("m1"), "k1", true, "v4"),
+      Array("m2", Nil, "k1", true, "v3"),
+      Array("notexist", Nil, "k1", true, "v1"),
+
+      // With Freevar
+      Array("notexist", Nil, "notexist", true, None),
+      Array("m1", Nil, "notexist", true, None),
+      Array("m2", Nil, "notexist", true, None),
+      Array("m1", List("m2"), "notexist", true, None),
+      Array("m3", Nil, "k2", true, "v5"),
+      Array("m4", Nil, "k2", true, None),
+      Array("m5", Nil, "k2", true, None),
+      Array("m6", Nil, "k2", true, None),
+      Array("m4", List("m3"), "k2", true, "v6"),
+      Array("m5", List("m3"), "k2", true, "v5"),
+      Array("m6", List("m3"), "k2", true, "v5"),
+      Array("m5", List("m3", "m4"), "k2", true, "v7"),
+      Array("m6", List("m3", "m4"), "k2", true, "v6"),
+      Array("m6", List("m3", "m4", "m5"), "k2", true, "v8"),
+
+      // Without freeVar
+      Array("m3", Nil, "k2", false, "v5"),
+      Array("m4", Nil, "k2", false, None),
+      Array("m5", Nil, "k2", false, None),
+      Array("m6", Nil, "k2", false, None),
+      Array("m4", List("m3"), "k2", false, "v6"),
+      Array("m5", List("m3"), "k2", false, None),
+      Array("m6", List("m3"), "k2", false, None),
+      Array("m5", List("m3", "m4"), "k2", false, "v7"),
+      Array("m6", List("m3", "m4"), "k2", false, None),
+      Array("m6", List("m3", "m4", "m5"), "k2", false, "v8")
+    )
+  }
+
+  @Test(dataProvider = "testGetValueFromMapProvider")
+  def testGetValueFromMap(module: String, path: List[String], key: String, freeVar: Boolean, expected: Any): Unit = {
     val map = ConfigTest.map
-    Config.getValueFromMap(map, new ConfigValueIndex("m1", Nil, "k1")).get.asString shouldBe "v2"
-    Config.getValueFromMap(map, new ConfigValueIndex("m1", List("bla"), "k1")).get.asString shouldBe "v2"
-    Config.getValueFromMap(map, new ConfigValueIndex("m1", List("bla", "bla2"), "k1")).get.asString shouldBe "v2"
-    Config.getValueFromMap(map, new ConfigValueIndex("m2", List("m1"), "k1")).get.asString shouldBe "v4"
-    Config.getValueFromMap(map, new ConfigValueIndex("m2", Nil, "k1")).get.asString shouldBe "v3"
-    Config.getValueFromMap(map, new ConfigValueIndex("notexist", Nil, "k1")).get.asString shouldBe "v1"
-
-    Config.getValueFromMap(map, new ConfigValueIndex("notexist", Nil, "notexist")) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m1", Nil, "notexist")) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m2", Nil, "notexist")) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m1", List("m2"), "notexist")) shouldBe None
-
-    // With free var
-    Config.getValueFromMap(map, new ConfigValueIndex("m3", Nil, "k2")).get.asString shouldBe "v5"
-    Config.getValueFromMap(map, new ConfigValueIndex("m4", Nil, "k2")) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", Nil, "k2")) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", Nil, "k2")) shouldBe None
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m4", List("m3"), "k2")).get.asString shouldBe "v6"
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", List("m3"), "k2")).get.asString shouldBe "v5"
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3"), "k2")).get.asString shouldBe "v5"
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", List("m3", "m4"), "k2")).get.asString shouldBe "v7"
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3", "m4"), "k2")).get.asString shouldBe "v6"
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3", "m4", "m5"), "k2")).get.asString shouldBe "v8"
-
-    // Without free var
-    Config.getValueFromMap(map, new ConfigValueIndex("m3", Nil, "k2", false)).get.asString shouldBe "v5"
-    Config.getValueFromMap(map, new ConfigValueIndex("m4", Nil, "k2", false)) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", Nil, "k2", false)) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", Nil, "k2", false)) shouldBe None
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m4", List("m3"), "k2", false)).get.asString shouldBe "v6"
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", List("m3"), "k2", false)) shouldBe None
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3"), "k2", false)) shouldBe None
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m5", List("m3", "m4"), "k2", false)).get.asString shouldBe "v7"
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3", "m4"), "k2", false)) shouldBe None
-
-    Config.getValueFromMap(map, new ConfigValueIndex("m6", List("m3", "m4", "m5"), "k2", false)).get.asString shouldBe "v8"
+    val index = new ConfigValueIndex(module, path, key, freeVar)
+    val value = Config.getValueFromMap(map, index)
+    value match {
+      case Some(x) => x.value shouldBe expected
+      case None    => value shouldBe expected
+    }
   }
 }
 
