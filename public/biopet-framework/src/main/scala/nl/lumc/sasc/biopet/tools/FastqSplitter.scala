@@ -23,6 +23,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 
+/**
+ * Queue extension for the FastqSplitter
+ * @param root Parent object
+ */
 class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
@@ -35,10 +39,20 @@ class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunctio
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
+  /**
+   * Generate command to execute
+   * @return
+   */
   override def commandLine = super.commandLine + required("-I", input) + repeat("-o", output)
 }
 
 object FastqSplitter extends ToolCommand {
+
+  /**
+   * Arg for commandline program
+   * @param inputFile input fastq file
+   * @param outputFile output fastq files
+   */
   case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -51,6 +65,8 @@ object FastqSplitter extends ToolCommand {
   }
 
   /**
+   * Program will split fastq file in multiple fastq files
+   *
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
