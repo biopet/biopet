@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ PrintWriter, File }
 
+import htsjdk.variant.variantcontext.Genotype
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.ToolCommand
 import org.broadinstitute.gatk.utils.R.RScriptExecutor
@@ -28,6 +29,11 @@ object VcfStats extends ToolCommand {
     }
   }
 
+  val genotypeOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
+  val variantOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
+
+  val genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map()
+
   /**
    * @param args the command line arguments
    */
@@ -40,29 +46,90 @@ object VcfStats extends ToolCommand {
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
 
-    val genotypeOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
+    // Init
+    for (sample1 <- samples) {
+      genotypeOverlap(sample1) = mutable.Map()
+      variantOverlap(sample1) = mutable.Map()
+      genotypeStats(sample1) = mutable.Map()
+      for (sample2 <- samples) {
+        genotypeOverlap(sample1)(sample2) = 0
+        variantOverlap(sample1)(sample2) = 0
+      }
+    }
+
+    // Reading vcf records
+    logger.info("Start reading vcf records")
     for (record <- reader) {
       for (sample1 <- samples) {
+        val genotype = record.getGenotype(sample1)
+        checkGenotype(genotype)
         for (sample2 <- samples) {
-          if (record.getGenotype(sample1).getAlleles == record.getGenotype(sample2).getAlleles) {
-            if (!genotypeOverlap.contains(sample1)) genotypeOverlap(sample1) = mutable.Map()
-            val current = genotypeOverlap(sample1).getOrElse(sample2, 0)
-            genotypeOverlap(sample1)(sample2) = current + 1
+          if (genotype.getAlleles == record.getGenotype(sample2).getAlleles) {
+            genotypeOverlap(sample1)(sample2) = genotypeOverlap(sample1)(sample2) + 1
+            if (!(genotype.isHomRef || genotype.isNoCall || genotype.isNonInformative))
+              variantOverlap(sample1)(sample2) = variantOverlap(sample1)(sample2) + 1
           }
         }
       }
     }
+    logger.info("Done reading vcf records")
 
-    writeOverlap(genotypeOverlap, commandArgs.outputDir + "/sample_genotype_overlap", samples)
-
-    plot(new File(commandArgs.outputDir + "/sample_genotype_overlap.rel.tsv"))
+    writeGenotypeFields(commandArgs.outputDir + "/genotype_", samples)
+    writeOverlap(genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
+    writeOverlap(variantOverlap, commandArgs.outputDir + "/sample_compare/variant_overlap", samples)
 
     logger.info("Done")
   }
 
+  def checkGenotype(genotype: Genotype): Unit = {
+    val sample = genotype.getSampleName
+    val dp = if (genotype.hasDP) genotype.getDP else "not set"
+    if (!genotypeStats(sample).contains("DP")) genotypeStats(sample)("DP") = mutable.Map()
+    genotypeStats(sample)("DP")(dp) = genotypeStats(sample)("DP").getOrElse(dp, 0) + 1
+
+    val gq = if (genotype.hasGQ) genotype.getGQ else "not set"
+    if (!genotypeStats(sample).contains("GQ")) genotypeStats(sample)("GQ") = mutable.Map()
+    genotypeStats(sample)("GQ")(gq) = genotypeStats(sample)("DP").getOrElse(gq, 0) + 1
+
+    //TODO: add AD field
+  }
+
+  def writeGenotypeFields(prefix: String, samples: List[String]) {
+    val fields = List("DP", "GQ")
+    for (field <- fields) {
+      val file = new File(prefix + field + ".tsv")
+      file.getParentFile.mkdirs()
+      val writer = new PrintWriter(file)
+      writer.println(samples.mkString("\t", "\t", ""))
+      val keySet = (for (sample <- samples) yield genotypeStats(sample)(field).keySet).fold(Set[Any]())(_ ++ _)
+      for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
+        val values = for (sample <- samples) yield genotypeStats(sample)(field).getOrElse(key, 0)
+        writer.println(values.mkString(key + "\t", "\t", ""))
+      }
+      writer.close()
+    }
+  }
+
+  def sortAnyAny(a: Any, b: Any): Boolean = {
+    a match {
+      case ai: Int => {
+        b match {
+          case bi: Int => ai < bi
+          case _       => a.toString < b.toString
+        }
+      }
+      case _ => a.toString < b.toString
+    }
+  }
+
   def writeOverlap(overlap: mutable.Map[String, mutable.Map[String, Int]], prefix: String, samples: List[String]): Unit = {
-    val absWriter = new PrintWriter(new File(prefix + ".abs.tsv"))
-    val relWriter = new PrintWriter(new File(prefix + ".rel.tsv"))
+    val absFile = new File(prefix + ".abs.tsv")
+    val relFile = new File(prefix + ".rel.tsv")
+
+    absFile.getParentFile.mkdirs()
+
+    val absWriter = new PrintWriter(absFile)
+    val relWriter = new PrintWriter(relFile)
 
     absWriter.println(samples.mkString("\t", "\t", ""))
     relWriter.println(samples.mkString("\t", "\t", ""))
@@ -75,9 +142,11 @@ object VcfStats extends ToolCommand {
     }
     absWriter.close()
     relWriter.close()
+
+    plotHeatmap(relFile)
   }
 
-  def plot(file: File) {
+  def plotHeatmap(file: File) {
     val executor = new RScriptExecutor
     executor.addScript(new Resource("plotHeatmap.R", getClass))
     executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".png", file.getAbsolutePath.stripSuffix(".tsv") + ".clustering.png")
