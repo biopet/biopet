@@ -22,14 +22,13 @@ import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.scripts.PrefixFastq
+import nl.lumc.sasc.biopet.tools.PrefixFastq
 import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
 import nl.lumc.sasc.biopet.tools.SageCountFastq
 import nl.lumc.sasc.biopet.tools.SageCreateLibrary
 import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function._
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
@@ -142,17 +141,17 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       addAll(flexiprep.functions)
 
       val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
-      val prefixFastq = PrefixFastq.apply(this, flexiprepOutput.head, runDir)
-      prefixFastq.prefix = config("sage_tag", default = "CATG")
+      val prefixFastq = PrefixFastq(this, flexiprepOutput.head, runDir)
+      prefixFastq.prefixSeq = config("sage_tag", default = "CATG")
       prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
       add(prefixFastq)
-      libraryOutput.prefixFastq = prefixFastq.output
+      libraryOutput.prefixFastq = prefixFastq.outputFastq
 
       val mapping = new Mapping(this)
       mapping.skipFlexiprep = true
       mapping.skipMarkduplicates = true
       mapping.aligner = config("aligner", default = "bowtie")
-      mapping.input_R1 = prefixFastq.output
+      mapping.input_R1 = prefixFastq.outputFastq
       mapping.RGLB = runConfig("ID").toString
       mapping.RGSM = sampleConfig("ID").toString
       if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
@@ -165,7 +164,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
       if (config("library_counts", default = false).asBoolean) {
         addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
-        addTablibCounts(prefixFastq.output, sampleID + "-" + runID, runDir)
+        addTablibCounts(prefixFastq.outputFastq, sampleID + "-" + runID, runDir)
       }
 
       libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
