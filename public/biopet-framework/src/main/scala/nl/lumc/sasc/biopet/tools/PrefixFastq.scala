@@ -5,7 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import htsjdk.samtools.fastq.{ FastqRecord, AsyncFastqWriter, FastqReader, BasicFastqWriter }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 import scala.collection.JavaConversions._
 
 /**
@@ -17,10 +17,11 @@ class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var inputFastq: File = _
 
-  @Output(doc = "Output fastq", shortName = "o", required = false)
+  @Output(doc = "Output fastq", shortName = "o", required = true)
   var outputFastq: File = _
 
-  var prefixSeq = config("prefix_seq", default = "CATG")
+  @Argument(doc = "Prefix seq", required = true)
+  var prefixSeq: String = _
 
   override def commandLine = super.commandLine +
     required("-i", inputFastq) +
@@ -36,7 +37,7 @@ object PrefixFastq extends ToolCommand {
     return prefixFastq
   }
 
-  case class Args(input: File = null, output: File = null, seq: String = "CATG") extends AbstractArgs
+  case class Args(input: File = null, output: File = null, seq: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "input") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -45,7 +46,7 @@ object PrefixFastq extends ToolCommand {
     opt[File]('o', "output") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(output = x)
     }
-    opt[String]('s', "seq") maxOccurs (1) valueName ("<prefix seq>") action { (x, c) =>
+    opt[String]('s', "seq") required () maxOccurs (1) valueName ("<prefix seq>") action { (x, c) =>
       c.copy(seq = x)
     }
   }
