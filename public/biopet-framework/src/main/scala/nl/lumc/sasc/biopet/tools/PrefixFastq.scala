@@ -2,13 +2,32 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import htsjdk.samtools.fastq.{ FastqRecord, AsyncFastqWriter, FastqReader, BasicFastqWriter }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
 
 /**
  * Created by pjvan_thof on 1/13/15.
  */
+class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
+  javaMainClass = getClass.getName
+
+  @Input(doc = "Input fastq", shortName = "I", required = true)
+  var inputFastq: File = _
+
+  @Output(doc = "Output fastq", shortName = "o", required = false)
+  var outputFastq: File = _
+
+  var prefixSeq = config("prefix_seq", default = "CATG")
+
+  override def commandLine = super.commandLine +
+    required("-i", inputFastq) +
+    required("-o", outputFastq) +
+    optional("-s", prefixSeq)
+}
+
 object PrefixFastq extends ToolCommand {
   case class Args(input: File = null, output: File = null, seq: String = "CATG") extends AbstractArgs
 
