@@ -22,6 +22,15 @@ class AnnotateVcfWithBed {
 
 object AnnotateVcfWithBed extends ToolCommand {
 
+  /**
+   * Args for the commandline tool
+   * @param inputFile input vcf file
+   * @param bedFile bed file to annotate to vcf file
+   * @param outputFile output vcf file
+   * @param fieldName Info field that should be used
+   * @param fieldDescription Description at field if needed
+   * @param fieldType Type of filed, can be: "Integer", "Flag", "Character", "Float"
+   */
   case class Args(inputFile: File = null,
                   bedFile: File = null,
                   outputFile: File = null,
@@ -50,6 +59,11 @@ object AnnotateVcfWithBed extends ToolCommand {
     } text ("Description of field in new vcf file")
   }
 
+  /**
+   * Program will Annotate a vcf file with the overlapping regions of a bed file, 4e column of the bed file we in a info tag in the vcf file
+   *
+   * @param args
+   */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
