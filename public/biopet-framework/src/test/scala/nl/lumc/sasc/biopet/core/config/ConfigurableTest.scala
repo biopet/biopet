@@ -9,7 +9,7 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 1/8/15.
  */
-class ConfigurableTest extends TestNGSuite with MockitoSugar with Matchers {
+class ConfigurableTest extends TestNGSuite with Matchers {
   @Test def testConfigurable: Unit = {
     Config.global.map = Map()
     Config.global.loadConfigFile(ConfigurableTest.file)

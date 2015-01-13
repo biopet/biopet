@@ -10,7 +10,7 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 1/8/15.
  */
-class ConfigValueTest extends TestNGSuite with MockitoSugar with Matchers {
+class ConfigValueTest extends TestNGSuite with Matchers {
   val index = ConfigValueIndex("", Nil, "")
   @Test def testAs: Unit = {
     ConfigValue(index, index, "bla").asString shouldBe "bla"

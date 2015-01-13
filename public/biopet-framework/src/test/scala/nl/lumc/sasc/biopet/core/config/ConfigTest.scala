@@ -10,7 +10,7 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 1/8/15.
  */
-class ConfigTest extends TestNGSuite with MockitoSugar with Matchers with ConfigUtils.ImplicitConversions {
+class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConversions {
   @Test def testLoadConfigFile: Unit = {
     val config = new Config
     config.loadConfigFile(ConfigTest.file)

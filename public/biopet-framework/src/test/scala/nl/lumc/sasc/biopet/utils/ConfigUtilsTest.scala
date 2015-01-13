@@ -13,7 +13,7 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 1/5/15.
  */
-class ConfigUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
+class ConfigUtilsTest extends TestNGSuite with Matchers {
   import ConfigUtils._
   import ConfigUtilsTest._
 
