@@ -52,8 +52,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     def getSeqs(file: File) = {
       if (file != null) {
         (for (
-          line <- Source.fromFile(file).getLines() if line.startsWith("#");
-          values = line.split("\t") if values.size >= 2
+          line <- Source.fromFile(file).getLines(); if line.startsWith("#");
+          values = line.split("\t*") if values.size >= 2
         ) yield Sequence(values(0), values(1))).toList
       } else Nil
     }
