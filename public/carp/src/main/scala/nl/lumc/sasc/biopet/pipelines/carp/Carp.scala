@@ -15,21 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMerge
+import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk._
-import org.broadinstitute.gatk.queue.extensions.picard._
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star, Bowtie, Stampy }
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
-import nl.lumc.sasc.biopet.extensions.macs2.Macs2
 
 /**
  * Carp pipeline
@@ -44,10 +38,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   class SampleOutput extends AbstractSampleOutput {
+    var mappedBamFile: File = _
   }
 
   def init() {
-
   }
 
   def biopetScript() {
@@ -69,6 +63,20 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     val sampleID: String = sampleConfig("ID").toString
 
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
+    val bamfiles = sampleOutput.libraries.map(_._2.mappedBamFile).toList
+    sampleOutput.mappedBamFile = new File(globalSampleDir + sampleID + "/" + sampleID + ".bam")
+    if (bamfiles.length == 1) {
+      add(Ln(this, bamfiles.head, sampleOutput.mappedBamFile))
+      val oldIndex = new File(bamfiles.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      val newIndex = new File(sampleOutput.mappedBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      add(Ln(this, oldIndex, newIndex))
+    } else if (bamfiles.length > 1) {
+      val merge = new MergeSamFiles(this)
+      merge.input = bamfiles
+      merge.sortOrder = "coordinate"
+      merge.output = sampleOutput.mappedBamFile
+      add(merge)
+    }
 
     return sampleOutput
   }
