@@ -30,25 +30,47 @@ trait MultiSampleQScript extends BiopetQScript {
   }
 
   if (!config.contains("samples")) logger.warn("No Samples found in config")
+
+  /**
+   * Returns a map with all sample configs
+   */
   val getSamplesConfig: Map[String, Any] = config("samples", default = Map())
+
+  /**
+   * Returns a list of all sampleIDs
+   */
   val getSamples: Set[String] = getSamplesConfig.keySet
+
+  /**
+   * Returns the global sample directory
+   * @return global sample directory
+   */
   def globalSampleDir: String = outputDir + "samples/"
 
   var samplesOutput: Map[String, SampleOutput] = Map()
 
+  /**
+   * Runs runSingleSampleJobs method for each sample
+   */
   final def runSamplesJobs() {
     for ((key, value) <- getSamplesConfig) {
       var sample = any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
-        setCurrentSample(key)
+        currentSample = key
         samplesOutput += key -> runSingleSampleJobs(sample)
-        unsetCurrentSample()
+        currentSample = null
       } else logger.warn("Key is not the same as ID on value for sample")
     }
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
+
+  /**
+   * Run sample with only sampleID
+   * @param sample sampleID
+   * @return
+   */
   def runSingleSampleJobs(sample: String): SampleOutput = {
     var map = any2map(getSamplesConfig(sample))
     if (map.contains("ID") && map("ID") != sample)
@@ -57,6 +79,11 @@ trait MultiSampleQScript extends BiopetQScript {
     return runSingleSampleJobs(map)
   }
 
+  /**
+   * Runs runSingleLibraryJobs method for each library found in sampleConfig
+   * @param sampleConfig sample config
+   * @return Map with libraryID -> LibraryOutput object
+   */
   final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, LibraryOutput] = {
     var output: Map[String, LibraryOutput] = Map()
     val sampleID = sampleConfig("ID").toString
@@ -66,9 +93,9 @@ trait MultiSampleQScript extends BiopetQScript {
         var library = any2map(value)
         if (!library.contains("ID")) library += ("ID" -> key)
         if (library("ID") == key) {
-          setCurrentLibrary(key)
+          currentLibrary = key
           output += key -> runSingleLibraryJobs(library, sampleConfig)
-          unsetCurrentLibrary()
+          currentLibrary = null
         } else logger.warn("Key is not the same as ID on value for run of sample: " + sampleID)
       }
     } else logger.warn("No runs found in config for sample: " + sampleID)
@@ -76,26 +103,52 @@ trait MultiSampleQScript extends BiopetQScript {
   }
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput
 
-  private var currentSample: String = null
-  private var currentLibrary: String = null
+  protected var currentSample: String = null
+  protected var currentLibrary: String = null
 
+  /**
+   * Set current sample manual, only use this when not using runSamplesJobs method
+   * @param sample
+   */
   def setCurrentSample(sample: String) {
+    logger.debug("Manual sample set to: " + sample)
     currentSample = sample
   }
 
+  /**
+   * Gets current sample
+   * @return current sample
+   */
   def getCurrentSample = currentSample
 
-  def unsetCurrentSample() {
+  /**
+   * Reset current sample manual, only use this when not using runSamplesJobs method
+   */
+  def resetCurrentSample() {
+    logger.debug("Manual sample reset")
     currentSample = null
   }
 
+  /**
+   * Set current library manual, only use this when not using runLibraryJobs method
+   * @param library
+   */
   def setCurrentLibrary(library: String) {
+    logger.debug("Manual library set to: " + library)
     currentLibrary = library
   }
 
+  /**
+   * Gets current library
+   * @return current library
+   */
   def getCurrentLibrary = currentLibrary
 
-  def unsetCurrentLibrary() {
+  /**
+   * Reset current library manual, only use this when not using runLibraryJobs method
+   */
+  def resetCurrentLibrary() {
+    logger.debug("Manual library reset")
     currentLibrary = null
   }
 
