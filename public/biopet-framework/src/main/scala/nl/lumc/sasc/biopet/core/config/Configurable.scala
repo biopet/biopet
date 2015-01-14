@@ -20,36 +20,105 @@ import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
+  /**
+   * Should be object of parant object
+   */
   val root: Configurable
+
+  /**
+   * Get default path to search config values for current object
+   * @return
+   */
   def configPath: List[String] = if (root != null) root.configFullPath else List()
-  protected lazy val configName = getClass.getSimpleName.toLowerCase
-  protected lazy val configFullPath = configName :: configPath
+
+  /**
+   * Gets name of module for config
+   * @return
+   */
+  protected[core] def configName = getClass.getSimpleName.toLowerCase
+
+  /**
+   * Full path with module in there
+   * @return
+   */
+  protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
+
+  /**
+   * Map to store defaults for config
+   */
   var defaults: scala.collection.mutable.Map[String, Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
   else scala.collection.mutable.Map()
 
   val config = new ConfigFunctions
 
+  /**
+   * Creates path with a prefix for sample and library
+   * "samples" -> "sampleID" -> "libraries" -> "libraryID" -> rest of path
+   * @param sample
+   * @param library
+   * @param submodule
+   * @return
+   */
+  def path(sample: String = null, library: String = null, submodule: String = null) = {
+    (if (sample != null) "samples" :: sample :: Nil else Nil) :::
+      (if (library != null) "libraries" :: library :: Nil else Nil) :::
+      (if (submodule != null) configName :: configPath else configPath)
+  }
+
+  /**
+   * Class is used for retrieval of config values
+   */
   protected class ConfigFunctions {
-    def apply(key: String, default: Any = null, submodule: String = null, required: Boolean = false, freeVar: Boolean = true): ConfigValue = {
+    /**
+     *
+     * @param key Name of value
+     * @param default Default value if not found
+     * @param submodule Adds to the path
+     * @param required Default false, if true and value is not found this function will raise an exception
+     * @param freeVar Default true, if set false value must exist in module
+     * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
+     * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
+     * @return
+     */
+    def apply(key: String,
+              default: Any = null,
+              submodule: String = null,
+              required: Boolean = false,
+              freeVar: Boolean = true,
+              sample: String = null,
+              library: String = null): ConfigValue = {
       val m = if (submodule != null) submodule else configName
-      val p = if (submodule != null) configName :: configPath else configPath
+      val p = path(sample, library, submodule)
       val d = {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (!contains(key, submodule, freeVar) && d == null) {
+      if (!contains(key, submodule, freeVar, sample = sample, library = library) && d == null) {
         if (required) {
           Logging.logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
           throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
         } else return null
       }
-      if (d == null) return Config.global(m, p, key, freeVar)
+      if (d == null) return Config.global(m, p, key, freeVar = freeVar)
       else return Config.global(m, p, key, d, freeVar)
     }
 
-    def contains(key: String, submodule: String = null, freeVar: Boolean = true) = {
+    /**
+     * Check if value exist in config
+     * @param key Name of value
+     * @param submodule Adds to the path
+     * @param freeVar Default true, if set false value must exist in module
+     * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
+     * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
+     * @return true when value is found in config
+     */
+    def contains(key: String,
+                 submodule: String = null,
+                 freeVar: Boolean = true,
+                 sample: String = null,
+                 library: String = null) = {
       val m = if (submodule != null) submodule else configName
-      val p = if (submodule != null) configName :: configPath else configPath
+      val p = path(sample, library, submodule)
 
       Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }

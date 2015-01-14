@@ -16,10 +16,10 @@
 package nl.lumc.sasc.biopet.core
 
 trait ToolCommand extends MainCommand with Logging {
-  abstract class AbstractArgs {
+  protected abstract class AbstractArgs {
   }
 
-  abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
+  protected abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
     opt[String]('l', "log_level") foreach { x =>
       x.toLowerCase match {
         case "debug" => logger.setLevel(org.apache.log4j.Level.DEBUG)
@@ -44,6 +44,6 @@ trait ToolCommand extends MainCommand with Logging {
     } text ("Print version")
   }
 
-  type Args <: AbstractArgs
-  type OptParser <: AbstractOptParser
+  protected type Args <: AbstractArgs
+  protected type OptParser <: AbstractOptParser
 }

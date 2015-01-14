@@ -62,7 +62,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   val multisampleVariantcalling = new GatkVariantcalling(this) {
-    override protected lazy val configName = "gatkvariantcalling"
+    override def configName = "gatkvariantcalling"
     override def configPath: List[String] = "multisample" :: super.configPath
   }
 
@@ -97,7 +97,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
 
         val gatkVariantcalling = new GatkVariantcalling(this) {
-          override protected lazy val configName = "gatkvariantcalling"
+          override def configName = "gatkvariantcalling"
           override def configPath: List[String] = "multisample" :: super.configPath
         }
 

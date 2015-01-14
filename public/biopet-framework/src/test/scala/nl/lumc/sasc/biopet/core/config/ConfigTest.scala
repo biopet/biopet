@@ -1,0 +1,138 @@
+package nl.lumc.sasc.biopet.core.config
+
+import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
+import org.scalatest.Matchers
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.{ DataProvider, Test }
+
+/**
+ * Created by pjvan_thof on 1/8/15.
+ */
+class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConversions {
+  @Test def testLoadConfigFile: Unit = {
+    val config = new Config
+    config.loadConfigFile(ConfigTest.file)
+    config.map shouldBe ConfigTest.map
+    config.loadConfigFile(ConfigTest.file)
+    config.map shouldBe ConfigTest.map
+  }
+
+  @Test def testContains: Unit = {
+    ConfigTest.config.contains("m1") shouldBe true
+    ConfigTest.config.contains("notexist") shouldBe false
+    ConfigTest.config.contains(new ConfigValueIndex("m1", Nil, "k1")) shouldBe true
+    ConfigTest.config.contains(new ConfigValueIndex("notexist", Nil, "k1")) shouldBe true
+    ConfigTest.config.contains(new ConfigValueIndex("notexist", Nil, "k1", false)) shouldBe false
+  }
+
+  @Test def testApply: Unit = {
+    ConfigTest.config("m1", Nil, "k1").asString shouldBe "v2"
+    ConfigTest.config("m1", Nil, "notexist", default = "default").asString shouldBe "default"
+    intercept[IllegalStateException] {
+      ConfigTest.config("m1", Nil, "notexist")
+    }
+  }
+
+  @Test def testMergeConfigs: Unit = {
+    val map1 = Map("1" -> 1)
+    val map2 = Map("2" -> 2)
+    Config.mergeConfigs(new Config(map1), new Config(map2)).map shouldBe ConfigUtils.mergeMaps(map1, map2)
+  }
+
+  @Test def testToString: Unit = {
+    val map1 = Map("1" -> 1)
+    new Config(map1).toString() shouldBe map1.toString()
+  }
+
+  @Test def testSkipNested: Unit = {
+    val map = Map("1" -> Map("2" -> Map("4" -> Map("5" -> Map("k1" -> "v1")))))
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1")).get.asString shouldBe "v1"
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1")).get.asString shouldBe "v1"
+    Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
+  }
+
+  @DataProvider(name = "testGetValueFromMapProvider", parallel = true)
+  def testGetValueFromMapProvider() = {
+    Array(
+      Array("m1", Nil, "k1", true, "v2"),
+      Array("m1", List("bla"), "k1", true, "v2"),
+      Array("m1", List("bla", "bla2"), "k1", true, "v2"),
+      Array("m2", List("m1"), "k1", true, "v4"),
+      Array("m2", Nil, "k1", true, "v3"),
+      Array("notexist", Nil, "k1", true, "v1"),
+
+      // With Freevar
+      Array("notexist", Nil, "notexist", true, None),
+      Array("m1", Nil, "notexist", true, None),
+      Array("m2", Nil, "notexist", true, None),
+      Array("m1", List("m2"), "notexist", true, None),
+      Array("m3", Nil, "k2", true, "v5"),
+      Array("m4", Nil, "k2", true, None),
+      Array("m5", Nil, "k2", true, None),
+      Array("m6", Nil, "k2", true, None),
+      Array("m4", List("m3"), "k2", true, "v6"),
+      Array("m5", List("m3"), "k2", true, "v5"),
+      Array("m6", List("m3"), "k2", true, "v5"),
+      Array("m5", List("m3", "m4"), "k2", true, "v7"),
+      Array("m6", List("m3", "m4"), "k2", true, "v6"),
+      Array("m6", List("m3", "m4", "m5"), "k2", true, "v8"),
+
+      // Without freeVar
+      Array("m3", Nil, "k2", false, "v5"),
+      Array("m4", Nil, "k2", false, None),
+      Array("m5", Nil, "k2", false, None),
+      Array("m6", Nil, "k2", false, None),
+      Array("m4", List("m3"), "k2", false, "v6"),
+      Array("m5", List("m3"), "k2", false, None),
+      Array("m6", List("m3"), "k2", false, None),
+      Array("m5", List("m3", "m4"), "k2", false, "v7"),
+      Array("m6", List("m3", "m4"), "k2", false, None),
+      Array("m6", List("m3", "m4", "m5"), "k2", false, "v8")
+    )
+  }
+
+  @Test(dataProvider = "testGetValueFromMapProvider")
+  def testGetValueFromMap(module: String, path: List[String], key: String, freeVar: Boolean, expected: Any): Unit = {
+    val map = ConfigTest.map
+    val index = new ConfigValueIndex(module, path, key, freeVar)
+    val value = Config.getValueFromMap(map, index)
+    value match {
+      case Some(x) => x.value shouldBe expected
+      case None    => value shouldBe expected
+    }
+  }
+}
+
+object ConfigTest {
+  val map = Map(
+    "k1" -> "v1",
+    "m1" -> Map(
+      "k1" -> "v2",
+      "m2" -> Map(
+        "k1" -> "v4"
+      )
+    ),
+    "m2" -> Map(
+      "k1" -> "v3"
+    ),
+    "m3" -> Map(
+      "k2" -> "v5",
+      "m4" -> Map(
+        "k2" -> "v6",
+        "m5" -> Map(
+          "k2" -> "v7",
+          "m6" -> Map(
+            "k2" -> "v8"
+          )
+        )
+      )
+    )
+  )
+
+  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2)
+
+  val config = new Config
+  config.loadConfigFile(file)
+}

@@ -36,22 +36,14 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Output(doc = "Output vcf", shortName = "o", required = false)
   var outputVcf: File = _
 
-  var minSampleDepth: Option[Int] = _
-  var minTotalDepth: Option[Int] = _
-  var minAlternateDepth: Option[Int] = _
-  var minSamplesPass: Option[Int] = _
-  var filterRefCalls: Boolean = _
+  var minSampleDepth: Option[Int] = config("min_sample_depth")
+  var minTotalDepth: Option[Int] = config("min_total_depth")
+  var minAlternateDepth: Option[Int] = config("min_alternate_depth")
+  var minSamplesPass: Option[Int] = config("min_samples_pass")
+  var filterRefCalls: Boolean = config("filter_ref_calls")
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
-
-  override def afterGraph {
-    minSampleDepth = config("min_sample_depth")
-    minTotalDepth = config("min_total_depth")
-    minAlternateDepth = config("min_alternate_depth")
-    minSamplesPass = config("min_samples_pass")
-    filterRefCalls = config("filter_ref_calls")
-  }
 
   override def commandLine = super.commandLine +
     required("-I", inputVcf) +
