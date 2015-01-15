@@ -1,7 +1,17 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
  */
 
 package nl.lumc.sasc.biopet.pipelines.flexiprep
@@ -35,6 +45,30 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       line <- block if (line.startsWith("Encoding"))
     ) return line.stripPrefix("Encoding\t")
     return null // Could be default Sanger with a warning in the log
+  }
+
+  protected case class Sequence(name: String, seq: String)
+  def getFoundAdapters: List[Sequence] = {
+    def getSeqs(file: File) = {
+      if (file != null) {
+        (for (
+          line <- Source.fromFile(file).getLines(); if line.startsWith("#");
+          values = line.split("\t*") if values.size >= 2
+        ) yield Sequence(values(0), values(1))).toList
+      } else Nil
+    }
+
+    val seqs = getSeqs(adapters) ::: getSeqs(contaminants)
+
+    val block = getDataBlock("Overrepresented sequences")
+    if (block == null) return Nil
+
+    val found = for (
+      line <- block if !line.startsWith("#");
+      values = line.split("\t") if values.size >= 4
+    ) yield values(3)
+
+    seqs.filter(x => found.exists(_.startsWith(x.name)))
   }
 
   def getSummary: Json = {

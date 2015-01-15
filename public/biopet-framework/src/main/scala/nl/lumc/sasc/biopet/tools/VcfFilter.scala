@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
@@ -21,22 +36,14 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Output(doc = "Output vcf", shortName = "o", required = false)
   var outputVcf: File = _
 
-  var minSampleDepth: Option[Int] = _
-  var minTotalDepth: Option[Int] = _
-  var minAlternateDepth: Option[Int] = _
-  var minSamplesPass: Option[Int] = _
-  var filterRefCalls: Boolean = _
+  var minSampleDepth: Option[Int] = config("min_sample_depth")
+  var minTotalDepth: Option[Int] = config("min_total_depth")
+  var minAlternateDepth: Option[Int] = config("min_alternate_depth")
+  var minSamplesPass: Option[Int] = config("min_samples_pass")
+  var filterRefCalls: Boolean = config("filter_ref_calls")
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
-
-  override def afterGraph {
-    minSampleDepth = config("min_sample_depth")
-    minTotalDepth = config("min_total_depth")
-    minAlternateDepth = config("min_alternate_depth")
-    minSamplesPass = config("min_samples_pass")
-    filterRefCalls = config("filter_ref_calls")
-  }
 
   override def commandLine = super.commandLine +
     required("-I", inputVcf) +
@@ -82,13 +89,13 @@ object VcfFilter extends ToolCommand {
     } text ("Min value of AD field in genotype fields")
     opt[Int]("minSamplesPass") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSamplesPass = x)
-    } text ("Min number opf samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
+    } text ("Min number off samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
     opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minBamAlternateDepth = x)
     } // TODO: Convert this to more generic filter
     opt[String]("denovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(denovoInSample = x)
-    } text ("Only show variants that contain unique alleles in compete set for given sample")
+    } text ("Only show variants that contain unique alleles in complete set for given sample")
     opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
     } text ("Given sample must have 1 alternative allele")
@@ -99,7 +106,7 @@ object VcfFilter extends ToolCommand {
     opt[String]("filterHetVarToHomVar") unbounded () valueName ("<sample:sample>") action { (x, c) =>
       c.copy(filterHetVarToHomVar = (x.split(":")(0), x.split(":")(1)) :: c.filterHetVarToHomVar)
     } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
-    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filterd")
+    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered")
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
       c.copy(filterRefCalls = true)
     } text ("Filter when there are only ref calls")

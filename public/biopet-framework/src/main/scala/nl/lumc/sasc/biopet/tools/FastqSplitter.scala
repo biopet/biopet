@@ -1,13 +1,32 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedInputStream, File, FileInputStream, PrintWriter }
-import java.util.zip.GZIPInputStream
+import java.io.File
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, BasicFastqWriter }
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import scala.io.Source
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import scala.collection.JavaConversions._
 
+/**
+ * Queue extension for the FastqSplitter
+ * @param root Parent object
+ */
 class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
@@ -20,10 +39,20 @@ class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunctio
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
+  /**
+   * Generate command to execute
+   * @return
+   */
   override def commandLine = super.commandLine + required("-I", input) + repeat("-o", output)
 }
 
 object FastqSplitter extends ToolCommand {
+
+  /**
+   * Arg for commandline program
+   * @param inputFile input fastq file
+   * @param outputFile output fastq files
+   */
   case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -36,32 +65,32 @@ object FastqSplitter extends ToolCommand {
   }
 
   /**
+   * Program will split fastq file in multiple fastq files
+   *
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val groupsize = 100
-    val output = for (file <- commandArgs.outputFile) yield new PrintWriter(file)
-    val inputStream = {
-      if (commandArgs.inputFile.getName.endsWith(".gz") || commandArgs.inputFile.getName.endsWith(".gzip")) Source.fromInputStream(
-        new GZIPInputStream(
-          new BufferedInputStream(
-            new FileInputStream(commandArgs.inputFile)))).bufferedReader
-      else Source.fromFile(commandArgs.inputFile).bufferedReader
-    }
-    while (inputStream.ready) {
-      for (writter <- output) {
-        for (t <- 1 to groupsize) {
-          for (t <- 1 to (4)) {
-            if (inputStream.ready) {
-              writter.write(inputStream.readLine + "\n")
-            }
-          }
+    val groupSize = 100
+    val output = for (file <- commandArgs.outputFile) yield new AsyncFastqWriter(new BasicFastqWriter(file), groupSize)
+    val reader = new FastqReader(commandArgs.inputFile)
+
+    logger.info("Starting to split fatsq file: " + commandArgs.inputFile)
+    logger.info("Output files: " + commandArgs.outputFile.mkString(", "))
+
+    var counter: Long = 0
+    while (reader.hasNext) {
+      for (writer <- output) {
+        for (t <- 1 to groupSize if reader.hasNext) {
+          writer.write(reader.next())
+          counter += 1
+          if (counter % 1000000 == 0) logger.info(counter + " reads processed")
         }
       }
     }
-    for (writter <- output) writter.close
+    for (writer <- output) writer.close
+    logger.info("Done, " + counter + " reads processed")
   }
 }

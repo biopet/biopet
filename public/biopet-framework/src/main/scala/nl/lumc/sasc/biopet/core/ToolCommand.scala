@@ -1,10 +1,25 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.core
 
 trait ToolCommand extends MainCommand with Logging {
-  abstract class AbstractArgs {
+  protected abstract class AbstractArgs {
   }
 
-  abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
+  protected abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
     opt[String]('l', "log_level") foreach { x =>
       x.toLowerCase match {
         case "debug" => logger.setLevel(org.apache.log4j.Level.DEBUG)
@@ -29,6 +44,6 @@ trait ToolCommand extends MainCommand with Logging {
     } text ("Print version")
   }
 
-  type Args <: AbstractArgs
-  type OptParser <: AbstractOptParser
+  protected type Args <: AbstractArgs
+  protected type OptParser <: AbstractOptParser
 }
