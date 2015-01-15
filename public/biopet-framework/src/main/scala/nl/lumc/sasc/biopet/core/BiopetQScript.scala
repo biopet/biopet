@@ -63,6 +63,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
     val writer = new PrintWriter(configReportFile)
     writer.write(configReport)
     writer.close()
+    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
     for (line <- configReport.split("\n")) logger.debug(line)
   }
 
