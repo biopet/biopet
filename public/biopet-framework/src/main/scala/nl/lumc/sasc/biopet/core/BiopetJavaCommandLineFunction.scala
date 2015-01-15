@@ -30,6 +30,10 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     memoryLimit = config("memory_limit")
   }
 
+  /**
+   * Creates command to execute extension
+   * @return
+   */
   override def commandLine: String = {
     preCmdInternal
     val cmd = super.commandLine
