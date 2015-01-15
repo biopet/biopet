@@ -22,7 +22,8 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
     nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp,
-    nl.lumc.sasc.biopet.pipelines.sage.Sage
+    nl.lumc.sasc.biopet.pipelines.sage.Sage,
+    nl.lumc.sasc.biopet.pipelines.toucan.Toucan
   )
 
   def tools: List[MainCommand] = List(

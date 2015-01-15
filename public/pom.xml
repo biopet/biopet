@@ -33,6 +33,7 @@
         <module>mapping</module>
         <module>sage</module>
         <module>yamsvp</module>
+        <module>toucan</module>
     </modules>
     
     <properties>

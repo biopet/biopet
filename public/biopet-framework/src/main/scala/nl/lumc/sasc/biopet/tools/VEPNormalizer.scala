@@ -25,12 +25,17 @@ class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
   javaMainClass = getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
-  var InputVCF: File = _
-
-  //TODO: Add flags?
+  var inputVCF: File = _
 
   @Output(doc = "Output VCF", shortName = "OutputFile", required = true)
-  var OutputVCF: File = _
+  var outputVCF: File = _
+
+  var mode: String = config("mode", default = "explode")
+
+  override def commandLine = super.commandLine +
+    required("-I", inputVCF) +
+    required("-O", outputVCF) +
+    required("-m", mode)
 }
 
 object VEPNormalizer extends ToolCommand {
@@ -280,7 +285,7 @@ object VEPNormalizer extends ToolCommand {
 
   case class Args(inputVCF: File = null,
                   outputVCF: File = null,
-                  mode: String = "standard") extends AbstractArgs
+                  mode: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
