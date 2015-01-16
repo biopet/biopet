@@ -102,7 +102,7 @@ object VEPNormalizer extends ToolCommand {
     val writerBuilder = new VariantContextWriterBuilder()
     writerBuilder.
       setOutputFile(output).
-      setOutputFileType(VariantContextWriterBuilder.OutputType.VCF).
+      setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF).
       setReferenceDictionary(seqDict)
     val writer = writerBuilder.build()
     writer.writeHeader(header)

@@ -56,7 +56,6 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     }
 
     def check(item: String) = {
-      println(record.getAttribute(item))
       record.getAttribute(item).toString.split(""",""", -1).length should be(11)
     }
 

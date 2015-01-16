@@ -26,6 +26,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   //Boolean vars
   var v: Boolean = config("v")
   var q: Boolean = config("q")
+  var offline: Boolean = config("offline")
   var no_progress: Boolean = config("no_progress")
   var everything: Boolean = config("everything")
   var force: Boolean = config("force")
@@ -124,12 +125,22 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var db_version: Option[Int] = config("db_version")
   var buffer_size: Option[Int] = config("buffer_size")
 
+  override def afterGraph: Unit = {
+    super.afterGraph
+    if (!cache && !database) {
+      throw new IllegalArgumentException("Must supply either cache or database")
+    } else if (cache && dir == null) {
+      throw new IllegalArgumentException("Must supply dir to cache")
+    }
+  }
+
   def cmdLine = required(executable) +
     required(vep_script) +
     required("-i", input) +
     required("-o", output) +
     conditional(v, "-v") +
     conditional(q, "-q") +
+    conditional(offline, "--offline") +
     conditional(no_progress, "--no_progress") +
     conditional(everything, "--everything") +
     conditional(force, "--force_overwrite") +
