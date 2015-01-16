@@ -3,12 +3,12 @@ package nl.lumc.sasc.biopet.extensions.bwa
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 1/16/15.
  */
-class BwaSampe (val root: Configurable) extends Bwa {
+class BwaSampe(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", required = true)
   var fastqR1: File = _
 

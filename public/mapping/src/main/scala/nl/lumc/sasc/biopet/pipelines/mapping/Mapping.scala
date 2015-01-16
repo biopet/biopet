@@ -20,7 +20,7 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.{ Star, Stampy, Bowtie }
-import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -183,7 +183,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val outputBam = new File(chunkDir + outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa"        => addBwa(R1, R2, outputBam, deps)
+        case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
+        case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
         case "stampy"     => addStampy(R1, R2, outputBam, deps)
         case "star"       => addStar(R1, R2, outputBam, deps)
@@ -213,13 +214,53 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-  def addBwa(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
+    val bwaAlnR1 = new BwaAln(this)
+    bwaAlnR1.fastq = R1
+    bwaAlnR1.deps = deps
+    bwaAlnR1.output = swapExt(output.getParent, output, ".bam", ".R1.sai")
+    add(bwaAlnR1)
+
+    val samFile: File = if (paired) {
+      val bwaAlnR2 = new BwaMem(this)
+      bwaAlnR2.deps = deps
+      bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
+      add(bwaAlnR2)
+
+      val bwaSampe = new BwaSampe(this)
+      bwaSampe.fastqR1 = R1
+      bwaSampe.fastqR2 = R2
+      bwaSampe.saiR1 = bwaAlnR1.output
+      bwaSampe.saiR2 = bwaAlnR2.output
+      bwaSampe.r = getReadGroup
+      bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
+      add(bwaSampe)
+
+      bwaSampe.output
+    } else {
+      val bwaSamse = new BwaSamse(this)
+      bwaSamse.fastq = R1
+      bwaSamse.sai = bwaAlnR1.output
+      bwaSamse.r = getReadGroup
+      bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
+      add(bwaSamse)
+
+      bwaSamse.output
+    }
+
+    val sortSam = SortSam(this, samFile, output)
+    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    add(sortSam)
+    return sortSam.output
+  }
+
+  def addBwaMem(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
     bwaCommand.R = getReadGroup
-    bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     add(bwaCommand, isIntermediate = true)
     val sortSam = SortSam(this, bwaCommand.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
