@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
 abstract class Samtools extends BiopetCommandLineFunction {
   override def subPath = "samtools" :: super.subPath
-  executable = config("exe", default = "samtools", freeVar = false)
+  executable = config("exe", default = "samtools")
   override def versionCommand = executable
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0, 1)

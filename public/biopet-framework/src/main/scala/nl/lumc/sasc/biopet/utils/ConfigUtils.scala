@@ -354,7 +354,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2long(value: ConfigValue): Long = {
-      if (value != null && value.value != null && value.value != None) any2long(value.value) else 0
+      if (value != null && value.value != null && value.value != None) any2long(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -372,7 +373,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2int(value: ConfigValue): Int = {
-      if (value != null && value.value != null && value.value != None) any2int(value.value) else 0
+      if (value != null && value.value != null && value.value != None) any2int(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -390,7 +392,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2double(value: ConfigValue): Double = {
-      if (value != null && value.value != null && value.value != None) any2double(value.value) else 0
+      if (value != null && value.value != null && value.value != None) any2double(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -408,7 +411,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2float(value: ConfigValue): Float = {
-      if (value != null && value.value != null && value.value != None) any2float(value.value) else 0
+      if (value != null && value.value != null && value.value != None) any2float(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -426,7 +430,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2boolean(value: ConfigValue): Boolean = {
-      if (value != null && value.value != null && value.value != None) any2boolean(value.value) else false
+      if (value != null && value.value != null && value.value != None) any2boolean(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -444,7 +449,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2list(value: ConfigValue): List[Any] = {
-      if (value != null && value.value != null && value.value != None) any2list(value.value) else null
+      if (value != null && value.value != null && value.value != None) any2list(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -453,7 +459,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringList(value: ConfigValue): List[String] = {
-      if (value != null && value.value != null && value.value != None) any2stringList(value.value) else null
+      if (value != null && value.value != null && value.value != None) any2stringList(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -462,7 +469,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
-      if (value != null && value.value != null && value.value != None) any2stringList(value.value).toSet else null
+      if (value != null && value.value != null && value.value != None) any2stringList(value.value).toSet
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -471,7 +479,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2map(value: ConfigValue): Map[String, Any] = {
-      if (value != null && value.value != null && value.value != None) any2map(value.value) else null
+      if (value != null && value.value != null && value.value != None) any2map(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
   }
 }
