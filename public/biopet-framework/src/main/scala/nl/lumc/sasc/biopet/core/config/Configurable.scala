@@ -20,34 +20,26 @@ import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
-  /**
-   * Should be object of parant object
-   */
+  /** Should be object of parant object */
   val root: Configurable
 
-  /**
-   * Get default path to search config values for current object
-   * @return
-   */
-  def configPath: List[String] = if (root != null) root.configFullPath else List()
+  /** subfix to the path */
+  def subPath: List[String] = Nil
 
-  /**
-   * Gets name of module for config
-   * @return
-   */
+  /** Get default path to search config values for current object */
+  def configPath: List[String] = if (root != null) root.configFullPath ::: subPath else subPath
+
+  /** Gets name of module for config */
   protected[core] def configName = getClass.getSimpleName.toLowerCase
 
-  /**
-   * Full path with module in there
-   * @return
-   */
+  /** ull path with module in there */
   protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
 
-  /**
-   * Map to store defaults for config
-   */
-  var defaults: scala.collection.mutable.Map[String, Any] = if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
-  else scala.collection.mutable.Map()
+  /** Map to store defaults for config */
+  var defaults: scala.collection.mutable.Map[String, Any] = {
+    if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
+    else scala.collection.mutable.Map()
+  }
 
   val config = new ConfigFunctions
 
@@ -62,7 +54,7 @@ trait Configurable extends ImplicitConversions {
   def path(sample: String = null, library: String = null, submodule: String = null) = {
     (if (sample != null) "samples" :: sample :: Nil else Nil) :::
       (if (library != null) "libraries" :: library :: Nil else Nil) :::
-      (if (submodule != null) configName :: configPath else configPath)
+      (if (submodule != null) configPath ::: configName :: Nil else configPath)
   }
 
   /**
