@@ -13,14 +13,15 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.aligners
+package nl.lumc.sasc.biopet.extensions.bwa
+
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
-class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
+class BwaMem(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
 
@@ -62,14 +63,8 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   var Y: Boolean = config("Y", default = false)
   var I: String = config("I")
 
-  executable = config("exe", default = "bwa", freeVar = false)
-  override val versionRegex = """Version: (.*)""".r
-  override val versionExitcode = List(0, 1)
-
   override val defaultVmem = "6G"
   override val defaultThreads = 8
-
-  override def versionCommand = executable
 
   def cmdLine = {
     required(executable) +
