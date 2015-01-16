@@ -100,7 +100,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     else if (foundCache.contains(requestedIndex)) return true
     else {
       val value = Config.getValueFromMap(map, requestedIndex)
-      if (value.isDefined) {
+      if (value.isDefined && value.get.value != None) {
         foundCache += (requestedIndex -> value.get)
         return true
       } else {
