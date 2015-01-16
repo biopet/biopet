@@ -89,7 +89,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGDT: Date = _
 
   @Argument(doc = "Readgroup predicted insert size", shortName = "RGPI", required = false)
-  var RGPI: Int = config("RGPI")
+  var RGPI: Option[Int] = config("RGPI")
 
   var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
@@ -300,7 +300,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (RGCN != null) RG += "CN:" + RGCN + "\\t"
     if (RGDS != null) RG += "DS" + RGDS + "\\t"
     if (RGDT != null) RG += "DT" + RGDT + "\\t"
-    if (RGPI > 0) RG += "PI" + RGPI + "\\t"
+    if (RGPI.isDefined) RG += "PI" + RGPI.get + "\\t"
 
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
