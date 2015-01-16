@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.core
 
 import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 trait MultiSampleQScript extends BiopetQScript {
@@ -29,12 +30,12 @@ trait MultiSampleQScript extends BiopetQScript {
     def getLibrary(key: String) = libraries(key)
   }
 
-  if (!config.contains("samples")) logger.warn("No Samples found in config")
+  if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
 
   /**
    * Returns a map with all sample configs
    */
-  val getSamplesConfig: Map[String, Any] = config("samples", default = Map())
+  val getSamplesConfig: Map[String, Any] = ConfigUtils.any2map(Config.global.map.getOrElse("samples", Map()))
 
   /**
    * Returns a list of all sampleIDs
@@ -144,9 +145,7 @@ trait MultiSampleQScript extends BiopetQScript {
    */
   def getCurrentLibrary = currentLibrary
 
-  /**
-   * Reset current library manual, only use this when not using runLibraryJobs method
-   */
+  /** Reset current library manual, only use this when not using runLibraryJobs method */
   def resetCurrentLibrary() {
     logger.debug("Manual library reset")
     currentLibrary = null
@@ -158,23 +157,29 @@ trait MultiSampleQScript extends BiopetQScript {
       super.configFullPath
   }
 
-  protected class ConfigFunctions extends super.ConfigFunctions {
+  override val config = new ConfigFunctionsExt
+
+  protected class ConfigFunctionsExt extends super.ConfigFunctions {
     override def apply(key: String,
                        default: Any = null,
                        submodule: String = null,
                        required: Boolean = false,
                        freeVar: Boolean = true,
-                       sample: String = currentSample,
-                       library: String = currentLibrary): ConfigValue = {
-      super.apply(key, default, submodule, required, freeVar, sample, library)
+                       sample: String = null,
+                       library: String = null): ConfigValue = {
+      val s = if (sample == null) currentSample else sample
+      val l = if (library == null) currentLibrary else library
+      super.apply(key, default, submodule, required, freeVar, s, l)
     }
 
     override def contains(key: String,
                           submodule: String = null,
                           freeVar: Boolean = true,
-                          sample: String = currentSample,
-                          library: String = currentLibrary) = {
-      super.contains(key, submodule, freeVar, sample, library)
+                          sample: String = null,
+                          library: String = null) = {
+      val s = if (sample == null) currentSample else sample
+      val l = if (library == null) currentLibrary else library
+      super.contains(key, submodule, freeVar, s, l)
     }
   }
 }
