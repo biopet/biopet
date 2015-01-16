@@ -68,7 +68,7 @@ class BwaAln(val root: Configurable) extends Bwa {
     conditional(n1, "-1") +
     conditional(n2, "-2") +
     conditional(Y, "-Y") +
-    required("-f", output) +
+    optional("-f", output) +
     required(reference) +
     required(fastq)
 }
