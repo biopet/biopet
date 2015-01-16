@@ -30,7 +30,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
 import scala.math._
 
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
-  qscript =>
   def this() = this(null)
 
   @Input(doc = "R1 fastq file", shortName = "R1", required = true)
@@ -156,13 +155,15 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val fastSplitter_R1 = new FastqSplitter(this)
       fastSplitter_R1.input = fastq_R1
       for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
-      add(fastSplitter_R1, isIntermediate = true)
+      fastSplitter_R1.isIntermediate = true
+      add(fastSplitter_R1)
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
         fastSplitter_R2.input = fastq_R2
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
-        add(fastSplitter_R2, isIntermediate = true)
+        fastSplitter_R2.isIntermediate = true
+        add(fastSplitter_R2)
       }
     }
 
@@ -219,12 +220,15 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaAlnR1.fastq = R1
     bwaAlnR1.deps = deps
     bwaAlnR1.output = swapExt(output.getParent, output, ".bam", ".R1.sai")
+    bwaAlnR1.isIntermediate = true
     add(bwaAlnR1)
 
     val samFile: File = if (paired) {
-      val bwaAlnR2 = new BwaMem(this)
+      val bwaAlnR2 = new BwaAln(this)
+      bwaAlnR2.fastq = R2
       bwaAlnR2.deps = deps
       bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
+      bwaAlnR2.isIntermediate = true
       add(bwaAlnR2)
 
       val bwaSampe = new BwaSampe(this)
@@ -234,6 +238,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bwaSampe.saiR2 = bwaAlnR2.output
       bwaSampe.r = getReadGroup
       bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
+      bwaSampe.isIntermediate = true
       add(bwaSampe)
 
       bwaSampe.output
@@ -243,6 +248,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bwaSamse.sai = bwaAlnR1.output
       bwaSamse.r = getReadGroup
       bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
+      bwaSamse.isIntermediate = true
       add(bwaSamse)
 
       bwaSamse.output
@@ -261,7 +267,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.deps = deps
     bwaCommand.R = getReadGroup
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
-    add(bwaCommand, isIntermediate = true)
+    bwaCommand.isIntermediate = true
+    add(bwaCommand)
     val sortSam = SortSam(this, bwaCommand.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
@@ -287,7 +294,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     stampyCmd.readgroup = RG
     stampyCmd.sanger = true
     stampyCmd.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-    add(stampyCmd, isIntermediate = true)
+    stampyCmd.isIntermediate = true
+    add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
@@ -300,7 +308,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (paired) bowtie.R2 = R2
     bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-    add(bowtie, isIntermediate = true)
+    bowtie.isIntermediate = true
+    add(bowtie)
     return addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
