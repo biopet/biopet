@@ -140,40 +140,6 @@ class Config(var map: Map[String, Any]) extends Logging {
     } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
   }
 
-  //TODO: New version of report is needed
-  /**
-   * Makes report for all used values
-   * @deprecated
-   * @return Config report
-   */
-  def getReport: String = {
-    val output: StringBuilder = new StringBuilder
-    output.append("Config report, sorted on module:\n")
-    var modules: Map[String, StringBuilder] = Map()
-    for ((key, value) <- foundCache) {
-      val module = key.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      modules(module).append("Found: " + value.toString + "\n")
-    }
-    for ((key, value) <- defaultCache) {
-      val module = key.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      modules(module).append("Default used: " + value.toString + "\n")
-    }
-    for (value <- notFoundCache) {
-      val module = value.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      if (!defaultCache.contains(value)) modules(module).append("Not Found: " + value.toString + "\n")
-    }
-    for ((key, value) <- modules) {
-      output.append("Config options for module: " + key + "\n")
-      output.append(value.toString)
-      output.append("\n")
-    }
-
-    return output.toString
-  }
-
   def writeReport(id: String, directory: String): Unit = {
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
