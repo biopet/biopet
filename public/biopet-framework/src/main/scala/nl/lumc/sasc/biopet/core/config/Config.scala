@@ -198,7 +198,6 @@ class Config(var map: Map[String, Any]) extends Logging {
 
     // Positions where values are found
     val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
-    //val defaultFound = convertIndexValuesToMap(defaultCache.filter(_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
 
     // Positions where to start searching
     val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
@@ -209,8 +208,8 @@ class Config(var map: Map[String, Any]) extends Logging {
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
+    writeMapToJsonFile(Config.global.map, "input")
     writeMapToJsonFile(found, "found")
-    //writeMapToJsonFile(defaultFound, "defaults")
     writeMapToJsonFile(effectiveFound, "effective.found")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")
     writeMapToJsonFile(notFound, "not.found")
