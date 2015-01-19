@@ -122,12 +122,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def biopetScript() {
-    var fastq_R1: File = input_R1
-    var fastq_R2: File = if (paired) input_R2 else ""
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep/"
-      flexiprep.input_R1 = fastq_R1
-      if (paired) flexiprep.input_R2 = fastq_R2
+      flexiprep.input_R1 = input_R1
+      if (paired) flexiprep.input_R2 = input_R2
       flexiprep.sampleName = this.RGSM
       flexiprep.libraryName = this.RGLB
       flexiprep.init
@@ -145,22 +143,22 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     var chunks: Map[String, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       val chunkDir = outputDir + "chunks/" + t + "/"
-      chunks += (chunkDir -> (removeGz(chunkDir + fastq_R1.getName),
-        if (paired) removeGz(chunkDir + fastq_R2.getName) else ""))
+      chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
+        if (paired) removeGz(chunkDir + input_R2.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
+    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      flexiprep.extractIfNeeded(input_R2, flexiprep.outputDir)))
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
-      fastSplitter_R1.input = fastq_R1
+      fastSplitter_R1.input = input_R1
       for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
       fastSplitter_R1.isIntermediate = true
       add(fastSplitter_R1)
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = fastq_R2
+        fastSplitter_R2.input = input_R2
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
         fastSplitter_R2.isIntermediate = true
         add(fastSplitter_R2)

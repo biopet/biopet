@@ -132,7 +132,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     var results: Map[String, File] = Map()
 
     var R1: File = new File(R1_in)
-    var R2: File = new File(R2_in)
+    var R2: File = if (paired) new File(R2_in) else null
     var deps: List[File] = if (paired) List(R1, R2) else List(R1)
 
     val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
@@ -199,7 +199,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       }
       sickle.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
       sickle.deps = deps
-      add(sickle, isIntermediate = true)
+      sickle.isIntermediate = true
+      add(sickle)
       summary.addSickle(sickle, chunk)
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
@@ -256,7 +257,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def extractIfNeeded(file: File, runDir: String): File = {
-    if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+    if (file == null) return file
+    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")
       if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
       val zcatCommand = Zcat(this, file, newFile)
