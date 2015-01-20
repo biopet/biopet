@@ -15,125 +15,81 @@
  */
 package nl.lumc.sasc.biopet.core
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 trait MultiSampleQScript extends BiopetQScript {
-  type LibraryOutput <: AbstractLibraryOutput
-  type SampleOutput <: AbstractSampleOutput
-
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   val onlySample: List[String] = Nil
 
-  abstract class AbstractLibraryOutput
-  abstract class AbstractSampleOutput {
-    var libraries: Map[String, LibraryOutput] = Map()
-    def getAllLibraries = libraries
-    def getLibrary(key: String) = libraries(key)
-  }
-
   if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
 
-  /**
-   * Returns a map with all sample configs
-   */
-  val getSamplesConfig: Map[String, Any] = ConfigUtils.any2map(Config.global.map.getOrElse("samples", Map()))
+  type Sample <: AbstractSample
+  abstract class AbstractSample {
+    val sampleId: String
+    abstract class AbstractLibrary {
+      val libraryId: String
+      final def run(): Unit = {
+        currentSample = Some(sampleId)
+        currentLibrary = Some(libraryId)
+        runJobs()
+        currentLibrary = None
+        currentSample = None
+      }
 
-  /** Returns a list of all sampleIDs */
-  def getSamples: Set[String] = if (onlySample == Nil) getSamplesConfig.keySet else onlySample.toSet
+      def getLibraryDir: String = {
+        getSampleDir + "libraries" + File.pathSeparator + libraryId + File.pathSeparator
+      }
 
-  def getLibraries(sample: String): Set[String] = {
-    ConfigUtils.getMapFromPath(getSamplesConfig, List(sample, "libraries")).getOrElse(Map()).keySet
+      protected def runJobs()
+    }
+    type Library <: AbstractLibrary
+
+    protected def getLibrariesIds: Set[String] = {
+      ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+    }
+
+    final def run(): Unit = {
+      currentSample = Some(sampleId)
+      runJobs()
+      currentSample = None
+    }
+
+    protected def runJobs()
+
+    val libraries: Map[String, Library]
+
+    protected final def runLibraryJobs(): Unit = {
+      for ((libraryId, library) <- libraries) {
+        library.run()
+      }
+    }
+
+    def getSampleDir: String = {
+      outputDir + "samples" + File.pathSeparator + sampleId + File.pathSeparator
+    }
   }
 
-  /**
-   * Returns the global sample directory
-   * @return global sample directory
-   */
-  def globalSampleDir: String = outputDir + "samples/"
+  val samples: Map[String, Sample]
 
-  var samplesOutput: Map[String, SampleOutput] = Map()
+  /** Returns a list of all sampleIDs */
+  protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
+    ConfigUtils.any2map(Config.global.map.getOrElse("samples", Map())).keySet
+  }
 
   /** Runs runSingleSampleJobs method for each sample */
   final def runSamplesJobs() {
-    for (sampleID <- getSamples) {
-      currentSample = Some(sampleID)
-      samplesOutput += sampleID -> runSingleSampleJobs(sampleID)
-      currentSample = None
+    for ((sampleId, sample) <- samples) {
+      sample.run()
     }
   }
 
-  /**
-   * Run sample with only sampleID
-   * @param sampleID sampleID
-   * @return
-   */
-  def runSingleSampleJobs(sampleID: String): SampleOutput
-
-  /**
-   * Runs runSingleLibraryJobs method for each library found in sampleConfig
-   * @param sampleID sampleID
-   * @return Map with libraryID -> LibraryOutput object
-   */
-  final def runLibraryJobs(sampleID: String = null): Map[String, LibraryOutput] = {
-    var output: Map[String, LibraryOutput] = Map()
-    for (libraryID <- getLibraries(sampleID)) {
-      currentLibrary = Some(libraryID)
-      output += libraryID -> runSingleLibraryJobs(sampleID, libraryID)
-      currentLibrary = None
-    }
-    return output
-  }
-  def runSingleLibraryJobs(sampleID: String, libraryID: String): LibraryOutput
-
-  protected var currentSample: Option[String] = None
-  protected var currentLibrary: Option[String] = None
-
-  /**
-   * Set current sample manual, only use this when not using runSamplesJobs method
-   * @param sample
-   */
-  def setCurrentSample(sample: String) {
-    logger.debug("Manual sample set to: " + sample)
-    currentSample = Some(sample)
-  }
-
-  /**
-   * Gets current sample
-   * @return current sample
-   */
-  def getCurrentSample = currentSample
-
-  /**
-   * Reset current sample manual, only use this when not using runSamplesJobs method
-   */
-  def resetCurrentSample() {
-    logger.debug("Manual sample reset")
-    currentSample = None
-  }
-
-  /**
-   * Set current library manual, only use this when not using runLibraryJobs method
-   * @param library
-   */
-  def setCurrentLibrary(library: String) {
-    logger.debug("Manual library set to: " + library)
-    currentLibrary = Some(library)
-  }
-
-  /**
-   * Gets current library
-   * @return current library
-   */
-  def getCurrentLibrary = currentLibrary
-
-  /** Reset current library manual, only use this when not using runLibraryJobs method */
-  def resetCurrentLibrary() {
-    logger.debug("Manual library reset")
-    currentLibrary = None
-  }
+  private var currentSample: Option[String] = None
+  private var currentLibrary: Option[String] = None
 
   override protected[core] def configFullPath: List[String] = {
     val s = currentSample match {
