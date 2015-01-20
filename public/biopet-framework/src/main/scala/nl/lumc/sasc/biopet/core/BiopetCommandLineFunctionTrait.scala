@@ -99,14 +99,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
           val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
           BiopetCommandLineFunctionTrait.executableMd5Cache += executable -> temp
         }
-
-        addJobReportBinding("md5sum_exe", BiopetCommandLineFunctionTrait.executableMd5Cache(executable))
       } catch {
         case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
       }
-    } else {
-      addJobReportBinding("md5sum_exe", BiopetCommandLineFunctionTrait.executableMd5Cache(executable))
     }
+    val md5 = BiopetCommandLineFunctionTrait.executableMd5Cache(executable)
+    if (md5 == null) addJobReportBinding("md5sum_exe", md5)
+    else addJobReportBinding("md5sum_exe", "None")
   }
 
   final protected def preCmdInternal {

@@ -19,8 +19,9 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.{ Star, Stampy, Bowtie }
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star, Bowtie, Stampy }
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -29,7 +30,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
 import scala.math._
 
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
-  qscript =>
   def this() = this(null)
 
   @Input(doc = "R1 fastq file", shortName = "R1", required = true)
@@ -89,7 +89,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var RGDT: Date = _
 
   @Argument(doc = "Readgroup predicted insert size", shortName = "RGPI", required = false)
-  var RGPI: Int = config("RGPI")
+  var RGPI: Option[Int] = config("RGPI")
 
   var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
@@ -122,12 +122,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def biopetScript() {
-    var fastq_R1: File = input_R1
-    var fastq_R2: File = if (paired) input_R2 else ""
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep/"
-      flexiprep.input_R1 = fastq_R1
-      if (paired) flexiprep.input_R2 = fastq_R2
+      flexiprep.input_R1 = input_R1
+      if (paired) flexiprep.input_R2 = input_R2
       flexiprep.sampleName = this.RGSM
       flexiprep.libraryName = this.RGLB
       flexiprep.init
@@ -145,23 +143,25 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     var chunks: Map[String, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       val chunkDir = outputDir + "chunks/" + t + "/"
-      chunks += (chunkDir -> (removeGz(chunkDir + fastq_R1.getName),
-        if (paired) removeGz(chunkDir + fastq_R2.getName) else ""))
+      chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
+        if (paired) removeGz(chunkDir + input_R2.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(fastq_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(fastq_R2, flexiprep.outputDir)))
+    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      flexiprep.extractIfNeeded(input_R2, flexiprep.outputDir)))
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
-      fastSplitter_R1.input = fastq_R1
+      fastSplitter_R1.input = input_R1
       for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
-      add(fastSplitter_R1, isIntermediate = true)
+      fastSplitter_R1.isIntermediate = true
+      add(fastSplitter_R1)
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = fastq_R2
+        fastSplitter_R2.input = input_R2
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
-        add(fastSplitter_R2, isIntermediate = true)
+        fastSplitter_R2.isIntermediate = true
+        add(fastSplitter_R2)
       }
     }
 
@@ -182,7 +182,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val outputBam = new File(chunkDir + outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa"        => addBwa(R1, R2, outputBam, deps)
+        case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
+        case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
         case "stampy"     => addStampy(R1, R2, outputBam, deps)
         case "star"       => addStar(R1, R2, outputBam, deps)
@@ -212,14 +213,60 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
-  def addBwa(R1: File, R2: File, output: File, deps: List[File]): File = {
-    val bwaCommand = new Bwa(this)
+  def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
+    val bwaAlnR1 = new BwaAln(this)
+    bwaAlnR1.fastq = R1
+    bwaAlnR1.deps = deps
+    bwaAlnR1.output = swapExt(output.getParent, output, ".bam", ".R1.sai")
+    bwaAlnR1.isIntermediate = true
+    add(bwaAlnR1)
+
+    val samFile: File = if (paired) {
+      val bwaAlnR2 = new BwaAln(this)
+      bwaAlnR2.fastq = R2
+      bwaAlnR2.deps = deps
+      bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
+      bwaAlnR2.isIntermediate = true
+      add(bwaAlnR2)
+
+      val bwaSampe = new BwaSampe(this)
+      bwaSampe.fastqR1 = R1
+      bwaSampe.fastqR2 = R2
+      bwaSampe.saiR1 = bwaAlnR1.output
+      bwaSampe.saiR2 = bwaAlnR2.output
+      bwaSampe.r = getReadGroup
+      bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
+      bwaSampe.isIntermediate = true
+      add(bwaSampe)
+
+      bwaSampe.output
+    } else {
+      val bwaSamse = new BwaSamse(this)
+      bwaSamse.fastq = R1
+      bwaSamse.sai = bwaAlnR1.output
+      bwaSamse.r = getReadGroup
+      bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
+      bwaSamse.isIntermediate = true
+      add(bwaSamse)
+
+      bwaSamse.output
+    }
+
+    val sortSam = SortSam(this, samFile, output)
+    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+    add(sortSam)
+    return sortSam.output
+  }
+
+  def addBwaMem(R1: File, R2: File, output: File, deps: List[File]): File = {
+    val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
     bwaCommand.R = getReadGroup
-    bwaCommand.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-    add(bwaCommand, isIntermediate = true)
+    bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
+    bwaCommand.isIntermediate = true
+    add(bwaCommand)
     val sortSam = SortSam(this, bwaCommand.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
@@ -245,7 +292,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     stampyCmd.readgroup = RG
     stampyCmd.sanger = true
     stampyCmd.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-    add(stampyCmd, isIntermediate = true)
+    stampyCmd.isIntermediate = true
+    add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
@@ -258,7 +306,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (paired) bowtie.R2 = R2
     bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
-    add(bowtie, isIntermediate = true)
+    bowtie.isIntermediate = true
+    add(bowtie)
     return addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
@@ -300,32 +349,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (RGCN != null) RG += "CN:" + RGCN + "\\t"
     if (RGDS != null) RG += "DS" + RGDS + "\\t"
     if (RGDT != null) RG += "DT" + RGDT + "\\t"
-    if (RGPI > 0) RG += "PI" + RGPI + "\\t"
+    if (RGPI.isDefined) RG += "PI" + RGPI.get + "\\t"
 
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
 }
 
 object Mapping extends PipelineCommand {
-  def loadFromLibraryConfig(root: Configurable, runConfig: Map[String, Any], sampleConfig: Map[String, Any],
-                            runDir: String, startJobs: Boolean = true): Mapping = {
-    val mapping = new Mapping(root)
 
-    logger.debug("Mapping runconfig: " + runConfig)
-    if (runConfig.contains("R1")) mapping.input_R1 = new File(runConfig("R1").toString)
-    if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
-    mapping.paired = (mapping.input_R2 != null)
-    mapping.RGLB = runConfig("ID").toString
-    mapping.RGSM = sampleConfig("ID").toString
-    if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
-    if (runConfig.contains("PU")) mapping.RGPU = runConfig("PU").toString
-    if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
-    mapping.outputDir = runDir
-
-    if (startJobs) {
-      mapping.init
-      mapping.biopetScript
-    }
-    return mapping
-  }
 }
