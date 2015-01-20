@@ -31,6 +31,7 @@ import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
 import org.broadinstitute.gatk.queue.QScript
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
 
   @Input(doc = "countBed", required = false)
@@ -53,13 +54,81 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   )
 
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
-    var prefixFastq: File = _
-  }
+  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> new Sample(id)).toMap
 
-  class SampleOutput extends AbstractSampleOutput {
+  class Sample(val sampleId: String) extends AbstractSample {
 
+    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> new Library(id)).toMap
+
+    class Library(val libraryId: String) extends AbstractLibrary {
+      val inputFastq: File = config("R1", required = true)
+      val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
+      var mappedBamFile: File = _
+
+      def runJobs(): Unit = {
+        val flexiprep = new Flexiprep(qscript)
+        flexiprep.outputDir = getLibraryDir + "flexiprep/"
+        flexiprep.input_R1 = inputFastq
+        flexiprep.skipClip = true
+        flexiprep.skipTrim = true
+        flexiprep.sampleName = sampleId
+        flexiprep.libraryName = libraryId
+        flexiprep.init
+        flexiprep.biopetScript
+        addAll(flexiprep.functions)
+
+        val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
+        val pf = new PrefixFastq(qscript)
+        pf.inputFastq = flexiprepOutput.head
+        pf.outputFastq = prefixFastq
+        pf.prefixSeq = config("sage_tag", default = "CATG")
+        pf.deps +:= flexiprep.outputFiles("fastq_input_R1")
+        add(pf)
+
+        val mapping = new Mapping(qscript)
+        mapping.skipFlexiprep = true
+        mapping.skipMarkduplicates = true
+        mapping.aligner = config("aligner", default = "bowtie")
+        mapping.input_R1 = pf.outputFastq
+        mapping.RGLB = libraryId
+        mapping.RGSM = sampleId
+        mapping.RGPL = config("PL")
+        mapping.RGPU = config("PU")
+        mapping.RGCN = config("CN")
+        mapping.outputDir = getLibraryDir
+        mapping.init
+        mapping.biopetScript
+        addAll(mapping.functions)
+
+        if (config("library_counts", default = false).asBoolean) {
+          addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleId + "-" + libraryId, getLibraryDir)
+          addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, getLibraryDir)
+        }
+
+        mappedBamFile = mapping.outputFiles("finalBamFile")
+      }
+    }
+
+    def runJobs(): Unit = {
+      val libraryBamfiles = libraries.map(_._2.mappedBamFile).toList
+      val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
+
+      val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
+      else if (libraryBamfiles.size > 1) {
+        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, getSampleDir)
+        add(mergeSamFiles)
+        mergeSamFiles.output
+      } else null
+      val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
+      else if (libraryFastqFiles.size > 1) {
+        val cat = Cat(qscript, libraryFastqFiles, getSampleDir + sampleId + ".fastq")
+        add(cat)
+        cat.output
+      } else null
+
+      addBedtoolsCounts(bamFile, sampleId, getSampleDir)
+      addTablibCounts(fastqFile, sampleId, getSampleDir)
+    }
   }
 
   def init() {
@@ -89,84 +158,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
 
     runSamplesJobs
-  }
-
-  // Called for each sample
-  def runSingleSampleJobs(sampleID: String): SampleOutput = {
-    val sampleOutput = new SampleOutput
-    var libraryBamfiles: List[File] = List()
-    var libraryFastqFiles: List[File] = List()
-    val sampleDir: String = globalSampleDir + sampleID + "/"
-    for ((library, libraryFiles) <- runLibraryJobs(sampleID)) {
-      libraryFastqFiles +:= libraryFiles.prefixFastq
-      libraryBamfiles +:= libraryFiles.mappedBamFile
-    }
-
-    val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-    else if (libraryBamfiles.size > 1) {
-      val mergeSamFiles = MergeSamFiles(this, libraryBamfiles, sampleDir)
-      add(mergeSamFiles)
-      mergeSamFiles.output
-    } else null
-    val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
-    else if (libraryFastqFiles.size > 1) {
-      val cat = Cat.apply(this, libraryFastqFiles, sampleDir + sampleID + ".fastq")
-      add(cat)
-      cat.output
-    } else null
-
-    addBedtoolsCounts(bamFile, sampleID, sampleDir)
-    addTablibCounts(fastqFile, sampleID, sampleDir)
-
-    return sampleOutput
-  }
-
-  // Called for each run from a sample
-  def runSingleLibraryJobs(libraryID: String, sampleID: String): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-    val runDir: String = globalSampleDir + sampleID + "/run_" + libraryID + "/"
-    if (config.contains("R1")) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.outputDir = runDir + "flexiprep/"
-      flexiprep.input_R1 = config("R1")
-      flexiprep.skipClip = true
-      flexiprep.skipTrim = true
-      flexiprep.sampleName = sampleID
-      flexiprep.libraryName = libraryID
-      flexiprep.init
-      flexiprep.biopetScript
-      addAll(flexiprep.functions)
-
-      val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
-      val prefixFastq = PrefixFastq(this, flexiprepOutput.head, runDir)
-      prefixFastq.prefixSeq = config("sage_tag", default = "CATG")
-      prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
-      add(prefixFastq)
-      libraryOutput.prefixFastq = prefixFastq.outputFastq
-
-      val mapping = new Mapping(this)
-      mapping.skipFlexiprep = true
-      mapping.skipMarkduplicates = true
-      mapping.aligner = config("aligner", default = "bowtie")
-      mapping.input_R1 = prefixFastq.outputFastq
-      mapping.RGLB = libraryID
-      mapping.RGSM = sampleID
-      mapping.RGPL = config("PL")
-      mapping.RGPU = config("PU")
-      mapping.RGCN = config("CN")
-      mapping.outputDir = runDir
-      mapping.init
-      mapping.biopetScript
-      addAll(mapping.functions)
-
-      if (config("library_counts", default = false).asBoolean) {
-        addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + libraryID, runDir)
-        addTablibCounts(prefixFastq.outputFastq, sampleID + "-" + libraryID, runDir)
-      }
-
-      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for library: " + libraryID)
-    return libraryOutput
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
