@@ -61,7 +61,7 @@ trait MultiSampleQScript extends BiopetQScript {
     for (sampleID <- getSamples) {
       currentSample = Some(sampleID)
       samplesOutput += sampleID -> runSingleSampleJobs(sampleID)
-      currentSample = null
+      currentSample = None
     }
   }
 
@@ -136,9 +136,15 @@ trait MultiSampleQScript extends BiopetQScript {
   }
 
   override protected[core] def configFullPath: List[String] = {
-    (if (currentSample.isDefined) "samples" :: currentSample.get :: Nil else Nil) :::
-      (if (currentLibrary.isDefined) "libraries" :: currentLibrary.get :: Nil else Nil) :::
-      super.configFullPath
+    val s = currentSample match {
+      case Some(s) => "samples" :: s :: Nil
+      case _       => Nil
+    }
+    val l = currentLibrary match {
+      case Some(l) => "libraries" :: l :: Nil
+      case _       => Nil
+    }
+    s ::: l ::: super.configFullPath
   }
 
   override val config = new ConfigFunctionsExt
@@ -151,8 +157,8 @@ trait MultiSampleQScript extends BiopetQScript {
                        freeVar: Boolean = true,
                        sample: String = null,
                        library: String = null): ConfigValue = {
-      val s = if (sample == null) currentSample.getOrElse(null) else sample
-      val l = if (library == null) currentLibrary.getOrElse(null) else library
+      val s = currentSample.getOrElse(sample)
+      val l = currentLibrary.getOrElse(library)
       super.apply(key, default, submodule, required, freeVar, s, l)
     }
 
@@ -161,8 +167,8 @@ trait MultiSampleQScript extends BiopetQScript {
                           freeVar: Boolean = true,
                           sample: String = null,
                           library: String = null) = {
-      val s = if (sample == null) currentSample.getOrElse(null) else sample
-      val l = if (library == null) currentLibrary.getOrElse(null) else library
+      val s = currentSample.getOrElse(sample)
+      val l = currentLibrary.getOrElse(library)
       super.contains(key, submodule, freeVar, s, l)
     }
   }
