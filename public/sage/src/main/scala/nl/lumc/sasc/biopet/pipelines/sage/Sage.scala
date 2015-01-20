@@ -92,13 +92,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
+  def runSingleSampleJobs(sampleID: String): SampleOutput = {
     val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
     var libraryFastqFiles: List[File] = List()
-    val sampleID: String = sampleConfig("ID").toString
     val sampleDir: String = globalSampleDir + sampleID + "/"
-    for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
+    for ((library, libraryFiles) <- runLibraryJobs(sampleID)) {
       libraryFastqFiles +:= libraryFiles.prefixFastq
       libraryBamfiles +:= libraryFiles.mappedBamFile
     }
@@ -123,19 +122,17 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
+  def runSingleLibraryJobs(libraryID: String, sampleID: String): LibraryOutput = {
     val libraryOutput = new LibraryOutput
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
-    if (runConfig.contains("R1")) {
+    val runDir: String = globalSampleDir + sampleID + "/run_" + libraryID + "/"
+    if (config.contains("R1")) {
       val flexiprep = new Flexiprep(this)
       flexiprep.outputDir = runDir + "flexiprep/"
-      flexiprep.input_R1 = new File(runConfig("R1").toString)
+      flexiprep.input_R1 = config("R1")
       flexiprep.skipClip = true
       flexiprep.skipTrim = true
       flexiprep.sampleName = sampleID
-      flexiprep.libraryName = runID
+      flexiprep.libraryName = libraryID
       flexiprep.init
       flexiprep.biopetScript
       addAll(flexiprep.functions)
@@ -152,23 +149,23 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.skipMarkduplicates = true
       mapping.aligner = config("aligner", default = "bowtie")
       mapping.input_R1 = prefixFastq.outputFastq
-      mapping.RGLB = runConfig("ID").toString
-      mapping.RGSM = sampleConfig("ID").toString
-      if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
-      if (runConfig.contains("PU")) mapping.RGPU = runConfig("PU").toString
-      if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
+      mapping.RGLB = libraryID
+      mapping.RGSM = sampleID
+      mapping.RGPL = config("PL")
+      mapping.RGPU = config("PU")
+      mapping.RGCN = config("CN")
       mapping.outputDir = runDir
       mapping.init
       mapping.biopetScript
       addAll(mapping.functions)
 
       if (config("library_counts", default = false).asBoolean) {
-        addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
-        addTablibCounts(prefixFastq.outputFastq, sampleID + "-" + runID, runDir)
+        addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + libraryID, runDir)
+        addTablibCounts(prefixFastq.outputFastq, sampleID + "-" + libraryID, runDir)
       }
 
       libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
+    } else this.logger.error("Sample: " + sampleID + ": No R1 found for library: " + libraryID)
     return libraryOutput
   }
 

@@ -116,12 +116,11 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
+  def runSingleSampleJobs(sampleID: String): SampleOutput = {
     val sampleOutput = new SampleOutput
-    val sampleID: String = sampleConfig("ID").toString
     val sampleDir = globalSampleDir + sampleID + "/"
 
-    sampleOutput.libraries = runLibraryJobs(sampleConfig)
+    sampleOutput.libraries = runLibraryJobs(sampleID)
 
     sampleOutput.output = addGenerateFasta(sampleID, sampleDir)
     sampleOutput.outputSnps = addGenerateFasta(sampleID, sampleDir, snpsOnly = true)
@@ -130,12 +129,10 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
+  def runSingleLibraryJobs(libraryID: String, sampleID: String): LibraryOutput = {
     val libraryOutput = new LibraryOutput
 
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
+    val runDir: String = globalSampleDir + sampleID + "/run_" + libraryID + "/"
 
     return libraryOutput
   }

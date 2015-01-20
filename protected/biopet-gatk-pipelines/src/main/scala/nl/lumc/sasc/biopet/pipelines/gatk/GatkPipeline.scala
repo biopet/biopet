@@ -23,9 +23,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument }
 class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
-  @Argument(doc = "Only Sample", shortName = "sample", required = false)
-  val onlySample: List[String] = Nil
-
   @Argument(doc = "Skip Genotyping step", shortName = "skipgenotyping", required = false)
   var skipGenotyping: Boolean = false
 
@@ -68,73 +65,70 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def biopetScript() {
-    if (onlySample.isEmpty) {
-      runSamplesJobs
+    runSamplesJobs
 
-      //SampleWide jobs
-      if (mergeGvcfs && gvcfFiles.size > 0) {
-        val newFile = outputDir + "merged.gvcf.vcf.gz"
-        add(CombineGVCFs(this, gvcfFiles, newFile))
-        gvcfFiles = List(newFile)
+    //SampleWide jobs
+    if (mergeGvcfs && gvcfFiles.size > 0) {
+      val newFile = outputDir + "merged.gvcf.vcf.gz"
+      add(CombineGVCFs(this, gvcfFiles, newFile))
+      gvcfFiles = List(newFile)
+    }
+
+    if (!skipGenotyping && gvcfFiles.size > 0) {
+      if (jointGenotyping) {
+        val gatkGenotyping = new GatkGenotyping(this)
+        gatkGenotyping.inputGvcfs = gvcfFiles
+        gatkGenotyping.outputDir = outputDir + "genotyping/"
+        gatkGenotyping.init
+        gatkGenotyping.biopetScript
+        addAll(gatkGenotyping.functions)
+        var vcfFile = gatkGenotyping.outputFile
+      }
+    } else logger.warn("No gVCFs to genotype")
+
+    if (jointVariantcalling) {
+      val allBamfiles = for (
+        (sampleID, sampleOutput) <- samplesOutput;
+        file <- sampleOutput.variantcalling.bamFiles
+      ) yield file
+      val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
+
+      val gatkVariantcalling = new GatkVariantcalling(this) {
+        override def configName = "gatkvariantcalling"
+        override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
       }
 
-      if (!skipGenotyping && gvcfFiles.size > 0) {
-        if (jointGenotyping) {
-          val gatkGenotyping = new GatkGenotyping(this)
-          gatkGenotyping.inputGvcfs = gvcfFiles
-          gatkGenotyping.outputDir = outputDir + "genotyping/"
-          gatkGenotyping.init
-          gatkGenotyping.biopetScript
-          addAll(gatkGenotyping.functions)
-          var vcfFile = gatkGenotyping.outputFile
-        }
-      } else logger.warn("No gVCFs to genotype")
-
-      if (jointVariantcalling) {
-        val allBamfiles = for (
-          (sampleID, sampleOutput) <- samplesOutput;
-          file <- sampleOutput.variantcalling.bamFiles
-        ) yield file
-        val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
-
-        val gatkVariantcalling = new GatkVariantcalling(this) {
-          override def configName = "gatkvariantcalling"
-          override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
-        }
-
-        if (gatkVariantcalling.useMpileup) {
-          val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
-          add(cvRaw)
-          gatkVariantcalling.rawVcfInput = cvRaw.out
-        }
-
-        multisampleVariantcalling.preProcesBams = false
-        multisampleVariantcalling.doublePreProces = false
-        multisampleVariantcalling.inputBams = allBamfiles.toList
-        multisampleVariantcalling.outputDir = outputDir + "variantcalling"
-        multisampleVariantcalling.outputName = "multisample"
-        multisampleVariantcalling.init
-        multisampleVariantcalling.biopetScript
-        addAll(multisampleVariantcalling.functions)
-
-        if (config("inputtype", default = "dna").asString != "rna" && config("recalibration", default = false).asBoolean) {
-          val recalibration = new GatkVariantRecalibration(this)
-          recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
-          recalibration.bamFiles = finalBamFiles
-          recalibration.outputDir = outputDir + "recalibration/"
-          recalibration.init
-          recalibration.biopetScript
-        }
+      if (gatkVariantcalling.useMpileup) {
+        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
+        add(cvRaw)
+        gatkVariantcalling.rawVcfInput = cvRaw.out
       }
-    } else for (sample <- onlySample) runSingleSampleJobs(sample)
+
+      multisampleVariantcalling.preProcesBams = false
+      multisampleVariantcalling.doublePreProces = false
+      multisampleVariantcalling.inputBams = allBamfiles.toList
+      multisampleVariantcalling.outputDir = outputDir + "variantcalling"
+      multisampleVariantcalling.outputName = "multisample"
+      multisampleVariantcalling.init
+      multisampleVariantcalling.biopetScript
+      addAll(multisampleVariantcalling.functions)
+
+      if (config("inputtype", default = "dna").asString != "rna" && config("recalibration", default = false).asBoolean) {
+        val recalibration = new GatkVariantRecalibration(this)
+        recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
+        recalibration.bamFiles = finalBamFiles
+        recalibration.outputDir = outputDir + "recalibration/"
+        recalibration.init
+        recalibration.biopetScript
+      }
+    }
   }
 
   // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
+  def runSingleSampleJobs(sampleID: String): SampleOutput = {
     val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
-    val sampleID: String = getCurrentSample
-    sampleOutput.libraries = runLibraryJobs(sampleConfig)
+    sampleOutput.libraries = runLibraryJobs(sampleID)
     val sampleDir = globalSampleDir + sampleID
     for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
       libraryBamfiles ++= libraryOutput.variantcalling.bamFiles
@@ -161,11 +155,9 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
+  def runSingleLibraryJobs(libraryId: String, sampleID: String): LibraryOutput = {
     val libraryOutput = new LibraryOutput
-    val runID: String = getCurrentLibrary
-    val sampleID: String = getCurrentSample
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
+    val runDir: String = globalSampleDir + sampleID + "/run_" + libraryId + "/"
     var inputType: String = config("inputtype", default = "dna")
 
     def loadFromLibraryConfig(startJobs: Boolean = true): Mapping = {
@@ -173,7 +165,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
       mapping.input_R1 = config("R1")
       mapping.input_R2 = config("R2")
-      mapping.RGLB = runID
+      mapping.RGLB = libraryId
       mapping.RGSM = sampleID
       mapping.RGPL = config("PL")
       mapping.RGPU = config("PU")
@@ -196,8 +188,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
 
       if (config("bam_to_fastq", default = false).asBoolean) {
-        val samToFastq = SamToFastq(this, bamFile, runDir + sampleID + "-" + runID + ".R1.fastq",
-          runDir + sampleID + "-" + runID + ".R2.fastq")
+        val samToFastq = SamToFastq(this, bamFile, runDir + sampleID + "-" + libraryId + ".R1.fastq",
+          runDir + sampleID + "-" + libraryId + ".R2.fastq")
         add(samToFastq, isIntermediate = true)
         val mapping = loadFromLibraryConfig(startJobs = false)
         mapping.input_R1 = samToFastq.fastqR1
@@ -212,17 +204,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val header = inputSam.getFileHeader.getReadGroups
         for (readGroup <- inputSam.getFileHeader.getReadGroups) {
           if (readGroup.getSample != sampleID) logger.warn("Sample ID readgroup in bam file is not the same")
-          if (readGroup.getLibrary != runID) logger.warn("Library ID readgroup in bam file is not the same")
-          if (readGroup.getSample != sampleID || readGroup.getLibrary != runID) readGroupOke = false
+          if (readGroup.getLibrary != libraryId) logger.warn("Library ID readgroup in bam file is not the same")
+          if (readGroup.getSample != sampleID || readGroup.getLibrary != libraryId) readGroupOke = false
         }
         inputSam.close
 
         if (!readGroupOke) {
           if (config("correct_readgroups", default = false)) {
             logger.info("Correcting readgroups, file:" + bamFile)
-            val aorrg = AddOrReplaceReadGroups(this, bamFile, new File(runDir + sampleID + "-" + runID + ".bam"))
-            aorrg.RGID = sampleID + "-" + runID
-            aorrg.RGLB = runID
+            val aorrg = AddOrReplaceReadGroups(this, bamFile, new File(runDir + sampleID + "-" + libraryId + ".bam"))
+            aorrg.RGID = sampleID + "-" + libraryId
+            aorrg.RGLB = libraryId
             aorrg.RGSM = sampleID
             aorrg.RGPL = config("PL", default = "illumina")
             aorrg.RGPU = config("PU", default = "na")
@@ -237,7 +229,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         libraryOutput.mappedBamFile = bamFile
       }
     } else {
-      logger.error("Sample: " + sampleID + ": No R1 found for run: " + runID)
+      logger.error("Sample: " + sampleID + ": No R1 found for run: " + libraryId)
       return libraryOutput
     }
 
