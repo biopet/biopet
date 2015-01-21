@@ -45,6 +45,5 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
     nl.lumc.sasc.biopet.tools.VEPNormalizer,
-    nl.lumc.sasc.biopet.tools.VCFFreqAnnotator,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
 }
