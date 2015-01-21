@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
@@ -54,8 +54,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   )
 
-  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> new Sample(id)).toMap
-
   class Sample(val sampleId: String) extends AbstractSample {
 
     val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> new Library(id)).toMap
@@ -63,16 +61,26 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     class Library(val libraryId: String) extends AbstractLibrary {
       val inputFastq: File = config("R1", required = true)
       val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
-      var mappedBamFile: File = _
+
+      val flexiprep = new Flexiprep(qscript)
+      flexiprep.skipClip = true
+      flexiprep.skipTrim = true
+      flexiprep.sampleName = sampleId
+      flexiprep.libraryName = libraryId
+
+      val mapping = new Mapping(qscript)
+      mapping.aligner = config("aligner", default = "bowtie")
+      mapping.skipFlexiprep = true
+      mapping.skipMarkduplicates = true
+      mapping.RGLB = libraryId
+      mapping.RGSM = sampleId
+      mapping.RGPL = config("PL")
+      mapping.RGPU = config("PU")
+      mapping.RGCN = config("CN")
 
       def runJobs(): Unit = {
-        val flexiprep = new Flexiprep(qscript)
         flexiprep.outputDir = getLibraryDir + "flexiprep/"
         flexiprep.input_R1 = inputFastq
-        flexiprep.skipClip = true
-        flexiprep.skipTrim = true
-        flexiprep.sampleName = sampleId
-        flexiprep.libraryName = libraryId
         flexiprep.init
         flexiprep.biopetScript
         addAll(flexiprep.functions)
@@ -85,16 +93,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         pf.deps +:= flexiprep.outputFiles("fastq_input_R1")
         add(pf)
 
-        val mapping = new Mapping(qscript)
-        mapping.skipFlexiprep = true
-        mapping.skipMarkduplicates = true
-        mapping.aligner = config("aligner", default = "bowtie")
         mapping.input_R1 = pf.outputFastq
-        mapping.RGLB = libraryId
-        mapping.RGSM = sampleId
-        mapping.RGPL = config("PL")
-        mapping.RGPU = config("PU")
-        mapping.RGCN = config("CN")
         mapping.outputDir = getLibraryDir
         mapping.init
         mapping.biopetScript
@@ -104,13 +103,11 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
           addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleId + "-" + libraryId, getLibraryDir)
           addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, getLibraryDir)
         }
-
-        mappedBamFile = mapping.outputFiles("finalBamFile")
       }
     }
 
     def runJobs(): Unit = {
-      val libraryBamfiles = libraries.map(_._2.mappedBamFile).toList
+      val libraryBamfiles = libraries.map(_._2.mapping.outputFiles("finalBamFile")).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
       val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
@@ -132,6 +129,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def init() {
+    samples = getSamplesIds.map(id => id -> new Sample(id)).toMap
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (transcriptome == null && tagsLibrary == null)
       throw new IllegalStateException("No transcriptome or taglib found")
