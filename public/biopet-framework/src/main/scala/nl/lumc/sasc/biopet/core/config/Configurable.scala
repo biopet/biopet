@@ -60,7 +60,7 @@ trait Configurable extends ImplicitConversions {
   /**
    * Class is used for retrieval of config values
    */
-  protected class ConfigFunctions {
+  protected class ConfigFunctions(val defaultSample: Option[String] = None, val defaultLibrary: Option[String] = None) {
     /**
      *
      * @param key Name of value
@@ -79,13 +79,15 @@ trait Configurable extends ImplicitConversions {
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null): ConfigValue = {
+      val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
+      val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = path(sample, library, submodule)
+      val p = path(s, l, submodule)
       val d = {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (!contains(key, submodule, freeVar, sample = sample, library = library) && d == null) {
+      if (!contains(key, submodule, freeVar, sample = s, library = l) && d == null) {
         if (required) {
           Logging.logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
           throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
@@ -109,8 +111,10 @@ trait Configurable extends ImplicitConversions {
                  freeVar: Boolean = true,
                  sample: String = null,
                  library: String = null) = {
+      val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
+      val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = path(sample, library, submodule)
+      val p = path(s, l, submodule)
 
       Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
