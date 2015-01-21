@@ -31,8 +31,10 @@ trait MultiSampleQScript extends BiopetQScript {
   type Sample <: AbstractSample
   abstract class AbstractSample {
     val sampleId: String
+    val config = new ConfigFunctions(defaultSample = Some(sampleId))
     abstract class AbstractLibrary {
       val libraryId: String
+      val config = new ConfigFunctions(defaultSample = Some(sampleId), defaultLibrary = Some(libraryId))
       final def run(): Unit = {
         currentSample = Some(sampleId)
         currentLibrary = Some(libraryId)
@@ -74,7 +76,7 @@ trait MultiSampleQScript extends BiopetQScript {
     }
   }
 
-  val samples: Map[String, Sample]
+  var samples: Map[String, Sample] = Map()
 
   /** Returns a list of all sampleIDs */
   protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
@@ -101,31 +103,5 @@ trait MultiSampleQScript extends BiopetQScript {
       case _       => Nil
     }
     s ::: l ::: super.configFullPath
-  }
-
-  override val config = new ConfigFunctionsExt
-
-  protected class ConfigFunctionsExt extends super.ConfigFunctions {
-    override def apply(key: String,
-                       default: Any = null,
-                       submodule: String = null,
-                       required: Boolean = false,
-                       freeVar: Boolean = true,
-                       sample: String = null,
-                       library: String = null): ConfigValue = {
-      val s = currentSample.getOrElse(sample)
-      val l = currentLibrary.getOrElse(library)
-      super.apply(key, default, submodule, required, freeVar, s, l)
-    }
-
-    override def contains(key: String,
-                          submodule: String = null,
-                          freeVar: Boolean = true,
-                          sample: String = null,
-                          library: String = null) = {
-      val s = currentSample.getOrElse(sample)
-      val l = currentLibrary.getOrElse(library)
-      super.contains(key, submodule, freeVar, s, l)
-    }
   }
 }
