@@ -107,6 +107,7 @@ object VcfStats extends ToolCommand {
         writer.println(values.mkString(key + "\t", "\t", ""))
       }
       writer.close()
+      plotXy(file)
     }
   }
 
@@ -149,7 +150,14 @@ object VcfStats extends ToolCommand {
   def plotHeatmap(file: File) {
     val executor = new RScriptExecutor
     executor.addScript(new Resource("plotHeatmap.R", getClass))
-    executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".png", file.getAbsolutePath.stripSuffix(".tsv") + ".clustering.png")
+    executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png", file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png")
+    executor.exec()
+  }
+
+  def plotXy(file: File) {
+    val executor = new RScriptExecutor
+    executor.addScript(new Resource("plotXY.R", getClass))
+    executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".xy.png")
     executor.exec()
   }
 }
