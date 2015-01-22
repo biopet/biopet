@@ -15,7 +15,8 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 trait MultiSampleQScript extends BiopetQScript {
@@ -29,31 +30,61 @@ trait MultiSampleQScript extends BiopetQScript {
     def getLibrary(key: String) = libraries(key)
   }
 
-  var samplesConfig: Map[String, Any] = config("samples")
-  var samplesOutput: Map[String, SampleOutput] = Map()
+  if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
+
+  /**
+   * Returns a map with all sample configs
+   */
+  val getSamplesConfig: Map[String, Any] = ConfigUtils.any2map(Config.global.map.getOrElse("samples", Map()))
+
+  /**
+   * Returns a list of all sampleIDs
+   */
+  val getSamples: Set[String] = getSamplesConfig.keySet
+
+  /**
+   * Returns the global sample directory
+   * @return global sample directory
+   */
   def globalSampleDir: String = outputDir + "samples/"
 
+  var samplesOutput: Map[String, SampleOutput] = Map()
+
+  /**
+   * Runs runSingleSampleJobs method for each sample
+   */
   final def runSamplesJobs() {
-    if (samplesConfig == null) samplesConfig = Map()
-    if (Config.global.contains("samples")) for ((key, value) <- samplesConfig) {
+    for ((key, value) <- getSamplesConfig) {
       var sample = any2map(value)
       if (!sample.contains("ID")) sample += ("ID" -> key)
       if (sample("ID") == key) {
+        currentSample = key
         samplesOutput += key -> runSingleSampleJobs(sample)
+        currentSample = null
       } else logger.warn("Key is not the same as ID on value for sample")
     }
-    else logger.warn("No Samples found in config")
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
+
+  /**
+   * Run sample with only sampleID
+   * @param sample sampleID
+   * @return
+   */
   def runSingleSampleJobs(sample: String): SampleOutput = {
-    var map = any2map(samplesConfig(sample))
+    var map = any2map(getSamplesConfig(sample))
     if (map.contains("ID") && map("ID") != sample)
       throw new IllegalStateException("ID in config not the same as the key")
     else map += ("ID" -> sample)
     return runSingleSampleJobs(map)
   }
 
+  /**
+   * Runs runSingleLibraryJobs method for each library found in sampleConfig
+   * @param sampleConfig sample config
+   * @return Map with libraryID -> LibraryOutput object
+   */
   final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, LibraryOutput] = {
     var output: Map[String, LibraryOutput] = Map()
     val sampleID = sampleConfig("ID").toString
@@ -63,11 +94,92 @@ trait MultiSampleQScript extends BiopetQScript {
         var library = any2map(value)
         if (!library.contains("ID")) library += ("ID" -> key)
         if (library("ID") == key) {
+          currentLibrary = key
           output += key -> runSingleLibraryJobs(library, sampleConfig)
+          currentLibrary = null
         } else logger.warn("Key is not the same as ID on value for run of sample: " + sampleID)
       }
     } else logger.warn("No runs found in config for sample: " + sampleID)
     return output
   }
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput
+
+  protected var currentSample: String = null
+  protected var currentLibrary: String = null
+
+  /**
+   * Set current sample manual, only use this when not using runSamplesJobs method
+   * @param sample
+   */
+  def setCurrentSample(sample: String) {
+    logger.debug("Manual sample set to: " + sample)
+    currentSample = sample
+  }
+
+  /**
+   * Gets current sample
+   * @return current sample
+   */
+  def getCurrentSample = currentSample
+
+  /**
+   * Reset current sample manual, only use this when not using runSamplesJobs method
+   */
+  def resetCurrentSample() {
+    logger.debug("Manual sample reset")
+    currentSample = null
+  }
+
+  /**
+   * Set current library manual, only use this when not using runLibraryJobs method
+   * @param library
+   */
+  def setCurrentLibrary(library: String) {
+    logger.debug("Manual library set to: " + library)
+    currentLibrary = library
+  }
+
+  /**
+   * Gets current library
+   * @return current library
+   */
+  def getCurrentLibrary = currentLibrary
+
+  /** Reset current library manual, only use this when not using runLibraryJobs method */
+  def resetCurrentLibrary() {
+    logger.debug("Manual library reset")
+    currentLibrary = null
+  }
+
+  override protected[core] def configFullPath: List[String] = {
+    (if (currentSample != null) "samples" :: currentSample :: Nil else Nil) :::
+      (if (currentLibrary != null) "libraries" :: currentLibrary :: Nil else Nil) :::
+      super.configFullPath
+  }
+
+  override val config = new ConfigFunctionsExt
+
+  protected class ConfigFunctionsExt extends super.ConfigFunctions {
+    override def apply(key: String,
+                       default: Any = null,
+                       submodule: String = null,
+                       required: Boolean = false,
+                       freeVar: Boolean = true,
+                       sample: String = null,
+                       library: String = null): ConfigValue = {
+      val s = if (sample == null) currentSample else sample
+      val l = if (library == null) currentLibrary else library
+      super.apply(key, default, submodule, required, freeVar, s, l)
+    }
+
+    override def contains(key: String,
+                          submodule: String = null,
+                          freeVar: Boolean = true,
+                          sample: String = null,
+                          library: String = null) = {
+      val s = if (sample == null) currentSample else sample
+      val l = if (library == null) currentLibrary else library
+      super.contains(key, submodule, freeVar, s, l)
+    }
+  }
 }

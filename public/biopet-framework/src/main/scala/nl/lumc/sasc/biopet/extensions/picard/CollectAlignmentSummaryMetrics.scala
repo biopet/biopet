@@ -29,7 +29,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
   var maxInstertSize: Option[Int] = config("maxInstertSize")
 
   @Argument(doc = "ADAPTER_SEQUENCE", required = false)
-  var adapterSequence: List[String] = config("adapterSequence")
+  var adapterSequence: List[String] = config("adapterSequence", default = Nil)
 
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequenced: Option[Boolean] = config("isBisulfiteSequenced")
@@ -44,7 +44,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
   var assumeSorted: Boolean = config("assumeSorted", default = true)
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stopAfter")

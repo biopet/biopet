@@ -57,13 +57,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case f: BiopetCommandLineFunctionTrait => f.afterGraph
       case _                                 =>
     }
-    val configReport = Config.global.getReport
-    val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
-    configReportFile.getParentFile.mkdir
-    val writer = new PrintWriter(configReportFile)
-    writer.write(configReport)
-    writer.close()
-    for (line <- configReport.split("\n")) logger.debug(line)
+
+    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
   }
 
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
