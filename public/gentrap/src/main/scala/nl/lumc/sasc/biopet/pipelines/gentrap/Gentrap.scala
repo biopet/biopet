@@ -18,7 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import java.io.File
 
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.HtseqCount
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.picard.SortSam
 import org.broadinstitute.gatk.queue.QScript
 
 import nl.lumc.sasc.biopet.core._
@@ -29,6 +31,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
  * Gentrap pipeline
  * Generic transcriptome analysis pipeline
  */
+// TODO: less vars, less mutable state
 class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
 
   // alternative constructor for initialization with empty configuration
@@ -53,8 +56,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
   */
 
   /** Split aligner to use */
-  @Argument(doc = "Split aligner", fullName = "aligner", shortName = "aln", required = true, validation = "gsnap|tophat|star|star-2pass")
-  var aligner: String = _
+  @Argument(doc = "Split aligner (default: gsnap)", fullName = "aligner", shortName = "aln", required = false, validation = "gsnap|tophat|star|star-2pass")
+  var aligner: String = config("aligner", default = "gsnap")
+
+  /** Gene-wise read count table output */
+  @Argument(doc = "Output read counts per gene (default: false)", fullName = "count_gene_read", shortName = "cGeneRead", required = false)
+  var cGeneRead: Boolean = config("gene_read_counts", default = false)
 
   /*
   /** Whether library is strand-specific (dUTP protocol) or not */
@@ -68,10 +75,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
   /** Cufflinks assembly type */
   @Argument(doc = "Cufflinks assembly type", fullName = "transcript_asm", shortName = "transAsm", required = false, validation = "none|strict|guided|blind")
   var asm: List[String] = List("none")
-
-  /** Gene-wise read count table output */
-  @Argument(doc = "Gene read count table output", fullName = "count_gene_read", shortName = "cGeneRead", required = false)
-  var cGeneRead: Boolean = _
 
   /** Gene-wise base count table output */
   @Argument(doc = "Gene base count table output", fullName = "count_gene_base", shortName = "cGeneBase", required = false)
@@ -94,91 +97,144 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript {
     )
   )
 
-  class SampleOutput extends AbstractSampleOutput {}
+  /** General function to get sample or library config ID */
+  protected def getUnitId(unitConfig: Map[String, Any]): String = unitConfig("ID").toString
 
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
+  /** Trait for object that contains input and/or output files */
+  protected trait OutputContainer { this: { val unitConfig: Map[String, Any] } =>
+
+    /** The container ID */
+    val id: String = getUnitId(unitConfig)
+
+    /** Run directory of the container */
+    val runDirectory: File
+
+    /** Function to return a file within the run directory given an extension */
+    def makeFile(extension: String): File = new File(runDirectory, id + extension)
+  }
+
+  /** Per-sample output file container */
+  class SampleOutput(val unitConfig: Map[String, Any]) extends AbstractSampleOutput with OutputContainer {
+
+    /** Per-sample run directory */
+    val runDirectory = new File(outputDir, "sample_" + id)
+
+    /** Sample input alignment files */
+    // lazy since we need to execute library jobs first
+    lazy val inputAlignmentFiles: List[File] = libraries.values.map(x => x.alignmentFile).toList
+
+    /** Sample output alignment file */
+    val alignmentFile: File = makeFile(".bam")
+  }
+
+  /** Per-library output file container */
+  // TODO: Use SampleOutput directly?
+  class LibraryOutput(val unitConfig: Map[String, Any], sampleConfig: Map[String, Any]) extends AbstractLibraryOutput with OutputContainer {
+
+    /** Sample ID of this library */
+    val sampleId: String = getUnitId(sampleConfig)
+
+    /** Per-library run directory */
+    val runDirectory = new File(new File(outputDir, "sample_" + getUnitId(sampleConfig)), "lib_" + id)
+
+    /** Library input read 1 */
+    val inputRead1: File = unitConfig.get("R1") match {
+      case Some(r1) =>
+        val f1 = new File(r1.toString)
+        require(f1.exists, "Read 1 file " + r1.toString + " not found")
+        f1
+      case None => throw new IllegalArgumentException("Missing read 1 for library " + id + " in sample " + sampleId)
+    }
+
+    /** Library input read 2 */
+    val inputRead2: Option[File] = unitConfig.get("R2") match {
+      case Some(r2) =>
+        val f2 = new File(r2.toString)
+        require(f2.exists, "Read 2 file " + r2.toString + " not found")
+        Some(f2)
+      case None => None
+    }
+
+    /** Final mapped alignment file per library*/
+    var alignmentFile: File = _
   }
 
   // empty implementation
   def init() {}
 
   def biopetScript() {
-    // validation
-    /*
-    inputR1 = inputR1 match {
-      case null   => throw new IllegalArgumentException("Missing read 1 argument for Gentrap")
-      case other  => other
-    }
-    skipTrim = config.getOrElse("skipTrim", false)
-    */
-    //val testOutput = new File("/home/warindrarto/hmm/test_output.txt")
     runSamplesJobs()
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
-    val so = new SampleOutput
-    val sampleDir: File = new File(outputDir + "sample_" + sampleConfig("ID").toString)
+
+    // setup output container
+    val so = new SampleOutput(sampleConfig)
     so.libraries = runLibraryJobs(sampleConfig)
 
-    val libBamFiles = so.libraries.values.map(x => x.mappedBamFile)
-    val sampleBam = new File(outputDir, sampleConfig("ID").toString + ".bam")
-    val sampleBamJob =
-      if (libBamFiles.size == 1) {
+    // create per-sample alignment file
+    val sampleAlignmentJob = so.inputAlignmentFiles match {
+      // library only has one file, then we symlink
+      case file :: Nil =>
         val ln = new Ln(this)
-        ln.in = libBamFiles.head
-        ln.out = sampleBam
+        ln.in = file
+        ln.out = so.alignmentFile
         ln
-      } else {
+      // library has multiple files, then we merge
+      case files @ f :: fs =>
         val merge = new MergeSamFiles(this)
-        merge.input = libBamFiles.toList
-        merge.output = sampleBam
+        merge.input = files
         merge.sortOrder = "coordinate"
+        merge.output = so.alignmentFile
         merge
-      }
-    add(sampleBamJob)
+      // library has 0 or less files, error!
+      case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
+    }
+    add(sampleAlignmentJob)
+
+    // do gene read counts if set ~ and use ID-sorted bam
+    if (cGeneRead) {
+      val idSortingJob = new SortSam(this)
+      idSortingJob.input = so.alignmentFile
+      idSortingJob.output = so.makeFile(".idsorted.bam")
+      idSortingJob.sortOrder = "queryname"
+      add(idSortingJob)
+
+      val geneReadJob = new HtseqCount(this)
+      geneReadJob.format = "bam"
+      geneReadJob.order = "name"
+      geneReadJob.inputAlignment = idSortingJob.output
+      add(geneReadJob)
+    }
 
     so
   }
 
   def runSingleLibraryJobs(libConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
-    val lo = new LibraryOutput
-    val libDir: File = new File(outputDir + "sample_" +
-      sampleConfig("ID").toString + File.separator + "lib_" + libConfig("ID").toString)
 
-    // val mapping = Mapping.loadFromLibraryConfig(this, libConfig, sampleConfig, libDir)
+    // setup output container
+    val lo = new LibraryOutput(libConfig, sampleConfig)
+
+    // create per-library alignment file
     val mapping = new Mapping(this)
+    mapping.input_R1 = lo.inputRead1
+    // input_R2 may or may not exist (pipeline can handle single-end or paired-end inputs)
+    mapping.input_R2 = lo.inputRead2 match {
+      case Some(f) => f
+      case None    => null
+    }
+    mapping.aligner = aligner
+    mapping.RGSM = lo.sampleId
+    mapping.RGLB = lo.id
+    mapping.outputDir = lo.runDirectory
     mapping.skipFlexiprep = config("skipFlexiprep", default = false)
     mapping.skipMetrics = config("skipMetrics", default = true)
     mapping.skipMarkduplicates = config("skipMarkDuplicates", default = true)
-    mapping.aligner = config("aligner", default = "gsnap")
-    // TODO: handle more than 2 files in mapping?
-    mapping.input_R1 =
-      if (libConfig.contains("R1")) {
-        val r1 = new File(libConfig("R1").toString)
-        if (r1.exists)
-          r1
-        else throw new IllegalArgumentException("Listed file " + r1.getPath + " does not exist")
-      } else
-        throw new IllegalArgumentException("Missing required argument: R1")
-    mapping.input_R2 =
-      if (libConfig.contains("R2")) {
-        val r2 = new File(libConfig("R2").toString)
-        if (r2.exists)
-          r2
-        else throw new IllegalArgumentException("Listed file " + r2.getPath + " does not exist")
-      } else
-        null
-    mapping.RGLB = libConfig("ID").toString
-    mapping.RGSM = sampleConfig("ID").toString
-    mapping.outputDir = libDir
     mapping.init()
     mapping.biopetScript()
     addAll(mapping.functions)
-    lo.mappedBamFile = mapping.outputFiles("finalBamFile")
+    lo.alignmentFile = mapping.outputFiles("finalBamFile")
 
-    logger.info("From single lib jobs: " + mapping.input_R1.toString)
-    logger.info("From single lib jobs: " + mapping.input_R2)
     lo
   }
 
