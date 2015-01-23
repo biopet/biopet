@@ -28,6 +28,7 @@ import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge, SambambaMarkdup }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Delly, CleverCaller }
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
@@ -94,18 +95,20 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         // When the sample has only 1 run, make a link in the main alignment directory
         val alignmentlink = Ln(this, libraryBamfiles.head,
           alignmentDir + sampleID + ".merged.bam", true)
-        add(alignmentlink, isIntermediate = true)
+        add(alignmentlink, isIntermediate=true)
         alignmentlink.out
       } else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = new SambambaMerge(this)
         mergeSamFiles.input = libraryBamfiles
         mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
-        add(mergeSamFiles, isIntermediate = true)
+        add(mergeSamFiles, isIntermediate=true)
         mergeSamFiles.output
       } else null
 
     val bamMarkDup = SambambaMarkdup(this, bamFile)
     add(bamMarkDup)
+
+    addAll(BamMetrics(this, bamMarkDup.output, alignmentDir + "metrics/").functions)
 
     // create an IGV TDF file
     val tdfCount = IGVToolsCount(this, bamMarkDup.output, config("genomename", default = "hg19"))
