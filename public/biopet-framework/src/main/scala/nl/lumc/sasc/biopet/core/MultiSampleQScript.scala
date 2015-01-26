@@ -20,6 +20,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import scala.reflect.ClassTag
+import scala.reflect._
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 trait MultiSampleQScript extends BiopetQScript {
@@ -28,12 +30,10 @@ trait MultiSampleQScript extends BiopetQScript {
 
   if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
 
-  type Sample <: AbstractSample
-  abstract class AbstractSample {
-    val sampleId: String
+  abstract class AbstractSample(val sampleId: String) {
     val config = new ConfigFunctions(defaultSample = Some(sampleId))
-    abstract class AbstractLibrary {
-      val libraryId: String
+
+    abstract class AbstractLibrary(val libraryId: String) {
       val config = new ConfigFunctions(defaultSample = Some(sampleId), defaultLibrary = Some(libraryId))
       final def run(): Unit = {
         currentSample = Some(sampleId)
@@ -49,7 +49,10 @@ trait MultiSampleQScript extends BiopetQScript {
 
       protected def runJobs()
     }
+
     type Library <: AbstractLibrary
+
+    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> initClass(id)).toMap
 
     protected def getLibrariesIds: Set[String] = {
       ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
@@ -63,8 +66,6 @@ trait MultiSampleQScript extends BiopetQScript {
 
     protected def runJobs()
 
-    val libraries: Map[String, Library]
-
     protected final def runLibraryJobs(): Unit = {
       for ((libraryId, library) <- libraries) {
         library.run()
@@ -76,7 +77,16 @@ trait MultiSampleQScript extends BiopetQScript {
     }
   }
 
-  var samples: Map[String, Sample] = Map()
+  type Sample <: AbstractSample
+
+  final private def initClass[T: ClassTag](arg: String): T = {
+    logger.debug("init of: " + classTag[T])
+    val x = classTag[T].runtimeClass.getConstructor(classOf[String]).newInstance(arg).asInstanceOf[T]
+    logger.debug("init of: " + classTag[T] + "  Done")
+    x
+  }
+
+  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> initClass(id)).toMap
 
   /** Returns a list of all sampleIDs */
   protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {

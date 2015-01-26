@@ -22,11 +22,9 @@ import org.broadinstitute.gatk.queue.QScript
 class MultisamplePipelineTemplate(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
-  class Sample(val sampleId: String) extends AbstractSample {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
-    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> new Library(id)).toMap
-
-    class Library(val libraryId: String) extends AbstractLibrary {
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       def runJobs(): Unit = {
         // Library jobs
       }
@@ -38,7 +36,6 @@ class MultisamplePipelineTemplate(val root: Configurable) extends QScript with M
   }
 
   def init(): Unit = {
-    samples = getSamplesIds.map(id => id -> new Sample(id)).toMap
   }
 
   def biopetScript() {

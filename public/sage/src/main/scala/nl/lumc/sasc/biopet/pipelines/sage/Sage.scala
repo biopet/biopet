@@ -54,11 +54,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   )
 
-  class Sample(val sampleId: String) extends AbstractSample {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
-    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> new Library(id)).toMap
-
-    class Library(val libraryId: String) extends AbstractLibrary {
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       val inputFastq: File = config("R1", required = true)
       val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
 
@@ -129,7 +127,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def init() {
-    samples = getSamplesIds.map(id => id -> new Sample(id)).toMap
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (transcriptome == null && tagsLibrary == null)
       throw new IllegalStateException("No transcriptome or taglib found")
@@ -198,3 +195,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 }
 
 object Sage extends PipelineCommand
+
+object SageTest {
+  def main(args: Array[String]): Unit = {
+    val sage = new Sage()
+    println("done")
+  }
+}
