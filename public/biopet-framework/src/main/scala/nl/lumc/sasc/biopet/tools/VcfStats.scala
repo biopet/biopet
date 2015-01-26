@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ PrintWriter, File }
+import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.variant.variantcontext.Genotype
 import htsjdk.variant.vcf.VCFFileReader
@@ -9,6 +9,8 @@ import org.broadinstitute.gatk.utils.R.RScriptExecutor
 import org.broadinstitute.gatk.utils.io.Resource
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.sys.process.{ Process, ProcessLogger }
+import scala.util.matching.Regex
 
 /**
  * Created by pjvan_thof on 1/10/15.
@@ -31,8 +33,10 @@ object VcfStats extends ToolCommand {
 
   val genotypeOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
   val variantOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
-
+  val qualStats: mutable.Map[Any, Int] = mutable.Map()
   val genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map()
+
+  var commandArgs: Args = _
 
   /**
    * @param args the command line arguments
@@ -40,7 +44,7 @@ object VcfStats extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    commandArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
     val header = reader.getFileHeader
@@ -60,6 +64,7 @@ object VcfStats extends ToolCommand {
     // Reading vcf records
     logger.info("Start reading vcf records")
     for (record <- reader) {
+      qualStats(record.getPhredScaledQual) = qualStats.getOrElse(record.getPhredScaledQual, 0) + 1
       for (sample1 <- samples) {
         val genotype = record.getGenotype(sample1)
         checkGenotype(genotype)
@@ -74,6 +79,7 @@ object VcfStats extends ToolCommand {
     }
     logger.info("Done reading vcf records")
 
+    plotXy(writeField("QUAL", qualStats.toMap))
     writeGenotypeFields(commandArgs.outputDir + "/genotype_", samples)
     writeOverlap(genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(variantOverlap, commandArgs.outputDir + "/sample_compare/variant_overlap", samples)
@@ -89,7 +95,7 @@ object VcfStats extends ToolCommand {
 
     val gq = if (genotype.hasGQ) genotype.getGQ else "not set"
     if (!genotypeStats(sample).contains("GQ")) genotypeStats(sample)("GQ") = mutable.Map()
-    genotypeStats(sample)("GQ")(gq) = genotypeStats(sample)("DP").getOrElse(gq, 0) + 1
+    genotypeStats(sample)("GQ")(gq) = genotypeStats(sample)("GQ").getOrElse(gq, 0) + 1
 
     //TODO: add AD field
   }
@@ -111,12 +117,26 @@ object VcfStats extends ToolCommand {
     }
   }
 
+  def writeField(prefix: String, data: Map[Any, Int]): File = {
+    val file = new File(commandArgs.outputDir + "/" + prefix + ".tsv")
+    println(file)
+    file.getParentFile.mkdirs()
+    val writer = new PrintWriter(file)
+    writer.println("\t" + prefix)
+    for (key <- data.keySet.toList.sortWith(sortAnyAny(_, _))) {
+      writer.println(key + "\t" + data(key))
+    }
+    writer.close()
+    file
+  }
+
   def sortAnyAny(a: Any, b: Any): Boolean = {
     a match {
       case ai: Int => {
         b match {
-          case bi: Int => ai < bi
-          case _       => a.toString < b.toString
+          case bi: Int    => ai < bi
+          case bi: Double => ai < bi
+          case _          => a.toString < b.toString
         }
       }
       case _ => a.toString < b.toString
@@ -148,16 +168,29 @@ object VcfStats extends ToolCommand {
   }
 
   def plotHeatmap(file: File) {
-    val executor = new RScriptExecutor
-    executor.addScript(new Resource("plotHeatmap.R", getClass))
-    executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png", file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png")
-    executor.exec()
+    executeRscript("plotHeatmap.R", Array(file.getAbsolutePath,
+      file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png",
+      file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png"))
   }
 
   def plotXy(file: File) {
-    val executor = new RScriptExecutor
-    executor.addScript(new Resource("plotXY.R", getClass))
-    executor.addArgs(file, file.getAbsolutePath.stripSuffix(".tsv") + ".xy.png")
-    executor.exec()
+    executeRscript("plotXY.R", Array(file.getAbsolutePath,
+      file.getAbsolutePath.stripSuffix(".tsv") + ".xy.png"))
+  }
+
+  def executeRscript(resource: String, args: Array[String]): Unit = {
+    val is = getClass.getResourceAsStream(resource)
+    val file = File.createTempFile("script.", "." + resource)
+    val os = new FileOutputStream(file)
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+
+    val command: String = "Rscript " + file + " " + args.mkString(" ")
+
+    val stdout = new StringBuffer()
+    val stderr = new StringBuffer()
+    val process = Process(command)
+    process.run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
+    logger.debug("Version command: \n" + command + "\n output log: \n stdout: \n" + stdout.toString + "\n stderr: \n" + stderr.toString)
   }
 }
