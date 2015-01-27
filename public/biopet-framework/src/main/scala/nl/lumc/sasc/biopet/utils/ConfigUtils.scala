@@ -341,6 +341,15 @@ object ConfigUtils extends Logging {
     }
 
     /**
+     * Convert ConfigValue to File
+     * @param value Input ConfigValue
+     * @return
+     */
+    implicit def configValue2optionFile(value: ConfigValue): Option[File] = {
+      if (value != null && value.value != null && value.value != None) Some(new File(any2string(value.value))) else None
+    }
+
+    /**
      * Convert ConfigValue to String
      * @param value Input ConfigValue
      * @return
@@ -348,6 +357,15 @@ object ConfigUtils extends Logging {
     implicit def configValue2string(value: ConfigValue): String = {
       //TODO: throw IllegalStateException
       if (value != null && value.value != null && value.value != None) any2string(value.value) else null
+    }
+
+    /**
+     * Convert ConfigValue to String
+     * @param value Input ConfigValue
+     * @return
+     */
+    implicit def configValue2optionString(value: ConfigValue): Option[String] = {
+      if (value != null && value.value != null && value.value != None) Some(any2string(value.value)) else None
     }
 
     /**
