@@ -45,7 +45,7 @@ trait MultiSampleQScript extends BiopetQScript {
     abstract class AbstractLibrary(val libraryId: String) {
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
-      
+
       /** Adds the library jobs */
       final def add(): Unit = {
         currentSample = Some(sampleId)
@@ -116,10 +116,10 @@ trait MultiSampleQScript extends BiopetQScript {
 
   /**
    * Factory method for Sample class
-    * @param id SampleId
+   * @param id SampleId
    * @return Sample class
    */
-   def makeSample(id: String): Sample
+  def makeSample(id: String): Sample
 
   /** Stores all samples */
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap

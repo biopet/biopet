@@ -79,7 +79,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         flexiprep.input_R1 = inputFastq
         flexiprep.init
         flexiprep.biopetScript
-        addAll(flexiprep.functions)
+        qscript.addAll(flexiprep.functions)
 
         val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
         val pf = new PrefixFastq(qscript)
@@ -87,13 +87,13 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         pf.outputFastq = prefixFastq
         pf.prefixSeq = config("sage_tag", default = "CATG")
         pf.deps +:= flexiprep.outputFiles("fastq_input_R1")
-        add(pf)
+        qscript.add(pf)
 
         mapping.input_R1 = pf.outputFastq
         mapping.outputDir = libDir
         mapping.init
         mapping.biopetScript
-        addAll(mapping.functions)
+        qscript.addAll(mapping.functions)
 
         if (config("library_counts", default = false).asBoolean) {
           addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libraryId, libDir)
@@ -110,13 +110,13 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
       else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, sampleDir)
-        add(mergeSamFiles)
+        qscript.add(mergeSamFiles)
         mergeSamFiles.output
       } else null
       val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
       else if (libraryFastqFiles.size > 1) {
         val cat = Cat(qscript, libraryFastqFiles, sampleDir + sampleId + ".fastq")
-        add(cat)
+        qscript.add(cat)
         cat.output
       } else null
 

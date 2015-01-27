@@ -9,9 +9,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping._
 import scala.collection.JavaConversions._
-import java.io.File
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
@@ -21,40 +19,139 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
 
   @Argument(doc = "Skip Genotyping step", shortName = "skipgenotyping", required = false)
-  var skipGenotyping: Boolean = false
+  var skipGenotyping: Boolean = config("skip_genotyping", default = false)
 
-  @Argument(doc = "Merge gvcfs", shortName = "mergegvcfs", required = false)
-  var mergeGvcfs: Boolean = false
+  /** Merge gvcfs */
+  var mergeGvcfs: Boolean = config("merge_gvcfs", default = false)
 
-  @Argument(doc = "Joint variantcalling", shortName = "jointVariantCalling", required = false)
+  /** Joint variantcalling */
   var jointVariantcalling: Boolean = config("joint_variantcalling", default = false)
 
-  @Argument(doc = "Joint genotyping", shortName = "jointGenotyping", required = false)
+  /** Joint genotyping */
   var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
   var singleSampleCalling = config("single_sample_calling", default = true)
   var reference: File = config("reference", required = true)
   var dbsnp: File = config("dbsnp")
-  var gvcfFiles: List[File] = Nil
-  var finalBamFiles: List[File] = Nil
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
+  val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
-    var variantcalling: GatkVariantcalling.ScriptOutput = _
-  }
+  /**
+   * class LibraryOutput extends AbstractLibraryOutput {
+   * var mappedBamFile: File = _
+   * var variantcalling: GatkVariantcalling.ScriptOutput = _
+   * }
+   *
+   * class SampleOutput extends AbstractSampleOutput {
+   * var variantcalling: GatkVariantcalling.ScriptOutput = _
+   * }
+   */
 
-  class SampleOutput extends AbstractSampleOutput {
-    var variantcalling: GatkVariantcalling.ScriptOutput = _
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      val mapping = new Mapping(qscript)
+      mapping.sampleId = sampleId
+      mapping.libraryId = libraryId
+      mapping.outputDir = libDir + "/variantcalling/"
+
+      /** Library variantcalling */
+      val gatkVariantcalling = new GatkVariantcalling(qscript)
+      gatkVariantcalling.sampleID = sampleId
+      gatkVariantcalling.outputDir = libDir
+
+      def addJobs(): Unit = {
+        val bamFile: Option[File] = if (config.contains("R1")) {
+          mapping.input_R1 = config("R1")
+          mapping.input_R2 = config("R2")
+          mapping.init
+          mapping.biopetScript
+          addAll(mapping.functions) // Add functions of mapping to curent function pool
+          Some(mapping.finalBamFile)
+        } else if (config.contains("bam")) {
+          var bamFile: File = config("bam")
+          if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
+
+          if (config("bam_to_fastq", default = false).asBoolean) {
+            val samToFastq = SamToFastq(qscript, bamFile, libDir + sampleId + "-" + libraryId + ".R1.fastq",
+              libDir + sampleId + "-" + libraryId + ".R2.fastq")
+            samToFastq.isIntermediate = true
+            qscript.add(samToFastq)
+            mapping.input_R1 = samToFastq.fastqR1
+            mapping.input_R2 = samToFastq.fastqR2
+            mapping.init
+            mapping.biopetScript
+            addAll(mapping.functions) // Add functions of mapping to curent function pool
+            Some(mapping.finalBamFile)
+          } else {
+            var readGroupOke = true
+            val inputSam = SamReaderFactory.makeDefault.open(bamFile)
+            val header = inputSam.getFileHeader.getReadGroups
+            for (readGroup <- inputSam.getFileHeader.getReadGroups) {
+              if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
+              if (readGroup.getLibrary != libraryId) logger.warn("Library ID readgroup in bam file is not the same")
+              if (readGroup.getSample != sampleId || readGroup.getLibrary != libraryId) readGroupOke = false
+            }
+            inputSam.close
+
+            if (!readGroupOke) {
+              if (config("correct_readgroups", default = false)) {
+                logger.info("Correcting readgroups, file:" + bamFile)
+                val aorrg = AddOrReplaceReadGroups(qscript, bamFile, new File(libDir + sampleId + "-" + libraryId + ".bam"))
+                aorrg.RGID = sampleId + "-" + libraryId
+                aorrg.RGLB = libraryId
+                aorrg.RGSM = sampleId
+                aorrg.isIntermediate = true
+                qscript.add(aorrg)
+                bamFile = aorrg.output
+              } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
+                "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
+            }
+            addAll(BamMetrics(qscript, bamFile, libDir + "metrics/").functions)
+
+            Some(bamFile)
+          }
+        } else {
+          logger.error("Sample: " + sampleId + ": No R1 found for run: " + libraryId)
+          None
+        }
+
+        if (bamFile.isDefined) {
+          gatkVariantcalling.inputBams = List(bamFile.get)
+          gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
+          gatkVariantcalling.preProcesBams = true
+          gatkVariantcalling.init
+          gatkVariantcalling.biopetScript
+          addAll(gatkVariantcalling.functions)
+        }
+      }
+    }
+
+    /** sample variantcalling */
+    val gatkVariantcalling = new GatkVariantcalling(qscript)
+    gatkVariantcalling.sampleID = sampleId
+    gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
+
+    def addJobs(): Unit = {
+      runLibraryJobs()
+      gatkVariantcalling.inputBams = libraries.map(_._2.mapping.finalBamFile).toList
+      gatkVariantcalling.preProcesBams = false
+      if (!singleSampleCalling) {
+        gatkVariantcalling.useHaplotypecaller = false
+        gatkVariantcalling.useUnifiedGenotyper = false
+      }
+      gatkVariantcalling.init
+      gatkVariantcalling.biopetScript
+      addAll(gatkVariantcalling.functions)
+    }
   }
 
   def init() {
-    if (config.contains("gvcfFiles"))
-      for (file <- config("gvcfFiles").asList)
-        gvcfFiles :+= file.toString
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
   }
@@ -68,11 +165,11 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     runSamplesJobs
 
     //SampleWide jobs
-    if (mergeGvcfs && gvcfFiles.size > 0) {
+    val gvcfFiles: List[File] = if (mergeGvcfs && externalGvcfs.size + samples.size > 1) {
       val newFile = outputDir + "merged.gvcf.vcf.gz"
-      add(CombineGVCFs(this, gvcfFiles, newFile))
-      gvcfFiles = List(newFile)
-    }
+      add(CombineGVCFs(this, externalGvcfs ++ samples.map(_._2.gatkVariantcalling.scriptOutput.gvcfFile), newFile))
+      List(newFile)
+    } else externalGvcfs ++ samples.map(_._2.gatkVariantcalling.scriptOutput.gvcfFile)
 
     if (!skipGenotyping && gvcfFiles.size > 0) {
       if (jointGenotyping) {
@@ -87,11 +184,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     } else logger.warn("No gVCFs to genotype")
 
     if (jointVariantcalling) {
-      val allBamfiles = for (
-        (sampleID, sampleOutput) <- samplesOutput;
-        file <- sampleOutput.variantcalling.bamFiles
-      ) yield file
-      val allRawVcfFiles = for ((sampleID, sampleOutput) <- samplesOutput) yield sampleOutput.variantcalling.rawFilterVcfFile
+      val allBamfiles = samples.map(_._2.gatkVariantcalling.scriptOutput.bamFiles).toList.fold(Nil)(_ ++ _)
+      val allRawVcfFiles = samples.map(_._2.gatkVariantcalling.scriptOutput.rawVcfFile).filter(_ != null).toList
 
       val gatkVariantcalling = new GatkVariantcalling(this) {
         override def configName = "gatkvariantcalling"
@@ -116,7 +210,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       if (config("inputtype", default = "dna").asString != "rna" && config("recalibration", default = false).asBoolean) {
         val recalibration = new GatkVariantRecalibration(this)
         recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
-        recalibration.bamFiles = finalBamFiles
+        recalibration.bamFiles = allBamfiles
         recalibration.outputDir = outputDir + "recalibration/"
         recalibration.init
         recalibration.biopetScript
@@ -124,6 +218,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     }
   }
 
+  /*
   // Called for each sample
   def runSingleSampleJobs(sampleID: String): SampleOutput = {
     val sampleOutput = new SampleOutput
@@ -246,6 +341,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
     return libraryOutput
   }
+  */
 }
 
 object GatkPipeline extends PipelineCommand
