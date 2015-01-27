@@ -48,9 +48,9 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")
   var m: Option[Int] = config("m")
-  var best: Boolean = config("best")
+  var best: Boolean = config("best", default = false)
   var maxbts: Option[Int] = config("maxbts")
-  var strata: Boolean = config("strata")
+  var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
 
   def cmdLine = {
