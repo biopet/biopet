@@ -28,6 +28,7 @@ import nl.lumc.sasc.biopet.scripts.SquishBed
 import nl.lumc.sasc.biopet.tools.SageCountFastq
 import nl.lumc.sasc.biopet.tools.SageCreateLibrary
 import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
@@ -42,14 +43,21 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   var tagsLibrary: File = config("tags_library")
 
-  defaults ++= Map("bowtie" -> Map(
+  override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
     "m" -> 1,
     "k" -> 1,
     "best" -> true,
     "strata" -> true,
     "seedmms" -> 1
+  ), "mapping" -> Map(
+    "aligner" -> "bowtie",
+    "skip_flexiprep" -> true,
+    "skip_markduplicates" -> true
+  ), "flexiprep" -> Map(
+    "skip_clip" -> true,
+    "skip_trim" -> true
   )
-  )
+  ), super.defaults)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
@@ -59,20 +67,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
-      flexiprep.skipClip = true
-      flexiprep.skipTrim = true
       flexiprep.sampleName = sampleId
       flexiprep.libraryName = libraryId
 
       val mapping = new Mapping(qscript)
-      mapping.aligner = config("aligner", default = "bowtie")
-      mapping.skipFlexiprep = true
-      mapping.skipMarkduplicates = true
-      mapping.RGLB = libraryId
-      mapping.RGSM = sampleId
-      mapping.RGPL = config("PL")
-      mapping.RGPU = config("PU")
-      mapping.RGCN = config("CN")
+      mapping.libraryId = libraryId
+      mapping.sampleId = sampleId
 
       def runJobs(): Unit = {
         flexiprep.outputDir = getLibraryDir + "flexiprep/"
