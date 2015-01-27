@@ -22,8 +22,10 @@ import org.broadinstitute.gatk.queue.QScript
 class MultisamplePipelineTemplate(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
+  def initSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
+    def initLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       def runJobs(): Unit = {
         // Library jobs
