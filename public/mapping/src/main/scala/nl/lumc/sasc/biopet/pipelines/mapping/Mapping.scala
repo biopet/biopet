@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Star, Stampy, Bowtie }
+import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
@@ -92,6 +92,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
+  def finalBamFile: File = outputDir + outputName + ".final.bam"
 
   def init() {
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
@@ -209,6 +210,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions)
 
+    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
+    add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
