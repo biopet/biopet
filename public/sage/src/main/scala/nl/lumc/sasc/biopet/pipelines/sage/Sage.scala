@@ -54,8 +54,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   )
 
+  def initSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-
+    def initLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       val inputFastq: File = config("R1", required = true)
       val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
@@ -105,6 +106,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
 
     def runJobs(): Unit = {
+      runLibraryJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.outputFiles("finalBamFile")).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
@@ -195,10 +197,3 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 }
 
 object Sage extends PipelineCommand
-
-object SageTest {
-  def main(args: Array[String]): Unit = {
-    val sage = new Sage()
-    println("done")
-  }
-}
