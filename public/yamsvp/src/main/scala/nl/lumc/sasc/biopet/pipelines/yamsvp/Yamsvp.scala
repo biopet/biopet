@@ -20,8 +20,7 @@
 package nl.lumc.sasc.biopet.pipelines.yamsvp
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.MultiSampleQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
 import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
@@ -33,12 +32,12 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.queue.engine.JobRunInfo
 
-class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
+class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with MultiSampleQScript {
   def this() = this(null)
 
   var reference: File = config("reference", required = true)
   var finalBamFiles: List[File] = Nil
-
+  /*
   class LibraryOutput extends AbstractLibraryOutput {
     var mappedBamFile: File = _
   }
@@ -47,7 +46,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     var vcf: Map[String, List[File]] = Map()
     var mappedBamFile: File = _
   }
-
+*/
   override def init() {
     if (outputDir == null)
       throw new IllegalStateException("Output directory is not specified in the config / argument")
@@ -61,7 +60,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     // read config and set all parameters for the pipeline
     logger.info("Starting YAM SV Pipeline")
-    runSamplesJobs
+    //runSamplesJobs
     //
 
   }
@@ -69,7 +68,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {
     logger.info("YAM SV Pipeline has run .......................")
   }
-
+  /*
   def runSingleSampleJobs(sampleID: String): SampleOutput = {
     val sampleOutput = new SampleOutput
     var libraryBamfiles: List[File] = List()
@@ -160,6 +159,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     //    logger.debug(outputFiles)
     //    return outputFiles
   }
+  */
 }
 
 object Yamsvp extends PipelineCommand
