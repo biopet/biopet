@@ -13,21 +13,10 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.pipelines.sage
+package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.Cat
-import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.PrefixFastq
-import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
-import nl.lumc.sasc.biopet.scripts.SquishBed
-import nl.lumc.sasc.biopet.tools.SageCountFastq
-import nl.lumc.sasc.biopet.tools.SageCreateLibrary
-import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
 
 class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
@@ -53,13 +42,6 @@ class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
   // Called for each sample
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
     val sampleOutput = new SampleOutput
-    var libraryBamfiles: List[File] = List()
-    var libraryFastqFiles: List[File] = List()
-    val sampleID: String = sampleConfig("ID").toString
-    val sampleDir: String = globalSampleDir + sampleID + "/"
-
-    for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-    }
 
     return sampleOutput
   }
@@ -67,11 +49,6 @@ class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
   // Called for each run from a sample
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
     val libraryOutput = new LibraryOutput
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
-    if (runConfig.contains("bam")) {
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
     return libraryOutput
   }
 }

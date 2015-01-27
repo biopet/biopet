@@ -16,11 +16,19 @@
 package nl.lumc.sasc.biopet.extensions.conifer
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
-abstract class Conifer extends BiopetCommandLineFunction {
+abstract class Conifer extends PythonCommandLineFunction {
   override def subPath = "conifer" :: super.subPath
-  executable = config("exe", default = "conifer")
+  //  executable = config("exe", default = "conifer")
+  setPythonScript(config("script", default = "conifer"))
   override val versionRegex = """(.*)""".r
   override val versionExitcode = List(0)
-  override def versionCommand = executable + " --version"
+  override def versionCommand = executable + " " + python_script + " --version"
+
+  override val defaultVmem = "8G"
+  override val defaultThreads = 1
+
+  def cmdLine = getPythonCommand
+
 }

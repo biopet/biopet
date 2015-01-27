@@ -18,23 +18,22 @@ package nl.lumc.sasc.biopet.extensions.conifer
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class ConiferRPKM(val root: Configurable) extends Conifer {
+class ConiferExport(val root: Configurable) extends Conifer {
 
-  @Input(doc = "Bam file", required = true)
-  var bamFile: File = _
+  @Input(doc = "Input analysis.hdf5", required = true)
+  var input: File = _
 
-  @Input(doc = "Probes / capture kit definition as bed file: chr,start,stop,gene-annot", required = true)
-  var probes: File = _
-
-  /** The output RPKM should outputted to a directory which contains all the RPKM files from previous experiments */
-  @Output(doc = "Output RPKM.txt", shortName = "out")
+  @Output(doc = "Output <sample>.svdzrpkm.bed", shortName = "out", required = true)
   var output: File = _
 
+  override def afterGraph {
+    this.checkExecutable
+  }
+
   override def cmdLine = super.cmdLine +
-    " rpkm " +
-    " --probes" + required(probes) +
-    " --input" + required(bamFile) +
+    " export " +
+    " --input" + required(input) +
     " --output" + required(output)
 }

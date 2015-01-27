@@ -18,35 +18,56 @@ package nl.lumc.sasc.biopet.extensions.conifer
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import nl.lumc.sasc.biopet.extensions.Ln
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class ConiferAnalyze(val root: Configurable) extends Conifer {
 
   @Input(doc = "Probes / capture kit definition as bed file: chr,start,stop,gene-annot", required = true)
   var probes: File = _
 
-  @Input(doc = "Path to Conifer RPKM files", required = true)
-  var rpkm_dir: File = _
+  //  @Input(doc = "Path to Conifer RPKM files", required = true)
+  var rpkmDir: File = _
 
-  @Output(doc = "Output RPKM.txt", shortName = "out")
+  @Output(doc = "Output analyse.hdf5", shortName = "out")
   var output: File = _
 
   @Argument(doc = "SVD, number of components to remove", minRecommendedValue = 2, maxRecommendedValue = 5,
-    minValue = 2, maxValue = 20)
-  var svd: Option[Int] = config("svd")
+    minValue = 2, maxValue = 20, required = false)
+  var svd: Option[Int] = config("svd", default = 1)
 
-  @Argument(doc="Minimum population median RPKM per probe")
+  @Argument(doc = "Minimum population median RPKM per probe", required = false)
   var min_rpkm: Option[Double] = config("min_rpkm")
 
-  override def afterGraph {
-    this.checkExecutable
+  override def afterGraph: Unit = {
+    super.afterGraph
+    //
+    //    // create new RPKM_dir with the controls in it together with the subject
+    //    new_rpkm_dir = new File(this.output.getParent() + File.separator + "rpkm_tmp")
+    //    logger.info("Creating " + new_rpkm_dir.getAbsolutePath)
+    //    new_rpkm_dir.mkdir()
+    //
+    //    for (f <- rpkm_dir.listFiles()) {
+    //      var target = new File(new_rpkm_dir + File.separator + f.getName)
+    //      if (!target.exists()) {
+    //        logger.info("Creating " + target.getAbsolutePath)
+    //        Ln(this, f, target, true).run
+    //      }
+    //    }
+    //    for (f <- rpkm_refdir.listFiles()) {
+    //      var target = new File(new_rpkm_dir + File.separator + f.getName)
+    //      if (!target.exists()) {
+    //        logger.info("Creating " + target.getAbsolutePath)
+    //        Ln(this, f, target, true).run
+    //      }
+    //    }
   }
 
-  def cmdLine = required(executable) +
-    required("rpkm")+
+  override def cmdLine = super.cmdLine +
+    " analyze " +
     " --probes" + required(probes) +
-    " --rpkm_dir" + required(rpkm_dir) +
+    " --rpkm_dir" + required(rpkmDir) +
     " --output" + required(output) +
-    optional("--svd",svd) +
+    optional("--svd", svd) +
     optional("--min_rpkm", min_rpkm)
 }
