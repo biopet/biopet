@@ -35,9 +35,9 @@ trait Configurable extends ImplicitConversions {
   protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
-  var defaults: scala.collection.mutable.Map[String, Any] = {
-    if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
-    else scala.collection.mutable.Map()
+  def defaults: Map[String, Any] = {
+    if (root != null) root.defaults
+    else Map()
   }
 
   val config = new ConfigFunctions
