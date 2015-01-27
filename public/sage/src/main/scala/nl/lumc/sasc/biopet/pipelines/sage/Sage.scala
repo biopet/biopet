@@ -64,7 +64,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       val inputFastq: File = config("R1", required = true)
-      val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
+      val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
       flexiprep.sampleName = sampleId
@@ -74,8 +74,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.libraryId = libraryId
       mapping.sampleId = sampleId
 
-      def runJobs(): Unit = {
-        flexiprep.outputDir = getLibraryDir + "flexiprep/"
+      def addJobs(): Unit = {
+        flexiprep.outputDir = libDir + "flexiprep/"
         flexiprep.input_R1 = inputFastq
         flexiprep.init
         flexiprep.biopetScript
@@ -90,38 +90,38 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         add(pf)
 
         mapping.input_R1 = pf.outputFastq
-        mapping.outputDir = getLibraryDir
+        mapping.outputDir = libDir
         mapping.init
         mapping.biopetScript
         addAll(mapping.functions)
 
         if (config("library_counts", default = false).asBoolean) {
-          addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleId + "-" + libraryId, getLibraryDir)
-          addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, getLibraryDir)
+          addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libraryId, libDir)
+          addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, libDir)
         }
       }
     }
 
-    def runJobs(): Unit = {
+    def addJobs(): Unit = {
       runLibraryJobs()
-      val libraryBamfiles = libraries.map(_._2.mapping.outputFiles("finalBamFile")).toList
+      val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
       val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
       else if (libraryBamfiles.size > 1) {
-        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, getSampleDir)
+        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, sampleDir)
         add(mergeSamFiles)
         mergeSamFiles.output
       } else null
       val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
       else if (libraryFastqFiles.size > 1) {
-        val cat = Cat(qscript, libraryFastqFiles, getSampleDir + sampleId + ".fastq")
+        val cat = Cat(qscript, libraryFastqFiles, sampleDir + sampleId + ".fastq")
         add(cat)
         cat.output
       } else null
 
-      addBedtoolsCounts(bamFile, sampleId, getSampleDir)
-      addTablibCounts(fastqFile, sampleId, getSampleDir)
+      addBedtoolsCounts(bamFile, sampleId, sampleDir)
+      addTablibCounts(fastqFile, sampleId, sampleDir)
     }
   }
 

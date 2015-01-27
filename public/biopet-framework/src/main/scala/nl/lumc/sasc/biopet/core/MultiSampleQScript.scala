@@ -21,88 +21,134 @@ import nl.lumc.sasc.biopet.core.config.{ Config }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
+/**
+ * This trait creates a structured way of use multisample pipelines
+ */
 trait MultiSampleQScript extends BiopetQScript {
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   val onlySample: List[String] = Nil
 
-  if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
+  require(Config.global.map.contains("samples"), "No Samples found in config")
 
+  /**
+   * Sample class with basic functions build in
+   * @param sampleId
+   */
   abstract class AbstractSample(val sampleId: String) {
+    /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
+    /**
+     * Library class with basic functions build in
+     * @param libraryId
+     */
     abstract class AbstractLibrary(val libraryId: String) {
+      /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
-      final def run(): Unit = {
+      
+      /** Adds the library jobs */
+      final def add(): Unit = {
         currentSample = Some(sampleId)
-        currentLibrary = Some(libraryId)
-        runJobs()
-        currentLibrary = None
+        currentLib = Some(libraryId)
+        addJobs()
+        currentLib = None
         currentSample = None
       }
 
-      def getLibraryDir: String = {
-        getSampleDir + "lib_" + libraryId + File.separator
-      }
+      /** Creates a library file with given suffix */
+      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libraryId + suffix)
 
-      protected def runJobs()
+      /** Returns library directory */
+      def libDir = sampleDir + "lib_" + libraryId + File.separator
+
+      /** Function that add library jobs */
+      protected def addJobs()
     }
 
+    /** Library type, need implementation in pipeline */
     type Library <: AbstractLibrary
 
-    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> makeLibrary(id)).toMap
+    /** Stores all libraries */
+    val libraries: Map[String, Library] = libIds.map(id => id -> makeLibrary(id)).toMap
 
+    /**
+     * Factory method for Library class
+     * @param id SampleId
+     * @return Sample class
+     */
     def makeLibrary(id: String): Library
 
-    protected def getLibrariesIds: Set[String] = {
+    /** returns a set with library names */
+    protected def libIds: Set[String] = {
       ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
     }
 
-    final def run(): Unit = {
+    /** Adds sample jobs */
+    final def add(): Unit = {
       currentSample = Some(sampleId)
-      runJobs()
+      addJobs()
       currentSample = None
     }
 
-    protected def runJobs()
+    /** Function to add library jobs */
+    protected def addJobs()
 
+    /** function runs all libraries in one call */
     protected final def runLibraryJobs(): Unit = {
       for ((libraryId, library) <- libraries) {
-        library.run()
+        library.add()
       }
     }
 
-    def getSampleDir: String = {
-      outputDir + "samples" + File.pathSeparator + sampleId + File.pathSeparator
-    }
+    /**
+     * Creates a sample file with given suffix
+     * @param suffix
+     * @return
+     */
+    def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
+
+    /** Returns sample directory */
+    def sampleDir = outputDir + "samples" + File.pathSeparator + sampleId + File.pathSeparator
   }
 
+  /** Sample type, need implementation in pipeline */
   type Sample <: AbstractSample
 
-  def makeSample(id: String): Sample
+  /**
+   * Factory method for Sample class
+    * @param id SampleId
+   * @return Sample class
+   */
+   def makeSample(id: String): Sample
 
-  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> makeSample(id)).toMap
+  /** Stores all samples */
+  val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
-    ConfigUtils.any2map(Config.global.map.getOrElse("samples", Map())).keySet
+  protected def sampleIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
+    ConfigUtils.any2map(Config.global.map("samples")).keySet
   }
 
   /** Runs runSingleSampleJobs method for each sample */
   final def runSamplesJobs() {
     for ((sampleId, sample) <- samples) {
-      sample.run()
+      sample.add()
     }
   }
 
+  /** Stores sample state */
   private var currentSample: Option[String] = None
-  private var currentLibrary: Option[String] = None
 
+  /** Stores library state */
+  private var currentLib: Option[String] = None
+
+  /** Prefix full path with sample and library for jobs that's are created in current state */
   override protected[core] def configFullPath: List[String] = {
     val s = currentSample match {
       case Some(s) => "samples" :: s :: Nil
       case _       => Nil
     }
-    val l = currentLibrary match {
+    val l = currentLib match {
       case Some(l) => "libraries" :: l :: Nil
       case _       => Nil
     }
