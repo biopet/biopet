@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
@@ -61,6 +60,20 @@ trait Configurable extends ImplicitConversions {
    * Class is used for retrieval of config values
    */
   protected class ConfigFunctions(val defaultSample: Option[String] = None, val defaultLibrary: Option[String] = None) {
+    def this(defaultSample: String, defaultLibrary: String) = {
+      this(defaultSample = Some(defaultSample), defaultLibrary = Some(defaultLibrary))
+    }
+
+    def this(defaultSample: String) = {
+      this(defaultSample = Some(defaultSample), defaultLibrary = None)
+    }
+
+    (defaultSample, defaultLibrary) match {
+      case (Some(null), _) => throw new IllegalArgumentException("defaultSample can not be null")
+      case (_, Some(null)) => throw new IllegalArgumentException("defaultLibrary can not be null")
+      case _               =>
+    }
+
     /**
      *
      * @param key Name of value
