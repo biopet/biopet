@@ -28,10 +28,10 @@ trait MultiSampleQScript extends BiopetQScript {
   if (!Config.global.map.contains("samples")) logger.warn("No Samples found in config")
 
   abstract class AbstractSample(val sampleId: String) {
-    val config = new ConfigFunctions(defaultSample = Some(sampleId))
+    val config = new ConfigFunctions(defaultSample = sampleId)
 
     abstract class AbstractLibrary(val libraryId: String) {
-      val config = new ConfigFunctions(defaultSample = Some(sampleId), defaultLibrary = Some(libraryId))
+      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
       final def run(): Unit = {
         currentSample = Some(sampleId)
         currentLibrary = Some(libraryId)
@@ -41,7 +41,7 @@ trait MultiSampleQScript extends BiopetQScript {
       }
 
       def getLibraryDir: String = {
-        getSampleDir + "libraries" + File.pathSeparator + libraryId + File.pathSeparator
+        getSampleDir + "lib_" + libraryId + File.separator
       }
 
       protected def runJobs()
@@ -49,9 +49,9 @@ trait MultiSampleQScript extends BiopetQScript {
 
     type Library <: AbstractLibrary
 
-    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> initLibrary(id)).toMap
+    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> makeLibrary(id)).toMap
 
-    def initLibrary(id: String): Library
+    def makeLibrary(id: String): Library
 
     protected def getLibrariesIds: Set[String] = {
       ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
@@ -78,9 +78,9 @@ trait MultiSampleQScript extends BiopetQScript {
 
   type Sample <: AbstractSample
 
-  def initSample(id: String): Sample
+  def makeSample(id: String): Sample
 
-  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> initSample(id)).toMap
+  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
   protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
