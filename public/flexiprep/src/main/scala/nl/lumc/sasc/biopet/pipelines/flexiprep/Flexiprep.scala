@@ -32,16 +32,16 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
   var input_R2: File = _
 
-  @Argument(doc = "Skip Trim fastq files", shortName = "skiptrim", required = false)
-  var skipTrim: Boolean = config("skiptrim", default = false)
+  /** Skip Trim fastq files */
+  var skipTrim: Boolean = config("skip_trim", default = false)
 
-  @Argument(doc = "Skip Clip fastq files", shortName = "skipclip", required = false)
-  var skipClip: Boolean = config("skipclip", default = false)
+  /** Skip Clip fastq files */
+  var skipClip: Boolean = config("skip_clip", default = false)
 
-  @Argument(doc = "Sample name", shortName = "sample", required = true)
+  /** Sample name */
   var sampleName: String = _
 
-  @Argument(doc = "Library name", shortName = "library", required = true)
+  /** Library name */
   var libraryName: String = _
 
   var paired: Boolean = (input_R2 != null)
@@ -136,24 +136,28 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     var deps: List[File] = if (paired) List(R1, R2) else List(R1)
 
     val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
-    add(seqtkSeq_R1, isIntermediate = true)
+    seqtkSeq_R1.isIntermediate = true
+    add(seqtkSeq_R1)
     R1 = seqtkSeq_R1.output
     deps ::= R1
 
     if (paired) {
       val seqtkSeq_R2 = SeqtkSeq(this, R2, swapExt(outDir, R2, R2_ext, ".sanger" + R2_ext), fastqc_R2)
-      add(seqtkSeq_R2, isIntermediate = true)
+      seqtkSeq_R2.isIntermediate = true
+      add(seqtkSeq_R2)
       R2 = seqtkSeq_R2.output
       deps ::= R2
     }
 
     val seqstat_R1 = Seqstat(this, R1, outDir)
-    add(seqstat_R1, isIntermediate = true)
+    seqstat_R1.isIntermediate = true
+    add(seqstat_R1)
     summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
-      add(seqstat_R2, isIntermediate = true)
+      seqstat_R2.isIntermediate = true
+      add(seqstat_R2)
       summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
 
@@ -161,7 +165,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
       val cutadapt_R1 = Cutadapt(this, R1, swapExt(outDir, R1, R1_ext, ".clip" + R1_ext))
       cutadapt_R1.fastqc = fastqc_R1
-      add(cutadapt_R1, isIntermediate = true)
+      cutadapt_R1.isIntermediate = true
+      add(cutadapt_R1)
       summary.addCutadapt(cutadapt_R1, R2 = false, chunk)
       R1 = cutadapt_R1.fastq_output
       deps ::= R1
@@ -171,7 +176,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         val cutadapt_R2 = Cutadapt(this, R2, swapExt(outDir, R2, R2_ext, ".clip" + R2_ext))
         outputFiles += ("cutadapt_R2_stats" -> cutadapt_R2.stats_output)
         cutadapt_R2.fastqc = fastqc_R2
-        add(cutadapt_R2, isIntermediate = true)
+        cutadapt_R2.isIntermediate = true
+        add(cutadapt_R2)
         summary.addCutadapt(cutadapt_R2, R2 = true, chunk)
         R2 = cutadapt_R2.fastq_output
         deps ::= R2
@@ -179,7 +185,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         val fastqSync = FastqSync(this, cutadapt_R1.fastq_input, cutadapt_R1.fastq_output, cutadapt_R2.fastq_output,
           swapExt(outDir, R1, R1_ext, ".sync" + R1_ext), swapExt(outDir, R2, R2_ext, ".sync" + R2_ext), swapExt(outDir, R1, R1_ext, ".sync.stats"))
         fastqSync.deps :::= deps
-        add(fastqSync, isIntermediate = true)
+        fastqSync.isIntermediate = true
+        add(fastqSync)
         summary.addFastqcSync(fastqSync, chunk)
         outputFiles += ("syncStats" -> fastqSync.output_stats)
         R1 = fastqSync.output_R1
