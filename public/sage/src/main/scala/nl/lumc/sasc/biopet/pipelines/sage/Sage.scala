@@ -34,13 +34,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
-  @Input(doc = "countBed", required = false)
   var countBed: File = config("count_bed")
 
-  @Input(doc = "squishedCountBed, by suppling this file the auto squish job will be skipped", required = false)
   var squishedCountBed: File = config("squished_count_bed")
 
-  @Input(doc = "Transcriptome, used for generation of tag library", required = false)
   var transcriptome: File = config("transcriptome")
 
   var tagsLibrary: File = config("tags_library")
@@ -54,9 +51,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   )
 
-  def initSample(id: String) = new Sample(id)
+  def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    def initLibrary(id: String) = new Library(id)
+    def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       val inputFastq: File = config("R1", required = true)
       val prefixFastq: File = new File(getLibraryDir, sampleId + "-" + libraryId + ".prefix.fastq")
