@@ -17,11 +17,8 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ Config }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.utils.ConfigUtils._
-import scala.reflect.ClassTag
-import scala.reflect._
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 trait MultiSampleQScript extends BiopetQScript {
@@ -52,7 +49,9 @@ trait MultiSampleQScript extends BiopetQScript {
 
     type Library <: AbstractLibrary
 
-    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> initClass(id)).toMap
+    val libraries: Map[String, Library] = getLibrariesIds.map(id => id -> initLibrary(id)).toMap
+
+    def initLibrary(id: String): Library
 
     protected def getLibrariesIds: Set[String] = {
       ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
@@ -79,14 +78,9 @@ trait MultiSampleQScript extends BiopetQScript {
 
   type Sample <: AbstractSample
 
-  final private def initClass[T: ClassTag](arg: String): T = {
-    logger.debug("init of: " + classTag[T])
-    val x = classTag[T].runtimeClass.getConstructor(classOf[String]).newInstance(arg).asInstanceOf[T]
-    logger.debug("init of: " + classTag[T] + "  Done")
-    x
-  }
+  def initSample(id: String): Sample
 
-  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> initClass(id)).toMap
+  val samples: Map[String, Sample] = getSamplesIds.map(id => id -> initSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
   protected def getSamplesIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
