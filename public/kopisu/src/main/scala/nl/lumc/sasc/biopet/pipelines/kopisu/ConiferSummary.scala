@@ -26,10 +26,10 @@ import scala.io.Source
 
 class ConiferSummary(val root: Configurable) extends InProcessFunction with Configurable {
   def filterCalls(callFile: File, outFile: File, sampleName: String): Unit = {
-    val filename = callFile.getAbsolutePath
+    //    val filename = callFile.getAbsolutePath
     val writer = new BufferedWriter(new FileWriter(outFile))
 
-    for (line <- Source.fromFile(filename).getLines()) {
+    for (line <- Source.fromFile(callFile).getLines()) {
       line.startsWith(sampleName) || line.startsWith("sampleID") match {
         case true => writer.write(line)
         case _    =>
@@ -58,7 +58,7 @@ class ConiferSummary(val root: Configurable) extends InProcessFunction with Conf
 
   override def run {
     logger.debug("Start")
-    filterCalls(out, calls, label)
+    filterCalls(calls, out, label)
     logger.debug("Stop")
   }
 }

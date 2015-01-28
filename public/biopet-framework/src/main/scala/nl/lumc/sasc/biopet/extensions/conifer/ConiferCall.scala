@@ -28,10 +28,6 @@ class ConiferCall(val root: Configurable) extends Conifer {
   @Output(doc = "Output calls.txt", shortName = "out")
   var output: File = _
 
-  override def afterGraph {
-    this.checkExecutable
-  }
-
   override def cmdLine = super.cmdLine +
     " call " +
     " --input" + required(input) +

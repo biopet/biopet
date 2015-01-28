@@ -84,7 +84,7 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
       var target = new File(RPKMdir + File.separator + f.getName)
       if (!target.exists()) {
         logger.info("Creating " + target.getAbsolutePath)
-        add(Ln(this, f, target, false))
+        add(Ln(this, f, target, true))
         refRPKMlist :+= target
       }
     }
@@ -104,7 +104,7 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
     summary.deps = List(coniferCall.output)
     summary.label = sampleLabel
     summary.calls = coniferCall.output
-    summary.out = input2Calls(inputBam)
+    summary.out = new File(sampleDir + File.separator + input2Calls(inputBam))
 
     add(summary)
 

@@ -39,30 +39,6 @@ class ConiferAnalyze(val root: Configurable) extends Conifer {
   @Argument(doc = "Minimum population median RPKM per probe", required = false)
   var min_rpkm: Option[Double] = config("min_rpkm")
 
-  override def afterGraph: Unit = {
-    super.afterGraph
-    //
-    //    // create new RPKM_dir with the controls in it together with the subject
-    //    new_rpkm_dir = new File(this.output.getParent() + File.separator + "rpkm_tmp")
-    //    logger.info("Creating " + new_rpkm_dir.getAbsolutePath)
-    //    new_rpkm_dir.mkdir()
-    //
-    //    for (f <- rpkm_dir.listFiles()) {
-    //      var target = new File(new_rpkm_dir + File.separator + f.getName)
-    //      if (!target.exists()) {
-    //        logger.info("Creating " + target.getAbsolutePath)
-    //        Ln(this, f, target, true).run
-    //      }
-    //    }
-    //    for (f <- rpkm_refdir.listFiles()) {
-    //      var target = new File(new_rpkm_dir + File.separator + f.getName)
-    //      if (!target.exists()) {
-    //        logger.info("Creating " + target.getAbsolutePath)
-    //        Ln(this, f, target, true).run
-    //      }
-    //    }
-  }
-
   override def cmdLine = super.cmdLine +
     " analyze " +
     " --probes" + required(probes) +
