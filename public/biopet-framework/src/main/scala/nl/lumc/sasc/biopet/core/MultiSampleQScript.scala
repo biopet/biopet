@@ -93,7 +93,7 @@ trait MultiSampleQScript extends BiopetQScript {
     /** Function to add sample jobs */
     protected def addJobs()
 
-    /** function runs all libraries in one call */
+    /** function add all libraries in one call */
     protected final def addLibsJobs(): Unit = {
       for ((libraryId, library) <- libraries) {
         library.addAndTrackJobs()
@@ -129,7 +129,7 @@ trait MultiSampleQScript extends BiopetQScript {
     ConfigUtils.any2map(Config.global.map("samples")).keySet
   }
 
-  /** Runs runSingleSampleJobs method for each sample */
+  /** Add runSingleSampleJobs method for each sample */
   final def addSamplesJobs() {
     for ((sampleId, sample) <- samples) {
       sample.addAndTrackJobs()
