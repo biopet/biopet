@@ -43,5 +43,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SageCreateTagCounts,
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.MergeAlleles,
-    nl.lumc.sasc.biopet.tools.SamplesTsvToJson)
+    nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
+    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
 }

@@ -120,8 +120,8 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     logger.debug("Start")
     md5Summary()
     val summary = 
-      ("samples" := ( flexiprep.sampleName :=
-        ("libraries" := ( flexiprep.libraryName := (
+      ("samples" := ( flexiprep.sampleId :=
+        ("libraries" := ( flexiprep.libraryId := (
           ("flexiprep" := (
             ("clipping" := !flexiprep.skipClip) ->:
             ("trimming" := !flexiprep.skipTrim) ->:
