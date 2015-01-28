@@ -67,14 +67,14 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
-      flexiprep.sampleName = sampleId
-      flexiprep.libraryName = libraryId
+      flexiprep.sampleId = sampleId
+      flexiprep.libraryId = libraryId
 
       val mapping = new Mapping(qscript)
       mapping.libraryId = libraryId
       mapping.sampleId = sampleId
 
-      def addJobs(): Unit = {
+      protected def addLibJobsInternal(): Unit = {
         flexiprep.outputDir = libDir + "flexiprep/"
         flexiprep.input_R1 = inputFastq
         flexiprep.init
@@ -102,8 +102,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       }
     }
 
-    def addJobs(): Unit = {
-      runLibraryJobs()
+    protected def addSampleJobsInternal(): Unit = {
+      runLibsJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
@@ -151,7 +151,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       tagsLibrary = cdl.output
     }
 
-    runSamplesJobs
+    addSamplesJobs
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {

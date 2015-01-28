@@ -47,10 +47,10 @@ trait MultiSampleQScript extends BiopetQScript {
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
 
       /** Adds the library jobs */
-      final def add(): Unit = {
+      final def addLibJobs(): Unit = {
         currentSample = Some(sampleId)
         currentLib = Some(libraryId)
-        addJobs()
+        addLibJobsInternal()
         currentLib = None
         currentSample = None
       }
@@ -62,7 +62,7 @@ trait MultiSampleQScript extends BiopetQScript {
       def libDir = sampleDir + "lib_" + libraryId + File.separator
 
       /** Function that add library jobs */
-      protected def addJobs()
+      protected def addLibJobsInternal()
     }
 
     /** Library type, need implementation in pipeline */
@@ -84,19 +84,19 @@ trait MultiSampleQScript extends BiopetQScript {
     }
 
     /** Adds sample jobs */
-    final def add(): Unit = {
+    final def addSampleJobs(): Unit = {
       currentSample = Some(sampleId)
-      addJobs()
+      addSampleJobsInternal()
       currentSample = None
     }
 
-    /** Function to add library jobs */
-    protected def addJobs()
+    /** Function to add sample jobs */
+    protected def addSampleJobsInternal()
 
     /** function runs all libraries in one call */
-    protected final def runLibraryJobs(): Unit = {
+    protected final def runLibsJobs(): Unit = {
       for ((libraryId, library) <- libraries) {
-        library.add()
+        library.addLibJobs()
       }
     }
 
@@ -130,9 +130,9 @@ trait MultiSampleQScript extends BiopetQScript {
   }
 
   /** Runs runSingleSampleJobs method for each sample */
-  final def runSamplesJobs() {
+  final def addSamplesJobs() {
     for ((sampleId, sample) <- samples) {
-      sample.add()
+      sample.addSampleJobs()
     }
   }
 

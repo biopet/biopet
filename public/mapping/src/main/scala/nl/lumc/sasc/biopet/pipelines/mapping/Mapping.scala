@@ -126,8 +126,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       flexiprep.outputDir = outputDir + "flexiprep/"
       flexiprep.input_R1 = input_R1
       if (paired) flexiprep.input_R2 = input_R2
-      flexiprep.sampleName = this.sampleId
-      flexiprep.libraryName = this.libraryId
+      flexiprep.sampleId = this.sampleId
+      flexiprep.libraryId = this.libraryId
       flexiprep.init
       flexiprep.runInitialJobs
     }

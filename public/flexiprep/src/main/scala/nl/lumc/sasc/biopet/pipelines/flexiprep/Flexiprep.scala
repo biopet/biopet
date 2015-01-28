@@ -39,10 +39,10 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var skipClip: Boolean = config("skip_clip", default = false)
 
   /** Sample name */
-  var sampleName: String = _
+  var sampleId: String = _
 
   /** Library name */
-  var libraryName: String = _
+  var libraryId: String = _
 
   var paired: Boolean = (input_R2 != null)
   var R1_ext: String = _
@@ -60,8 +60,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   def init() {
     if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
-    if (sampleName == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
-    if (libraryName == null) throw new IllegalStateException("Missing Library name on flexiprep module")
+    if (sampleId == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
+    if (libraryId == null) throw new IllegalStateException("Missing Library name on flexiprep module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
 
@@ -79,7 +79,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
     }
 
-    summary.out = outputDir + sampleName + "-" + libraryName + ".qc.summary.json"
+    summary.out = outputDir + sampleId + "-" + libraryId + ".qc.summary.json"
   }
 
   def biopetScript() {

@@ -34,14 +34,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
-      def addJobs(): Unit = {}
+      protected def addLibJobsInternal(): Unit = {}
     }
 
     var output: FastaOutput = _
     var outputSnps: FastaOutput = _
 
-    def addJobs(): Unit = {
-      runLibraryJobs()
+    protected def addSampleJobsInternal(): Unit = {
+      runLibsJobs()
       output = addGenerateFasta(sampleId, sampleDir)
       outputSnps = addGenerateFasta(sampleId, sampleDir, snpsOnly = true)
     }
@@ -59,7 +59,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     val refVariants = addGenerateFasta(null, outputDir + "reference/", outputName = "reference")
     val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", outputName = "reference", snpsOnly = true)
 
-    runSamplesJobs()
+    addSamplesJobs()
 
     val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList, outputDir + "fastas/variant.fasta")
     add(catVariants)
