@@ -74,7 +74,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.libraryId = libraryId
       mapping.sampleId = sampleId
 
-      protected def addLibJobsInternal(): Unit = {
+      protected def addJobs(): Unit = {
         flexiprep.outputDir = libDir + "flexiprep/"
         flexiprep.input_R1 = inputFastq
         flexiprep.init
@@ -102,8 +102,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       }
     }
 
-    protected def addSampleJobsInternal(): Unit = {
-      runLibsJobs()
+    protected def addJobs(): Unit = {
+      addLibsJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 

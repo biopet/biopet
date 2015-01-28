@@ -27,12 +27,12 @@ class MultisamplePipelineTemplate(val root: Configurable) extends QScript with M
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
-      protected def addLibJobsInternal(): Unit = {
+      protected def addJobs(): Unit = {
         // Library jobs
       }
     }
 
-    protected def addSampleJobsInternal(): Unit = {
+    protected def addJobs(): Unit = {
       // Sample jobs
     }
   }

@@ -54,7 +54,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       gatkVariantcalling.sampleID = sampleId
       gatkVariantcalling.outputDir = libDir
 
-      protected def addLibJobsInternal(): Unit = {
+      protected def addJobs(): Unit = {
         val bamFile: Option[File] = if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           mapping.input_R2 = config("R2")
@@ -126,8 +126,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     gatkVariantcalling.sampleID = sampleId
     gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
 
-    protected def addSampleJobsInternal(): Unit = {
-      runLibsJobs()
+    protected def addJobs(): Unit = {
+      addLibsJobs()
       gatkVariantcalling.inputBams = libraries.map(_._2.mapping.finalBamFile).toList
       gatkVariantcalling.preProcesBams = false
       if (!singleSampleCalling) {

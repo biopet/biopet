@@ -34,14 +34,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
-      protected def addLibJobsInternal(): Unit = {}
+      protected def addJobs(): Unit = {}
     }
 
     var output: FastaOutput = _
     var outputSnps: FastaOutput = _
 
-    protected def addSampleJobsInternal(): Unit = {
-      runLibsJobs()
+    protected def addJobs(): Unit = {
+      addLibsJobs()
       output = addGenerateFasta(sampleId, sampleDir)
       outputSnps = addGenerateFasta(sampleId, sampleDir, snpsOnly = true)
     }
