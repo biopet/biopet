@@ -9,10 +9,16 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import scala.io.Source
+import scala.util.matching.Regex
+
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
+import argonaut._, Argonaut._
+import scalaz._, Scalaz._
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -27,9 +33,60 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
 
+  @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
+  var refFastq: File = _
+
+  @Input(doc = "Input read 1 FASTQ file", shortName = "i", required = true)
+  var inputFastq1: File = _
+
+  @Input(doc = "Input read 2 FASTQ file", shortName = "j", required = true)
+  var inputFastq2: File = _
+
+  @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
+  var outputFastq1: File = _
+
+  @Output(doc = "Output read 2 FASTQ file", shortName = "p", required = true)
+  var outputFastq2: File = _
+
+  var outputStats: File = _
+
+  // executed command line
+  override def commandLine =
+    super.commandLine +
+      required("-r", refFastq) +
+      required("-i", inputFastq1) +
+      required("-j", inputFastq2) +
+      required("-o", outputFastq1) +
+      required("-p", outputFastq2) + " > " +
+      required(outputStats)
+
+  // summary statistics
+  def summary: Json = {
+
+    val regex = new Regex("""Filtered (\d*) reads from first read file.
+                            |Filtered (\d*) reads from second read file.
+                            |Synced read files contain (\d*) reads.""".stripMargin,
+      "R1", "R2", "RL")
+
+    val (countFilteredR1, countFilteredR2, countRLeft) =
+      if (outputStats.exists) {
+        val text = Source
+          .fromFile(outputStats)
+          .getLines()
+          .mkString("\n")
+        regex.findFirstMatchIn(text) match {
+          case None         => (0, 0, 0)
+          case Some(rmatch) => (rmatch.group("R1").toInt, rmatch.group("R2").toInt, rmatch.group("RL").toInt)
+        }
+      } else (0, 0, 0)
+
+    ("num_reads_discarded_R1" := countFilteredR1) ->:
+      ("num_reads_discarded_R2" := countFilteredR2) ->:
+      ("num_reads_kept" := countRLeft) ->:
+      jEmptyObject
+  }
 }
 
-// TODO: implement reading from and writing to gzipped files
 object FastqSync extends ToolCommand {
 
   /**
@@ -137,6 +194,30 @@ object FastqSync extends ToolCommand {
     println("Filtered %d reads from first read file.".format(counts.numDiscard1))
     println("Filtered %d reads from second read file.".format(counts.numDiscard2))
     println("Synced read files contain %d reads.".format(counts.numKept))
+  }
+
+  /** Function to merge this tool's summary with summaries from other objects */
+  // TODO: refactor this into the object? At least make it work on the summary object
+  def mergeSummaries(jsons: List[Json]): Json = {
+
+    val (read1FilteredCount, read2FilteredCount, readsLeftCount) = jsons
+      // extract the values we require from each JSON object into tuples
+      .map {
+        case json =>
+          (json.field("num_reads_discarded_R1").get.numberOrZero.toInt,
+            json.field("num_reads_discarded_R2").get.numberOrZero.toInt,
+            json.field("num_reads_kept").get.numberOrZero.toInt)
+      }
+      // reduce the tuples
+      .reduceLeft {
+        (x: (Int, Int, Int), y: (Int, Int, Int)) =>
+          (x._1 + y._1, x._2 + y._2, x._3 + y._3)
+      }
+
+    ("num_reads_discarded_R1" := read1FilteredCount) ->:
+      ("num_reads_discarded_R2" := read2FilteredCount) ->:
+      ("num_reads_kept" := readsLeftCount) ->:
+      jEmptyObject
   }
 
   case class Args(refFastq: File = new File(""),

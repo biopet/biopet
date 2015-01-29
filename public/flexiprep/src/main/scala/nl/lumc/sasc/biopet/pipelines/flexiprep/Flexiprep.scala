@@ -21,7 +21,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat, Seqstat }
-import nl.lumc.sasc.biopet.scripts.{ FastqSync }
+//import nl.lumc.sasc.biopet.scripts.FastqSync
+import nl.lumc.sasc.biopet.tools.FastqSync
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -182,15 +183,20 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         R2 = cutadapt_R2.fastq_output
         deps ::= R2
 
-        val fastqSync = FastqSync(this, cutadapt_R1.fastq_input, cutadapt_R1.fastq_output, cutadapt_R2.fastq_output,
-          swapExt(outDir, R1, R1_ext, ".sync" + R1_ext), swapExt(outDir, R2, R2_ext, ".sync" + R2_ext), swapExt(outDir, R1, R1_ext, ".sync.stats"))
-        fastqSync.deps :::= deps
-        fastqSync.isIntermediate = true
-        add(fastqSync)
-        summary.addFastqcSync(fastqSync, chunk)
-        outputFiles += ("syncStats" -> fastqSync.output_stats)
-        R1 = fastqSync.output_R1
-        R2 = fastqSync.output_R2
+        val fqSync = new FastqSync(this)
+        fqSync.refFastq = cutadapt_R1.fastq_input
+        fqSync.inputFastq1 = cutadapt_R1.fastq_output
+        fqSync.inputFastq2 = cutadapt_R2.fastq_output
+        fqSync.outputFastq1 = swapExt(outDir, R1, R1_ext, ".sync" + R1_ext)
+        fqSync.outputFastq2 = swapExt(outDir, R2, R2_ext, ".sync" + R2_ext)
+        fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
+        fqSync.deps :::= deps
+        add(fqSync)
+
+        summary.addFastqcSync(fqSync, chunk)
+        outputFiles += ("syncStats" -> fqSync.outputStats)
+        R1 = fqSync.outputFastq1
+        R2 = fqSync.outputFastq2
         deps :::= R1 :: R2 :: Nil
       }
     }
