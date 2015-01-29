@@ -26,7 +26,9 @@ import org.broadinstitute.gatk.queue.QScript
 import scala.io.Source
 
 class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript {
-
+  //*
+  // Kopisu - Coniferpipeline is a pipeline that can run standalone
+  // */
   def this() = this(null)
 
   /** Input bamfile  */
@@ -39,11 +41,14 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
   var sampleLabel: String = _
 
   /** Exon definitions in bed format */
-  @Input(doc = "Exon definition file in bed format", fullName = "exon_bed", shortName = "bed", required = true)
-  var probeFile: File = _
+  @Input(doc = "Exon definition file in bed format", fullName = "exon_bed", shortName = "bed", required = false)
+  var probeFile: File = config("probeFile")
 
-  @Input(doc = "Previous RPKM files (controls)", fullName = "rpkm_controls", shortName = "rc", required = true)
-  var rpkmControls: File = _
+  @Input(doc = "Previous RPKM files (controls)", fullName = "rpkm_controls", shortName = "rc", required = false)
+  var controlsDir: File = config("controlsDir")
+
+  @Argument(doc = "Enable RPKM only mode, generate files for reference db", shortName = "rpkmonly", required = false)
+  var RPKMonly: Boolean = false
 
   val summary = new ConiferSummary(this)
 
@@ -78,35 +83,37 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
     coniferRPKM.output = new File(RPKMdir + File.separator + input2RPKM(inputBam))
     add(coniferRPKM)
 
-    /** Collect the rpkm_output to a temp directory, where we merge with the control files */
-    var refRPKMlist: List[File] = Nil
-    for (f <- rpkmControls.listFiles()) {
-      var target = new File(RPKMdir + File.separator + f.getName)
-      if (!target.exists()) {
-        logger.info("Creating " + target.getAbsolutePath)
-        add(Ln(this, f, target, true))
-        refRPKMlist :+= target
+    if (!RPKMonly) {
+      /** Collect the rpkm_output to a temp directory, where we merge with the control files */
+      var refRPKMlist: List[File] = Nil
+      for (f <- controlsDir.listFiles()) {
+        var target = new File(RPKMdir + File.separator + f.getName)
+        if (!target.exists()) {
+          logger.info("Creating " + target.getAbsolutePath)
+          add(Ln(this, f, target, true))
+          refRPKMlist :+= target
+        }
       }
+
+      val coniferAnalyze = new ConiferAnalyze(this)
+      coniferAnalyze.deps = List(coniferRPKM.output) ++ refRPKMlist
+      coniferAnalyze.probes = this.probeFile
+      coniferAnalyze.rpkmDir = RPKMdir
+      coniferAnalyze.output = new File(sampleDir + File.separator + input2HDF5(inputBam))
+      add(coniferAnalyze)
+
+      val coniferCall = new ConiferCall(this)
+      coniferCall.input = coniferAnalyze.output
+      coniferCall.output = new File(sampleDir + File.separator + "calls.txt")
+      add(coniferCall)
+
+      summary.deps = List(coniferCall.output)
+      summary.label = sampleLabel
+      summary.calls = coniferCall.output
+      summary.out = new File(sampleDir + File.separator + input2Calls(inputBam))
+
+      add(summary)
     }
-
-    val coniferAnalyze = new ConiferAnalyze(this)
-    coniferAnalyze.deps = List(coniferRPKM.output) ++ refRPKMlist
-    coniferAnalyze.probes = this.probeFile
-    coniferAnalyze.rpkmDir = RPKMdir
-    coniferAnalyze.output = new File(sampleDir + File.separator + input2HDF5(inputBam))
-    add(coniferAnalyze)
-
-    val coniferCall = new ConiferCall(this)
-    coniferCall.input = coniferAnalyze.output
-    coniferCall.output = new File(sampleDir + File.separator + "calls.txt")
-    add(coniferCall)
-
-    summary.deps = List(coniferCall.output)
-    summary.label = sampleLabel
-    summary.calls = coniferCall.output
-    summary.out = new File(sampleDir + File.separator + input2Calls(inputBam))
-
-    add(summary)
 
   }
 }

@@ -31,10 +31,11 @@ class ConiferSummary(val root: Configurable) extends InProcessFunction with Conf
 
     for (line <- Source.fromFile(callFile).getLines()) {
       line.startsWith(sampleName) || line.startsWith("sampleID") match {
-        case true => writer.write(line)
+        case true => writer.write(line + "\n");
         case _    =>
       }
     }
+    writer.close()
   }
 
   this.analysisName = getClass.getSimpleName
