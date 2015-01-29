@@ -95,6 +95,7 @@
     <orderEntry type="module" module-name="Gentrap" />
     <orderEntry type="module" module-name="Sage" />
     <orderEntry type="module" module-name="Yamsvp" />
+    <orderEntry type="module" module-name="bamtobigwig" />
     <orderEntry type="module" module-name="BiopetGatkPipelines" />
     <orderEntry type="module" module-name="BiopetGatkExtensions" />
     <orderEntry type="module" module-name="Basty" />
