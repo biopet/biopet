@@ -8,6 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 1/29/15.
+ * Versions from the executable are not reliable, this extension is based on md5 '3d033ff8a1f4ea9cb3ede12939561141' from the executable
  */
 class WigToBigWig(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input wig file")
