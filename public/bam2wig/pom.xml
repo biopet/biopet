@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>nl.lumc.sasc</groupId>
-    <artifactId>BamToBigWig</artifactId>
+    <artifactId>Bam2Wig</artifactId>
     <packaging>jar</packaging>
 
     <parent>
@@ -16,7 +16,7 @@
     </parent>
 
     <inceptionYear>2014</inceptionYear>
-    <name>BamToBigWig</name>
+    <name>Bam2Wig</name>
 
     <dependencies>
         <dependency>

@@ -33,7 +33,7 @@
         <module>mapping</module>
         <module>sage</module>
         <module>yamsvp</module>
-        <module>bamtobigwig</module>
+        <module>bam2wig</module>
     </modules>
     
     <properties>

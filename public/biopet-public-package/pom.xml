@@ -77,7 +77,7 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BamToBigWig</artifactId>
+            <artifactId>Bam2Wig</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
