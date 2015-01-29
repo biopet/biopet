@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -50,7 +51,8 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override val defaultVmem = "6G"
   memoryLimit = Option(2.0)
 
-  defaults ++= Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
+  override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
+    super.defaults)
 
   override def afterGraph {
     super.afterGraph

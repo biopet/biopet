@@ -42,10 +42,10 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var iterations: Option[Int] = config("iterations")
   var minSnps: Option[Int] = config("min_snps")
   var convergeMethod: String = config("converge_method")
-  var useTimeStamp: Boolean = config("use_time_stamp")
+  var useTimeStamp: Boolean = config("use_time_stamp", default = false)
   var prefix: String = config("prefix")
-  var verbose: Boolean = config("verbose")
-  var noCleanup: Boolean = config("no_cleanup")
+  var verbose: Boolean = config("verbose", default = false)
+  var noCleanup: Boolean = config("no_cleanup", default = false)
 
   override def afterGraph: Unit = {
     super.afterGraph

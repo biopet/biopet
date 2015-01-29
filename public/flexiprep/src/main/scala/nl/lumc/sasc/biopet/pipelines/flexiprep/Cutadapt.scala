@@ -28,12 +28,15 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import scala.collection.mutable.Map
 
 class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
-  @Input(doc = "Fastq contams file", required = false)
-  var contams_file: File = _
+  var fastqc: Fastqc = _
 
   override def beforeCmd() {
     super.beforeCmd
-    getContamsFromFile
+
+    val foundAdapters = fastqc.getFoundAdapters.map(_.seq)
+    if (default_clip_mode == "3") opt_adapter ++= foundAdapters
+    else if (default_clip_mode == "5") opt_front ++= foundAdapters
+    else if (default_clip_mode == "both") opt_anywhere ++= foundAdapters
   }
 
   override def cmdLine = {
@@ -43,24 +46,6 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     } else {
       analysisName = getClass.getSimpleName + "-ln"
       Ln(this, fastq_input, fastq_output, relative = true).cmd
-    }
-  }
-
-  def getContamsFromFile {
-    if (contams_file != null) {
-      if (contams_file.exists()) {
-        for (line <- Source.fromFile(contams_file).getLines) {
-          var s: String = line.substring(line.lastIndexOf("\t") + 1, line.size)
-          if (default_clip_mode == "3") opt_adapter += s
-          else if (default_clip_mode == "5") opt_front += s
-          else if (default_clip_mode == "both") opt_anywhere += s
-          else {
-            opt_adapter += s
-            logger.warn("Option default_clip_mode should be '3', '5' or 'both', falling back to default: '3'")
-          }
-          logger.info("Adapter: " + s + " found in: " + fastq_input)
-        }
-      } else logger.warn("File : " + contams_file + " does not exist")
     }
   }
 

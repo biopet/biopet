@@ -58,28 +58,28 @@ class SeqtkSeq(val root: Configurable) extends Seqtk {
   var L: Option[Int] = config("L")
 
   /** mask complement region (effective with -M) */
-  var c: Boolean = config("c")
+  var c: Boolean = config("c", default = false)
 
   /** reverse complement */
-  var r: Boolean = config("r")
+  var r: Boolean = config("r", default = false)
 
   /** force FASTA output (discard quality) */
-  var A: Boolean = config("A")
+  var A: Boolean = config("A", default = false)
 
   /** drop comments at the header lines */
-  var C: Boolean = config("C")
+  var C: Boolean = config("C", default = false)
 
   /** drop sequences containing ambiguous bases */
-  var N: Boolean = config("N")
+  var N: Boolean = config("N", default = false)
 
   /** output the 2n-1 reads only */
-  var flag1: Boolean = config("1")
+  var flag1: Boolean = config("1", default = false)
 
   /** output the 2n reads only */
-  var flag2: Boolean = config("2")
+  var flag2: Boolean = config("2", default = false)
 
   /** shift quality by '(-Q) - 33' */
-  var V: Boolean = config("V")
+  var V: Boolean = config("V", default = false)
 
   def cmdLine = {
     required(executable) +
