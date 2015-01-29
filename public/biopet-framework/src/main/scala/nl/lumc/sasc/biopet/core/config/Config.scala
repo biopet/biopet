@@ -15,9 +15,12 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 import nl.lumc.sasc.biopet.core.Logging
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+
+import scala.reflect.io.Directory
 
 /**
  * This class can store nested config values
@@ -97,7 +100,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     else if (foundCache.contains(requestedIndex)) return true
     else {
       val value = Config.getValueFromMap(map, requestedIndex)
-      if (value.isDefined) {
+      if (value.isDefined && value.get.value != None) {
         foundCache += (requestedIndex -> value.get)
         return true
       } else {
@@ -137,36 +140,47 @@ class Config(var map: Map[String, Any]) extends Logging {
     } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
   }
 
-  //TODO: New version of report is needed
-  /**
-   * Makes report for all used values
-   * @return Config report
-   */
-  def getReport: String = {
-    val output: StringBuilder = new StringBuilder
-    output.append("Config report, sorted on module:\n")
-    var modules: Map[String, StringBuilder] = Map()
-    for ((key, value) <- foundCache) {
-      val module = key.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      modules(module).append("Found: " + value.toString + "\n")
+  def writeReport(id: String, directory: String): Unit = {
+
+    def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
+      input.foldLeft(Map[String, Any]())(
+        (a: Map[String, Any], x: (ConfigValueIndex, Any)) => {
+          val v = {
+            if (forceFreeVar.getOrElse(x._1.freeVar)) Map(x._1.key -> x._2)
+            else Map(x._1.module -> Map(x._1.key -> x._2))
+          }
+          val newMap = x._1.path.foldRight(v)((p, map) => Map(p -> map))
+          ConfigUtils.mergeMaps(a, newMap)
+        })
     }
-    for ((key, value) <- defaultCache) {
-      val module = key.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      modules(module).append("Default used: " + value.toString + "\n")
+
+    def writeMapToJsonFile(map: Map[String, Any], name: String): Unit = {
+      val file = new File(directory + "/" + id + "." + name + ".json")
+      file.getParentFile.mkdirs()
+      val writer = new PrintWriter(file)
+      writer.write(ConfigUtils.mapToJson(map).spaces2)
+      writer.close()
     }
-    for (value <- notFoundCache) {
-      val module = value.module
-      if (!modules.contains(module)) modules += (module -> new StringBuilder)
-      if (!defaultCache.contains(value)) modules(module).append("Not Found: " + value.toString + "\n")
-    }
-    for ((key, value) <- modules) {
-      output.append("Config options for module: " + key + "\n")
-      output.append(value.toString)
-      output.append("\n")
-    }
-    return output.toString
+
+    // Positions where values are found
+    val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
+
+    // Positions where to start searching
+    val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
+    val effectiveDefaultFound = convertIndexValuesToMap(defaultCache.filter(_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
+    val notFound = convertIndexValuesToMap(notFoundCache.map((_, None)), Some(false))
+
+    // Merged maps
+    val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
+    val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
+
+    writeMapToJsonFile(Config.global.map, "input")
+    writeMapToJsonFile(found, "found")
+    writeMapToJsonFile(effectiveFound, "effective.found")
+    writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")
+    writeMapToJsonFile(notFound, "not.found")
+    writeMapToJsonFile(fullEffective, "effective.full")
+    writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
   override def toString(): String = map.toString

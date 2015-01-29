@@ -12,24 +12,40 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
 class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
 
-  class LibraryOutput extends AbstractLibraryOutput {
-  }
-
   case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
-  class SampleOutput extends AbstractSampleOutput {
+
+  override def defaults = ConfigUtils.mergeMaps(Map(
+    "ploidy" -> 1,
+    "use_haplotypecaller" -> false,
+    "use_unifiedgenotyper" -> true,
+    "joint_variantcalling" -> true
+  ), super.defaults)
+
+  var gatkPipeline: GatkPipeline = new GatkPipeline(qscript)
+
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      protected def addJobs(): Unit = {}
+    }
+
     var output: FastaOutput = _
     var outputSnps: FastaOutput = _
+
+    protected def addJobs(): Unit = {
+      addLibsJobs()
+      output = addGenerateFasta(sampleId, sampleDir)
+      outputSnps = addGenerateFasta(sampleId, sampleDir, snpsOnly = true)
+    }
   }
-
-  defaults ++= Map("ploidy" -> 1, "use_haplotypecaller" -> false, "use_unifiedgenotyper" -> true, "joint_variantcalling" -> true)
-
-  var gatkPipeline: GatkPipeline = new GatkPipeline(this)
-  gatkPipeline.jointVariantcalling = true
 
   def init() {
     gatkPipeline.outputDir = outputDir
@@ -43,21 +59,21 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     val refVariants = addGenerateFasta(null, outputDir + "reference/", outputName = "reference")
     val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", outputName = "reference", snpsOnly = true)
 
-    runSamplesJobs()
+    addSamplesJobs()
 
-    val catVariants = Cat(this, refVariants.variants :: samplesOutput.map(_._2.output.variants).toList, outputDir + "fastas/variant.fasta")
+    val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList, outputDir + "fastas/variant.fasta")
     add(catVariants)
-    val catVariantsSnps = Cat(this, refVariantSnps.variants :: samplesOutput.map(_._2.outputSnps.variants).toList, outputDir + "fastas/variant.snps_only.fasta")
+    val catVariantsSnps = Cat(this, refVariantSnps.variants :: samples.map(_._2.outputSnps.variants).toList, outputDir + "fastas/variant.snps_only.fasta")
     add(catVariantsSnps)
 
-    val catConsensus = Cat(this, refVariants.consensus :: samplesOutput.map(_._2.output.consensus).toList, outputDir + "fastas/consensus.fasta")
+    val catConsensus = Cat(this, refVariants.consensus :: samples.map(_._2.output.consensus).toList, outputDir + "fastas/consensus.fasta")
     add(catConsensus)
-    val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samplesOutput.map(_._2.outputSnps.consensus).toList, outputDir + "fastas/consensus.snps_only.fasta")
+    val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samples.map(_._2.outputSnps.consensus).toList, outputDir + "fastas/consensus.snps_only.fasta")
     add(catConsensusSnps)
 
-    val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samplesOutput.map(_._2.output.consensusVariants).toList, outputDir + "fastas/consensus.variant.fasta")
+    val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samples.map(_._2.output.consensusVariants).toList, outputDir + "fastas/consensus.variant.fasta")
     add(catConsensusVariants)
-    val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samplesOutput.map(_._2.outputSnps.consensusVariants).toList, outputDir + "fastas/consensus.variant.snps_only.fasta")
+    val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samples.map(_._2.outputSnps.consensusVariants).toList, outputDir + "fastas/consensus.variant.snps_only.fasta")
     add(catConsensusVariantsSnps)
 
     val seed: Int = config("seed", default = 12345)
@@ -115,45 +131,20 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     addTreeJobs(catVariants.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
   }
 
-  // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
-    val sampleOutput = new SampleOutput
-    val sampleID: String = sampleConfig("ID").toString
-    val sampleDir = globalSampleDir + sampleID + "/"
-
-    sampleOutput.libraries = runLibraryJobs(sampleConfig)
-
-    sampleOutput.output = addGenerateFasta(sampleID, sampleDir)
-    sampleOutput.outputSnps = addGenerateFasta(sampleID, sampleDir, snpsOnly = true)
-
-    return sampleOutput
-  }
-
-  // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
-
-    return libraryOutput
-  }
-
   def addGenerateFasta(sampleName: String, outputDir: String, outputName: String = null,
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
     bastyGenerateFasta.inputVcf = gatkPipeline.multisampleVariantcalling.scriptOutput.finalVcfFile
-    if (gatkPipeline.samplesOutput.contains(sampleName)) {
-      bastyGenerateFasta.bamFile = gatkPipeline.samplesOutput(sampleName).variantcalling.bamFiles.head
+    if (gatkPipeline.samples.contains(sampleName)) {
+      bastyGenerateFasta.bamFile = gatkPipeline.samples(sampleName).gatkVariantcalling.scriptOutput.bamFiles.head
     }
     bastyGenerateFasta.outputVariants = outputDir + bastyGenerateFasta.outputName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
     bastyGenerateFasta.outputConsensus = outputDir + bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
     bastyGenerateFasta.outputConsensusVariants = outputDir + bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
-    add(bastyGenerateFasta)
+    qscript.add(bastyGenerateFasta)
     return FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
   }
 }

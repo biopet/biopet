@@ -40,7 +40,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   var minTotalDepth: Option[Int] = config("min_total_depth")
   var minAlternateDepth: Option[Int] = config("min_alternate_depth")
   var minSamplesPass: Option[Int] = config("min_samples_pass")
-  var filterRefCalls: Boolean = config("filter_ref_calls")
+  var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)

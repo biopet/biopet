@@ -9,13 +9,17 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.ApplyRecalibration with GatkGeneral {
+  scatterCount = config("scattercount", default = 0)
+
   override def afterGraph {
     super.afterGraph
 
-    if (config.contains("scattercount")) scatterCount = config("scattercount")
-
     nt = Option(getThreads(3))
     memoryLimit = Option(nt.getOrElse(1) * 2)
+
+    import org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode
+    if (mode == Mode.INDEL) ts_filter_level = config("ts_filter_level", default = 99.0)
+    else if (mode == Mode.SNP) ts_filter_level = config("ts_filter_level", default = 99.5)
     ts_filter_level = config("ts_filter_level")
   }
 }
@@ -24,11 +28,9 @@ object ApplyRecalibration {
   def apply(root: Configurable, input: File, output: File, recal_file: File, tranches_file: File, indel: Boolean = false): ApplyRecalibration = {
     val ar = if (indel) new ApplyRecalibration(root) {
       mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-      defaults ++= Map("ts_filter_level" -> 99.0)
     }
     else new ApplyRecalibration(root) {
       mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-      defaults ++= Map("ts_filter_level" -> 99.5)
     }
     ar.input :+= input
     ar.recal_file = recal_file
