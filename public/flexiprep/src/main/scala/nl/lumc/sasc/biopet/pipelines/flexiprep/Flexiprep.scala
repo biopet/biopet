@@ -21,7 +21,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat, Seqstat }
-//import nl.lumc.sasc.biopet.scripts.FastqSync
 import nl.lumc.sasc.biopet.tools.FastqSync
 
 class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
