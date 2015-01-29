@@ -48,6 +48,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Output(doc = "Output read 2 FASTQ file", shortName = "p", required = true)
   var outputFastq2: File = _
 
+  @Output(doc = "Sync statistics", required = true)
   var outputStats: File = _
 
   // executed command line
