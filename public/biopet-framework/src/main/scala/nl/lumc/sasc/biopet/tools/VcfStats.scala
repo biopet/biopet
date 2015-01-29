@@ -32,7 +32,7 @@ object VcfStats extends ToolCommand {
   }
 
   val genotypeOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
-  val variantOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
+  val allelesOverlap: mutable.Map[String, mutable.Map[String, Int]] = mutable.Map()
   val qualStats: mutable.Map[Any, Int] = mutable.Map()
   val genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map()
 
@@ -53,11 +53,11 @@ object VcfStats extends ToolCommand {
     // Init
     for (sample1 <- samples) {
       genotypeOverlap(sample1) = mutable.Map()
-      variantOverlap(sample1) = mutable.Map()
+      allelesOverlap(sample1) = mutable.Map()
       genotypeStats(sample1) = mutable.Map()
       for (sample2 <- samples) {
         genotypeOverlap(sample1)(sample2) = 0
-        variantOverlap(sample1)(sample2) = 0
+        allelesOverlap(sample1)(sample2) = 0
       }
     }
 
@@ -69,11 +69,12 @@ object VcfStats extends ToolCommand {
         val genotype = record.getGenotype(sample1)
         checkGenotype(genotype)
         for (sample2 <- samples) {
-          if (genotype.getAlleles == record.getGenotype(sample2).getAlleles) {
+          val genotype2 = record.getGenotype(sample2)
+          if (genotype.getAlleles == genotype2.getAlleles)
             genotypeOverlap(sample1)(sample2) = genotypeOverlap(sample1)(sample2) + 1
-            if (!(genotype.isHomRef || genotype.isNoCall || genotype.isNonInformative))
-              variantOverlap(sample1)(sample2) = variantOverlap(sample1)(sample2) + 1
-          }
+          for (allele <- genotype.getAlleles)
+            if (genotype2.getAlleles.exists(_.basesMatch(allele)))
+              allelesOverlap(sample1)(sample2) = allelesOverlap(sample1)(sample2) + 1
         }
       }
     }
@@ -82,7 +83,7 @@ object VcfStats extends ToolCommand {
     plotXy(writeField("QUAL", qualStats.toMap))
     writeGenotypeFields(commandArgs.outputDir + "/genotype_", samples)
     writeOverlap(genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
-    writeOverlap(variantOverlap, commandArgs.outputDir + "/sample_compare/variant_overlap", samples)
+    writeOverlap(allelesOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
 
     logger.info("Done")
   }

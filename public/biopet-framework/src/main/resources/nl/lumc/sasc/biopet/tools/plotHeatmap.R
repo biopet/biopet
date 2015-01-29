@@ -15,11 +15,11 @@ heat<- heat[,-1]
 
 heat<- as.matrix(heat)
 
-png(file = outputArg, width = 1500, height = 1500)
-heatmap.2(heat, trace = 'none', col = col, Colv=NA, Rowv=NA, dendrogram="none", margins = c(10, 10), na.color="#00FF00")
+png(file = outputArg, width = 1200, height = 1200)
+heatmap.2(heat, trace = 'none', col = col, Colv=NA, Rowv=NA, dendrogram="none", margins = c(12, 12), na.color="#00FF00")
 dev.off()
 
 
-png(file = outputArgClustering, width = 1500, height = 1500)
-heatmap.2(heat, trace = 'none', col = col, Colv="Rowv", dendrogram="row",margins = c(10, 10), na.color="#00FF00")
+png(file = outputArgClustering, width = 1200, height = 1200)
+heatmap.2(heat, trace = 'none', col = col, Colv="Rowv", dendrogram="row",margins = c(12, 12), na.color="#00FF00")
 dev.off()
