@@ -23,6 +23,8 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="BamMetrics" />
+        <module name="BamToBigWig" />
+        <module name="bamtobigwig" />
         <module name="Basty" />
         <module name="BiopetFramework" />
         <module name="BiopetGatkExtensions" />
