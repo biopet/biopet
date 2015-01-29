@@ -104,8 +104,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     for ((sampleId, sample) <- samples) {
       for (control <- sample.controls) {
-        if (!samples.exists(_ == control))
-          throw new IllegalStateException("For sample: " + sample + " this control: " + control + " does not exist")
+        if (!samples.contains(control))
+          throw new IllegalStateException("For sample: " + sampleId + " this control: " + control + " does not exist")
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = sample.bamFile
         macs2.control = samples(control).bamFile
