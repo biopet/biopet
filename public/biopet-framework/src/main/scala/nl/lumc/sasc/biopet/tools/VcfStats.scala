@@ -63,6 +63,7 @@ object VcfStats extends ToolCommand {
 
     // Reading vcf records
     logger.info("Start reading vcf records")
+    var counter = 0
     for (record <- reader) {
       qualStats(record.getPhredScaledQual) = qualStats.getOrElse(record.getPhredScaledQual, 0) + 1
       for (sample1 <- samples) {
@@ -77,7 +78,10 @@ object VcfStats extends ToolCommand {
               allelesOverlap(sample1)(sample2) = allelesOverlap(sample1)(sample2) + 1
         }
       }
+      counter += 1
+      if (counter % 100000 == 0) logger.info(counter + " variants done")
     }
+    logger.info(counter + " variants done")
     logger.info("Done reading vcf records")
 
     plotXy(writeField("QUAL", qualStats.toMap))
@@ -171,7 +175,8 @@ object VcfStats extends ToolCommand {
   def plotHeatmap(file: File) {
     executeRscript("plotHeatmap.R", Array(file.getAbsolutePath,
       file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png",
-      file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png"))
+      file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.clustering.png",
+      file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.dendrogram.png"))
   }
 
   def plotXy(file: File) {
