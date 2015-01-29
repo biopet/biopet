@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.carp
 
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
@@ -53,18 +54,30 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     runSamplesJobs
 
-    //val macs2 = new Macs2CallPeak(this)
-    //macs2.treatment = new File("patient.bam")
-    //macs2.control = new File("control.bam")
+    for (sample <- getSamples) {
+      val controls: List[String] = config("control", sample = sample, default = Nil)
+
+      for (control <- controls) {
+        if (!getSamples.exists(_ == control))
+          throw new IllegalStateException("For sample: " + sample + " this control: " + control + " does not exist")
+        val macs2 = new Macs2CallPeak(this)
+        macs2.treatment = samplesOutput(sample).mappedBamFile
+        macs2.control = samplesOutput(control).mappedBamFile
+        macs2.name = sample + "_VS_" + control
+        macs2.outputdir = globalSampleDir + sample + "/" + "macs2/" + macs2.name + "/"
+        add(macs2)
+      }
+    }
   }
 
   def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
     val sampleOutput = new SampleOutput
-    val sampleID: String = sampleConfig("ID").toString
+    val sampleID: String = getCurrentSample
+    val sampleDir = globalSampleDir + sampleID + "/"
 
     sampleOutput.libraries = runLibraryJobs(sampleConfig)
     val bamfiles = sampleOutput.libraries.map(_._2.mappedBamFile).toList
-    sampleOutput.mappedBamFile = new File(globalSampleDir + sampleID + "/" + sampleID + ".bam")
+    sampleOutput.mappedBamFile = new File(sampleDir + sampleID + ".bam")
     if (bamfiles.length == 1) {
       add(Ln(this, bamfiles.head, sampleOutput.mappedBamFile))
       val oldIndex = new File(bamfiles.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
@@ -78,14 +91,20 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
       add(merge)
     }
 
+    val macs2 = new Macs2CallPeak(this)
+    macs2.treatment = sampleOutput.mappedBamFile
+    macs2.name = sampleID
+    macs2.outputdir = sampleDir + "macs2/" + macs2.name + "/"
+    add(macs2)
+
     return sampleOutput
   }
 
   def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
     val libraryOutput = new LibraryOutput
 
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
+    val runID: String = getCurrentLibrary
+    val sampleID: String = getCurrentSample
     val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
 
     if (runConfig.contains("R1")) {
