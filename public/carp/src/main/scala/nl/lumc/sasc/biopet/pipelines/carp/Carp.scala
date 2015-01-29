@@ -15,13 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-import nl.lumc.sasc.biopet.extensions.aligners.{ Bwa, Star, Bowtie, Stampy }
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -32,14 +34,60 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
  * This pipeline performs QC,mapping and peak calling
  */
 class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
 
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
-  }
+  override def defaults = ConfigUtils.mergeMaps(Map(
+    "mapping" -> Map("skip_markduplicates" -> true)
+  ), super.defaults)
 
-  class SampleOutput extends AbstractSampleOutput {
-    var mappedBamFile: File = _
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      val mapping = new Mapping(qscript)
+
+      def addJobs(): Unit = {
+        if (config.contains("R1")) {
+          mapping.input_R1 = config("R1")
+          if (config.contains("R2")) mapping.input_R2 = config("R2")
+          mapping.libraryId = libraryId
+          mapping.sampleId = sampleId
+          mapping.outputDir = libDir
+
+          mapping.init
+          mapping.biopetScript
+          addAll(mapping.functions)
+
+        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libraryId)
+      }
+    }
+
+    val bamFile = new File(sampleDir + sampleId + ".bam")
+    val controls: List[String] = config("control", default = Nil)
+
+    def addJobs(): Unit = {
+      addLibsJobs()
+      val bamFiles = libraries.map(_._2.mapping.finalBamFile).toList
+      if (bamFiles.length == 1) {
+        add(Ln(qscript, bamFiles.head, bamFile))
+        val oldIndex = new File(bamFiles.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex = new File(bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        add(Ln(qscript, oldIndex, newIndex))
+      } else if (bamFiles.length > 1) {
+        val merge = new MergeSamFiles(qscript)
+        merge.input = bamFiles
+        merge.sortOrder = "coordinate"
+        merge.output = bamFile
+        add(merge)
+      }
+
+      val macs2 = new Macs2CallPeak(qscript)
+      macs2.treatment = bamFile
+      macs2.name = sampleId
+      macs2.outputdir = sampleDir + "macs2/" + macs2.name + "/"
+      add(macs2)
+    }
   }
 
   def init() {
@@ -52,84 +100,21 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     // Third step is calling peaks on the bam files produced with the mapping pipeline, this will be done with MACS2
     logger.info("Starting CArP pipeline")
 
-    runSamplesJobs
+    addSamplesJobs
 
-    for (sample <- getSamples) {
-      val controls: List[String] = config("control", sample = sample, default = Nil)
-
-      for (control <- controls) {
-        if (!getSamples.exists(_ == control))
+    for ((sampleId, sample) <- samples) {
+      for (control <- sample.controls) {
+        if (!samples.exists(_ == control))
           throw new IllegalStateException("For sample: " + sample + " this control: " + control + " does not exist")
         val macs2 = new Macs2CallPeak(this)
-        macs2.treatment = samplesOutput(sample).mappedBamFile
-        macs2.control = samplesOutput(control).mappedBamFile
+        macs2.treatment = sample.bamFile
+        macs2.control = samples(control).bamFile
         macs2.name = sample + "_VS_" + control
-        macs2.outputdir = globalSampleDir + sample + "/" + "macs2/" + macs2.name + "/"
+        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name + "/"
         add(macs2)
       }
     }
   }
-
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
-    val sampleOutput = new SampleOutput
-    val sampleID: String = getCurrentSample
-    val sampleDir = globalSampleDir + sampleID + "/"
-
-    sampleOutput.libraries = runLibraryJobs(sampleConfig)
-    val bamfiles = sampleOutput.libraries.map(_._2.mappedBamFile).toList
-    sampleOutput.mappedBamFile = new File(sampleDir + sampleID + ".bam")
-    if (bamfiles.length == 1) {
-      add(Ln(this, bamfiles.head, sampleOutput.mappedBamFile))
-      val oldIndex = new File(bamfiles.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
-      val newIndex = new File(sampleOutput.mappedBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-      add(Ln(this, oldIndex, newIndex))
-    } else if (bamfiles.length > 1) {
-      val merge = new MergeSamFiles(this)
-      merge.input = bamfiles
-      merge.sortOrder = "coordinate"
-      merge.output = sampleOutput.mappedBamFile
-      add(merge)
-    }
-
-    val macs2 = new Macs2CallPeak(this)
-    macs2.treatment = sampleOutput.mappedBamFile
-    macs2.name = sampleID
-    macs2.outputdir = sampleDir + "macs2/" + macs2.name + "/"
-    add(macs2)
-
-    return sampleOutput
-  }
-
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-
-    val runID: String = getCurrentLibrary
-    val sampleID: String = getCurrentSample
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
-
-    if (runConfig.contains("R1")) {
-      val mapping = new Mapping(this)
-
-      mapping.skipMarkduplicates = config("skip_markduplicates", default = true) // we do the dedup marking using Sambamba
-
-      mapping.input_R1 = new File(runConfig("R1").toString)
-      if (runConfig.contains("R2")) mapping.input_R2 = new File(runConfig("R2").toString)
-      mapping.RGLB = runConfig("ID").toString
-      mapping.RGSM = sampleConfig("ID").toString
-      if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
-      if (runConfig.contains("PU")) mapping.RGPU = runConfig("PU").toString
-      if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
-      mapping.outputDir = runDir
-
-      mapping.init
-      mapping.biopetScript
-      addAll(mapping.functions)
-
-      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
-    return libraryOutput
-  }
-
 }
 
 object Carp extends PipelineCommand
