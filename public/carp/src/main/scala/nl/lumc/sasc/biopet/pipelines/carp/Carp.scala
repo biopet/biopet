@@ -80,6 +80,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         merge.sortOrder = "coordinate"
         merge.output = bamFile
         add(merge)
+
+        //TODO: Add BigWIg track
       }
 
       val macs2 = new Macs2CallPeak(qscript)
@@ -103,13 +105,13 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     addSamplesJobs
 
     for ((sampleId, sample) <- samples) {
-      for (control <- sample.controls) {
-        if (!samples.contains(control))
-          throw new IllegalStateException("For sample: " + sampleId + " this control: " + control + " does not exist")
+      for (controlId <- sample.controls) {
+        if (!samples.contains(controlId))
+          throw new IllegalStateException("For sample: " + sampleId + " this control: " + controlId + " does not exist")
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = sample.bamFile
-        macs2.control = samples(control).bamFile
-        macs2.name = sample + "_VS_" + control
+        macs2.control = samples(controlId).bamFile
+        macs2.name = sampleId + "_VS_" + controlId
         macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name + "/"
         add(macs2)
       }

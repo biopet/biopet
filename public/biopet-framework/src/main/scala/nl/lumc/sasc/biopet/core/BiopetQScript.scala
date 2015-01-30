@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -29,7 +29,14 @@ trait BiopetQScript extends Configurable with GatkLogging {
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  var outputDir: String = _
+  var outputDir: String = {
+    val temp = Config.getValueFromMap(Config.global.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
+    if (temp.isEmpty) throw new IllegalArgumentException("No output_dir defined in config")
+    else {
+      val t = temp.get.value.toString
+      if (!t.endsWith("/")) t + "/" else t
+    }
+  }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
   var disableScatter: Boolean = false
