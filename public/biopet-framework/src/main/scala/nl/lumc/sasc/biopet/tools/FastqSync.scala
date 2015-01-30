@@ -17,7 +17,7 @@ import scala.collection.JavaConverters._
 
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
-import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
@@ -185,8 +185,8 @@ object FastqSync extends ToolCommand {
 
   def writeSyncedFastq(sync: Stream[(FastqRecord, FastqRecord)],
                        counts: SyncCounts,
-                       outputFastq1: BasicFastqWriter,
-                       outputFastq2: BasicFastqWriter): Unit = {
+                       outputFastq1: AsyncFastqWriter,
+                       outputFastq2: AsyncFastqWriter): Unit = {
     sync.foreach {
       case (rec1, rec2) =>
         outputFastq1.write(rec1)
@@ -281,8 +281,9 @@ object FastqSync extends ToolCommand {
       new FastqReader(commandArgs.inputFastq2))
 
     writeSyncedFastq(synced, counts,
-      new BasicFastqWriter(commandArgs.outputFastq1),
-      new BasicFastqWriter(commandArgs.outputFastq2)
+      // using 3000 for queue size to approximate NFS buffer
+      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000),
+      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq2), 3000)
     )
   }
 }

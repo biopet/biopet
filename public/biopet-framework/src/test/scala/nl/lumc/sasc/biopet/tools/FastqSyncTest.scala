@@ -8,7 +8,7 @@ import java.io.File
 import java.nio.file.Paths
 import scala.collection.JavaConverters._
 
-import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, FastqRecord }
 import org.mockito.Mockito.{ inOrder => inOrd, when }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -191,8 +191,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testWriteSynced() = {
-    val aMock = mock[BasicFastqWriter]
-    val bMock = mock[BasicFastqWriter]
+    val aMock = mock[AsyncFastqWriter]
+    val bMock = mock[AsyncFastqWriter]
     val sync = Stream(
       (new FastqRecord("1", "A", "", "H"), new FastqRecord("1", "T", "", "E")),
       (new FastqRecord("2", "A", "", "H"), new FastqRecord("2", "T", "", "E")))
