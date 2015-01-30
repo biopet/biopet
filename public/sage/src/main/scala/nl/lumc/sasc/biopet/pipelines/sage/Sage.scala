@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
@@ -28,38 +28,101 @@ import nl.lumc.sasc.biopet.scripts.SquishBed
 import nl.lumc.sasc.biopet.tools.SageCountFastq
 import nl.lumc.sasc.biopet.tools.SageCreateLibrary
 import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
 class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
 
-  @Input(doc = "countBed", required = false)
   var countBed: File = config("count_bed")
 
-  @Input(doc = "squishedCountBed, by suppling this file the auto squish job will be skipped", required = false)
   var squishedCountBed: File = config("squished_count_bed")
 
-  @Input(doc = "Transcriptome, used for generation of tag library", required = false)
   var transcriptome: File = config("transcriptome")
 
   var tagsLibrary: File = config("tags_library")
 
-  defaults ++= Map("bowtie" -> Map(
+  override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
     "m" -> 1,
     "k" -> 1,
     "best" -> true,
     "strata" -> true,
     "seedmms" -> 1
+  ), "mapping" -> Map(
+    "aligner" -> "bowtie",
+    "skip_flexiprep" -> true,
+    "skip_markduplicates" -> true
+  ), "flexiprep" -> Map(
+    "skip_clip" -> true,
+    "skip_trim" -> true
   )
-  )
+  ), super.defaults)
 
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
-    var prefixFastq: File = _
-  }
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      val inputFastq: File = config("R1", required = true)
+      val prefixFastq: File = createFile(".prefix.fastq")
 
-  class SampleOutput extends AbstractSampleOutput {
+      val flexiprep = new Flexiprep(qscript)
+      flexiprep.sampleId = sampleId
+      flexiprep.libraryId = libraryId
 
+      val mapping = new Mapping(qscript)
+      mapping.libraryId = libraryId
+      mapping.sampleId = sampleId
+
+      protected def addJobs(): Unit = {
+        flexiprep.outputDir = libDir + "flexiprep/"
+        flexiprep.input_R1 = inputFastq
+        flexiprep.init
+        flexiprep.biopetScript
+        qscript.addAll(flexiprep.functions)
+
+        val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
+        val pf = new PrefixFastq(qscript)
+        pf.inputFastq = flexiprepOutput.head
+        pf.outputFastq = prefixFastq
+        pf.prefixSeq = config("sage_tag", default = "CATG")
+        pf.deps +:= flexiprep.outputFiles("fastq_input_R1")
+        qscript.add(pf)
+
+        mapping.input_R1 = pf.outputFastq
+        mapping.outputDir = libDir
+        mapping.init
+        mapping.biopetScript
+        qscript.addAll(mapping.functions)
+
+        if (config("library_counts", default = false).asBoolean) {
+          addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libraryId, libDir)
+          addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, libDir)
+        }
+      }
+    }
+
+    protected def addJobs(): Unit = {
+      addLibsJobs()
+      val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
+      val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
+
+      val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
+      else if (libraryBamfiles.size > 1) {
+        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, sampleDir)
+        qscript.add(mergeSamFiles)
+        mergeSamFiles.output
+      } else null
+      val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
+      else if (libraryFastqFiles.size > 1) {
+        val cat = Cat(qscript, libraryFastqFiles, sampleDir + sampleId + ".fastq")
+        qscript.add(cat)
+        cat.output
+      } else null
+
+      addBedtoolsCounts(bamFile, sampleId, sampleDir)
+      addTablibCounts(fastqFile, sampleId, sampleDir)
+    }
   }
 
   def init() {
@@ -88,88 +151,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       tagsLibrary = cdl.output
     }
 
-    runSamplesJobs
-  }
-
-  // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
-    val sampleOutput = new SampleOutput
-    var libraryBamfiles: List[File] = List()
-    var libraryFastqFiles: List[File] = List()
-    val sampleID: String = sampleConfig("ID").toString
-    val sampleDir: String = globalSampleDir + sampleID + "/"
-    for ((library, libraryFiles) <- runLibraryJobs(sampleConfig)) {
-      libraryFastqFiles +:= libraryFiles.prefixFastq
-      libraryBamfiles +:= libraryFiles.mappedBamFile
-    }
-
-    val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
-    else if (libraryBamfiles.size > 1) {
-      val mergeSamFiles = MergeSamFiles(this, libraryBamfiles, sampleDir)
-      add(mergeSamFiles)
-      mergeSamFiles.output
-    } else null
-    val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
-    else if (libraryFastqFiles.size > 1) {
-      val cat = Cat.apply(this, libraryFastqFiles, sampleDir + sampleID + ".fastq")
-      add(cat)
-      cat.output
-    } else null
-
-    addBedtoolsCounts(bamFile, sampleID, sampleDir)
-    addTablibCounts(fastqFile, sampleID, sampleDir)
-
-    return sampleOutput
-  }
-
-  // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-    val runID: String = runConfig("ID").toString
-    val sampleID: String = sampleConfig("ID").toString
-    val runDir: String = globalSampleDir + sampleID + "/run_" + runID + "/"
-    if (runConfig.contains("R1")) {
-      val flexiprep = new Flexiprep(this)
-      flexiprep.outputDir = runDir + "flexiprep/"
-      flexiprep.input_R1 = new File(runConfig("R1").toString)
-      flexiprep.skipClip = true
-      flexiprep.skipTrim = true
-      flexiprep.sampleName = sampleID
-      flexiprep.libraryName = runID
-      flexiprep.init
-      flexiprep.biopetScript
-      addAll(flexiprep.functions)
-
-      val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
-      val prefixFastq = PrefixFastq(this, flexiprepOutput.head, runDir)
-      prefixFastq.prefixSeq = config("sage_tag", default = "CATG")
-      prefixFastq.deps +:= flexiprep.outputFiles("fastq_input_R1")
-      add(prefixFastq)
-      libraryOutput.prefixFastq = prefixFastq.outputFastq
-
-      val mapping = new Mapping(this)
-      mapping.skipFlexiprep = true
-      mapping.skipMarkduplicates = true
-      mapping.aligner = config("aligner", default = "bowtie")
-      mapping.input_R1 = prefixFastq.outputFastq
-      mapping.RGLB = runConfig("ID").toString
-      mapping.RGSM = sampleConfig("ID").toString
-      if (runConfig.contains("PL")) mapping.RGPL = runConfig("PL").toString
-      if (runConfig.contains("PU")) mapping.RGPU = runConfig("PU").toString
-      if (runConfig.contains("CN")) mapping.RGCN = runConfig("CN").toString
-      mapping.outputDir = runDir
-      mapping.init
-      mapping.biopetScript
-      addAll(mapping.functions)
-
-      if (config("library_counts", default = false).asBoolean) {
-        addBedtoolsCounts(mapping.outputFiles("finalBamFile"), sampleID + "-" + runID, runDir)
-        addTablibCounts(prefixFastq.outputFastq, sampleID + "-" + runID, runDir)
-      }
-
-      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for run: " + runConfig)
-    return libraryOutput
+    addSamplesJobs
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {

@@ -31,6 +31,20 @@ trait PipelineCommand extends MainCommand with GatkLogging {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")
         Config.global.loadConfigFile(new File(args(t + 1)))
       }
+      if (args(t) == "--logging_level" || args(t) == "-l") {
+        args(t + 1).toLowerCase match {
+          case "debug" => Logging.logger.setLevel(org.apache.log4j.Level.DEBUG)
+          case "info"  => Logging.logger.setLevel(org.apache.log4j.Level.INFO)
+          case "warn"  => Logging.logger.setLevel(org.apache.log4j.Level.WARN)
+          case "error" => Logging.logger.setLevel(org.apache.log4j.Level.ERROR)
+          case _       =>
+        }
+      }
+    }
+    for (t <- 0 until argsSize) {
+      if (args(t) == "--outputDir" || args(t) == "-outDir") {
+        throw new IllegalArgumentException("Commandline argument is deprecated, should use config for this now")
+      }
     }
 
     var argv: Array[String] = Array()

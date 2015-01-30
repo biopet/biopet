@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import java.io.File
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
@@ -36,9 +35,9 @@ trait Configurable extends ImplicitConversions {
   protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
-  var defaults: scala.collection.mutable.Map[String, Any] = {
-    if (root != null) scala.collection.mutable.Map(root.defaults.toArray: _*)
-    else scala.collection.mutable.Map()
+  def defaults: Map[String, Any] = {
+    if (root != null) root.defaults
+    else Map()
   }
 
   val config = new ConfigFunctions
@@ -60,7 +59,21 @@ trait Configurable extends ImplicitConversions {
   /**
    * Class is used for retrieval of config values
    */
-  protected class ConfigFunctions {
+  protected class ConfigFunctions(val defaultSample: Option[String] = None, val defaultLibrary: Option[String] = None) {
+    def this(defaultSample: String, defaultLibrary: String) = {
+      this(defaultSample = Some(defaultSample), defaultLibrary = Some(defaultLibrary))
+    }
+
+    def this(defaultSample: String) = {
+      this(defaultSample = Some(defaultSample), defaultLibrary = None)
+    }
+
+    (defaultSample, defaultLibrary) match {
+      case (Some(null), _) => throw new IllegalArgumentException("defaultSample can not be null")
+      case (_, Some(null)) => throw new IllegalArgumentException("defaultLibrary can not be null")
+      case _               =>
+    }
+
     /**
      *
      * @param key Name of value
@@ -79,13 +92,15 @@ trait Configurable extends ImplicitConversions {
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null): ConfigValue = {
+      val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
+      val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = path(sample, library, submodule)
+      val p = path(s, l, submodule)
       val d = {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (!contains(key, submodule, freeVar, sample = sample, library = library) && d == null) {
+      if (!contains(key, submodule, freeVar, sample = s, library = l) && d == null) {
         if (required) {
           Logging.logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
           throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
@@ -109,8 +124,10 @@ trait Configurable extends ImplicitConversions {
                  freeVar: Boolean = true,
                  sample: String = null,
                  library: String = null) = {
+      val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
+      val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = path(sample, library, submodule)
+      val p = path(s, l, submodule)
 
       Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }

@@ -29,11 +29,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
   var outputDir: String = _
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
-  var disableScatterDefault: Boolean = false
+  var disableScatter: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
 
@@ -45,11 +44,12 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   final def script() {
+    outputDir = config("output_dir", required = true)
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
-    if (disableScatterDefault) for (function <- functions) function match {
+    if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }

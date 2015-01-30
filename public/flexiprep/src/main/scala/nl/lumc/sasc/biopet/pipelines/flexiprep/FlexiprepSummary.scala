@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Md5sum, Seqstat }
-import nl.lumc.sasc.biopet.scripts.{ FastqSync }
+import nl.lumc.sasc.biopet.tools.FastqSync
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
@@ -112,16 +112,16 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   def addFastqcSync(fastqSync: FastqSync, chunk: String = ""): FastqSync = {
     if (!chunks.contains(chunk)) chunks += (chunk -> new Chunk)
     chunks(chunk).fastqSync = fastqSync
-    deps ::= fastqSync.output_stats
-    return fastqSync
+    deps ::= fastqSync.outputStats
+    fastqSync
   }
   // format: OFF
   override def run {
     logger.debug("Start")
     md5Summary()
     val summary = 
-      ("samples" := ( flexiprep.sampleName :=
-        ("libraries" := ( flexiprep.libraryName := (
+      ("samples" := ( flexiprep.sampleId :=
+        ("libraries" := ( flexiprep.libraryId := (
           ("flexiprep" := (
             ("clipping" := !flexiprep.skipClip) ->:
             ("trimming" := !flexiprep.skipTrim) ->:
@@ -223,11 +223,13 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
       jEmptyObject)
   }
 
-  def syncstatSummary(): Option[Json] = {
-    if (flexiprep.skipClip || !flexiprep.paired) return None
-    val s = for ((key, value) <- chunks) yield value.fastqSync.getSummary
-    return Option(FastqSync.mergeSummaries(s.toList))
-  }
+  def syncstatSummary(): Option[Json] =
+    if (flexiprep.skipClip || !flexiprep.paired)
+      None
+    else {
+      val s = for ((key, value) <- chunks) yield value.fastqSync.summary
+      Option(FastqSync.mergeSummaries(s.toList))
+    }
 
   def trimstatSummary(): Option[Json] = {
     if (flexiprep.skipTrim) return None
