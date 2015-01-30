@@ -6,7 +6,11 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
- * Created by pjvan_thof on 1/16/15.
+ * BWA sampe wrapper
+ *
+ * based on executable verion 0.7.10-r789
+ *
+ * @param root Configurable
  */
 class BwaSampe(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", required = true)
@@ -39,11 +43,14 @@ class BwaSampe(val root: Configurable) extends Bwa {
   var r: String = _
 
   def cmdLine = required(executable) +
-    required("samse") +
+    required("sampe") +
+    optional("-a", a) +
+    optional("-o", o) +
     optional("-n", n) +
+    optional("-N", N) +
+    optional("-c", c) +
     optional("-f", output) +
     optional("-r", r) +
-    optional("-c", c) +
     conditional(P, "-P") +
     conditional(s, "-s") +
     conditional(A, "-A") +
