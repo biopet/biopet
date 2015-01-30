@@ -58,7 +58,7 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
   var samout: File = _
 
   /** suppress progress report */
-  var quiet: Boolean = config("quiet")
+  var quiet: Boolean = config("quiet", default = false)
 
   override val versionRegex = """.*, version (.*)\.""".r
   override def versionCommand = executable + " --help"
