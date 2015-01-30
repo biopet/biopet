@@ -66,19 +66,19 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var fastq_id_end: Option[Int] = config("fastq_id_end")
 
   /** when multiple fastq files are provided on the command line, gsnap assumes */
-  var force_single_end: Boolean = config("force_single_end")
+  var force_single_end: Boolean = config("force_single_end", default = false)
 
   /** skips reads marked by the illumina chastity program.  expecting a string */
   var filter_chastity: String = config("filter_chastity")
 
   /** allows accession names of reads to mismatch in paired-end files */
-  var allow_pe_name_mismatch: Boolean = config("allow_pe_name_mismatch")
+  var allow_pe_name_mismatch: Boolean = config("allow_pe_name_mismatch", default = false)
 
   /** uncompress gzipped input files */
-  var gunzip: Boolean = config("gunzip")
+  var gunzip: Boolean = config("gunzip", default = false)
 
   /** uncompress bzip2-compressed input files */
-  var bunzip2: Boolean = config("bunzip2")
+  var bunzip2: Boolean = config("bunzip2", default = false)
 
   /** batch mode (default = 2) */
   var batch: Option[Int] = config("batch")
@@ -198,7 +198,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var use_splicing: String = config("use_splicing")
 
   /** for ambiguous known splicing at ends of the read, do not clip at the */
-  var ambig_splice_noclip: Boolean = config("ambig_splice_noclip")
+  var ambig_splice_noclip: Boolean = config("ambig_splice_noclip", default = false)
 
   /** definition of local novel splicing event (default 200000) */
   var localsplicedist: Option[Int] = config("localsplicedist")
@@ -225,7 +225,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var antistranded_penalty: Option[Int] = config("antistranded_penalty")
 
   /** report distant splices on the same chromosome as a single splice, if possible */
-  var merge_distant_samechr: Boolean = config("merge_distant_samechr")
+  var merge_distant_samechr: Boolean = config("merge_distant_samechr", default = false)
 
   /** max total genomic length for dna-seq paired reads, or other reads */
   var pairmax_dna: Option[Int] = config("pairmax_dna")
@@ -252,28 +252,28 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var npaths: Option[Int] = config("npaths")
 
   /** if more than maximum number of paths are found, */
-  var quiet_if_excessive: Boolean = config("quiet_if_excessive")
+  var quiet_if_excessive: Boolean = config("quiet_if_excessive", default = false)
 
   /** print output in same order as input (relevant */
-  var ordered: Boolean = config("ordered")
+  var ordered: Boolean = config("ordered", default = false)
 
   /** for gsnap output in snp-tolerant alignment, shows all differences */
-  var show_refdiff: Boolean = config("show_refdiff")
+  var show_refdiff: Boolean = config("show_refdiff", default = false)
 
   /** for paired-end reads whose alignments overlap, clip the overlapping region */
-  var clip_overlap: Boolean = config("clip_overlap")
+  var clip_overlap: Boolean = config("clip_overlap", default = false)
 
   /** print detailed information about snps in reads (works only if -v also selected) */
-  var print_snps: Boolean = config("print_snps")
+  var print_snps: Boolean = config("print_snps", default = false)
 
   /** print only failed alignments, those with no results */
-  var failsonly: Boolean = config("failsonly")
+  var failsonly: Boolean = config("failsonly", default = false)
 
   /** exclude printing of failed alignments */
-  var nofails: Boolean = config("nofails")
+  var nofails: Boolean = config("nofails", default = false)
 
   /** print completely failed alignments as input fasta or fastq format */
-  var fails_as_input: Boolean = config("fails_as_input")
+  var fails_as_input: Boolean = config("fails_as_input", default = false)
 
   /** another format type, other than default */
   var format: String = config("format")
@@ -282,28 +282,28 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var split_output: String = config("split_output")
 
   /** when --split-output is given, this flag will append output to the */
-  var append_output: Boolean = config("append_output")
+  var append_output: Boolean = config("append_output", default = false)
 
   /** buffer size, in queries, for output thread (default 1000).  when the number */
   var output_buffer_size: Option[Int] = config("output_buffer_size")
 
   /** do not print headers beginning with '@' */
-  var no_sam_headers: Boolean = config("no_sam_headers")
+  var no_sam_headers: Boolean = config("no_sam_headers", default = false)
 
   /** print headers only for this batch, as specified by -q */
   var sam_headers_batch: Option[Int] = config("sam_headers_batch")
 
   /** insert 0m in cigar between adjacent insertions and deletions */
-  var sam_use_0M: Boolean = config("sam_use_0M")
+  var sam_use_0M: Boolean = config("sam_use_0M", default = false)
 
   /** allows multiple alignments to be marked as primary if they */
-  var sam_multiple_primaries: Boolean = config("sam_multiple_primaries")
+  var sam_multiple_primaries: Boolean = config("sam_multiple_primaries", default = false)
 
   /** for rna-seq alignments, disallows xs:a:? when the sense direction */
-  var force_xs_dir: Boolean = config("force_xs_dir")
+  var force_xs_dir: Boolean = config("force_xs_dir", default = false)
 
   /** in md string, when known snps are given by the -v flag, */
-  var md_lowercase_snp: Boolean = config("md_lowercase_snp")
+  var md_lowercase_snp: Boolean = config("md_lowercase_snp", default = false)
 
   /** value to put into read-group id (rg-id) field */
   var read_group_id: String = config("read_group_id")
