@@ -229,9 +229,13 @@ object FastqSync extends ToolCommand {
 
   class OptParser extends AbstractOptParser {
 
+    // TODO: make output format independent from input format?
     head(
       s"""
-        |$commandName - Sync paired-end FASTQ files
+        |$commandName - Sync paired-end FASTQ files.
+        |
+        |This tool works with gzipped or non-gzipped FASTQ files. The output
+        |file will be gzipped when the input is also gzipped.
       """.stripMargin)
 
     opt[File]('r', "ref") required () valueName "<fastq>" action { (x, c) =>
