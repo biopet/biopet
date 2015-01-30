@@ -75,6 +75,11 @@
             <artifactId>Yamsvp</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Kopisu</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
