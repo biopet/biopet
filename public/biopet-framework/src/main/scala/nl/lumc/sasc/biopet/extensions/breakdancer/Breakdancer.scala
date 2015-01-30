@@ -13,16 +13,14 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.svcallers
+package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.breakdancer.BreakdancerVCF
+import org.broadinstitute.gatk.queue.QScript
 
 /// Breakdancer is actually a mini pipeline executing binaries from the breakdancer package
 class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {

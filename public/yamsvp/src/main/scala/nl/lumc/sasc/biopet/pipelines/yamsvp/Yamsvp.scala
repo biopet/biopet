@@ -25,10 +25,12 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
+import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
 import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMerge, SambambaMarkdup }
-//import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
-import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Delly, CleverCaller }
+//import nl.lumc.sasc.biopet.extensions.pindel.Pindel
+import nl.lumc.sasc.biopet.extensions.delly.Delly
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping

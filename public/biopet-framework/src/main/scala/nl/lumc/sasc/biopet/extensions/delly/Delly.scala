@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.extensions.svcallers
+package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
 

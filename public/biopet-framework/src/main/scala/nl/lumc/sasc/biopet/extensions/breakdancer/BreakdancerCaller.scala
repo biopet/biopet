@@ -1,11 +1,10 @@
-package nl.lumc.sasc.biopet.extensions.svcallers
+package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
