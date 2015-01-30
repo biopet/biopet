@@ -8,7 +8,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * BWA sampe wrapper
  *
- * based on executable verion 0.7.10-r789
+ * based on executable version 0.7.10-r789
  *
  * @param root Configurable
  */
