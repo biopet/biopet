@@ -28,6 +28,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.WipeReads,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
+    nl.lumc.sasc.biopet.tools.FastqSync,
     nl.lumc.sasc.biopet.tools.BiopetFlagstat,
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
@@ -44,4 +45,5 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
     nl.lumc.sasc.biopet.tools.Seqstat)
+    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
 }
