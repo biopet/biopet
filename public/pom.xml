@@ -32,6 +32,7 @@
         <module>gentrap</module>
         <module>mapping</module>
         <module>sage</module>
+        <module>kopisu</module>
         <module>yamsvp</module>
         <module>carp</module>
     </modules>
