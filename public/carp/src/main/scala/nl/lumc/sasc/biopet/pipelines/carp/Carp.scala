@@ -63,7 +63,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
       }
     }
 
-    val bamFile = new File(sampleDir + sampleId + ".bam")
+    val bamFile = createFile(".bam")
     val controls: List[String] = config("control", default = Nil)
 
     def addJobs(): Unit = {
