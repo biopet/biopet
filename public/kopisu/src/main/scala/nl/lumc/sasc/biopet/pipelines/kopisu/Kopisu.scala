@@ -25,31 +25,29 @@ class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
   @Input(doc = "Input bamfile", required = true)
   var bamFile: File = config("bam")
 
-  class LibraryOutput extends AbstractLibraryOutput {
-  }
-
-  class SampleOutput extends AbstractSampleOutput {
-  }
-
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
   def biopetScript() {
-    runSamplesJobs
+    this.addPerSampleJobs()
   }
 
-  // Called for each sample
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput = {
-    val sampleOutput = new SampleOutput
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      def addJobs(): Unit = {
 
-    return sampleOutput
+      }
+    }
+
+    def addJobs(): Unit = {
+
+    }
   }
 
-  // Called for each run from a sample
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-    return libraryOutput
+  def addMultiSampleJobs(): Unit = {
   }
 }
 
