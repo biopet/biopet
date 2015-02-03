@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument }
  */
 trait MultiSampleQScript extends BiopetQScript {
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
-  val onlySample: List[String] = Nil
+  private val onlySamples: List[String] = Nil
 
   require(Config.global.map.contains("samples"), "No Samples found in config")
 
@@ -94,7 +94,7 @@ trait MultiSampleQScript extends BiopetQScript {
     protected def addJobs()
 
     /** function add all libraries in one call */
-    protected final def addLibsJobs(): Unit = {
+    protected final def addPerLibJobs(): Unit = {
       for ((libraryId, library) <- libraries) {
         library.addAndTrackJobs()
       }
@@ -128,13 +128,20 @@ trait MultiSampleQScript extends BiopetQScript {
   protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
-  final def addSamplesJobs() {
-    if (onlySample.isEmpty) samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
-    else onlySample.foreach(sampleId => samples.get(sampleId) match {
+  final def addPerSampleJobs() {
+    if (onlySamples.isEmpty) {
+      samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
+      addMultiSampleJobs()
+    } else onlySamples.foreach(sampleId => samples.get(sampleId) match {
       case Some(sample) => sample.addAndTrackJobs()
       case None         => logger.warn("sampleId '" + sampleId + "' not found")
     })
   }
+
+  /**
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given
+   */
+  def addMultiSampleJobs()
 
   /** Stores sample state */
   private var currentSample: Option[String] = None
