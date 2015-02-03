@@ -129,7 +129,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
-    if (countBed == null && squishedCountBed == null)
+    if (countBed.isEmpty && squishedCountBed.isEmpty)
       throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
   }
 
