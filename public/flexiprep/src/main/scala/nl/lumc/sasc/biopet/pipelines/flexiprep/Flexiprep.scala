@@ -38,10 +38,14 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
+  // TODO: hide sampleId and libraryId from the command line so they do not interfere with our config values
+
   /** Sample name */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
   var sampleId: String = _
 
   /** Library name */
+  @Argument(doc = "Library ID", shortName = "library", required = true)
   var libraryId: String = _
 
   var paired: Boolean = (input_R2 != null)
