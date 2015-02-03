@@ -41,7 +41,7 @@ class MergeSamFiles(val root: Configurable) extends Picard {
   var useThreading: Boolean = config("use_threading", default = false)
 
   @Argument(doc = "COMMENT", required = false)
-  var comment: String = config("comment")
+  var comment: Option[String] = config("comment")
 
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +

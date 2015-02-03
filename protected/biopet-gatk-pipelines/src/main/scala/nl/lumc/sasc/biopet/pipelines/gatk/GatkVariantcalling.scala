@@ -32,9 +32,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   @Argument(doc = "Reference", shortName = "R", required = false)
   var reference: File = config("reference", required = true)
 
-  @Argument(doc = "Dbsnp", shortName = "dbsnp", required = false)
-  var dbsnp: File = config("dbsnp")
-
   @Argument(doc = "OutputName", required = false)
   var outputName: String = _
 

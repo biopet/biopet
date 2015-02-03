@@ -35,13 +35,13 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
-  var countBed: File = config("count_bed")
+  var countBed: Option[File] = config("count_bed")
 
-  var squishedCountBed: File = config("squished_count_bed")
+  var squishedCountBed: Option[File] = config("squished_count_bed")
 
-  var transcriptome: File = config("transcriptome")
+  var transcriptome: Option[File] = config("transcriptome")
 
-  var tagsLibrary: File = config("tags_library")
+  var tagsLibrary: Option[File] = config("tags_library")
 
   override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
     "m" -> 1,
@@ -127,28 +127,28 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
-    if (transcriptome == null && tagsLibrary == null)
+    if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
     if (countBed == null && squishedCountBed == null)
       throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
   }
 
   def biopetScript() {
-    if (squishedCountBed == null) {
-      val squishBed = SquishBed(this, countBed, outputDir)
+    if (squishedCountBed.isEmpty) {
+      val squishBed = SquishBed(this, countBed.get, outputDir)
       add(squishBed)
-      squishedCountBed = squishBed.output
+      squishedCountBed = Some(squishBed.output)
     }
 
-    if (tagsLibrary == null) {
+    if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
-      cdl.input = transcriptome
+      cdl.input = transcriptome.get
       cdl.output = outputDir + "taglib/tag.lib"
       cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
       cdl.noTagsOutput = outputDir + "taglib/no_sense_genes.txt"
       cdl.allGenesOutput = outputDir + "taglib/all_genes.txt"
       add(cdl)
-      tagsLibrary = cdl.output
+      tagsLibrary = Some(cdl.output)
     }
 
     addSamplesJobs()
@@ -158,19 +158,19 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
-    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.coverage",
+    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.sense.coverage",
       depth = false, sameStrand = true, diffStrand = false)
     val countSense = new BedtoolsCoverageToCounts(this)
     countSense.input = bedtoolsSense.output
     countSense.output = outputDir + outputPrefix + ".genome.sense.counts"
 
-    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.coverage",
+    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.antisense.coverage",
       depth = false, sameStrand = false, diffStrand = true)
     val countAntisense = new BedtoolsCoverageToCounts(this)
     countAntisense.input = bedtoolsAntisense.output
     countAntisense.output = outputDir + outputPrefix + ".genome.antisense.counts"
 
-    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.coverage",
+    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.coverage",
       depth = false, sameStrand = false, diffStrand = false)
     val count = new BedtoolsCoverageToCounts(this)
     count.input = bedtools.output
@@ -187,7 +187,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
-    createTagCounts.tagLib = tagsLibrary
+    createTagCounts.tagLib = tagsLibrary.get
     createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"
     createTagCounts.countAllSense = outputDir + outputPrefix + ".tagcount.all.sense.counts"
     createTagCounts.countAntiSense = outputDir + outputPrefix + ".tagcount.antisense.counts"
