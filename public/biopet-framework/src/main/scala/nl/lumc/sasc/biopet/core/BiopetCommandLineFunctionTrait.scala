@@ -60,7 +60,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
     if (vmem.isEmpty) {
       vmem = config("vmem")
-      if (vmem.isEmpty && !defaultVmem.isEmpty) vmem = Some(defaultVmem)
+      if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
     jobName = configName + ":" + firstOutput.getName
