@@ -108,7 +108,7 @@ trait MultiSampleQScript extends BiopetQScript {
     def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
 
     /** Returns sample directory */
-    def sampleDir = outputDir + "samples" + File.pathSeparator + sampleId + File.pathSeparator
+    def sampleDir = outputDir + "samples" + File.separator + sampleId + File.separator
   }
 
   /** Sample type, need implementation in pipeline */
