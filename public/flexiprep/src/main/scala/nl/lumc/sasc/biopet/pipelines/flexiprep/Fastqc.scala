@@ -66,9 +66,20 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     else fqModules
   }
 
-  protected case class Sequence(name: String, seq: String)
-  def getFoundAdapters: List[Sequence] = {
-    def getSeqs(file: File) = {
+  /**
+   * Retrieves the FASTQ file encoding as computed by FastQC.
+   *
+   * @return encoding name
+   * @throws NoSuchElementException when the "Basic Statistics" key does not exist in the mapping or
+   *                                when a line starting with "Encoding" does not exist.
+   */
+  @throws(classOf[NoSuchElementException])
+  lazy val encoding: String =
+    qcModules("Basic Statistics")
+      .dropWhile(!_.startsWith("Encoding"))
+      .head
+      .stripPrefix("Encoding\t")
+
       if (file != null) {
         (for (
           line <- Source.fromFile(file).getLines(); if line.startsWith("#");
