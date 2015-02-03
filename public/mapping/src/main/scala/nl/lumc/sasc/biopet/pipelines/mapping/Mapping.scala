@@ -146,8 +146,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(input_R2.getOrElse(null), flexiprep.outputDir)))
+    else chunks += (outputDir -> (
+      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    )
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
