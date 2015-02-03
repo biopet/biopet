@@ -99,13 +99,16 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
   def foundAdapters: Set[AdapterSequence] = {
 
     /** Returns a list of adapter and/or contaminant sequences known to FastQC */
-    def getFastqcSeqs(file: File): Set[AdapterSequence] =
-      if (file != null) {
-        (for (
-          line <- Source.fromFile(file).getLines(); if line.startsWith("#");
-          values = line.split("\t*") if values.size >= 2
-        ) yield AdapterSequence(values(0), values(1))).toSet
-      } else Set.empty[AdapterSequence]
+    def getFastqcSeqs(file: Option[File]): Set[AdapterSequence] = file match {
+      case None => Set.empty[AdapterSequence]
+      case Some(f) =>
+        (for {
+          line <- Source.fromFile(f).getLines()
+          if !line.startsWith("#")
+          values = line.split("\t*")
+          if values.size >= 2
+        } yield AdapterSequence(values(0), values(1))).toSet
+    }
 
     val found = qcModules.get("Overrepresented sequences") match {
       case None => Array.empty[String]
@@ -137,7 +140,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         "plot_per_sequence_quality" -> "Images/per_sequence_quality.png",
         "plot_sequence_length_distribution" -> "Images/sequence_length_distribution.png",
         "fastqc_data" -> "fastqc_data.txt")
-        .map { case (name, relPath) =>
+        .map {
+          case (name, relPath) =>
             name -> Map("path" -> (outputDir + relPath))
         }
 

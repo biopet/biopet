@@ -25,10 +25,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
-  var contaminants: File = _
+  var contaminants: Option[File] = None
 
   @Input(doc = "Adapters", required = false)
-  var adapters: File = _
+  var adapters: Option[File] = None
 
   @Input(doc = "Fastq file", shortName = "FQ")
   var fastqfile: File = _
@@ -50,17 +50,19 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def afterGraph {
     this.checkExecutable
-    if (contaminants == null) {
-      val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
-      val defaultContams = getVersion match {
-        case "v0.11.2" => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-        case _         => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
-      }
-      val defaultAdapters = getVersion match {
-        case "v0.11.2" => new File(fastqcDir + "/Configuration/adapter_list.txt")
-        case _         => null
-      }
-      contaminants = config("contaminants", default = defaultContams)
+    contaminants = contaminants match {
+      case None =>
+        val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
+        val defaultContams = getVersion match {
+          case "v0.11.2" => Option(new File(fastqcDir + "/Configuration/contaminant_list.txt"))
+          case _         => Option(new File(fastqcDir + "/Contaminants/contaminant_list.txt"))
+        }
+        val defaultAdapters = getVersion match {
+          case "v0.11.2" => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
+          case _         => None
+        }
+        config("contaminants", default = defaultContams)
+      case wrapped @ Some(_) => wrapped
     }
   }
 
@@ -74,6 +76,6 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
     conditional(noextract, "--noextract") +
     conditional(extract, "--extract") +
     conditional(quiet, "--quiet") +
-    required("-o", output.getParent()) +
+    required("-o", output.getParent) +
     required(fastqfile)
 }
