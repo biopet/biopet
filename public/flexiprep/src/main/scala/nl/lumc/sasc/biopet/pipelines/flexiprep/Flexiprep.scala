@@ -62,11 +62,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   val summary = new FlexiprepSummary(this)
 
   def init() {
-    if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
-    if (sampleId == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
-    if (libId == null) throw new IllegalStateException("Missing Library name on flexiprep module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
+    require(outputDir != null, "Missing output directory on flexiprep module")
+    require(input_R1 != null, "Missing output directory on flexiprep module")
+    require(sampleId != null, "Missing sample ID on flexiprep module")
+    require(libId != null, "Missing library ID on flexiprep module")
+
+    if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
 
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))

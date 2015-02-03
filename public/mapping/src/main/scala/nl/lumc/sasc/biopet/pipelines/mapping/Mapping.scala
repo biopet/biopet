@@ -95,13 +95,14 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def finalBamFile: File = outputDir + outputName + ".final.bam"
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
-    if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
+    require(outputDir != null, "Missing output directory on mapping module")
+    require(input_R1 != null, "Missing output directory on mapping module")
+    require(sampleId != null, "Missing sample ID on mapping module")
+    require(libId != null, "Missing library ID on mapping module")
+
+    if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
 
-    if (libId == null) libId = config("library_id")
-    if (sampleId == null) sampleId = config("sample_id")
     if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
