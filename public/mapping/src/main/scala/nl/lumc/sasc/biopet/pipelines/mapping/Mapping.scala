@@ -67,7 +67,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   protected var readgroupId: String = _
 
   /** Readgroup Library */
-  var libraryId: String = _
+  var libId: String = _
 
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
@@ -100,9 +100,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
     paired = (input_R2 != null)
 
-    if (libraryId == null) libraryId = config("library_id")
+    if (libId == null) libId = config("library_id")
     if (sampleId == null) sampleId = config("sample_id")
-    if (readgroupId == null && sampleId != null && libraryId != null) readgroupId = sampleId + "-" + libraryId
+    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
     if (outputName == null) outputName = readgroupId
@@ -127,7 +127,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       flexiprep.input_R1 = input_R1
       if (paired) flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
-      flexiprep.libraryId = this.libraryId
+      flexiprep.libId = this.libId
       flexiprep.init
       flexiprep.runInitialJobs
     }
@@ -279,7 +279,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId + ","
-    RG += "LB:" + libraryId + ","
+    RG += "LB:" + libId + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     RG += "PU:" + platformUnit + ","
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -330,7 +330,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libraryId
+    addOrReplaceReadGroups.RGLB = libId
     addOrReplaceReadGroups.RGPL = platform
     addOrReplaceReadGroups.RGPU = platformUnit
     addOrReplaceReadGroups.RGSM = sampleId
@@ -344,7 +344,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def getReadGroup(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libraryId + "\\t"
+    RG += "LB:" + libId + "\\t"
     RG += "PL:" + platform + "\\t"
     RG += "PU:" + platformUnit + "\\t"
     RG += "SM:" + sampleId + "\\t"

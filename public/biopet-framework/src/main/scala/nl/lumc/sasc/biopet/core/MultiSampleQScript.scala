@@ -40,26 +40,26 @@ trait MultiSampleQScript extends BiopetQScript {
 
     /**
      * Library class with basic functions build in
-     * @param libraryId
+     * @param libId
      */
-    abstract class AbstractLibrary(val libraryId: String) {
+    abstract class AbstractLibrary(val libId: String) {
       /** Overrules config of qscript with default sample and default library */
-      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
+      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
         currentSample = Some(sampleId)
-        currentLib = Some(libraryId)
+        currentLib = Some(libId)
         addJobs()
         currentLib = None
         currentSample = None
       }
 
       /** Creates a library file with given suffix */
-      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libraryId + suffix)
+      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
 
       /** Returns library directory */
-      def libDir = sampleDir + "lib_" + libraryId + File.separator
+      def libDir = sampleDir + "lib_" + libId + File.separator
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -95,7 +95,7 @@ trait MultiSampleQScript extends BiopetQScript {
 
     /** function add all libraries in one call */
     protected final def addPerLibJobs(): Unit = {
-      for ((libraryId, library) <- libraries) {
+      for ((libId, library) <- libraries) {
         library.addAndTrackJobs()
       }
     }
