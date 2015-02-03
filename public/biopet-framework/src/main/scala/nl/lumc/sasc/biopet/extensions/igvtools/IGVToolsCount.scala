@@ -22,8 +22,25 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Output(doc = "Output File(s), .wig/.tdf or both separated by comma")
   var output: List[File] = _
 
-  var tdf: File = new File("")
-  var wig: File = new File("")
+  var tdf: File = _
+  var wig: File = _
+
+  var maxZoom: Option[Int] = config("maxZoom")
+  var windowSize: Option[Int] = config("windowSize")
+  var extFactor: Option[Int] = config("extFactor")
+
+  var preExtFactor: Option[Int] = config("preExtFactor")
+  var postExtFactor: Option[Int] = config("postExtFactor")
+
+  var windowFunctions: Option[String] = config("windowFunctions")
+  var strands: Option[String] = config("strands")
+  var bases: Boolean = config("bases", default = false)
+
+  var query: Option[String] = config("query")
+  var minMapQuality: Option[Int] = config("minMapQuality")
+  var includeDuplicates: Boolean = config("includeDuplicates", default = false)
+
+  var pairs: Boolean = config("pairs", default = false)
 
   /**
    * Set `output` to `.tdf`.
@@ -31,7 +48,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
    * @param output `File` object to output to
    */
   def outputTDF(output: File) = {
-    if (!output.equals(new File(""))) {
+    if (tdf.getName != "") {
       this.tdf = output
       this.output +:= output
     } else {
@@ -46,7 +63,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
    * @param output `File` object to output to
    */
   def outputWIG(output: File) = {
-    if (!output.equals(new File(""))) {
+    if (wig.getName != "") {
       this.wig = output
       this.output +:= output
     } else {
@@ -58,9 +75,22 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   def cmdLine = {
     required(executable) +
       required("count") +
+      optional("-z", maxZoom) +
+      optional("-w", windowSize) +
+      optional("-e", extFactor) +
+      optional("--preExtFactor", preExtFactor) +
+      optional("--postExtFactor", postExtFactor) +
+      optional("--windowFunctions", windowFunctions) +
+      optional("--strands", strands) +
+      conditional(bases, "--bases") +
+      optional("--query", query) +
+      optional("--minMapQuality", minMapQuality) +
+      conditional(includeDuplicates, "--includeDuplicates") +
+      conditional(pairs, "--pairs") +
       required(input) +
       required(output.mkString(",")) +
       required(genomename)
+
   }
 }
 
