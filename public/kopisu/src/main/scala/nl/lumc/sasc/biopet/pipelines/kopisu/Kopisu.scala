@@ -13,38 +13,42 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.pipelines
+package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
 
-class MultisamplePipelineTemplate(val root: Configurable) extends QScript with MultiSampleQScript {
+class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
+
+  @Input(doc = "Input bamfile", required = true)
+  var bamFile: File = config("bam")
+
+  def init() {
+    if (!outputDir.endsWith("/")) outputDir += "/"
+  }
+
+  def biopetScript() {
+    addSamplesJobs()
+  }
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
-      protected def addJobs(): Unit = {
-        // Library jobs
+      def addJobs(): Unit = {
+
       }
     }
 
-    protected def addJobs(): Unit = {
-      // Sample jobs
+    def addJobs(): Unit = {
+
     }
   }
 
   def addMultiSampleJobs(): Unit = {
   }
-
-  def init(): Unit = {
-  }
-
-  def biopetScript() {
-  }
 }
 
-object MultisamplePipelineTemplate extends PipelineCommand
+object Kopisu extends PipelineCommand

@@ -126,7 +126,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = outputDir + "flexiprep/"
+      flexiprep.outputDir = outputDir + "flexiprep" + File.separator
       flexiprep.input_R1 = input_R1
       if (paired) flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
@@ -212,7 +212,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions)
+    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics" + File.separator).functions)
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
