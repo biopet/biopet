@@ -67,7 +67,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     val controls: List[String] = config("control", default = Nil)
 
     def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       val bamFiles = libraries.map(_._2.mapping.finalBamFile).toList
       if (bamFiles.length == 1) {
         add(Ln(qscript, bamFiles.head, bamFile))
@@ -102,8 +102,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     // Third step is calling peaks on the bam files produced with the mapping pipeline, this will be done with MACS2
     logger.info("Starting CArP pipeline")
 
-    addSamplesJobs
+    addPerSampleJobs
+  }
 
+  def addMultiSampleJobs(): Unit = {
     for ((sampleId, sample) <- samples) {
       for (controlId <- sample.controls) {
         if (!samples.contains(controlId))

@@ -103,7 +103,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
 
     protected def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
@@ -151,7 +151,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       tagsLibrary = cdl.output
     }
 
-    addSamplesJobs
+    addPerSampleJobs
+  }
+
+  def addMultiSampleJobs(): Unit = {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
