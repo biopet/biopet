@@ -25,27 +25,45 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
-  def getDataBlock(name: String): Array[String] = { // Based on Fastqc v0.10.1
-    val outputDir = output.getAbsolutePath.stripSuffix(".zip")
-    val dataFile = new File(outputDir + "/fastqc_data.txt")
-    if (!dataFile.exists) return null
-    val data = Source.fromFile(dataFile).mkString
-    for (block <- data.split(">>END_MODULE\n")) {
-      val b = if (block.startsWith("##FastQC")) block.substring(block.indexOf("\n") + 1) else block
-      if (b.startsWith(">>" + name))
-        return for (line <- b.split("\n"))
-          yield line
-    }
-    return null
-  }
 
-  def getEncoding: String = {
-    val block = getDataBlock("Basic Statistics")
-    if (block == null) return null
-    for (
-      line <- block if (line.startsWith("Encoding"))
-    ) return line.stripPrefix("Encoding\t")
-    return null // Could be default Sanger with a warning in the log
+  /**
+   * FastQC QC modules.
+   *
+   * @return Mapping of FastQC module names and its contents as array of strings (one item per line)
+   * @throws FileNotFoundException if the FastQC data file can not be found.
+   * @throws IllegalStateException if the module mapping is empty.
+   */
+  @throws(classOf[FileNotFoundException])
+  @throws(classOf[IllegalStateException])
+  protected lazy val qcModules: Map[String, Array[String]] = {
+
+    val outputDir = output.getAbsolutePath.stripSuffix(".zip")
+    val dataFile = new File(outputDir, "fastqc_data.txt")
+
+    val fqModules = Source.fromFile(dataFile)
+      // drop all the characters before the first module delimiter (i.e. '>>')
+      .dropWhile(_ != '>')
+      // pull everything into a string
+      .mkString
+      // split into modules
+      .split(">>END_MODULE\n")
+      // make map of module name -> module lines
+      .map {
+        case (modString) =>
+          // module name is in the first line, without '>>' and before the tab character
+          val modName = modString
+            // so we take all characters in the first line
+            .takeWhile(_ != '\n')
+            // and drop all characters that equals '>'
+            .dropWhile(_ == '>')
+            // and take all characters before the tab
+            .takeWhile(_ != '\t')
+          modName -> modString.split('\n')
+      }
+      .toMap
+
+    if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
+    else fqModules
   }
 
   protected case class Sequence(name: String, seq: String)
