@@ -24,6 +24,12 @@ import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 
+/**
+ * FastQC wrapper with added functionality for the Flexiprep pipeline
+ *
+ * This wrapper implements additional methods for parsing FastQC output files and aggregating everything in a summary
+ * object. The current implementation is based on FastQC v0.10.1.
+ */
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
 
   /**
