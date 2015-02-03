@@ -56,7 +56,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     gatkPipeline.biopetScript
     addAll(gatkPipeline.functions)
 
-    addPerSampleJobs()
+    addSamplesJobs()
   }
 
   def addMultiSampleJobs(): Unit = {

@@ -151,7 +151,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   }
 
   def biopetScript(): Unit = {
-    addPerSampleJobs
+    addSamplesJobs()
   }
 
   def addMultiSampleJobs(): Unit = {

@@ -151,7 +151,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       tagsLibrary = cdl.output
     }
 
-    addPerSampleJobs
+    addSamplesJobs()
   }
 
   def addMultiSampleJobs(): Unit = {

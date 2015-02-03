@@ -128,7 +128,7 @@ trait MultiSampleQScript extends BiopetQScript {
   protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
-  final def addPerSampleJobs() {
+  final def addSamplesJobs() {
     if (onlySamples.isEmpty) {
       samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
       addMultiSampleJobs()

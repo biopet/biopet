@@ -102,7 +102,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     // Third step is calling peaks on the bam files produced with the mapping pipeline, this will be done with MACS2
     logger.info("Starting CArP pipeline")
 
-    addPerSampleJobs
+    addSamplesJobs()
   }
 
   def addMultiSampleJobs(): Unit = {

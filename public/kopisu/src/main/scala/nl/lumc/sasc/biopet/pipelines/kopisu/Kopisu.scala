@@ -30,7 +30,7 @@ class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def biopetScript() {
-    this.addPerSampleJobs()
+    addSamplesJobs()
   }
 
   def makeSample(id: String) = new Sample(id)
