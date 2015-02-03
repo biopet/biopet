@@ -16,12 +16,13 @@
 
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.File
-import nl.lumc.sasc.biopet.core.config.Configurable
+import java.io.{ File, FileNotFoundException }
 import scala.io.Source
 
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
+
+import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
   def getDataBlock(name: String): Array[String] = { // Based on Fastqc v0.10.1
@@ -95,6 +96,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 }
 
 object Fastqc {
+
   def apply(root: Configurable, fastqfile: File, outDir: String): Fastqc = {
     val fastqcCommand = new Fastqc(root)
     fastqcCommand.fastqfile = fastqfile
@@ -105,6 +107,6 @@ object Fastqc {
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
     fastqcCommand.output = new File(outDir + "/" + filename + "_fastqc.zip")
     fastqcCommand.afterGraph
-    return fastqcCommand
+    fastqcCommand
   }
 }
