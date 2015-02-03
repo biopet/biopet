@@ -16,8 +16,8 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Input(doc = "Bam File")
   var input: File = _
 
-  @Argument(doc = "Genome name")
-  var genomeName: String = config("genomeName")
+  @Input(doc = "<genome>.chrom.sizes File")
+  var genomeChromSizes: File = _
 
   @Output
   protected var tdf: File = _
@@ -48,30 +48,14 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
     this.tdf = new File(input.getAbsolutePath + ".tdf")
     this.wig = new File(input.getAbsolutePath.stripSuffix(".bam") + ".wig")
-
-    // check genome name or File
-    val genome = new File(genomeName)
-    if (!genome.exists()) {
-      // check in the IGVTools genome/directory
-      val genomeInDir = new File(new File(executable).getParent + File.separator + "genomes" + File.separator + genomeName + ".chrom.sizes")
-      if (!genomeInDir.exists()) {
-        throw new FileNotFoundException("genomeName contains a invalid filepath/genomename or not supported by IGVTools")
-      } else {
-        genomeName = genomeInDir.getAbsolutePath
-      }
-    } else {
-      // redefine the genomeName.
-      genomeName = genome.getAbsolutePath
-    }
-
   }
 
   def cmdLine = {
     required(executable) +
       required("count") +
-      optional("-z", maxZoom) +
-      optional("-w", windowSize) +
-      optional("-e", extFactor) +
+      optional("--maxZoom", maxZoom) +
+      optional("--windowSize", windowSize) +
+      optional("--extFactor", extFactor) +
       optional("--preExtFactor", preExtFactor) +
       optional("--postExtFactor", postExtFactor) +
       optional("--windowFunctions", windowFunctions) +
@@ -83,9 +67,13 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
       conditional(pairs, "--pairs") +
       required(input) +
       required(outputArg) +
-      required(genomeName)
+      required(genomeChromSizes)
   }
 
+  /**
+   * This part should never fail, these values are set within this wrapper
+   * 
+   */
   private def outputArg: String = {
     (tdf.isInstanceOf[File], wig.isInstanceOf[File]) match {
       case (false, false) => throw new IllegalArgumentException("Either TDF or WIG should be supplied");
@@ -102,16 +90,14 @@ object IGVToolsCount {
    * and the `genomename` (hg18,hg19,mm10)
    *
    * @param input Bamfile to count reads from
-   * @param genomename Name of path to the genome.chrsizes.bed,
    * @return a new IGVToolsCount instance
    * @throws FileNotFoundException bam File is not found
    * @throws IllegalArgumentException tdf or wig not supplied
    */
-  def apply(root: Configurable, input: File,
-            genomename: String): IGVToolsCount = {
+  def apply(root: Configurable, input: File, genomeChromSizes: File): IGVToolsCount = {
     val counting = new IGVToolsCount(root)
     counting.input = input
-    counting.genomeName = genomename
+    counting.genomeChromSizes = genomeChromSizes
     return counting
   }
 }
