@@ -336,7 +336,6 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2file(value: ConfigValue): File = {
-      //TODO: throw IllegalStateException
       if (value != null && value.value != null && value.value != None) new File(any2string(value.value))
       else throw new IllegalStateException("Value does not exist")
     }
@@ -357,7 +356,6 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2string(value: ConfigValue): String = {
-      //TODO: throw IllegalStateException
       if (value != null && value.value != null && value.value != None) any2string(value.value)
       else throw new IllegalStateException("Value does not exist")
     }
