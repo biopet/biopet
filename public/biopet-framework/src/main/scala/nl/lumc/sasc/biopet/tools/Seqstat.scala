@@ -21,6 +21,7 @@ import argonaut._, Argonaut._
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * Seqstat function class for usage in Biopet pipelines
@@ -42,14 +43,14 @@ object Seqstat extends ToolCommand {
 
     head(
       s"""
-        |$commandName - Sync paired-end FASTQ files
+        |$commandName - Summarize FastQ
       """.stripMargin)
 
     opt[File]('i', "fastq") required () valueName "<fastq>" action { (x, c) =>
       c.copy(fastq = x)
     } validate {
       x => if (x.exists) success else failure("FASTQ file not found")
-    } text "FASTQ file to generate stats from"
+    } text "FastQ file to generate stats from"
   }
 
   /**
@@ -62,9 +63,9 @@ object Seqstat extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
-  def detectPhredEncoding(qualMap: Map[Int, Int]): Unit = {
-    val l_qual = qualMap.keys.min
-    val h_qual = qualMap.keys.max
+  def detectPhredEncoding(quals: mutable.ArrayBuffer[Long]): Unit = {
+    val l_qual = quals.takeWhile(_ == 0).length
+    val h_qual = quals.length - 1
 
     if (h_qual > 74) {
       phred_correction = 64
@@ -109,8 +110,8 @@ object Seqstat extends ToolCommand {
         for (_ <- 0 to nuc(t).toInt - baseStats(t).nuc.length) baseStats(t).nuc.append(0)
       }
 
-      val qualLength = baseStats(t).qual.length
-      val nucLength = baseStats(t).nuc.length
+      //      val qualLength = baseStats(t).qual.length
+      //      val nucLength = baseStats(t).nuc.length
 
       baseStats(t).qual(qual(t)) += 1
       baseStats(t).nuc(nuc(t)) += 1
@@ -136,67 +137,111 @@ object Seqstat extends ToolCommand {
 
     val reportValues = List(1, 10, 20, 30, 40, 50, 60)
 
+    // the base quality for each position on the reads
     var quals: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+    var nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
 
+    // generate the baseHistogram and readHistogram
     var baseHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+    var readHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
 
+    var nucleotideHistoMap: mutable.Map[Char, Long] = mutable.Map()
+    var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
+    var readQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
+
+    // for every position to the max length of any read
     for (pos <- 0 until baseStats.length) {
       // list all qualities at this particular position `pos`
+      // fix the length of `quals`
       if (quals.length <= baseStats(pos).qual.length) {
-        for (_ <- 0 until baseStats(pos).qual.length - quals.length) quals.append(0)
+        for (_ <- quals.length until baseStats(pos).qual.length) quals.append(0)
       }
+      if (nucs.length <= baseStats(pos).nuc.length) {
+        for (_ <- nucs.length until baseStats(pos).nuc.length) nucs.append(0)
+      }
+      // count into the quals
       baseStats(pos).qual.zipWithIndex foreach { case (value, index) => quals(index) += value }
+      // count N into nucs
+      baseStats(pos).nuc.zipWithIndex foreach { case (value, index) => nucs(index) += value }
+
     }
 
-    println(quals)
-    println(quals.takeWhile(_ == 0).length)
-    println(quals.length - 1)
+    detectPhredEncoding(quals)
 
+    for (pos <- 0 until nucs.length) {
+      // always export the N-nucleotide
+      if (nucs(pos) > 0 || pos.toChar == 'N') {
+        nucleotideHistoMap += (pos.toChar -> nucs(pos))
+      }
+    }
+
+    // init baseHistogram with the bounderies of the report values
+    for (pos <- 0 until reportValues.max + 1) {
+      baseHistogram.append(0)
+      readHistogram.append(0)
+    }
+
+    for (pos <- 0 until quals.length) {
+      var key: Int = pos - phred_correction
+      if (key > 0) {
+        // count till the max of baseHistogram.length
+        for (histokey <- 0 until key) {
+          baseHistogram(histokey) += quals(pos)
+        }
+      }
+    }
+
+    for (pos <- 0 until baseHistogram.length) {
+      baseQualHistoMap += (pos -> baseHistogram(pos))
+    }
+
+    for (pos <- 0 until readQuals.length) {
+      var key: Int = pos - phred_correction
+      if (key > 0) {
+        // count till the max of baseHistogram.length
+        for (histokey <- 0 until key) {
+          readHistogram(histokey) += readQuals(pos)
+        }
+      }
+    }
+
+    for (pos <- 0 until readHistogram.length) {
+      readQualHistoMap += (pos -> readHistogram(pos))
+    }
+
+    logger.debug(nucs)
+    //    logger.debug(baseStats)
     logger.info("Done")
 
-    sys.exit()
+    val report: Map[String, Any] = Map(
+      ("files",
+        Map(
+          ("fastq", Map(
+            ("path", commandArgs.fastq),
+            ("checksum_sha1", "")
+          )
+          )
+        )
+      ),
+      ("stats", Map(
+        ("bases", Map(
+          ("num_n", nucleotideHistoMap('N')),
+          ("num_total", nucleotideHistoMap.values.sum),
+          ("num_qual_gte", baseQualHistoMap.toMap),
+          ("nucleotides", nucleotideHistoMap.toMap)
+        )),
+        ("reads", Map(
+          ("num_with_n", 0),
+          ("num_total", 0),
+          ("len_min", 0),
+          ("len_max", 0),
+          ("num_qual_gte", readQualHistoMap.toMap),
+          ("qual_encoding", phred_encoding)
+        ))
+      ))
+    )
 
-    //    val baseHistMap = reportValues map (t => t -> baseHistogram.filterKeys(k => k >= t).values.sum) toMap
-    //    val readHistMap = reportValues map (t => t -> readHistogram.filterKeys(k => k >= t).values.sum) toMap
-    //
-    //    val stats = ("bases" := (
-    //      ("num_n" := readstats.n_bases) ->:
-    //      ("num_total" := readstats.bases_total) ->:
-    //      ("num_qual_gte" := (
-    //        ("1" := baseHistMap(1)) ->:
-    //        ("10" := baseHistMap(10)) ->:
-    //        ("20" := baseHistMap(20)) ->:
-    //        ("30" := baseHistMap(30)) ->:
-    //        ("40" := baseHistMap(40)) ->:
-    //        ("50" := baseHistMap(50)) ->:
-    //        ("60" := baseHistMap(60)) ->:
-    //        jEmptyObject)) ->: jEmptyObject)) ->:
-    //        ("reads" := (
-    //          ("num_with_n" := readstats.has_N) ->:
-    //          ("num_total" := readstats.total_reads) ->:
-    //          ("len_min" := readstats.length_min) ->:
-    //          ("len_max" := readstats.length_max) ->:
-    //          ("num_mean_qual_gte" := (
-    //            ("1" := readHistMap(1)) ->:
-    //            ("10" := readHistMap(10)) ->:
-    //            ("20" := readHistMap(20)) ->:
-    //            ("30" := readHistMap(30)) ->:
-    //            ("40" := readHistMap(40)) ->:
-    //            ("50" := readHistMap(50)) ->:
-    //            ("60" := readHistMap(60)) ->:
-    //            jEmptyObject)) ->: jEmptyObject)) ->:
-    //            ("qual_encoding" := phred_encoding) ->:
-    //            jEmptyObject
-    //
-    //    val json = ("stats" := stats) ->:
-    //      ("files" := (
-    //        "fastq" := (
-    //          ("checksum_sha1" := "") ->:
-    //          ("path" := commandArgs.fastq.getCanonicalPath.toString) ->:
-    //          jEmptyObject)) ->:
-    //          jEmptyObject) ->:
-    //          jEmptyObject
-    //
-    //    println(json.spaces2)
+    val json_report: Json = ConfigUtils.mapToJson(report)
+    println(json_report.spaces2)
   }
 }
