@@ -125,15 +125,15 @@ trait MultiSampleQScript extends BiopetQScript {
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def sampleIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
-    ConfigUtils.any2map(Config.global.map("samples")).keySet
-  }
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
-    for ((sampleId, sample) <- samples) {
-      sample.addAndTrackJobs()
-    }
+    if (onlySample.isEmpty) samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
+    else onlySample.foreach(sampleId => samples.get(sampleId) match {
+      case Some(sample) => sample.addAndTrackJobs()
+      case None         => logger.warn("sampleId '" + sampleId + "' not found")
+    })
   }
 
   /** Stores sample state */
