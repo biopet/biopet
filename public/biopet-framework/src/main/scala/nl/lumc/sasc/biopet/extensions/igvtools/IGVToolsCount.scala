@@ -17,13 +17,13 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   var input: File = _
 
   @Argument(doc = "Genome name")
-  var genomename: String = config("genomename")
+  var genomeName: String = config("genomeName")
 
-  @Output(doc = "Output File(s), .wig/.tdf or both separated by comma")
-  var output: List[File] = _
+  @Output
+  protected var tdf: File = _
 
-  var tdf: File = _
-  var wig: File = _
+  @Output
+  protected var wig: File = _
 
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
@@ -42,34 +42,28 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
-  /**
-   * Set `output` to `.tdf`.
-   *
-   * @param output `File` object to output to
-   */
-  def outputTDF(output: File) = {
-    if (tdf.getName != "") {
-      this.tdf = output
-      this.output +:= output
-    } else {
-      logger.error("TDF File not specified")
-      throw new FileNotFoundException("TDF File not specified")
-    }
-  }
+  override def afterGraph {
+    super.afterGraph
+    if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
-  /**
-   * Set `output` to `.wig`.
-   *
-   * @param output `File` object to output to
-   */
-  def outputWIG(output: File) = {
-    if (wig.getName != "") {
-      this.wig = output
-      this.output +:= output
+    this.tdf = new File(input.getAbsolutePath + ".tdf")
+    this.wig = new File(input.getAbsolutePath.stripSuffix(".bam") + ".wig")
+
+    // check genome name or File
+    val genome = new File(genomeName)
+    if (!genome.exists()) {
+      // check in the IGVTools genome/directory
+      val genomeInDir = new File(new File(executable).getParent + File.separator + "genomes" + File.separator + genomeName + ".chrom.sizes")
+      if (!genomeInDir.exists()) {
+        throw new FileNotFoundException("genomeName contains a invalid filepath/genomename or not supported by IGVTools")
+      } else {
+        genomeName = genomeInDir.getAbsolutePath
+      }
     } else {
-      logger.error("WIG File not specified")
-      throw new FileNotFoundException("WIG File not specified")
+      // redefine the genomeName.
+      genomeName = genome.getAbsolutePath
     }
+
   }
 
   def cmdLine = {
@@ -88,14 +82,21 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
       conditional(includeDuplicates, "--includeDuplicates") +
       conditional(pairs, "--pairs") +
       required(input) +
-      required(output.mkString(",")) +
-      required(genomename)
+      required(outputArg) +
+      required(genomeName)
+  }
 
+  private def outputArg: String = {
+    (tdf.isInstanceOf[File], wig.isInstanceOf[File]) match {
+      case (false, false) => throw new IllegalArgumentException("Either TDF or WIG should be supplied");
+      case (true, false)  => tdf.getAbsolutePath;
+      case (false, true)  => wig.getAbsolutePath;
+      case (true, true)   => tdf.getAbsolutePath + "," + wig.getAbsolutePath;
+    }
   }
 }
 
 object IGVToolsCount {
-
   /**
    * Create an object by specifying the `input` (.bam),
    * and the `genomename` (hg18,hg19,mm10)
@@ -103,33 +104,14 @@ object IGVToolsCount {
    * @param input Bamfile to count reads from
    * @param genomename Name of path to the genome.chrsizes.bed,
    * @return a new IGVToolsCount instance
+   * @throws FileNotFoundException bam File is not found
+   * @throws IllegalArgumentException tdf or wig not supplied
    */
   def apply(root: Configurable, input: File,
             genomename: String): IGVToolsCount = {
     val counting = new IGVToolsCount(root)
     counting.input = input
-    counting.genomename = genomename
-    counting.outputWIG(new File(input.getAbsolutePath.substring(0, input.getAbsolutePath.lastIndexOf(".bam")) + ".wig"))
-    return counting
-  }
-
-  /**
-   * Create an object by specifying the `input` (.bam),
-   * and the `genomename` (hg18,hg19,mm10)
-   *
-   * @param input Bamfile to count reads from
-   * @param genomename Name of path to the genome.chrsizes.bed,
-   * @param tdf File-path to output.tdf
-   * @param wig File-path to output.wig
-   * @return a new IGVToolsCount instance
-   */
-  def apply(root: Configurable, input: File,
-            genomename: String, tdf: File, wig: File): IGVToolsCount = {
-    val counting = new IGVToolsCount(root)
-    counting.input = input
-    counting.genomename = genomename
-    counting.outputTDF(tdf)
-    counting.outputWIG(wig)
+    counting.genomeName = genomename
     return counting
   }
 }
