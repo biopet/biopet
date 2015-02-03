@@ -17,12 +17,14 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, FileNotFoundException }
+
 import scala.io.Source
 
 import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
@@ -41,7 +43,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    */
   @throws(classOf[FileNotFoundException])
   @throws(classOf[IllegalStateException])
-  protected lazy val qcModules: Map[String, Array[String]] = {
+  protected def qcModules: Map[String, Array[String]] = {
 
     val outputDir = output.getAbsolutePath.stripSuffix(".zip")
     val dataFile = new File(outputDir, "fastqc_data.txt")
@@ -80,7 +82,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    *                                when a line starting with "Encoding" does not exist.
    */
   @throws(classOf[NoSuchElementException])
-  lazy val encoding: String =
+  def encoding: String =
     qcModules("Basic Statistics")
       .dropWhile(!_.startsWith("Encoding"))
       .head
@@ -94,7 +96,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    *
    * @return a [[Set]] of [[AdapterSequence]] objects.
    */
-  lazy val foundAdapters: Set[AdapterSequence] = {
+  def foundAdapters: Set[AdapterSequence] = {
 
     /** Returns a list of adapter and/or contaminant sequences known to FastQC */
     def getFastqcSeqs(file: File): Set[AdapterSequence] =
@@ -135,13 +137,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         "plot_per_sequence_quality" -> "Images/per_sequence_quality.png",
         "plot_sequence_length_distribution" -> "Images/sequence_length_distribution.png",
         "fastqc_data" -> "fastqc_data.txt")
-        .map {
-          case (name, relPath) =>
+        .map { case (name, relPath) =>
             name -> Map("path" -> (outputDir + relPath))
         }
 
-    (("" := outputMap) ->: jEmptyObject)
-      .fieldOrEmptyObject("")
+    ConfigUtils.mapToJson(outputMap)
   }
 }
 
