@@ -80,28 +80,43 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       .head
       .stripPrefix("Encoding\t")
 
+  /** Case class representing a known adapter sequence */
+  protected case class AdapterSequence(name: String, seq: String)
+
+  /**
+   * Retrieves overrepresented sequences found by FastQ.
+   *
+   * @return a [[Set]] of [[AdapterSequence]] objects.
+   */
+  lazy val foundAdapters: Set[AdapterSequence] = {
+
+    /** Returns a list of adapter and/or contaminant sequences known to FastQC */
+    def getFastqcSeqs(file: File): Set[AdapterSequence] =
       if (file != null) {
         (for (
           line <- Source.fromFile(file).getLines(); if line.startsWith("#");
           values = line.split("\t*") if values.size >= 2
-        ) yield Sequence(values(0), values(1))).toList
-      } else Nil
+        ) yield AdapterSequence(values(0), values(1))).toSet
+      } else Set.empty[AdapterSequence]
+
+    val found = qcModules.get("Overrepresented sequences") match {
+      case None => Array.empty[String]
+      case Some(modLines) =>
+        for (
+          line <- modLines if !line.startsWith("#");
+          values = line.split("\t") if values.size >= 4
+        ) yield values(3)
     }
 
-    val seqs = getSeqs(adapters) ::: getSeqs(contaminants)
+    // select full sequences from known adapters and contaminants
+    // based on overrepresented sequences results
+    (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
+      .filter(x => found.exists(_.startsWith(x.name)))
+  }
 
-    val block = getDataBlock("Overrepresented sequences")
-    if (block == null) return Nil
-
-    val found = for (
-      line <- block if !line.startsWith("#");
-      values = line.split("\t") if values.size >= 4
-    ) yield values(3)
   /** Summary of the FastQC run, stored in a [[Json]] object */
   def summary: Json = {
 
-    seqs.filter(x => found.exists(_.startsWith(x.name)))
-  }
     val outputDir: String = output.getAbsolutePath.stripSuffix(".zip")
     val outputMap =
       Map("plot_duplication_levels" -> "Images/duplication_levels.png",

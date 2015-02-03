@@ -33,7 +33,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
   override def beforeCmd() {
     super.beforeCmd
 
-    val foundAdapters = fastqc.getFoundAdapters.map(_.seq)
+    val foundAdapters = fastqc.foundAdapters.map(_.seq)
     if (default_clip_mode == "3") opt_adapter ++= foundAdapters
     else if (default_clip_mode == "5") opt_front ++= foundAdapters
     else if (default_clip_mode == "both") opt_anywhere ++= foundAdapters
