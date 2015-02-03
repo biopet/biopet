@@ -66,17 +66,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   /** Readgroup ID */
   protected var readgroupId: String = _
 
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+
   /** Readgroup Library */
+  @Argument(doc = "Library ID", shortName = "library", required = true)
   var libId: String = _
+
+  /**Readgroup sample */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
+  var sampleId: String = _
 
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
 
   /** Readgroup platform unit */
   protected var platformUnit: String = config("platform_unit", default = "na")
-
-  /**Readgroup sample */
-  var sampleId: String = _
 
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
