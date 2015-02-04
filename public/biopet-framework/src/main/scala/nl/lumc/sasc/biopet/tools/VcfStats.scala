@@ -211,6 +211,7 @@ object VcfStats extends ToolCommand {
 
     val usedAlleles = (for (allele <- genotype.getAlleles) yield record.getAlleleIndex(allele)).toList
 
+    addToBuffer("general", "Total")
     if (genotype.isHet) addToBuffer("general", "Het")
     if (genotype.isHetNonRef) addToBuffer("general", "HetNonRef")
     if (genotype.isHom) addToBuffer("general", "Hom")
@@ -243,7 +244,7 @@ object VcfStats extends ToolCommand {
       val file = new File(prefix + field + ".tsv")
       file.getParentFile.mkdirs()
       val writer = new PrintWriter(file)
-      writer.println(samples.mkString("\t", "\t", ""))
+      writer.println(samples.mkString(field+"\t", "\t", ""))
       val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
       for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
         val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
