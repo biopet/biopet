@@ -30,6 +30,7 @@ object VcfStats extends ToolCommand {
     opt[String]('o', "outputDir") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputDir = x)
     }
+    //TODO: add interval argument
     /*
     opt[File]('i', "intervals") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(intervals = Some(x))
@@ -162,7 +163,7 @@ object VcfStats extends ToolCommand {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record))
         for (sample1 <- samples) yield {
           val genotype = record.getGenotype(sample1)
-          mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(genotype))
+          mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype))
           for (sample2 <- samples) {
             val genotype2 = record.getGenotype(sample2)
             if (genotype.getAlleles == genotype2.getAlleles)
@@ -194,27 +195,44 @@ object VcfStats extends ToolCommand {
     Map("QUAL" -> Map(qual -> 1))
   }
 
-  def checkGenotype(genotype: Genotype): Map[String, Map[Any, Int]] = {
-    val sample = genotype.getSampleName
-    val dp = if (genotype.hasDP) genotype.getDP else "not set"
-    val gq = if (genotype.hasGQ) genotype.getGQ else "not set"
+  def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[Any, Int]] = {
+    val buffer = mutable.Map[String, Map[Any, Int]]()
 
-    //TODO: add AD field
+    buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
+    buffer += "GQ" -> Map((if (genotype.hasGQ) genotype.getGQ else "not set") -> 1)
 
-    Map("DP" -> Map(dp -> 1),
-      "GQ" -> Map(gq -> 1))
+    def addToBuffer(key:String, value:Any): Unit = {
+      val map = buffer.getOrElse(key, Map())
+      buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+    }
+
+    val usedAlleles = (for (allele <- genotype.getAlleles) yield record.getAlleleIndex(allele)).toList
+
+    if (genotype.hasAD) {
+      val ad = genotype.getAD
+      for (i <- 0 until ad.size if ad(i) > 0) {
+        addToBuffer("AD", ad(i))
+        if (i == 0) addToBuffer("AD-ref", ad(i))
+        if (i > 0) addToBuffer("AD-alt", ad(i))
+        if (usedAlleles.exists(_ == i)) addToBuffer("AD-used", ad(i))
+        else addToBuffer("AD-not_used", ad(i))
+      }
+    }
+    buffer.toMap
   }
 
   def writeGenotypeFields(stats: Stats, prefix: String, samples: List[String]) {
-    val fields = List("DP", "GQ")
+    val fields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used")
     for (field <- fields) {
       val file = new File(prefix + field + ".tsv")
       file.getParentFile.mkdirs()
       val writer = new PrintWriter(file)
       writer.println(samples.mkString("\t", "\t", ""))
-      val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats(field).keySet).fold(Set[Any]())(_ ++ _)
+      val keySet = (for (sample <- samples) yield
+        stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any,Int]()).keySet).fold(Set[Any]())(_ ++ _)
       for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
-        val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats(field).getOrElse(key, 0)
+        val values = for (sample <- samples) yield
+          stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any,Int]()).getOrElse(key, 0)
         writer.println(values.mkString(key + "\t", "\t", ""))
       }
       writer.close()
