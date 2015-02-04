@@ -34,6 +34,14 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  */
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
 
+  /** Default FastQC output directory containing actual results */
+  // this is a def instead of a val since the value depends on the variable `output`, which is null on class creation
+  def outputDir: File = new File(output.getAbsolutePath.stripSuffix(".zip"))
+
+  /** Default FastQC output data file */
+  // this is a def instead of a val since the value depends on the variable `output`, which is null on class creation
+  def dataFile: File = new File(outputDir, "fastqc_data.txt")
+
   /**
    * FastQC QC modules.
    *
@@ -43,10 +51,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    */
   @throws(classOf[FileNotFoundException])
   @throws(classOf[IllegalStateException])
-  protected def qcModules: Map[String, Array[String]] = {
-
-    val outputDir = output.getAbsolutePath.stripSuffix(".zip")
-    val dataFile = new File(outputDir, "fastqc_data.txt")
+  def qcModules: Map[String, Array[String]] = {
 
     val fqModules = Source.fromFile(dataFile)
       // drop all the characters before the first module delimiter (i.e. '>>')
@@ -128,7 +133,6 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
   /** Summary of the FastQC run, stored in a [[Json]] object */
   def summary: Json = {
 
-    val outputDir: String = output.getAbsolutePath.stripSuffix(".zip")
     val outputMap =
       Map("plot_duplication_levels" -> "Images/duplication_levels.png",
         "plot_kmer_profiles" -> "Images/kmer_profiles.png",
