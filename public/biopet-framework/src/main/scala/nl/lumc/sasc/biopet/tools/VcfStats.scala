@@ -114,15 +114,17 @@ object VcfStats extends ToolCommand {
     val samples = header.getSampleNamesInOrder.toList
 
     val intervals: List[Interval] = (
-      for (seq <- header.getSequenceDictionary.getSequences;
+      for (
+        seq <- header.getSequenceDictionary.getSequences;
         chunks = seq.getSequenceLength / 10000000;
-        i <- 1 until chunks) yield {
+        i <- 1 until chunks
+      ) yield {
         val size = seq.getSequenceLength / chunks
-        val begin = size * (i-1) + 1
+        val begin = size * (i - 1) + 1
         val end = if (i >= chunks) seq.getSequenceLength else size * i
         new Interval(seq.getSequenceName, begin, end)
       }
-      ).toList
+    ).toList
 
     val totalBases = intervals.foldRight(0L)(_.length() + _)
 
@@ -144,7 +146,7 @@ object VcfStats extends ToolCommand {
     var variantCounter = 0L
     var baseCounter = 0L
 
-    def status(count: Int, interval:Interval): Unit = {
+    def status(count: Int, interval: Interval): Unit = {
       variantCounter += count
       baseCounter += interval.length()
       val fraction = baseCounter.toFloat / totalBases * 100
@@ -158,8 +160,9 @@ object VcfStats extends ToolCommand {
       val stats = createStats
       logger.info("Starting on: " + interval)
 
-      for (record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
-           if record.getStart <= interval.getEnd) {
+      for (
+        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+      ) {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record))
         for (sample1 <- samples) yield {
           val genotype = record.getGenotype(sample1)
@@ -201,12 +204,24 @@ object VcfStats extends ToolCommand {
     buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
     buffer += "GQ" -> Map((if (genotype.hasGQ) genotype.getGQ else "not set") -> 1)
 
-    def addToBuffer(key:String, value:Any): Unit = {
+    def addToBuffer(key: String, value: Any): Unit = {
       val map = buffer.getOrElse(key, Map())
       buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
     }
 
     val usedAlleles = (for (allele <- genotype.getAlleles) yield record.getAlleleIndex(allele)).toList
+
+    if (genotype.isHet) addToBuffer("general", "Het")
+    if (genotype.isHetNonRef) addToBuffer("general", "HetNonRef")
+    if (genotype.isHom) addToBuffer("general", "Hom")
+    if (genotype.isHomRef) addToBuffer("general", "HomRef")
+    if (genotype.isHomVar) addToBuffer("general", "HomVar")
+    if (genotype.isMixed) addToBuffer("general", "Mixed")
+    if (genotype.isNoCall) addToBuffer("general", "NoCall")
+    if (genotype.isNonInformative) addToBuffer("general", "NonInformative")
+    if (genotype.isAvailable) addToBuffer("general", "Available")
+    if (genotype.isCalled) addToBuffer("general", "Called")
+    if (genotype.isFiltered) addToBuffer("general", "Filtered")
 
     if (genotype.hasAD) {
       val ad = genotype.getAD
@@ -218,21 +233,20 @@ object VcfStats extends ToolCommand {
         else addToBuffer("AD-not_used", ad(i))
       }
     }
+
     buffer.toMap
   }
 
   def writeGenotypeFields(stats: Stats, prefix: String, samples: List[String]) {
-    val fields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used")
+    val fields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
     for (field <- fields) {
       val file = new File(prefix + field + ".tsv")
       file.getParentFile.mkdirs()
       val writer = new PrintWriter(file)
       writer.println(samples.mkString("\t", "\t", ""))
-      val keySet = (for (sample <- samples) yield
-        stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any,Int]()).keySet).fold(Set[Any]())(_ ++ _)
+      val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
       for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
-        val values = for (sample <- samples) yield
-          stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any,Int]()).getOrElse(key, 0)
+        val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
         writer.println(values.mkString(key + "\t", "\t", ""))
       }
       writer.close()
@@ -315,9 +329,9 @@ object VcfStats extends ToolCommand {
 
     logger.info("Starting: " + command)
     val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
-    if (process.exitValue() == 0) logger.info("Done: " +  command)
+    if (process.exitValue() == 0) logger.info("Done: " + command)
     else {
-      logger.warn("Failed: " +  command)
+      logger.warn("Failed: " + command)
       if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
     }
   }
