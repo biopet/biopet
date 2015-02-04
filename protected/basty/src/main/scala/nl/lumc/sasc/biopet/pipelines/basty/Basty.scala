@@ -124,7 +124,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val gubbins = new RunGubbins(this)
       gubbins.fastafile = concensusVariants
-      gubbins.startingTree = raxmlBi.getBipartitionsFile
+      gubbins.startingTree = Some(raxmlBi.getBipartitionsFile)
       gubbins.outputDirectory = outputDir + dirSufixGubbins
       add(gubbins)
     }

@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
-  var startingTree: File = config("starting_tree")
+  var startingTree: Option[File] = config("starting_tree")
 
   @Input(doc = "Fasta file", shortName = "FQ")
   var fastafile: File = _
@@ -36,21 +36,21 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var outputDirectory: String = _
 
   executable = config("exe", default = "run_gubbins.py")
-  var outgroup: String = config("outgroup")
-  var filterPercentage: String = config("filter_percentage")
-  var treeBuilder: String = config("tree_builder")
+  var outgroup: Option[String] = config("outgroup")
+  var filterPercentage: Option[String] = config("filter_percentage")
+  var treeBuilder: Option[String] = config("tree_builder")
   var iterations: Option[Int] = config("iterations")
   var minSnps: Option[Int] = config("min_snps")
-  var convergeMethod: String = config("converge_method")
+  var convergeMethod: Option[String] = config("converge_method")
   var useTimeStamp: Boolean = config("use_time_stamp", default = false)
-  var prefix: String = config("prefix")
+  var prefix: Option[String] = config("prefix")
   var verbose: Boolean = config("verbose", default = false)
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
   override def afterGraph: Unit = {
     super.afterGraph
     jobLocalDir = new File(outputDirectory)
-    if (prefix == null) prefix = fastafile.getName
+    if (prefix.isEmpty) prefix = Some(fastafile.getName)
     val out: List[String] = List(".recombination_predictions.embl",
       ".recombination_predictions.gff",
       ".branch_base_reconstruction.embl",

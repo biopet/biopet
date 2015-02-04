@@ -38,7 +38,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   var outputPerRg: Boolean = config("outputPerRg", default = false)
 
   @Argument(doc = "Output dir", required = false)
-  var outputDir: String = config("outputDir")
+  var outputDir: String = _
 
   @Argument(doc = "re reverse", required = false)
   var reReverse: Boolean = config("reReverse", default = false)
@@ -53,7 +53,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   var clippingAtribute: String = config("clippingAtribute")
 
   @Argument(doc = "clippingAction", required = false)
-  var clippingAction: String = config("clippingAction")
+  var clippingAction: Option[String] = config("clippingAction")
 
   @Argument(doc = "read1Trim", required = false)
   var read1Trim: Option[Int] = config("read1Trim")

@@ -43,7 +43,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
-  var sam_RG: String = config("sam-RG")
+  var sam_RG: Option[String] = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
   var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")

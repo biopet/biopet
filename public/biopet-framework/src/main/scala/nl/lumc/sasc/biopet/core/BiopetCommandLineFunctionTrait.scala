@@ -38,7 +38,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   val defaultThreads = 1
 
   @Argument(doc = "Vmem", required = false)
-  var vmem: String = _
+  var vmem: Option[String] = None
   val defaultVmem: String = ""
 
   @Argument(doc = "Executable", required = false)
@@ -58,9 +58,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
-    if (vmem == null) {
+    if (vmem.isEmpty) {
       vmem = config("vmem")
-      if (vmem == null && !defaultVmem.isEmpty) vmem = defaultVmem
+      if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
     jobName = configName + ":" + firstOutput.getName
