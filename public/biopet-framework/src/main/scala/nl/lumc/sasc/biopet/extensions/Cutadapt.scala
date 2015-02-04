@@ -43,8 +43,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction {
   if (config.contains("front")) for (adapter <- config("front").asList) opt_front += adapter.toString
 
   var opt_discard: Boolean = config("discard", default = false)
-  var opt_minimum_length: String = config("minimum_length", 1)
-  var opt_maximum_length: String = config("maximum_length")
+  var opt_minimum_length: Option[Int] = config("minimum_length", 1)
+  var opt_maximum_length: Option[Int] = config("maximum_length")
 
   def cmdLine = required(executable) +
     // options

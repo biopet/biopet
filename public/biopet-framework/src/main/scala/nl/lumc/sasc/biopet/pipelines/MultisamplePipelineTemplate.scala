@@ -37,6 +37,9 @@ class MultisamplePipelineTemplate(val root: Configurable) extends QScript with M
     }
   }
 
+  def addMultiSampleJobs(): Unit = {
+  }
+
   def init(): Unit = {
   }
 

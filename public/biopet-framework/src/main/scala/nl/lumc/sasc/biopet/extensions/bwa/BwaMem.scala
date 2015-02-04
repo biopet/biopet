@@ -34,7 +34,7 @@ class BwaMem(val root: Configurable) extends Bwa {
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
 
-  var R: String = config("R")
+  var R: Option[String] = config("R")
   var k: Option[Int] = config("k")
   var r: Option[Float] = config("r")
   var S: Boolean = config("S", default = false)
@@ -49,11 +49,11 @@ class BwaMem(val root: Configurable) extends Bwa {
   var e: Boolean = config("e", default = false)
   var A: Option[Int] = config("A")
   var B: Option[Int] = config("B")
-  var O: String = config("O")
-  var E: String = config("E")
-  var L: String = config("L")
+  var O: Option[String] = config("O")
+  var E: Option[String] = config("E")
+  var L: Option[String] = config("L")
   var U: Option[Int] = config("U")
-  var x: String = config("x")
+  var x: Option[String] = config("x")
   var p: Boolean = config("p", default = false)
   var v: Option[Int] = config("v")
   var T: Option[Int] = config("T")
@@ -61,7 +61,7 @@ class BwaMem(val root: Configurable) extends Bwa {
   var a: Boolean = config("a", default = false)
   var C: Boolean = config("C", default = false)
   var Y: Boolean = config("Y", default = false)
-  var I: String = config("I")
+  var I: Option[String] = config("I")
 
   override val defaultVmem = "6G"
   override val defaultThreads = 8
