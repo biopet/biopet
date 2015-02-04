@@ -22,7 +22,14 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   var input: File = _
 
   @Output(doc = "Output fastq", shortName = "o", required = true)
-  var output: File = _
+  protected var generalTsv: File = _
+
+  protected var outputDir: String = _
+
+  def setOutputDir(dir: String): Unit = {
+    outputDir = dir
+    generalTsv = new File(dir + File.separator + "genotype_general.tsv")
+  }
 
   /**
    * Creates command to execute extension
@@ -30,7 +37,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
    */
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("-o", output)
+    required("-o", outputDir)
 }
 
 object VcfStats extends ToolCommand {

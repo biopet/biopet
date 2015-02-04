@@ -7,7 +7,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, MergeAlleles }
+import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
@@ -197,6 +197,12 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       val cvFinal = CombineVariants(this, mergeList.toList, outputDir + outputName + ".final.vcf.gz")
       cvFinal.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
       add(cvFinal)
+
+      val vcfStats = new VcfStats(this)
+      vcfStats.input = cvFinal.out
+      vcfStats.setOutputDir(outputDir + File.separator + "vcfstats")
+      add(vcfStats)
+
       scriptOutput.finalVcfFile = cvFinal.out
     }
   }
