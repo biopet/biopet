@@ -120,7 +120,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       case None => Array.empty[String]
       case Some(modLines) =>
         for (
-          line <- modLines if !line.startsWith("#");
+          line <- modLines if !(line.startsWith("#") || line.startsWith(">"));
           values = line.split("\t") if values.size >= 4
         ) yield values(3)
     }
