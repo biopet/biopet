@@ -41,7 +41,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     var outputSnps: FastaOutput = _
 
     protected def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       output = addGenerateFasta(sampleId, sampleDir)
       outputSnps = addGenerateFasta(sampleId, sampleDir, snpsOnly = true)
     }
@@ -56,10 +56,12 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     gatkPipeline.biopetScript
     addAll(gatkPipeline.functions)
 
+    addSamplesJobs()
+  }
+
+  def addMultiSampleJobs(): Unit = {
     val refVariants = addGenerateFasta(null, outputDir + "reference/", outputName = "reference")
     val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", outputName = "reference", snpsOnly = true)
-
-    addSamplesJobs()
 
     val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList, outputDir + "fastas/variant.fasta")
     add(catVariants)
@@ -122,13 +124,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val gubbins = new RunGubbins(this)
       gubbins.fastafile = concensusVariants
-      gubbins.startingTree = raxmlBi.getBipartitionsFile
+      gubbins.startingTree = Some(raxmlBi.getBipartitionsFile)
       gubbins.outputDirectory = outputDir + dirSufixGubbins
       add(gubbins)
     }
 
     addTreeJobs(catVariantsSnps.output, catConsensusVariantsSnps.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
     addTreeJobs(catVariants.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
+
   }
 
   def addGenerateFasta(sampleName: String, outputDir: String, outputName: String = null,

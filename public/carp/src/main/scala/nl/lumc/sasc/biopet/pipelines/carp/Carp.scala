@@ -67,7 +67,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     val controls: List[String] = config("control", default = Nil)
 
     def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       val bamFiles = libraries.map(_._2.mapping.finalBamFile).toList
       if (bamFiles.length == 1) {
         add(Ln(qscript, bamFiles.head, bamFile))
@@ -86,8 +86,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val macs2 = new Macs2CallPeak(qscript)
       macs2.treatment = bamFile
-      macs2.name = sampleId
-      macs2.outputdir = sampleDir + "macs2/" + macs2.name + "/"
+      macs2.name = Some(sampleId)
+      macs2.outputdir = sampleDir + "macs2/" + sampleId + "/"
       add(macs2)
     }
   }
@@ -102,8 +102,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
     // Third step is calling peaks on the bam files produced with the mapping pipeline, this will be done with MACS2
     logger.info("Starting CArP pipeline")
 
-    addSamplesJobs
+    addSamplesJobs()
+  }
 
+  def addMultiSampleJobs(): Unit = {
     for ((sampleId, sample) <- samples) {
       for (controlId <- sample.controls) {
         if (!samples.contains(controlId))
@@ -111,8 +113,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = sample.bamFile
         macs2.control = samples(controlId).bamFile
-        macs2.name = sampleId + "_VS_" + controlId
-        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name + "/"
+        macs2.name = Some(sampleId + "_VS_" + controlId)
+        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name.get + "/"
         add(macs2)
       }
     }

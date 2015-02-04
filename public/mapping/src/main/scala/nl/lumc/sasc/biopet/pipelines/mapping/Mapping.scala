@@ -36,7 +36,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var input_R1: File = _
 
   @Input(doc = "R2 fastq file", shortName = "R2", required = false)
-  var input_R2: File = _
+  var input_R2: Option[File] = None
 
   /** Output name */
   var outputName: String = _
@@ -98,7 +98,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
     if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
-    paired = (input_R2 != null)
+    paired = input_R2.isDefined
 
     if (libraryId == null) libraryId = config("library_id")
     if (sampleId == null) sampleId = config("sample_id")
@@ -125,7 +125,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep" + File.separator
       flexiprep.input_R1 = input_R1
-      if (paired) flexiprep.input_R2 = input_R2
+      flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
       flexiprep.libraryId = this.libraryId
       flexiprep.init
@@ -144,10 +144,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       val chunkDir = outputDir + "chunks/" + t + "/"
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
-        if (paired) removeGz(chunkDir + input_R2.getName) else ""))
+        if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(input_R2, flexiprep.outputDir)))
+    else chunks += (outputDir -> (
+      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    )
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -158,7 +160,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = input_R2
+        fastSplitter_R2.input = input_R2.get
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
         fastSplitter_R2.isIntermediate = true
         add(fastSplitter_R2)
@@ -265,7 +267,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
-    bwaCommand.R = getReadGroup
+    bwaCommand.R = Some(getReadGroup)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     add(bwaCommand)

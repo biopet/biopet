@@ -36,7 +36,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   var singleSampleCalling = config("single_sample_calling", default = true)
   var reference: File = config("reference", required = true)
-  var dbsnp: File = config("dbsnp")
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
@@ -72,7 +71,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             samToFastq.isIntermediate = true
             qscript.add(samToFastq)
             mapping.input_R1 = samToFastq.fastqR1
-            mapping.input_R2 = samToFastq.fastqR2
+            mapping.input_R2 = Some(samToFastq.fastqR2)
             mapping.init
             mapping.biopetScript
             addAll(mapping.functions) // Add functions of mapping to curent function pool
@@ -127,7 +126,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
 
     protected def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       gatkVariantcalling.inputBams = libraries.map(_._2.mapping.finalBamFile).toList
       gatkVariantcalling.preProcesBams = false
       if (!singleSampleCalling) {
@@ -150,10 +149,11 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
   }
 
-  def biopetScript() {
-    addSamplesJobs
+  def biopetScript(): Unit = {
+    addSamplesJobs()
+  }
 
-    //SampleWide jobs
+  def addMultiSampleJobs(): Unit = {
     val gvcfFiles: List[File] = if (mergeGvcfs && externalGvcfs.size + samples.size > 1) {
       val newFile = outputDir + "merged.gvcf.vcf.gz"
       add(CombineGVCFs(this, externalGvcfs ++ samples.map(_._2.gatkVariantcalling.scriptOutput.gvcfFile), newFile))

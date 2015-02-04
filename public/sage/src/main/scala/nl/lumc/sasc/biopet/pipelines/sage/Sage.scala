@@ -35,13 +35,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
-  var countBed: File = config("count_bed")
-
-  var squishedCountBed: File = config("squished_count_bed")
-
-  var transcriptome: File = config("transcriptome")
-
-  var tagsLibrary: File = config("tags_library")
+  var countBed: Option[File] = config("count_bed")
+  var squishedCountBed: File = _
+  var transcriptome: Option[File] = config("transcriptome")
+  var tagsLibrary: Option[File] = config("tags_library")
 
   override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
     "m" -> 1,
@@ -103,7 +100,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     }
 
     protected def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
@@ -127,31 +124,32 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
-    if (transcriptome == null && tagsLibrary == null)
+    if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
-    if (countBed == null && squishedCountBed == null)
-      throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
+    if (countBed.isEmpty)
+      throw new IllegalStateException("No bedfile supplied, please add a countBed")
   }
 
   def biopetScript() {
-    if (squishedCountBed == null) {
-      val squishBed = SquishBed(this, countBed, outputDir)
-      add(squishBed)
-      squishedCountBed = squishBed.output
-    }
+    val squishBed = SquishBed(this, countBed.get, outputDir)
+    add(squishBed)
+    squishedCountBed = squishBed.output
 
-    if (tagsLibrary == null) {
+    if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
-      cdl.input = transcriptome
+      cdl.input = transcriptome.get
       cdl.output = outputDir + "taglib/tag.lib"
       cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
       cdl.noTagsOutput = outputDir + "taglib/no_sense_genes.txt"
       cdl.allGenesOutput = outputDir + "taglib/all_genes.txt"
       add(cdl)
-      tagsLibrary = cdl.output
+      tagsLibrary = Some(cdl.output)
     }
 
-    addSamplesJobs
+    addSamplesJobs()
+  }
+
+  def addMultiSampleJobs(): Unit = {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
@@ -184,7 +182,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
-    createTagCounts.tagLib = tagsLibrary
+    createTagCounts.tagLib = tagsLibrary.get
     createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"
     createTagCounts.countAllSense = outputDir + outputPrefix + ".tagcount.all.sense.counts"
     createTagCounts.countAntiSense = outputDir + outputPrefix + ".tagcount.antisense.counts"
