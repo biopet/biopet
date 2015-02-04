@@ -59,7 +59,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
       ".filtered_polymorphic_sites.fasta",
       ".filtered_polymorphic_sites.phylip",
       ".final_tree.tre")
-    for (t <- out) outputFiles ::= new File(outputDirectory + File.separator + prefix + t)
+    for (t <- out) outputFiles ::= new File(outputDirectory + File.separator + prefix.getOrElse("gubbins") + t)
   }
 
   def cmdLine = required("cd", outputDirectory) + " && " + required(executable) +
