@@ -15,7 +15,7 @@ heat<- heat[,-1]
 heat<- as.matrix(heat)
 
 colNumber <- 50
-col <- colorRampPalette(brewer.pal(12, "Spectral"))(colNumber)
+col <- rev(colorRampPalette(brewer.pal(12, "Spectral"))(colNumber))
 for (i in (colNumber+1):(colNumber+round((dist(range(heat)) - dist(range(heat[heat < 1]))) / dist(range(heat[heat < 1])) * colNumber))) {
     col[i] <- col[colNumber]
 }
