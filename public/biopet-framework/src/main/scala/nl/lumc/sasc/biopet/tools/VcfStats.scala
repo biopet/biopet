@@ -4,20 +4,33 @@ import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.ToolCommand
-import org.broadinstitute.gatk.utils.R.RScriptExecutor
-import org.broadinstitute.gatk.utils.io.Resource
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
-import scala.util.matching.Regex
 import htsjdk.samtools.util.Interval
 
 /**
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats {
-  //TODO: add Queue wrapper
+class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
+  javaMainClass = getClass.getName
+
+  @Input(doc = "Input fastq", shortName = "I", required = true)
+  var input: File = _
+
+  @Output(doc = "Output fastq", shortName = "o", required = true)
+  var output: File = _
+
+  /**
+   * Creates command to execute extension
+   * @return
+   */
+  override def commandLine = super.commandLine +
+    required("-I", input) +
+    required("-o", output)
 }
 
 object VcfStats extends ToolCommand {
@@ -244,7 +257,7 @@ object VcfStats extends ToolCommand {
       val file = new File(prefix + field + ".tsv")
       file.getParentFile.mkdirs()
       val writer = new PrintWriter(file)
-      writer.println(samples.mkString(field+"\t", "\t", ""))
+      writer.println(samples.mkString(field + "\t", "\t", ""))
       val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
       for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
         val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
