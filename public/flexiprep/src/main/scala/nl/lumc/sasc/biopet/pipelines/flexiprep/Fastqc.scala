@@ -111,7 +111,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         (for {
           line <- Source.fromFile(f).getLines()
           if !line.startsWith("#")
-          values = line.split("\t*")
+          values = line.split("\t+")
           if values.size >= 2
         } yield AdapterSequence(values(0), values(1))).toSet
     }
