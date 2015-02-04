@@ -92,6 +92,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       .dropWhile(!_.startsWith("Encoding"))
       .head
       .stripPrefix("Encoding\t")
+      .stripSuffix("\t")
 
   /** Case class representing a known adapter sequence */
   protected case class AdapterSequence(name: String, seq: String)
