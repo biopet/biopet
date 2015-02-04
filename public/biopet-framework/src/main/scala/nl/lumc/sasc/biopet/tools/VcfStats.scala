@@ -313,10 +313,12 @@ object VcfStats extends ToolCommand {
 
     val command: String = "Rscript " + file + " " + args.mkString(" ")
 
-    val stdout = new StringBuffer()
-    val stderr = new StringBuffer()
-    val process = Process(command)
-    process.run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
-    logger.debug("Version command: \n" + command + "\n output log: \n stdout: \n" + stdout.toString + "\n stderr: \n" + stderr.toString)
+    logger.info("Starting: " + command)
+    val process = Process(command).run(ProcessLogger(x => logger.debug(x), x => logger.debug(x)))
+    if (process.exitValue() == 0) logger.info("Done: " +  command)
+    else {
+      logger.warn("Failed: " +  command)
+      if (!logger.isDebugEnabled) logger.warn("Use -l debug for more info")
+    }
   }
 }
