@@ -36,11 +36,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   var countBed: Option[File] = config("count_bed")
-
-  var squishedCountBed: Option[File] = config("squished_count_bed")
-
+  var squishedCountBed: File = _
   var transcriptome: Option[File] = config("transcriptome")
-
   var tagsLibrary: Option[File] = config("tags_library")
 
   override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
@@ -129,16 +126,14 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     if (!outputDir.endsWith("/")) outputDir += "/"
     if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
-    if (countBed.isEmpty && squishedCountBed.isEmpty)
-      throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
+    if (countBed.isEmpty)
+      throw new IllegalStateException("No bedfile supplied, please add a countBed")
   }
 
   def biopetScript() {
-    if (squishedCountBed.isEmpty) {
-      val squishBed = SquishBed(this, countBed.get, outputDir)
-      add(squishBed)
-      squishedCountBed = Some(squishBed.output)
-    }
+    val squishBed = SquishBed(this, countBed.get, outputDir)
+    add(squishBed)
+    squishedCountBed = squishBed.output
 
     if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
@@ -158,19 +153,19 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
-    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.sense.coverage",
+    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.coverage",
       depth = false, sameStrand = true, diffStrand = false)
     val countSense = new BedtoolsCoverageToCounts(this)
     countSense.input = bedtoolsSense.output
     countSense.output = outputDir + outputPrefix + ".genome.sense.counts"
 
-    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.antisense.coverage",
+    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.coverage",
       depth = false, sameStrand = false, diffStrand = true)
     val countAntisense = new BedtoolsCoverageToCounts(this)
     countAntisense.input = bedtoolsAntisense.output
     countAntisense.output = outputDir + outputPrefix + ".genome.antisense.counts"
 
-    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed.get, outputDir + outputPrefix + ".genome.coverage",
+    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.coverage",
       depth = false, sameStrand = false, diffStrand = false)
     val count = new BedtoolsCoverageToCounts(this)
     count.input = bedtools.output
