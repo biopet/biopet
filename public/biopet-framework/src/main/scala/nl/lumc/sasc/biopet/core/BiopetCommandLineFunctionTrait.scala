@@ -53,7 +53,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   override def freezeFieldValues() {
     checkExecutable
     afterGraph
-    jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
+    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
@@ -63,7 +63,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
       if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
     }
     if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
-    jobName = configName + ":" + firstOutput.getName
+    jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
     super.freezeFieldValues()
   }
