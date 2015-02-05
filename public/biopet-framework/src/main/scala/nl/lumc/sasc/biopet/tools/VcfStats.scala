@@ -61,14 +61,13 @@ object VcfStats extends ToolCommand {
     */
   }
 
-  /** Class to store sample to sample compare stats */
-  class SampleToSampleStats {
-    /** Number of genotypes match with other sample */
-    var genotypeOverlap: Int = 0
-
-    /** Number of alleles also found in other sample */
-    var alleleOverlap: Int = 0
-
+  /**
+   * Class to store sample to sample compare stats
+   * @param genotypeOverlap Number of genotypes match with other sample
+   * @param alleleOverlap Number of alleles also found in other sample
+   */
+  case class SampleToSampleStats(var genotypeOverlap: Int = 0,
+                                 var alleleOverlap: Int = 0) {
     /** Add an other class */
     def +=(other: SampleToSampleStats) {
       this.genotypeOverlap += other.genotypeOverlap
@@ -76,14 +75,13 @@ object VcfStats extends ToolCommand {
     }
   }
 
-  /** class to store all sample relative stats */
-  class SampleStats {
-    /** Stores all genotype relative stats */
-    val genotypeStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map()
-
-    /** Stores sample to sample compare stats */
-    val sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()
-
+  /**
+   * class to store all sample relative stats
+   * @param genotypeStats Stores all genotype relative stats
+   * @param sampleToSample Stores sample to sample compare stats
+   */
+  case class SampleStats(val genotypeStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
+                         val sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()) {
     /** Add an other class */
     def +=(other: SampleStats): Unit = {
       for ((key, value) <- other.sampleToSample) {
@@ -98,13 +96,13 @@ object VcfStats extends ToolCommand {
     }
   }
 
-  class Stats {
-    /** Stores are general stats */
-    val generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map()
-
-    /** Stores all sample/genotype specific stats */
-    val samplesStats: mutable.Map[String, SampleStats] = mutable.Map()
-
+  /**
+   * General stats class to store vcf stats
+   * @param generalStats Stores are general stats
+   * @param samplesStats Stores all sample/genotype specific stats
+   */
+  case class Stats(val generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
+                   val samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
     /** Add an other class */
     def +=(other: Stats): Stats = {
       for ((key, value) <- other.samplesStats) {
@@ -207,8 +205,9 @@ object VcfStats extends ToolCommand {
       val stats = createStats
       logger.info("Starting on: " + interval)
 
-      for (record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
-           if record.getStart <= interval.getEnd) {
+      for (
+        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+      ) {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record))
         for (sample1 <- samples) yield {
           val genotype = record.getGenotype(sample1)
