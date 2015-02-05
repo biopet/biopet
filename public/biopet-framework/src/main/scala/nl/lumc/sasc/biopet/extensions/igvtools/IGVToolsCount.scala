@@ -20,10 +20,10 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   var genomeChromSizes: File = _
 
   @Output
-  protected var tdf: File = _
+  protected var tdf: Option[File] = _
 
   @Output
-  protected var wig: File = _
+  protected var wig: Option[File] = _
 
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
@@ -46,8 +46,8 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
     super.afterGraph
     if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
-    this.tdf = new File(input.getAbsolutePath + ".tdf")
-    this.wig = new File(input.getAbsolutePath.stripSuffix(".bam") + ".wig")
+    this.tdf = Some(new File(input.getAbsolutePath + ".tdf"))
+    this.wig = Some(new File(input.getAbsolutePath.stripSuffix(".bam") + ".wig"))
   }
 
   def cmdLine = {
@@ -72,14 +72,14 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   /**
    * This part should never fail, these values are set within this wrapper
-   * 
+   *
    */
   private def outputArg: String = {
-    (tdf.isInstanceOf[File], wig.isInstanceOf[File]) match {
-      case (false, false) => throw new IllegalArgumentException("Either TDF or WIG should be supplied");
-      case (true, false)  => tdf.getAbsolutePath;
-      case (false, true)  => wig.getAbsolutePath;
-      case (true, true)   => tdf.getAbsolutePath + "," + wig.getAbsolutePath;
+    (tdf, wig) match {
+      case (None, None)       => throw new IllegalArgumentException("Either TDF or WIG should be supplied");
+      case (Some(a), None)    => a.getAbsolutePath;
+      case (None, Some(b))    => b.getAbsolutePath;
+      case (Some(a), Some(b)) => a.getAbsolutePath + "," + b.getAbsolutePath;
     }
   }
 }
