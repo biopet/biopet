@@ -104,7 +104,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     require(sampleId != null, "Missing sample ID on mapping module")
     require(libId != null, "Missing library ID on mapping module")
 
-    if (!outputDir.endsWith("/")) outputDir += "/"
     paired = (input_R2 != null)
 
     if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
