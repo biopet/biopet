@@ -1,6 +1,8 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
+import java.nio.file.InvalidPathException
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.{ FileNotFoundException, File }
@@ -20,10 +22,10 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   var genomeChromSizes: File = _
 
   @Output
-  protected var tdf: Option[File] = _
+  var tdf: Option[File] = _
 
   @Output
-  protected var wig: Option[File] = _
+  var wig: Option[File] = _
 
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
@@ -46,8 +48,8 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
     super.afterGraph
     if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
-    this.tdf = Some(new File(input.getAbsolutePath + ".tdf"))
-    this.wig = Some(new File(input.getAbsolutePath.stripSuffix(".bam") + ".wig"))
+    if (!wig.isEmpty && !wig.get.getAbsolutePath.endsWith(".wig")) throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
+    if (!tdf.isEmpty && !tdf.get.getAbsolutePath.endsWith(".tdf")) throw new IllegalArgumentException("TDF file should have a .tdf file-extension")
   }
 
   def cmdLine = {
