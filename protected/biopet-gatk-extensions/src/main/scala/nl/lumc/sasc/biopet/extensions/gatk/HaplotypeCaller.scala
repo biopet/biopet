@@ -10,13 +10,11 @@ import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.HaplotypeCaller with GatkGeneral {
   min_mapping_quality_score = config("minMappingQualityScore", default = 20)
-  if (config.contains("scattercount")) scatterCount = config("scattercount")
+  scatterCount = config("scattercount", default = 1)
   if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
   this.sample_ploidy = config("ploidy")
-  nct = config("threads", default = 1)
   if (config.contains("bamOutput")) bamOutput = config("bamOutput")
-  memoryLimit = Option(nct.getOrElse(1) * 2)
-  if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
+  if (config.contains("allSitePLs")) allSitePLs = config("allSitePLs")
   if (config.contains("output_mode")) {
     import org.broadinstitute.gatk.tools.walkers.genotyper.OutputMode._
     config("output_mode").asString match {
@@ -40,9 +38,11 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
   override def afterGraph {
     super.afterGraph
     if (bamOutput != null && nct.getOrElse(1) > 1) {
-      nct = Option(1)
+      threads = 1
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
     }
+    nct = Some(threads)
+    memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
   }
 
   def useGvcf() {
