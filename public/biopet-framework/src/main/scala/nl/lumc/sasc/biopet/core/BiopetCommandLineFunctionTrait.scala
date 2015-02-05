@@ -15,13 +15,11 @@
  */
 package nl.lumc.sasc.biopet.core
 
-//import java.io.BufferedInputStream
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-//import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 import java.io.FileInputStream
@@ -62,7 +60,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
       vmem = config("vmem")
       if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
     }
-    if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
+    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
     super.freezeFieldValues()
