@@ -37,6 +37,20 @@ object Seqstat extends ToolCommand {
   var phred_encoding: String = "sanger"
   var phred_correction: Int = 33
 
+  val reportValues = List(1, 10, 20, 30, 40, 50, 60)
+
+  // the base quality for each position on the reads
+  var quals: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+  var nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+
+  // generate the baseHistogram and readHistogram
+  var baseHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+  var readHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+
+  var nucleotideHistoMap: mutable.Map[Char, Long] = mutable.Map()
+  var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
+  var readQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
+
   case class Args(fastq: File = new File("")) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -125,30 +139,16 @@ object Seqstat extends ToolCommand {
     readQuals(avgQual) += 1
   }
 
-  def main(args: Array[String]): Unit = {
-
-    val commandArgs: Args = parseArgs(args)
-
-    logger.info("Start")
-    val reader = new FastqReader(commandArgs.fastq)
-    for (read <- reader.iterator.asScala) {
+  def seqStat(fqreader: FastqReader): (Long) = {
+    var numReads: Long = 0
+    for (read <- fqreader.iterator.asScala) {
       procesRead(read)
+      numReads += 1
     }
+    numReads
+  }
 
-    val reportValues = List(1, 10, 20, 30, 40, 50, 60)
-
-    // the base quality for each position on the reads
-    var quals: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
-    var nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
-
-    // generate the baseHistogram and readHistogram
-    var baseHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
-    var readHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
-
-    var nucleotideHistoMap: mutable.Map[Char, Long] = mutable.Map()
-    var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
-    var readQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
-
+  def summarize(): Unit = {
     // for every position to the max length of any read
     for (pos <- 0 until baseStats.length) {
       // list all qualities at this particular position `pos`
@@ -163,9 +163,7 @@ object Seqstat extends ToolCommand {
       baseStats(pos).qual.zipWithIndex foreach { case (value, index) => quals(index) += value }
       // count N into nucs
       baseStats(pos).nuc.zipWithIndex foreach { case (value, index) => nucs(index) += value }
-
     }
-
     detectPhredEncoding(quals)
 
     for (pos <- 0 until nucs.length) {
@@ -208,6 +206,18 @@ object Seqstat extends ToolCommand {
     for (pos <- 0 until readHistogram.length) {
       readQualHistoMap += (pos -> readHistogram(pos))
     }
+
+  }
+
+  def main(args: Array[String]): Unit = {
+
+    val commandArgs: Args = parseArgs(args)
+
+    logger.info("Start")
+
+    val reader = new FastqReader(commandArgs.fastq)
+    seqStat(reader)
+    summarize()
 
     logger.debug(nucs)
     //    logger.debug(baseStats)
