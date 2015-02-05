@@ -21,14 +21,15 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 
-  @Output(doc = "Output fastq", shortName = "o", required = true)
-  protected var generalTsv: File = _
-
   protected var outputDir: String = _
 
+  /**
+   * Set output dir and a output file
+   * @param dir
+   */
   def setOutputDir(dir: String): Unit = {
     outputDir = dir
-    generalTsv = new File(dir + File.separator + "genotype_general.tsv")
+    this.jobOutputFile = new File(dir + File.separator + ".vcfstats.out")
   }
 
   /**
@@ -41,8 +42,10 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
 }
 
 object VcfStats extends ToolCommand {
+  /** Commandline argument */
   case class Args(inputFile: File = null, outputDir: String = null, intervals: Option[File] = None) extends AbstractArgs
 
+  /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(inputFile = x)
@@ -58,20 +61,30 @@ object VcfStats extends ToolCommand {
     */
   }
 
+  /** Class to store sample to sample compare stats */
   class SampleToSampleStats {
+    /** Number of genotypes match with other sample */
     var genotypeOverlap: Int = 0
+
+    /** Number of alleles also found in other sample */
     var alleleOverlap: Int = 0
 
+    /** Add an other class */
     def +=(other: SampleToSampleStats) {
       this.genotypeOverlap += other.genotypeOverlap
       this.alleleOverlap += other.alleleOverlap
     }
   }
 
+  /** class to store all sample relative stats */
   class SampleStats {
+    /** Stores all genotype relative stats */
     val genotypeStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map()
+
+    /** Stores sample to sample compare stats */
     val sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()
 
+    /** Add an other class */
     def +=(other: SampleStats): Unit = {
       for ((key, value) <- other.sampleToSample) {
         if (this.sampleToSample.contains(key)) this.sampleToSample(key) += value
@@ -86,9 +99,13 @@ object VcfStats extends ToolCommand {
   }
 
   class Stats {
+    /** Stores are general stats */
     val generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map()
+
+    /** Stores all sample/genotype specific stats */
     val samplesStats: mutable.Map[String, SampleStats] = mutable.Map()
 
+    /** Add an other class */
     def +=(other: Stats): Stats = {
       for ((key, value) <- other.samplesStats) {
         if (this.samplesStats.contains(key)) this.samplesStats(key) += value
@@ -103,11 +120,21 @@ object VcfStats extends ToolCommand {
     }
   }
 
+  /**
+   * Merge m2 into m1
+   * @param m1
+   * @param m2
+   */
   def mergeStatsMap(m1: mutable.Map[Any, Int], m2: mutable.Map[Any, Int]): Unit = {
     for (key <- m2.keySet)
       m1(key) = m1.getOrElse(key, 0) + m2(key)
   }
 
+  /**
+   * Merge m2 into m1
+   * @param m1
+   * @param m2
+   */
   def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[Any, Int]], m2: Map[String, Map[Any, Int]]): Unit = {
     for ((field, fieldMap) <- m2) {
       if (m1.contains(field)) {
@@ -119,7 +146,7 @@ object VcfStats extends ToolCommand {
     }
   }
 
-  var commandArgs: Args = _
+  protected var commandArgs: Args = _
 
   /**
    * @param args the command line arguments
@@ -205,7 +232,7 @@ object VcfStats extends ToolCommand {
     //logger.info(counter + " variants done")
     logger.info("Done reading vcf records")
 
-    plotXy(writeField("QUAL", stats.generalStats.getOrElse("QUAL", mutable.Map())))
+    plotLine(writeField("QUAL", stats.generalStats.getOrElse("QUAL", mutable.Map())))
     writeGenotypeFields(stats, commandArgs.outputDir + "/genotype_", samples)
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
@@ -213,12 +240,28 @@ object VcfStats extends ToolCommand {
     logger.info("Done")
   }
 
-  def checkGeneral(record: VariantContext): Map[String, Map[Any, Int]] = {
-    val qual = record.getPhredScaledQual
-    Map("QUAL" -> Map(qual -> 1))
+  /**
+   * Function to check all general stats, all info expect sample/genotype specific stats
+   * @param record
+   * @return
+   */
+  protected def checkGeneral(record: VariantContext): Map[String, Map[Any, Int]] = {
+    val buffer = mutable.Map[String, Map[Any, Int]]()
+
+    buffer += "qual" -> Map(record.getPhredScaledQual -> 1)
+
+    //TODO: more general stats
+
+    buffer.toMap
   }
 
-  def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[Any, Int]] = {
+  /**
+   * Function to check sample/genotype specific stats
+   * @param record
+   * @param genotype
+   * @return
+   */
+  protected def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
@@ -258,24 +301,47 @@ object VcfStats extends ToolCommand {
     buffer.toMap
   }
 
-  def writeGenotypeFields(stats: Stats, prefix: String, samples: List[String]) {
+  /**
+   * Function to write stats to tsv files
+   * @param stats
+   * @param prefix
+   * @param samples
+   */
+  protected def writeGenotypeFields(stats: Stats, prefix: String, samples: List[String]) {
     val fields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
     for (field <- fields) {
-      val file = new File(prefix + field + ".tsv")
-      file.getParentFile.mkdirs()
-      val writer = new PrintWriter(file)
-      writer.println(samples.mkString(field + "\t", "\t", ""))
-      val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
-      for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
-        val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
-        writer.println(values.mkString(key + "\t", "\t", ""))
-      }
-      writer.close()
-      plotXy(file)
+      writeGenotypeField(stats, prefix, samples, field)
     }
   }
 
-  def writeField(prefix: String, data: mutable.Map[Any, Int]): File = {
+  /**
+   * Function to write 1 specific genotype field
+   * @param stats
+   * @param prefix
+   * @param samples
+   * @param field
+   */
+  protected def writeGenotypeField(stats: Stats, prefix: String, samples: List[String], field: String): Unit = {
+    val file = new File(prefix + field + ".tsv")
+    file.getParentFile.mkdirs()
+    val writer = new PrintWriter(file)
+    writer.println(samples.mkString(field + "\t", "\t", ""))
+    val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
+    for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
+      val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
+      writer.println(values.mkString(key + "\t", "\t", ""))
+    }
+    writer.close()
+    plotLine(file)
+  }
+
+  /**
+   * Function to write 1 specific general field
+   * @param prefix
+   * @param data
+   * @return
+   */
+  protected def writeField(prefix: String, data: mutable.Map[Any, Int]): File = {
     val file = new File(commandArgs.outputDir + "/" + prefix + ".tsv")
     println(file)
     file.getParentFile.mkdirs()
@@ -288,6 +354,12 @@ object VcfStats extends ToolCommand {
     file
   }
 
+  /**
+   * Function to sort Any values
+   * @param a
+   * @param b
+   * @return
+   */
   def sortAnyAny(a: Any, b: Any): Boolean = {
     a match {
       case ai: Int => {
@@ -301,6 +373,13 @@ object VcfStats extends ToolCommand {
     }
   }
 
+  /**
+   * Function to write sample to sample compare tsv's / heatmaps
+   * @param stats
+   * @param function function to extract targeted var in SampleToSampleStats
+   * @param prefix
+   * @param samples
+   */
   def writeOverlap(stats: Stats, function: SampleToSampleStats => Int,
                    prefix: String, samples: List[String]): Unit = {
     val absFile = new File(prefix + ".abs.tsv")
@@ -327,6 +406,10 @@ object VcfStats extends ToolCommand {
     plotHeatmap(relFile)
   }
 
+  /**
+   * Plots heatmaps on target tsv file
+   * @param file
+   */
   def plotHeatmap(file: File) {
     executeRscript("plotHeatmap.R", Array(file.getAbsolutePath,
       file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png",
@@ -334,11 +417,20 @@ object VcfStats extends ToolCommand {
       file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.dendrogram.png"))
   }
 
-  def plotXy(file: File) {
+  /**
+   * Plots line graph with target tsv file
+   * @param file
+   */
+  def plotLine(file: File) {
     executeRscript("plotXY.R", Array(file.getAbsolutePath,
       file.getAbsolutePath.stripSuffix(".tsv") + ".xy.png"))
   }
 
+  /**
+   * Function to execute Rscript as subproces
+   * @param resource
+   * @param args
+   */
   def executeRscript(resource: String, args: Array[String]): Unit = {
     val is = getClass.getResourceAsStream(resource)
     val file = File.createTempFile("script.", "." + resource)
