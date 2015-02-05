@@ -229,10 +229,10 @@ object VcfStats extends ToolCommand {
 
     val stats = statsChunks.toList.fold(createStats)(_ += _)
 
-    //logger.info(counter + " variants done")
     logger.info("Done reading vcf records")
 
-    plotLine(writeField("QUAL", stats.generalStats.getOrElse("QUAL", mutable.Map())))
+    writeField("QUAL", stats.generalStats.getOrElse("QUAL", mutable.Map()))
+    writeField("general", stats.generalStats.getOrElse("general", mutable.Map()))
     writeGenotypeFields(stats, commandArgs.outputDir + "/genotype_", samples)
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
@@ -248,9 +248,32 @@ object VcfStats extends ToolCommand {
   protected def checkGeneral(record: VariantContext): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
+    def addToBuffer(key: String, value: Any): Unit = {
+      val map = buffer.getOrElse(key, Map())
+      buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+    }
+
     buffer += "qual" -> Map(record.getPhredScaledQual -> 1)
 
-    //TODO: more general stats
+    addToBuffer("general", "Total")
+    if (record.isBiallelic) addToBuffer("general", "Biallelic")
+    if (record.isComplexIndel) addToBuffer("general", "ComplexIndel")
+    if (record.isFiltered) addToBuffer("general", "Filtered")
+    if (record.isFullyDecoded) addToBuffer("general", "FullyDecoded")
+    if (record.isIndel) addToBuffer("general", "Indel")
+    if (record.isMixed) addToBuffer("general", "Mixed")
+    if (record.isMNP) addToBuffer("general", "MNP")
+    if (record.isMonomorphicInSamples) addToBuffer("general", "MonomorphicInSamples")
+    if (record.isNotFiltered) addToBuffer("general", "NotFiltered")
+    if (record.isPointEvent) addToBuffer("general", "PointEvent")
+    if (record.isPolymorphicInSamples) addToBuffer("general", "PolymorphicInSamples")
+    if (record.isSimpleDeletion) addToBuffer("general", "SimpleDeletion")
+    if (record.isSimpleInsertion) addToBuffer("general", "SimpleInsertion")
+    if (record.isSNP) addToBuffer("general", "SNP")
+    if (record.isStructuralIndel) addToBuffer("general", "StructuralIndel")
+    if (record.isSymbolic) addToBuffer("general", "Symbolic")
+    if (record.isSymbolicOrSV) addToBuffer("general", "SymbolicOrSV")
+    if (record.isVariant) addToBuffer("general", "Variant")
 
     buffer.toMap
   }
@@ -264,13 +287,13 @@ object VcfStats extends ToolCommand {
   protected def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[Any, Int]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
-    buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
-    buffer += "GQ" -> Map((if (genotype.hasGQ) genotype.getGQ else "not set") -> 1)
-
     def addToBuffer(key: String, value: Any): Unit = {
       val map = buffer.getOrElse(key, Map())
       buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
     }
+
+    buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
+    buffer += "GQ" -> Map((if (genotype.hasGQ) genotype.getGQ else "not set") -> 1)
 
     val usedAlleles = (for (allele <- genotype.getAlleles) yield record.getAlleleIndex(allele)).toList
 
