@@ -50,7 +50,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
-    else if (outputName == null) outputName = "noname"
+    else if (outputName == null) outputName = config("output_name", default = "noname")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
 
