@@ -24,6 +24,9 @@ import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
+/**
+ * Base for biopet pipeline
+ */
 trait BiopetQScript extends Configurable with GatkLogging {
 
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
@@ -43,13 +46,21 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputFiles: Map[String, File] = Map()
 
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var qSettings: QSettings
 
-  def init
-  def biopetScript
-
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var functions: Seq[QFunction]
 
+  /** Init for pipeline */
+  def init
+
+  /** Pipeline itself */
+  def biopetScript
+
+  /**
+   * Script from queue itself, final to force some checks for each pipeline and write report
+   */
   final def script() {
     outputDir = config("output_dir", required = true)
     if (!outputDir.endsWith("/")) outputDir += "/"
@@ -68,10 +79,16 @@ trait BiopetQScript extends Configurable with GatkLogging {
     Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
   }
 
-  def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
+  def add(functions: QFunction*)
+
+  /**
+   * Function to set isIntermediate and add in 1 line
+   * @param function
+   * @param isIntermediate
+   */
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
   }
-
 }
