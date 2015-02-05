@@ -207,9 +207,8 @@ object VcfStats extends ToolCommand {
       val stats = createStats
       logger.info("Starting on: " + interval)
 
-      for (
-        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
-      ) {
+      for (record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
+           if record.getStart <= interval.getEnd) {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record))
         for (sample1 <- samples) yield {
           val genotype = record.getGenotype(sample1)
@@ -253,7 +252,7 @@ object VcfStats extends ToolCommand {
       buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
     }
 
-    buffer += "qual" -> Map(record.getPhredScaledQual -> 1)
+    buffer += "QUAL" -> Map(record.getPhredScaledQual -> 1)
 
     addToBuffer("general", "Total")
     if (record.isBiallelic) addToBuffer("general", "Biallelic")
