@@ -33,29 +33,29 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   /** type of input alignment */
-  var format: String = config("format")
+  var format: Option[String] = config("format")
 
   /** sorting order of alignment file */
-  var order: String = config("order")
+  var order: Option[String] = config("order")
 
   /** whether alignment is strand specific or not */
-  var stranded: String = config("stranded")
+  var stranded: Option[String] = config("stranded")
 
   /** skip all reads with alignment quality lower than the given minimum value */
   var minaqual: Option[Int] = config("minaqual")
 
   /** feature type to be used */
-  var featuretype: String = config("type")
+  var featuretype: Option[String] = config("type")
 
   /** attribute to use as feature ID */
-  var idattr: String = config("idattr")
+  var idattr: Option[String] = config("idattr")
 
   /** counting mode */
-  var mode: String = config("mode")
+  var mode: Option[String] = config("mode")
 
   /** write all SAM alignment records into an output file */
   @Output(doc = "Optional SAM file output", required = false)
-  var samout: File = _
+  var samout: Option[File] = None
 
   /** suppress progress report */
   var quiet: Boolean = config("quiet", default = false)
