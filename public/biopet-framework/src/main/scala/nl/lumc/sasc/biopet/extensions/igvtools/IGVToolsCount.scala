@@ -18,7 +18,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Input(doc = "Bam File")
   var input: File = _
 
-  @Input(doc = "<genome>.chrom.sizes File")
+  @Input(doc = "<genome>.chrom.sizes File", required = true)
   var genomeChromSizes: File = _
 
   @Output
@@ -46,7 +46,6 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   override def afterGraph {
     super.afterGraph
-    if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
     if (!wig.exists(_.getAbsolutePath.endsWith(".wig")))
       throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
