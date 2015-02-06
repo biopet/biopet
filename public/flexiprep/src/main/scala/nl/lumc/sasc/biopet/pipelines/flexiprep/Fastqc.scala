@@ -34,6 +34,8 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  */
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
 
+  protected case class FastQCModule(name: String, status: String, lines: Seq[String])
+
   /** Default FastQC output directory containing actual results */
   // this is a def instead of a val since the value depends on the variable `output`, which is null on class creation
   def outputDir: File = new File(output.getAbsolutePath.stripSuffix(".zip"))
@@ -47,11 +49,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    *
    * @return Mapping of FastQC module names and its contents as array of strings (one item per line)
    * @throws FileNotFoundException if the FastQC data file can not be found.
-   * @throws IllegalStateException if the module mapping is empty.
+   * @throws IllegalStateException if the module lines have no content or mapping is empty.
    */
   @throws(classOf[FileNotFoundException])
   @throws(classOf[IllegalStateException])
-  def qcModules: Map[String, Array[String]] = {
+  def qcModules: Map[String, FastQCModule] = {
 
     val fqModules = Source.fromFile(dataFile)
       // drop all the characters before the first module delimiter (i.e. '>>')
@@ -64,14 +66,18 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       .map {
         case (modString) =>
           // module name is in the first line, without '>>' and before the tab character
-          val modName = modString
-            // so we take all characters in the first line
-            .takeWhile(_ != '\n')
-            // and drop all characters that equals '>'
+          val Array(firstLine, otherLines) = modString
+            // drop all '>>' character (start of module)
             .dropWhile(_ == '>')
-            // and take all characters before the tab
-            .takeWhile(_ != '\t')
-          modName -> modString.split('\n')
+            // split first line and others
+            .split("\n", 2)
+            // and slice them
+            .slice(0, 2)
+          // extract module name and module status
+          val Array(modName, modStatus) = firstLine
+            .split("\t", 2)
+            .slice(0, 2)
+          modName -> FastQCModule(modName, modStatus, otherLines.split("\n").toSeq)
       }
       .toMap
 
@@ -89,6 +95,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
   @throws(classOf[NoSuchElementException])
   def encoding: String =
     qcModules("Basic Statistics")
+      .lines
       .dropWhile(!_.startsWith("Encoding"))
       .head
       .stripPrefix("Encoding\t")
@@ -117,10 +124,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     }
 
     val found = qcModules.get("Overrepresented sequences") match {
-      case None => Array.empty[String]
-      case Some(modLines) =>
+      case None => Seq.empty[String]
+      case Some(qcModule) =>
         for (
-          line <- modLines if !(line.startsWith("#") || line.startsWith(">"));
+          line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
           values = line.split("\t") if values.size >= 4
         ) yield values(3)
     }

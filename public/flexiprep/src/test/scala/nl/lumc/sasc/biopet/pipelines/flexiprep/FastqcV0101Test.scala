@@ -53,6 +53,14 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     fqc.qcModules.keySet should contain("Kmer Content")
   }
 
+  @Test def testSingleQcModule() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+    fqc.qcModules("Basic Statistics").name should ===("Basic Statistics")
+    fqc.qcModules("Basic Statistics").status should ===("pass")
+    fqc.qcModules("Basic Statistics").lines.size shouldBe 8
+  }
+
   @Test def testEncoding() = {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
