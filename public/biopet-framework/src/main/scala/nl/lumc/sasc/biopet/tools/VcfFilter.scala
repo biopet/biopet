@@ -59,6 +59,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 object VcfFilter extends ToolCommand {
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
+                  invertedOutputVcf: Option[File] = None,
                   minQualscore: Option[Double] = None,
                   minSampleDepth: Int = -1,
                   minTotalDepth: Int = -1,
@@ -80,6 +81,9 @@ object VcfFilter extends ToolCommand {
     opt[File]('o', "outputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputVcf = x)
     } text ("Output vcf file")
+    opt[File]("invertedOutputVcf") maxOccurs (1) valueName ("<file>") action { (x, c) =>
+      c.copy(invertedOutputVcf = Some(x))
+    } text ("inverted output vcf file")
     opt[Int]("minSampleDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSampleDepth = x)
     } text ("Min value for DP in genotype fields")
@@ -141,6 +145,11 @@ object VcfFilter extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
     writer.writeHeader(header)
 
+    val invertedWriter = if (commandArgs.invertedOutputVcf.isDefined)
+      Some(new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.invertedOutputVcf.get).build))
+    else None
+    if (invertedWriter.isDefined) invertedWriter.get.writeHeader(header)
+
     var counterTotal = 0
     var counterLeft = 0
     for (record <- reader) {
@@ -158,6 +167,8 @@ object VcfFilter extends ToolCommand {
         inIdSet(record)) {
         writer.add(record)
         counterLeft += 1
+      } else {
+        if (invertedWriter.isDefined) invertedWriter.get.add(record)
       }
       counterTotal += 1
       if (counterTotal % 100000 == 0) logger.info(counterTotal + " variants processed, " + counterLeft + " left")
@@ -165,6 +176,7 @@ object VcfFilter extends ToolCommand {
     logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     reader.close
     writer.close
+    if (invertedWriter.isDefined) invertedWriter.get.close()
     logger.info("Done")
   }
 
