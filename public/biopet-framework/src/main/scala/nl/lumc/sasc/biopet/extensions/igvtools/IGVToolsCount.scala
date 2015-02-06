@@ -22,10 +22,10 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   var genomeChromSizes: File = _
 
   @Output
-  var tdf: Option[File] = _
+  var tdf: Option[File] = None
 
   @Output
-  var wig: Option[File] = _
+  var wig: Option[File] = None
 
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
@@ -48,8 +48,10 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
     super.afterGraph
     if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
-    if (!wig.isEmpty && !wig.get.getAbsolutePath.endsWith(".wig")) throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
-    if (!tdf.isEmpty && !tdf.get.getAbsolutePath.endsWith(".tdf")) throw new IllegalArgumentException("TDF file should have a .tdf file-extension")
+    if (!wig.exists(_.getAbsolutePath.endsWith(".wig")))
+      throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
+    if (!tdf.exists(_.getAbsolutePath.endsWith(".tdf")))
+      throw new IllegalArgumentException("TDF file should have a .tdf file-extension")
   }
 
   def cmdLine = {
