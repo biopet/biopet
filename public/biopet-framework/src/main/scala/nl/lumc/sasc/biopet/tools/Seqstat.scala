@@ -103,9 +103,6 @@ object Seqstat extends ToolCommand {
   /**
    * Compute the quality metric per read
    * Results are stored in baseStats and readQuals
-   *
-   *
-   *
    */
 
   def procesRead(record: FastqRecord): Unit = {
@@ -113,26 +110,22 @@ object Seqstat extends ToolCommand {
       baseStats ++= mutable.ArrayBuffer.fill(record.length - baseStats.length)(BaseStat())
     }
 
-    val qual = record.getBaseQualityString
-    val nuc = record.getReadString
+    val readQual = record.getBaseQualityString
+    val readNucleotides = record.getReadString
 
     for (t <- 0 until record.length()) {
-      if (baseStats(t).qual.length <= qual(t)) {
-        for (_ <- 0 to qual(t).toInt - baseStats(t).qual.length) baseStats(t).qual.append(0)
+      if (baseStats(t).qual.length <= readQual(t)) {
+        for (_ <- 0 to readQual(t).toInt - baseStats(t).qual.length) baseStats(t).qual.append(0)
       }
-      if (baseStats(t).nuc.length <= nuc(t)) {
-        for (_ <- 0 to nuc(t).toInt - baseStats(t).nuc.length) baseStats(t).nuc.append(0)
+      if (baseStats(t).nuc.length <= readNucleotides(t)) {
+        for (_ <- 0 to readNucleotides(t).toInt - baseStats(t).nuc.length) baseStats(t).nuc.append(0)
       }
-
-      //      val qualLength = baseStats(t).qual.length
-      //      val nucLength = baseStats(t).nuc.length
-
-      baseStats(t).qual(qual(t)) += 1
-      baseStats(t).nuc(nuc(t)) += 1
+      baseStats(t).qual(readQual(t)) += 1
+      baseStats(t).nuc(readNucleotides(t)) += 1
     }
 
     // implicit conversion to Int using foldLeft(0)
-    val avgQual: Int = (qual.foldLeft(0)(_ + _) / qual.length)
+    val avgQual: Int = (readQual.foldLeft(0)(_ + _) / readQual.length)
     if (readQuals.length <= avgQual) {
       for (_ <- 0 to avgQual - readQuals.length) readQuals.append(0)
     }
@@ -140,10 +133,10 @@ object Seqstat extends ToolCommand {
   }
 
   def seqStat(fqreader: FastqReader): (Long) = {
-    var numReads: Long = 0
+    val numReads: Long = fqreader.iterator.size
     for (read <- fqreader.iterator.asScala) {
       procesRead(read)
-      numReads += 1
+      //      numReads += 1
     }
     numReads
   }
@@ -154,7 +147,7 @@ object Seqstat extends ToolCommand {
       // list all qualities at this particular position `pos`
       // fix the length of `quals`
       if (quals.length <= baseStats(pos).qual.length) {
-        for (_ <- quals.length until baseStats(pos).qual.length) quals.append(0)
+        for (_ <- 0 until baseStats(pos).qual.length - quals.length) quals.append(0)
       }
       if (nucs.length <= baseStats(pos).nuc.length) {
         for (_ <- nucs.length until baseStats(pos).nuc.length) nucs.append(0)
