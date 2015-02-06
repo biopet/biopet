@@ -34,6 +34,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  */
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
 
+  /** Class for storing a single FastQC module result */
   protected case class FastQCModule(name: String, status: String, lines: Seq[String])
 
   /** Default FastQC output directory containing actual results */
