@@ -1,8 +1,6 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
-import java.nio.file.InvalidPathException
-
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.{ FileNotFoundException, File }
@@ -13,7 +11,6 @@ import java.io.{ FileNotFoundException, File }
  * @constructor create a new IGVTools instance from a `.bam` file
  *
  */
-
 class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Input(doc = "Bam File")
   var input: File = _
@@ -47,10 +44,10 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   override def afterGraph {
     super.afterGraph
 
-    if (!wig.exists(_.getAbsolutePath.endsWith(".wig")))
-      throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
-    if (!tdf.exists(_.getAbsolutePath.endsWith(".tdf")))
-      throw new IllegalArgumentException("TDF file should have a .tdf file-extension")
+    wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
+      throw new IllegalArgumentException("WIG file should have a .wig file-extension"))
+    tdf.foreach(x => if (!x.getAbsolutePath.endsWith(".tdf"))
+      throw new IllegalArgumentException("TDF file should have a .tdf file-extension"))
   }
 
   def cmdLine = {
