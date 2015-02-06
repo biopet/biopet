@@ -52,9 +52,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     checkExecutable
     afterGraph
 
-    super.freezeFieldValues()
-
-    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
+    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
@@ -65,6 +63,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     }
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
+
+    super.freezeFieldValues()
   }
 
   protected def checkExecutable {
