@@ -13,11 +13,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Input(doc="", required = true)
+  @Input(doc = "Input bam file", required = true)
   var bamFile: File = _
-
-  @Output(doc="", required = true)
-  var bigWigFile: File = _
 
   def init(): Unit = {
   }
@@ -25,7 +22,7 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript(): Unit = {
     val bs = new BamToChromSizes(this)
     bs.bamFile = bamFile
-    bs.chromSizesFile = bamFile.getAbsoluteFile + ".chromsizes"
+    bs.chromSizesFile = bamFile.getAbsoluteFile + ".chrom.sizes"
     bs.isIntermediate = true
     add(bs)
 
@@ -33,12 +30,13 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
     igvCount.input = bamFile
     igvCount.genomeChromSizes = bs.chromSizesFile
     igvCount.wig = Some(swapExt(outputDir, bamFile, ".bam", ".wig"))
+    igvCount.tdf = Some(swapExt(outputDir, bamFile, ".bam", ".tdf"))
     add(igvCount)
 
     val wigToBigWig = new WigToBigWig(this)
     wigToBigWig.inputWigFile = igvCount.wig.get
     wigToBigWig.inputChromSizesFile = bs.chromSizesFile
-    wigToBigWig.outputBigWig = bigWigFile
+    wigToBigWig.outputBigWig = swapExt(outputDir, bamFile, ".bam", ".bigwig")
     add(wigToBigWig)
   }
 }
