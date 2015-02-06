@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
 import java.util.Date
+import java.io.File
 import scala.math._
 
 import org.broadinstitute.gatk.queue.QScript
@@ -39,7 +40,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var input_R1: File = _
 
   @Input(doc = "R2 fastq file", shortName = "R2", required = false)
-  var input_R2: File = _
+  var input_R2: Option[File] = None
 
   /** Output name */
   var outputName: String = _
@@ -69,17 +70,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   /** Readgroup ID */
   protected var readgroupId: String = _
 
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+
   /** Readgroup Library */
-  var libraryId: String = _
+  @Argument(doc = "Library ID", shortName = "library", required = true)
+  var libId: String = _
+
+  /**Readgroup sample */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
+  var sampleId: String = _
 
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
 
   /** Readgroup platform unit */
   protected var platformUnit: String = config("platform_unit", default = "na")
-
-  /**Readgroup sample */
-  var sampleId: String = _
 
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
@@ -98,14 +103,14 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def finalBamFile: File = outputDir + outputName + ".final.bam"
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
-    if (input_R1 == null) throw new IllegalStateException("Missing FASTQ R1 on mapping module")
-    paired = input_R2 != null
+    require(outputDir != null, "Missing output directory on mapping module")
+    require(input_R1 != null, "Missing output directory on mapping module")
+    require(sampleId != null, "Missing sample ID on mapping module")
+    require(libId != null, "Missing library ID on mapping module")
 
-    if (libraryId == null) libraryId = config("library_id")
-    if (sampleId == null) sampleId = config("sample_id")
-    if (readgroupId == null && sampleId != null && libraryId != null) readgroupId = sampleId + "-" + libraryId
+    paired = input_R2.isDefined
+
+    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
     if (outputName == null) outputName = readgroupId
@@ -128,9 +133,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (!skipFlexiprep) {
       flexiprep.outputDir = outputDir + "flexiprep" + File.separator
       flexiprep.input_R1 = input_R1
-      if (paired) flexiprep.input_R2 = input_R2
+      flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
-      flexiprep.libraryId = this.libraryId
+      flexiprep.libId = this.libId
       flexiprep.init
       flexiprep.runInitialJobs
     }
@@ -147,10 +152,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       val chunkDir = outputDir + "chunks/" + t + "/"
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
-        if (paired) removeGz(chunkDir + input_R2.getName) else ""))
+        if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(input_R2, flexiprep.outputDir)))
+    else chunks += (outputDir -> (
+      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    )
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -161,7 +168,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = input_R2
+        fastSplitter_R2.input = input_R2.get
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
         fastSplitter_R2.isIntermediate = true
         add(fastSplitter_R2)
@@ -269,7 +276,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
-    bwaCommand.R = getReadGroup
+    bwaCommand.R = Some(getReadGroup)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     add(bwaCommand)
@@ -302,7 +309,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId + ","
-    RG += "LB:" + libraryId + ","
+    RG += "LB:" + libId + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     RG += "PU:" + platformUnit + ","
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -353,7 +360,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libraryId
+    addOrReplaceReadGroups.RGLB = libId
     addOrReplaceReadGroups.RGPL = platform
     addOrReplaceReadGroups.RGPU = platformUnit
     addOrReplaceReadGroups.RGSM = sampleId
@@ -367,7 +374,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def getReadGroup(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libraryId + "\\t"
+    RG += "LB:" + libId + "\\t"
     RG += "PL:" + platform + "\\t"
     RG += "PU:" + platformUnit + "\\t"
     RG += "SM:" + sampleId + "\\t"

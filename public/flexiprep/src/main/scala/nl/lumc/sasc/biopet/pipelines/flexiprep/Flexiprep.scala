@@ -30,7 +30,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var input_R1: File = _
 
   @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
-  var input_R2: File = _
+  var input_R2: Option[File] = None
 
   /** Skip Trim fastq files */
   var skipTrim: Boolean = config("skip_trim", default = false)
@@ -38,13 +38,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+
   /** Sample name */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
   var sampleId: String = _
 
   /** Library name */
-  var libraryId: String = _
+  @Argument(doc = "Library ID", shortName = "library", required = true)
+  var libId: String = _
 
-  var paired: Boolean = (input_R2 != null)
+  var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
   var R2_ext: String = _
   var R1_name: String = _
@@ -58,12 +62,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   val summary = new FlexiprepSummary(this)
 
   def init() {
-    if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
-    if (sampleId == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
-    if (libraryId == null) throw new IllegalStateException("Missing Library name on flexiprep module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
-    paired = (input_R2 != null)
+    require(outputDir != null, "Missing output directory on flexiprep module")
+    require(input_R1 != null, "Missing input R1 on flexiprep module")
+    require(sampleId != null, "Missing sample ID on flexiprep module")
+    require(libId != null, "Missing library ID on flexiprep module")
+
+    paired = input_R2.isDefined
 
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
@@ -71,15 +75,19 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     R1_ext = R1_name.substring(R1_name.lastIndexOf("."), R1_name.size)
     R1_name = R1_name.substring(0, R1_name.lastIndexOf(R1_ext))
 
-    if (paired) {
-      if (input_R2.endsWith(".gz")) R2_name = input_R2.getName.substring(0, input_R2.getName.lastIndexOf(".gz"))
-      else if (input_R2.endsWith(".gzip")) R2_name = input_R2.getName.substring(0, input_R2.getName.lastIndexOf(".gzip"))
-      else R2_name = input_R2.getName
-      R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.size)
-      R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
+    input_R2 match {
+      case Some(fileR2) => {
+        paired = true
+        if (fileR2.endsWith(".gz")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gz"))
+        else if (fileR2.endsWith(".gzip")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gzip"))
+        else R2_name = fileR2.getName
+        R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.size)
+        R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
+      }
+      case _ =>
     }
 
-    summary.out = outputDir + sampleId + "-" + libraryId + ".qc.summary.json"
+    summary.out = outputDir + sampleId + "-" + libId + ".qc.summary.json"
   }
 
   def biopetScript() {
@@ -95,7 +103,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
   def runInitialJobs() {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
-    if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2, outputDir))
+    if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2.get, outputDir))
 
     fastqc_R1 = Fastqc(this, input_R1, outputDir + "/" + R1_name + ".fastqc/")
     add(fastqc_R1)
@@ -107,12 +115,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     summary.addMd5sum(md5sum_R1, R2 = false, after = false)
 
     if (paired) {
-      fastqc_R2 = Fastqc(this, input_R2, outputDir + "/" + R2_name + ".fastqc/")
+      fastqc_R2 = Fastqc(this, input_R2.get, outputDir + "/" + R2_name + ".fastqc/")
       add(fastqc_R2)
       summary.addFastqc(fastqc_R2, R2 = true)
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
 
-      val md5sum_R2 = Md5sum(this, input_R2, outputDir)
+      val md5sum_R2 = Md5sum(this, input_R2.get, outputDir)
       add(md5sum_R2)
       summary.addMd5sum(md5sum_R2, R2 = true, after = false)
     }
@@ -278,7 +286,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       add(zcatCommand)
       return newFile
     } else if (file.getName().endsWith(".bz2")) {
-      var newFile = swapExt(runDir, file, ".bz2", "")
+      val newFile = swapExt(runDir, file, ".bz2", "")
       val pbzip2 = Pbzip2(this, file, newFile)
       pbzip2.isIntermediate = true
       add(pbzip2)

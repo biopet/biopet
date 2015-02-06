@@ -33,7 +33,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
-    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+    class Library(libId: String) extends AbstractLibrary(libId) {
       protected def addJobs(): Unit = {}
     }
 
@@ -124,7 +124,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val gubbins = new RunGubbins(this)
       gubbins.fastafile = concensusVariants
-      gubbins.startingTree = raxmlBi.getBipartitionsFile
+      gubbins.startingTree = Some(raxmlBi.getBipartitionsFile)
       gubbins.outputDirectory = outputDir + dirSufixGubbins
       add(gubbins)
     }

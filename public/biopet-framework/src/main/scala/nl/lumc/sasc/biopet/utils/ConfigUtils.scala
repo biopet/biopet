@@ -336,8 +336,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2file(value: ConfigValue): File = {
-      //TODO: throw IllegalStateException
-      if (value != null && value.value != null && value.value != None) new File(any2string(value.value)) else null
+      if (value != null && value.value != null && value.value != None) new File(any2string(value.value))
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -346,7 +346,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionFile(value: ConfigValue): Option[File] = {
-      if (value != null && value.value != null && value.value != None) Some(new File(any2string(value.value))) else None
+      if (value != null && value.value != null && value.value != None) Some(new File(any2string(value.value)))
+      else None
     }
 
     /**
@@ -355,8 +356,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2string(value: ConfigValue): String = {
-      //TODO: throw IllegalStateException
-      if (value != null && value.value != null && value.value != None) any2string(value.value) else null
+      if (value != null && value.value != null && value.value != None) any2string(value.value)
+      else throw new IllegalStateException("Value does not exist")
     }
 
     /**
@@ -365,7 +366,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionString(value: ConfigValue): Option[String] = {
-      if (value != null && value.value != null && value.value != None) Some(any2string(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Some(any2string(value.value))
+      else None
     }
 
     /**
@@ -384,7 +386,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionLong(value: ConfigValue): Option[Long] = {
-      if (value != null && value.value != null && value.value != None) Option(any2long(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Option(any2long(value.value))
+      else None
     }
 
     /**
@@ -403,7 +406,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionInt(value: ConfigValue): Option[Int] = {
-      if (value != null && value.value != null && value.value != None) Option(any2int(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Option(any2int(value.value))
+      else None
     }
 
     /**
@@ -422,7 +426,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionDouble(value: ConfigValue): Option[Double] = {
-      if (value != null && value.value != null && value.value != None) Option(any2double(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Option(any2double(value.value))
+      else None
     }
 
     /**
@@ -441,7 +446,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionFloat(value: ConfigValue): Option[Float] = {
-      if (value != null && value.value != null && value.value != None) Option(any2float(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Option(any2float(value.value))
+      else None
     }
 
     /**
@@ -460,7 +466,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionBoolean(value: ConfigValue): Option[Boolean] = {
-      if (value != null && value.value != null && value.value != None) Option(any2boolean(value.value)) else None
+      if (value != null && value.value != null && value.value != None) Option(any2boolean(value.value))
+      else None
     }
 
     /**
