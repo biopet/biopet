@@ -35,6 +35,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfFilter,
+    nl.lumc.sasc.biopet.tools.VcfStats,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
     nl.lumc.sasc.biopet.tools.BedToInterval,
     nl.lumc.sasc.biopet.tools.MpileupToVcf,

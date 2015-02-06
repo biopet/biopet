@@ -36,7 +36,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   var singleSampleCalling = config("single_sample_calling", default = true)
   var reference: File = config("reference", required = true)
-  var dbsnp: File = config("dbsnp")
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
@@ -72,7 +71,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             samToFastq.isIntermediate = true
             qscript.add(samToFastq)
             mapping.input_R1 = samToFastq.fastqR1
-            mapping.input_R2 = samToFastq.fastqR2
+            mapping.input_R2 = Some(samToFastq.fastqR2)
             mapping.init
             mapping.biopetScript
             addAll(mapping.functions) // Add functions of mapping to curent function pool

@@ -30,12 +30,12 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   @Output(doc = "Output file gappedPeak")
   private var output_gapped: File = _
 
-  var fileformat: String = config("fileformat")
+  var fileformat: Option[String] = config("fileformat")
   var gsize: Option[Float] = config("gsize")
   var keepdup: Boolean = config("keep-dup", default = false)
   var buffersize: Option[Int] = config("buffer-size")
-  var outputdir: String = config("outputDir")
-  var name: String = config("name")
+  var outputdir: String = _
+  var name: Option[String] = config("name")
   var bdg: Boolean = config("bdg", default = false)
   var verbose: Boolean = config("verbose", default = false)
   var tsize: Option[Int] = config("tsize")
@@ -56,12 +56,14 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var callsummits: Boolean = config("callsummits", default = false)
 
   override def afterGraph: Unit = {
-    output_narrow = new File(outputdir + name + ".narrowPeak")
-    output_broad = new File(outputdir + name + ".broadPeak")
-    output_xls = new File(outputdir + name + ".xls")
-    output_bdg = new File(outputdir + name + ".bdg")
-    output_r = new File(outputdir + name + ".r")
-    output_gapped = new File(outputdir + name + ".gappedPeak")
+    if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
+    if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
+    output_narrow = new File(outputdir + name.get + ".narrowPeak")
+    output_broad = new File(outputdir + name.get + ".broadPeak")
+    output_xls = new File(outputdir + name.get + ".xls")
+    output_bdg = new File(outputdir + name.get + ".bdg")
+    output_r = new File(outputdir + name.get + ".r")
+    output_gapped = new File(outputdir + name.get + ".gappedPeak")
   }
 
   def cmdLine = {
