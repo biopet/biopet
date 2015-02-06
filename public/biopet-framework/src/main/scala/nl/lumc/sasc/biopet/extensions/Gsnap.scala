@@ -24,15 +24,15 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
-  var input: List[File] = _
+  var input: List[File] = List.empty[File]
 
   /** output file */
   @Output(doc = "Output alignment file", required = true)
-  var output: File = _
+  var output: File = null
 
   /** genome directory */
-  @Argument(doc = "Directory of genome database", required = true)
-  var dir: File = config("dir")
+  @Argument(doc = "Directory of genome database")
+  var dir: Option[File] = config("dir")
 
   /** genome database */
   @Argument(doc = "Genome database name", required = true)
@@ -48,7 +48,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var sampling: Option[Int] = config("sampling")
 
   /** process only the i-th out of every n sequences */
-  var part: String = config("part")
+  var part: Option[String] = config("part")
 
   /** size of input buffer (program reads this many sequences at a time)*/
   var input_buffer_size: Option[Int] = config("input_buffer_size")
@@ -57,7 +57,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var barcode_length: Option[Int] = config("barcode_length")
 
   /** orientation of paired-end reads */
-  var orientation: String = config("orientation")
+  var orientation: Option[String] = config("orientation")
 
   /** starting position of identifier in fastq header, space-delimited (>= 1) */
   var fastq_id_start: Option[Int] = config("fastq_id_start")
@@ -69,7 +69,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var force_single_end: Boolean = config("force_single_end", default = false)
 
   /** skips reads marked by the illumina chastity program.  expecting a string */
-  var filter_chastity: String = config("filter_chastity")
+  var filter_chastity: Option[String] = config("filter_chastity")
 
   /** allows accession names of reads to mismatch in paired-end files */
   var allow_pe_name_mismatch: Boolean = config("allow_pe_name_mismatch", default = false)
@@ -126,7 +126,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var suboptimal_levels: Option[Int] = config("suboptimal_levels")
 
   /** method for removing adapters from reads.  currently allowed values: off, paired */
-  var adapter_strip: String = config("adapter_strip")
+  var adapter_strip: Option[String] = config("adapter_strip")
 
   /** score to use for mismatches when trimming at ends (default is -3; */
   var trim_mismatch_score: Option[Int] = config("trim_mismatch_score")
@@ -135,37 +135,37 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var trim_indel_score: Option[Int] = config("trim_indel_score")
 
   /** directory for snps index files (created using snpindex) (default is */
-  var snpsdir: String = config("snpsdir")
+  var snpsdir: Option[String] = config("snpsdir")
 
   /** use database containing known snps (in <string>.iit, built */
-  var use_snps: String = config("use_snps")
+  var use_snps: Option[String] = config("use_snps")
 
   /** directory for methylcytosine index files (created using cmetindex) */
-  var cmetdir: String = config("cmetdir")
+  var cmetdir: Option[String] = config("cmetdir")
 
   /** directory for a-to-i rna editing index files (created using atoiindex) */
-  var atoidir: String = config("atoidir")
+  var atoidir: Option[String] = config("atoidir")
 
   /** alignment mode: standard (default), cmet-stranded, cmet-nonstranded, */
-  var mode: String = config("mode")
+  var mode: Option[String] = config("mode")
 
   /** directory for tally iit file to resolve concordant multiple results (default is */
-  var tallydir: String = config("tallydir")
+  var tallydir: Option[String] = config("tallydir")
 
   /** use this tally iit file to resolve concordant multiple results */
-  var use_tally: String = config("use_tally")
+  var use_tally: Option[String] = config("use_tally")
 
   /** directory for runlength iit file to resolve concordant multiple results (default is */
-  var runlengthdir: String = config("runlengthdir")
+  var runlengthdir: Option[String] = config("runlengthdir")
 
   /** use this runlength iit file to resolve concordant multiple results */
-  var use_runlength: String = config("use_runlength")
+  var use_runlength: Option[String] = config("use_runlength")
 
   /** number of worker threads */
   var nthreads: Option[Int] = config("nthreads")
 
   /** cases to use gmap for complex alignments containing multiple splices or indels */
-  var gmap_mode: String = config("gmap_mode")
+  var gmap_mode: Option[String] = config("gmap_mode")
 
   /** try gmap pairsearch on nearby genomic regions if best score (the total */
   var trigger_score_for_gmap: Option[Int] = config("trigger_score_for_gmap")
@@ -192,10 +192,10 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var novelsplicing: Option[Int] = config("novelsplicing")
 
   /** directory for splicing involving known sites or known introns, */
-  var splicingdir: String = config("splicingdir")
+  var splicingdir: Option[String] = config("splicingdir")
 
   /** look for splicing involving known sites or known introns */
-  var use_splicing: String = config("use_splicing")
+  var use_splicing: Option[String] = config("use_splicing")
 
   /** for ambiguous known splicing at ends of the read, do not clip at the */
   var ambig_splice_noclip: Boolean = config("ambig_splice_noclip", default = false)
@@ -240,7 +240,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var pairdev: Option[Int] = config("pairdev")
 
   /** protocol for input quality scores.  allowed values: */
-  var quality_protocol: String = config("quality_protocol")
+  var quality_protocol: Option[String] = config("quality_protocol")
 
   /** fastq quality scores are zero at this ascii value */
   var quality_zero_score: Option[Int] = config("quality_zero_score")
@@ -276,10 +276,10 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var fails_as_input: Boolean = config("fails_as_input", default = false)
 
   /** another format type, other than default */
-  var format: String = config("format")
+  var format: Option[String] = config("format")
 
   /** basename for multiple-file output, separately for nomapping, */
-  var split_output: String = config("split_output")
+  var split_output: Option[String] = config("split_output")
 
   /** when --split-output is given, this flag will append output to the */
   var append_output: Boolean = config("append_output", default = false)
@@ -306,16 +306,16 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   var md_lowercase_snp: Boolean = config("md_lowercase_snp", default = false)
 
   /** value to put into read-group id (rg-id) field */
-  var read_group_id: String = config("read_group_id")
+  var read_group_id: Option[String] = config("read_group_id")
 
   /** value to put into read-group name (rg-sm) field */
-  var read_group_name: String = config("read_group_name")
+  var read_group_name: Option[String] = config("read_group_name")
 
   /** value to put into read-group library (rg-lb) field */
-  var read_group_library: String = config("read_group_library")
+  var read_group_library: Option[String] = config("read_group_library")
 
   /** value to put into read-group library (rg-pl) field */
-  var read_group_platform: String = config("read_group_platform")
+  var read_group_platform: Option[String] = config("read_group_platform")
 
   override val versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
