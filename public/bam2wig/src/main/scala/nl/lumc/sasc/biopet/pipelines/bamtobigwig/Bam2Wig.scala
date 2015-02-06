@@ -13,10 +13,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Input
+  @Input(doc="", required = true)
   var bamFile: File = _
 
-  @Output
+  @Output(doc="", required = true)
   var bigWigFile: File = _
 
   def init(): Unit = {
@@ -33,6 +33,7 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
     igvCount.input = bamFile
     igvCount.genomeChromSizes = bs.chromSizesFile
     igvCount.wig = Some(swapExt(outputDir, bamFile, ".bam", ".wig"))
+    add(igvCount)
 
     val wigToBigWig = new WigToBigWig(this)
     wigToBigWig.inputWigFile = igvCount.wig.get
