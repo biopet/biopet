@@ -35,13 +35,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
 
-  var countBed: File = config("count_bed")
-
-  var squishedCountBed: File = config("squished_count_bed")
-
-  var transcriptome: File = config("transcriptome")
-
-  var tagsLibrary: File = config("tags_library")
+  var countBed: Option[File] = config("count_bed")
+  var squishedCountBed: File = _
+  var transcriptome: Option[File] = config("transcriptome")
+  var tagsLibrary: Option[File] = config("tags_library")
 
   override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
     "m" -> 1,
@@ -62,16 +59,16 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
-    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+    class Library(libId: String) extends AbstractLibrary(libId) {
       val inputFastq: File = config("R1", required = true)
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
       flexiprep.sampleId = sampleId
-      flexiprep.libraryId = libraryId
+      flexiprep.libId = libId
 
       val mapping = new Mapping(qscript)
-      mapping.libraryId = libraryId
+      mapping.libId = libId
       mapping.sampleId = sampleId
 
       protected def addJobs(): Unit = {
@@ -96,14 +93,14 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         qscript.addAll(mapping.functions)
 
         if (config("library_counts", default = false).asBoolean) {
-          addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libraryId, libDir)
-          addTablibCounts(pf.outputFastq, sampleId + "-" + libraryId, libDir)
+          addBedtoolsCounts(mapping.finalBamFile, sampleId + "-" + libId, libDir)
+          addTablibCounts(pf.outputFastq, sampleId + "-" + libId, libDir)
         }
       }
     }
 
     protected def addJobs(): Unit = {
-      addLibsJobs()
+      addPerLibJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
       val libraryFastqFiles = libraries.map(_._2.prefixFastq).toList
 
@@ -127,31 +124,32 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def init() {
     if (!outputDir.endsWith("/")) outputDir += "/"
-    if (transcriptome == null && tagsLibrary == null)
+    if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
-    if (countBed == null && squishedCountBed == null)
-      throw new IllegalStateException("No bedfile supplied, please add a countBed or squishedCountBed")
+    if (countBed.isEmpty)
+      throw new IllegalStateException("No bedfile supplied, please add a countBed")
   }
 
   def biopetScript() {
-    if (squishedCountBed == null) {
-      val squishBed = SquishBed(this, countBed, outputDir)
-      add(squishBed)
-      squishedCountBed = squishBed.output
-    }
+    val squishBed = SquishBed(this, countBed.get, outputDir)
+    add(squishBed)
+    squishedCountBed = squishBed.output
 
-    if (tagsLibrary == null) {
+    if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
-      cdl.input = transcriptome
+      cdl.input = transcriptome.get
       cdl.output = outputDir + "taglib/tag.lib"
       cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
       cdl.noTagsOutput = outputDir + "taglib/no_sense_genes.txt"
       cdl.allGenesOutput = outputDir + "taglib/all_genes.txt"
       add(cdl)
-      tagsLibrary = cdl.output
+      tagsLibrary = Some(cdl.output)
     }
 
-    addSamplesJobs
+    addSamplesJobs()
+  }
+
+  def addMultiSampleJobs(): Unit = {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
@@ -184,7 +182,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
     val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
-    createTagCounts.tagLib = tagsLibrary
+    createTagCounts.tagLib = tagsLibrary.get
     createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"
     createTagCounts.countAllSense = outputDir + outputPrefix + ".tagcount.all.sense.counts"
     createTagCounts.countAntiSense = outputDir + outputPrefix + ".tagcount.antisense.counts"

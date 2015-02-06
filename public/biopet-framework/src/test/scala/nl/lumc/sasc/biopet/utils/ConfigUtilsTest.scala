@@ -235,10 +235,14 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
       }
 
       var string: String = ConfigValue(index, index, "test")
-      string = ConfigValue(index, index, null)
+      intercept[IllegalStateException] {
+        string = ConfigValue(index, index, null)
+      }
 
       var file: File = ConfigValue(index, index, "test")
-      file = ConfigValue(index, index, null)
+      intercept[IllegalStateException] {
+        file = ConfigValue(index, index, null)
+      }
     }
   }
 }
