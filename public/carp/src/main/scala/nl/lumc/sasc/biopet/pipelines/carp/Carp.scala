@@ -44,14 +44,14 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
-    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+    class Library(libId: String) extends AbstractLibrary(libId) {
       val mapping = new Mapping(qscript)
 
       def addJobs(): Unit = {
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
-          mapping.libraryId = libraryId
+          mapping.libId = libId
           mapping.sampleId = sampleId
           mapping.outputDir = libDir
 
@@ -59,7 +59,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
           mapping.biopetScript
           addAll(mapping.functions)
 
-        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libraryId)
+        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libId)
       }
     }
 

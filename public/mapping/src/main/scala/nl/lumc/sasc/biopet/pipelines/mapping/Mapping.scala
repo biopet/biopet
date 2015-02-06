@@ -66,17 +66,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   /** Readgroup ID */
   protected var readgroupId: String = _
 
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+
   /** Readgroup Library */
-  var libraryId: String = _
+  @Argument(doc = "Library ID", shortName = "library", required = true)
+  var libId: String = _
+
+  /**Readgroup sample */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
+  var sampleId: String = _
 
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
 
   /** Readgroup platform unit */
   protected var platformUnit: String = config("platform_unit", default = "na")
-
-  /**Readgroup sample */
-  var sampleId: String = _
 
   /** Readgroup sequencing center */
   protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
@@ -95,14 +99,14 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def finalBamFile: File = outputDir + outputName + ".final.bam"
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
-    if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
+    require(outputDir != null, "Missing output directory on mapping module")
+    require(input_R1 != null, "Missing output directory on mapping module")
+    require(sampleId != null, "Missing sample ID on mapping module")
+    require(libId != null, "Missing library ID on mapping module")
+
     paired = input_R2.isDefined
 
-    if (libraryId == null) libraryId = config("library_id")
-    if (sampleId == null) sampleId = config("sample_id")
-    if (readgroupId == null && sampleId != null && libraryId != null) readgroupId = sampleId + "-" + libraryId
+    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
     if (outputName == null) outputName = readgroupId
@@ -127,7 +131,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       flexiprep.input_R1 = input_R1
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
-      flexiprep.libraryId = this.libraryId
+      flexiprep.libId = this.libId
       flexiprep.init
       flexiprep.runInitialJobs
     }
@@ -281,7 +285,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId + ","
-    RG += "LB:" + libraryId + ","
+    RG += "LB:" + libId + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     RG += "PU:" + platformUnit + ","
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -332,7 +336,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libraryId
+    addOrReplaceReadGroups.RGLB = libId
     addOrReplaceReadGroups.RGPL = platform
     addOrReplaceReadGroups.RGPU = platformUnit
     addOrReplaceReadGroups.RGSM = sampleId
@@ -346,7 +350,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def getReadGroup(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libraryId + "\\t"
+    RG += "LB:" + libId + "\\t"
     RG += "PL:" + platform + "\\t"
     RG += "PU:" + platformUnit + "\\t"
     RG += "SM:" + sampleId + "\\t"

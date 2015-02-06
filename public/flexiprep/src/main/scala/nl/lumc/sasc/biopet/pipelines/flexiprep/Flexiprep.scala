@@ -38,13 +38,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+
   /** Sample name */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
   var sampleId: String = _
 
   /** Library name */
-  var libraryId: String = _
+  @Argument(doc = "Library ID", shortName = "library", required = true)
+  var libId: String = _
 
-  var paired: Boolean = (input_R2 != null)
+  var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
   var R2_ext: String = _
   var R1_name: String = _
@@ -58,11 +62,12 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   val summary = new FlexiprepSummary(this)
 
   def init() {
-    if (input_R1 == null) throw new IllegalStateException("Missing R1 on flexiprep module")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on flexiprep module")
-    if (sampleId == null) throw new IllegalStateException("Missing Sample name on flexiprep module")
-    if (libraryId == null) throw new IllegalStateException("Missing Library name on flexiprep module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
+    require(outputDir != null, "Missing output directory on flexiprep module")
+    require(input_R1 != null, "Missing input R1 on flexiprep module")
+    require(sampleId != null, "Missing sample ID on flexiprep module")
+    require(libId != null, "Missing library ID on flexiprep module")
+
+    paired = input_R2.isDefined
 
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
@@ -82,7 +87,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       case _ =>
     }
 
-    summary.out = outputDir + sampleId + "-" + libraryId + ".qc.summary.json"
+    summary.out = outputDir + sampleId + "-" + libId + ".qc.summary.json"
   }
 
   def biopetScript() {
