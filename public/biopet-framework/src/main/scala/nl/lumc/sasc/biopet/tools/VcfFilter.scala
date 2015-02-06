@@ -145,10 +145,8 @@ object VcfFilter extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
     writer.writeHeader(header)
 
-    val invertedWriter = if (commandArgs.invertedOutputVcf.isDefined)
-      Some(new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.invertedOutputVcf.get).build))
-    else None
-    if (invertedWriter.isDefined) invertedWriter.get.writeHeader(header)
+    val invertedWriter = commandArgs.invertedOutputVcf.collect { case x => new VariantContextWriterBuilder().setOutputFile(x).build }
+    invertedWriter.foreach(_.writeHeader(header))
 
     var counterTotal = 0
     var counterLeft = 0
@@ -167,16 +165,15 @@ object VcfFilter extends ToolCommand {
         inIdSet(record)) {
         writer.add(record)
         counterLeft += 1
-      } else {
-        if (invertedWriter.isDefined) invertedWriter.get.add(record)
-      }
+      } else
+        invertedWriter.foreach(_.add(record))
       counterTotal += 1
       if (counterTotal % 100000 == 0) logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     }
     logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     reader.close
     writer.close
-    if (invertedWriter.isDefined) invertedWriter.get.close()
+    invertedWriter.foreach(_.close())
     logger.info("Done")
   }
 
