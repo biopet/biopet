@@ -26,6 +26,7 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
+import scala.io.Source
 
 class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -58,6 +59,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 object VcfFilter extends ToolCommand {
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
+                  invertedOutputVcf: Option[File] = None,
                   minQualscore: Option[Double] = None,
                   minSampleDepth: Int = -1,
                   minTotalDepth: Int = -1,
@@ -69,7 +71,8 @@ object VcfFilter extends ToolCommand {
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   filterRefCalls: Boolean = false,
-                  filterNoCalls: Boolean = false) extends AbstractArgs
+                  filterNoCalls: Boolean = false,
+                  iDset: Set[String] = Set()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -78,6 +81,9 @@ object VcfFilter extends ToolCommand {
     opt[File]('o', "outputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputVcf = x)
     } text ("Output vcf file")
+    opt[File]("invertedOutputVcf") maxOccurs (1) valueName ("<file>") action { (x, c) =>
+      c.copy(invertedOutputVcf = Some(x))
+    } text ("inverted output vcf file")
     opt[Int]("minSampleDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minSampleDepth = x)
     } text ("Min value for DP in genotype fields")
@@ -116,6 +122,12 @@ object VcfFilter extends ToolCommand {
     opt[Double]("minQualscore") unbounded () action { (x, c) =>
       c.copy(minQualscore = Some(x))
     } text ("Min qual score")
+    opt[String]("id") unbounded () action { (x, c) =>
+      c.copy(iDset = c.iDset + x)
+    } text ("Id that may pass the filter")
+    opt[File]("id-file") unbounded () action { (x, c) =>
+      c.copy(iDset = c.iDset ++ Source.fromFile(x).getLines())
+    } text ("File that contain list of IDs to get from vcf file")
   }
 
   var commandArgs: Args = _
@@ -124,6 +136,7 @@ object VcfFilter extends ToolCommand {
    * @param args the command line arguments
    */
   def main(args: Array[String]): Unit = {
+    logger.info("Start")
     val argsParser = new OptParser
     commandArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
@@ -132,6 +145,11 @@ object VcfFilter extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputVcf).build)
     writer.writeHeader(header)
 
+    val invertedWriter = commandArgs.invertedOutputVcf.collect { case x => new VariantContextWriterBuilder().setOutputFile(x).build }
+    invertedWriter.foreach(_.writeHeader(header))
+
+    var counterTotal = 0
+    var counterLeft = 0
     for (record <- reader) {
       if (minQualscore(record) &&
         filterRefCalls(record) &&
@@ -143,12 +161,20 @@ object VcfFilter extends ToolCommand {
         mustHaveVariant(record) &&
         notSameGenotype(record) &&
         filterHetVarToHomVar(record) &&
-        denovoInSample(record)) {
+        denovoInSample(record) &&
+        inIdSet(record)) {
         writer.add(record)
-      }
+        counterLeft += 1
+      } else
+        invertedWriter.foreach(_.add(record))
+      counterTotal += 1
+      if (counterTotal % 100000 == 0) logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     }
+    logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     reader.close
     writer.close
+    invertedWriter.foreach(_.close())
+    logger.info("Done")
   }
 
   def minQualscore(record: VariantContext): Boolean = {
@@ -240,5 +266,10 @@ object VcfFilter extends ToolCommand {
       }
     }
     return true
+  }
+
+  def inIdSet(record: VariantContext): Boolean = {
+    if (commandArgs.iDset.isEmpty) true
+    else record.getID.split(",").exists(commandArgs.iDset.contains(_))
   }
 }
