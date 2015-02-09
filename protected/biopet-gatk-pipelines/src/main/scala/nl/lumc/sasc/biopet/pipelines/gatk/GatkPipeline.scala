@@ -50,6 +50,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
       /** Library variantcalling */
       val gatkVariantcalling = new GatkVariantcalling(qscript)
+      gatkVariantcalling.doublePreProces = false
       gatkVariantcalling.sampleID = sampleId
       gatkVariantcalling.outputDir = libDir
 
@@ -112,7 +113,6 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         if (bamFile.isDefined) {
           gatkVariantcalling.inputBams = List(bamFile.get)
           gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
-          gatkVariantcalling.preProcesBams = true
           gatkVariantcalling.init
           gatkVariantcalling.biopetScript
           addAll(gatkVariantcalling.functions)
