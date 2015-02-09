@@ -9,6 +9,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
@@ -136,6 +137,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
+
+      gatkVariantcalling.inputBams.foreach(x => addAll(Bam2Wig(qscript, x).functions))
     }
   }
 
