@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.bamtobigwig
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.WigToBigWig
@@ -41,4 +43,13 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
   }
 }
 
-object Bam2Wig extends PipelineCommand
+object Bam2Wig extends PipelineCommand {
+  def apply(root: Configurable, bamFile: File): Bam2Wig = {
+    val bamToBigWig = new Bam2Wig(root)
+    bamToBigWig.outputDir = bamFile.getParent
+    bamToBigWig.bamFile = bamFile
+    bamToBigWig.init()
+    bamToBigWig.biopetScript()
+    bamToBigWig
+  }
+}
