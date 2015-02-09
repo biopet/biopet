@@ -43,7 +43,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   var fastqc: Fastqc = _
 
   executable = config("exe", default = "sickle", freeVar = false)
-  var qualityType: String = config("qualitytype")
+  var qualityType: Option[String] = config("qualitytype")
   var qualityThreshold: Option[Int] = config("qualityThreshold")
   var lengthThreshold: Option[Int] = config("lengthThreshold")
   var noFiveprime: Boolean = config("noFiveprime", default = false)
@@ -54,7 +54,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
 
   override def afterGraph {
-    if (qualityType == null && defaultQualityType != null) qualityType = defaultQualityType
+    if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 
   def cmdLine = {

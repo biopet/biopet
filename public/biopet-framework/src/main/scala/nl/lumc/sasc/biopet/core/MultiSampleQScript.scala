@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument }
  */
 trait MultiSampleQScript extends BiopetQScript {
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
-  val onlySample: List[String] = Nil
+  private val onlySamples: List[String] = Nil
 
   require(Config.global.map.contains("samples"), "No Samples found in config")
 
@@ -40,26 +40,26 @@ trait MultiSampleQScript extends BiopetQScript {
 
     /**
      * Library class with basic functions build in
-     * @param libraryId
+     * @param libId
      */
-    abstract class AbstractLibrary(val libraryId: String) {
+    abstract class AbstractLibrary(val libId: String) {
       /** Overrules config of qscript with default sample and default library */
-      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libraryId)
+      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
         currentSample = Some(sampleId)
-        currentLib = Some(libraryId)
+        currentLib = Some(libId)
         addJobs()
         currentLib = None
         currentSample = None
       }
 
       /** Creates a library file with given suffix */
-      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libraryId + suffix)
+      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
 
       /** Returns library directory */
-      def libDir = sampleDir + "lib_" + libraryId + File.separator
+      def libDir = sampleDir + "lib_" + libId + File.separator
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -94,8 +94,8 @@ trait MultiSampleQScript extends BiopetQScript {
     protected def addJobs()
 
     /** function add all libraries in one call */
-    protected final def addLibsJobs(): Unit = {
-      for ((libraryId, library) <- libraries) {
+    protected final def addPerLibJobs(): Unit = {
+      for ((libId, library) <- libraries) {
         library.addAndTrackJobs()
       }
     }
@@ -108,7 +108,7 @@ trait MultiSampleQScript extends BiopetQScript {
     def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
 
     /** Returns sample directory */
-    def sampleDir = outputDir + "samples" + File.pathSeparator + sampleId + File.pathSeparator
+    def sampleDir = outputDir + "samples" + File.separator + sampleId + File.separator
   }
 
   /** Sample type, need implementation in pipeline */
@@ -125,16 +125,23 @@ trait MultiSampleQScript extends BiopetQScript {
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def sampleIds: Set[String] = if (onlySample != Nil) onlySample.toSet else {
-    ConfigUtils.any2map(Config.global.map("samples")).keySet
-  }
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
-    for ((sampleId, sample) <- samples) {
-      sample.addAndTrackJobs()
-    }
+    if (onlySamples.isEmpty) {
+      samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
+      addMultiSampleJobs()
+    } else onlySamples.foreach(sampleId => samples.get(sampleId) match {
+      case Some(sample) => sample.addAndTrackJobs()
+      case None         => logger.warn("sampleId '" + sampleId + "' not found")
+    })
   }
+
+  /**
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given
+   */
+  def addMultiSampleJobs()
 
   /** Stores sample state */
   private var currentSample: Option[String] = None

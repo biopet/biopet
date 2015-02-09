@@ -53,11 +53,9 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
-
       //      val runDir: String = alignmentDir + "run_" + libraryId + "/"
-
       val mapping = new Mapping(qscript)
-      mapping.libraryId = libraryId
+      mapping.libId = libraryId
       mapping.sampleId = sampleId
 
       protected def addJobs(): Unit = {
@@ -71,7 +69,6 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       }
     }
     protected def addJobs(): Unit = {
-      addLibsJobs()
       val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
 
       val bamFile: File = if (libraryBamfiles.size == 1) {
@@ -133,6 +130,8 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
       //
     }
   }
+
+  def addMultiSampleJobs() = {}
 
   def init() {
   }
