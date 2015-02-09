@@ -229,7 +229,7 @@ object Seqstat extends ToolCommand {
       var key: Int = pos - phred_correction
       if (key > 0) {
         // count till the max of baseHistogram.length
-        for (histokey <- 0 until key) {
+        for (histokey <- 0 until key + 1) {
           baseHistogram(histokey) += quals(pos)
         }
       }
@@ -243,7 +243,7 @@ object Seqstat extends ToolCommand {
       var key: Int = pos - phred_correction
       if (key > 0) {
         // count till the max of baseHistogram.length
-        for (histokey <- 0 until key) {
+        for (histokey <- 0 until key + 1) {
           readHistogram(histokey) += readStats.qual(pos)
         }
       }
@@ -290,7 +290,7 @@ object Seqstat extends ToolCommand {
           ("num_with_n", readStats.withN),
           ("num_total", readStats.qual.sum),
           ("len_min", readStats.lengths.takeWhile(_ == 0).length),
-          ("len_max", readStats.lengths.length-1),
+          ("len_max", readStats.lengths.length - 1),
           ("num_qual_gte", readQualHistoMap.toMap),
           ("qual_encoding", phred_encoding)
         ))
@@ -298,6 +298,6 @@ object Seqstat extends ToolCommand {
     )
 
     val json_report: Json = ConfigUtils.mapToJson(report)
-    print(json_report.spaces2)
+    println(json_report.spaces2)
   }
 }

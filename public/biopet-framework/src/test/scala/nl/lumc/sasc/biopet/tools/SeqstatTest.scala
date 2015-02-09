@@ -43,7 +43,7 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3")
   }
 
-  @Test(dataProvider = "mockReaderProvider", groups = Array("sanger"), singleThreaded = true)
+  @Test(dataProvider = "mockReaderProvider", groups = Array("read"), singleThreaded = true)
   def testSeqCountReads(fqMock: FastqReader) = {
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
 
@@ -52,20 +52,40 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
     numReads shouldBe 5
   }
 
-  @Test(dataProvider = "mockReaderProvider", groups = Array("sanger"), singleThreaded = true)
+  @Test(dataProvider = "mockReaderProvider", groups = Array("phredscore"), singleThreaded = true, dependsOnGroups = Array("read"))
   def testEncodingDetectionSanger(fqMock: FastqReader) = {
-    when(fqMock.iterator) thenReturn recordsOver("1")
 
     val seqstat = Seqstat
-    val numReads = seqstat.seqStat(fqMock)
-    numReads shouldBe 1
+    //    val numReads = seqstat.seqStat(fqMock)
+    //    numReads shouldBe 1
     seqstat.summarize()
 
+    // TODO: divide into more testcases, instead of having in 1,
+    // currently not possible because the Seqstat is a bit state dependent?
     seqstat.phred_correction shouldBe 33
     seqstat.phred_encoding shouldBe "sanger"
-    //    nucleotideHistoMap.values.sum shouldBe 5
-    //    nucleotideHistoMap('N') shouldBe 1
-    //    nucleotideHistoMap('A') shouldBe 1
+  }
+
+  @Test(dataProvider = "mockReaderProvider", groups = Array("nucleocount"), singleThreaded = true, dependsOnGroups = Array("phredscore"))
+  def testEncodingNucleotideCount(fqMock: FastqReader) = {
+
+    val seqstat = Seqstat
+    baseHistogram(40) shouldEqual 5
+    baseHistogram(39) shouldEqual 10
+    baseHistogram(34) shouldEqual 15
+    baseHistogram(33) shouldEqual 20
+    baseHistogram(0) shouldEqual 20
+  }
+
+  @Test(dataProvider = "mockReaderProvider", groups = Array("basehistogram"), singleThreaded = true, dependsOnGroups = Array("nucleocount"))
+  def testEncodingBaseHistogram(fqMock: FastqReader) = {
+
+    val seqstat = Seqstat
+    baseHistogram(40) shouldEqual 5
+    baseHistogram(39) shouldEqual 10
+    baseHistogram(34) shouldEqual 15
+    baseHistogram(33) shouldEqual 20
+    baseHistogram(0) shouldEqual 20
   }
 
   @Test def testArgsMinimum() = {
