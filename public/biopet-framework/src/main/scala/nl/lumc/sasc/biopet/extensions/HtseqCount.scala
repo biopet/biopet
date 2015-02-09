@@ -22,15 +22,15 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** input file */
   @Input(doc = "Input alignment file", required = true)
-  var inputAlignment: File = _
+  var inputAlignment: File = null
 
   /** input GFF / GTF annotation file */
   @Input(doc = "Input GFF / GTF annotation file", required = true)
-  var inputAnnotation: File = _
+  var inputAnnotation: File = null
 
   /** output file */
   @Output(doc = "Output count file", required = true)
-  var output: File = _
+  var output: File = null
 
   /** type of input alignment */
   var format: Option[String] = config("format")
