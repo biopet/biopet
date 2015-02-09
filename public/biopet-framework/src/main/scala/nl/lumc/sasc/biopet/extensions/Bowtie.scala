@@ -13,12 +13,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.aligners
+package nl.lumc.sasc.biopet.extensions
+
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file R1", shortName = "R1")
@@ -42,14 +43,14 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
-  var sam_RG: String = config("sam-RG")
+  var sam_RG: Option[String] = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
   var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")
   var m: Option[Int] = config("m")
-  var best: Boolean = config("best")
+  var best: Boolean = config("best", default = false)
   var maxbts: Option[Int] = config("maxbts")
-  var strata: Boolean = config("strata")
+  var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
 
   def cmdLine = {

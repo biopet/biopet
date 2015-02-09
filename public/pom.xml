@@ -32,8 +32,10 @@
         <module>gentrap</module>
         <module>mapping</module>
         <module>sage</module>
+        <module>kopisu</module>
         <module>yamsvp</module>
-        <module>toucan</module>
+        <module>carp</module>
+	<module>toucan</module>
     </modules>
     
     <properties>

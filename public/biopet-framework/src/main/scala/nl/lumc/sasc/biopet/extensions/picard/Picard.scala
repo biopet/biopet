@@ -18,27 +18,29 @@ package nl.lumc.sasc.biopet.extensions.picard
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-trait Picard extends BiopetJavaCommandLineFunction {
+abstract class Picard extends BiopetJavaCommandLineFunction {
+  override def subPath = "picard" :: super.subPath
+
   @Argument(doc = "VERBOSITY", required = false)
-  var verbosity: String = config("verbosity", submodule = "picard")
+  var verbosity: Option[String] = config("verbosity")
 
   @Argument(doc = "QUIET", required = false)
-  var quiet: Boolean = config("quiet", default = false, submodule = "picard")
+  var quiet: Boolean = config("quiet", default = false)
 
   @Argument(doc = "VALIDATION_STRINGENCY", required = false)
-  var stringency: String = config("validationstringency", submodule = "picard")
+  var stringency: Option[String] = config("validationstringency")
 
   @Argument(doc = "COMPRESSION_LEVEL", required = false)
-  var compression: Option[Int] = config("compressionlevel", submodule = "picard")
+  var compression: Option[Int] = config("compressionlevel")
 
   @Argument(doc = "MAX_RECORDS_IN_RAM", required = false)
-  var maxRecordsInRam: Option[Int] = config("maxrecordsinram", submodule = "picard")
+  var maxRecordsInRam: Option[Int] = config("maxrecordsinram")
 
   @Argument(doc = "CREATE_INDEX", required = false)
-  var createIndex: Boolean = config("createindex", default = true, submodule = "picard")
+  var createIndex: Boolean = config("createindex", default = true)
 
   @Argument(doc = "CREATE_MD5_FILE", required = false)
-  var createMd5: Boolean = config("createmd5", default = false, submodule = "picard")
+  var createMd5: Boolean = config("createmd5", default = false)
 
   //  override def versionCommand = executable + " " + javaOpts + " " + javaExecutable + " -h"
   //  override val versionRegex = """Version: (.*)""".r

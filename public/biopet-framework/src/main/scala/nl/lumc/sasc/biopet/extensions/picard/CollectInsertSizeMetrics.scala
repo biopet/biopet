@@ -19,6 +19,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+import scala.collection.immutable.Nil
+
 class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
 
@@ -47,7 +49,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   var stopAfter: Option[Long] = config("stopAfter")
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")

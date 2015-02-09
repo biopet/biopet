@@ -72,16 +72,16 @@ Global setting examples are:
 #### Example settings config
 ~~~
 {
-        "reference": "/data/LGTC/projects/vandoorn-melanoma/data/references/hg19_nohap/ucsc.hg19_nohap.fasta",
-        "dbsnp": "/data/LGTC/projects/vandoorn-melanoma/data/references/hg19_nohap/dbsnp_137.hg19_nohap.vcf",
+        "reference": "/references/hg19_nohap/ucsc.hg19_nohap.fasta",
+        "dbsnp": "/references/hg19_nohap/dbsnp_137.hg19_nohap.vcf",
         "joint_variantcalling": false,
         "haplotypecaller": { "scattercount": 100 },
         "multisample": { "haplotypecaller": { "scattercount": 1000 } },
         "picard": { "validationstringency": "LENIENT" },
         "library_variantcalling_temp": true,
-        "target_bed_temp": "/data/LGTC/projects/vandoorn-melanoma/analysis/target.bed",
+        "target_bed_temp": "analysis/target.bed",
         "min_dp": 5,
-        "bedtools": {"exe":"/share/isilon/system/local/BEDtools/bedtools-2.17.0/bin/bedtools"},
+        "bedtools": {"exe":"/BEDtools/bedtools-2.17.0/bin/bedtools"},
         "bam_to_fastq": true,
         "baserecalibrator": { "memory_limit": 8, "vmem":"16G" },
         "samtofastq": {"memory_limit": 8, "vmem": "16G"},

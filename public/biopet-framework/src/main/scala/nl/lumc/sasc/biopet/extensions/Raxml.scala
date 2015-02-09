@@ -50,6 +50,8 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Output directory", required = true)
   var w: String = _
 
+  var noBfgs: Boolean = config("no_bfgs", default = false)
+
   @Input(required = false)
   var t: File = _
 
@@ -60,11 +62,11 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   private var out: List[File] = Nil
 
   var executableNonThreads: String = config("exe", default = "raxmlHPC")
-  var executableThreads: String = config("exe_pthreads")
+  var executableThreads: Option[String] = config("exe_pthreads")
 
   override def afterGraph {
     if (threads == 0) threads = getThreads(defaultThreads)
-    executable = if (threads > 1 && executableThreads != null) executableThreads else executableNonThreads
+    executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
     super.afterGraph
     out +:= getInfoFile
     f match {
@@ -101,5 +103,6 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
     optional("-f", f) +
     optional("-t", t) +
     optional("-z", z) +
+    conditional(noBfgs, "--no-bgfs") +
     required("-T", threads)
 }

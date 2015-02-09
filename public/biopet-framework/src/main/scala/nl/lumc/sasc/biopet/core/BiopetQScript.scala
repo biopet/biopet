@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -29,11 +29,17 @@ trait BiopetQScript extends Configurable with GatkLogging {
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
-  var outputDir: String = _
+  var outputDir: String = {
+    val temp = Config.getValueFromMap(Config.global.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
+    if (temp.isEmpty) throw new IllegalArgumentException("No output_dir defined in config")
+    else {
+      val t = temp.get.value.toString
+      if (!t.endsWith("/")) t + "/" else t
+    }
+  }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
-  var disableScatterDefault: Boolean = false
+  var disableScatter: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
 
@@ -45,11 +51,12 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   final def script() {
+    outputDir = config("output_dir", required = true)
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
-    if (disableScatterDefault) for (function <- functions) function match {
+    if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
@@ -57,13 +64,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case f: BiopetCommandLineFunctionTrait => f.afterGraph
       case _                                 =>
     }
-    val configReport = Config.global.getReport
-    val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
-    configReportFile.getParentFile.mkdir
-    val writer = new PrintWriter(configReportFile)
-    writer.write(configReport)
-    writer.close()
-    for (line <- configReport.split("\n")) logger.debug(line)
+
+    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
   }
 
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript

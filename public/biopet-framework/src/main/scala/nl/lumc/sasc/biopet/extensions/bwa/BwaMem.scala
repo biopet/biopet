@@ -13,14 +13,15 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.aligners
+package nl.lumc.sasc.biopet.extensions.bwa
+
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
-class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
+class BwaMem(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
 
@@ -33,10 +34,10 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
 
-  var R: String = config("R")
+  var R: Option[String] = config("R")
   var k: Option[Int] = config("k")
   var r: Option[Float] = config("r")
-  var S: Boolean = config("S")
+  var S: Boolean = config("S", default = false)
   var M: Boolean = config("M", default = true)
   var w: Option[Int] = config("w")
   var d: Option[Int] = config("d")
@@ -44,32 +45,26 @@ class Bwa(val root: Configurable) extends BiopetCommandLineFunction {
   var D: Option[Float] = config("D")
   var W: Option[Int] = config("W")
   var m: Option[Int] = config("m")
-  var P: Boolean = config("P")
-  var e: Boolean = config("e")
+  var P: Boolean = config("P", default = false)
+  var e: Boolean = config("e", default = false)
   var A: Option[Int] = config("A")
   var B: Option[Int] = config("B")
-  var O: String = config("O")
-  var E: String = config("E")
-  var L: String = config("L")
+  var O: Option[String] = config("O")
+  var E: Option[String] = config("E")
+  var L: Option[String] = config("L")
   var U: Option[Int] = config("U")
-  var x: String = config("x")
-  var p: Boolean = config("p")
+  var x: Option[String] = config("x")
+  var p: Boolean = config("p", default = false)
   var v: Option[Int] = config("v")
   var T: Option[Int] = config("T")
   var h: Option[Int] = config("h")
-  var a: Boolean = config("a")
-  var C: Boolean = config("C")
-  var Y: Boolean = config("Y")
-  var I: String = config("I")
-
-  executable = config("exe", default = "bwa", freeVar = false)
-  override val versionRegex = """Version: (.*)""".r
-  override val versionExitcode = List(0, 1)
+  var a: Boolean = config("a", default = false)
+  var C: Boolean = config("C", default = false)
+  var Y: Boolean = config("Y", default = false)
+  var I: Option[String] = config("I")
 
   override val defaultVmem = "6G"
   override val defaultThreads = 8
-
-  override def versionCommand = executable
 
   def cmdLine = {
     required(executable) +

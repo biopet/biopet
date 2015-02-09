@@ -13,12 +13,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.aligners
+package nl.lumc.sasc.biopet.extensions
+
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "FastQ file R1", shortName = "R1")

@@ -169,17 +169,20 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   @Test def testImplicits: Unit = {
     val index = ConfigValueIndex("test", Nil, "test")
     new ImplicitConversions {
-      var map: Map[String, Any] = ConfigValue(index, index, Map())
-      map = ConfigValue(index, index, null)
-
       configValue2list(ConfigValue(index, index, List(""))) shouldBe List("")
-      configValue2list(ConfigValue(index, index, null)) shouldBe null
+      intercept[IllegalStateException] {
+        configValue2list(ConfigValue(index, index, null))
+      }
 
       configValue2stringList(ConfigValue(index, index, List(""))) shouldBe List("")
-      configValue2stringList(ConfigValue(index, index, null)) shouldBe null
+      intercept[IllegalStateException] {
+        configValue2stringList(ConfigValue(index, index, null))
+      }
 
       configValue2stringSet(ConfigValue(index, index, List(""))) shouldBe Set("")
-      configValue2stringSet(ConfigValue(index, index, null)) shouldBe null
+      intercept[IllegalStateException] {
+        configValue2stringSet(ConfigValue(index, index, null))
+      }
 
       var int: Int = ConfigValue(index, index, 1)
       intercept[IllegalStateException] {
@@ -232,10 +235,14 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
       }
 
       var string: String = ConfigValue(index, index, "test")
-      string = ConfigValue(index, index, null)
+      intercept[IllegalStateException] {
+        string = ConfigValue(index, index, null)
+      }
 
       var file: File = ConfigValue(index, index, "test")
-      file = ConfigValue(index, index, null)
+      intercept[IllegalStateException] {
+        file = ConfigValue(index, index, null)
+      }
     }
   }
 }

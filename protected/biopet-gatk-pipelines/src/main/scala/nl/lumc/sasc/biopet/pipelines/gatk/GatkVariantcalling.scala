@@ -7,10 +7,11 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, MergeAlleles }
+import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
@@ -31,9 +32,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   @Argument(doc = "Reference", shortName = "R", required = false)
   var reference: File = config("reference", required = true)
 
-  @Argument(doc = "Dbsnp", shortName = "dbsnp", required = false)
-  var dbsnp: File = config("dbsnp")
-
   @Argument(doc = "OutputName", required = false)
   var outputName: String = _
 
@@ -52,7 +50,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
-    else if (outputName == null) outputName = "noname"
+    else if (outputName == null) outputName = config("output_name", default = "noname")
     if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
     else if (!outputDir.endsWith("/")) outputDir += "/"
 
@@ -68,7 +66,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
     if (!doublePreProces.get) return files
     val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
-    add(markDup, isIntermediate = useIndelRealigner)
+    markDup.isIntermediate = useIndelRealigner
+    add(markDup)
     if (useIndelRealigner) {
       List(addIndelRealign(markDup.output, outputDir, isIntermediate = false))
     } else {
@@ -141,11 +140,13 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           add(m2v)
           scriptOutput.rawVcfFile = m2v.output
 
-          val vcfFilter = new VcfFilter(this)
-          vcfFilter.defaults ++= Map("min_sample_depth" -> 8,
-            "min_alternate_depth" -> 2,
-            "min_samples_pass" -> 1,
-            "filter_ref_calls" -> true)
+          val vcfFilter = new VcfFilter(this) {
+            override def defaults = ConfigUtils.mergeMaps(Map("min_sample_depth" -> 8,
+              "min_alternate_depth" -> 2,
+              "min_samples_pass" -> 1,
+              "filter_ref_calls" -> true
+            ), super.defaults)
+          }
           vcfFilter.inputVcf = m2v.output
           vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
           add(vcfFilter)
@@ -157,7 +158,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       // Allele mode
       if (useAllelesOption.get) {
         val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz")
-        add(mergeAlleles, isIntermediate = true)
+        mergeAlleles.isIntermediate = true
+        add(mergeAlleles)
 
         if (useHaplotypecaller.get) {
           val hcAlleles = new HaplotypeCaller(this)
@@ -187,23 +189,32 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         val sv = SelectVariants(this, input, output)
         sv.excludeFiltered = true
         sv.excludeNonVariants = true
-        add(sv, isIntermediate = true)
+        sv.isIntermediate = true
+        add(sv)
         sv.out
       }
 
       val cvFinal = CombineVariants(this, mergeList.toList, outputDir + outputName + ".final.vcf.gz")
       cvFinal.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
       add(cvFinal)
+
+      val vcfStats = new VcfStats(this)
+      vcfStats.input = cvFinal.out
+      vcfStats.setOutputDir(outputDir + File.separator + "vcfstats")
+      add(vcfStats)
+
       scriptOutput.finalVcfFile = cvFinal.out
     }
   }
 
   def addIndelRealign(inputBam: File, dir: String, isIntermediate: Boolean = true): File = {
     val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
-    add(realignerTargetCreator, isIntermediate = true)
+    realignerTargetCreator.isIntermediate = true
+    add(realignerTargetCreator)
 
     val indelRealigner = IndelRealigner.apply(this, inputBam, realignerTargetCreator.out, dir)
-    add(indelRealigner, isIntermediate = isIntermediate)
+    indelRealigner.isIntermediate = isIntermediate
+    add(indelRealigner)
 
     return indelRealigner.o
   }
@@ -227,7 +238,8 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
     printReads.BQSR = baseRecalibrator.o
-    add(printReads, isIntermediate = isIntermediate)
+    printReads.isIntermediate = isIntermediate
+    add(printReads)
 
     return printReads.o
   }

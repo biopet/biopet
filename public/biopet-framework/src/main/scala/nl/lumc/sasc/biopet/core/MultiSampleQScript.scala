@@ -15,166 +15,150 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.core.config.{ ConfigValue, Config, Configurable }
-import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import java.io.File
 
+import nl.lumc.sasc.biopet.core.config.{ Config }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.utils.commandline.{ Argument }
+
+/**
+ * This trait creates a structured way of use multisample pipelines
+ */
 trait MultiSampleQScript extends BiopetQScript {
-  type LibraryOutput <: AbstractLibraryOutput
-  type SampleOutput <: AbstractSampleOutput
+  @Argument(doc = "Only Sample", shortName = "sample", required = false)
+  private val onlySamples: List[String] = Nil
 
-  abstract class AbstractLibraryOutput
-  abstract class AbstractSampleOutput {
-    var libraries: Map[String, LibraryOutput] = Map()
-    def getAllLibraries = libraries
-    def getLibrary(key: String) = libraries(key)
-  }
-
-  if (!config.contains("samples")) logger.warn("No Samples found in config")
+  require(Config.global.map.contains("samples"), "No Samples found in config")
 
   /**
-   * Returns a map with all sample configs
+   * Sample class with basic functions build in
+   * @param sampleId
    */
-  val getSamplesConfig: Map[String, Any] = config("samples", default = Map())
+  abstract class AbstractSample(val sampleId: String) {
+    /** Overrules config of qscript with default sample */
+    val config = new ConfigFunctions(defaultSample = sampleId)
 
-  /**
-   * Returns a list of all sampleIDs
-   */
-  val getSamples: Set[String] = getSamplesConfig.keySet
+    /**
+     * Library class with basic functions build in
+     * @param libId
+     */
+    abstract class AbstractLibrary(val libId: String) {
+      /** Overrules config of qscript with default sample and default library */
+      val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
-  /**
-   * Returns the global sample directory
-   * @return global sample directory
-   */
-  def globalSampleDir: String = outputDir + "samples/"
-
-  var samplesOutput: Map[String, SampleOutput] = Map()
-
-  /**
-   * Runs runSingleSampleJobs method for each sample
-   */
-  final def runSamplesJobs() {
-    for ((key, value) <- getSamplesConfig) {
-      var sample = any2map(value)
-      if (!sample.contains("ID")) sample += ("ID" -> key)
-      if (sample("ID") == key) {
-        currentSample = key
-        samplesOutput += key -> runSingleSampleJobs(sample)
-        currentSample = null
-      } else logger.warn("Key is not the same as ID on value for sample")
-    }
-  }
-
-  def runSingleSampleJobs(sampleConfig: Map[String, Any]): SampleOutput
-
-  /**
-   * Run sample with only sampleID
-   * @param sample sampleID
-   * @return
-   */
-  def runSingleSampleJobs(sample: String): SampleOutput = {
-    var map = any2map(getSamplesConfig(sample))
-    if (map.contains("ID") && map("ID") != sample)
-      throw new IllegalStateException("ID in config not the same as the key")
-    else map += ("ID" -> sample)
-    return runSingleSampleJobs(map)
-  }
-
-  /**
-   * Runs runSingleLibraryJobs method for each library found in sampleConfig
-   * @param sampleConfig sample config
-   * @return Map with libraryID -> LibraryOutput object
-   */
-  final def runLibraryJobs(sampleConfig: Map[String, Any]): Map[String, LibraryOutput] = {
-    var output: Map[String, LibraryOutput] = Map()
-    val sampleID = sampleConfig("ID").toString
-    if (sampleConfig.contains("libraries")) {
-      val runs = any2map(sampleConfig("libraries"))
-      for ((key, value) <- runs) {
-        var library = any2map(value)
-        if (!library.contains("ID")) library += ("ID" -> key)
-        if (library("ID") == key) {
-          currentLibrary = key
-          output += key -> runSingleLibraryJobs(library, sampleConfig)
-          currentLibrary = null
-        } else logger.warn("Key is not the same as ID on value for run of sample: " + sampleID)
+      /** Adds the library jobs */
+      final def addAndTrackJobs(): Unit = {
+        currentSample = Some(sampleId)
+        currentLib = Some(libId)
+        addJobs()
+        currentLib = None
+        currentSample = None
       }
-    } else logger.warn("No runs found in config for sample: " + sampleID)
-    return output
+
+      /** Creates a library file with given suffix */
+      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
+
+      /** Returns library directory */
+      def libDir = sampleDir + "lib_" + libId + File.separator
+
+      /** Function that add library jobs */
+      protected def addJobs()
+    }
+
+    /** Library type, need implementation in pipeline */
+    type Library <: AbstractLibrary
+
+    /** Stores all libraries */
+    val libraries: Map[String, Library] = libIds.map(id => id -> makeLibrary(id)).toMap
+
+    /**
+     * Factory method for Library class
+     * @param id SampleId
+     * @return Sample class
+     */
+    def makeLibrary(id: String): Library
+
+    /** returns a set with library names */
+    protected def libIds: Set[String] = {
+      ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+    }
+
+    /** Adds sample jobs */
+    final def addAndTrackJobs(): Unit = {
+      currentSample = Some(sampleId)
+      addJobs()
+      currentSample = None
+    }
+
+    /** Function to add sample jobs */
+    protected def addJobs()
+
+    /** function add all libraries in one call */
+    protected final def addPerLibJobs(): Unit = {
+      for ((libId, library) <- libraries) {
+        library.addAndTrackJobs()
+      }
+    }
+
+    /**
+     * Creates a sample file with given suffix
+     * @param suffix
+     * @return
+     */
+    def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
+
+    /** Returns sample directory */
+    def sampleDir = outputDir + "samples" + File.separator + sampleId + File.separator
   }
-  def runSingleLibraryJobs(runConfig: Map[String, Any], sampleConfig: Map[String, Any]): LibraryOutput
 
-  protected var currentSample: String = null
-  protected var currentLibrary: String = null
+  /** Sample type, need implementation in pipeline */
+  type Sample <: AbstractSample
 
   /**
-   * Set current sample manual, only use this when not using runSamplesJobs method
-   * @param sample
+   * Factory method for Sample class
+   * @param id SampleId
+   * @return Sample class
    */
-  def setCurrentSample(sample: String) {
-    logger.debug("Manual sample set to: " + sample)
-    currentSample = sample
+  def makeSample(id: String): Sample
+
+  /** Stores all samples */
+  val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
+
+  /** Returns a list of all sampleIDs */
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
+
+  /** Runs addAndTrackJobs method for each sample */
+  final def addSamplesJobs() {
+    if (onlySamples.isEmpty) {
+      samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
+      addMultiSampleJobs()
+    } else onlySamples.foreach(sampleId => samples.get(sampleId) match {
+      case Some(sample) => sample.addAndTrackJobs()
+      case None         => logger.warn("sampleId '" + sampleId + "' not found")
+    })
   }
 
   /**
-   * Gets current sample
-   * @return current sample
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given
    */
-  def getCurrentSample = currentSample
+  def addMultiSampleJobs()
 
-  /**
-   * Reset current sample manual, only use this when not using runSamplesJobs method
-   */
-  def resetCurrentSample() {
-    logger.debug("Manual sample reset")
-    currentSample = null
-  }
+  /** Stores sample state */
+  private var currentSample: Option[String] = None
 
-  /**
-   * Set current library manual, only use this when not using runLibraryJobs method
-   * @param library
-   */
-  def setCurrentLibrary(library: String) {
-    logger.debug("Manual library set to: " + library)
-    currentLibrary = library
-  }
+  /** Stores library state */
+  private var currentLib: Option[String] = None
 
-  /**
-   * Gets current library
-   * @return current library
-   */
-  def getCurrentLibrary = currentLibrary
-
-  /**
-   * Reset current library manual, only use this when not using runLibraryJobs method
-   */
-  def resetCurrentLibrary() {
-    logger.debug("Manual library reset")
-    currentLibrary = null
-  }
-
+  /** Prefix full path with sample and library for jobs that's are created in current state */
   override protected[core] def configFullPath: List[String] = {
-    (if (currentSample != null) "samples" :: currentSample :: Nil else Nil) :::
-      (if (currentLibrary != null) "libraries" :: currentLibrary :: Nil else Nil) :::
-      super.configFullPath
-  }
-
-  protected class ConfigFunctions extends super.ConfigFunctions {
-    override def apply(key: String,
-                       default: Any = null,
-                       submodule: String = null,
-                       required: Boolean = false,
-                       freeVar: Boolean = true,
-                       sample: String = currentSample,
-                       library: String = currentLibrary): ConfigValue = {
-      super.apply(key, default, submodule, required, freeVar, sample, library)
+    val s = currentSample match {
+      case Some(s) => "samples" :: s :: Nil
+      case _       => Nil
     }
-
-    override def contains(key: String,
-                          submodule: String = null,
-                          freeVar: Boolean = true,
-                          sample: String = currentSample,
-                          library: String = currentLibrary) = {
-      super.contains(key, submodule, freeVar, sample, library)
+    val l = currentLib match {
+      case Some(l) => "libraries" :: l :: Nil
+      case _       => Nil
     }
+    s ::: l ::: super.configFullPath
   }
 }
