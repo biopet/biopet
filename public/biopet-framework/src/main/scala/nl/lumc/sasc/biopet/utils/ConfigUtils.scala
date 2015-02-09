@@ -332,7 +332,9 @@ object ConfigUtils extends Logging {
 
     private def requiredValue(value: ConfigValue): Unit = {
       if (!valueExists(value))
-        throw new IllegalStateException("Value does not exist but is required, key: '" + value.requestIndex.key + "'")
+        throw new IllegalStateException("Value does not exist but is required, key: " + value.requestIndex.key +
+          "  module: " + value.requestIndex.module +
+          (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else ""))
     }
 
     private def valueExists(value: ConfigValue): Boolean = {

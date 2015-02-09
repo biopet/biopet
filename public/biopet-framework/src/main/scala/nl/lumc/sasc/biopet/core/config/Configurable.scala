@@ -79,7 +79,6 @@ trait Configurable extends ImplicitConversions {
      * @param key Name of value
      * @param default Default value if not found
      * @param submodule Adds to the path
-     * @param required Default false, if true and value is not found this function will raise an exception
      * @param freeVar Default true, if set false value must exist in module
      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
@@ -88,7 +87,6 @@ trait Configurable extends ImplicitConversions {
     def apply(key: String,
               default: Any = null,
               submodule: String = null,
-              required: Boolean = false,
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null): ConfigValue = {
@@ -100,14 +98,8 @@ trait Configurable extends ImplicitConversions {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (!contains(key, submodule, freeVar, sample = s, library = l) && d == null) {
-        if (required) {
-          Logging.logger.error("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
-          throw new IllegalStateException("Value in config could not be found but it is required, key: " + key + "   module: " + m + "   path: " + p)
-        } else return null
-      }
-      if (d == null) return Config.global(m, p, key, freeVar = freeVar)
-      else return Config.global(m, p, key, d, freeVar)
+      if (d == null) Config.global(m, p, key, freeVar = freeVar)
+      else Config.global(m, p, key, d, freeVar)
     }
 
     /**
