@@ -56,7 +56,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   var aligner: String = config("aligner", default = "gsnap")
 
   /** Gene-wise read count table output */
-  var cGeneRead: Boolean = config("gene_read_counts", default = false)
+  var countReadsPerGene: Boolean = config("count_reads_per_gene", default = false)
+
+  /** Exon-wise base count table output */
+  var countBasesPerExon: Boolean = config("count_bases_per_exon", default = false)
+
+  /** GTF reference file */
+  var annotationGtf: Option[File] = config("annotation_gtf", required = false)
+
+  /** BED reference file */
+  var annotationBed: Option[File] = config("annotation_bed", required = false)
+
+  /** refFlat reference file */
+  var annotationRefFlat: Option[File] = config("annotation_refflat", required = false)
 
   /*
   /** Whether library is strand-specific (dUTP protocol) or not */
@@ -97,46 +109,65 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
-    val alnFile: File = createFile(".bam")
+    def alnFile: File = privAlnFile
+    private var privAlnFile: File = createFile(".bam")
+
+    def geneReadCountFile: Option[File] = privGrcFile
+    private var privGrcFile: Option[File] = None
 
     def addJobs(): Unit = {
 
-      // create per-sample alignment file
-      val sampleAlignmentJob: Either[Ln, MergeSamFiles] = libraries.values.toList
-        .map(lib => lib.alnFile) match {
-          // library only has one file, then we symlink
-          case file :: Nil =>
-            val ln = new Ln(qscript)
-            ln.in = file
-            ln.out = alnFile
-            Left(ln)
-          // library has multiple files, then we merge
-          case files @ f :: fs =>
-            val merge = new MergeSamFiles(qscript)
-            merge.input = files
-            merge.sortOrder = "coordinate"
-            merge.output = alnFile
-            Right(merge)
-          // library has 0 or less files, error!
-          case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
-        }
-      add(sampleAlignmentJob.merge)
+      addPerLibJobs()
 
-      // do gene read counts if set ~ and use ID-sorted bam
-      if (cGeneRead) {
-        val idSortingJob = new SortSam(qscript)
-        idSortingJob.input = alnFile
-        idSortingJob.output = createFile(".idsorted.bam")
-        idSortingJob.sortOrder = "queryname"
-        add(idSortingJob)
+      privAlnFile = addMergeJob(libraries.values.map(lib => lib.alnFile).toList)
 
-        val geneReadJob = new HtseqCount(qscript)
-        geneReadJob.format = "bam"
-        geneReadJob.order = "name"
-        geneReadJob.inputAlignment = idSortingJob.output
-        add(geneReadJob)
+      privGrcFile = (countReadsPerGene, annotationGtf) match {
+        case (true, Some(gtf)) => Option(addReadsPerGeneJob(privAlnFile, gtf))
+        case (true, None)      => throw new IllegalStateException("GTF file must be defined for counting reads per gene")
+        case _                 => None
       }
 
+    }
+
+    def addMergeJob(alns: List[File]): File = alns match {
+      // library only has one file, then we symlink
+      case file :: Nil =>
+        val ln = new Ln(qscript)
+        ln.in = file
+        ln.out = alnFile
+        add(ln)
+        ln.out
+      // library has multiple files, then we merge
+      case files @ f :: fs =>
+        val merge = new MergeSamFiles(qscript)
+        merge.input = files
+        merge.sortOrder = "coordinate"
+        merge.output = alnFile
+        add(merge)
+        merge.output
+      // library has 0 or less files, error!
+      case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
+    }
+
+    /** Add jobs for reads per gene counting using HTSeq */
+    // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
+    // to its buffer not being large enough.
+    def addReadsPerGeneJob(alnFile: File, annotation: File): File = {
+      val idSortingJob = new SortSam(qscript)
+      idSortingJob.input = alnFile
+      idSortingJob.output = createFile(".idsorted.bam")
+      idSortingJob.sortOrder = "queryname"
+      add(idSortingJob)
+
+      val geneReadJob = new HtseqCount(qscript)
+      geneReadJob.format = Option("bam")
+      geneReadJob.order = Option("name")
+      geneReadJob.inputAnnotation = annotation
+      geneReadJob.inputAlignment = idSortingJob.output
+      geneReadJob.output = createFile(".raw.read.count")
+      add(geneReadJob)
+
+      geneReadJob.output
     }
 
     def makeLibrary(libId: String): Library = new Library(libId)
@@ -150,12 +181,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
       def addJobs(): Unit = {
         // create per-library alignment file
+        mapping.sampleId = sampleId
+        mapping.libId = libId
+        mapping.outputDir = libDir
         mapping.input_R1 = config("R1", required = true)
-        // TODO: update this once mapping.input_R2 becomes Option[File]
-        mapping.input_R2 =
-          if (config.contains("R2")) config("R2")
-          else null
-        mapping.outputDir = this.libDir
+        mapping.input_R2 = config("R2")
         mapping.init()
         mapping.biopetScript()
         addAll(mapping.functions)
@@ -163,13 +193,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     }
   }
 
-  // empty implementation
-  def init() {}
+  /** Steps to run before biopetScript */
+  def init(): Unit = {
+  }
 
-  def biopetScript() {
+  def biopetScript(): Unit = {
     addSamplesJobs()
   }
 
+  def addMultiSampleJobs(): Unit = {
+
+  }
 }
 
 object Gentrap extends PipelineCommand
