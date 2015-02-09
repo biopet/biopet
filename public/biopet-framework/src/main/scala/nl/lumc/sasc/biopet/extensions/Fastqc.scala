@@ -71,7 +71,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
       // otherwise, check if adapters are already present (depending on FastQC version)
       case None =>
         val defaultAdapters = getVersion match {
-          case "v0.11.2" => Some(new File(fastqcDir + "/Configuration/adapter_list.txt"))
+          case "v0.11.2" => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
           case _         => None
         }
         defaultAdapters.collect { case adp => config("adapters", default = adp) }
