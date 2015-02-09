@@ -37,34 +37,6 @@ class SeqstatSolexaTest extends TestNGSuite with MockitoSugar with Matchers {
     Array(
       Array(mock[FastqReader])
     )
-  //
-  //  @Test(dataProvider = "mockReaderProvider", groups = Array("solexa"))
-  //  def testEncodingDetectionSolexa(refMock: FastqReader) = {
-  //    when(refMock.iterator) thenReturn solexaRecordsOver("1", "2", "3", "4", "5")
-  //
-  //    val seqstat = Seqstat
-  //    val numReads = seqstat.seqStat(refMock)
-  //    numReads shouldBe 5
-  //    seqstat.summarize()
-  //
-  //    seqstat.phred_correction shouldBe 64
-  //    seqstat.phred_encoding shouldBe "solexa"
-  //  }
-  //
-  //  @Test(dataProvider = "mockReaderProvider", groups = Array("solexa"))
-  //  def testBaseCount(refMock: FastqReader) = {
-  //    when(refMock.iterator) thenReturn solexaRecordsOver("1", "2", "3", "4", "5")
-  //
-  //    val seqstat = Seqstat
-  //    val numReads = seqstat.seqStat(refMock)
-  //    numReads shouldBe 5
-  //
-  //    seqstat.summarize()
-  //
-  //    seqstat.quals.sum shouldBe 50
-  //    seqstat.readStats.withN shouldBe 5
-  //    seqstat.nucleotideHistoMap('N') shouldBe 10
-  //  }
 
   @Test def testArgsMinimum() = {
     val args = Array(

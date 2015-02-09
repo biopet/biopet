@@ -32,10 +32,17 @@ class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 }
 
-object Seqstat extends ToolCommand {
+object FqEncoding extends Enumeration {
+  type FqEncoding = Value
+  val Sanger = Value(33, "Sanger")
+  val Solexa = Value(64, "Solexa")
+  val Unknown = Value(0, "Unknown")
+}
 
-  var phred_encoding: String = "sanger"
-  var phred_correction: Int = 33
+object Seqstat extends ToolCommand {
+  import FqEncoding._
+
+  var phredEncoding: FqEncoding.Value = Sanger
 
   val reportValues = List(1, 10, 20, 30, 40, 50, 60)
 
@@ -77,6 +84,10 @@ object Seqstat extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
+  /**
+   *
+   * @param quals Computed quality histogram [flat]
+   */
   def detectPhredEncoding(quals: mutable.ArrayBuffer[Long]): Unit = {
     // substract 1 on high value, because we start from index 0
     val l_qual = quals.takeWhile(_ == 0).length
@@ -84,38 +95,22 @@ object Seqstat extends ToolCommand {
 
     (l_qual < 59, h_qual > 74) match {
       case (false, true) => {
-        phred_correction = 64
-        phred_encoding = "solexa"
+        phredEncoding = Solexa
       }
       case (true, true) => {
         // TODO: check this later on
         // complex case, we cannot tell wheter this is a sanger or solexa
         // but since the h_qual exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
-        phred_correction = 64
-        phred_encoding = "solexa"
+        phredEncoding = Solexa
       }
       case (true, false) => {
         // this is definite a sanger sequence, the lower end is sanger only
-        phred_correction = 33
-        phred_encoding = "sanger"
+        phredEncoding = Sanger
       }
       case (_, _) => {
-        phred_correction = 0
-        phred_encoding = "unknown"
+        phredEncoding = Unknown
       }
     }
-
-    //    if (h_qual > 74) {
-    //      phred_correction = 64
-    //      phred_encoding = "solexa"
-    //    } else if (l_qual < 59) {
-    //      phred_correction = 33
-    //      phred_encoding = "sanger"
-    //    }
-  }
-
-  def transformPhredEncoding(qualMap: Map[Int, Int]): (Map[Int, Int]) = {
-    qualMap map { case (k, v) => (k - phred_correction, v) }
   }
 
   // Setting up the internal storage for the statistics gathered for each read
@@ -226,7 +221,7 @@ object Seqstat extends ToolCommand {
     }
 
     for (pos <- 0 until quals.length) {
-      var key: Int = pos - phred_correction
+      var key: Int = pos - phredEncoding.id
       if (key > 0) {
         // count till the max of baseHistogram.length
         for (histokey <- 0 until key + 1) {
@@ -240,7 +235,7 @@ object Seqstat extends ToolCommand {
     }
 
     for (pos <- 0 until readStats.qual.length) {
-      var key: Int = pos - phred_correction
+      var key: Int = pos - phredEncoding.id
       if (key > 0) {
         // count till the max of baseHistogram.length
         for (histokey <- 0 until key + 1) {
@@ -292,12 +287,12 @@ object Seqstat extends ToolCommand {
           ("len_min", readStats.lengths.takeWhile(_ == 0).length),
           ("len_max", readStats.lengths.length - 1),
           ("num_qual_gte", readQualHistoMap.toMap),
-          ("qual_encoding", phred_encoding)
+          ("qual_encoding", phredEncoding.toString.toLowerCase)
         ))
       ))
     )
 
-    val json_report: Json = ConfigUtils.mapToJson(report)
-    println(json_report.spaces2)
+    val jsonReport: Json = ConfigUtils.mapToJson(report)
+    println(jsonReport.spaces2)
   }
 }

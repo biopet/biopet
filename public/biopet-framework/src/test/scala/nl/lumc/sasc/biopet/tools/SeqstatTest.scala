@@ -19,6 +19,7 @@ import scala.collection.JavaConverters._
 class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
 
   import nl.lumc.sasc.biopet.tools.Seqstat._
+  import nl.lumc.sasc.biopet.tools.FqEncoding._
 
   private def resourceFile(p: String): File =
     new File(resourcePath(p))
@@ -60,21 +61,18 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
     //    numReads shouldBe 1
     seqstat.summarize()
 
-    // TODO: divide into more testcases, instead of having in 1,
-    // currently not possible because the Seqstat is a bit state dependent?
-    seqstat.phred_correction shouldBe 33
-    seqstat.phred_encoding shouldBe "sanger"
+    seqstat.phredEncoding shouldBe Sanger
   }
 
   @Test(dataProvider = "mockReaderProvider", groups = Array("nucleocount"), singleThreaded = true, dependsOnGroups = Array("phredscore"))
   def testEncodingNucleotideCount(fqMock: FastqReader) = {
 
     val seqstat = Seqstat
-    baseHistogram(40) shouldEqual 5
-    baseHistogram(39) shouldEqual 10
-    baseHistogram(34) shouldEqual 15
-    baseHistogram(33) shouldEqual 20
-    baseHistogram(0) shouldEqual 20
+    nucleotideHistoMap('N') shouldEqual 5
+    nucleotideHistoMap('A') shouldEqual 5
+    nucleotideHistoMap('C') shouldEqual 5
+    nucleotideHistoMap('T') shouldEqual 5
+    nucleotideHistoMap('G') shouldEqual 5
   }
 
   @Test(dataProvider = "mockReaderProvider", groups = Array("basehistogram"), singleThreaded = true, dependsOnGroups = Array("nucleocount"))
