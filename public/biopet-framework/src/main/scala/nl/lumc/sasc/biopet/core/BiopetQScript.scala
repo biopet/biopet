@@ -51,7 +51,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   final def script() {
-    outputDir = config("output_dir", required = true)
+    outputDir = config("output_dir")
     if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript

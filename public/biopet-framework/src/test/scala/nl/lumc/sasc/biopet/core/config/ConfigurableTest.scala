@@ -27,10 +27,6 @@ class ConfigurableTest extends TestNGSuite with Matchers {
     classC.classB.get("k1").asString shouldBe "c1"
     classC.classB.classA.get("k1").asString shouldBe "c1"
 
-    classC.get("notexist") shouldBe null
-    intercept[IllegalStateException] {
-      classC.get("notexist", required = true)
-    }
     classC.get("notexist", default = "default").asString shouldBe "default"
 
     classC.get("k1", freeVar = false).asString shouldBe "c1"
@@ -47,11 +43,10 @@ abstract class Cfg extends Configurable {
   def get(key: String,
           default: String = null,
           submodule: String = null,
-          required: Boolean = false,
           freeVar: Boolean = true,
           sample: String = null,
           library: String = null) = {
-    config(key, default, submodule, required, freeVar = freeVar, sample = sample, library = library)
+    config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
   }
 }
 
