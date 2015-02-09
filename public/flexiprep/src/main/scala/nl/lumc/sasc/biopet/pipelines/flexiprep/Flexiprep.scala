@@ -30,7 +30,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var input_R1: File = _
 
   @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
-  var input_R2: Option[File] = _
+  var input_R2: Option[File] = None
 
   /** Skip Trim fastq files */
   var skipTrim: Boolean = config("skip_trim", default = false)
