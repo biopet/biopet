@@ -49,5 +49,10 @@
             <artifactId>BamMetrics</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Bam2Wig</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
