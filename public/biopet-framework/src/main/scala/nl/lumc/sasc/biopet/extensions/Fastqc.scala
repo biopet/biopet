@@ -31,10 +31,10 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   var adapters: Option[File] = None
 
   @Input(doc = "Fastq file", shortName = "FQ")
-  var fastqfile: File = _
+  var fastqfile: File = null
 
   @Output(doc = "Output", shortName = "out")
-  var output: File = _
+  var output: File = null
 
   executable = config("exe", default = "fastqc")
   var java_exe: String = config("exe", default = "java", submodule = "java", freeVar = false)
