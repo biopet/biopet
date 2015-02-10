@@ -53,15 +53,15 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @throws IllegalStateException if the module lines have no content or mapping is empty.
    */
   def qcModules: Map[String, FastQCModule] = {
-      val fqModules = Source.fromFile(dataFile)
-        // drop all the characters before the first module delimiter (i.e. '>>')
-        .dropWhile(_ != '>')
-        // pull everything into a string
-        .mkString
-        // split into modules
-        .split(">>END_MODULE\n")
-        // make map of module name -> module lines
-        .map {
+    val fqModules = Source.fromFile(dataFile)
+      // drop all the characters before the first module delimiter (i.e. '>>')
+      .dropWhile(_ != '>')
+      // pull everything into a string
+      .mkString
+      // split into modules
+      .split(">>END_MODULE\n")
+      // make map of module name -> module lines
+      .map {
         case (modString) =>
           // module name is in the first line, without '>>' and before the tab character
           val Array(firstLine, otherLines) = modString
@@ -77,10 +77,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
             .slice(0, 2)
           modName -> FastQCModule(modName, modStatus, otherLines.split("\n").toSeq)
       }
-        .toMap
+      .toMap
 
-      if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
-      else fqModules
+    if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
+    else fqModules
   }
 
   /**
@@ -93,11 +93,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
   def encoding: String = {
     if (dataFile.exists())
       qcModules("Basic Statistics") //FIXME: not save
-      .lines
-      .dropWhile(!_.startsWith("Encoding"))
-      .head
-      .stripPrefix("Encoding\t")
-      .stripSuffix("\t")
+        .lines
+        .dropWhile(!_.startsWith("Encoding"))
+        .head
+        .stripPrefix("Encoding\t")
+        .stripSuffix("\t")
     else ""
   }
 

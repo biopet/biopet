@@ -68,7 +68,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
         f.checkExecutable
         f.afterGraph
       }
-      case _                                 =>
+      case _ =>
     }
 
     if (new File(outputDir).canWrite) Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
