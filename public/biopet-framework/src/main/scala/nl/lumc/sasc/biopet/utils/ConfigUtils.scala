@@ -335,8 +335,8 @@ object ConfigUtils extends Logging {
       val exist = valueExists(value)
       if (!exist)
         BiopetQScript.addError("Value does not exist but is required, key: " + value.requestIndex.key +
-          "  module: " + value.requestIndex.module +
-          (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else ""))
+          "  module: " + value.requestIndex.module,
+          (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null))
       exist
     }
 

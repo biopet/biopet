@@ -33,7 +33,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputDir: String = {
     val temp = Config.getValueFromMap(Config.global.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
-    if (temp.isEmpty) throw new IllegalArgumentException("No output_dir defined in config")
+    if (temp.isEmpty) ""
     else {
       val t = temp.get.value.toString
       if (!t.endsWith("/")) t + "/" else t
@@ -54,7 +54,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   final def script() {
     outputDir = config("output_dir")
-    if (!outputDir.endsWith("/")) outputDir += "/"
+    if (outputDir.isEmpty) outputDir = new File(".").getAbsolutePath()
+    else if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
@@ -63,11 +64,15 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => f.afterGraph
+      case f: BiopetCommandLineFunctionTrait => {
+        f.checkExecutable
+        f.afterGraph
+      }
       case _                                 =>
     }
 
-    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    if (new File(outputDir).canWrite) Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    else BiopetQScript.addError("Output dir: '" + outputDir + "' is not writeable")
 
     BiopetQScript.checkErrors
   }
@@ -82,15 +87,23 @@ trait BiopetQScript extends Configurable with GatkLogging {
 object BiopetQScript extends Logging {
   private val errors: ListBuffer[Exception] = ListBuffer()
 
-  def addError(msg: String): Unit = {
+  def addError(error: String, debug: String = null): Unit = {
+    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
     errors.append(new Exception(msg))
   }
 
   protected def checkErrors: Unit = {
     if (!errors.isEmpty) {
-      for (e <- errors) {
-        logger.error(e.getMessage)
-        logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+      logger.error("*************************")
+      logger.error("Biopet found some errors:")
+      if (logger.isDebugEnabled) {
+        for (e <- errors) {
+          logger.error(e.getMessage)
+          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+        }
+      } else {
+        val set = errors.map(_.getMessage).toSet
+        set.toList.sorted.foreach(logger.error(_))
       }
       throw new IllegalStateException("Biopet found errors")
     }
