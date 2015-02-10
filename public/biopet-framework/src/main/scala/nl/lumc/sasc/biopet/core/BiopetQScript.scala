@@ -90,9 +90,8 @@ object BiopetQScript extends Logging {
     if (!errors.isEmpty) {
       for (e <- errors) {
         logger.error(e.getMessage)
-        logger.debug(e.getStackTrace.mkString("Stack trace:\n","\n","\n"))
+        logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
       }
-      //errors.foreach(logger.error(_))
       throw new IllegalStateException("Biopet found errors")
     }
   }
