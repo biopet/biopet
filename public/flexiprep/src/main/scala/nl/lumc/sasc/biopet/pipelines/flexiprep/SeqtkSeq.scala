@@ -32,6 +32,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
         case s if (s.contains("Illumina <1.3"))         => Option(64)
         case s if (s.contains("Illumina 1.3"))          => Option(64)
         case s if (s.contains("Illumina 1.5"))          => Option(64)
+        case _ => None
       }
       if (Q != None) V = true
     }
