@@ -228,9 +228,8 @@ object VEPNormalizer extends ToolCommand {
    * @return list of strings with new info fields
    */
   def parseCsq(header: VCFHeader): Array[String] = {
-    val csq = header.getInfoHeaderLine("CSQ").getDescription
-    val items = csq.split(':')(1).trim.split('|')
-    items
+    header.getInfoHeaderLine("CSQ").getDescription.
+      split(':')(1).trim.split('|')
   }
 
   /**
