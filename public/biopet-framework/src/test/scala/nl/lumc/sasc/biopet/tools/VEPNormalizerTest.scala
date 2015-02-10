@@ -29,27 +29,27 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testVEPHeaderLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    parse_csq(header).length should be(27)
+    parseCsq(header).length should be(27)
   }
 
   @Test def testExplodeVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parse_csq(header)
-    explode_transcripts(reader.iterator().next(), new_infos).length should be(11)
+    val new_infos = parseCsq(header)
+    explodeTranscripts(reader.iterator().next(), new_infos).length should be(11)
   }
 
   @Test def testStandardVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parse_csq(header)
+    val new_infos = parseCsq(header)
     Array(standardTranscripts(reader.iterator().next(), new_infos)).length should be(1)
   }
 
   @Test def testStandardVEPAttributeLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parse_csq(header)
+    val new_infos = parseCsq(header)
     val record = standardTranscripts(reader.iterator().next(), new_infos)
     def checkItems(items: Array[String]) = {
       items.foreach { check }
@@ -75,7 +75,7 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test(expectedExceptions = Array(classOf[VEPException]))
   def testNoCSQTagException {
-    csq_check(new VCFFileReader(unvepped, false).getFileHeader)
+    csqCheck(new VCFFileReader(unvepped, false).getFileHeader)
   }
 
 }

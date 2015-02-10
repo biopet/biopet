@@ -83,14 +83,14 @@ object VEPNormalizer extends ToolCommand {
 
     val header = reader.getFileHeader
     logger.debug("Checking for CSQ tag")
-    csq_check(header)
+    csqCheck(header)
     logger.debug("CSQ tag OK")
     logger.debug("Checkion VCF version")
-    version_check(header)
+    versionCheck(header)
     logger.debug("VCF version OK")
     val seqDict = header.getSequenceDictionary
     logger.debug("Parsing header")
-    val new_infos = parse_csq(header)
+    val new_infos = parseCsq(header)
     header.setWriteCommandLine(true)
     for (info <- new_infos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
@@ -116,7 +116,7 @@ object VEPNormalizer extends ToolCommand {
       if (i % 1000 == 0) {
         logger.info(s"""Read $i records \t Wrote $nwritten_records records""")
       }
-      val new_records = explode_transcripts(record, new_infos)
+      val new_records = explodeTranscripts(record, new_infos)
       for (vc <- new_records) {
         writer.add(vc)
       }
@@ -146,14 +146,14 @@ object VEPNormalizer extends ToolCommand {
 
     val header = reader.getFileHeader
     logger.debug("Checking for CSQ tag")
-    csq_check(header)
+    csqCheck(header)
     logger.debug("CSQ tag OK")
     logger.debug("Checkion VCF version")
-    version_check(header)
+    versionCheck(header)
     logger.debug("VCF version OK")
     val seqDict = header.getSequenceDictionary
     logger.debug("Parsing header")
-    val new_infos = parse_csq(header)
+    val new_infos = parseCsq(header)
     header.setWriteCommandLine(true)
     for (info <- new_infos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
@@ -194,7 +194,7 @@ object VEPNormalizer extends ToolCommand {
    * Checks whether header has a CSQ tag
    * @param header VCF header
    */
-  def csq_check(header: VCFHeader) = {
+  def csqCheck(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
       logger.error("No CSQ info tag found! Is this file VEP-annotated?")
       throw new VEPException("")
@@ -207,7 +207,7 @@ object VEPNormalizer extends ToolCommand {
    * Throws exception if not
    * @param header VCFHeader of input VCF
    */
-  def version_check(header: VCFHeader) = {
+  def versionCheck(header: VCFHeader) = {
     var format = ""
     //HACK: getMetaDataLine does not work for fileformat
     for (line <- header.getMetaDataInInputOrder) {
@@ -227,7 +227,7 @@ object VEPNormalizer extends ToolCommand {
    * @param header the VCF header
    * @return list of strings with new info fields
    */
-  def parse_csq(header: VCFHeader): Array[String] = {
+  def parseCsq(header: VCFHeader): Array[String] = {
     val csq = header.getInfoHeaderLine("CSQ").getDescription
     val items = csq.split(':')(1).trim.split('|')
     items
@@ -240,7 +240,7 @@ object VEPNormalizer extends ToolCommand {
    * @param csq_infos An array with names of new info tags
    * @return An array with the new records
    */
-  def explode_transcripts(record: VariantContext, csq_infos: Array[String]): Array[VariantContext] = {
+  def explodeTranscripts(record: VariantContext, csq_infos: Array[String]): Array[VariantContext] = {
     val csq = record.getAttributeAsString("CSQ", "unknown")
     val attributes = record.getAttributes.toMap
 
