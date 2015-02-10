@@ -24,6 +24,8 @@ import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
+import scala.collection.mutable.ListBuffer
+
 trait BiopetQScript extends Configurable with GatkLogging {
 
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
@@ -66,6 +68,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     }
 
     Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+
+    BiopetQScript.checkErrors
   }
 
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
@@ -73,5 +77,23 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
 
+object BiopetQScript extends Logging {
+  private val errors: ListBuffer[Exception] = ListBuffer()
+
+  def addError(msg: String): Unit = {
+    errors.append(new Exception(msg))
+  }
+
+  protected def checkErrors: Unit = {
+    if (!errors.isEmpty) {
+      for (e <- errors) {
+        logger.error(e.getMessage)
+        logger.debug(e.getStackTrace.mkString("Stack trace:\n","\n","\n"))
+      }
+      //errors.foreach(logger.error(_))
+      throw new IllegalStateException("Biopet found errors")
+    }
+  }
 }
