@@ -164,8 +164,8 @@ object VEPNormalizer extends ToolCommand {
    */
   def csqCheck(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
-      logger.error("No CSQ info tag found! Is this file VEP-annotated?")
-      throw new VEPException("")
+      //logger.error("No CSQ info tag found! Is this file VEP-annotated?")
+      throw new VEPException("No CSQ info tag found! Is this file VEP-annotated?")
     }
   }
 
@@ -185,8 +185,8 @@ object VEPNormalizer extends ToolCommand {
     }
     val version = VCFHeaderVersion.toHeaderVersion(format)
     if (!version.isAtLeastAsRecentAs(VCFHeaderVersion.VCF4_0)) {
-      logger.error(s"""version $version is not supported""")
-      throw new VEPException("")
+      //logger.error(s"""version $version is not supported""")
+      throw new VEPException(s"""version $version is not supported""")
     }
   }
 
