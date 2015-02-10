@@ -330,6 +330,8 @@ object ConfigUtils extends Logging {
   trait ImplicitConversions {
     import scala.language.implicitConversions
 
+
+    //TODO: unit test on message
     private def requiredValue(value: ConfigValue): Unit = {
       if (!valueExists(value))
         throw new IllegalStateException("Value does not exist but is required, key: " + value.requestIndex.key +
