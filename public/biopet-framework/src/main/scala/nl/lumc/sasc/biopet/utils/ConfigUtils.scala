@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.core.config.ConfigValue
 import argonaut._, Argonaut._
@@ -330,13 +331,14 @@ object ConfigUtils extends Logging {
   trait ImplicitConversions {
     import scala.language.implicitConversions
 
-
     //TODO: unit test on message
-    private def requiredValue(value: ConfigValue): Unit = {
-      if (!valueExists(value))
-        throw new IllegalStateException("Value does not exist but is required, key: " + value.requestIndex.key +
+    private def requiredValue(value: ConfigValue): Boolean = {
+      val exist = valueExists(value)
+      if (!exist)
+        BiopetQScript.addError("Value does not exist but is required, key: " + value.requestIndex.key +
           "  module: " + value.requestIndex.module +
           (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else ""))
+      exist
     }
 
     private def valueExists(value: ConfigValue): Boolean = {
@@ -349,8 +351,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2file(value: ConfigValue): File = {
-      requiredValue(value)
-      new File(any2string(value.value))
+      if (requiredValue(value)) new File(any2string(value.value))
+      else new File("")
     }
 
     /**
@@ -369,8 +371,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2string(value: ConfigValue): String = {
-      requiredValue(value)
-      any2string(value.value)
+      if (requiredValue(value)) any2string(value.value)
+      else ""
     }
 
     /**
@@ -389,8 +391,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2long(value: ConfigValue): Long = {
-      requiredValue(value)
-      any2long(value.value)
+      if (requiredValue(value)) any2long(value.value)
+      else 0L
     }
 
     /**
@@ -409,8 +411,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2int(value: ConfigValue): Int = {
-      requiredValue(value)
-      any2int(value.value)
+      if (requiredValue(value)) any2int(value.value)
+      else 0
     }
 
     /**
@@ -429,8 +431,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2double(value: ConfigValue): Double = {
-      requiredValue(value)
-      any2double(value.value)
+      if (requiredValue(value)) any2double(value.value)
+      else 0.0
     }
 
     /**
@@ -449,8 +451,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2float(value: ConfigValue): Float = {
-      requiredValue(value)
-      any2float(value.value)
+      if (requiredValue(value)) any2float(value.value)
+      else 0f
     }
 
     /**
@@ -469,8 +471,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2boolean(value: ConfigValue): Boolean = {
-      requiredValue(value)
-      any2boolean(value.value)
+      if (requiredValue(value)) any2boolean(value.value)
+      else false
     }
 
     /**
@@ -489,8 +491,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2list(value: ConfigValue): List[Any] = {
-      requiredValue(value)
-      any2list(value.value)
+      if (requiredValue(value)) any2list(value.value)
+      else Nil
     }
 
     /**
@@ -499,8 +501,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringList(value: ConfigValue): List[String] = {
-      requiredValue(value)
-      any2stringList(value.value)
+      if (requiredValue(value)) any2stringList(value.value)
+      else Nil
     }
 
     /**
@@ -509,8 +511,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
-      requiredValue(value)
-      any2stringList(value.value).toSet
+      if (requiredValue(value)) any2stringList(value.value).toSet
+      else Set()
     }
 
     /**
@@ -519,8 +521,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2map(value: ConfigValue): Map[String, Any] = {
-      requiredValue(value)
-      any2map(value.value)
+      if (requiredValue(value)) any2map(value.value)
+      else Map()
     }
   }
 }
