@@ -81,19 +81,15 @@ object BiopetQCommandLine extends GatkLogging {
 
     Runtime.getRuntime.addShutdownHook(shutdownHook)
 
+    CommandLineProgram.start(qCommandLine, argv)
     try {
-      CommandLineProgram.start(qCommandLine, argv)
-      try {
-        Runtime.getRuntime.removeShutdownHook(shutdownHook)
-        qCommandLine.shutdown()
-      } catch {
-        case e: Exception => /* ignore, example 'java.lang.IllegalStateException: Shutdown in progress' */
-      }
-      if (CommandLineProgram.result != 0)
-        System.exit(CommandLineProgram.result)
+      Runtime.getRuntime.removeShutdownHook(shutdownHook)
+      qCommandLine.shutdown()
     } catch {
-      case e: Exception => CommandLineProgram.exitSystemWithError(e)
+      case e: Exception => /* ignore, example 'java.lang.IllegalStateException: Shutdown in progress' */
     }
+    if (CommandLineProgram.result != 0)
+      System.exit(CommandLineProgram.result)
   }
 }
 
@@ -114,21 +110,28 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   private var qScriptClasses: File = _
   private var shuttingDown = false
 
+  /**
+   * we modified this in Biopet to skip compiling and show full stacktrace again
+   */
   private lazy val qScriptPluginManager = {
     qScriptClasses = IOUtils.tempDir("Q-Classes-", "", settings.qSettings.tempDirectory)
-    //qScriptManager.loadScripts(scripts, qScriptClasses)
-    //var temp: Seq[URL] = Seq()
     for (t <- scripts) {
       val is = getClass.getResourceAsStream(t.getAbsolutePath)
       val os = new FileOutputStream(qScriptClasses.getAbsolutePath + "/" + t.getName)
       org.apache.commons.io.IOUtils.copy(is, os)
       os.close()
-      //temp :+= this.getClass.getResource(t.toString)
-      //logger.info(this.getClass.getResource(t.toString))
       val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
       pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + System.currentTimeMillis
     }
-    new PluginManager[QScript](qPluginType, List(qScriptClasses.toURI.toURL))
+
+    // override createByType to pass the correct exceptions
+    new PluginManager[QScript](qPluginType, List(qScriptClasses.toURI.toURL)) {
+      override def createByType(plugintype: Class[_ <: QScript]) = {
+        val noArgsConstructor = plugintype.getDeclaredConstructor()
+        noArgsConstructor.setAccessible(true)
+        noArgsConstructor.newInstance()
+      }
+    }
   }
 
   private lazy val qCommandPlugin = {
@@ -186,12 +189,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
         //if (settings.run)
         script.pullInputs()
         script.qSettings = settings.qSettings
-        try {
-          script.script()
-        } catch {
-          case e: Exception =>
-            throw new UserException.CannotExecuteQScript(script.getClass.getSimpleName + ".script() threw the following exception: " + e, e)
-        }
+        script.script()
 
         if (remoteFileConverter != null) {
           if (remoteFileConverter.convertToRemoteEnabled)
