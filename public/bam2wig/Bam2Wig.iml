@@ -88,11 +88,5 @@
     <orderEntry type="library" name="Maven: org.biojava:biojava3-sequencing:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.scopt:scopt_2.10:3.2.0" level="project" />
-    <orderEntry type="module" module-name="BiopetGatkPipelines" />
-    <orderEntry type="module" module-name="BiopetGatkExtensions" />
-    <orderEntry type="module" module-name="Mapping" />
-    <orderEntry type="module" module-name="Flexiprep" />
-    <orderEntry type="module" module-name="BamMetrics" />
-    <orderEntry type="module" module-name="Bam2Wig" />
   </component>
 </module>
