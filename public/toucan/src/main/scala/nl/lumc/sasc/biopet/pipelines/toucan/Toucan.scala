@@ -4,6 +4,7 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.tools.VEPNormalizer
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
@@ -20,7 +21,11 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript {
 
   }
 
-  defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
+  override def defaults = ConfigUtils.mergeMaps(Map(
+    "varianteffectpredictor" -> Map("everything" -> true)
+  ), super.defaults)
+
+  //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
   def biopetScript(): Unit = {
     val vep = new VariantEffectPredictor(this)
