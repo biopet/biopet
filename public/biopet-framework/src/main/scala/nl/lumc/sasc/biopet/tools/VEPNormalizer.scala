@@ -1,13 +1,15 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, IOException }
+import htsjdk.tribble.TribbleException
+
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import collection.mutable.{ Map => MMap }
 import collection.JavaConverters._
 import htsjdk.variant.vcf._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
+import htsjdk.variant.variantcontext.writer.{ VariantContextWriter, VariantContextWriterBuilder }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -48,35 +50,16 @@ object VEPNormalizer extends ToolCommand {
     val input = commandArgs.inputVCF
     val output = commandArgs.outputVCF
 
-    if (commandArgs.mode == "explode") {
-      logger.info("You have selected explode mode")
-      logger.info(s"""Input VCF is $input""")
-      logger.info(s"""Output VCF is $output""")
-      explode(commandArgs.inputVCF, commandArgs.outputVCF)
-    } else if (commandArgs.mode == "standard") {
-      logger.info("You have selected standard mode")
-      logger.info(s"""Input VCF is $input""")
-      logger.info(s"""Output VCF is $output""")
-      standard(commandArgs.inputVCF, commandArgs.outputVCF)
-    } else {
-      // this should be impossible, but should nevertheless be checked
-      logger.error("impossibru!", new IllegalArgumentException)
-    }
-  }
+    logger.info(s"""Input VCF is $input""")
+    logger.info(s"""Output VCF is $output""")
 
-  /**
-   * Wrapper for mode explode
-   * @param input input VCF file
-   * @param output output VCF file
-   */
-  def explode(input: File, output: File) = {
     var reader: VCFFileReader = null
     // this can give a codec error if malformed VCF
     //
     try {
       reader = new VCFFileReader(input, false)
     } catch {
-      case e: Exception =>
+      case e: TribbleException.MalformedFeatureFile =>
         logger.error("Malformed VCF file! VCFv3 not supported!")
         throw e
     }
@@ -108,6 +91,25 @@ object VEPNormalizer extends ToolCommand {
     writer.writeHeader(header)
     logger.debug("Wrote header to file")
 
+    if (commandArgs.mode == "explode") {
+      logger.info("You have selected explode mode")
+      explode(reader, writer, new_infos)
+    } else if (commandArgs.mode == "standard") {
+      logger.info("You have selected standard mode")
+      standard(reader, writer, new_infos)
+    } else {
+      // this should be impossible, but should nevertheless be checked
+      logger.error("impossibru!", new IllegalArgumentException)
+    }
+  }
+
+  /**
+   * Wrapper for mode explode
+   * @param reader input VCF VCFFileReader
+   * @param writer output VCF VariantContextWriter
+   * @param new_infos array of string containing names of new info fields
+   */
+  def explode(reader: VCFFileReader, writer: VariantContextWriter, new_infos: Array[String]) = {
     logger.info("Start processing records")
     var nprocessed_records: Int = 0
     var nwritten_records: Int = 0
@@ -132,45 +134,11 @@ object VEPNormalizer extends ToolCommand {
 
   /**
    * Wrapper for mode standard
-   * @param input input VCF file
-   * @param output output VCF file
+   * @param reader input VCF VCFFileReader
+   * @param writer output VCF VariantContextWriter
+   * @param new_infos array of string containing names of new info fields
    */
-  def standard(input: File, output: File) = {
-    val reader: VCFFileReader = try {
-      new VCFFileReader(input, false)
-    } catch {
-      case e: Exception =>
-        logger.error("Malformed VCF file! VCFv3 not supported!")
-        throw e
-    }
-
-    val header = reader.getFileHeader
-    logger.debug("Checking for CSQ tag")
-    csqCheck(header)
-    logger.debug("CSQ tag OK")
-    logger.debug("Checkion VCF version")
-    versionCheck(header)
-    logger.debug("VCF version OK")
-    val seqDict = header.getSequenceDictionary
-    logger.debug("Parsing header")
-    val new_infos = parseCsq(header)
-    header.setWriteCommandLine(true)
-    for (info <- new_infos) {
-      val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
-      header.addMetaDataLine(tmpheaderline)
-    }
-    logger.debug("Header parsing done")
-
-    logger.debug("Writing header to file")
-    val writerBuilder = new VariantContextWriterBuilder()
-    writerBuilder.
-      setOutputFile(output).
-      setOutputFileType(VariantContextWriterBuilder.OutputType.VCF).
-      setReferenceDictionary(seqDict)
-    val writer = writerBuilder.build()
-    writer.writeHeader(header)
-    logger.debug("Wrote header to file")
-
+  def standard(reader: VCFFileReader, writer: VariantContextWriter, new_infos: Array[String]) = {
     logger.info("Start processing records")
     var nprocessed_records: Int = 0
     var nwritten_records: Int = 0
