@@ -201,7 +201,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
 
   def fastqcSummary(fastqc: Fastqc): Option[Json] = {
     if (fastqc == null) return None
-    else return Option(fastqc.getSummary)
+    else return Option(fastqc.summary)
   }
 
   def clipstatSummary(): Option[Json] = {
