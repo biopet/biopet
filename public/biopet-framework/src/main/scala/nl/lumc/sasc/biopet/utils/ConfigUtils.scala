@@ -331,7 +331,6 @@ object ConfigUtils extends Logging {
   trait ImplicitConversions {
     import scala.language.implicitConversions
 
-    //TODO: unit test on message
     private def requiredValue(value: ConfigValue): Boolean = {
       val exist = valueExists(value)
       if (!exist)
