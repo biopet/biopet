@@ -92,7 +92,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   def biopetScript() {
     scriptOutput.bamFiles = {
       doublePreProces(if (preProcesBams) {
-        //var bamFiles: List[File] = Nil
         for (inputBam <- inputBams) yield {
           var bamFile = inputBam
           if (useIndelRealigner)
@@ -101,7 +100,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
             bamFile = addBaseRecalibrator(bamFile, outputDir, isIntermediate = inputBams.size > 1)
           bamFile
         }
-        //bamFiles
       } else {
         inputBams
       })
