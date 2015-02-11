@@ -35,7 +35,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
   var singleSampleCalling = config("single_sample_calling", default = true)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 

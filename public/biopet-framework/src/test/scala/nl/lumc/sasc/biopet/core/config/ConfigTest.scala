@@ -30,9 +30,6 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   @Test def testApply: Unit = {
     ConfigTest.config("m1", Nil, "k1").asString shouldBe "v2"
     ConfigTest.config("m1", Nil, "notexist", default = "default").asString shouldBe "default"
-    intercept[IllegalStateException] {
-      ConfigTest.config("m1", Nil, "notexist")
-    }
   }
 
   @Test def testMergeConfigs: Unit = {

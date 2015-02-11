@@ -51,7 +51,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   override def afterGraph {
     this.checkExecutable
 
-    val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
+    val fastqcDir = new File(executable).getParent
 
     contaminants = contaminants match {
       // user-defined contaminants file take precedence

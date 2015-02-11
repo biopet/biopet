@@ -35,7 +35,7 @@ import org.broadinstitute.gatk.queue.engine.JobRunInfo
 class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with MultiSampleQScript {
   def this() = this(null)
 
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
   var finalBamFiles: List[File] = Nil
   /*
   class LibraryOutput extends AbstractLibraryOutput {

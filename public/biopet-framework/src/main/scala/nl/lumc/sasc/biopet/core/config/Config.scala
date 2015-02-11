@@ -133,11 +133,11 @@ class Config(var map: Map[String, Any]) extends Logging {
    */
   protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    if (contains(requestedIndex)) return foundCache(requestedIndex)
+    if (contains(requestedIndex)) foundCache(requestedIndex)
     else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
-      return defaultCache(requestedIndex)
-    } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
+      defaultCache(requestedIndex)
+    } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
   def writeReport(id: String, directory: String): Unit = {
@@ -174,7 +174,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(Config.global.map, "input")
+    writeMapToJsonFile(this.map, "input")
     writeMapToJsonFile(found, "found")
     writeMapToJsonFile(effectiveFound, "effective.found")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")

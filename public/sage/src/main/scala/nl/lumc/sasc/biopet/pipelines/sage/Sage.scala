@@ -60,7 +60,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      val inputFastq: File = config("R1", required = true)
+      val inputFastq: File = config("R1")
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
