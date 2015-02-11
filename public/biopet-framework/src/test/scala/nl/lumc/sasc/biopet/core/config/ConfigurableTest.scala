@@ -54,11 +54,13 @@ class ClassA(val root: Configurable) extends Cfg
 
 class ClassB(val root: Configurable) extends Cfg {
   lazy val classA = new ClassA(this)
+  // Why this needs to be lazy?
 }
 
 class ClassC(val root: Configurable) extends Cfg {
   def this() = this(null)
   lazy val classB = new ClassB(this)
+  // Why this needs to be lazy?
 }
 
 object ConfigurableTest {
