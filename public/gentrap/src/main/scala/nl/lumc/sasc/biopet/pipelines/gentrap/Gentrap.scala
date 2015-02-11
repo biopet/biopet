@@ -37,6 +37,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   /** Split aligner to use */
   var aligner: String = config("aligner", default = "gsnap")
 
+  /** Expression measurement rawName */
+  // see the enumeration below for valid modes
+  var expressionMeasures: List[String] = config("expression_measures", default = Nil)
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf")
@@ -57,6 +60,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   var varcaller: String = _
   */
 
+  /** Default pipeline config */
   override def defaults = ConfigUtils.mergeMaps(
     Map(
       "gsnap" -> Map(
@@ -66,9 +70,24 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       )
     ), super.defaults)
 
-  def makeSample(sampleId: String): Sample = new Sample(sampleId)
+  /** Conversion from raw user-supplied expression measure string to enum value */
+  private def makeExpMeasure(rawName: String): ExpMeasures.Value = {
+    // process name so it is case insensitive and has camelCaps instead of underscores
+    val readyName = rawName
+      .split("_")
+      .map(_.toLowerCase.capitalize)
+      .mkString("")
+    try {
+      ExpMeasures.withName(readyName)
+    } catch {
+      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid expression measure: " + rawName)
+      case e: Exception                => throw e
+    }
+  }
 
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+  /** Private container for active expression measures */
+  private val expMeasures: Set[ExpMeasures.Value] = expressionMeasures
+    .map { makeExpMeasure }.toSet
 
     def alnFile: File = privAlnFile
     private var privAlnFile: File = createFile(".bam")
@@ -154,16 +173,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     }
   }
 
-  /** Steps to run before biopetScript */
-  def init(): Unit = {
+object Gentrap extends PipelineCommand {
+
+  /** implicit extension that allows to create option values based on boolean values */
+  implicit class RichBoolean(val b: Boolean) extends AnyVal {
+    final def option[A](a: => A): Option[A] = if (b) Some(a) else None
   }
 
-  def biopetScript(): Unit = {
-    addSamplesJobs()
-  }
-
-  def addMultiSampleJobs(): Unit = {
-
+  /** Enumeration of available expression measures */
+  object ExpMeasures extends Enumeration {
+    val GeneReads, GeneBases, ExonBases, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
   }
 }
 
