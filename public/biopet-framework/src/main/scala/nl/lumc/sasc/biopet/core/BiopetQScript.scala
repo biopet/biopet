@@ -23,6 +23,7 @@ import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import scala.collection.mutable.ListBuffer
 
 /**
  * Base for biopet pipeline
@@ -33,8 +34,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
   val configfiles: List[File] = Nil
 
   var outputDir: String = {
-    val temp = Config.getValueFromMap(Config.global.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
-    if (temp.isEmpty) throw new IllegalArgumentException("No output_dir defined in config")
+    val temp = Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
+    if (temp.isEmpty) ""
     else {
       val t = temp.get.value.toString
       if (!t.endsWith("/")) t + "/" else t
@@ -62,8 +63,9 @@ trait BiopetQScript extends Configurable with GatkLogging {
    * Script from queue itself, final to force some checks for each pipeline and write report
    */
   final def script() {
-    outputDir = config("output_dir", required = true)
-    if (!outputDir.endsWith("/")) outputDir += "/"
+    outputDir = config("output_dir")
+    if (outputDir.isEmpty) outputDir = new File(".").getAbsolutePath()
+    else if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
@@ -72,11 +74,17 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => f.afterGraph
-      case _                                 =>
+      case f: BiopetCommandLineFunctionTrait => {
+        f.checkExecutable
+        f.afterGraph
+      }
+      case _ =>
     }
 
-    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    if (new File(outputDir).canWrite) globalConfig.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    else BiopetQScript.addError("Output dir: '" + outputDir + "' is not writeable")
+
+    BiopetQScript.checkErrors
   }
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
@@ -90,5 +98,30 @@ trait BiopetQScript extends Configurable with GatkLogging {
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
+  }
+}
+
+object BiopetQScript extends Logging {
+  private val errors: ListBuffer[Exception] = ListBuffer()
+
+  def addError(error: String, debug: String = null): Unit = {
+    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    errors.append(new Exception(msg))
+  }
+
+  protected def checkErrors: Unit = {
+    if (!errors.isEmpty) {
+      logger.error("*************************")
+      logger.error("Biopet found some errors:")
+      if (logger.isDebugEnabled) {
+        for (e <- errors) {
+          logger.error(e.getMessage)
+          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+        }
+      } else {
+        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
+      }
+      throw new IllegalStateException("Biopet found errors")
+    }
   }
 }

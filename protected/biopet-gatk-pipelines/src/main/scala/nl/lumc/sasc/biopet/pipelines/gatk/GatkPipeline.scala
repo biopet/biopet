@@ -35,17 +35,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
   var singleSampleCalling = config("single_sample_calling", default = true)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
-    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+    class Library(libId: String) extends AbstractLibrary(libId) {
       val mapping = new Mapping(qscript)
       mapping.sampleId = sampleId
-      mapping.libraryId = libraryId
+      mapping.libId = libId
       mapping.outputDir = libDir + "/variantcalling/"
 
       /** Library variantcalling */
@@ -66,8 +66,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           if (!bamFile.exists) throw new IllegalStateException("Bam in config does not exist, file: " + bamFile)
 
           if (config("bam_to_fastq", default = false).asBoolean) {
-            val samToFastq = SamToFastq(qscript, bamFile, libDir + sampleId + "-" + libraryId + ".R1.fastq",
-              libDir + sampleId + "-" + libraryId + ".R2.fastq")
+            val samToFastq = SamToFastq(qscript, bamFile, libDir + sampleId + "-" + libId + ".R1.fastq",
+              libDir + sampleId + "-" + libId + ".R2.fastq")
             samToFastq.isIntermediate = true
             qscript.add(samToFastq)
             mapping.input_R1 = samToFastq.fastqR1
@@ -82,17 +82,17 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             val header = inputSam.getFileHeader.getReadGroups
             for (readGroup <- inputSam.getFileHeader.getReadGroups) {
               if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
-              if (readGroup.getLibrary != libraryId) logger.warn("Library ID readgroup in bam file is not the same")
-              if (readGroup.getSample != sampleId || readGroup.getLibrary != libraryId) readGroupOke = false
+              if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
+              if (readGroup.getSample != sampleId || readGroup.getLibrary != libId) readGroupOke = false
             }
             inputSam.close
 
             if (!readGroupOke) {
               if (config("correct_readgroups", default = false)) {
                 logger.info("Correcting readgroups, file:" + bamFile)
-                val aorrg = AddOrReplaceReadGroups(qscript, bamFile, new File(libDir + sampleId + "-" + libraryId + ".bam"))
-                aorrg.RGID = sampleId + "-" + libraryId
-                aorrg.RGLB = libraryId
+                val aorrg = AddOrReplaceReadGroups(qscript, bamFile, new File(libDir + sampleId + "-" + libId + ".bam"))
+                aorrg.RGID = sampleId + "-" + libId
+                aorrg.RGLB = libId
                 aorrg.RGSM = sampleId
                 aorrg.isIntermediate = true
                 qscript.add(aorrg)
@@ -105,7 +105,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
             Some(bamFile)
           }
         } else {
-          logger.error("Sample: " + sampleId + ": No R1 found for run: " + libraryId)
+          logger.error("Sample: " + sampleId + ": No R1 found for run: " + libId)
           None
         }
 

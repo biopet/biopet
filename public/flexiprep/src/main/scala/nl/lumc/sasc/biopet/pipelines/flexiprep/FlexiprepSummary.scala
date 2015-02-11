@@ -121,7 +121,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
     md5Summary()
     val summary = 
       ("samples" := ( flexiprep.sampleId :=
-        ("libraries" := ( flexiprep.libraryId := (
+        ("libraries" := ( flexiprep.libId := (
           ("flexiprep" := (
             ("clipping" := !flexiprep.skipClip) ->:
             ("trimming" := !flexiprep.skipTrim) ->:
@@ -201,7 +201,7 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
 
   def fastqcSummary(fastqc: Fastqc): Option[Json] = {
     if (fastqc == null) return None
-    else return Option(fastqc.getSummary)
+    else return Option(fastqc.summary)
   }
 
   def clipstatSummary(): Option[Json] = {

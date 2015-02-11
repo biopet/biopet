@@ -78,7 +78,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
-  protected def checkExecutable {
+  protected[core] def checkExecutable {
     if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
       try if (executable != null) {
         if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
@@ -91,8 +91,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
             val file = new File(executable)
             executable = file.getCanonicalPath
           } else {
-            logger.error("executable: '" + executable + "' not found, please check config")
-            throw new QException("executable: '" + executable + "' not found, please check config")
+            BiopetQScript.addError("executable: '" + executable + "' not found, please check config")
           }
           BiopetCommandLineFunctionTrait.executableCache += oldExecutable -> executable
           BiopetCommandLineFunctionTrait.executableCache += executable -> executable
@@ -113,9 +112,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
       }
     }
-    val md5 = BiopetCommandLineFunctionTrait.executableMd5Cache(executable)
-    if (md5 == null) addJobReportBinding("md5sum_exe", md5)
-    else addJobReportBinding("md5sum_exe", "None")
+    val md5 = BiopetCommandLineFunctionTrait.executableMd5Cache.get(executable)
+    addJobReportBinding("md5sum_exe", md5.getOrElse("None"))
   }
 
   /**
@@ -145,6 +143,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   /** Executes the version command */
   private def getVersionInternal: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
+    val exe = new File(versionCommand.trim.split(" ")(0))
+    if (!exe.exists()) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     def outputLog = "Version command: \n" + versionCommand +
