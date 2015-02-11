@@ -31,7 +31,6 @@ import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSam
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 
-
 // TODO: documentation
 class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
