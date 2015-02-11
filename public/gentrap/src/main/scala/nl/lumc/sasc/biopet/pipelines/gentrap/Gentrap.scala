@@ -109,6 +109,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       .contains(GeneReads)
       .option(createFile(".gene_reads_count"))
 
+    lazy val exonReadsCount: Option[File] = expMeasures
+      .contains(ExonReads)
+      .option(createFile(".exon_reads_count"))
+
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
@@ -116,8 +120,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       // merge or symlink per-library alignments
       addSampleAlnJob()
       // measure expression depending on modes set in expMeasures
-      if (expMeasures.contains(GeneReads))
-        addGeneReadsJob()
+      if (expMeasures.contains(GeneReads) || expMeasures.contains(ExonReads))
+        addHtseqJob()
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
@@ -141,8 +145,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     /** Add jobs for reads per gene counting using HTSeq */
     // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
     // to its buffer not being large enough.
-    private def addGeneReadsJob(): Unit = {
-      require(annotationGtf.nonEmpty && geneReadsCount.nonEmpty)
+    private def addHtseqJob(): Unit = {
 
       val idSortingJob = new SortSam(qscript)
       idSortingJob.input = alnFile
@@ -150,17 +153,35 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       idSortingJob.sortOrder = "queryname"
       add(idSortingJob)
 
-      val geneReadJob = new HtseqCount(qscript)
-      geneReadJob.inputAnnotation = annotationGtf.get
-      geneReadJob.inputAlignment = idSortingJob.output
-      geneReadJob.output = geneReadsCount.get
-      geneReadJob.format = Option("bam")
-      geneReadJob.order = Option("name")
-      if (strProtocol == NonSpecific)
-        geneReadJob.stranded = Option("no")
-      else if (strProtocol == Dutp)
-        geneReadJob.stranded = Option("reverse")
-      add(geneReadJob)
+      if (expMeasures.contains(GeneReads)) {
+        val geneReadJob = new HtseqCount(qscript)
+        geneReadJob.inputAnnotation = annotationGtf.get
+        geneReadJob.inputAlignment = idSortingJob.output
+        geneReadJob.output = geneReadsCount.get
+        geneReadJob.format = Option("bam")
+        geneReadJob.order = Option("name")
+        if (strProtocol == NonSpecific)
+          geneReadJob.stranded = Option("no")
+        else if (strProtocol == Dutp)
+          geneReadJob.stranded = Option("reverse")
+        add(geneReadJob)
+      }
+
+      if (expMeasures.contains(ExonReads)) {
+        // TODO: ensure GTF file has exon_id
+        val exonReadJob = new HtseqCount(qscript)
+        exonReadJob.inputAnnotation = annotationGtf.get
+        exonReadJob.inputAlignment = idSortingJob.output
+        exonReadJob.output = exonReadsCount.get
+        exonReadJob.format = Option("bam")
+        exonReadJob.order = Option("name")
+        exonReadJob.idattr = Option("exon_id")
+        if (strProtocol == NonSpecific)
+          exonReadJob.stranded = Option("no")
+        else if (strProtocol == Dutp)
+          exonReadJob.stranded = Option("reverse")
+        add(exonReadJob)
+      }
     }
 
     def makeLibrary(libId: String): Library = new Library(libId)
@@ -197,7 +218,7 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val GeneReads, GeneBases, ExonBases, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
+    val GeneReads, ExonReads, GeneBases, ExonBases, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
   }
 
   /** Enumeration of available strandedness */
