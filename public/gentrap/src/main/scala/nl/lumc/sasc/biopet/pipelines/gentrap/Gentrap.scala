@@ -206,6 +206,10 @@ object Gentrap extends PipelineCommand {
   object ExpMeasures extends Enumeration {
     val GeneReads, GeneBases, ExonBases, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
   }
-}
 
-object Gentrap extends PipelineCommand
+  /** Enumeration of available strandedness */
+  object Strandedness extends Enumeration {
+    // for now, only non-strand specific and dUTP stranded protocol is supported
+    val NonSpecific, Dutp = Value
+  }
+}
