@@ -31,6 +31,9 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  */
 class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { qscript =>
 
+  import Gentrap._
+  import Gentrap.ExpMeasures._
+
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
 
@@ -89,34 +92,52 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   private val expMeasures: Set[ExpMeasures.Value] = expressionMeasures
     .map { makeExpMeasure }.toSet
 
-    def alnFile: File = privAlnFile
-    private var privAlnFile: File = createFile(".bam")
+  /** Steps to run before biopetScript */
+  def init(): Unit = {
+    // validate required annotation files
+    if (expMeasures.contains(GeneReads))
+      require(annotationGtf.isDefined, "GTF file must be defined for counting reads per gene")
 
-    def geneReadCountFile: Option[File] = privGrcFile
-    private var privGrcFile: Option[File] = None
+    if (expMeasures.contains(GeneBases))
+      require(annotationBed.isDefined, "BED file must be defined for counting bases per gene")
+
+    if (expMeasures.contains(ExonBases))
+      require(annotationBed.isDefined, "BED file must be defined for counting bases per exon")
+  }
+
+  def biopetScript(): Unit = {
+    addSamplesJobs()
+  }
+
+  def addMultiSampleJobs(): Unit = {}
+
+  def makeSample(sampleId: String): Sample = new Sample(sampleId)
+
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
+    lazy val alnFile: File = createFile(".bam")
+
+    lazy val geneReadsCount: Option[File] = expMeasures
+      .contains(GeneReads)
+      .option(createFile(".gene_reads_count"))
 
     def addJobs(): Unit = {
-
+      // add per-library jobs
       addPerLibJobs()
-
-      privAlnFile = addMergeJob(libraries.values.map(lib => lib.alnFile).toList)
-
-      privGrcFile = (countReadsPerGene, annotationGtf) match {
-        case (true, Some(gtf)) => Option(addReadsPerGeneJob(privAlnFile, gtf))
-        case (true, None)      => throw new IllegalStateException("GTF file must be defined for counting reads per gene")
-        case _                 => None
-      }
-
+      // merge or symlink per-library alignments
+      addSampleAlnJob()
+      // measure expression depending on modes set in expMeasures
+      if (expMeasures.contains(GeneReads))
+        addGeneReadsJob()
     }
 
-    def addMergeJob(alns: List[File]): File = alns match {
+    private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
       // library only has one file, then we symlink
       case file :: Nil =>
         val ln = new Ln(qscript)
         ln.in = file
         ln.out = alnFile
         add(ln)
-        ln.out
       // library has multiple files, then we merge
       case files @ f :: fs =>
         val merge = new MergeSamFiles(qscript)
@@ -124,7 +145,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         merge.sortOrder = "coordinate"
         merge.output = alnFile
         add(merge)
-        merge.output
       // library has 0 or less files, error!
       case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
     }
@@ -132,7 +152,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     /** Add jobs for reads per gene counting using HTSeq */
     // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
     // to its buffer not being large enough.
-    def addReadsPerGeneJob(alnFile: File, annotation: File): File = {
+    private def addGeneReadsJob(): Unit = {
+      require(annotationGtf.nonEmpty && geneReadsCount.nonEmpty)
+
       val idSortingJob = new SortSam(qscript)
       idSortingJob.input = alnFile
       idSortingJob.output = createFile(".idsorted.bam")
@@ -142,12 +164,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       val geneReadJob = new HtseqCount(qscript)
       geneReadJob.format = Option("bam")
       geneReadJob.order = Option("name")
-      geneReadJob.inputAnnotation = annotation
+      geneReadJob.inputAnnotation = annotationGtf.get
       geneReadJob.inputAlignment = idSortingJob.output
-      geneReadJob.output = createFile(".raw.read.count")
+      geneReadJob.output = geneReadsCount.get
       add(geneReadJob)
-
-      geneReadJob.output
     }
 
     def makeLibrary(libId: String): Library = new Library(libId)
@@ -164,7 +184,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         mapping.sampleId = sampleId
         mapping.libId = libId
         mapping.outputDir = libDir
-        mapping.input_R1 = config("R1", required = true)
+        mapping.input_R1 = config("R1")
+        // R2 is optional here (input samples could be paired-end or single-end)
         mapping.input_R2 = config("R2")
         mapping.init()
         mapping.biopetScript()
@@ -172,6 +193,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       }
     }
   }
+}
 
 object Gentrap extends PipelineCommand {
 
