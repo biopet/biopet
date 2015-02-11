@@ -11,10 +11,10 @@ import org.testng.annotations.Test
  */
 class ConfigurableTest extends TestNGSuite with Matchers {
   @Test def testConfigurable: Unit = {
-    Config.global.map = Map()
-    Config.global.loadConfigFile(ConfigurableTest.file)
-
-    val classC = new ClassC
+    val classC = new ClassC {
+      override def configName = "classc"
+      override val globalConfig = new Config(ConfigurableTest.map)
+    }
 
     classC.configPath shouldBe Nil
     classC.configFullPath shouldBe List("classc")
@@ -53,12 +53,12 @@ abstract class Cfg extends Configurable {
 class ClassA(val root: Configurable) extends Cfg
 
 class ClassB(val root: Configurable) extends Cfg {
-  val classA = new ClassA(this)
+  lazy val classA = new ClassA(this)
 }
 
 class ClassC(val root: Configurable) extends Cfg {
   def this() = this(null)
-  val classB = new ClassB(this)
+  lazy val classB = new ClassB(this)
 }
 
 object ConfigurableTest {
@@ -80,6 +80,4 @@ object ConfigurableTest {
       )
     )
   )
-
-  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2)
 }

@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
   val root: Configurable
+  val globalConfig: Config = if (root != null) root.globalConfig else Config.global
 
   /** subfix to the path */
   def subPath: List[String] = Nil
@@ -98,8 +99,8 @@ trait Configurable extends ImplicitConversions {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (d == null) Config.global(m, p, key, freeVar = freeVar)
-      else Config.global(m, p, key, d, freeVar)
+      if (d == null) globalConfig(m, p, key, freeVar = freeVar)
+      else globalConfig(m, p, key, d, freeVar)
     }
 
     /**
@@ -121,7 +122,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = path(s, l, submodule)
 
-      Config.global.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
+      globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
   }
 }

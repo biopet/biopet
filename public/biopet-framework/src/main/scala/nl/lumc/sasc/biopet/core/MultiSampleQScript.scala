@@ -28,7 +28,7 @@ trait MultiSampleQScript extends BiopetQScript {
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   private val onlySamples: List[String] = Nil
 
-  require(Config.global.map.contains("samples"), "No Samples found in config")
+  require(globalConfig.map.contains("samples"), "No Samples found in config")
 
   /**
    * Sample class with basic functions build in
@@ -80,7 +80,7 @@ trait MultiSampleQScript extends BiopetQScript {
 
     /** returns a set with library names */
     protected def libIds: Set[String] = {
-      ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
     }
 
     /** Adds sample jobs */
@@ -125,7 +125,7 @@ trait MultiSampleQScript extends BiopetQScript {
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
