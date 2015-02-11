@@ -33,6 +33,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
   import Gentrap._
   import Gentrap.ExpMeasures._
+  import Gentrap.StrandProtocol._
 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
@@ -40,9 +41,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   /** Split aligner to use */
   var aligner: String = config("aligner", default = "gsnap")
 
-  /** Expression measurement rawName */
+  /** Expression measurement modes */
   // see the enumeration below for valid modes
   var expressionMeasures: List[String] = config("expression_measures", default = Nil)
+
+  /** Strandedness modes */
+  var strandProtocol: String = config("strand_protocol", default = "non_specific")
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf")
@@ -54,10 +58,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   var annotationRefFlat: Option[File] = config("annotation_refflat")
 
   /*
-  /** Whether library is strand-specific (dUTP protocol) or not */
-  @Argument(doc = "Whether input data was made using the dUTP strand-specific protocol", fullName = "strand_specific", shortName = "strandSpec", required = true)
-  var strandSpec: Boolean = _
-
   /** Variant calling */
   @Argument(doc = "Variant caller", fullName = "variant_caller", shortName = "varCaller", required = false, validation = "varscan|snvmix")
   var varcaller: String = _
@@ -73,24 +73,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       )
     ), super.defaults)
 
-  /** Conversion from raw user-supplied expression measure string to enum value */
-  private def makeExpMeasure(rawName: String): ExpMeasures.Value = {
-    // process name so it is case insensitive and has camelCaps instead of underscores
-    val readyName = rawName
-      .split("_")
-      .map(_.toLowerCase.capitalize)
-      .mkString("")
-    try {
-      ExpMeasures.withName(readyName)
-    } catch {
-      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid expression measure: " + rawName)
-      case e: Exception                => throw e
-    }
-  }
-
-  /** Private container for active expression measures */
+  /** Private container for expression modes */
   private val expMeasures: Set[ExpMeasures.Value] = expressionMeasures
     .map { makeExpMeasure }.toSet
+
+  /** Private value for strand protocol */
+  private val strProtocol: StrandProtocol.Value = makeStrandProtocol(strandProtocol)
 
   /** Steps to run before biopetScript */
   def init(): Unit = {
@@ -121,6 +109,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       .contains(GeneReads)
       .option(createFile(".gene_reads_count"))
 
+    // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
       addPerLibJobs()
@@ -162,11 +151,15 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       add(idSortingJob)
 
       val geneReadJob = new HtseqCount(qscript)
-      geneReadJob.format = Option("bam")
-      geneReadJob.order = Option("name")
       geneReadJob.inputAnnotation = annotationGtf.get
       geneReadJob.inputAlignment = idSortingJob.output
       geneReadJob.output = geneReadsCount.get
+      geneReadJob.format = Option("bam")
+      geneReadJob.order = Option("name")
+      if (strProtocol == NonSpecific)
+        geneReadJob.stranded = Option("no")
+      else if (strProtocol == Dutp)
+        geneReadJob.stranded = Option("reverse")
       add(geneReadJob)
     }
 
@@ -208,8 +201,34 @@ object Gentrap extends PipelineCommand {
   }
 
   /** Enumeration of available strandedness */
-  object Strandedness extends Enumeration {
+  object StrandProtocol extends Enumeration {
     // for now, only non-strand specific and dUTP stranded protocol is supported
     val NonSpecific, Dutp = Value
+  }
+
+  /** Converts string with underscores into camel-case strings */
+  private def camelize(ustring: String): String = ustring
+    .split("_")
+    .map(_.toLowerCase.capitalize)
+    .mkString("")
+
+  /** Conversion from raw user-supplied expression measure string to enum value */
+  private def makeExpMeasure(rawName: String): ExpMeasures.Value = {
+    try {
+      ExpMeasures.withName(camelize(rawName))
+    } catch {
+      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid expression measure: " + rawName)
+      case e: Exception                => throw e
+    }
+  }
+
+  /** Conversion from raw user-supplied expression measure string to enum value */
+  private def makeStrandProtocol(rawName: String): StrandProtocol.Value = {
+    try {
+      StrandProtocol.withName(camelize(rawName))
+    } catch {
+      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid strand protocol: " + rawName)
+      case e: Exception                => throw e
+    }
   }
 }
