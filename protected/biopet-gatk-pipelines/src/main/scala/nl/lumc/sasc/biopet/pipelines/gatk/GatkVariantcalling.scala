@@ -30,7 +30,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var rawVcfInput: File = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Argument(doc = "OutputName", required = false)
   var outputName: String = _

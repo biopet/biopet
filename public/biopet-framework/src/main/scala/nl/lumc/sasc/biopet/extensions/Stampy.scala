@@ -29,13 +29,13 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "ref")
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Input(doc = "The genome prefix.")
-  var genome: File = config("genome", required = true)
+  var genome: File = config("genome")
 
   @Input(doc = "The hash prefix")
-  var hash: File = config("hash", required = true)
+  var hash: File = config("hash")
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
