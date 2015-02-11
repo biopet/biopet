@@ -39,13 +39,13 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
 
   /** GTF reference file */
-  var annotationGtf: Option[File] = config("annotation_gtf", required = false)
+  var annotationGtf: Option[File] = config("annotation_gtf")
 
   /** BED reference file */
-  var annotationBed: Option[File] = config("annotation_bed", required = false)
+  var annotationBed: Option[File] = config("annotation_bed")
 
   /** refFlat reference file */
-  var annotationRefFlat: Option[File] = config("annotation_refflat", required = false)
+  var annotationRefFlat: Option[File] = config("annotation_refflat")
 
   /*
   /** Whether library is strand-specific (dUTP protocol) or not */
