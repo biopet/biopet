@@ -102,8 +102,7 @@ object BiopetQScript extends Logging {
           logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
         }
       } else {
-        val set = errors.map(_.getMessage).toSet
-        set.toList.sorted.foreach(logger.error(_))
+        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
       }
       throw new IllegalStateException("Biopet found errors")
     }
