@@ -34,32 +34,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
 
-  /*
-  /** Read 1 input */
-  @Input(doc = "FASTQ file input (single-end or pair 1)", fullName = "input_r1", shortName = "R1", required = true)
-  var inputR1: File = _
-
-  /** Read 2 input (optional) */
-  @Input(doc = "FASTQ file input (pair 2)", fullName = "input_r2", shortName = "R2", required = false)
-  var inputR2: File = _
-
-  /** FASTQ trimming */
-  @Argument(doc = "Whether to skip trimming input files", fullName = "skip_trim_input", shortName = "skipTrim", required = false)
-  var skipTrim: Boolean = false
-
-  /** FASTQ clipping */
-  @Argument(doc = "Whether to skip clipping input files", fullName = "skip_clip_input", shortName = "skipClip", required = false)
-  var skipClip: Boolean = false
-  */
-
   /** Split aligner to use */
   var aligner: String = config("aligner", default = "gsnap")
 
-  /** Gene-wise read count table output */
-  var countReadsPerGene: Boolean = config("count_reads_per_gene", default = false)
-
-  /** Exon-wise base count table output */
-  var countBasesPerExon: Boolean = config("count_bases_per_exon", default = false)
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf", required = false)
@@ -78,22 +55,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   /** Variant calling */
   @Argument(doc = "Variant caller", fullName = "variant_caller", shortName = "varCaller", required = false, validation = "varscan|snvmix")
   var varcaller: String = _
-
-  /** Cufflinks assembly type */
-  @Argument(doc = "Cufflinks assembly type", fullName = "transcript_asm", shortName = "transAsm", required = false, validation = "none|strict|guided|blind")
-  var asm: List[String] = List("none")
-
-  /** Gene-wise base count table output */
-  @Argument(doc = "Gene base count table output", fullName = "count_gene_base", shortName = "cGeneBase", required = false)
-  var cGeneBase: Boolean = _
-
-  /** Exon-wise read count table output */
-  @Argument(doc = "Exon read count table output", fullName = "count_exon_read", shortName = "cExonRead", required = false)
-  var cExonRead: Boolean = _
-
-  /** Exon-wise base count table output */
-  @Argument(doc = "Exon base count table output", fullName = "count_exon_base", shortName = "cExonBase", required = false)
-  var cExonBase: Boolean = _
   */
 
   override def defaults = ConfigUtils.mergeMaps(
