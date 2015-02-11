@@ -91,7 +91,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    *                                when a line starting with "Encoding" does not exist.
    */
   def encoding: String = {
-    if (dataFile.exists())
+    if (dataFile.exists) // On a dry run this file does not yet exist
       qcModules("Basic Statistics") //FIXME: not save
         .lines
         .dropWhile(!_.startsWith("Encoding"))
@@ -110,7 +110,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @return a [[Set]] of [[AdapterSequence]] objects.
    */
   def foundAdapters: Set[AdapterSequence] = {
-    if (dataFile.exists()) {
+    if (dataFile.exists) { // On a dry run this file does not yet exist
       /** Returns a list of adapter and/or contaminant sequences known to FastQC */
       def getFastqcSeqs(file: Option[File]): Set[AdapterSequence] = file match {
         case None => Set.empty[AdapterSequence]
