@@ -119,10 +119,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   private def getVersionInternal: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
     val exe = new File(versionCommand.trim.split(" ")(0))
-    if (!exe.exists()) {
-      //BiopetQScript.addError("executable '" + exe + "' does not exist")
-      return "N/A"
-    }
+    if (!exe.exists()) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     def outputLog = "Version command: \n" + versionCommand +
