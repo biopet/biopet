@@ -48,8 +48,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected[core] def beforeCmd {}
 
   /**
-   * Can overr
-   * ide this method. This is executed after the script is done en queue starts to generate the graph
+   * Can override this method. This is executed after the script is done en queue starts to generate the graph
    */
   protected[core] def beforeGraph {}
 
