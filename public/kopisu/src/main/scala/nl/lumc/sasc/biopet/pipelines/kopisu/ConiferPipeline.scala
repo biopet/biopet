@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ BufferedWriter, FileWriter, File }
+import java.io.{ FileFilter, BufferedWriter, FileWriter, File }
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, _ }
 import nl.lumc.sasc.biopet.core.config._
@@ -86,11 +86,16 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
     if (!RPKMonly) {
       /** Collect the rpkm_output to a temp directory, where we merge with the control files */
       var refRPKMlist: List[File] = Nil
-      for (f <- controlsDir.listFiles()) {
-        var target = new File(RPKMdir + File.separator + f.getName)
+      // Sync the .txt only, these files contain the RPKM Values
+      for (controlRPKMfile <- controlsDir.list.filter(_.toLowerCase.endsWith(".txt"))) {
+        val target = new File(RPKMdir + File.separator + controlRPKMfile.getName)
+        val source = new File(controlsDir + File.separator + controlRPKMfile)
         if (!target.exists()) {
-          logger.info("Creating " + target.getAbsolutePath)
-          add(Ln(this, f, target, true))
+          add(Ln(this, source, target, false))
+          refRPKMlist :+= target
+        } else if (!target.equals(source)) {
+          target.delete()
+          add(Ln(this, source, target, false))
           refRPKMlist :+= target
         }
       }

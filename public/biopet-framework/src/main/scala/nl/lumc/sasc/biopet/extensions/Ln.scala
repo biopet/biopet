@@ -32,6 +32,11 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
   var relative: Boolean = true
 
+  override def freezeFieldValues(): Unit = {
+    jobOutputFile = new File(out.getParent + File.separator + "." + out.getName + "." + this.analysisName + ".out")
+    super.freezeFieldValues()
+  }
+
   lazy val cmd: String = {
     lazy val inCanonical: String = {
       // need to remove "/~" to correctly expand path with tilde
