@@ -47,7 +47,7 @@ class Config(var map: Map[String, Any]) extends Logging {
       case Some(globalFiles) => {
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
-          if (file.exists()) {
+          if (file.exists) {
             logger.info("Loading config file: " + file)
             loadConfigFile(file)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
