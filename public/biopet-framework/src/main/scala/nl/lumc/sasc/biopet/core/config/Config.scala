@@ -43,14 +43,17 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @param valueName Name of value
    */
   def loadConfigEnv(valueName: String) {
-    val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
-    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
-    for (globalFile <- globalFiles) {
-      val file: File = new File(globalFile)
-      if (file.exists()) {
-        logger.info("Loading config file: " + file)
-        loadConfigFile(file)
-      } else logger.warn(valueName + " value found but file does not exist, no global config is loaded")
+    sys.env.get(valueName) match {
+      case Some(globalFiles) => {
+        for (globalFile <- globalFiles.split(":")) {
+          val file: File = new File(globalFile)
+          if (file.exists()) {
+            logger.info("Loading config file: " + file)
+            loadConfigFile(file)
+          } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
+        }
+      }
+      case _ => logger.info(valueName + " value not found, no global config is loaded")
     }
   }
 
