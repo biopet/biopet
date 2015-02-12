@@ -127,7 +127,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = new File(outputDir, "flexiprep" + File.separator)
+      flexiprep.outputDir = new File(outputDir, "flexiprep")
       flexiprep.input_R1 = input_R1
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
@@ -146,7 +146,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     }
     var chunks: Map[File, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = new File(outputDir, "chunks/" + t + "/")
+      val chunkDir = new File(outputDir, "chunks" + File.separator + t)
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }

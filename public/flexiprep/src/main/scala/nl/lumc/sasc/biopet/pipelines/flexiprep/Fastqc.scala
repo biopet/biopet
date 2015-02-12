@@ -172,7 +172,7 @@ object Fastqc {
     if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.size - 5)
     if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.size - 6)
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
-    fastqcCommand.output = new File(outDir, "/" + filename + "_fastqc.zip")
+    fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")
     fastqcCommand.beforeGraph
     fastqcCommand
   }
