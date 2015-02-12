@@ -54,7 +54,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Output Directory")
   var outputDir: File = _
 
-  var genomeDir: File = config("genomeDir", new File(reference.getParent, "/star"))
+  var genomeDir: File = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
