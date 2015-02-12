@@ -29,7 +29,7 @@ class ConiferExport(val root: Configurable) extends Conifer {
   var output: File = _
 
   override def beforeGraph {
-    this.checkExecutable
+    this.preProcesExecutable
   }
 
   override def cmdLine = super.cmdLine +

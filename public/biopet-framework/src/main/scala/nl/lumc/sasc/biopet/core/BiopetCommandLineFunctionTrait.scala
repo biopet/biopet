@@ -57,7 +57,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * Set default output file, threads and vmem for current job
    */
   override def freezeFieldValues() {
-    checkExecutable
+    preProcesExecutable
     beforeGraph
     if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
@@ -77,7 +77,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
-  protected[core] def checkExecutable {
+  protected[core] def preProcesExecutable {
     if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
       try if (executable != null) {
         if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
@@ -119,7 +119,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * executes checkExecutable method and fill job report
    */
   final protected def preCmdInternal {
-    checkExecutable
+    preProcesExecutable
 
     beforeCmd
 
@@ -170,7 +170,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   /** Get version from cache otherwise execute the version command  */
   def getVersion: String = {
     if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
-      checkExecutable
+      preProcesExecutable
     if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
       BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
     return BiopetCommandLineFunctionTrait.versionCache(executable)
