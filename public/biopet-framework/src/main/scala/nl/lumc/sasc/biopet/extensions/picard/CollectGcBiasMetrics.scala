@@ -67,7 +67,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
 }
 
 object CollectGcBiasMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectGcBiasMetrics = {
+  def apply(root: Configurable, input: File, outputDir: File): CollectGcBiasMetrics = {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
     collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")

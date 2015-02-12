@@ -35,7 +35,7 @@ class SquishBed(val root: Configurable) extends PythonCommandLineFunction {
 }
 
 object SquishBed {
-  def apply(root: Configurable, input: File, outputDir: String): SquishBed = {
+  def apply(root: Configurable, input: File, outputDir: File): SquishBed = {
     val squishBed = new SquishBed(root)
     squishBed.input = input
     squishBed.output = new File(outputDir, input.getName.stripSuffix(".bed") + ".squish.bed")

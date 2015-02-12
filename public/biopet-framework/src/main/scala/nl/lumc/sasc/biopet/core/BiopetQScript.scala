@@ -33,12 +33,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  var outputDir: String = {
-    val temp = Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
-    if (temp.isEmpty) ""
-    else {
-      val t = temp.get.value.toString
-      if (!t.endsWith("/")) t + "/" else t
+  var outputDir: File = {
+    Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
+      case Some(value) => new File(value.asString)
+      case _           => new File(".")
     }
   }
 
@@ -64,8 +62,6 @@ trait BiopetQScript extends Configurable with GatkLogging {
    */
   final def script() {
     outputDir = config("output_dir")
-    if (outputDir.isEmpty) outputDir = new File(".").getAbsolutePath()
-    else if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
@@ -81,7 +77,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _ =>
     }
 
-    if (new File(outputDir).canWrite) globalConfig.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    if (outputDir.canWrite) globalConfig.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
     else BiopetQScript.addError("Output dir: '" + outputDir + "' is not writeable")
 
     BiopetQScript.checkErrors

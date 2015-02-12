@@ -29,11 +29,8 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
   var dbsnp: File = config("dbsnp")
 
   def init() {
-    if (config.contains("gvcffiles")) for (file <- config("gvcffiles").asList) {
+    if (config.contains("gvcffiles")) for (file <- config("gvcffiles").asList)
       gvcfFiles ::= file.toString
-    }
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
   def biopetScript() {
@@ -53,7 +50,7 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     val gatkGenotyping = new GatkGenotyping(this)
     gatkGenotyping.inputGvcfs = sampleGvcf :: gvcfPool
     gatkGenotyping.samples :+= sampleName
-    gatkGenotyping.outputDir = outputDir + "samples_" + gvcfPool.size + "/"
+    gatkGenotyping.outputDir = new File(outputDir, "samples_" + gvcfPool.size + "/")
     gatkGenotyping.init
     gatkGenotyping.biopetScript
     addAll(gatkGenotyping.functions)

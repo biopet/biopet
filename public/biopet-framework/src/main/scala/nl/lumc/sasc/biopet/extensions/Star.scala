@@ -52,9 +52,9 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", "STAR")
 
   @Argument(doc = "Output Directory")
-  var outputDir: String = _
+  var outputDir: File = _
 
-  var genomeDir: String = config("genomeDir", reference.getParent + "/star/")
+  var genomeDir: File = config("genomeDir", new File(reference.getParent, "/star"))
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
@@ -64,7 +64,6 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def afterGraph() {
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    if (!outputDir.endsWith("/")) outputDir += "/"
     val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
@@ -97,7 +96,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
 }
 
 object Star {
-  def apply(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
+  def apply(configurable: Configurable, R1: File, R2: File, outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
     if (R2 != null) star.R2 = R2
@@ -108,21 +107,20 @@ object Star {
     return star
   }
 
-  def _2pass(configurable: Configurable, R1: File, R2: File, outputDir: String, isIntermediate: Boolean = false, deps: List[File] = Nil): (File, List[Star]) = {
-    val outDir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, outDir + "aln-pass1/")
+  def _2pass(configurable: Configurable, R1: File, R2: File, outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): (File, List[Star]) = {
+    val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass1"))
     starCommand_pass1.isIntermediate = isIntermediate
     starCommand_pass1.deps = deps
     starCommand_pass1.afterGraph
 
     val starCommand_reindex = new Star(configurable)
     starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
-    starCommand_reindex.outputDir = outDir + "re-index/"
+    starCommand_reindex.outputDir = new File(outputDir, "re-index")
     starCommand_reindex.runmode = "genomeGenerate"
     starCommand_reindex.isIntermediate = isIntermediate
     starCommand_reindex.afterGraph
 
-    val starCommand_pass2 = Star(configurable, R1, if (R2 != null) R2 else null, outDir + "aln-pass2/")
+    val starCommand_pass2 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass2"))
     starCommand_pass2.genomeDir = starCommand_reindex.outputDir
     starCommand_pass2.isIntermediate = isIntermediate
     starCommand_pass2.deps = deps

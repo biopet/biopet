@@ -48,7 +48,7 @@ package nl.lumc.sasc.biopet.core.workaround
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline._
 import org.broadinstitute.gatk.queue.util._
-import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager}
+import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
 import collection.JavaConversions._

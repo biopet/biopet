@@ -20,7 +20,7 @@ package nl.lumc.sasc.biopet.core
  */
 trait ToolCommand extends MainCommand with Logging {
   /** Placeholder for args */
-  protected abstract class AbstractArgs { }
+  protected abstract class AbstractArgs {}
 
   /**
    * Abstract opt parser to add efault args to each biopet tool

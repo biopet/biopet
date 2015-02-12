@@ -87,7 +87,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       case _ =>
     }
 
-    summary.out = outputDir + sampleId + "-" + libId + ".qc.summary.json"
+    summary.out = new File(outputDir, sampleId + "-" + libId + ".qc.summary.json")
   }
 
   def biopetScript() {
@@ -105,7 +105,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
     if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2.get, outputDir))
 
-    fastqc_R1 = Fastqc(this, input_R1, outputDir + "/" + R1_name + ".fastqc/")
+    fastqc_R1 = Fastqc(this, input_R1, new File(outputDir, R1_name + ".fastqc/"))
     add(fastqc_R1)
     summary.addFastqc(fastqc_R1)
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
@@ -115,7 +115,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     summary.addMd5sum(md5sum_R1, R2 = false, after = false)
 
     if (paired) {
-      fastqc_R2 = Fastqc(this, input_R2.get, outputDir + "/" + R2_name + ".fastqc/")
+      fastqc_R2 = Fastqc(this, input_R2.get, new File(outputDir, R2_name + ".fastqc/"))
       add(fastqc_R2)
       summary.addFastqc(fastqc_R2, R2 = true)
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
@@ -126,16 +126,16 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     }
   }
 
-  def runTrimClip(R1_in: File, outDir: String, chunk: String): (File, File, List[File]) = {
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) = {
     runTrimClip(R1_in, new File(""), outDir, chunk)
   }
-  def runTrimClip(R1_in: File, outDir: String): (File, File, List[File]) = {
+  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) = {
     runTrimClip(R1_in, new File(""), outDir, "")
   }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: String): (File, File, List[File]) = {
+  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) = {
     runTrimClip(R1_in, R2_in, outDir, "")
   }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: String, chunkarg: String): (File, File, List[File]) = {
+  def runTrimClip(R1_in: File, R2_in: File, outDir: File, chunkarg: String): (File, File, List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String, File] = Map()
 
@@ -245,8 +245,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
 
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
     if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
-    val R1 = new File(outputDir + R1_name + ".qc" + R1_ext + ".gz")
-    val R2 = new File(outputDir + R2_name + ".qc" + R2_ext + ".gz")
+    val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
+    val R2 = new File(outputDir, R2_name + ".qc" + R2_ext + ".gz")
 
     add(Gzip(this, fastq_R1, R1))
     if (paired) add(Gzip(this, fastq_R2, R2))
@@ -263,11 +263,11 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         add(md5sum_R2)
         summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
-      fastqc_R1_after = Fastqc(this, R1, outputDir + "/" + R1_name + ".qc.fastqc/")
+      fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
       add(fastqc_R1_after)
       summary.addFastqc(fastqc_R1_after, after = true)
       if (paired) {
-        fastqc_R2_after = Fastqc(this, R2, outputDir + "/" + R2_name + ".qc.fastqc/")
+        fastqc_R2_after = Fastqc(this, R2, new File(outputDir, R2_name + ".qc.fastqc/"))
         add(fastqc_R2_after)
         summary.addFastqc(fastqc_R2_after, R2 = true, after = true)
       }
@@ -276,7 +276,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     add(summary)
   }
 
-  def extractIfNeeded(file: File, runDir: String): File = {
+  def extractIfNeeded(file: File, runDir: File): File = {
     if (file == null) return file
     else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")

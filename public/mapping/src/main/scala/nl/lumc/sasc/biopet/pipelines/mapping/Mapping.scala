@@ -96,7 +96,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = outputDir + outputName + ".final.bam"
+  def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
 
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
@@ -127,7 +127,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = outputDir + "flexiprep" + File.separator
+      flexiprep.outputDir = new File(outputDir, "flexiprep" + File.separator)
       flexiprep.input_R1 = input_R1
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
@@ -144,9 +144,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       else if (file.endsWith(".gzip")) return file.substring(0, file.lastIndexOf(".gzip"))
       else return file
     }
-    var chunks: Map[String, (String, String)] = Map()
+    var chunks: Map[File, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = outputDir + "chunks/" + t + "/"
+      val chunkDir = new File(outputDir, "chunks/" + t + "/")
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
@@ -206,7 +206,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     var bamFile = bamFiles.head
     if (!skipMarkduplicates) {
-      bamFile = new File(outputDir + outputName + ".dedup.bam")
+      bamFile = new File(outputDir, outputName + ".dedup.bam")
       add(MarkDuplicates(this, bamFiles, bamFile))
     } else if (skipMarkduplicates && chunking) {
       val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
@@ -214,7 +214,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics" + File.separator).functions)
+    if (!skipMetrics) addAll(BamMetrics(this, bamFile, new File(outputDir, "metrics")).functions)
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
