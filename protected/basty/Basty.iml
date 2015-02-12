@@ -93,5 +93,6 @@
     <orderEntry type="module" module-name="Mapping" />
     <orderEntry type="module" module-name="Flexiprep" />
     <orderEntry type="module" module-name="BamMetrics" />
+    <orderEntry type="module" module-name="Bam2Wig" />
   </component>
 </module>

@@ -90,5 +90,6 @@
     <orderEntry type="library" name="Maven: com.github.scopt:scopt_2.10:3.2.0" level="project" />
     <orderEntry type="module" module-name="Flexiprep" />
     <orderEntry type="module" module-name="BamMetrics" />
+    <orderEntry type="module" module-name="Bam2Wig" />
   </component>
 </module>

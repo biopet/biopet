@@ -94,5 +94,6 @@
     <orderEntry type="module" module-name="Gentrap" />
     <orderEntry type="module" module-name="Sage" />
     <orderEntry type="module" module-name="Yamsvp" />
+    <orderEntry type="module" module-name="Bam2Wig" />
   </component>
 </module>
