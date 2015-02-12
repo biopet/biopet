@@ -35,7 +35,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputDir: File = {
     Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
-      case Some(value) => new File(value.asString)
+      case Some(value) => new File(value.asString).getAbsoluteFile
       case _           => new File(".")
     }
   }
@@ -61,7 +61,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
    * Script from queue itself, final to force some checks for each pipeline and write report
    */
   final def script() {
-    outputDir = config("output_dir")
+    outputDir = config("output_dir").asFile.getAbsoluteFile
     init
     biopetScript
 
