@@ -49,7 +49,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
-  override def afterGraph {
+  override def beforeGraph {
     if (outputChart == null) outputChart = new File(output + ".pdf")
     //require(reference.exists)
   }

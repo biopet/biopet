@@ -62,7 +62,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultVmem = "6G"
   override val defaultThreads = 8
 
-  override def afterGraph() {
+  override def beforeGraph() {
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
     val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
     if (runmode == null) {
@@ -103,7 +103,7 @@ object Star {
     star.outputDir = outputDir
     star.isIntermediate = isIntermediate
     star.deps = deps
-    star.afterGraph
+    star.beforeGraph
     return star
   }
 
@@ -111,20 +111,20 @@ object Star {
     val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass1"))
     starCommand_pass1.isIntermediate = isIntermediate
     starCommand_pass1.deps = deps
-    starCommand_pass1.afterGraph
+    starCommand_pass1.beforeGraph
 
     val starCommand_reindex = new Star(configurable)
     starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
     starCommand_reindex.outputDir = new File(outputDir, "re-index")
     starCommand_reindex.runmode = "genomeGenerate"
     starCommand_reindex.isIntermediate = isIntermediate
-    starCommand_reindex.afterGraph
+    starCommand_reindex.beforeGraph
 
     val starCommand_pass2 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass2"))
     starCommand_pass2.genomeDir = starCommand_reindex.outputDir
     starCommand_pass2.isIntermediate = isIntermediate
     starCommand_pass2.deps = deps
-    starCommand_pass2.afterGraph
+    starCommand_pass2.beforeGraph
 
     return (starCommand_pass2.outputSam, List(starCommand_pass1, starCommand_reindex, starCommand_pass2))
   }

@@ -51,15 +51,14 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * Can overr
    * ide this method. This is executed after the script is done en queue starts to generate the graph
    */
-  protected[core] def afterGraph {}
-  //TODO: function need rename to beforeGraph
+  protected[core] def beforeGraph {}
 
   /**
    * Set default output file, threads and vmem for current job
    */
   override def freezeFieldValues() {
     checkExecutable
-    afterGraph
+    beforeGraph
     if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
@@ -126,7 +125,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
     addJobReportBinding("cores", nCoresRequest match {
       case Some(n) if n > 0 => n
-      case _ => 1
+      case _                => 1
     })
     addJobReportBinding("version", getVersion)
   }

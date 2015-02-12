@@ -44,8 +44,8 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
     if (!wig.isEmpty && !wig.get.getAbsolutePath.endsWith(".wig")) throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")

@@ -48,7 +48,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
   override val defaultThreads = 4
 
-  override def afterGraph {
+  override def beforeGraph {
     this.checkExecutable
 
     val fastqcDir = new File(executable).getParent

@@ -54,7 +54,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")
 
-  override def afterGraph {
+  override def beforeGraph {
     if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
     //require(reference.exists)
   }

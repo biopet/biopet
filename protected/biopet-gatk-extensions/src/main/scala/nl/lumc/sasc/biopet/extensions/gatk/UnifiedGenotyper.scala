@@ -8,8 +8,8 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.UnifiedGenotyper with GatkGeneral {
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
 
     genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
     if (config.contains("scattercount")) scatterCount = config("scattercount")
