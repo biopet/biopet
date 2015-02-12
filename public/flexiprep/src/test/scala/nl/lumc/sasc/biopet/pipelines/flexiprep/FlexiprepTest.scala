@@ -26,7 +26,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def TestDefault = {
+  @Test def testDefault = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir), Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
@@ -44,7 +44,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 1
   }
 
-  @Test def TestDefaultPaired = {
+  @Test def testDefaultPaired = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir), Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
@@ -63,7 +63,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
   }
 
-  @Test def TestClipTrimPaired = {
+  @Test def testClipTrimPaired = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> false, "skip_clip" -> false),
       Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
@@ -83,7 +83,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
   }
 
-  @Test def TestTrimPaired = {
+  @Test def testTrimPaired = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> false, "skip_clip" -> true),
       Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
@@ -103,7 +103,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
   }
 
-  @Test def TestClipPaired = {
+  @Test def testClipPaired = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> true, "skip_clip" -> false),
       Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
@@ -123,7 +123,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
   }
 
-  @Test def TestPaired = {
+  @Test def testPaired = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> true, "skip_clip" -> true),
       Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
