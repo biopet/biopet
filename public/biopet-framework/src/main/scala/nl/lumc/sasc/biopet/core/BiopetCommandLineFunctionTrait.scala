@@ -48,7 +48,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected[core] def beforeCmd {}
 
   /**
-   * Can override this method. This is executed after the script is done en queue starts to generate the graph
+   * Can overr
+   * ide this method. This is executed after the script is done en queue starts to generate the graph
    */
   protected[core] def afterGraph {}
   //TODO: function need rename to beforeGraph
@@ -123,7 +124,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
     beforeCmd
 
-    addJobReportBinding("cores", if (nCoresRequest.get.toInt > 0) nCoresRequest.get.toInt else 1)
+    addJobReportBinding("cores", nCoresRequest match {
+      case Some(n) if n > 0 => n
+      case _ => 1
+    })
     addJobReportBinding("version", getVersion)
   }
 
@@ -166,6 +170,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
   /** Get version from cache otherwise execute the version command  */
   def getVersion: String = {
+    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+      checkExecutable
     if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
       BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
     return BiopetCommandLineFunctionTrait.versionCache(executable)

@@ -73,12 +73,14 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case f: BiopetCommandLineFunctionTrait => {
         f.checkExecutable
         f.afterGraph
+        f.commandLine
       }
       case _ =>
     }
 
-    if (outputDir.canWrite) globalConfig.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
-    else BiopetQScript.addError("Output dir: '" + outputDir + "' is not writeable")
+    if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
+      globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
+    else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
     BiopetQScript.checkErrors
   }
