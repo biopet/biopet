@@ -17,11 +17,12 @@ package nl.lumc.sasc.biopet.core.config
 
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
+import scala.collection.JavaConversions._
 
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
   val root: Configurable
-  val globalConfig: Config = if (root != null) root.globalConfig else Config.global
+  def globalConfig: Config = if (root != null) root.globalConfig else Config.global
 
   /** subfix to the path */
   def subPath: List[String] = Nil
