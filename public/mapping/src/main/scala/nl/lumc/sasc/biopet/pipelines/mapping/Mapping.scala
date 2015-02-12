@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Star, Stampy, Bowtie }
+import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
@@ -36,76 +36,80 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   var input_R1: File = _
 
   @Input(doc = "R2 fastq file", shortName = "R2", required = false)
-  var input_R2: File = _
+  var input_R2: Option[File] = None
 
-  @Argument(doc = "Output name", shortName = "outputName", required = false)
+  /** Output name */
   var outputName: String = _
 
-  @Argument(doc = "Skip flexiprep", shortName = "skipflexiprep", required = false)
-  var skipFlexiprep: Boolean = false
+  /** Skip flexiprep */
+  protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
 
-  @Argument(doc = "Skip mark duplicates", shortName = "skipmarkduplicates", required = false)
-  var skipMarkduplicates: Boolean = false
+  /** Skip mark duplicates */
+  protected var skipMarkduplicates: Boolean = config("skip_markduplicates", default = false)
 
-  @Argument(doc = "Skip metrics", shortName = "skipmetrics", required = false)
-  var skipMetrics: Boolean = false
+  /** Skip metrics */
+  protected var skipMetrics: Boolean = config("skip_metrics", default = false)
 
-  @Argument(doc = "Aligner", shortName = "ALN", required = false)
-  var aligner: String = config("aligner", default = "bwa")
+  /** Aligner */
+  protected var aligner: String = config("aligner", default = "bwa")
 
-  @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = config("reference")
+  /** Reference */
+  protected var reference: File = config("reference")
 
-  @Argument(doc = "Chunking", shortName = "chunking", required = false)
-  var chunking: Boolean = config("chunking", false)
+  /** Number of chunks, when not defined pipeline will automatic calculate number of chunks */
+  protected var numberChunks: Option[Int] = config("number_chunks")
 
-  @ClassType(classOf[Int])
-  @Argument(doc = "Number of chunks, when not defined pipeline will automatic calculate number of chunks", shortName = "numberChunks", required = false)
-  var numberChunks: Option[Int] = None
+  /** Enable chunking */
+  protected var chunking: Boolean = config("chunking", numberChunks.getOrElse(1) > 1)
 
   // Readgroup items
-  @Argument(doc = "Readgroup ID", shortName = "RGID", required = false)
-  var RGID: String = config("RGID")
+  /** Readgroup ID */
+  protected var readgroupId: String = _
 
-  @Argument(doc = "Readgroup Library", shortName = "RGLB", required = false)
-  var RGLB: String = config("RGLB")
+  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
 
-  @Argument(doc = "Readgroup Platform", shortName = "RGPL", required = false)
-  var RGPL: String = config("RGPL", default = "illumina")
+  /** Readgroup Library */
+  @Argument(doc = "Library ID", shortName = "library", required = true)
+  var libId: String = _
 
-  @Argument(doc = "Readgroup platform unit", shortName = "RGPU", required = false)
-  var RGPU: String = config("RGPU", default = "na")
+  /**Readgroup sample */
+  @Argument(doc = "Sample ID", shortName = "sample", required = true)
+  var sampleId: String = _
 
-  @Argument(doc = "Readgroup sample", shortName = "RGSM", required = false)
-  var RGSM: String = config("RGSM")
+  /** Readgroup Platform */
+  protected var platform: String = config("platform", default = "illumina")
 
-  @Argument(doc = "Readgroup sequencing center", shortName = "RGCN", required = false)
-  var RGCN: String = config("RGCN")
+  /** Readgroup platform unit */
+  protected var platformUnit: String = config("platform_unit", default = "na")
 
-  @Argument(doc = "Readgroup description", shortName = "RGDS", required = false)
-  var RGDS: String = config("RGDS")
+  /** Readgroup sequencing center */
+  protected var readgroupSequencingCenter: Option[String] = config("readgroup_sequencing_center")
 
-  @Argument(doc = "Readgroup sequencing date", shortName = "RGDT", required = false)
-  var RGDT: Date = _
+  /** Readgroup description */
+  protected var readgroupDescription: Option[String] = config("readgroup_description")
 
-  @Argument(doc = "Readgroup predicted insert size", shortName = "RGPI", required = false)
-  var RGPI: Option[Int] = config("RGPI")
+  /** Readgroup sequencing date */
+  protected var readgroupDate: Date = _
 
-  var paired: Boolean = false
+  /** Readgroup predicted insert size */
+  protected var predictedInsertsize: Option[Int] = config("predicted_insertsize")
+
+  protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
+  def finalBamFile: File = outputDir + outputName + ".final.bam"
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on mapping module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
-    if (input_R1 == null) throw new IllegalStateException("Missing FastQ R1 on mapping module")
-    paired = (input_R2 != null)
+    require(outputDir != null, "Missing output directory on mapping module")
+    require(input_R1 != null, "Missing output directory on mapping module")
+    require(sampleId != null, "Missing sample ID on mapping module")
+    require(libId != null, "Missing library ID on mapping module")
 
-    if (RGLB == null) throw new IllegalStateException("Missing Readgroup library on mapping module")
-    if (RGLB == null) throw new IllegalStateException("Missing Readgroup sample on mapping module")
-    if (RGID == null && RGSM != null && RGLB != null) RGID = RGSM + "-" + RGLB
-    else if (RGID == null) throw new IllegalStateException("Missing Readgroup ID on mapping module")
+    paired = input_R2.isDefined
 
-    if (outputName == null) outputName = RGID
+    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
+    else if (readgroupId == null) readgroupId = config("readgroup_id")
+
+    if (outputName == null) outputName = readgroupId
 
     if (chunking) {
       if (numberChunks.isEmpty) {
@@ -123,11 +127,11 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = outputDir + "flexiprep/"
+      flexiprep.outputDir = outputDir + "flexiprep" + File.separator
       flexiprep.input_R1 = input_R1
-      if (paired) flexiprep.input_R2 = input_R2
-      flexiprep.sampleName = this.RGSM
-      flexiprep.libraryName = this.RGLB
+      flexiprep.input_R2 = input_R2
+      flexiprep.sampleId = this.sampleId
+      flexiprep.libId = this.libId
       flexiprep.init
       flexiprep.runInitialJobs
     }
@@ -144,10 +148,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
       val chunkDir = outputDir + "chunks/" + t + "/"
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
-        if (paired) removeGz(chunkDir + input_R2.getName) else ""))
+        if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      flexiprep.extractIfNeeded(input_R2, flexiprep.outputDir)))
+    else chunks += (outputDir -> (
+      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
+      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    )
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -158,7 +164,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = input_R2
+        fastSplitter_R2.input = input_R2.get
         for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
         fastSplitter_R2.isIntermediate = true
         add(fastSplitter_R2)
@@ -208,8 +214,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics/").functions)
+    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics" + File.separator).functions)
 
+    add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
+    add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> bamFile)
   }
 
@@ -263,7 +271,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
-    bwaCommand.R = getReadGroup
+    bwaCommand.R = Some(getReadGroup)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     add(bwaCommand)
@@ -275,15 +283,15 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
 
-    var RG: String = "ID:" + RGID + ","
-    RG += "SM:" + RGSM + ","
-    RG += "LB:" + RGLB + ","
-    if (RGDS != null) RG += "DS" + RGDS + ","
-    RG += "PU:" + RGPU + ","
-    if (RGPI > 0) RG += "PI:" + RGPI + ","
-    if (RGCN != null) RG += "CN:" + RGCN + ","
-    if (RGDT != null) RG += "DT:" + RGDT + ","
-    RG += "PL:" + RGPL
+    var RG: String = "ID:" + readgroupId + ","
+    RG += "SM:" + sampleId + ","
+    RG += "LB:" + libId + ","
+    if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
+    RG += "PU:" + platformUnit + ","
+    if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
+    if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + ","
+    if (readgroupDate != null) RG += "DT:" + readgroupDate + ","
+    RG += "PL:" + platform
 
     val stampyCmd = new Stampy(this)
     stampyCmd.R1 = R1
@@ -327,13 +335,13 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
 
-    addOrReplaceReadGroups.RGID = RGID
-    addOrReplaceReadGroups.RGLB = RGLB
-    addOrReplaceReadGroups.RGPL = RGPL
-    addOrReplaceReadGroups.RGPU = RGPU
-    addOrReplaceReadGroups.RGSM = RGSM
-    if (RGCN != null) addOrReplaceReadGroups.RGCN = RGCN
-    if (RGDS != null) addOrReplaceReadGroups.RGDS = RGDS
+    addOrReplaceReadGroups.RGID = readgroupId
+    addOrReplaceReadGroups.RGLB = libId
+    addOrReplaceReadGroups.RGPL = platform
+    addOrReplaceReadGroups.RGPU = platformUnit
+    addOrReplaceReadGroups.RGSM = sampleId
+    if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
+    if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
     if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
     add(addOrReplaceReadGroups)
 
@@ -341,20 +349,18 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def getReadGroup(): String = {
-    var RG: String = "@RG\\t" + "ID:" + RGID + "\\t"
-    RG += "LB:" + RGLB + "\\t"
-    RG += "PL:" + RGPL + "\\t"
-    RG += "PU:" + RGPU + "\\t"
-    RG += "SM:" + RGSM + "\\t"
-    if (RGCN != null) RG += "CN:" + RGCN + "\\t"
-    if (RGDS != null) RG += "DS" + RGDS + "\\t"
-    if (RGDT != null) RG += "DT" + RGDT + "\\t"
-    if (RGPI.isDefined) RG += "PI" + RGPI.get + "\\t"
+    var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
+    RG += "LB:" + libId + "\\t"
+    RG += "PL:" + platform + "\\t"
+    RG += "PU:" + platformUnit + "\\t"
+    RG += "SM:" + sampleId + "\\t"
+    if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
+    if (readgroupDescription.isDefined) RG += "DS" + readgroupDescription.get + "\\t"
+    if (readgroupDate != null) RG += "DT" + readgroupDate + "\\t"
+    if (predictedInsertsize.isDefined) RG += "PI" + predictedInsertsize.get + "\\t"
 
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
 }
 
-object Mapping extends PipelineCommand {
-
-}
+object Mapping extends PipelineCommand

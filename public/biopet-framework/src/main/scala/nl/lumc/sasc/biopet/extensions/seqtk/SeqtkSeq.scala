@@ -37,7 +37,7 @@ class SeqtkSeq(val root: Configurable) extends Seqtk {
   var q: Option[Int] = config("q")
 
   /** masked bases converted to CHAR; 0 for lowercase [0] */
-  var n: String = config("n")
+  var n: Option[String] = config("n")
 
   /** number of residues per line; 0 for 2^32-1 [0] */
   var l: Option[Int] = config("l")
@@ -52,7 +52,7 @@ class SeqtkSeq(val root: Configurable) extends Seqtk {
   var f: Option[Int] = config("f")
 
   /** mask regions in BED or name list FILE [null] */
-  var M: File = config("M")
+  var M: Option[File] = config("M")
 
   /** drop sequences with length shorter than INT [0] */
   var L: Option[Int] = config("L")

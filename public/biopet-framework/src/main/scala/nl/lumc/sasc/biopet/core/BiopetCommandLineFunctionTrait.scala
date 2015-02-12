@@ -15,13 +15,11 @@
  */
 package nl.lumc.sasc.biopet.core
 
-//import java.io.BufferedInputStream
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-//import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 import java.io.FileInputStream
@@ -38,7 +36,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   val defaultThreads = 1
 
   @Argument(doc = "Vmem", required = false)
-  var vmem: String = _
+  var vmem: Option[String] = None
   val defaultVmem: String = ""
 
   @Argument(doc = "Executable", required = false)
@@ -53,22 +51,22 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   override def freezeFieldValues() {
     checkExecutable
     afterGraph
-    jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
+    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
-    if (vmem == null) {
+    if (vmem.isEmpty) {
       vmem = config("vmem")
-      if (vmem == null && !defaultVmem.isEmpty) vmem = defaultVmem
+      if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
     }
-    if (vmem != null) jobResourceRequests :+= "h_vmem=" + vmem
-    jobName = configName + ":" + firstOutput.getName
+    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
+    jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
     super.freezeFieldValues()
   }
 
-  protected def checkExecutable {
+  protected[core] def checkExecutable {
     if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
       try if (executable != null) {
         if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
@@ -81,8 +79,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
             val file = new File(executable)
             executable = file.getCanonicalPath
           } else {
-            logger.error("executable: '" + executable + "' not found, please check config")
-            throw new QException("executable: '" + executable + "' not found, please check config")
+            BiopetQScript.addError("executable: '" + executable + "' not found, please check config")
           }
           BiopetCommandLineFunctionTrait.executableCache += oldExecutable -> executable
           BiopetCommandLineFunctionTrait.executableCache += executable -> executable
@@ -103,9 +100,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
         case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
       }
     }
-    val md5 = BiopetCommandLineFunctionTrait.executableMd5Cache(executable)
-    if (md5 == null) addJobReportBinding("md5sum_exe", md5)
-    else addJobReportBinding("md5sum_exe", "None")
+    val md5 = BiopetCommandLineFunctionTrait.executableMd5Cache.get(executable)
+    addJobReportBinding("md5sum_exe", md5.getOrElse("None"))
   }
 
   final protected def preCmdInternal {
@@ -122,6 +118,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0) // Can select multiple
   private def getVersionInternal: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
+    val exe = new File(versionCommand.trim.split(" ")(0))
+    if (!exe.exists()) return "N/A"
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     def outputLog = "Version command: \n" + versionCommand +

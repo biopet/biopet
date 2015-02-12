@@ -35,7 +35,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   var outputSummary: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Argument(doc = "Window size", required = false)
   var windowSize: Option[Int] = config("windowsize")

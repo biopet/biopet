@@ -17,23 +17,31 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
+import scala.collection.mutable.ListBuffer
+
 trait BiopetQScript extends Configurable with GatkLogging {
 
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
-  var outputDir: String = _
+  var outputDir: String = {
+    val temp = Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir"))
+    if (temp.isEmpty) ""
+    else {
+      val t = temp.get.value.toString
+      if (!t.endsWith("/")) t + "/" else t
+    }
+  }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
-  var disableScatterDefault: Boolean = false
+  var disableScatter: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
 
@@ -45,20 +53,28 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   final def script() {
-    if (!outputDir.endsWith("/")) outputDir += "/"
+    outputDir = config("output_dir")
+    if (outputDir.isEmpty) outputDir = new File(".").getAbsolutePath()
+    else if (!outputDir.endsWith("/")) outputDir += "/"
     init
     biopetScript
 
-    if (disableScatterDefault) for (function <- functions) function match {
+    if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => f.afterGraph
-      case _                                 =>
+      case f: BiopetCommandLineFunctionTrait => {
+        f.checkExecutable
+        f.afterGraph
+      }
+      case _ =>
     }
 
-    Config.global.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    if (new File(outputDir).canWrite) globalConfig.writeReport(qSettings.runName, outputDir + ".log/" + qSettings.runName)
+    else BiopetQScript.addError("Output dir: '" + outputDir + "' is not writeable")
+
+    BiopetQScript.checkErrors
   }
 
   def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
@@ -66,5 +82,29 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
 
+object BiopetQScript extends Logging {
+  private val errors: ListBuffer[Exception] = ListBuffer()
+
+  def addError(error: String, debug: String = null): Unit = {
+    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    errors.append(new Exception(msg))
+  }
+
+  protected def checkErrors: Unit = {
+    if (!errors.isEmpty) {
+      logger.error("*************************")
+      logger.error("Biopet found some errors:")
+      if (logger.isDebugEnabled) {
+        for (e <- errors) {
+          logger.error(e.getMessage)
+          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+        }
+      } else {
+        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
+      }
+      throw new IllegalStateException("Biopet found errors")
+    }
+  }
 }
