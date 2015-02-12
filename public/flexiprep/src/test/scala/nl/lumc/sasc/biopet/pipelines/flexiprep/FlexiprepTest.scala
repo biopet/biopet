@@ -10,7 +10,7 @@ import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvan_thof on 2/11/15.
@@ -26,121 +26,46 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testDefault = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir), Map(FlexiprepTest.excutables.toSeq: _*))
-    val flexiprep: Flexiprep = initPipeline(map)
+  @DataProvider(name = "flexiprepOptions", parallel = true)
+  def flexiprepOptions = {
+    val paired = Array(true, false)
+    val skipTrims = Array(true, false)
+    val skipClips = Array(true, false)
+    val zipped = Array(true, false)
 
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla.fq")
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
-    flexiprep.script()
-
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 1
+    for (
+      pair <- paired;
+      skipTrim <- skipTrims;
+      skipClip <- skipClips;
+      zip <- zipped
+    ) yield Array("", pair, skipTrim, skipClip, zip)
   }
 
-  @Test def testDefaultPaired = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir), Map(FlexiprepTest.excutables.toSeq: _*))
+  @Test(dataProvider = "flexiprepOptions")
+  def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean, zipped: Boolean) = {
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir,
+      "skip_trim" -> skipTrim,
+      "skip_clip" -> skipClip
+    ), Map(FlexiprepTest.excutables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq.gz")
-    flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq.gz"))
+    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
+    if (paired) flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq" + (if (zipped) ".gz" else "")))
     flexiprep.sampleId = "1"
     flexiprep.libId = "1"
     flexiprep.script()
 
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 4
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
-  }
-
-  @Test def testClipTrimPaired = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> false, "skip_clip" -> false),
-      Map(FlexiprepTest.excutables.toSeq: _*))
-    val flexiprep: Flexiprep = initPipeline(map)
-
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq.gz")
-    flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq.gz"))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
-    flexiprep.script()
-
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 4
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
-  }
-
-  @Test def testTrimPaired = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> false, "skip_clip" -> true),
-      Map(FlexiprepTest.excutables.toSeq: _*))
-    val flexiprep: Flexiprep = initPipeline(map)
-
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq.gz")
-    flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq.gz"))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
-    flexiprep.script()
-
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 4
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
-  }
-
-  @Test def testClipPaired = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> true, "skip_clip" -> false),
-      Map(FlexiprepTest.excutables.toSeq: _*))
-    val flexiprep: Flexiprep = initPipeline(map)
-
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq.gz")
-    flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq.gz"))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
-    flexiprep.script()
-
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 4
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 1
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
-  }
-
-  @Test def testPaired = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir, "skip_trim" -> true, "skip_clip" -> true),
-      Map(FlexiprepTest.excutables.toSeq: _*))
-    val flexiprep: Flexiprep = initPipeline(map)
-
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq.gz")
-    flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq.gz"))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
-    flexiprep.script()
-
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe 2
-    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe 0
-    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe 2
+    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (
+      if (paired && (skipClip && skipTrim)) 2
+      else if (!paired && (skipClip && skipTrim)) 1
+      else if (paired && !(skipClip && skipTrim)) 4
+      else if (!paired && !(skipClip && skipTrim)) 2)
+    flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (zipped) (if (paired) 2 else 1) else 0)
+    flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe (if (paired) 2 else 1)
+    flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe (if (skipClip) 0 else (if (paired) 2 else 1))
+    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe (if (skipClip) 0 else (if (paired) 1 else 0))
+    flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe (if (skipTrim) 0 else 1)
+    flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe (if (paired) 2 else 1)
   }
 }
 object FlexiprepTest {
