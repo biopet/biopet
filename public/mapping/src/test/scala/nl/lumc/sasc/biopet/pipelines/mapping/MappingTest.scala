@@ -32,7 +32,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions", parallel = true)
   def mappingOptions = {
-    val aligners = Array("bwa", "bwa-aln", "star", "bowtie")
+    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
@@ -77,7 +77,6 @@ class MappingTest extends TestNGSuite with Matchers {
     mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 2 else 1) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 1 else 0) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 0 else 1) else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[Star]) shouldBe ((if (aligner == "star") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Star]) shouldBe ((if (aligner == "star") 1 else if (aligner == "star-2pass") 3 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Bowtie]) shouldBe ((if (aligner == "bowtie") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Stampy]) shouldBe ((if (aligner == "stampy") 1 else 0) * chunks)
@@ -109,7 +108,7 @@ object MappingTest {
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
-    "stampy" -> Map("exe" -> "test"),
+    "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
     "samtools" -> Map("exe" -> "test")
   )
 }
