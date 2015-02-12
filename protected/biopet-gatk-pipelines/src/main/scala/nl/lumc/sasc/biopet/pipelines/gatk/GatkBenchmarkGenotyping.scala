@@ -50,7 +50,7 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     val gatkGenotyping = new GatkGenotyping(this)
     gatkGenotyping.inputGvcfs = sampleGvcf :: gvcfPool
     gatkGenotyping.samples :+= sampleName
-    gatkGenotyping.outputDir = new File(outputDir, "samples_" + gvcfPool.size + "/")
+    gatkGenotyping.outputDir = new File(outputDir, "samples_" + gvcfPool.size)
     gatkGenotyping.init
     gatkGenotyping.biopetScript
     addAll(gatkGenotyping.functions)
