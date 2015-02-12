@@ -34,7 +34,6 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
-
   var threads = 0
   val defaultThreads = 1
 
@@ -46,12 +45,12 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * Can override this method. This is executed just before the job is ready to run.
    * Can check on run time files from pipeline here
    */
-  protected[core] def beforeCmd { }
+  protected[core] def beforeCmd {}
 
   /**
    * Can override this method. This is executed after the script is done en queue starts to generate the graph
    */
-  protected[core] def afterGraph { }
+  protected[core] def afterGraph {}
   //TODO: function need rename to beforeGraph
 
   /**
