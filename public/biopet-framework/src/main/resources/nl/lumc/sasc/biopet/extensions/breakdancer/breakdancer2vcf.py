@@ -15,21 +15,18 @@
 # license, please contact us to obtain a separate license.
 #
 
-
 __copyright__ = """
 Copyright (C) 2013 - Tim te Beek
 Copyright (C) 2013 - Wai Yi Leung
 Copyright (C) 2013 AllBio (see AUTHORS file)
 """
 
-__desc__ = """Convert breakdancer output to pseudo .vcf file format."""
+__desc__ = """Convert breakdancer output to VCF v4.2 .file format."""
 __created__ = "Mar 18, 2013"
-__author__ = "tbeek"
+__author__ = "tbeek,wyleung"
 
 import argparse
 import csv
-import os.path
-import sys
 import datetime
 
 
@@ -43,15 +40,9 @@ def main(tsvfile, vcffile):
     with open(tsvfile) as reader:
         # Parse file
         dictreader = _parse_tsvfile(reader)
-        print dictreader.fieldnames
 
         # Write out file
         _format_vcffile(dictreader, vcffile)
-
-    # Quick output
-    with open(vcffile) as reader:
-        print reader.read(1000)
-
 
 def _parse_tsvfile(readable):
     '''
