@@ -22,7 +22,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
       override def configName = "flexiprep"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
-      qSettings.runName = "test." + System.currentTimeMillis
+      qSettings.runName = "test"
     }
   }
 
