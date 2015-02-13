@@ -59,7 +59,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   /** write all output files to this directory [./] */
-  var output_dir: File = config("output_dir", default = ".")
+  var output_dir: File = config("output_dir", default = new File("."))
 
   /** number of threads used during analysis [1] */
   var num_threads: Option[Int] = config("num_threads")
