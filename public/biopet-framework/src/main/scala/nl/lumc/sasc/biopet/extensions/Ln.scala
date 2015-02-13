@@ -33,7 +33,8 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   var relative: Boolean = true
 
   override def freezeFieldValues(): Unit = {
-    jobOutputFile = new File(out.getParent + File.separator + "." + out.getName + "." + this.analysisName + ".out")
+    val outLog: String = ".%s.%s.out".format(out.getName, analysisName)
+    jobOutputFile = new File(out.getAbsoluteFile.getParentFile, outLog)
     super.freezeFieldValues()
   }
 
