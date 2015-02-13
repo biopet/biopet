@@ -38,7 +38,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true)
+    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa")
   ), super.defaults)
 
   def makeSample(id: String) = new Sample(id)
