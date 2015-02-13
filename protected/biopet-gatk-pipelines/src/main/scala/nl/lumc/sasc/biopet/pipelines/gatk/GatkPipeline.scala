@@ -46,12 +46,12 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       val mapping = new Mapping(qscript)
       mapping.sampleId = sampleId
       mapping.libId = libId
-      mapping.outputDir = new File(libDir, "variantcalling/")
+      mapping.outputDir = libDir
 
       /** Library variantcalling */
       val gatkVariantcalling = new GatkVariantcalling(qscript)
       gatkVariantcalling.sampleID = sampleId
-      gatkVariantcalling.outputDir = libDir
+      gatkVariantcalling.outputDir = new File(libDir, "variantcalling")
 
       protected def addJobs(): Unit = {
         val bamFile: Option[File] = if (config.contains("R1")) {
