@@ -2,17 +2,20 @@ package nl.lumc.sasc.biopet.pipelines.carp
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.{ConfigValueIndex, Config}
+import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
+import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
-import org.testng.annotations.{DataProvider, Test}
-import org.testng.annotations.{Test, DataProvider}
-import org.scalatest.Assertions._
+import org.testng.annotations.{ Test, DataProvider }
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
 
 /**
  * Created by pjvan_thof on 2/13/15.
  */
-class CarpTest {
+class CarpTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Carp = {
     new Carp() {
       override def configName = "carp"
@@ -26,12 +29,11 @@ class CarpTest {
   def carpOptions = {
     val bool = Array(true, false)
 
-    for (s1 <- bool; s2 <- bool; s3 <- bool; t <- bool; c <- bool) yield
-      Array("", s1, s2, s3, t, c)
+    for (s1 <- bool; s2 <- bool; s3 <- bool; t <- bool; c <- bool) yield Array("", s1, s2, s3, t, c)
   }
 
   @Test(dataProvider = "carpOptions")
-  def testCarp(f:String, sample1:Boolean, sample2:Boolean, sample3:Boolean, threatment:Boolean, control:Boolean): Unit = {
+  def testCarp(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean, threatment: Boolean, control: Boolean): Unit = {
     val map = {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> CarpTest.outputDir
       ), CarpTest.excutables)
@@ -55,8 +57,16 @@ class CarpTest {
     } else { // When samples are correct
       val carp = initPipeline(map)
       carp.script()
+      val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 2 else 0) +
+        (if (threatment) 1 else 0) + (if (control) 1 else 0)
+      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0) +
+        (if (threatment) 1 else 0) + (if (control) 1 else 0)
 
+      carp.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
+      carp.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
+      carp.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (if (sample3) 1 else 0)
 
+      carp.functions.count(_.isInstanceOf[Macs2CallPeak]) shouldBe (numberSamples + (if (threatment) 1 else 0))
     }
   }
 }
@@ -76,7 +86,7 @@ object CarpTest {
   )
 
   val sample1 = Map(
-    "samples" -> Map( "sample1" -> Map( "libraries" -> Map(
+    "samples" -> Map("sample1" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> "1_1_R1.fq",
         "R2" -> "1_1_R2.fq"
@@ -85,16 +95,16 @@ object CarpTest {
     )))
 
   val sample2 = Map(
-    "samples" -> Map( "sample2" -> Map( "libraries" -> Map(
+    "samples" -> Map("sample2" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> "2_1_R1.fq",
         "R2" -> "2_1_R2.fq"
       )
     )
-  )))
+    )))
 
   val sample3 = Map(
-    "samples" -> Map( "sample3" -> Map( "libraries" -> Map(
+    "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> "3_1_R1.fq",
         "R2" -> "3_1_R2.fq"
@@ -107,7 +117,7 @@ object CarpTest {
     )))
 
   val threatment1 = Map(
-    "samples" -> Map( "threatment" -> Map( "control" -> "control1","libraries" -> Map(
+    "samples" -> Map("threatment" -> Map("control" -> "control1", "libraries" -> Map(
       "lib1" -> Map(
         "R1" -> "threatment_1_R1.fq",
         "R2" -> "threatment_1_R2.fq"
@@ -116,7 +126,7 @@ object CarpTest {
     )))
 
   val control1 = Map(
-    "samples" -> Map( "control1" -> Map( "libraries" -> Map(
+    "samples" -> Map("control1" -> Map("libraries" -> Map(
       "lib1" -> Map(
         "R1" -> "control_1_R1.fq",
         "R2" -> "control_1_R2.fq"
