@@ -176,7 +176,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       var R2 = fastqfile._2
       var deps: List[File] = Nil
       if (!skipFlexiprep) {
-        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunkDir)
+        val flexiout = flexiprep.runTrimClip(R1, R2, new File(chunkDir, "flexiprep"), chunkDir)
         logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
