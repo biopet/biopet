@@ -82,7 +82,9 @@ object CarpTest {
     "sickle" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
-    "macs2" -> Map("exe" -> "test")
+    "macs2" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test"),
+    "wigtobigwig" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(
