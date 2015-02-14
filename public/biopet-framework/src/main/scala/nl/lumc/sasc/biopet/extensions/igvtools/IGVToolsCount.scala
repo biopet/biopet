@@ -43,7 +43,6 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   override def beforeGraph {
     super.beforeGraph
-    if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
 
     wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
       throw new IllegalArgumentException("WIG file should have a .wig file-extension"))
