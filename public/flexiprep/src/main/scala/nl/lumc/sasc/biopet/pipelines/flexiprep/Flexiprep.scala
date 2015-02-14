@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
@@ -23,7 +24,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat, Seqstat }
 import nl.lumc.sasc.biopet.tools.FastqSync
 
-class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
+class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
@@ -47,6 +48,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   /** Library name */
   @Argument(doc = "Library ID", shortName = "library", required = true)
   var libId: String = _
+
+  def summaryFile = new File(outputDir, sampleId + "-" + libId + ".qc.summary.json")
 
   var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
@@ -264,6 +267,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
       fastqc_R1_after = Fastqc(this, R1, outputDir + "/" + R1_name + ".qc.fastqc/")
+      addSummarizable(fastqc_R1_after)
       add(fastqc_R1_after)
       summary.addFastqc(fastqc_R1_after, after = true)
       if (paired) {
@@ -273,7 +277,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       }
     }
 
-    add(summary)
+    //add(summary)
+    addSummaryJobs
   }
 
   def extractIfNeeded(file: File, runDir: String): File = {

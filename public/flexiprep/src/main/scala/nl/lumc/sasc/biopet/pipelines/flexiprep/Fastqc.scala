@@ -18,6 +18,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, FileNotFoundException }
 
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+
 import scala.io.Source
 
 import argonaut._, Argonaut._
@@ -32,7 +34,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  * This wrapper implements additional methods for parsing FastQC output files and aggregating everything in a summary
  * object. The current implementation is based on FastQC v0.10.1.
  */
-class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
+class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) with Summarizable {
 
   /** Class for storing a single FastQC module result */
   protected case class FastQCModule(name: String, status: String, lines: Seq[String])
@@ -160,6 +162,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
     ConfigUtils.mapToJson(outputMap)
   }
+
+  def summaryFiles: Map[String, File] = Map("test" -> this.fastqfile)
+
+  def summaryStats: Map[String, Any] = Map()
 }
 
 object Fastqc {
