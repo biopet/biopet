@@ -58,7 +58,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   override def freezeFieldValues() {
     preProcesExecutable
     beforeGraph
-    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getParent + "/." + firstOutput.getName + "." + configName + ".out")
+    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)

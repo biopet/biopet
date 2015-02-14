@@ -21,6 +21,7 @@ import java.util.Date
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -219,6 +220,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> bamFile)
+
+    if (config("generate_wig", default = false).asBoolean)
+      addAll(Bam2Wig(this, finalBamFile).functions)
   }
 
   def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
