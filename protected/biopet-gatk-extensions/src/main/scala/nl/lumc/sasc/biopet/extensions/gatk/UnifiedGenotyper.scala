@@ -15,7 +15,7 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
     if (config.contains("scattercount")) scatterCount = config("scattercount")
     if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
     this.sample_ploidy = config("ploidy")
-    nct = config("threads", default = 1)
+    nct = Some(getThreads(1))
     memoryLimit = Option(nct.getOrElse(1) * 2)
     if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
     if (config.contains("output_mode")) {
