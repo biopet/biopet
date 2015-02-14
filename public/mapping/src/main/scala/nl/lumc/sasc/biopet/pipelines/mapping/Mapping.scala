@@ -186,7 +186,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         fastq_R2_output :+= R2
       }
 
-      val outputBam = new File(chunkDir + outputName + ".bam")
+      val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
         case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
@@ -198,7 +198,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         case _            => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
       }
       if (config("chunk_metrics", default = false))
-        addAll(BamMetrics(this, outputBam, chunkDir + "metrics/").functions)
+        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
