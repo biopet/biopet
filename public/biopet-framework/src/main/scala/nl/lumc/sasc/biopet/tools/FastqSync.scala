@@ -160,6 +160,8 @@ object FastqSync extends ToolCommand {
       }
 
     syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream)
+    seqOutA.close()
+    seqOutB.close()
 
     (numDiscA, numDiscB, numKept)
   }
