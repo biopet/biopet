@@ -38,7 +38,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
     }
   }
 
-  override def afterGraph {
+  override def beforeGraph {
     if (fastqc != null) deps ::= fastqc.output
   }
 

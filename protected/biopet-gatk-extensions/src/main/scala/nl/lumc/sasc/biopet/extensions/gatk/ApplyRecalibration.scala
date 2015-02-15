@@ -11,8 +11,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.ApplyRecalibration with GatkGeneral {
   scatterCount = config("scattercount", default = 0)
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
 
     nt = Option(getThreads(3))
     memoryLimit = Option(nt.getOrElse(1) * 2)

@@ -47,8 +47,8 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var verbose: Boolean = config("verbose", default = false)
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
-  override def afterGraph: Unit = {
-    super.afterGraph
+  override def beforeGraph: Unit = {
+    super.beforeGraph
     jobLocalDir = new File(outputDirectory)
     if (prefix.isEmpty) prefix = Some(fastafile.getName)
     val out: List[String] = List(".recombination_predictions.embl",

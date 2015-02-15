@@ -64,10 +64,10 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   var executableNonThreads: String = config("exe", default = "raxmlHPC")
   var executableThreads: Option[String] = config("exe_pthreads")
 
-  override def afterGraph {
+  override def beforeGraph {
     if (threads == 0) threads = getThreads(defaultThreads)
     executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
-    super.afterGraph
+    super.beforeGraph
     out +:= getInfoFile
     f match {
       case "d" if b.isEmpty => {

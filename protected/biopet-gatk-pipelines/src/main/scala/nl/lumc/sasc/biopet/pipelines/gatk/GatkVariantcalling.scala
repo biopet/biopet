@@ -52,8 +52,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
     else if (outputName == null) outputName = config("output_name", default = "noname")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
 
     val baseRecalibrator = new BaseRecalibrator(this)
     if (preProcesBams && useBaseRecalibration && baseRecalibrator.knownSites.isEmpty) {
@@ -66,7 +64,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
     else if (!doublePreProces) files
     else if (files.size == 1) {
-      val bamFile: File = outputDir + files.head.getName
+      val bamFile = new File(outputDir, files.head.getName)
       if (bamFile != files.head) {
         val oldIndex: File = files.head.getAbsolutePath.stripSuffix(".bam") + ".bai"
         val newIndex: File = bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai"
@@ -113,20 +111,20 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         val hcGvcf = new HaplotypeCaller(this)
         hcGvcf.useGvcf
         hcGvcf.input_file = scriptOutput.bamFiles
-        hcGvcf.out = outputDir + outputName + ".hc.discovery.gvcf.vcf.gz"
+        hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.gvcf.vcf.gz")
         add(hcGvcf)
         scriptOutput.gvcfFile = hcGvcf.out
       }
 
       if (useHaplotypecaller) {
         if (sampleID != null) {
-          val genotypeGVCFs = GenotypeGVCFs(this, List(scriptOutput.gvcfFile), outputDir + outputName + ".hc.discovery.vcf.gz")
+          val genotypeGVCFs = GenotypeGVCFs(this, List(scriptOutput.gvcfFile), new File(outputDir, outputName + ".hc.discovery.vcf.gz"))
           add(genotypeGVCFs)
           scriptOutput.hcVcfFile = genotypeGVCFs.out
         } else {
           val hcGvcf = new HaplotypeCaller(this)
           hcGvcf.input_file = scriptOutput.bamFiles
-          hcGvcf.out = outputDir + outputName + ".hc.discovery.vcf.gz"
+          hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.vcf.gz")
           add(hcGvcf)
           scriptOutput.hcVcfFile = hcGvcf.out
         }
@@ -136,7 +134,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       if (useUnifiedGenotyper) {
         val ugVcf = new UnifiedGenotyper(this)
         ugVcf.input_file = scriptOutput.bamFiles
-        ugVcf.out = outputDir + outputName + ".ug.discovery.vcf.gz"
+        ugVcf.out = new File(outputDir, outputName + ".ug.discovery.vcf.gz")
         add(ugVcf)
         scriptOutput.ugVcfFile = ugVcf.out
         mergBuffer += ("2.UG-Discovery" -> scriptOutput.ugVcfFile)
@@ -148,7 +146,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           val m2v = new MpileupToVcf(this)
           m2v.inputBam = scriptOutput.bamFiles.head
           m2v.sample = sampleID
-          m2v.output = outputDir + outputName + ".raw.vcf"
+          m2v.output = new File(outputDir, outputName + ".raw.vcf")
           add(m2v)
           scriptOutput.rawVcfFile = m2v.output
 
@@ -160,7 +158,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
             ), super.defaults)
           }
           vcfFilter.inputVcf = m2v.output
-          vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
+          vcfFilter.outputVcf = swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
           add(vcfFilter)
           scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
@@ -176,7 +174,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         if (useHaplotypecaller) {
           val hcAlleles = new HaplotypeCaller(this)
           hcAlleles.input_file = scriptOutput.bamFiles
-          hcAlleles.out = outputDir + outputName + ".hc.allele.vcf.gz"
+          hcAlleles.out = new File(outputDir, outputName + ".hc.allele.vcf.gz")
           hcAlleles.alleles = mergeAlleles.output
           hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(hcAlleles)
@@ -187,7 +185,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         if (useUnifiedGenotyper) {
           val ugAlleles = new UnifiedGenotyper(this)
           ugAlleles.input_file = scriptOutput.bamFiles
-          ugAlleles.out = outputDir + outputName + ".ug.allele.vcf.gz"
+          ugAlleles.out = new File(outputDir, outputName + ".ug.allele.vcf.gz")
           ugAlleles.alleles = mergeAlleles.output
           ugAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(ugAlleles)
@@ -206,32 +204,32 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         sv.out
       }
 
-      val cvFinal = CombineVariants(this, mergeList.toList, outputDir + outputName + ".final.vcf.gz")
+      val cvFinal = CombineVariants(this, mergeList.toList, new File(outputDir, outputName + ".final.vcf.gz"))
       cvFinal.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
       add(cvFinal)
 
       val vcfStats = new VcfStats(this)
       vcfStats.input = cvFinal.out
-      vcfStats.setOutputDir(outputDir + File.separator + "vcfstats")
+      vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
       add(vcfStats)
 
       scriptOutput.finalVcfFile = cvFinal.out
     }
   }
 
-  def addIndelRealign(inputBam: File, dir: String, isIntermediate: Boolean = true): File = {
+  def addIndelRealign(inputBam: File, dir: File, isIntermediate: Boolean = true): File = {
     val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
     realignerTargetCreator.isIntermediate = true
     add(realignerTargetCreator)
 
-    val indelRealigner = IndelRealigner.apply(this, inputBam, realignerTargetCreator.out, dir)
+    val indelRealigner = IndelRealigner(this, inputBam, realignerTargetCreator.out, dir)
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
     return indelRealigner.o
   }
 
-  def addBaseRecalibrator(inputBam: File, dir: String, isIntermediate: Boolean = false): File = {
+  def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean = false): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
     if (baseRecalibrator.knownSites.isEmpty) {

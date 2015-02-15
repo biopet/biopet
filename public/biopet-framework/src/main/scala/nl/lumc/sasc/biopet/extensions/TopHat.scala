@@ -64,7 +64,7 @@ class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def versionCommand = executable + " --version"
 
-  override def afterGraph() {
+  override def beforeGraph() {
     if (!outputDir.endsWith("/")) outputDir += "/"
     output = new File(outputDir + "accepted_hits.bam")
   }

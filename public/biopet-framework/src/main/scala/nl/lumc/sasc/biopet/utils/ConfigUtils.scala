@@ -33,7 +33,8 @@ object ConfigUtils extends Logging {
    * @param map2 Backup for map1
    * @return merged map
    */
-  def mergeMaps(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
+  def mergeMaps(map1: Map[String, Any], map2: Map[String, Any],
+                resolveConflict: (Any, Any, String) => Any = (m1, m2, key) => m1): Map[String, Any] = {
     var newMap: Map[String, Any] = Map()
     for (key <- map1.keySet.++(map2.keySet)) {
       if (!map2.contains(key)) newMap += (key -> map1(key))
@@ -46,7 +47,7 @@ object ConfigUtils extends Logging {
               case _             => newMap += (key -> map1(key))
             }
           }
-          case _ => newMap += (key -> map1(key))
+          case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
         }
       }
     }

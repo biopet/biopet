@@ -54,9 +54,9 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   var sensitive: Boolean = config("sensitive", default = false)
   var fast: Boolean = config("fast", default = false)
 
-  var readgroup: String = config("readgroup")
+  var readgroup: String = null
   var verbosity: Option[Int] = config("verbosity", default = 2)
-  var logfile: String = config("logfile")
+  var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
   override val versionRegex = """stampy v(.*) \(.*\), .*""".r
@@ -67,6 +67,11 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   override def versionCommand = executable + " --help"
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    require(readgroup != null)
+  }
 
   def cmdLine: String = {
     var cmd: String = required(executable) +

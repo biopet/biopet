@@ -25,34 +25,40 @@ import scala.util.matching.Regex
 import java.io.FileInputStream
 import java.security.MessageDigest
 
+/**
+ * Biopet command line trait to auto check executable and cluster values
+ */
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {
   analysisName = configName
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
-  @Argument(doc = "Threads", required = false)
   var threads = 0
   val defaultThreads = 1
 
-  @Argument(doc = "Vmem", required = false)
   var vmem: Option[String] = None
   val defaultVmem: String = ""
-
-  @Argument(doc = "Executable", required = false)
   var executable: String = _
 
-  protected[core] def beforeCmd {
-  }
+  /**
+   * Can override this method. This is executed just before the job is ready to run.
+   * Can check on run time files from pipeline here
+   */
+  protected[core] def beforeCmd {}
 
-  protected[core] def afterGraph {
-  }
+  /**
+   * Can override this method. This is executed after the script is done en queue starts to generate the graph
+   */
+  protected[core] def beforeGraph {}
 
+  /**
+   * Set default output file, threads and vmem for current job
+   */
   override def freezeFieldValues() {
-    checkExecutable
-    afterGraph
-
-    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent + "/." + firstOutput.getName + "." + configName + ".out")
+    preProcesExecutable
+    beforeGraph
+    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
@@ -67,7 +73,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     super.freezeFieldValues()
   }
 
-  protected[core] def checkExecutable {
+  /**
+   * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
+   */
+  protected[core] def preProcesExecutable {
     if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
       try if (executable != null) {
         if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
@@ -105,18 +114,34 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     addJobReportBinding("md5sum_exe", md5.getOrElse("None"))
   }
 
+  /**
+   * executes checkExecutable method and fill job report
+   */
   final protected def preCmdInternal {
-    checkExecutable
+    preProcesExecutable
 
     beforeCmd
 
-    addJobReportBinding("cores", if (nCoresRequest.get.toInt > 0) nCoresRequest.get.toInt else 1)
+    addJobReportBinding("cores", nCoresRequest match {
+      case Some(n) if n > 0 => n
+      case _                => 1
+    })
     addJobReportBinding("version", getVersion)
   }
 
+  /**
+   * Command to get version of executable
+   * @return
+   */
   protected def versionCommand: String = null
+
+  /** Regex to get version from version command output */
   protected val versionRegex: Regex = null
-  protected val versionExitcode = List(0) // Can select multiple
+
+  /** Allowed exit codes for the version command */
+  protected val versionExitcode = List(0)
+
+  /** Executes the version command */
   private def getVersionInternal: String = {
     if (versionCommand == null || versionRegex == null) return "N/A"
     val exe = new File(versionCommand.trim.split(" ")(0))
@@ -141,12 +166,20 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     return "N/A"
   }
 
+  /** Get version from cache otherwise execute the version command  */
   def getVersion: String = {
+    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+      preProcesExecutable
     if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
       BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
     return BiopetCommandLineFunctionTrait.versionCache(executable)
   }
 
+  /**
+   * Get threads from config
+   * @param default default when not found in config
+   * @return number of threads
+   */
   def getThreads(default: Int): Int = {
     val maxThreads: Int = config("maxthreads", default = 8)
     val threads: Int = config("threads", default = default)
@@ -154,6 +187,12 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     else return maxThreads
   }
 
+  /**
+   * Get threads from config
+   * @param default default when not found in config
+   * @param module Module when this is difrent from default
+   * @return number of threads
+   */
   def getThreads(default: Int, module: String): Int = {
     val maxThreads: Int = config("maxthreads", default = 8, submodule = module)
     val threads: Int = config("threads", default = default, submodule = module)
@@ -162,6 +201,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
 }
 
+/**
+ * stores global caches
+ */
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
   private val versionCache: Map[String, String] = Map()
