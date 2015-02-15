@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014 Leiden University Medical Center - Streamuencing Analysis Support Core <sasc@lumc.nl>
+ * Copyright (c) 2014 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  *
  * This tool is a port of a Python implementation written by Martijn Vermaat[1]
