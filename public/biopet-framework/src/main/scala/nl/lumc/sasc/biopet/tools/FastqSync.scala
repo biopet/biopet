@@ -34,22 +34,22 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
-  var refFastq: File = _
+  var refFastq: File = null
 
   @Input(doc = "Input read 1 FASTQ file", shortName = "i", required = true)
-  var inputFastq1: File = _
+  var inputFastq1: File = null
 
   @Input(doc = "Input read 2 FASTQ file", shortName = "j", required = true)
-  var inputFastq2: File = _
+  var inputFastq2: File = null
 
   @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
-  var outputFastq1: File = _
+  var outputFastq1: File = null
 
   @Output(doc = "Output read 2 FASTQ file", shortName = "p", required = true)
-  var outputFastq2: File = _
+  var outputFastq2: File = null
 
   @Output(doc = "Sync statistics", required = true)
-  var outputStats: File = _
+  var outputStats: File = null
 
   // executed command line
   override def commandLine =
