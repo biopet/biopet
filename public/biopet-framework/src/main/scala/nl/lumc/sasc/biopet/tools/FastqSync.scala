@@ -259,6 +259,6 @@ object FastqSync extends ToolCommand {
 
     println(s"Filtered $numDiscA reads from first read file.")
     println(s"Filtered $numDiscB reads from second read file.")
-    println(s"Synced $numKept files contain %d reads.")
+    println(s"Synced files contain $numKept reads.")
   }
 }
