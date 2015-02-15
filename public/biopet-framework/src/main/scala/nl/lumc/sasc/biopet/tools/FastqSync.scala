@@ -90,9 +90,12 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
 object FastqSync extends ToolCommand {
 
+  /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
+  private val idRegex = "[_/][12]\\s??|\\s".r
+
   /** Implicit class to allow for lazy retrieval of FastqRecord ID without any read pair mark */
   private implicit class FastqPair(fq: FastqRecord) {
-    lazy val fragId = fq.getReadHeader.split("[_/][12]\\s??|\\s")(0)
+    lazy val fragId = idRegex.split(fq.getReadHeader)(0)
   }
 
   /**
