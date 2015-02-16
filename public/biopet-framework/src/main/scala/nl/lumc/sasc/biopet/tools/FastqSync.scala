@@ -33,8 +33,6 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
 
-  override val defaultVmem: String = "5G"
-
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
   var refFastq: File = null
 
