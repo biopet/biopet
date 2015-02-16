@@ -6,12 +6,12 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import scala.annotation.tailrec
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+
 import scala.collection.JavaConverters._
-import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.collection.parallel.mutable.ParMap
-import scala.collection.mutable.{ Map => MutMap }
+import scala.collection.immutable.{ Map }
+import scala.io.Source
 import scala.language.postfixOps
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
@@ -30,6 +30,23 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  */
 class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
+
+  @Input(doc = "Input FASTQ", shortName = "input", required = true)
+  var input: File = _
+
+  @Output(doc = "Output JSON", shortName = "output", required = true)
+  var output: File = _
+
+  override val defaultVmem = "4G"
+  memoryLimit = Option(3.0)
+
+  override def commandLine = super.commandLine + required("-i", input) + " > " + required(output)
+
+  def getSummary: Json = {
+    val json = Parse.parseOption(Source.fromFile(output).mkString)
+    if (json.isEmpty) return jNull
+    else return json.get.fieldOrEmptyObject("stats")
+  }
 }
 
 object FqEncoding extends Enumeration {
@@ -40,6 +57,80 @@ object FqEncoding extends Enumeration {
 }
 
 object Seqstat extends ToolCommand {
+  def apply(root: Configurable, input: File, output: File): Seqstat = {
+    val seqstat = new Seqstat(root)
+    seqstat.input = input
+    seqstat.output = output
+    return seqstat
+  }
+
+  def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
+    val seqstat = new Seqstat(root)
+    val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
+    seqstat.input = fastqfile
+    seqstat.output = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
+    return seqstat
+  }
+
+  def mergeSummaries(jsons: List[Json]): Json = {
+    def addJson(json: Json, total: mutable.Map[String, Long]) {
+      for (key <- json.objectFieldsOrEmpty) {
+        if (json.field(key).get.isObject) addJson(json.field(key).get, total)
+        else if (json.field(key).get.isNumber) {
+          val number = json.field(key).get.numberOrZero.toLong
+          if (total.contains(key)) {
+            if (key == "len_min") {
+              if (total(key) > number) total(key) = number
+            } else if (key == "len_max") {
+              if (total(key) < number) total(key) = number
+            } else total(key) += number
+          } else total += (key -> number)
+        }
+      }
+    }
+
+    var basesTotal: mutable.Map[String, Long] = mutable.Map()
+    var readsTotal: mutable.Map[String, Long] = mutable.Map()
+    var encoding: Set[Json] = Set()
+    for (json <- jsons) {
+      encoding += json.fieldOrEmptyString("qual_encoding")
+
+      val bases = json.fieldOrEmptyObject("bases")
+      addJson(bases, basesTotal)
+
+      val reads = json.fieldOrEmptyObject("reads")
+      addJson(reads, readsTotal)
+    }
+    return ("bases" := (
+      ("num_n" := basesTotal("num_n")) ->:
+      ("num_total" := basesTotal("num_total")) ->:
+      ("num_qual_gte" := (
+        ("1" := basesTotal("1")) ->:
+        ("10" := basesTotal("10")) ->:
+        ("20" := basesTotal("20")) ->:
+        ("30" := basesTotal("30")) ->:
+        ("40" := basesTotal("40")) ->:
+        ("50" := basesTotal("50")) ->:
+        ("60" := basesTotal("60")) ->:
+        jEmptyObject)) ->: jEmptyObject)) ->:
+        ("reads" := (
+          ("num_with_n" := readsTotal("num_with_n")) ->:
+          ("num_total" := readsTotal("num_total")) ->:
+          ("len_min" := readsTotal("len_min")) ->:
+          ("len_max" := readsTotal("len_max")) ->:
+          ("num_mean_qual_gte" := (
+            ("1" := readsTotal("1")) ->:
+            ("10" := readsTotal("10")) ->:
+            ("20" := readsTotal("20")) ->:
+            ("30" := readsTotal("30")) ->:
+            ("40" := readsTotal("40")) ->:
+            ("50" := readsTotal("50")) ->:
+            ("60" := readsTotal("60")) ->:
+            jEmptyObject)) ->: jEmptyObject)) ->:
+            ("qual_encoding" := encoding.head) ->:
+            jEmptyObject
+  }
+
   import FqEncoding._
 
   var phredEncoding: FqEncoding.Value = Sanger
@@ -254,7 +345,7 @@ object Seqstat extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    logger.info("Start")
+    logger.info("Start seqstat")
 
     val reader = new FastqReader(commandArgs.fastq)
     val numReads = seqStat(reader)
@@ -262,7 +353,7 @@ object Seqstat extends ToolCommand {
 
     logger.debug(nucs)
     //    logger.debug(baseStats)
-    logger.info("Done")
+    logger.info("Seqstat done")
 
     val report: Map[String, Any] = Map(
       ("files",
@@ -292,7 +383,9 @@ object Seqstat extends ToolCommand {
       ))
     )
 
-    val jsonReport: Json = ConfigUtils.mapToJson(report)
+    val jsonReport: Json = {
+      ConfigUtils.mapToJson(report)
+    }
     println(jsonReport.spaces2)
   }
 }

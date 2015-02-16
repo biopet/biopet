@@ -17,7 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Md5sum, Seqstat }
+import nl.lumc.sasc.biopet.extensions.{ Md5sum }
+import nl.lumc.sasc.biopet.tools.Seqstat
 import nl.lumc.sasc.biopet.tools.FastqSync
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
