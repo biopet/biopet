@@ -128,25 +128,23 @@ object FastqSync extends ToolCommand {
       (pre.headOption, seqA.headOption, seqB.headOption) match {
         // where the magic happens!
         case (Some(r), Some(a), Some(b)) =>
-          // value of A iterator in the next recursion
-          val nextA =
-            // hold A if its head is not equal to reference
-            if (a.fragId != r.fragId) {
-              if (b.fragId == r.fragId) numDiscB += 1
-              seqA
-              // otherwise, go to next item
-            } else seqA.tail
-          // like A above
-          val nextB =
-            if (b.fragId != r.fragId) {
-              if (a.fragId == r.fragId) numDiscA += 1
-              seqB
-            } else seqB.tail
-          // write only if all IDs are equal
-          if (a.fragId == r.fragId && b.fragId == r.fragId) {
-            numKept += 1
-            seqOutA.write(a)
-            seqOutB.write(b)
+          val (nextA, nextB) = (a.fragId == r.fragId, b.fragId == r.fragId) match {
+            // all IDs are equal to ref
+            case (true, true) =>
+              numKept += 1
+              seqOutA.write(a)
+              seqOutB.write(b)
+              (seqA.tail, seqB.tail)
+            // B not equal to ref and A is equal, then we discard A and progress
+            case (true, false) =>
+              numDiscA += 1
+              (seqA.tail, seqB)
+            // A not equal to ref and B is equal, then we discard B and progress
+            case (false, true) =>
+              numDiscB += 1
+              (seqA, seqB.tail)
+            case (false, false) =>
+              (seqA, seqB)
           }
           syncIter(pre.tail, nextA, nextB)
         // recursion base case: both iterators have been exhausted
