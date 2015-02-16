@@ -84,7 +84,6 @@ object CarpTest {
 
   val excutables = Map(
     "reference" -> "test",
-    "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

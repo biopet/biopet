@@ -17,7 +17,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.Cutadapt
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Sickle
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
-import nl.lumc.sasc.biopet.tools.FastqSync
+import nl.lumc.sasc.biopet.tools.{ Seqstat, FastqSync }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
@@ -69,6 +69,7 @@ class MappingTest extends TestNGSuite with Matchers {
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
     mapping.functions.count(_.isInstanceOf[Zcat]) shouldBe 0
+    mapping.functions.count(_.isInstanceOf[Seqstat]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 4 else 2) * chunks)
     mapping.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[Cutadapt]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[FastqSync]) shouldBe ((if (skipFlexiprep) 0 else if (paired && !skipFlexiprep) 1 else 0) * chunks)
@@ -109,7 +110,6 @@ object MappingTest {
 
   val excutables = Map(
     "reference" -> "test",
-    "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
