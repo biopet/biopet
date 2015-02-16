@@ -1,8 +1,6 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
-import java.nio.file.InvalidPathException
-
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.{ FileNotFoundException, File }
@@ -13,19 +11,18 @@ import java.io.{ FileNotFoundException, File }
  * @constructor create a new IGVTools instance from a `.bam` file
  *
  */
-
 class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Input(doc = "Bam File")
   var input: File = _
 
-  @Input(doc = "<genome>.chrom.sizes File")
+  @Input(doc = "<genome>.chrom.sizes File", required = true)
   var genomeChromSizes: File = _
 
   @Output
-  var tdf: Option[File] = _
+  var tdf: Option[File] = None
 
   @Output
-  var wig: Option[File] = _
+  var wig: Option[File] = None
 
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
@@ -44,12 +41,13 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
-  override def afterGraph {
-    super.afterGraph
-    if (!input.exists()) throw new FileNotFoundException("Input bam is required for IGVToolsCount")
+  override def beforeGraph {
+    super.beforeGraph
 
-    if (!wig.isEmpty && !wig.get.getAbsolutePath.endsWith(".wig")) throw new IllegalArgumentException("Wiggle file should have a .wig file-extension")
-    if (!tdf.isEmpty && !tdf.get.getAbsolutePath.endsWith(".tdf")) throw new IllegalArgumentException("TDF file should have a .tdf file-extension")
+    wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
+      throw new IllegalArgumentException("WIG file should have a .wig file-extension"))
+    tdf.foreach(x => if (!x.getAbsolutePath.endsWith(".tdf"))
+      throw new IllegalArgumentException("TDF file should have a .tdf file-extension"))
   }
 
   def cmdLine = {

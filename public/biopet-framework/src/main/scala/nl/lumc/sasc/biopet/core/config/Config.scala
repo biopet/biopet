@@ -43,14 +43,17 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @param valueName Name of value
    */
   def loadConfigEnv(valueName: String) {
-    val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
-    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
-    for (globalFile <- globalFiles) {
-      val file: File = new File(globalFile)
-      if (file.exists()) {
-        logger.info("Loading config file: " + file)
-        loadConfigFile(file)
-      } else logger.warn(valueName + " value found but file does not exist, no global config is loaded")
+    sys.env.get(valueName) match {
+      case Some(globalFiles) => {
+        for (globalFile <- globalFiles.split(":")) {
+          val file: File = new File(globalFile)
+          if (file.exists) {
+            logger.info("Loading config file: " + file)
+            loadConfigFile(file)
+          } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
+        }
+      }
+      case _ => logger.info(valueName + " value not found, no global config is loaded")
     }
   }
 
@@ -140,7 +143,8 @@ class Config(var map: Map[String, Any]) extends Logging {
     } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
-  def writeReport(id: String, directory: String): Unit = {
+  def writeReport(id: String, directory: File): Unit = {
+    directory.mkdirs()
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
       input.foldLeft(Map[String, Any]())(
@@ -155,8 +159,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
 
     def writeMapToJsonFile(map: Map[String, Any], name: String): Unit = {
-      val file = new File(directory + "/" + id + "." + name + ".json")
-      file.getParentFile.mkdirs()
+      val file = new File(directory, id + "." + name + ".json")
       val writer = new PrintWriter(file)
       writer.write(ConfigUtils.mapToJson(map).spaces2)
       writer.close()

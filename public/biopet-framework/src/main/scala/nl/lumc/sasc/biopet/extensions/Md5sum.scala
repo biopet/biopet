@@ -43,10 +43,10 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 }
 
 object Md5sum {
-  def apply(root: Configurable, fastqfile: File, outDir: String): Md5sum = {
+  def apply(root: Configurable, fastqfile: File, outDir: File): Md5sum = {
     val md5sum = new Md5sum(root)
     md5sum.input = fastqfile
-    md5sum.output = new File(outDir + fastqfile.getName + ".md5")
+    md5sum.output = new File(outDir, fastqfile.getName + ".md5")
     return md5sum
   }
 }

@@ -53,7 +53,7 @@ class MergeSamFiles(val root: Configurable) extends Picard {
 }
 
 object MergeSamFiles {
-  def apply(root: Configurable, input: List[File], outputDir: String, sortOrder: String = null): MergeSamFiles = {
+  def apply(root: Configurable, input: List[File], outputDir: File, sortOrder: String = null): MergeSamFiles = {
     val mergeSamFiles = new MergeSamFiles(root)
     mergeSamFiles.input = input
     mergeSamFiles.output = new File(outputDir, input.head.getName.stripSuffix(".bam").stripSuffix(".sam") + ".merge.bam")

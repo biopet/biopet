@@ -21,15 +21,15 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 
-  protected var outputDir: String = _
+  protected var outputDir: File = _
 
   /**
    * Set output dir and a output file
    * @param dir
    */
-  def setOutputDir(dir: String): Unit = {
+  def setOutputDir(dir: File): Unit = {
     outputDir = dir
-    this.jobOutputFile = new File(dir + File.separator + ".vcfstats.out")
+    this.jobOutputFile = new File(dir, ".vcfstats.out")
   }
 
   /**

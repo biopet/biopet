@@ -58,7 +58,7 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
 }
 
 object CalculateHsMetrics {
-  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: String): CalculateHsMetrics = {
+  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: File): CalculateHsMetrics = {
     val calculateHsMetrics = new CalculateHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals

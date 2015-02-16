@@ -9,6 +9,6 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 abstract class IGVTools extends BiopetCommandLineFunction {
   executable = config("exe", default = "igvtools", submodule = "igvtools", freeVar = false)
   override def versionCommand = executable + " version"
-  override val versionRegex = """IGV Version: ([\d\.]) .*""".r
+  override val versionRegex = """IGV Version:? ([\w\.]*) .*""".r
   override val versionExitcode = List(0)
 }

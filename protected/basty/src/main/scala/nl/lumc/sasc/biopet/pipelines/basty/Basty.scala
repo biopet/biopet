@@ -60,28 +60,34 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def addMultiSampleJobs(): Unit = {
-    val refVariants = addGenerateFasta(null, outputDir + "reference/", outputName = "reference")
-    val refVariantSnps = addGenerateFasta(null, outputDir + "reference/", outputName = "reference", snpsOnly = true)
+    val refVariants = addGenerateFasta(null, new File(outputDir, "reference"), outputName = "reference")
+    val refVariantSnps = addGenerateFasta(null, new File(outputDir, "reference"), outputName = "reference", snpsOnly = true)
 
-    val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList, outputDir + "fastas/variant.fasta")
+    val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList,
+      new File(outputDir, "fastas" + File.separator + "variant.fasta"))
     add(catVariants)
-    val catVariantsSnps = Cat(this, refVariantSnps.variants :: samples.map(_._2.outputSnps.variants).toList, outputDir + "fastas/variant.snps_only.fasta")
+    val catVariantsSnps = Cat(this, refVariantSnps.variants :: samples.map(_._2.outputSnps.variants).toList,
+      new File(outputDir, "fastas" + File.separator + "variant.snps_only.fasta"))
     add(catVariantsSnps)
 
-    val catConsensus = Cat(this, refVariants.consensus :: samples.map(_._2.output.consensus).toList, outputDir + "fastas/consensus.fasta")
+    val catConsensus = Cat(this, refVariants.consensus :: samples.map(_._2.output.consensus).toList,
+      new File(outputDir, "fastas" + File.separator + "consensus.fasta"))
     add(catConsensus)
-    val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samples.map(_._2.outputSnps.consensus).toList, outputDir + "fastas/consensus.snps_only.fasta")
+    val catConsensusSnps = Cat(this, refVariantSnps.consensus :: samples.map(_._2.outputSnps.consensus).toList,
+      new File(outputDir, "fastas" + File.separator + "consensus.snps_only.fasta"))
     add(catConsensusSnps)
 
-    val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samples.map(_._2.output.consensusVariants).toList, outputDir + "fastas/consensus.variant.fasta")
+    val catConsensusVariants = Cat(this, refVariants.consensusVariants :: samples.map(_._2.output.consensusVariants).toList,
+      new File(outputDir, "fastas" + File.separator + "consensus.variant.fasta"))
     add(catConsensusVariants)
-    val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samples.map(_._2.outputSnps.consensusVariants).toList, outputDir + "fastas/consensus.variant.snps_only.fasta")
+    val catConsensusVariantsSnps = Cat(this, refVariantSnps.consensusVariants :: samples.map(_._2.outputSnps.consensusVariants).toList,
+      new File(outputDir, "fastas" + File.separator + "consensus.variant.snps_only.fasta"))
     add(catConsensusVariantsSnps)
 
     val seed: Int = config("seed", default = 12345)
-    def addTreeJobs(variants: File, concensusVariants: File, outputDir: String, outputName: String) {
-      val dirSufixRaxml = if (outputDir.endsWith(File.separator)) "raxml" else File.separator + "raxml"
-      val dirSufixGubbins = if (outputDir.endsWith(File.separator)) "gubbins" else File.separator + "gubbins"
+    def addTreeJobs(variants: File, concensusVariants: File, outputDir: File, outputName: String) {
+      val dirSufixRaxml = new File(outputDir, "raxml")
+      val dirSufixGubbins = new File(outputDir, "gubbins")
 
       val raxmlMl = new Raxml(this)
       raxmlMl.input = variants
@@ -101,7 +107,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = seed
         raxmlBoot.b = math.abs(r.nextInt)
-        raxmlBoot.w = outputDir + dirSufixRaxml
+        raxmlBoot.w = dirSufixRaxml
         raxmlBoot.N = 1
         raxmlBoot.n = outputName + "_boot_" + t
         add(raxmlBoot)
@@ -125,16 +131,18 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       val gubbins = new RunGubbins(this)
       gubbins.fastafile = concensusVariants
       gubbins.startingTree = Some(raxmlBi.getBipartitionsFile)
-      gubbins.outputDirectory = outputDir + dirSufixGubbins
+      gubbins.outputDirectory = dirSufixGubbins
       add(gubbins)
     }
 
-    addTreeJobs(catVariantsSnps.output, catConsensusVariantsSnps.output, outputDir + "trees" + File.separator + "snps_only", "snps_only")
-    addTreeJobs(catVariants.output, catConsensusVariants.output, outputDir + "trees" + File.separator + "snps_indels", "snps_indels")
+    addTreeJobs(catVariantsSnps.output, catConsensusVariantsSnps.output,
+      new File(outputDir, "trees" + File.separator + "snps_only"), "snps_only")
+    addTreeJobs(catVariants.output, catConsensusVariants.output,
+      new File(outputDir, "trees" + File.separator + "snps_indels"), "snps_indels")
 
   }
 
-  def addGenerateFasta(sampleName: String, outputDir: String, outputName: String = null,
+  def addGenerateFasta(sampleName: String, outputDir: File, outputName: String = null,
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName

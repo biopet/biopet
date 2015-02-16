@@ -55,7 +55,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var broadcutoff: Option[Int] = config("broadcutoff")
   var callsummits: Boolean = config("callsummits", default = false)
 
-  override def afterGraph: Unit = {
+  override def beforeGraph: Unit = {
     if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
     if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
     output_narrow = new File(outputdir + name.get + ".narrowPeak")

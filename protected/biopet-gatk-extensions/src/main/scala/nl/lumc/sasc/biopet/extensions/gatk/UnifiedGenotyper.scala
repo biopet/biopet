@@ -8,14 +8,14 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.UnifiedGenotyper with GatkGeneral {
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
 
     genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
     if (config.contains("scattercount")) scatterCount = config("scattercount")
     if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
     this.sample_ploidy = config("ploidy")
-    nct = config("threads", default = 1)
+    nct = Some(getThreads(1))
     memoryLimit = Option(nct.getOrElse(1) * 2)
     if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
     if (config.contains("output_mode")) {

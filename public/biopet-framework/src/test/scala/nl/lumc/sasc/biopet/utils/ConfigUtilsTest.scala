@@ -4,10 +4,8 @@ import java.io.{ PrintWriter, File }
 
 import argonaut.Argonaut._
 import argonaut.Json
-import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, ConfigValue }
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 

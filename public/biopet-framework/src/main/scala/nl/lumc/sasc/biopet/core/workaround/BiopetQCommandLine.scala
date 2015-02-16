@@ -39,14 +39,16 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ * This is a modifed version of org.broadinstitute.gatk.queue.QCommandLine, works without compiling a scala files but used build in class files to skip compile step
+ */
+
 package nl.lumc.sasc.biopet.core.workaround
 
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline._
 import org.broadinstitute.gatk.queue.util._
-import org.broadinstitute.gatk.queue.QCommandPlugin
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.QScriptManager
+import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
 import collection.JavaConversions._
