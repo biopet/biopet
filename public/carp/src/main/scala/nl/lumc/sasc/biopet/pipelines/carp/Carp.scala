@@ -52,8 +52,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
-          mapping.libId = libId
-          mapping.sampleId = sampleId
+          mapping.libId = Some(libId)
+          mapping.sampleId = Some(sampleId)
           mapping.outputDir = libDir
 
           mapping.init

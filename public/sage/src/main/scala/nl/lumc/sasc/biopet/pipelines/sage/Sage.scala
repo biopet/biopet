@@ -66,12 +66,12 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
-      flexiprep.sampleId = sampleId
-      flexiprep.libId = libId
+      flexiprep.sampleId = Some(sampleId)
+      flexiprep.libId = Some(libId)
 
       val mapping = new Mapping(qscript)
-      mapping.libId = libId
-      mapping.sampleId = sampleId
+      mapping.libId = Some(libId)
+      mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
         flexiprep.outputDir = new File(libDir, "flexiprep/")

@@ -19,12 +19,12 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat, Seqstat }
 import nl.lumc.sasc.biopet.tools.FastqSync
 
-class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript {
+class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
@@ -41,15 +41,11 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with 
 
   // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
 
-  /** Sample name */
-  @Argument(doc = "Sample ID", shortName = "sample", required = true)
-  var sampleId: String = _
+  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
 
-  /** Library name */
-  @Argument(doc = "Library ID", shortName = "library", required = true)
-  var libId: String = _
+  def summaryFiles = Map()
 
-  def summaryFile = new File(outputDir, sampleId + "-" + libId + ".qc.summary.json")
+  def summaryData = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip)
 
   var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
@@ -67,8 +63,8 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with 
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
     require(input_R1 != null, "Missing input R1 on flexiprep module")
-    require(sampleId != null, "Missing sample ID on flexiprep module")
-    require(libId != null, "Missing library ID on flexiprep module")
+    //require(sampleId != null, "Missing sample ID on flexiprep module")
+    //require(libId != null, "Missing library ID on flexiprep module")
 
     paired = input_R2.isDefined
 
@@ -90,7 +86,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with 
       case _ =>
     }
 
-    summary.out = new File(outputDir, sampleId + "-" + libId + ".qc.summary.json")
+    summary.out = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
   }
 
   def biopetScript() {
@@ -267,7 +263,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript with 
         summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
       fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
-      addSummarizable(fastqc_R1_after)
+      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
       add(fastqc_R1_after)
       summary.addFastqc(fastqc_R1_after, after = true)
       if (paired) {

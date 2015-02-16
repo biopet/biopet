@@ -18,7 +18,8 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import nl.lumc.sasc.biopet.core.config.Configurable
 import java.io.File
 import java.util.Date
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
@@ -30,7 +31,7 @@ import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
 import scala.math._
 
-class Mapping(val root: Configurable) extends QScript with BiopetQScript {
+class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file", shortName = "R1", required = true)
@@ -69,14 +70,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
 
-  /** Readgroup Library */
-  @Argument(doc = "Library ID", shortName = "library", required = true)
-  var libId: String = _
-
-  /**Readgroup sample */
-  @Argument(doc = "Sample ID", shortName = "sample", required = true)
-  var sampleId: String = _
-
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
 
@@ -99,15 +92,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   val flexiprep = new Flexiprep(this)
   def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
 
+  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
+
+  def summaryFiles = Map()
+
+  def summaryData = Map()
+
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
     require(input_R1 != null, "Missing output directory on mapping module")
-    require(sampleId != null, "Missing sample ID on mapping module")
-    require(libId != null, "Missing library ID on mapping module")
+    require(sampleId.isDefined, "Missing sample ID on mapping module")
+    require(libId.isDefined, "Missing library ID on mapping module")
 
     paired = input_R2.isDefined
 
-    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
+    if (readgroupId == null) readgroupId = sampleId.get + "-" + libId.get
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
     if (outputName == null) outputName = readgroupId
@@ -203,6 +202,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
+      addSummaryQScript(flexiprep)
     }
 
     var bamFile = bamFiles.head
@@ -223,6 +223,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
+
+    addSummaryJobs
   }
 
   def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
@@ -246,7 +248,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bwaSampe.fastqR2 = R2
       bwaSampe.saiR1 = bwaAlnR1.output
       bwaSampe.saiR2 = bwaAlnR2.output
-      bwaSampe.r = getReadGroup
+      bwaSampe.r = getReadGroupBwa
       bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSampe.isIntermediate = true
       add(bwaSampe)
@@ -256,7 +258,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val bwaSamse = new BwaSamse(this)
       bwaSamse.fastq = R1
       bwaSamse.sai = bwaAlnR1.output
-      bwaSamse.r = getReadGroup
+      bwaSamse.r = getReadGroupBwa
       bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSamse.isIntermediate = true
       add(bwaSamse)
@@ -275,7 +277,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
-    bwaCommand.R = Some(getReadGroup)
+    bwaCommand.R = Some(getReadGroupBwa)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     add(bwaCommand)
@@ -288,8 +290,8 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
   def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
-    RG += "SM:" + sampleId + ","
-    RG += "LB:" + libId + ","
+    RG += "SM:" + sampleId.get + ","
+    RG += "LB:" + libId.get + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     RG += "PU:" + platformUnit + ","
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -340,10 +342,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libId
+    addOrReplaceReadGroups.RGLB = libId.get
     addOrReplaceReadGroups.RGPL = platform
     addOrReplaceReadGroups.RGPU = platformUnit
-    addOrReplaceReadGroups.RGSM = sampleId
+    addOrReplaceReadGroups.RGSM = sampleId.get
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
     if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
@@ -352,12 +354,12 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     return addOrReplaceReadGroups.output
   }
 
-  def getReadGroup(): String = {
+  def getReadGroupBwa(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libId + "\\t"
+    RG += "LB:" + libId.get + "\\t"
     RG += "PL:" + platform + "\\t"
     RG += "PU:" + platformUnit + "\\t"
-    RG += "SM:" + sampleId + "\\t"
+    RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
     if (readgroupDescription.isDefined) RG += "DS" + readgroupDescription.get + "\\t"
     if (readgroupDate != null) RG += "DT" + readgroupDate + "\\t"

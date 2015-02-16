@@ -51,8 +51,8 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
     flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
     if (paired) flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq" + (if (zipped) ".gz" else "")))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
+    flexiprep.sampleId = Some("1")
+    flexiprep.libId = Some("1")
     flexiprep.script()
 
     flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (

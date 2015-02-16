@@ -45,8 +45,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
       val mapping = new Mapping(qscript)
-      mapping.sampleId = sampleId
-      mapping.libId = libId
+      mapping.sampleId = Some(sampleId)
+      mapping.libId = Some(libId)
       mapping.outputDir = libDir
 
       /** Library variantcalling */
