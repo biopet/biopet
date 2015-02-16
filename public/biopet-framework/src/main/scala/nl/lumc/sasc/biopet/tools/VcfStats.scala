@@ -21,6 +21,9 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 
+  override val defaultVmem = "4G"
+  override val defaultThreads = 3
+
   protected var outputDir: File = _
 
   /**
