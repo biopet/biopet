@@ -57,8 +57,6 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
   def testEncodingDetectionSanger(fqMock: FastqReader) = {
 
     val seqstat = Seqstat
-    //    val numReads = seqstat.seqStat(fqMock)
-    //    numReads shouldBe 1
     seqstat.summarize()
 
     seqstat.phredEncoding shouldBe Sanger
