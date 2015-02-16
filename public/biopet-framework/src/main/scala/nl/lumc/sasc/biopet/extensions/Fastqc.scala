@@ -25,16 +25,16 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
-  var contaminants: File = _
+  var contaminants: Option[File] = None
 
   @Input(doc = "Adapters", required = false)
-  var adapters: File = _
+  var adapters: Option[File] = None
 
   @Input(doc = "Fastq file", shortName = "FQ")
-  var fastqfile: File = _
+  var fastqfile: File = null
 
   @Output(doc = "Output", shortName = "out")
-  var output: File = _
+  var output: File = null
 
   executable = config("exe", default = "fastqc")
   var java_exe: String = config("exe", default = "java", submodule = "java", freeVar = false)
@@ -48,19 +48,33 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
   override val defaultThreads = 4
 
-  override def afterGraph {
-    this.checkExecutable
-    if (contaminants == null) {
-      val fastqcDir = executable.substring(0, executable.lastIndexOf("/"))
-      val defaultContams = getVersion match {
-        case "v0.11.2" => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-        case _         => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
-      }
-      val defaultAdapters = getVersion match {
-        case "v0.11.2" => new File(fastqcDir + "/Configuration/adapter_list.txt")
-        case _         => null
-      }
-      contaminants = config("contaminants", default = defaultContams)
+  override def beforeGraph {
+    this.preProcesExecutable
+
+    val fastqcDir = new File(executable).getParent
+
+    contaminants = contaminants match {
+      // user-defined contaminants file take precedence
+      case userDefinedValue @ Some(_) => userDefinedValue
+      // otherwise, use default contaminants file (depending on FastQC version)
+      case None =>
+        val defaultContams = getVersion match {
+          case "v0.11.2" => new File(fastqcDir + "/Configuration/contaminant_list.txt")
+          case _         => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+        }
+        config("contaminants", default = defaultContams)
+    }
+
+    adapters = adapters match {
+      // user-defined contaminants file take precedence
+      case userDefinedValue @ Some(_) => userDefinedValue
+      // otherwise, check if adapters are already present (depending on FastQC version)
+      case None =>
+        val defaultAdapters = getVersion match {
+          case "v0.11.2" => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
+          case _         => None
+        }
+        defaultAdapters.collect { case adp => config("adapters", default = adp) }
     }
   }
 
@@ -74,6 +88,6 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
     conditional(noextract, "--noextract") +
     conditional(extract, "--extract") +
     conditional(quiet, "--quiet") +
-    required("-o", output.getParent()) +
+    required("-o", output.getParent) +
     required(fastqfile)
 }

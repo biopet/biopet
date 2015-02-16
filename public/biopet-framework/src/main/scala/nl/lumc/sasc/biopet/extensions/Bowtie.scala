@@ -29,7 +29,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -43,7 +43,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
-  var sam_RG: String = config("sam-RG")
+  var sam_RG: Option[String] = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
   var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")

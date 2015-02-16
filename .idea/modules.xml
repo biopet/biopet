@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/public/bam2wig/Bam2Wig.iml" filepath="$PROJECT_DIR$/public/bam2wig/Bam2Wig.iml" />
       <module fileurl="file://$PROJECT_DIR$/public/bammetrics/BamMetrics.iml" filepath="$PROJECT_DIR$/public/bammetrics/BamMetrics.iml" />
       <module fileurl="file://$PROJECT_DIR$/protected/basty/Basty.iml" filepath="$PROJECT_DIR$/protected/basty/Basty.iml" />
       <module fileurl="file://$PROJECT_DIR$/public/Biopet.iml" filepath="$PROJECT_DIR$/public/Biopet.iml" />

@@ -35,7 +35,7 @@ import org.broadinstitute.gatk.queue.engine.JobRunInfo
 class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with MultiSampleQScript {
   def this() = this(null)
 
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
   var finalBamFiles: List[File] = Nil
   /*
   class LibraryOutput extends AbstractLibraryOutput {
@@ -124,11 +124,11 @@ class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with
 
   // Called for each run from a sample
 
-  def runSingleLibraryJobs(libraryId: String, sampleID: String): LibraryOutput = {
+  def runSingleLibraryJobs(libId: String, sampleID: String): LibraryOutput = {
     val libraryOutput = new LibraryOutput
 
     val alignmentDir: String = outputDir + sampleID + "/alignment/"
-    val runDir: String = alignmentDir + "run_" + libraryId + "/"
+    val runDir: String = alignmentDir + "run_" + libId + "/"
 
     if (config.contains("R1")) {
       val mapping = new Mapping(this)
@@ -140,7 +140,7 @@ class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with
       mapping.input_R1 = config("R1")
       mapping.input_R2 = config("R2")
       mapping.paired = (mapping.input_R2 != null)
-      mapping.RGLB = libraryId
+      mapping.RGLB = libId
       mapping.RGSM = sampleID
       mapping.RGPL = config("PL")
       mapping.RGPU = config("PU")
@@ -154,7 +154,7 @@ class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with
       // start sambamba dedup
 
       libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for library: " + libraryId)
+    } else this.logger.error("Sample: " + sampleID + ": No R1 found for library: " + libId)
     return libraryOutput
     //    logger.debug(outputFiles)
     //    return outputFiles

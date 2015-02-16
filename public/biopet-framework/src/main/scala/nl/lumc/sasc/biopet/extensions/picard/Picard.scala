@@ -22,13 +22,13 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   override def subPath = "picard" :: super.subPath
 
   @Argument(doc = "VERBOSITY", required = false)
-  var verbosity: String = config("verbosity")
+  var verbosity: Option[String] = config("verbosity")
 
   @Argument(doc = "QUIET", required = false)
   var quiet: Boolean = config("quiet", default = false)
 
   @Argument(doc = "VALIDATION_STRINGENCY", required = false)
-  var stringency: String = config("validationstringency")
+  var stringency: Option[String] = config("validationstringency")
 
   @Argument(doc = "COMPRESSION_LEVEL", required = false)
   var compression: Option[Int] = config("compressionlevel")

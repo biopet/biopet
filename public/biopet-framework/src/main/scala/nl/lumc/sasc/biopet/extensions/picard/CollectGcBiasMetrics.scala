@@ -35,7 +35,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   var outputSummary: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Argument(doc = "Window size", required = false)
   var windowSize: Option[Int] = config("windowsize")
@@ -49,7 +49,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
-  override def afterGraph {
+  override def beforeGraph {
     if (outputChart == null) outputChart = new File(output + ".pdf")
     //require(reference.exists)
   }
@@ -67,7 +67,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
 }
 
 object CollectGcBiasMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectGcBiasMetrics = {
+  def apply(root: Configurable, input: File, outputDir: File): CollectGcBiasMetrics = {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
     collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")

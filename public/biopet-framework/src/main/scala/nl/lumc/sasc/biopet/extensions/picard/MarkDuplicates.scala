@@ -32,19 +32,19 @@ class MarkDuplicates(val root: Configurable) extends Picard {
   var outputMetrics: File = _
 
   @Argument(doc = "PROGRAM_RECORD_ID", required = false)
-  var programRecordId: String = config("programrecordid")
+  var programRecordId: Option[String] = config("programrecordid")
 
   @Argument(doc = "PROGRAM_GROUP_VERSION", required = false)
-  var programGroupVersion: String = config("programgroupversion")
+  var programGroupVersion: Option[String] = config("programgroupversion")
 
   @Argument(doc = "PROGRAM_GROUP_COMMAND_LINE", required = false)
-  var programGroupCommandLine: String = config("programgroupcommandline")
+  var programGroupCommandLine: Option[String] = config("programgroupcommandline")
 
   @Argument(doc = "PROGRAM_GROUP_NAME", required = false)
-  var programGroupName: String = config("programgroupname")
+  var programGroupName: Option[String] = config("programgroupname")
 
   @Argument(doc = "COMMENT", required = false)
-  var comment: String = config("comment")
+  var comment: Option[String] = config("comment")
 
   @Argument(doc = "REMOVE_DUPLICATES", required = false)
   var removeDuplicates: Boolean = config("removeduplicates", default = false)
@@ -62,7 +62,7 @@ class MarkDuplicates(val root: Configurable) extends Picard {
   var sortingCollectionSizeRatio: Option[Double] = config("sortingCollectionSizeRatio")
 
   @Argument(doc = "READ_NAME_REGEX", required = false)
-  var readNameRegex: String = config("readNameRegex")
+  var readNameRegex: Option[String] = config("readNameRegex")
 
   @Argument(doc = "OPTICAL_DUPLICATE_PIXEL_DISTANCE", required = false)
   var opticalDuplicatePixelDistance: Option[Int] = config("opticalDuplicatePixelDistance")
@@ -70,8 +70,8 @@ class MarkDuplicates(val root: Configurable) extends Picard {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 

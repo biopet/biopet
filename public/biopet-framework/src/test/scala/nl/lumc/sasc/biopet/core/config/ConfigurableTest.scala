@@ -11,10 +11,10 @@ import org.testng.annotations.Test
  */
 class ConfigurableTest extends TestNGSuite with Matchers {
   @Test def testConfigurable: Unit = {
-    Config.global.map = Map()
-    Config.global.loadConfigFile(ConfigurableTest.file)
-
-    val classC = new ClassC
+    val classC = new ClassC {
+      override def configName = "classc"
+      override val globalConfig = new Config(ConfigurableTest.map)
+    }
 
     classC.configPath shouldBe Nil
     classC.configFullPath shouldBe List("classc")
@@ -27,10 +27,6 @@ class ConfigurableTest extends TestNGSuite with Matchers {
     classC.classB.get("k1").asString shouldBe "c1"
     classC.classB.classA.get("k1").asString shouldBe "c1"
 
-    classC.get("notexist") shouldBe null
-    intercept[IllegalStateException] {
-      classC.get("notexist", required = true)
-    }
     classC.get("notexist", default = "default").asString shouldBe "default"
 
     classC.get("k1", freeVar = false).asString shouldBe "c1"
@@ -47,23 +43,24 @@ abstract class Cfg extends Configurable {
   def get(key: String,
           default: String = null,
           submodule: String = null,
-          required: Boolean = false,
           freeVar: Boolean = true,
           sample: String = null,
           library: String = null) = {
-    config(key, default, submodule, required, freeVar = freeVar, sample = sample, library = library)
+    config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
   }
 }
 
 class ClassA(val root: Configurable) extends Cfg
 
 class ClassB(val root: Configurable) extends Cfg {
-  val classA = new ClassA(this)
+  lazy val classA = new ClassA(this)
+  // Why this needs to be lazy?
 }
 
 class ClassC(val root: Configurable) extends Cfg {
   def this() = this(null)
-  val classB = new ClassB(this)
+  lazy val classB = new ClassB(this)
+  // Why this needs to be lazy?
 }
 
 object ConfigurableTest {
@@ -85,6 +82,4 @@ object ConfigurableTest {
       )
     )
   )
-
-  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2)
 }

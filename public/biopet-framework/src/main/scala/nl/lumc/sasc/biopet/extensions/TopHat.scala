@@ -29,7 +29,7 @@ class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "Bowtie index", shortName = "bti")
-  var bowtie_index: File = config("bowtie_index", required = true)
+  var bowtie_index: File = config("bowtie_index")
 
   @Argument(doc = "Output Directory")
   var outputDir: String = _
@@ -64,7 +64,7 @@ class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def versionCommand = executable + " --version"
 
-  override def afterGraph() {
+  override def beforeGraph() {
     if (!outputDir.endsWith("/")) outputDir += "/"
     output = new File(outputDir + "accepted_hits.bam")
   }

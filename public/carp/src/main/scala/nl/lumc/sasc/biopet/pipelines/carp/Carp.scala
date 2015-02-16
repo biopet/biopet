@@ -20,6 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
@@ -38,20 +39,20 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true)
+    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa")
   ), super.defaults)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
-    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+    class Library(libId: String) extends AbstractLibrary(libId) {
       val mapping = new Mapping(qscript)
 
       def addJobs(): Unit = {
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
-          mapping.libraryId = libraryId
+          mapping.libId = libId
           mapping.sampleId = sampleId
           mapping.outputDir = libDir
 
@@ -59,7 +60,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
           mapping.biopetScript
           addAll(mapping.functions)
 
-        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libraryId)
+        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libId)
       }
     }
 
@@ -80,14 +81,14 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         merge.sortOrder = "coordinate"
         merge.output = bamFile
         add(merge)
-
-        //TODO: Add BigWIg track
       }
+
+      addAll(Bam2Wig(qscript, bamFile).functions)
 
       val macs2 = new Macs2CallPeak(qscript)
       macs2.treatment = bamFile
-      macs2.name = sampleId
-      macs2.outputdir = sampleDir + "macs2/" + macs2.name + "/"
+      macs2.name = Some(sampleId)
+      macs2.outputdir = sampleDir + "macs2/" + sampleId + "/"
       add(macs2)
     }
   }
@@ -113,8 +114,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         val macs2 = new Macs2CallPeak(this)
         macs2.treatment = sample.bamFile
         macs2.control = samples(controlId).bamFile
-        macs2.name = sampleId + "_VS_" + controlId
-        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name + "/"
+        macs2.name = Some(sampleId + "_VS_" + controlId)
+        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name.get + "/"
         add(macs2)
       }
     }

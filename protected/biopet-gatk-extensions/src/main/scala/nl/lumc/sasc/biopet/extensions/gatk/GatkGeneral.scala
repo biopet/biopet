@@ -13,13 +13,13 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
 
   override def subPath = "gatk" :: super.subPath
 
-  jarFile = config("gatk_jar", required = true)
+  jarFile = config("gatk_jar")
 
   override val defaultVmem = "7G"
 
   if (config.contains("intervals")) intervals = config("intervals").asFileList
   if (config.contains("exclude_intervals")) excludeIntervals = config("exclude_intervals").asFileList
   reference_sequence = config("reference")
-  gatk_key = config("gatk_key")
+  if (config.contains("gatk_key")) gatk_key = config("gatk_key")
   if (config.contains("pedigree")) pedigree = config("pedigree").asFileList
 }

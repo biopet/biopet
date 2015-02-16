@@ -18,7 +18,7 @@ class RealignerTargetCreator(val root: Configurable) extends org.broadinstitute.
 }
 
 object RealignerTargetCreator {
-  def apply(root: Configurable, input: File, outputDir: String): RealignerTargetCreator = {
+  def apply(root: Configurable, input: File, outputDir: File): RealignerTargetCreator = {
     val re = new RealignerTargetCreator(root)
     re.input_file :+= input
     re.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.intervals")

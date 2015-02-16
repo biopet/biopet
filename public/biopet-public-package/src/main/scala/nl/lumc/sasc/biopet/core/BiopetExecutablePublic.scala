@@ -23,6 +23,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
     nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp,
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
+    nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
     nl.lumc.sasc.biopet.pipelines.kopisu.ConiferPipeline,
     nl.lumc.sasc.biopet.pipelines.carp.Carp
   )
@@ -35,6 +36,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfFilter,
+    nl.lumc.sasc.biopet.tools.VcfStats,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
     nl.lumc.sasc.biopet.tools.BedToInterval,
     nl.lumc.sasc.biopet.tools.MpileupToVcf,

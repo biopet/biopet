@@ -20,6 +20,8 @@
       <parameter value="$PROJECT_DIR$/public/flexiprep/target/.scala_dependencies" />
       <parameter value="$PROJECT_DIR$/public/mapping/target/.scala_dependencies" />
       <parameter value="$PROJECT_DIR$/protected/biopet-gatk-extensions/target/.scala_dependencies" />
+      <parameter value="$PROJECT_DIR$/public/bamtobigwig/target/.scala_dependencies" />
+      <parameter value="$PROJECT_DIR$/public/bam2wig/target/.scala_dependencies" />
     </parameters>
   </component>
 </project>

@@ -25,19 +25,20 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
   override def beforeCmd {
     super.beforeCmd
     if (fastqc != null && Q == None) {
-      val encoding = fastqc.getEncoding
+      val encoding = fastqc.encoding
       Q = encoding match {
-        case null                                       => None
+        case null => None
         case s if (s.contains("Sanger / Illumina 1.9")) => None
-        case s if (s.contains("Illumina <1.3"))         => Option(64)
-        case s if (s.contains("Illumina 1.3"))          => Option(64)
-        case s if (s.contains("Illumina 1.5"))          => Option(64)
+        case s if (s.contains("Illumina <1.3")) => Option(64)
+        case s if (s.contains("Illumina 1.3")) => Option(64)
+        case s if (s.contains("Illumina 1.5")) => Option(64)
+        case _ => None
       }
       if (Q != None) V = true
     }
   }
 
-  override def afterGraph {
+  override def beforeGraph {
     if (fastqc != null) deps ::= fastqc.output
   }
 
