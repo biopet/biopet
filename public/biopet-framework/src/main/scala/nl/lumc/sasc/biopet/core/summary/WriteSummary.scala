@@ -36,6 +36,9 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       case f: QFunction => deps :+= f.firstOutput
       case _            =>
     }
+
+    jobOutputFile = new File(out.getParentFile, ".%s.%s.out".format(out.getName, analysisName))
+
     super.freezeFieldValues()
   }
 
