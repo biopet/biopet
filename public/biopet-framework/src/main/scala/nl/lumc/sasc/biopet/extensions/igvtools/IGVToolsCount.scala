@@ -41,8 +41,8 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
 
     wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
       throw new IllegalArgumentException("WIG file should have a .wig file-extension"))

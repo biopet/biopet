@@ -97,7 +97,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = outputDir + outputName + ".final.bam"
+  def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
 
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
@@ -128,7 +128,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = outputDir + "flexiprep" + File.separator
+      flexiprep.outputDir = new File(outputDir, "flexiprep")
       flexiprep.input_R1 = input_R1
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
@@ -145,9 +145,9 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       else if (file.endsWith(".gzip")) return file.substring(0, file.lastIndexOf(".gzip"))
       else return file
     }
-    var chunks: Map[String, (String, String)] = Map()
+    var chunks: Map[File, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = outputDir + "chunks/" + t + "/"
+      val chunkDir = new File(outputDir, "chunks" + File.separator + t)
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
@@ -177,7 +177,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       var R2 = fastqfile._2
       var deps: List[File] = Nil
       if (!skipFlexiprep) {
-        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunkDir)
+        val flexiout = flexiprep.runTrimClip(R1, R2, new File(chunkDir, "flexiprep"), chunkDir)
         logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
@@ -186,7 +186,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         fastq_R2_output :+= R2
       }
 
-      val outputBam = new File(chunkDir + outputName + ".bam")
+      val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
         case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
@@ -198,7 +198,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         case _            => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
       }
       if (config("chunk_metrics", default = false))
-        addAll(BamMetrics(this, outputBam, chunkDir + "metrics/").functions)
+        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
@@ -207,7 +207,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
     var bamFile = bamFiles.head
     if (!skipMarkduplicates) {
-      bamFile = new File(outputDir + outputName + ".dedup.bam")
+      bamFile = new File(outputDir, outputName + ".dedup.bam")
       add(MarkDuplicates(this, bamFiles, bamFile))
     } else if (skipMarkduplicates && chunking) {
       val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
@@ -215,7 +215,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics" + File.separator).functions)
+    if (!skipMetrics) addAll(BamMetrics(this, bamFile, new File(outputDir, "metrics")).functions)
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))

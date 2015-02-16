@@ -70,8 +70,8 @@ class MarkDuplicates(val root: Configurable) extends Picard {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 

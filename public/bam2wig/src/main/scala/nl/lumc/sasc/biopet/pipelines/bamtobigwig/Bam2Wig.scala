@@ -46,7 +46,7 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
 object Bam2Wig extends PipelineCommand {
   def apply(root: Configurable, bamFile: File): Bam2Wig = {
     val bamToBigWig = new Bam2Wig(root)
-    bamToBigWig.outputDir = bamFile.getParent
+    bamToBigWig.outputDir = bamFile.getParentFile
     bamToBigWig.bamFile = bamFile
     bamToBigWig.init()
     bamToBigWig.biopetScript()

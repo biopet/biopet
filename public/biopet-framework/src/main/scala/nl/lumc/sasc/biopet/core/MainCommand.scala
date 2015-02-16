@@ -15,6 +15,9 @@
  */
 package nl.lumc.sasc.biopet.core
 
+/**
+ * This trait is used in the biopet executable
+ */
 trait MainCommand {
 
   lazy val commandName = this.getClass.getSimpleName

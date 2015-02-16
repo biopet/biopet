@@ -26,6 +26,12 @@ class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValu
   def asString = any2string(value)
 
   /**
+   * Get value as File
+   * @return value as File
+   */
+  def asFile = new File(any2string(value))
+
+  /**
    * Get value as Int
    * @return value as Int
    */

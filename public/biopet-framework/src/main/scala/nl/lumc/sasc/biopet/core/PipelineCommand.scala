@@ -20,10 +20,21 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 
+/**
+ * Wrapper around executable from Queue
+ */
 trait PipelineCommand extends MainCommand with GatkLogging {
 
+  /**
+   * Gets location of compiled class of pipeline
+   * @return path from classPath to class file
+   */
   def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
 
+  /**
+   * Class can be used directly from java with -cp option
+   * @param args
+   */
   def main(args: Array[String]): Unit = {
     val argsSize = args.size
     for (t <- 0 until argsSize) {

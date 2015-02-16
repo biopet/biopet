@@ -62,7 +62,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
 }
 
 object CollectAlignmentSummaryMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectAlignmentSummaryMetrics = {
+  def apply(root: Configurable, input: File, outputDir: File): CollectAlignmentSummaryMetrics = {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input
     collectAlignmentSummaryMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")
