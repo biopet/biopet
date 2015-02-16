@@ -1,10 +1,15 @@
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{PrintWriter, File}
+import java.io.{FileInputStream, PrintWriter, File}
+import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+
+import scala.collection.mutable
+import scala.io.Source
 
 /**
  * Created by pjvan_thof on 2/14/15.
@@ -37,6 +42,39 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   def run(): Unit = {
     val writer = new PrintWriter(out)
 
+    val bla = for (((name, sampleId, libraryId), summarizables) <- summaryQScript.summarizables;
+         summarizable <- summarizables) yield {
+      val map = Map(name -> parseSummarizable(summarizable))
+
+      (sampleId match {
+        case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
+          case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
+          case _ => map
+        })))
+        case _ => map
+      }, (v1:Any, v2:Any, key:String) => summarizable.resolveSummaryConflict(v1, v2, key))
+    }
+    bla.foldRight(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
+
+    //TODO: QScript merging
+
     writer.close()
+  }
+
+  def parseSummarizable(summarizable: Summarizable): Map[String, Map[String, Any]] = {
+    Map("data" -> summarizable.summaryData, "files" -> parseFiles(summarizable.summaryFiles))
+  }
+
+  def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
+    for ((key, file) <- files) yield {
+      val map: mutable.Map[String, Any] = mutable.Map()
+      map += "path" -> file.getAbsolutePath
+      if (md5sum) map += "md5" -> parseChechsum(SummaryQScript.md5sumCache(file))
+      key -> map.toMap
+    }
+  }
+
+  def parseChechsum(checksumFile: File): String = {
+    Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }
 }
