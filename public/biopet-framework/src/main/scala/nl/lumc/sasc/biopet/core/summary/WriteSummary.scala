@@ -60,7 +60,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }).foldRight(map)((a, b) => ConfigUtils.mergeMaps(a, b))
 
     val writer = new PrintWriter(out)
-    writer.println(ConfigUtils.mapToJson(combinedMap).spaces2)
+    writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)
     writer.close()
   }
 
