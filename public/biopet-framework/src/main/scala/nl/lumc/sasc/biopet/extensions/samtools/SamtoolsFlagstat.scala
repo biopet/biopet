@@ -36,16 +36,4 @@ object SamtoolsFlagstat {
     flagstat.output = output
     return flagstat
   }
-
-  def apply(root: Configurable, input: File, outputDir: String): SamtoolsFlagstat = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
-  }
-
-  def apply(root: Configurable, input: File): SamtoolsFlagstat = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
-  }
-
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".flagstat"
 }
