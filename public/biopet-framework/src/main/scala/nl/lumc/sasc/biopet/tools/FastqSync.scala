@@ -165,8 +165,6 @@ object FastqSync extends ToolCommand {
       }
 
     syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream)
-    seqOutA.close()
-    seqOutB.close()
 
     (numDiscA, numDiscB, numKept)
   }
@@ -252,15 +250,23 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    val (numDiscA, numDiscB, numKept) = syncFastq(
-      new FastqReader(commandArgs.refFastq),
-      new FastqReader(commandArgs.inputFastq1),
-      new FastqReader(commandArgs.inputFastq2),
-      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000),
-      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq2), 3000))
+    val refReader = new FastqReader(commandArgs.refFastq)
+    val AReader = new FastqReader(commandArgs.inputFastq1)
+    val BReader = new FastqReader(commandArgs.inputFastq2)
+    val AWriter = new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000)
+    val BWriter = new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq2), 3000)
 
-    println(s"Filtered $numDiscA reads from first read file.")
-    println(s"Filtered $numDiscB reads from second read file.")
-    println(s"Synced files contain $numKept reads.")
+    try {
+      val (numDiscA, numDiscB, numKept) = syncFastq(refReader, AReader, BReader, AWriter, BWriter)
+      println(s"Filtered $numDiscA reads from first read file.")
+      println(s"Filtered $numDiscB reads from second read file.")
+      println(s"Synced files contain $numKept reads.")
+    } finally {
+      refReader.close()
+      AReader.close()
+      BReader.close()
+      AWriter.close()
+      BWriter.close()
+    }
   }
 }
