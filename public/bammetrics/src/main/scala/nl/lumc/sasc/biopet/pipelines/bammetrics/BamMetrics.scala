@@ -50,8 +50,8 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def biopetScript() {
-    add(SamtoolsFlagstat(this, inputBam, outputDir))
-    add(BiopetFlagstat(this, inputBam, outputDir))
+    add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
+    add(BiopetFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".biopetflagstat")))
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
     add(CollectInsertSizeMetrics(this, inputBam, outputDir))
     add(CollectAlignmentSummaryMetrics(this, inputBam, outputDir))
@@ -69,13 +69,13 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
 
       val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default = 1.0)), true)
-      add(SamtoolsFlagstat(this, strictOutputBam))
-      add(BiopetFlagstat(this, strictOutputBam, targetDir))
+      add(SamtoolsFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".flagstat")))
+      add(BiopetFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat")))
 
       val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default = 0.01)), true)
-      add(SamtoolsFlagstat(this, looseOutputBam))
-      add(BiopetFlagstat(this, looseOutputBam, targetDir))
+      add(SamtoolsFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopet")))
+      add(BiopetFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat")))
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       add(BedtoolsCoverage(this, inputBam, bedFile, coverageFile, true), true)
