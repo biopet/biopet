@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{FileInputStream, PrintWriter, File}
+import java.io.{ FileInputStream, PrintWriter, File }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -40,24 +40,27 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   }
 
   def run(): Unit = {
-    val writer = new PrintWriter(out)
-
-    val bla = for (((name, sampleId, libraryId), summarizables) <- summaryQScript.summarizables;
-         summarizable <- summarizables) yield {
+    val map = (for (
+      ((name, sampleId, libraryId), summarizables) <- summaryQScript.summarizables;
+      summarizable <- summarizables
+    ) yield {
       val map = Map(name -> parseSummarizable(summarizable))
 
       (sampleId match {
         case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
           case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
-          case _ => map
+          case _               => map
         })))
         case _ => map
-      }, (v1:Any, v2:Any, key:String) => summarizable.resolveSummaryConflict(v1, v2, key))
-    }
-    bla.foldRight(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
+      }, (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
+    }).foldRight(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
-    //TODO: QScript merging
+    val combinedMap = (for (qscript <- summaryQScript.summaryQScripts) yield {
+      ConfigUtils.fileToConfigMap(qscript.summaryFile)
+    }).foldRight(map)((a, b) => ConfigUtils.mergeMaps(a, b))
 
+    val writer = new PrintWriter(out)
+    writer.println(ConfigUtils.mapToJson(combinedMap).spaces2)
     writer.close()
   }
 
