@@ -9,11 +9,9 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  */
 trait Summarizable extends Configurable {
 
-  var summaryModule = configName
-
   def summaryFiles: Map[String, File]
 
-  def summaryStats: Map[String, Any]
+  def summaryData: Map[String, Any]
 
   /**
    * This function is used to merge

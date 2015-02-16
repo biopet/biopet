@@ -165,7 +165,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
   def summaryFiles: Map[String, File] = Map("test" -> this.fastqfile)
 
-  def summaryStats: Map[String, Any] = Map()
+  def summaryData: Map[String, Any] = Map()
 }
 
 object Fastqc {
