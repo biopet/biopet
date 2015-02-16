@@ -46,12 +46,6 @@ object BiopetFlagstat extends ToolCommand {
     flagstat.output = output
     return flagstat
   }
-  def apply(root: Configurable, input: File, outputDir: String): BiopetFlagstat = {
-    val flagstat = new BiopetFlagstat(root)
-    flagstat.input = input
-    flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
-    return flagstat
-  }
 
   case class Args(inputFile: File = null, region: Option[String] = None) extends AbstractArgs
 
