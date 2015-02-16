@@ -2,15 +2,18 @@ package nl.lumc.sasc.biopet.pipelines.carp
 
 import java.io.File
 
+import com.google.common.io.Files
+import org.apache.commons.io.FileUtils
+import org.broadinstitute.gatk.queue.QSettings
+import org.testng.annotations.{ AfterClass, Test, DataProvider }
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.queue.QSettings
-import org.testng.annotations.{ Test, DataProvider }
-import org.scalatest.Matchers
-import org.scalatest.testng.TestNGSuite
 
 /**
  * Created by pjvan_thof on 2/13/15.
@@ -69,10 +72,15 @@ class CarpTest extends TestNGSuite with Matchers {
       carp.functions.count(_.isInstanceOf[Macs2CallPeak]) shouldBe (numberSamples + (if (threatment) 1 else 0))
     }
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(CarpTest.outputDir)
+  }
 }
 
 object CarpTest {
-  val outputDir = System.getProperty("java.io.tmpdir") + File.separator + "flexiprep"
+  val outputDir = Files.createTempDir()
 
   val excutables = Map(
     "reference" -> "test",

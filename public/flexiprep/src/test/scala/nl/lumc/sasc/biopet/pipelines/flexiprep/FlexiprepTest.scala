@@ -2,15 +2,17 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
+import com.google.common.io.Files
+import org.apache.commons.io.FileUtils
+import org.broadinstitute.gatk.queue.QSettings
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
+
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.queue.QSettings
-import org.broadinstitute.gatk.queue.function.QFunction
-import org.scalatest.Matchers
-import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvan_thof on 2/11/15.
@@ -67,9 +69,15 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe (if (skipTrim) 0 else 1)
     flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe (if (paired) 2 else 1)
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(FlexiprepTest.outputDir)
+  }
 }
+
 object FlexiprepTest {
-  val outputDir = System.getProperty("java.io.tmpdir") + File.separator + "flexiprep"
+  val outputDir = Files.createTempDir()
 
   val excutables = Map(
     "seqstat" -> Map("exe" -> "test"),

@@ -2,6 +2,13 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 
 import java.io.File
 
+import com.google.common.io.Files
+import org.apache.commons.io.FileUtils
+import org.broadinstitute.gatk.queue.QSettings
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
+
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, MarkDuplicates, SortSam }
@@ -12,10 +19,6 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.Sickle
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.queue.QSettings
-import org.scalatest.Matchers
-import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvan_thof on 2/12/15.
@@ -94,10 +97,15 @@ class MappingTest extends TestNGSuite with Matchers {
     mapping.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (if (skipMarkDuplicate && chunks > 1) 1 else 0)
     mapping.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (if (skipMarkDuplicate) 0 else 1)
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(MappingTest.outputDir)
+  }
 }
 
 object MappingTest {
-  val outputDir = System.getProperty("java.io.tmpdir") + File.separator + "flexiprep"
+  val outputDir = Files.createTempDir()
 
   val excutables = Map(
     "reference" -> "test",
