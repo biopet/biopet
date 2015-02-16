@@ -2,23 +2,27 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetQScript
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript }
 import nl.lumc.sasc.biopet.extensions.Md5sum
 
 /**
  * Created by pjvan_thof on 2/14/15.
  */
-trait SummaryQScript extends BiopetQScript {
+trait SummaryQScript extends BiopetQScript with Summarizable {
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
 
+  var summaryName = configName
+
   def summaryFile: File
 
   def addSummarizable(summarizable: Summarizable, name: String): Unit = {
-    //TODO: Automatic sample capture
-    addSummarizable(summarizable, name, None, None)
+    this match {
+      case tag: SampleLibraryTag => addSummarizable(summarizable, name, tag.sampleId, tag.libId)
+      case _                     => addSummarizable(summarizable, name, None, None)
+    }
   }
 
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String]): Unit = {
@@ -36,6 +40,8 @@ trait SummaryQScript extends BiopetQScript {
 
   def addSummaryJobs: Unit = {
     val writeSummary = new WriteSummary(this)
+
+    addSummarizable(this, summaryName)
 
     //Automatic checksums
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles) {
