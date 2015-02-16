@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.scripts.CoverageStats
 import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.tools.{ BedToInterval, BiopetFlagstat }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -25,7 +26,7 @@ import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsInter
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 
-class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
+class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
@@ -39,6 +40,16 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
 
   @Argument(doc = "", required = false)
   var wholeGenome = false
+
+  def summaryFile = (sampleId, libId) match {
+    case (Some(sampleId), Some(libId)) => new File(outputDir, sampleId + "-" + libId + ".BamMetrics.summary.json")
+    case (Some(sampleId), _)           => new File(outputDir, sampleId + ".BamMetrics.summary.json")
+    case _                             => new File(outputDir, "BamMetrics.summary.json")
+  }
+
+  def summaryFiles = Map("input_bam" -> inputBam)
+
+  def summaryData = Map()
 
   def init() {
     if (config.contains("target_bed")) {
@@ -81,6 +92,8 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
       add(BedtoolsCoverage(this, inputBam, bedFile, coverageFile, true), true)
       add(CoverageStats(this, coverageFile, targetDir))
     }
+
+    addSummaryJobs
   }
 }
 

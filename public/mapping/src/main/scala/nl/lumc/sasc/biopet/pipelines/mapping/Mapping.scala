@@ -215,7 +215,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, new File(outputDir, "metrics")).functions)
+    if (!skipMetrics) {
+      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"))
+      addAll(bamMetrics.functions)
+      addSummaryQScript(bamMetrics)
+    }
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
