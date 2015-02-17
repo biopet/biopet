@@ -58,7 +58,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
 
-  val summary = new FlexiprepSummary(this)
+  //val summary = new FlexiprepSummary(this)
 
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
@@ -161,13 +161,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val seqstat_R1 = Seqstat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
     add(seqstat_R1)
-    summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
+    //summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
       seqstat_R2.isIntermediate = true
       add(seqstat_R2)
-      summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
+      //summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
 
     if (!skipClip) { // Adapter clipping
@@ -176,7 +176,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       cutadapt_R1.fastqc = fastqc_R1
       cutadapt_R1.isIntermediate = true
       add(cutadapt_R1)
-      summary.addCutadapt(cutadapt_R1, R2 = false, chunk)
+      addSummarizable(cutadapt_R1, "clipping_R1")
+      //summary.addCutadapt(cutadapt_R1, R2 = false, chunk)
       R1 = cutadapt_R1.fastq_output
       deps ::= R1
       outputFiles += ("cutadapt_R1_stats" -> cutadapt_R1.stats_output)
@@ -187,7 +188,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         cutadapt_R2.fastqc = fastqc_R2
         cutadapt_R2.isIntermediate = true
         add(cutadapt_R2)
-        summary.addCutadapt(cutadapt_R2, R2 = true, chunk)
+        addSummarizable(cutadapt_R2, "clipping_R2")
+        //summary.addCutadapt(cutadapt_R2, R2 = true, chunk)
         R2 = cutadapt_R2.fastq_output
         deps ::= R2
 
@@ -200,8 +202,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
         fqSync.deps :::= deps
         add(fqSync)
-
-        summary.addFastqcSync(fqSync, chunk)
+        addSummarizable(fqSync, "fastq_sync")
+        //summary.addFastqcSync(fqSync, chunk)
         outputFiles += ("syncStats" -> fqSync.outputStats)
         R1 = fqSync.outputFastq1
         R2 = fqSync.outputFastq2
@@ -222,7 +224,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       sickle.deps = deps
       sickle.isIntermediate = true
       add(sickle)
-      summary.addSickle(sickle, chunk)
+      addSummarizable(sickle, "trimming")
+      //summary.addSickle(sickle, chunk)
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
     }
@@ -230,13 +233,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val seqstat_R1_after = Seqstat(this, R1, outDir)
     seqstat_R1_after.deps = deps
     add(seqstat_R1_after)
-    summary.addSeqstat(seqstat_R1_after, R2 = false, after = true, chunk)
+    //summary.addSeqstat(seqstat_R1_after, R2 = false, after = true, chunk)
 
     if (paired) {
       val seqstat_R2_after = Seqstat(this, R2, outDir)
       seqstat_R2_after.deps = deps
       add(seqstat_R2_after)
-      summary.addSeqstat(seqstat_R2_after, R2 = true, after = true, chunk)
+      //summary.addSeqstat(seqstat_R2_after, R2 = true, after = true, chunk)
     }
 
     outputFiles += (chunk + "output_R1" -> R1)
@@ -258,11 +261,11 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (!skipTrim || !skipClip) {
       val md5sum_R1 = Md5sum(this, R1, outputDir)
       add(md5sum_R1)
-      summary.addMd5sum(md5sum_R1, R2 = false, after = true)
+      //summary.addMd5sum(md5sum_R1, R2 = false, after = true)
       if (paired) {
         val md5sum_R2 = Md5sum(this, R2, outputDir)
         add(md5sum_R2)
-        summary.addMd5sum(md5sum_R2, R2 = true, after = true)
+        //summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
       fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
       add(fastqc_R1_after)
