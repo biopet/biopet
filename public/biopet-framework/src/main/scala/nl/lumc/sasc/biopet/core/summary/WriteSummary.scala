@@ -75,12 +75,12 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     for ((key, file) <- files) yield {
       val map: mutable.Map[String, Any] = mutable.Map()
       map += "path" -> file.getAbsolutePath
-      if (md5sum) map += "md5" -> parseChechsum(SummaryQScript.md5sumCache(file))
+      if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
       key -> map.toMap
     }
   }
 
-  def parseChechsum(checksumFile: File): String = {
+  def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }
 }
