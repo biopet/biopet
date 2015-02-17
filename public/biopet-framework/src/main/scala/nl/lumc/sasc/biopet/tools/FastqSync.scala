@@ -9,6 +9,8 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+
 import scala.io.Source
 import scala.util.matching.Regex
 
@@ -29,7 +31,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
 
   javaMainClass = getClass.getName
 
@@ -62,6 +64,47 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
       required("-o", outputFastq1) +
       required("-p", outputFastq2) + " > " +
       required(outputStats)
+
+  def summaryFiles: Map[String, File] = {
+    Map("refFastq" -> refFastq,
+      "inputFastq1" -> inputFastq1,
+      "inputFastq2" -> inputFastq2,
+      "outputFastq1" -> outputFastq1,
+      "outputFastq2" -> outputFastq2
+    )
+  }
+
+  def summaryData: Map[String, Any] = {
+    val regex = new Regex("""Filtered (\d*) reads from first read file.
+                            |Filtered (\d*) reads from second read file.
+                            |Synced read files contain (\d*) reads.""".stripMargin,
+      "R1", "R2", "RL")
+
+    val (countFilteredR1, countFilteredR2, countRLeft) =
+      if (outputStats.exists) {
+        val text = Source
+          .fromFile(outputStats)
+          .getLines()
+          .mkString("\n")
+        regex.findFirstMatchIn(text) match {
+          case None         => (0, 0, 0)
+          case Some(rmatch) => (rmatch.group("R1").toInt, rmatch.group("R2").toInt, rmatch.group("RL").toInt)
+        }
+      } else (0, 0, 0)
+
+    Map("version" -> getVersion,
+      "num_reads_discarded_R1" -> countFilteredR1,
+      "num_reads_discarded_R2" -> countFilteredR2,
+      "num_reads_kept" -> countRLeft
+    )
+  }
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) => v1 + v2
+      case _                  => v1
+    }
+  }
 
   // summary statistics
   def summary: Json = {
