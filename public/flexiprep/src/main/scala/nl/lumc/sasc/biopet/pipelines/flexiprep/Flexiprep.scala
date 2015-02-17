@@ -43,7 +43,10 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
 
-  def summaryFiles = Map()
+  def summaryFiles: Map[String, File] = {
+    Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
+      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
+  }
 
   def summaryData = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
