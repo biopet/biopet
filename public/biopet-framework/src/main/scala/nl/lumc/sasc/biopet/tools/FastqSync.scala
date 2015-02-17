@@ -65,14 +65,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
       required("-p", outputFastq2) + " > " +
       required(outputStats)
 
-  def summaryFiles: Map[String, File] = {
-    Map("refFastq" -> refFastq,
-      "inputFastq1" -> inputFastq1,
-      "inputFastq2" -> inputFastq2,
-      "outputFastq1" -> outputFastq1,
-      "outputFastq2" -> outputFastq2
-    )
-  }
+  def summaryFiles: Map[String, File] = Map()
 
   def summaryData: Map[String, Any] = {
     val regex = new Regex("""Filtered (\d*) reads from first read file.

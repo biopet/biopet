@@ -62,8 +62,5 @@ class Sickle(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Sickle(r
     }
   }
 
-  def summaryFiles: Map[String, File] = {
-    Map("input_R1" -> input_R1, "output_R1" -> output_R1) ++
-      (if (input_R2 != null) Map("input_R2" -> input_R2, "output_R2" -> output_R2) else Map())
-  }
+  def summaryFiles: Map[String, File] = Map()
 }

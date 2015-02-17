@@ -85,7 +85,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     }
   }
 
-  def summaryFiles: Map[String, File] = Map("input" -> fastq_input, "output" -> fastq_output)
+  def summaryFiles: Map[String, File] = Map()
 }
 
 object Cutadapt {

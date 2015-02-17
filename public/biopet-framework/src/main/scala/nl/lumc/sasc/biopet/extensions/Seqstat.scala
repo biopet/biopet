@@ -51,9 +51,7 @@ class Seqstat(val root: Configurable) extends BiopetCommandLineFunction with Sum
     ConfigUtils.any2map(map.getOrElse("stats", Map()))
   }
 
-  def summaryFiles: Map[String, File] = {
-    Map("fastq" -> input)
-  }
+  def summaryFiles: Map[String, File] = Map()
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
