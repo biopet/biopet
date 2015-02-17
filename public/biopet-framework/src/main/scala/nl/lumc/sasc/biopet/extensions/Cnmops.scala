@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -36,14 +36,14 @@ class Cnmops(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Output(doc = "Output CNV file")
   lazy val output_cnv: File = {
     if (output_dir == null)
-      throw new RuntimeException("Unexpected error when trying to set Cnmops CNV output")
-    new File(output_dir,  "cnv.txt")
+      throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNV output")
+    new File(output_dir, "cnv.txt")
   }
   @Output(doc = "Output CNR file")
   lazy val output_cnr: File = {
     if (output_dir == null)
-      throw new RuntimeException("Unexpected error when trying to set Cnmops CNR output")
-    new File(output_dir,  "cnr.txt")
+      throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNR output")
+    new File(output_dir, "cnr.txt")
   }
 
   /** write all output files to this directory [./] */
@@ -54,9 +54,6 @@ class Cnmops(val root: Configurable) extends BiopetJavaCommandLineFunction {
     require(!output_dir.isEmpty, "Outputdir for cn.MOPS should not be empty")
     require(input.length > 1, "Please supply at least 2 BAM files for cn.MOPS")
   }
-
-  override val versionRegex = """Cnmops v(.*)""".r
-  override def versionCommand = executable
 
   def cmdLine = {
     required(executable) +
