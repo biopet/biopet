@@ -19,20 +19,20 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   require(root.isInstanceOf[SummaryQScript], "root is not a SummaryQScript")
 
-  val summaryQScript = root.asInstanceOf[SummaryQScript]
+  val qscript = root.asInstanceOf[SummaryQScript]
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
   @Output(doc = "Summary output", required = true)
-  var out: File = summaryQScript.summaryFile
+  var out: File = qscript.summaryFile
 
   var md5sum: Boolean = config("summary_md5", default = true)
   //TODO: add more checksums types
 
   override def freezeFieldValues(): Unit = {
-    for (q <- summaryQScript.summaryQScripts) deps :+= q.summaryFile
-    for ((_, l) <- summaryQScript.summarizables; s <- l) s match {
+    for (q <- qscript.summaryQScripts) deps :+= q.summaryFile
+    for ((_, l) <- qscript.summarizables; s <- l) s match {
       case f: QFunction => deps :+= f.firstOutput
       case _            =>
     }
@@ -44,10 +44,10 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   def run(): Unit = {
     val map = (for (
-      ((name, sampleId, libraryId), summarizables) <- summaryQScript.summarizables;
+      ((name, sampleId, libraryId), summarizables) <- qscript.summarizables;
       summarizable <- summarizables
     ) yield {
-      val map = Map(name -> parseSummarizable(summarizable))
+      val map = Map(qscript.summaryName ->Map(name -> parseSummarizable(summarizable)))
 
       (sampleId match {
         case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
@@ -58,7 +58,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       }, (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
     }).foldRight(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
-    val combinedMap = (for (qscript <- summaryQScript.summaryQScripts) yield {
+    val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
       ConfigUtils.fileToConfigMap(qscript.summaryFile)
     }).foldRight(map)((a, b) => ConfigUtils.mergeMaps(a, b))
 

@@ -41,7 +41,7 @@ trait SummaryQScript extends BiopetQScript with Summarizable {
   def addSummaryJobs: Unit = {
     val writeSummary = new WriteSummary(this)
 
-    addSummarizable(this, summaryName)
+    addSummarizable(this, "pipeline")
 
     //Automatic checksums
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles) {
