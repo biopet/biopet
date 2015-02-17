@@ -59,7 +59,7 @@ trait MultiSampleQScript extends BiopetQScript {
       def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
 
       /** Returns library directory */
-      def libDir = sampleDir + "lib_" + libId + File.separator
+      def libDir = new File(sampleDir, "lib_" + libId)
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -108,7 +108,7 @@ trait MultiSampleQScript extends BiopetQScript {
     def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
 
     /** Returns sample directory */
-    def sampleDir = outputDir + "samples" + File.separator + sampleId + File.separator
+    def sampleDir = new File(outputDir, "samples" + File.separator + sampleId)
   }
 
   /** Sample type, need implementation in pipeline */

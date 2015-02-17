@@ -1,9 +1,7 @@
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 

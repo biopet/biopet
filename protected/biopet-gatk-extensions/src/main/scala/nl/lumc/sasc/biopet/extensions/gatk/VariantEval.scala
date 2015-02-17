@@ -9,8 +9,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class VariantEval(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantEval with GatkGeneral {
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
   }
 }
 
@@ -21,7 +21,7 @@ object VariantEval {
     vareval.eval = Seq(sample)
     vareval.comp = Seq(compareWith)
     vareval.out = output
-    vareval.afterGraph
+    vareval.beforeGraph
     return vareval
   }
 
@@ -35,7 +35,7 @@ object VariantEval {
     vareval.ST = ST
     vareval.noEV = true
     vareval.EV = EV
-    vareval.afterGraph
+    vareval.beforeGraph
     return vareval
   }
 

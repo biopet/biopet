@@ -51,13 +51,6 @@ class Seqstat(val root: Configurable) extends BiopetCommandLineFunction {
 }
 
 object Seqstat {
-  def apply(root: Configurable, input: File, output: File): Seqstat = {
-    val seqstat = new Seqstat(root)
-    seqstat.input = input
-    seqstat.output = output
-    return seqstat
-  }
-
   def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
     val seqstat = new Seqstat(root)
     val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))

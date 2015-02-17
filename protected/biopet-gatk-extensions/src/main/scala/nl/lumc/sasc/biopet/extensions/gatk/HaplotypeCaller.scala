@@ -35,13 +35,13 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     stand_emit_conf = config("stand_emit_conf", default = 0)
   }
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (bamOutput != null && nct.getOrElse(1) > 1) {
       threads = 1
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
     }
-    nct = Some(threads)
+    nct = Some(getThreads(1))
     memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
   }
 
