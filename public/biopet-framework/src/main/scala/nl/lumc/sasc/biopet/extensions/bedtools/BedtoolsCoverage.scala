@@ -30,7 +30,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   @Output(doc = "output File")
   var output: File = null
 
-  @Argument(doc = "dept", required = false)
+  @Argument(doc = "depth", required = false)
   var depth: Boolean = false
 
   @Argument(doc = "sameStrand", required = false)
