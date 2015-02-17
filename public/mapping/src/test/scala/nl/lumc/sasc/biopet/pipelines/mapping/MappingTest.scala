@@ -15,7 +15,6 @@ import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGr
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Cutadapt
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Sickle
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
