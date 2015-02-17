@@ -1,0 +1,34 @@
+library(cn.mops)
+
+# Script from  https://git.lumc.nl/lgtc-bioinformatics/gapss3/blob/master/src/CNV/makeCnmops.sh
+# modified to take arguments
+
+
+args <- commandArgs(TRUE)
+chromosome <- args[1]
+CNVoutput <- args[2]
+CNRoutput <- args[3]
+bamFile <- args[4:length(args)]
+
+BAMFiles <- c(bamFile)
+bamDataRanges <- getReadCountsFromBAM(BAMFiles,mode="paired", refSeqName=chromosome)
+res <- cn.mops(bamDataRanges)
+res <- calcIntegerCopyNumbers(res)
+
+write.table(as.data.frame(cnvs(res)), quote = FALSE, CNVoutput, row.names=FALSE)
+write.table(as.data.frame(cnvr(res)), quote = FALSE, CNRoutput, row.names=FALSE)
+
+# Plot chromosome per sample.
+for ( i in 1:length(BAMFiles)){
+  png(file=paste(chromosome,"/",chromosome,"-segplot-",i,".png",sep=""))
+  segplot(res,sampleIdx=i)
+  dev.off()
+}
+
+# Plot cnvr regions.
+for ( i in 1:nrow(as.data.frame(cnvr(res)))) {
+  png(file=paste(chromosome,"/",chromosome,"-cnv-",i,".png",sep=""))
+  plot(res,which=i,toFile=TRUE)
+  dev.off()
+}
+
