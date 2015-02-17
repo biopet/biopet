@@ -21,16 +21,18 @@ package nl.lumc.sasc.biopet.extensions
  */
 
 import argonaut._, Argonaut._
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import scalaz._, Scalaz._
 import scala.io.Source
-import scala.collection.mutable.Map
+import scala.collection.mutable
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
-class Seqstat(val root: Configurable) extends BiopetCommandLineFunction {
+class Seqstat(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
   override val defaultVmem = "4G"
 
   @Input(doc = "Input FastQ", required = true)
@@ -48,6 +50,25 @@ class Seqstat(val root: Configurable) extends BiopetCommandLineFunction {
     if (json.isEmpty) return jNull
     else return json.get.fieldOrEmptyObject("stats")
   }
+
+  def summaryData: Map[String, Any] = {
+    val map = ConfigUtils.fileToConfigMap(output)
+
+    ConfigUtils.any2map(map.getOrElse("stats", Map()))
+  }
+
+  def summaryFiles: Map[String, File] = {
+    Map("fastq" -> input)
+  }
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) if key == "len_min" => if (v1 < v2) v1 else v2
+      case (v1: Int, v2: Int) if key == "len_max" => if (v1 > v2) v1 else v2
+      case (v1: Int, v2: Int)                     => v1 + v2
+      case _                                      => v1
+    }
+  }
 }
 
 object Seqstat {
@@ -60,7 +81,7 @@ object Seqstat {
   }
 
   def mergeSummaries(jsons: List[Json]): Json = {
-    def addJson(json: Json, total: Map[String, Long]) {
+    def addJson(json: Json, total: mutable.Map[String, Long]) {
       for (key <- json.objectFieldsOrEmpty) {
         if (json.field(key).get.isObject) addJson(json.field(key).get, total)
         else if (json.field(key).get.isNumber) {
@@ -76,8 +97,8 @@ object Seqstat {
       }
     }
 
-    var basesTotal: Map[String, Long] = Map()
-    var readsTotal: Map[String, Long] = Map()
+    var basesTotal: mutable.Map[String, Long] = mutable.Map()
+    var readsTotal: mutable.Map[String, Long] = mutable.Map()
     var encoding: Set[Json] = Set()
     for (json <- jsons) {
       encoding += json.fieldOrEmptyString("qual_encoding")

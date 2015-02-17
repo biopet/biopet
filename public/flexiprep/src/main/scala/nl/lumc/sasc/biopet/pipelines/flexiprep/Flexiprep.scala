@@ -45,7 +45,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   def summaryFiles = Map()
 
-  def summaryData = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip)
+  def summaryData = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
@@ -161,12 +161,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val seqstat_R1 = Seqstat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
     add(seqstat_R1)
+    addSummarizable(seqstat_R1, "seqstat_R1")
     //summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
       seqstat_R2.isIntermediate = true
       add(seqstat_R2)
+      addSummarizable(seqstat_R2, "seqstat_R2")
       //summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
     }
 
