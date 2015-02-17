@@ -19,6 +19,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.{ File, FileNotFoundException }
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.io.Source
 
@@ -167,8 +168,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     ConfigUtils.mapToJson(outputMap)
   }
 
+  @Output
+  var outputFiles: List[File] = Nil
+
   def summaryFiles: Map[String, File] = {
-    Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),
+    val outputFiles = Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),
       "plot_kmer_profiles" -> ("Images" + File.separator + "kmer_profiles.png"),
       "plot_per_base_gc_content" -> ("Images" + File.separator + "per_base_gc_content.png"),
       "plot_per_base_n_content" -> ("Images" + File.separator + "per_base_n_content.png"),
@@ -178,7 +182,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       "plot_per_sequence_quality" -> ("Images" + File.separator + "per_sequence_quality.png"),
       "plot_sequence_length_distribution" -> ("Images" + File.separator + "sequence_length_distribution.png"),
       "fastqc_data" -> ("fastqc_data.txt"))
-      .map(x => (x._1 -> new File(outputDir, x._2))) ++ Map("fastq_file" -> this.fastqfile)
+      .map(x => (x._1 -> new File(outputDir, x._2)))
+
+    outputFiles.foreach(this.outputFiles :+= _._2)
+
+    outputFiles ++ Map("fastq_file" -> this.fastqfile)
   }
 
   def summaryData: Map[String, Any] = Map("version" -> getVersion)
