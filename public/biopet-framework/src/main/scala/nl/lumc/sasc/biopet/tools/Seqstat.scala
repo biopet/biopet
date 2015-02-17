@@ -10,7 +10,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.immutable.{ Map }
+import scala.collection.immutable.Map
 import scala.io.Source
 import scala.language.postfixOps
 
@@ -32,20 +32,20 @@ class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "Output JSON", shortName = "output", required = true)
-  var output: File = _
+  var output: File = null
 
   override val defaultVmem = "4G"
   memoryLimit = Option(3.0)
 
   override def commandLine = super.commandLine + required("-i", input) + " > " + required(output)
 
-  def getSummary: Json = {
+  def summary: Json = {
     val json = Parse.parseOption(Source.fromFile(output).mkString)
-    if (json.isEmpty) return jNull
-    else return json.get.fieldOrEmptyObject("stats")
+    if (json.isEmpty) jNull
+    else json.get.fieldOrEmptyObject("stats")
   }
 }
 
@@ -61,7 +61,7 @@ object Seqstat extends ToolCommand {
     val seqstat = new Seqstat(root)
     seqstat.input = input
     seqstat.output = output
-    return seqstat
+    seqstat
   }
 
   def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
@@ -69,7 +69,7 @@ object Seqstat extends ToolCommand {
     val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
     seqstat.input = fastqfile
     seqstat.output = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
-    return seqstat
+    seqstat
   }
 
   def mergeSummaries(jsons: List[Json]): Json = {
@@ -101,7 +101,7 @@ object Seqstat extends ToolCommand {
       val reads = json.fieldOrEmptyObject("reads")
       addJson(reads, readsTotal)
     }
-    return ("bases" := (
+    ("bases" := (
       ("num_n" := basesTotal("num_n")) ->:
       ("num_total" := basesTotal("num_total")) ->:
       ("num_qual_gte" := (
@@ -254,7 +254,7 @@ object Seqstat extends ToolCommand {
     }
 
     // implicit conversion to Int using foldLeft(0)
-    val avgQual: Int = (readQual.foldLeft(0)(_ + _) / readQual.length)
+    val avgQual: Int = (readQual.sum / readQual.length)
     if (readStats.qual.length <= avgQual) {
       readStats.qual ++= mutable.ArrayBuffer.fill(avgQual - readStats.qual.length + 1)(0)
     }

@@ -149,25 +149,25 @@ class FlexiprepSummary(val root: Configurable) extends InProcessFunction with Co
   }
 
   def seqstatSummary(): Option[Json] = {
-    val R1_chunks = for ((key, value) <- chunks) yield value.seqstatR1.getSummary
+    val R1_chunks = for ((key, value) <- chunks) yield value.seqstatR1.summary
     val R1: Json = Seqstat.mergeSummaries(R1_chunks.toList)
 
     val R2: Option[Json] = if (!flexiprep.paired) None
-    else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.getSummary)
+    else if (chunks.size == 1) Option(chunks.head._2.seqstatR2.summary)
     else {
-      val s = for ((key, value) <- chunks) yield value.seqstatR2.getSummary
+      val s = for ((key, value) <- chunks) yield value.seqstatR2.summary
       Option(Seqstat.mergeSummaries(s.toList))
     }
     val R1_proc: Option[Json] = if (flexiprep.skipClip && flexiprep.skipTrim) None
-    else if (chunks.size == 1) Option(chunks.head._2.seqstatR1after.getSummary)
+    else if (chunks.size == 1) Option(chunks.head._2.seqstatR1after.summary)
     else {
-      val s = for ((key, value) <- chunks) yield value.seqstatR1after.getSummary
+      val s = for ((key, value) <- chunks) yield value.seqstatR1after.summary
       Option(Seqstat.mergeSummaries(s.toList))
     }
     val R2_proc: Option[Json] = if (!flexiprep.paired || (flexiprep.skipClip && flexiprep.skipTrim)) None
-    else if (chunks.size == 1) Option(chunks.head._2.seqstatR2after.getSummary)
+    else if (chunks.size == 1) Option(chunks.head._2.seqstatR2after.summary)
     else {
-      val s = for ((key, value) <- chunks) yield value.seqstatR2after.getSummary
+      val s = for ((key, value) <- chunks) yield value.seqstatR2after.summary
       Option(Seqstat.mergeSummaries(s.toList))
     }
     return Option(("R1_raw" := R1) ->:
