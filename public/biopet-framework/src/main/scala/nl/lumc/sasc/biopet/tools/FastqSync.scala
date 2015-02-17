@@ -22,8 +22,7 @@ import scalaz._, Scalaz._
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand}
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -85,7 +84,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
         }
       } else (0, 0, 0)
 
-    Map("version" -> getVersion,
+    Map("version" -> BiopetExecutable.getVersion,
       "num_reads_discarded_R1" -> countFilteredR1,
       "num_reads_discarded_R2" -> countFilteredR2,
       "num_reads_kept" -> countRLeft
