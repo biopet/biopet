@@ -15,21 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.Summarizable
-
-import scala.io.Source
-
 import nl.lumc.sasc.biopet.extensions.Ln
-import org.broadinstitute.gatk.utils.commandline.{ Input }
-
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
-import scala.collection.mutable
 
-class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) with Summarizable {
+class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
   var fastqc: Fastqc = _
 
   override def beforeCmd() {
@@ -50,42 +40,6 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
       Ln(this, fastq_input, fastq_output, relative = true).cmd
     }
   }
-
-  def summaryData: Map[String, Any] = {
-    val trimR = """.*Trimmed reads: *(\d*) .*""".r
-    val tooShortR = """.*Too short reads: *(\d*) .*""".r
-    val tooLongR = """.*Too long reads: *(\d*) .*""".r
-    val adapterR = """Adapter '([C|T|A|G]*)'.*trimmed (\d*) times.""".r
-
-    val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
-    val adapter_stats: mutable.Map[String, Int] = mutable.Map()
-
-    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
-      line match {
-        case trimR(m)                 => stats += ("trimmed" -> m.toInt)
-        case tooShortR(m)             => stats += ("tooshort" -> m.toInt)
-        case tooLongR(m)              => stats += ("toolong" -> m.toInt)
-        case adapterR(adapter, count) => adapter_stats += (adapter -> count.toInt)
-        case _                        =>
-      }
-    }
-
-    Map("version" -> getVersion,
-      "num_reads_affected" -> stats("trimmed"),
-      "num_reads_discarded_too_short" -> stats("tooshort"),
-      "num_reads_discarded_too_long" -> stats("toolong"),
-      "adapters" -> adapter_stats.toMap
-    )
-  }
-
-  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
-    (v1, v2) match {
-      case (v1: Int, v2: Int) => v1 + v2
-      case _                  => v1
-    }
-  }
-
-  def summaryFiles: Map[String, File] = Map()
 }
 
 object Cutadapt {
