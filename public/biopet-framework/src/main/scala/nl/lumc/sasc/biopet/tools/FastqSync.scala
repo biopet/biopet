@@ -17,12 +17,10 @@ import scala.util.matching.Regex
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.{BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand}
+import nl.lumc.sasc.biopet.core.{ BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
