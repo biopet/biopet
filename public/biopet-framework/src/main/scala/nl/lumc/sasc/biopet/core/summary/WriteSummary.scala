@@ -47,7 +47,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       ((name, sampleId, libraryId), summarizables) <- qscript.summarizables;
       summarizable <- summarizables
     ) yield {
-      val map = Map(qscript.summaryName ->Map(name -> parseSummarizable(summarizable)))
+      val map = Map(qscript.summaryName -> Map(name -> parseSummarizable(summarizable)))
 
       (sampleId match {
         case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
@@ -67,8 +67,12 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     writer.close()
   }
 
-  def parseSummarizable(summarizable: Summarizable): Map[String, Map[String, Any]] = {
-    Map("data" -> summarizable.summaryData, "files" -> parseFiles(summarizable.summaryFiles))
+  def parseSummarizable(summarizable: Summarizable) = {
+    val data = summarizable.summaryData
+    val files = parseFiles(summarizable.summaryFiles)
+
+    (if (data.isEmpty) Map[String, Any]() else Map("data" -> data)) ++
+      (if (files.isEmpty) Map[String, Any]() else Map("files" -> files))
   }
 
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
