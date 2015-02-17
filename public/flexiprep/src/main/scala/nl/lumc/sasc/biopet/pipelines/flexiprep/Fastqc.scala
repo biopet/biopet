@@ -23,11 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.io.Source
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
@@ -140,32 +136,6 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
         .filter(x => found.exists(_.startsWith(x.name)))
     } else Set()
-  }
-
-  /**
-   * Summary of the FastQC run, stored in a [[Json]] object
-   *
-   * @deprecated
-   */
-  def summary: Json = {
-
-    val outputMap =
-      Map("plot_duplication_levels" -> "Images/duplication_levels.png",
-        "plot_kmer_profiles" -> "Images/kmer_profiles.png",
-        "plot_per_base_gc_content" -> "Images/per_base_gc_content.png",
-        "plot_per_base_n_content" -> "Images/per_base_n_content.png",
-        "plot_per_base_quality" -> "Images/per_base_quality.png",
-        "plot_per_base_sequence_content" -> "Images/per_base_sequence_content.png",
-        "plot_per_sequence_gc_content" -> "Images/per_sequence_gc_content.png",
-        "plot_per_sequence_quality" -> "Images/per_sequence_quality.png",
-        "plot_sequence_length_distribution" -> "Images/sequence_length_distribution.png",
-        "fastqc_data" -> "fastqc_data.txt")
-        .map {
-          case (name, relPath) =>
-            name -> Map("path" -> (outputDir + File.separator + relPath))
-        }
-
-    ConfigUtils.mapToJson(outputMap)
   }
 
   @Output

@@ -105,32 +105,6 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
       case _                  => v1
     }
   }
-
-  // summary statistics
-  def summary: Json = {
-
-    val regex = new Regex("""Filtered (\d*) reads from first read file.
-                            |Filtered (\d*) reads from second read file.
-                            |Synced read files contain (\d*) reads.""".stripMargin,
-      "R1", "R2", "RL")
-
-    val (countFilteredR1, countFilteredR2, countRLeft) =
-      if (outputStats.exists) {
-        val text = Source
-          .fromFile(outputStats)
-          .getLines()
-          .mkString("\n")
-        regex.findFirstMatchIn(text) match {
-          case None         => (0, 0, 0)
-          case Some(rmatch) => (rmatch.group("R1").toInt, rmatch.group("R2").toInt, rmatch.group("RL").toInt)
-        }
-      } else (0, 0, 0)
-
-    ("num_reads_discarded_R1" := countFilteredR1) ->:
-      ("num_reads_discarded_R2" := countFilteredR2) ->:
-      ("num_reads_kept" := countRLeft) ->:
-      jEmptyObject
-  }
 }
 
 object FastqSync extends ToolCommand {
@@ -208,30 +182,6 @@ object FastqSync extends ToolCommand {
     syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream)
 
     (numDiscA, numDiscB, numKept)
-  }
-
-  /** Function to merge this tool's summary with summaries from other objects */
-  // TODO: refactor this into the object? At least make it work on the summary object
-  def mergeSummaries(jsons: List[Json]): Json = {
-
-    val (read1FilteredCount, read2FilteredCount, readsLeftCount) = jsons
-      // extract the values we require from each JSON object into tuples
-      .map {
-        case json =>
-          (json.field("num_reads_discarded_R1").get.numberOrZero.toInt,
-            json.field("num_reads_discarded_R2").get.numberOrZero.toInt,
-            json.field("num_reads_kept").get.numberOrZero.toInt)
-      }
-      // reduce the tuples
-      .reduceLeft {
-        (x: (Int, Int, Int), y: (Int, Int, Int)) =>
-          (x._1 + y._1, x._2 + y._2, x._3 + y._3)
-      }
-
-    ("num_reads_discarded_R1" := read1FilteredCount) ->:
-      ("num_reads_discarded_R2" := read2FilteredCount) ->:
-      ("num_reads_kept" := readsLeftCount) ->:
-      jEmptyObject
   }
 
   case class Args(refFastq: File = new File(""),
