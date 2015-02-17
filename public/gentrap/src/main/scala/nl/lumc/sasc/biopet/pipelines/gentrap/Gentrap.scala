@@ -82,9 +82,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
   /** Steps to run before biopetScript */
   def init(): Unit = {
+    // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(GeneReads))
       require(annotationGtf.isDefined, "GTF file must be defined for counting reads per gene")
+
+    if (expMeasures.contains(ExonReads))
+      // TODO: validate that GTF file contains exon features
+      require(annotationGtf.isDefined, "GTF file must be defined for counting reads per exon")
 
     if (expMeasures.contains(GeneBases))
       require(annotationBed.isDefined, "BED file must be defined for counting bases per gene")
@@ -238,6 +243,7 @@ object Gentrap extends PipelineCommand {
   /** Enumeration of available strandedness */
   object StrandProtocol extends Enumeration {
     // for now, only non-strand specific and dUTP stranded protocol is supported
+    // TODO: other strandedness protocol?
     val NonSpecific, Dutp = Value
   }
 
