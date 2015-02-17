@@ -86,7 +86,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       case _ =>
     }
 
-    summary.out = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
+    //summary.out = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
   }
 
   def biopetScript() {
@@ -106,22 +106,24 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     fastqc_R1 = Fastqc(this, input_R1, new File(outputDir, R1_name + ".fastqc/"))
     add(fastqc_R1)
-    summary.addFastqc(fastqc_R1)
+    //summary.addFastqc(fastqc_R1)
+    addSummarizable(fastqc_R1, "fastqc_R1")
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
 
-    val md5sum_R1 = Md5sum(this, input_R1, outputDir)
-    add(md5sum_R1)
-    summary.addMd5sum(md5sum_R1, R2 = false, after = false)
+    //val md5sum_R1 = Md5sum(this, input_R1, outputDir)
+    //add(md5sum_R1)
+    //summary.addMd5sum(md5sum_R1, R2 = false, after = false)
 
     if (paired) {
       fastqc_R2 = Fastqc(this, input_R2.get, new File(outputDir, R2_name + ".fastqc/"))
       add(fastqc_R2)
-      summary.addFastqc(fastqc_R2, R2 = true)
+      addSummarizable(fastqc_R2, "fastqc_R2")
+      //summary.addFastqc(fastqc_R2, R2 = true)
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
 
-      val md5sum_R2 = Md5sum(this, input_R2.get, outputDir)
-      add(md5sum_R2)
-      summary.addMd5sum(md5sum_R2, R2 = true, after = false)
+      //val md5sum_R2 = Md5sum(this, input_R2.get, outputDir)
+      //add(md5sum_R2)
+      //summary.addMd5sum(md5sum_R2, R2 = true, after = false)
     }
   }
 
@@ -263,13 +265,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         summary.addMd5sum(md5sum_R2, R2 = true, after = true)
       }
       fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
-      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
       add(fastqc_R1_after)
-      summary.addFastqc(fastqc_R1_after, after = true)
+      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
+      //summary.addFastqc(fastqc_R1_after, after = true)
       if (paired) {
         fastqc_R2_after = Fastqc(this, R2, new File(outputDir, R2_name + ".qc.fastqc/"))
         add(fastqc_R2_after)
-        summary.addFastqc(fastqc_R2_after, R2 = true, after = true)
+        addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
+        //summary.addFastqc(fastqc_R2_after, R2 = true, after = true)
       }
     }
 

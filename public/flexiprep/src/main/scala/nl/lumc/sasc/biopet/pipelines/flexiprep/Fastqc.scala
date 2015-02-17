@@ -141,7 +141,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     } else Set()
   }
 
-  /** Summary of the FastQC run, stored in a [[Json]] object */
+  /**
+   * Summary of the FastQC run, stored in a [[Json]] object
+   *
+   * @deprecated
+   */
   def summary: Json = {
 
     val outputMap =
@@ -163,9 +167,21 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     ConfigUtils.mapToJson(outputMap)
   }
 
-  def summaryFiles: Map[String, File] = Map("test" -> this.fastqfile)
+  def summaryFiles: Map[String, File] = {
+    Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),
+      "plot_kmer_profiles" -> ("Images" + File.separator + "kmer_profiles.png"),
+      "plot_per_base_gc_content" -> ("Images" + File.separator + "per_base_gc_content.png"),
+      "plot_per_base_n_content" -> ("Images" + File.separator + "per_base_n_content.png"),
+      "plot_per_base_quality" -> ("Images" + File.separator + "per_base_quality.png"),
+      "plot_per_base_sequence_content" -> ("Images" + File.separator + "per_base_sequence_content.png"),
+      "plot_per_sequence_gc_content" -> ("Images" + File.separator + "per_sequence_gc_content.png"),
+      "plot_per_sequence_quality" -> ("Images" + File.separator + "per_sequence_quality.png"),
+      "plot_sequence_length_distribution" -> ("Images" + File.separator + "sequence_length_distribution.png"),
+      "fastqc_data" -> ("fastqc_data.txt"))
+      .map(x => (x._1 -> new File(outputDir, x._2))) ++ Map("fastq_file" -> this.fastqfile)
+  }
 
-  def summaryData: Map[String, Any] = Map()
+  def summaryData: Map[String, Any] = Map("version" -> getVersion)
 }
 
 object Fastqc {
