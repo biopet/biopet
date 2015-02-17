@@ -74,7 +74,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
       "num_reads_affected" -> stats("trimmed"),
       "num_reads_discarded_too_short" -> stats("tooshort"),
       "num_reads_discarded_too_long" -> stats("toolong"),
-      "adapters" -> adapter_stats
+      "adapters" -> adapter_stats.toMap
     )
   }
 
