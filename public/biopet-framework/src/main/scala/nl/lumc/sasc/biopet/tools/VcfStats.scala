@@ -164,8 +164,8 @@ object VcfStats extends ToolCommand {
     val intervals: List[Interval] = (
       for (
         seq <- header.getSequenceDictionary.getSequences;
-        chunks = seq.getSequenceLength / 10000000;
-        i <- 1 until chunks
+        chunks = (seq.getSequenceLength / 10000000) + (if (seq.getSequenceLength % 10000000 == 0) 0 else 1);
+        i <- 1 to chunks
       ) yield {
         val size = seq.getSequenceLength / chunks
         val begin = size * (i - 1) + 1
