@@ -320,10 +320,6 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
 
-  override def afterGraph: Unit = {
-
-  }
-
   def cmdLine = {
     required(executable) +
       optional("--dir", dir) +
