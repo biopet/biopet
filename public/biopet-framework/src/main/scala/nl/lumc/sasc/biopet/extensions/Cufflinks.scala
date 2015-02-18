@@ -183,8 +183,9 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
 
   override val versionRegex = """cufflinks v(.*)""".r
   override def versionCommand = executable
+  override val versionExitcode = List(0, 1)
 
-  def cmdLine = {
+  def cmdLine =
     required(executable) +
       required("--output-dir", output_dir) +
       optional("--num-threads", num_threads) +
@@ -228,5 +229,4 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
       conditional(quiet, "--quiet") +
       conditional(no_update_check, "--no-update-check") +
       required(input)
-  }
 }
