@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
+import java.io.File
+
 import org.broadinstitute.gatk.queue.QScript
 
 import nl.lumc.sasc.biopet.core._
@@ -110,6 +112,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
+    /** Sample output directory */
+    override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
 
     /** Per-sample alignment file */
     lazy val alnFile: File = createFile(".bam")
