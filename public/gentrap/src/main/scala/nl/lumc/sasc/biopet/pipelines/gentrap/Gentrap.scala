@@ -121,21 +121,23 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       .collect { case job => job.output }
 
     /** ID-sorting job for HTseq-count jobs */
-    private lazy val idSortingJob: SortSam = {
-      val job = new SortSam(qscript)
-      job.input = alnFile
-      job.output = createFile(".idsorted.bam")
-      job.sortOrder = "queryname"
-      job
-    }
+    private lazy val idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
+      .option {
+        val job = new SortSam(qscript)
+        job.input = alnFile
+        job.output = createFile(".idsorted.bam")
+        job.sortOrder = "queryname"
+        job
+      }
 
     /** Read counting job per gene */
     private lazy val geneReadsJob: Option[HtseqCount] = expMeasures
       .contains(GeneReads)
-      .option { require(functions.contains(idSortingJob))
+      .option {
+        require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
         job.inputAnnotation = annotationGtf.get
-        job.inputAlignment = idSortingJob.output
+        job.inputAlignment = idSortingJob.get.output
         job.output = createFile(".gene_reads_count")
         job.format = Option("bam")
         job.order = Option("name")
@@ -150,10 +152,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     /** Read counting job per exon */
     private lazy val exonReadsJob: Option[HtseqCount] = expMeasures
       .contains(ExonReads)
-      .option { require(functions.contains(idSortingJob))
+      .option {
+        require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
         job.inputAnnotation = annotationGtf.get
-        job.inputAlignment = idSortingJob.output
+        job.inputAlignment = idSortingJob.get.output
         job.output = createFile(".exon_reads_count")
         job.format = Option("bam")
         job.order = Option("name")
@@ -165,7 +168,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         // TODO: ensure that the "exon_id" attributes exist for all exons in the GTF
         job.idattr = Option("exon_id")
         job
-    }
+      }
 
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
@@ -174,11 +177,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       // merge or symlink per-library alignments
       addSampleAlnJob()
       // measure expression depending on modes set in expMeasures
-      if (expMeasures.contains(GeneReads) || expMeasures.contains(ExonReads)) {
-        add(idSortingJob)
-        geneReadsJob.foreach(add(_))
-        exonReadsJob.foreach(add(_))
-      }
+      idSortingJob.foreach(add(_))
+      geneReadsJob.foreach(add(_))
+      exonReadsJob.foreach(add(_))
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
