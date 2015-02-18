@@ -45,7 +45,7 @@ class Seqstat(val root: Configurable) extends BiopetCommandLineFunction with Sum
 
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)
 
     ConfigUtils.any2map(map.getOrElse("stats", Map()))

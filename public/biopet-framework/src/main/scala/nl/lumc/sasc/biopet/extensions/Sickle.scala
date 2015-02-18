@@ -81,7 +81,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
       " > " + required(output_stats)
   }
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val pairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
     val singleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
     val pairDiscarded = """FastQ paired records discarded: (\d*) \((\d*) pairs\)""".r
@@ -105,7 +105,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
       }
     }
 
-    stats.toMap ++ Map("version" -> getVersion)
+    stats.toMap
   }
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {

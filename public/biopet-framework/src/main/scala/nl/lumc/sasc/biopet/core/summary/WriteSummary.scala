@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ FileInputStream, PrintWriter, File }
 import java.security.MessageDigest
 
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunctionTrait, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
@@ -43,45 +44,72 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   }
 
   def run(): Unit = {
-    val map = (for (
+
+    val pipelineMap = {
+      val files = parseFiles(qscript.summaryFiles)
+      val settings = qscript.summarySettings
+      val executables = {
+        for ((name, (file, version)) <- qscript.executables) yield {
+          name -> Map("version" -> version, "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(file.getCanonicalPath, "N/A"))
+        }
+      }
+
+      val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
+        (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map("pipeline" -> files))) ++
+        (if (executables.isEmpty) Map[String, Any]() else Map("executables" -> executables.toMap))))
+
+      qscript match {
+        case tag: SampleLibraryTag => prefixSampleLibrary(map, tag.sampleId, tag.libId)
+        case _                     => map
+      }
+    }
+
+    val jobsMap = (for (
       ((name, sampleId, libraryId), summarizables) <- qscript.summarizables;
       summarizable <- summarizables
     ) yield {
-      val map = Map(qscript.summaryName -> Map(name -> parseSummarizable(summarizable)))
+      val map = Map(qscript.summaryName -> parseSummarizable(summarizable, name))
 
-      (sampleId match {
-        case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
-          case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
-          case _               => map
-        })))
-        case _ => map
-      }, (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
-    }).foldRight(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
+      (prefixSampleLibrary(map, sampleId, libraryId),
+        (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
+    }).foldRight(pipelineMap)((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
     val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
       ConfigUtils.fileToConfigMap(qscript.summaryFile)
-    }).foldRight(map)((a, b) => ConfigUtils.mergeMaps(a, b))
+    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
 
     val writer = new PrintWriter(out)
     writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)
     writer.close()
   }
 
-  def parseSummarizable(summarizable: Summarizable) = {
-    val data = summarizable.summaryData
+  def prefixSampleLibrary(map: Map[String, Any], sampleId: Option[String], libraryId: Option[String]): Map[String, Any] = {
+    sampleId match {
+      case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
+        case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
+        case _               => map
+      })))
+      case _ => map
+    }
+  }
+
+  def parseSummarizable(summarizable: Summarizable, name: String) = {
+    val data = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (if (data.isEmpty) Map[String, Any]() else Map("data" -> data)) ++
-      (if (files.isEmpty) Map[String, Any]() else Map("files" -> files))
+    (if (data.isEmpty) Map[String, Any]() else Map("stats" -> Map(name -> data))) ++
+      (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
-    for ((key, file) <- files) yield {
-      val map: mutable.Map[String, Any] = mutable.Map()
-      map += "path" -> file.getAbsolutePath
-      if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
-      key -> map.toMap
-    }
+    for ((key, file) <- files) yield key -> parseFile(file)
+  }
+
+  def parseFile(file: File): Map[String, Any] = {
+    val map: mutable.Map[String, Any] = mutable.Map()
+    map += "path" -> file.getAbsolutePath
+    if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
+    map.toMap
   }
 
   def parseChecksum(checksumFile: File): String = {

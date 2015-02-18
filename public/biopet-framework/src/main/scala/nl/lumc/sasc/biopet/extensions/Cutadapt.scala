@@ -47,7 +47,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   if (config.contains("front")) for (adapter <- config("front").asList) opt_front += adapter.toString
 
   var opt_discard: Boolean = config("discard", default = false)
-  var opt_minimum_length: Option[Int] = config("minimum_length", 1)
+  var opt_minimum_length: Int = config("minimum_length", 1)
   var opt_maximum_length: Option[Int] = config("maximum_length")
 
   def cmdLine = required(executable) +
@@ -63,7 +63,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     required("--output", fastq_output) +
     " > " + required(stats_output)
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val trimR = """.*Trimmed reads: *(\d*) .*""".r
     val tooShortR = """.*Too short reads: *(\d*) .*""".r
     val tooLongR = """.*Too long reads: *(\d*) .*""".r
@@ -82,8 +82,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       }
     }
 
-    Map("version" -> getVersion,
-      "num_reads_affected" -> stats("trimmed"),
+    Map("num_reads_affected" -> stats("trimmed"),
       "num_reads_discarded_too_short" -> stats("tooshort"),
       "num_reads_discarded_too_long" -> stats("toolong"),
       "adapters" -> adapter_stats.toMap

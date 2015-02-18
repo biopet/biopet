@@ -159,7 +159,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     outputFiles ++ Map("fastq_file" -> this.fastqfile)
   }
 
-  def summaryData: Map[String, Any] = Map("version" -> getVersion)
+  def summaryStats: Map[String, Any] = Map()
 }
 
 object Fastqc {

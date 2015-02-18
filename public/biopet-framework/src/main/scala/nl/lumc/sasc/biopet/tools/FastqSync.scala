@@ -64,7 +64,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
 
   def summaryFiles: Map[String, File] = Map()
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val regex = new Regex("""Filtered (\d*) reads from first read file.
                             |Filtered (\d*) reads from second read file.
                             |Synced read files contain (\d*) reads.""".stripMargin,
@@ -82,8 +82,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
         }
       } else (0, 0, 0)
 
-    Map("version" -> BiopetExecutable.getVersion,
-      "num_reads_discarded_R1" -> countFilteredR1,
+    Map("num_reads_discarded_R1" -> countFilteredR1,
       "num_reads_discarded_R2" -> countFilteredR2,
       "num_reads_kept" -> countRLeft
     )

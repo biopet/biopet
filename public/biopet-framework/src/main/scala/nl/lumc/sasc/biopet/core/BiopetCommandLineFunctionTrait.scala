@@ -207,6 +207,6 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
   private val versionCache: Map[String, String] = Map()
-  private val executableMd5Cache: Map[String, String] = Map()
+  private[core] val executableMd5Cache: Map[String, String] = Map()
   private val executableCache: Map[String, String] = Map()
 }

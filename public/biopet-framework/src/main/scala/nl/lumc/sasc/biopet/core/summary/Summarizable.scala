@@ -11,7 +11,7 @@ trait Summarizable extends Configurable {
 
   def summaryFiles: Map[String, File]
 
-  def summaryData: Map[String, Any]
+  def summaryStats: Map[String, Any]
 
   /**
    * This function is used to merge
@@ -20,5 +20,7 @@ trait Summarizable extends Configurable {
    * @param key
    * @return
    */
-  def resolveSummaryConflict(v1: Any, v2: Any, key: String) = v1
+  def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    throw new IllegalStateException("Merge can not have same key by default")
+  }
 }

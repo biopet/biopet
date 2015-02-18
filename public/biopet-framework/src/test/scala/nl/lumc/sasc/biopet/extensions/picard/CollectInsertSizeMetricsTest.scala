@@ -18,6 +18,6 @@ class CollectInsertSizeMetricsTest extends TestNGSuite with Matchers {
     val job = new CollectInsertSizeMetrics(null)
     job.output = file
 
-    job.summaryData
+    job.summaryStats
   }
 }

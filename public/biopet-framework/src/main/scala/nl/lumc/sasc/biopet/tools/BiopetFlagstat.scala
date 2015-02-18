@@ -44,7 +44,7 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
 
   def summaryFiles: Map[String, File] = Map()
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     ConfigUtils.fileToConfigMap(summaryFile)
   }
 }

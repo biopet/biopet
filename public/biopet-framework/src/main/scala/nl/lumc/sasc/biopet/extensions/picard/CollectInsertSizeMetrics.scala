@@ -73,7 +73,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
 
   def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val (header, content) = Picard.getMetrics(output)
     (for (i <- 0 to header.size if i < content.head.size)
       yield (header(i).toLowerCase -> content.head(i))).toMap

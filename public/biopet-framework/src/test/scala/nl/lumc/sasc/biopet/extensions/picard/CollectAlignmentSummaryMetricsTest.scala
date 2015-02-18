@@ -18,6 +18,6 @@ class CollectAlignmentSummaryMetricsTest extends TestNGSuite with Matchers {
     val job = new CollectAlignmentSummaryMetrics(null)
     job.output = file
 
-    job.summaryData
+    job.summaryStats
   }
 }

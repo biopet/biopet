@@ -63,7 +63,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
 
   def summaryFiles: Map[String, File] = Map()
 
-  def summaryData: Map[String, Any] = {
+  def summaryStats: Map[String, Any] = {
     val (header, content) = Picard.getMetrics(output)
 
     (for (category <- 0 until content.size) yield {
