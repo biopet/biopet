@@ -19,8 +19,7 @@ import org.broadinstitute.gatk.queue.QScript
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.HtseqCount
+import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -96,6 +95,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
     if (expMeasures.contains(ExonBases))
       require(annotationBed.isDefined, "BED file must be defined for counting bases per exon")
+
+    if (expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict))
+      require(annotationGtf.isDefined, "GTF file must be defined for Cufflinks-based modes")
   }
 
   def biopetScript(): Unit = {
@@ -119,6 +121,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     /** Read count per exon file */
     lazy val exonReadsCount: Option[File] = exonReadsJob
       .collect { case job => job.output }
+
+    /** Gene tracking file from Cufflinks strict mode */
+    lazy val geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
+      .collect { case job => job.outputGenesFpkm }
+
+    /** Isoforms tracking file from Cufflinks strict mode */
+    lazy val isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
+      .collect { case job => job.outputIsoformsFpkm }
 
     /** ID-sorting job for HTseq-count jobs */
     private lazy val idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
@@ -170,6 +180,21 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         job
       }
 
+    /** Cufflinks strict job */
+    private lazy val cufflinksStrictJob: Option[Cufflinks] = expMeasures
+      .contains(CufflinksStrict)
+      .option {
+        val job = new Cufflinks(qscript) {
+          override def configName = "cufflinks"
+          override def configPath: List[String] = super.configPath ::: "cufflinks_strict" :: Nil
+        }
+        job.input = alnFile
+        job.GTF = annotationGtf
+        job.GTF_guide = None
+        job.output_dir = new File(sampleDir, "cufflinks_strict")
+        job
+      }
+
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
@@ -180,6 +205,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       idSortingJob.foreach(add(_))
       geneReadsJob.foreach(add(_))
       exonReadsJob.foreach(add(_))
+      cufflinksStrictJob.foreach(add(_))
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
