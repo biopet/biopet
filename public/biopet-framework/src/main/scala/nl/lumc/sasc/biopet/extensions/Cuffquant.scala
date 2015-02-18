@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the cuffquant command line tool.
@@ -31,10 +31,11 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cuffquant")
 
   /** input file */
-  @Input(doc = "Input file (SAM or BAM)", required = true)
-  // in cuffquant this input: sample1_rep1.sam,sample1_rep2.sam sample2_rep1.sam,sample2_rep2.sam
-  // means we have 2 samples, each with 2 replicates
-  // so our input is a list of lists of Files
+  @Input(doc = "Input file (SAM or BAM)", required = true) /*
+    in cuffquant this input: sample1_rep1.sam,sample1_rep2.sam sample2_rep1.sam,sample2_rep2.sam
+    means we have 2 samples, each with 2 replicates
+    so our input is a list of lists of Files
+   */
   var input: List[List[File]] = List.empty[List[File]]
 
   /** input GTF file */
@@ -118,32 +119,32 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction {
 
   override val versionRegex = """cuffquant v(.*)""".r
   override def versionCommand = executable
+  override val versionExitcode = List(0, 1)
 
-  def cmdLine = {
+  def cmdLine =
     required(executable) +
-    required("--output-dir", output_dir) +
-    optional("--mask-file", mask_file) +
-    optional("--frag-bias-correct", frag_bias_correct) +
-    conditional(multi_read_correct, "--multi-read-correct") +
-    optional("--num-threads", num_threads) +
-    optional("--library-type", library_type) +
-    optional("--frag-len-mean", frag_len_mean) +
-    optional("--frag-len-std-dev", frag_len_std_dev) +
-    optional("--min-alignment-count", min_alignment_count) +
-    optional("--max-mle-iterations", max_mle_iterations) +
-    conditional(verbose, "--verbose") +
-    conditional(quiet, "--quiet") +
-    optional("--seed", seed) +
-    conditional(no_update_check, "--no-update-check") +
-    optional("--max-bundle-frags", max_bundle_frags) +
-    optional("--max-frag-multihits", max_frag_multihits) +
-    conditional(no_effective_length_correction, "--no-effective-length-correction") +
-    conditional(no_length_correction, "--no-length-correction") +
-    optional("--read-skip-fraction", read_skip_fraction) +
-    conditional(no_read_pairs, "--no-read-pairs") +
-    optional("--trim-read-length", trim_read_length) +
-    conditional(no_scv_correction, "--no-scv-correction") +
-    required(transcripts_gtf) +
-    required(input.map(_.mkString(";").mkString(" ")))
-  }
+      required("--output-dir", output_dir) +
+      optional("--mask-file", mask_file) +
+      optional("--frag-bias-correct", frag_bias_correct) +
+      conditional(multi_read_correct, "--multi-read-correct") +
+      optional("--num-threads", num_threads) +
+      optional("--library-type", library_type) +
+      optional("--frag-len-mean", frag_len_mean) +
+      optional("--frag-len-std-dev", frag_len_std_dev) +
+      optional("--min-alignment-count", min_alignment_count) +
+      optional("--max-mle-iterations", max_mle_iterations) +
+      conditional(verbose, "--verbose") +
+      conditional(quiet, "--quiet") +
+      optional("--seed", seed) +
+      conditional(no_update_check, "--no-update-check") +
+      optional("--max-bundle-frags", max_bundle_frags) +
+      optional("--max-frag-multihits", max_frag_multihits) +
+      conditional(no_effective_length_correction, "--no-effective-length-correction") +
+      conditional(no_length_correction, "--no-length-correction") +
+      optional("--read-skip-fraction", read_skip_fraction) +
+      conditional(no_read_pairs, "--no-read-pairs") +
+      optional("--trim-read-length", trim_read_length) +
+      conditional(no_scv_correction, "--no-scv-correction") +
+      required(transcripts_gtf) +
+      required(input.map(_.mkString(";").mkString(" ")))
 }
