@@ -62,10 +62,21 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
   def biopetScript() {
     add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
-    add(BiopetFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".biopetflagstat")))
+
+    val biopetFlagstat = BiopetFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".biopetflagstat"),
+      swapExt(outputDir, inputBam, ".bam", ".biopetflagstat.json"))
+    add(biopetFlagstat)
+    addSummarizable(biopetFlagstat, "biopet_flagstat")
+
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
-    add(CollectInsertSizeMetrics(this, inputBam, outputDir))
-    add(CollectAlignmentSummaryMetrics(this, inputBam, outputDir))
+
+    val collectInsertSizeMetrics = CollectInsertSizeMetrics(this, inputBam, outputDir)
+    add(collectInsertSizeMetrics)
+    addSummarizable(collectInsertSizeMetrics, "insert_size_metrics")
+
+    val collectAlignmentSummaryMetrics = CollectAlignmentSummaryMetrics(this, inputBam, outputDir)
+    add(collectAlignmentSummaryMetrics)
+    addSummarizable(collectAlignmentSummaryMetrics, "alignment_metrics")
 
     val baitIntervalFile = if (baitBedFile != null) new File(outputDir, baitBedFile.getName.stripSuffix(".bed") + ".interval") else null
     if (baitIntervalFile != null)
@@ -81,12 +92,14 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default = 1.0)), true)
       add(SamtoolsFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".flagstat")))
-      add(BiopetFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat")))
+      add(BiopetFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat"),
+        swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat.json")))
 
       val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default = 0.01)), true)
       add(SamtoolsFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopet")))
-      add(BiopetFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat")))
+      add(BiopetFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat"),
+        swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat.json")))
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       add(BedtoolsCoverage(this, inputBam, bedFile, coverageFile, true), true)

@@ -17,11 +17,12 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 import scala.collection.immutable.Nil
 
-class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
+class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -31,7 +32,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   var output: File = _
 
   @Output(doc = "Output histogram", required = true)
-  var outputHistogram: File = _
+  def outputHistogram: File = new File(output + ".pdf")
 
   @Argument(doc = "Reference file", required = false)
   var reference: File = config("reference")
@@ -55,7 +56,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   var histogramWidth: Option[Int] = config("histogramWidth")
 
   override def beforeGraph {
-    if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
+    //if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
     //require(reference.exists)
   }
 
@@ -69,6 +70,14 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE")
+
+  def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
+
+  def summaryData: Map[String, Any] = {
+    val (header, content) = Picard.getMetrics(output)
+    (for (i <- 0 to header.size)
+      yield (header(i).toLowerCase -> content.head(i))).toMap
+  }
 }
 
 object CollectInsertSizeMetrics {
