@@ -49,7 +49,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
   def summaryFiles = Map("input_bam" -> inputBam)
 
-  def summaryData = Map()
+  def summarySettings = Map()
 
   def init() {
     if (config.contains("target_bed")) {

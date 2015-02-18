@@ -96,7 +96,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   def summaryFiles = Map()
 
-  def summaryData = Map()
+  def summarySettings = Map()
 
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")

@@ -48,7 +48,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
   }
 
-  def summaryData = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
+  def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
@@ -136,6 +136,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
     seqtkSeq_R1.isIntermediate = true
     add(seqtkSeq_R1)
+    addSummarizable(seqtkSeq_R1, "seqtkSeq_R1")
     R1 = seqtkSeq_R1.output
     deps ::= R1
 
@@ -143,6 +144,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       val seqtkSeq_R2 = SeqtkSeq(this, R2, swapExt(outDir, R2, R2_ext, ".sanger" + R2_ext), fastqc_R2)
       seqtkSeq_R2.isIntermediate = true
       add(seqtkSeq_R2)
+      addSummarizable(seqtkSeq_R2, "seqtkSeq_R2")
       R2 = seqtkSeq_R2.output
       deps ::= R2
     }

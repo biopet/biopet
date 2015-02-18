@@ -2,19 +2,25 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunctionTrait, BiopetCommandLineFunction, SampleLibraryTag, BiopetQScript }
 import nl.lumc.sasc.biopet.extensions.Md5sum
+
+import scala.collection.mutable
 
 /**
  * Created by pjvan_thof on 2/14/15.
  */
-trait SummaryQScript extends BiopetQScript with Summarizable {
+trait SummaryQScript extends BiopetQScript {
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
 
   var summaryName = configName
+
+  def summarySettings: Map[String, Any]
+
+  def summaryFiles: Map[String, File]
 
   def summaryFile: File
 
@@ -41,10 +47,7 @@ trait SummaryQScript extends BiopetQScript with Summarizable {
   def addSummaryJobs: Unit = {
     val writeSummary = new WriteSummary(this)
 
-    addSummarizable(this, "pipeline")
-
-    //Automatic checksums
-    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles) {
+    def addChecksum(file: File): Unit = {
       if (writeSummary.md5sum && !SummaryQScript.md5sumCache.contains(file)) {
         val md5sum = Md5sum(this, file)
         writeSummary.deps :+= md5sum.output
@@ -54,8 +57,28 @@ trait SummaryQScript extends BiopetQScript with Summarizable {
       //TODO: add more checksums types
     }
 
+    //Automatic checksums
+    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles)
+      addChecksum(file)
+
+    for ((_, sl) <- summarizables) {
+      for (s <- sl) {
+        s match {
+          case c: BiopetCommandLineFunctionTrait => {
+            executables += c.configName -> (new File(c.executable), c.getVersion)
+          }
+          case _ =>
+        }
+      }
+    }
+
+    for ((_, file) <- this.summaryFiles)
+      addChecksum(file)
+
     add(writeSummary)
   }
+
+  protected[summary] val executables: mutable.Map[String, (File, String)] = mutable.Map()
 }
 
 object SummaryQScript {
