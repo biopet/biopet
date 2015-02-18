@@ -135,6 +135,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     lazy val isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
       .collect { case job => job.outputIsoformsFpkm }
 
+    /** Gene tracking file from Cufflinks guided mode */
+    lazy val geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
+      .collect { case job => job.outputGenesFpkm }
+
+    /** Isoforms tracking file from Cufflinks guided mode */
+    lazy val isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
+      .collect { case job => job.outputIsoformsFpkm }
+
     /** ID-sorting job for HTseq-count jobs */
     private lazy val idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
       .option {
@@ -200,6 +208,21 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         job
       }
 
+    /** Cufflinks guided job */
+    private lazy val cufflinksGuidedJob: Option[Cufflinks] = expMeasures
+      .contains(CufflinksStrict)
+      .option {
+      val job = new Cufflinks(qscript) {
+        override def configName = "cufflinks"
+        override def configPath: List[String] = super.configPath ::: "cufflinks_guided" :: Nil
+      }
+      job.input = alnFile
+      job.GTF = None
+      job.GTF_guide = annotationGtf
+      job.output_dir = new File(sampleDir, "cufflinks_guided")
+      job
+    }
+
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
@@ -211,6 +234,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       geneReadsJob.foreach(add(_))
       exonReadsJob.foreach(add(_))
       cufflinksStrictJob.foreach(add(_))
+      cufflinksGuidedJob.foreach(add(_))
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
