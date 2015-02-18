@@ -83,6 +83,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       add(BedToInterval(this, baitBedFile, inputBam, outputDir), true)
 
     for (bedFile <- bedFiles) {
+      //TODO: Add target jobs to summary
       val targetDir = new File(outputDir, bedFile.getName.stripSuffix(".bed"))
       val targetInterval = BedToInterval(this, bedFile, inputBam, targetDir)
       add(targetInterval, true)
