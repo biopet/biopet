@@ -26,13 +26,13 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "The output file to write statistics to", required = true)
-  var output: File = _
+  var output: File = null
 
   @Output(doc = "Output histogram", required = true)
-  def outputHistogram: File = new File(output + ".pdf")
+  protected var outputHistogram: File = null
 
   @Argument(doc = "Reference file", required = false)
   var reference: File = config("reference")
@@ -56,6 +56,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   var histogramWidth: Option[Int] = config("histogramWidth")
 
   override def beforeGraph {
+    outputHistogram = new File(output + ".pdf")
     //if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
     //require(reference.exists)
   }

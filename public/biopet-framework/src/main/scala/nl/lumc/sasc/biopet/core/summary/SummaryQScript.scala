@@ -57,6 +57,13 @@ trait SummaryQScript extends BiopetQScript {
       //TODO: add more checksums types
     }
 
+    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {
+      summarizable match {
+        case f: BiopetCommandLineFunctionTrait => f.beforeGraph
+        case _                                 =>
+      }
+    }
+
     //Automatic checksums
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles)
       addChecksum(file)
