@@ -41,16 +41,20 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   @Argument(doc = "", required = false)
   var wholeGenome = false
 
+  /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
     case (Some(sampleId), Some(libId)) => new File(outputDir, sampleId + "-" + libId + ".BamMetrics.summary.json")
     case (Some(sampleId), _)           => new File(outputDir, sampleId + ".BamMetrics.summary.json")
     case _                             => new File(outputDir, "BamMetrics.summary.json")
   }
 
+  /** returns files to store in summary */
   def summaryFiles = Map("input_bam" -> inputBam)
 
+  /** return settings */
   def summarySettings = Map()
 
+  /** executed before script */
   def init() {
     if (config.contains("target_bed")) {
       for (file <- config("target_bed").asList) {
@@ -60,6 +64,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     if (baitBedFile == null && config.contains("target_bait")) baitBedFile = config("target_bait")
   }
 
+  /** Script to add jobs */
   def biopetScript() {
     add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
 
@@ -109,6 +114,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 }
 
 object BamMetrics extends PipelineCommand {
+  /**
+   * Make default implementation of BamMetrics
+   * @param root
+   * @param bamFile
+   * @param outputDir
+   * @return
+   */
   def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
     bamMetrics.inputBam = bamFile
