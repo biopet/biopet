@@ -57,7 +57,7 @@ class MappingTest extends TestNGSuite with Matchers {
       "number_chunks" -> chunks,
       "skip_markduplicates" -> skipMarkDuplicate,
       "skip_flexiprep" -> skipFlexiprep
-    ), Map(MappingTest.excutables.toSeq: _*))
+    ), Map(MappingTest.executables.toSeq: _*))
     val mapping: Mapping = initPipeline(map)
 
     mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq")
@@ -107,12 +107,13 @@ class MappingTest extends TestNGSuite with Matchers {
 object MappingTest {
   val outputDir = Files.createTempDir()
 
-  val excutables = Map(
+  val executables = Map(
     "reference" -> "test",
     "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
+    "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
