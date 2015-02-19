@@ -43,7 +43,7 @@ object SamplesTsvToJson extends ToolCommand {
 
     val fileMaps = for (inputFile <- commandArgs.inputFiles) yield {
       val reader = Source.fromFile(inputFile)
-      val lines = reader.getLines.toList
+      val lines = reader.getLines.toList.filter(!_.isEmpty)
       val header = lines.head.split("\t")
       val sampleColumn = header.indexOf("sample")
       val libraryColumn = header.indexOf("library")
