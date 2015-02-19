@@ -6,10 +6,9 @@ import htsjdk.tribble.TribbleException
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import collection.mutable.{ Map => MMap }
-import collection.JavaConverters._
 import htsjdk.variant.vcf._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.{ VariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriter, VariantContextWriterBuilder }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -53,14 +52,11 @@ object VEPNormalizer extends ToolCommand {
     logger.info(s"""Input VCF is $input""")
     logger.info(s"""Output VCF is $output""")
 
-    var reader: VCFFileReader = null
-    // this can give a codec error if malformed VCF
-    //
-    try {
-      reader = new VCFFileReader(input, false)
+    val reader = try {
+      new VCFFileReader(input, false)
     } catch {
       case e: TribbleException.MalformedFeatureFile =>
-        logger.error("Malformed VCF file! VCFv3 not supported!")
+        logger.error("Malformed VCF file! Are you sure this isn't a VCFv3 file?")
         throw e
     }
 
@@ -82,80 +78,41 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Header parsing done")
 
     logger.debug("Writing header to file")
-    val writerBuilder = new VariantContextWriterBuilder()
-    writerBuilder.
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(output).
-      setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF).
-      setReferenceDictionary(seqDict)
-    val writer = writerBuilder.build()
+      build())
     writer.writeHeader(header)
     logger.debug("Wrote header to file")
 
-    if (commandArgs.mode == "explode") {
-      logger.info("You have selected explode mode")
-      explode(reader, writer, new_infos)
-    } else if (commandArgs.mode == "standard") {
-      logger.info("You have selected standard mode")
-      standard(reader, writer, new_infos)
-    } else {
-      // this should be impossible, but should nevertheless be checked
-      logger.error("impossibru!", new IllegalArgumentException)
-    }
-  }
-
-  /**
-   * Wrapper for mode explode
-   * @param reader input VCF VCFFileReader
-   * @param writer output VCF VariantContextWriter
-   * @param new_infos array of string containing names of new info fields
-   */
-  def explode(reader: VCFFileReader, writer: VariantContextWriter, new_infos: Array[String]) = {
-    logger.info("Start processing records")
-    var nprocessed_records: Int = 0
-    var nwritten_records: Int = 0
-    for ((record, i) <- reader.iterator().zipWithIndex) {
-      nprocessed_records += 1
-      if (i % 1000 == 0) {
-        logger.info(s"""Read $i records \t Wrote $nwritten_records records""")
-      }
-      val new_records = explodeTranscripts(record, new_infos)
-      for (vc <- new_records) {
-        writer.add(vc)
-      }
-      nwritten_records += new_records.length
-    }
-    logger.info(s"""Processed $nprocessed_records records""")
-    logger.info("Done. Goodbye")
+    normalize(reader, writer, new_infos, commandArgs.mode, commandArgs.remove_CSQ)
     writer.close()
     logger.debug("Closed writer")
     reader.close()
     logger.debug("Closed reader")
+    logger.info("Done. Goodbye")
   }
 
   /**
-   * Wrapper for mode standard
+   * Normalizer
    * @param reader input VCF VCFFileReader
-   * @param writer output VCF VariantContextWriter
+   * @param writer output VCF AsyncVariantContextWriter
    * @param new_infos array of string containing names of new info fields
+   * @param mode normalizer mode (explode or standard)
+   * @param remove_csq remove csq tag (Boolean)
+   * @return
    */
-  def standard(reader: VCFFileReader, writer: VariantContextWriter, new_infos: Array[String]) = {
+  def normalize(reader: VCFFileReader, writer: AsyncVariantContextWriter,
+                new_infos: Array[String], mode: String, remove_csq: Boolean) = {
+    logger.info(s"""You have selected mode $mode""")
     logger.info("Start processing records")
-    var nprocessed_records: Int = 0
-    var nwritten_records: Int = 0
-    for ((record, i) <- reader.iterator().zipWithIndex) {
-      nprocessed_records += 1
-      if (i % 1000 == 0) {
-        logger.info(s"""Read $i records \t Wrote $nwritten_records records""")
+
+    for (record <- reader) {
+      mode match {
+        case "explode"  => explodeTranscripts(record, new_infos, remove_csq).foreach(vc => writer.add(vc))
+        case "standard" => writer.add(standardTranscripts(record, new_infos, remove_csq))
+        case _          => throw new IllegalArgumentException("Something odd happened!")
       }
-      writer.add(standardTranscripts(record, new_infos))
-      nwritten_records += 1
     }
-    logger.info(s"""Processed $nprocessed_records records""")
-    logger.info("Done. Goodbye")
-    writer.close()
-    logger.debug("Closed writer")
-    reader.close()
-    logger.debug("Closed reader")
   }
 
   /**
@@ -165,7 +122,7 @@ object VEPNormalizer extends ToolCommand {
   def csqCheck(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
       //logger.error("No CSQ info tag found! Is this file VEP-annotated?")
-      throw new VEPException("No CSQ info tag found! Is this file VEP-annotated?")
+      throw new IllegalArgumentException("No CSQ info tag found! Is this file VEP-annotated?")
     }
   }
 
@@ -186,7 +143,7 @@ object VEPNormalizer extends ToolCommand {
     val version = VCFHeaderVersion.toHeaderVersion(format)
     if (!version.isAtLeastAsRecentAs(VCFHeaderVersion.VCF4_0)) {
       //logger.error(s"""version $version is not supported""")
-      throw new VEPException(s"""version $version is not supported""")
+      throw new IllegalArgumentException(s"""version $version is not supported""")
     }
   }
 
@@ -197,7 +154,7 @@ object VEPNormalizer extends ToolCommand {
    */
   def parseCsq(header: VCFHeader): Array[String] = {
     header.getInfoHeaderLine("CSQ").getDescription.
-      split(':')(1).trim.split('|')
+      split(':')(1).trim.split('|').map("VEP_"+_)
   }
 
   /**
@@ -207,21 +164,26 @@ object VEPNormalizer extends ToolCommand {
    * @param csq_infos An array with names of new info tags
    * @return An array with the new records
    */
-  def explodeTranscripts(record: VariantContext, csq_infos: Array[String]): Array[VariantContext] = {
+  def explodeTranscripts(record: VariantContext, csq_infos: Array[String], remove_CSQ: Boolean): Array[VariantContext] = {
     val csq = record.getAttributeAsString("CSQ", "unknown")
-    val attributes = record.getAttributes.toMap
+    val attributes = if(remove_CSQ) record.getAttributes.toMap - "CSQ" else record.getAttributes.toMap
 
     csq.
       stripPrefix("[").
       stripSuffix("]").
       split(",").
       map(x => attributes ++ csq_infos.zip(x.split("""\|""", -1))).
-      map(x => new VariantContextBuilder(record).attributes(x).make())
+      map(x => {
+      if (remove_CSQ) new VariantContextBuilder(record)
+        .attributes(x)
+        .make()
+      else new VariantContextBuilder(record).attributes(x).make()
+    })
   }
 
-  def standardTranscripts(record: VariantContext, csqInfos: Array[String]): VariantContext = {
+  def standardTranscripts(record: VariantContext, csqInfos: Array[String], remove_CSQ: Boolean): VariantContext = {
     val csq = record.getAttributeAsString("CSQ", "unknown")
-    val attributes = record.getAttributes.toMap
+    val attributes = if(remove_CSQ) record.getAttributes.toMap - "CSQ" else record.getAttributes.toMap
 
     val new_attrs = attributes ++ csqInfos.zip(csq.
       stripPrefix("[").
@@ -236,23 +198,13 @@ object VEPNormalizer extends ToolCommand {
       ).
         map(x => x.mkString(",")))
 
+
     new VariantContextBuilder(record).attributes(new_attrs).make()
   }
-  /**
-   * This one-line class defines a new VEP-specific exception
-   * @param msg The error message
-   */
-  class VEPException(msg: String) extends RuntimeException(msg)
-
-  /**
-   * This one-line class defines a version exception
-   * @param msg The error message
-   */
-  class VCFVersionException(msg: String) extends RuntimeException(msg)
-
   case class Args(inputVCF: File = null,
                   outputVCF: File = null,
-                  mode: String = null) extends AbstractArgs
+                  mode: String = null,
+                  remove_CSQ: Boolean = true ) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -267,7 +219,8 @@ object VEPNormalizer extends ToolCommand {
     opt[File]('O', "OutputFile") required () valueName "<vcf>" action { (x, c) =>
       c.copy(outputVCF = x)
     } validate {
-      x => if (x.exists) success else success
+      x => if (!x.getName.endsWith(".vcf") && (!x.getName.endsWith(".vcf.gz")) &&(!x.getName.endsWith(".bcf")))
+        failure("Unsupported output file type") else success
     } text "Output VCF file"
 
     opt[String]('m', "mode") required () valueName "<mode>" action { (x, c) =>
@@ -275,6 +228,9 @@ object VEPNormalizer extends ToolCommand {
     } validate {
       x => if (x == "explode") success else if (x == "standard") success else failure("Unsupported mode")
     } text "Mode"
+
+    opt[Unit]("do-not-remove") action { (x, c) =>
+    c.copy(remove_CSQ = false)} text "Do not remove CSQ tag"
   }
 }
 
