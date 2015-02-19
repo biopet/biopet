@@ -96,7 +96,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   def summaryFiles = Map()
 
-  def summarySettings = Map()
+  def summarySettings = Map(
+    "skip_metrics" -> skipMetrics,
+    "skip_flexiprep" -> skipFlexiprep,
+    "skip_markduplicates" -> skipMarkduplicates,
+    "aligner" -> aligner,
+    "chunking" -> chunking,
+    "numberChunks" -> numberChunks.getOrElse(1)
+  )
 
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
@@ -208,7 +215,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var bamFile = bamFiles.head
     if (!skipMarkduplicates) {
       bamFile = new File(outputDir, outputName + ".dedup.bam")
-      add(MarkDuplicates(this, bamFiles, bamFile))
+      val md = MarkDuplicates(this, bamFiles, bamFile)
+      add(md)
+      addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
       val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
       add(mergeSamFile)
