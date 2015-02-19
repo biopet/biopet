@@ -30,10 +30,10 @@ class SamtoolsFlagstat(val root: Configurable) extends Samtools {
 }
 
 object SamtoolsFlagstat {
-  def apply(root: Configurable, input: File, output: File): SamtoolsFlagstat = {
+  def apply(root: Configurable, input: File, outputDir: File): SamtoolsFlagstat = {
     val flagstat = new SamtoolsFlagstat(root)
     flagstat.input = input
-    flagstat.output = output
-    return flagstat
+    flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".flagstat")
+    flagstat
   }
 }

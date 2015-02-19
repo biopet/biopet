@@ -63,8 +63,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   def biopetScript() {
     add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
 
-    val biopetFlagstat = BiopetFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".biopetflagstat"),
-      swapExt(outputDir, inputBam, ".bam", ".biopetflagstat.json"))
+    val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)
     addSummarizable(biopetFlagstat, "biopet_flagstat")
 
@@ -92,15 +91,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
       val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default = 1.0)), true)
-      add(SamtoolsFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".flagstat")))
-      add(BiopetFlagstat(this, strictOutputBam, swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat"),
-        swapExt(targetDir, strictOutputBam, ".bam", ".biopetflagstat.json")))
+      add(SamtoolsFlagstat(this, strictOutputBam, targetDir))
+      add(BiopetFlagstat(this, strictOutputBam, targetDir))
 
       val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default = 0.01)), true)
-      add(SamtoolsFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopet")))
-      add(BiopetFlagstat(this, looseOutputBam, swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat"),
-        swapExt(targetDir, looseOutputBam, ".bam", ".biopetflagstat.json")))
+      add(SamtoolsFlagstat(this, looseOutputBam, targetDir))
+      add(BiopetFlagstat(this, looseOutputBam, targetDir))
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       add(BedtoolsCoverage(this, inputBam, bedFile, coverageFile, true), true)

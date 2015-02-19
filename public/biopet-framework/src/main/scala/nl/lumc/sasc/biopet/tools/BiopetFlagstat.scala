@@ -52,12 +52,12 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
 object BiopetFlagstat extends ToolCommand {
   import scala.collection.mutable.Map
 
-  def apply(root: Configurable, input: File, output: File, summaryFile: File): BiopetFlagstat = {
+  def apply(root: Configurable, input: File, outputDir: File): BiopetFlagstat = {
     val flagstat = new BiopetFlagstat(root)
     flagstat.input = input
-    flagstat.output = output
-    flagstat.summaryFile = summaryFile
-    return flagstat
+    flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
+    flagstat.summaryFile = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat.json")
+    flagstat
   }
 
   case class Args(inputFile: File = null, summaryFile: Option[File] = None, region: Option[String] = None) extends AbstractArgs
