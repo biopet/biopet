@@ -92,11 +92,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   val flexiprep = new Flexiprep(this)
   def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
 
+  /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
+  /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
+  /** Settings to add to summary */
   def summarySettings = Map(
     "skip_metrics" -> skipMetrics,
     "skip_flexiprep" -> skipFlexiprep,
@@ -106,6 +109,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "numberChunks" -> numberChunks.getOrElse(1)
   )
 
+  /** Will be executed before script */
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
     require(input_R1 != null, "Missing output directory on mapping module")
@@ -133,6 +137,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     }
   }
 
+  /** Adds all jobs of the pipeline */
   def biopetScript() {
     if (!skipFlexiprep) {
       flexiprep.outputDir = new File(outputDir, "flexiprep")
@@ -241,6 +246,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addSummaryJobs
   }
 
+  /**
+   * Add bwa aln jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
@@ -286,6 +299,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     return sortSam.output
   }
 
+  /**
+   * Adds bwa mem jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBwaMem(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
@@ -301,6 +322,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     return sortSam.output
   }
 
+  /**
+   * Adds stampy jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
@@ -328,6 +357,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     return sortSam.output
   }
 
+  /**
+   * Adds bowtie jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBowtie(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
@@ -339,18 +376,40 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     return addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
+  /**
+   * Adds Star jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStar(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
     return addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
 
+  /**
+   * Adds Start 2 pass jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStar2pass(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star._2pass(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
     return addAddOrReplaceReadGroups(starCommand._1, output)
   }
 
+  /**
+   * Adds AddOrReplaceReadGroups
+   * @param input
+   * @param output
+   * @return
+   */
   def addAddOrReplaceReadGroups(input: File, output: File): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
@@ -368,6 +427,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     return addOrReplaceReadGroups.output
   }
 
+  /** Returns readgroup for bwa */
   def getReadGroupBwa(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
     RG += "LB:" + libId.get + "\\t"
