@@ -63,7 +63,7 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
       "Amino_acids", "CDS_position", "CLIN_SIG", "Codons", "Consequence", "DISTANCE",
       "EA_MAF", "EUR_MAF", "Existing_variation", "Feature", "Feature_type",
       "GMAF", "Gene", "HGVSc", "HGVSp", "PUBMED", "Protein_position", "STRAND", "SYMBOL",
-      "SYMBOL_SOURCE", "cDNA_position")
+      "SYMBOL_SOURCE", "cDNA_position").map("VEP_" + _)
 
     checkItems(items)
   }
@@ -74,7 +74,7 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test(expectedExceptions = Array(classOf[IllegalArgumentException]))
-  def testNoCSQTagException {
+  def testNoCSQTagException() {
     csqCheck(new VCFFileReader(unvepped, false).getFileHeader)
   }
 
