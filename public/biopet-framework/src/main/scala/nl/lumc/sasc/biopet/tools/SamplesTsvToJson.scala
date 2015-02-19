@@ -21,6 +21,9 @@ import scala.io.Source
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
+/**
+ * This tool can convert a tsv to a json file
+ */
 object SamplesTsvToJson extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil) extends AbstractArgs
 
@@ -29,6 +32,11 @@ object SamplesTsvToJson extends ToolCommand {
       c.copy(inputFiles = x :: c.inputFiles)
     } text ("Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed")
   }
+
+  /**
+   * Executes SamplesTsvToJson
+   * @param args
+   */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
