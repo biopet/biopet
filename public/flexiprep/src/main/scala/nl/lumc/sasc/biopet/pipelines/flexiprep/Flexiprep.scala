@@ -39,15 +39,16 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
-  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
-
+  /** Location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
 
+  /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
     Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
       (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
   }
 
+  /** returns settings to store in summary */
   def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
@@ -61,6 +62,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
 
+  /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
     require(input_R1 != null, "Missing input R1 on flexiprep module")
@@ -88,6 +90,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
   }
 
+  /** Script to add jobs */
   def biopetScript() {
     runInitialJobs()
 
@@ -99,6 +102,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     runFinalize(R1_files.toList, R2_files.toList)
   }
 
+  /** Add init non chunkable jobs */
   def runInitialJobs() {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
     if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2.get, outputDir))
@@ -116,15 +120,45 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
   }
 
-  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) = {
+  //TODO: Refactor need to combine all this functions
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param outDir
+   * @param chunk
+   * @return
+   */
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) = 
     runTrimClip(R1_in, new File(""), outDir, chunk)
-  }
-  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) = {
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param outDir
+   * @return
+   */
+  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) = 
     runTrimClip(R1_in, new File(""), outDir, "")
-  }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) = {
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param R2_in
+   * @param outDir
+   * @return
+   */
+  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) = 
     runTrimClip(R1_in, R2_in, outDir, "")
-  }
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param R2_in
+   * @param outDir
+   * @param chunkarg
+   * @return
+   */
   def runTrimClip(R1_in: File, R2_in: File, outDir: File, chunkarg: String): (File, File, List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String, File] = Map()
@@ -234,6 +268,11 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     return (R1, R2, deps)
   }
 
+  /**
+   * Adds last non chunkable jobs
+   * @param fastq_R1
+   * @param fastq_R2
+   */
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
     if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
     val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
@@ -260,6 +299,12 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     addSummaryJobs
   }
 
+  /**
+   * Extracts file if file is compressed
+   * @param file
+   * @param runDir
+   * @return returns extracted file
+   */
   def extractIfNeeded(file: File, runDir: File): File = {
     if (file == null) return file
     else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
