@@ -129,7 +129,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
    * @param chunk
    * @return
    */
-  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) = 
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) =
     runTrimClip(R1_in, new File(""), outDir, chunk)
 
   /**
@@ -138,7 +138,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
    * @param outDir
    * @return
    */
-  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) = 
+  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) =
     runTrimClip(R1_in, new File(""), outDir, "")
 
   /**
@@ -148,7 +148,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
    * @param outDir
    * @return
    */
-  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) = 
+  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) =
     runTrimClip(R1_in, R2_in, outDir, "")
 
   /**
