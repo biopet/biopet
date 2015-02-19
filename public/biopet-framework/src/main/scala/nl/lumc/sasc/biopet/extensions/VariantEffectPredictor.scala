@@ -12,13 +12,13 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", submodule = "perl", default = "perl")
-  var vep_script: String = config("vep_script", required = true)
+  var vep_script: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "output file", required = true)
-  var output: File = _
+  var output: File = null
 
   override val versionRegex = """version (\d*)""".r
   override def versionCommand = executable + " " + vep_script + " --help"
@@ -125,8 +125,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var db_version: Option[Int] = config("db_version")
   var buffer_size: Option[Int] = config("buffer_size")
 
-  override def afterGraph: Unit = {
-    super.afterGraph
+  override def beforeGraph: Unit = {
+    super.beforeGraph
     if (!cache && !database) {
       throw new IllegalArgumentException("Must supply either cache or database")
     } else if (cache && dir.isEmpty) {
