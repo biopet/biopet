@@ -39,7 +39,7 @@ class CarpTest extends TestNGSuite with Matchers {
   def testCarp(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean, threatment: Boolean, control: Boolean): Unit = {
     val map = {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> CarpTest.outputDir
-      ), CarpTest.excutables)
+      ), CarpTest.executables)
 
       if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m.toMap)
       if (sample2) m = ConfigUtils.mergeMaps(CarpTest.sample2, m.toMap)
@@ -82,12 +82,13 @@ class CarpTest extends TestNGSuite with Matchers {
 object CarpTest {
   val outputDir = Files.createTempDir()
 
-  val excutables = Map(
+  val executables = Map(
     "reference" -> "test",
     "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
+    "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),

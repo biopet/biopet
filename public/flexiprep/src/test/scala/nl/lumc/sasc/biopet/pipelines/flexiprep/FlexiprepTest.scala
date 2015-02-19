@@ -48,7 +48,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir,
       "skip_trim" -> skipTrim,
       "skip_clip" -> skipClip
-    ), Map(FlexiprepTest.excutables.toSeq: _*))
+    ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
     flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
@@ -79,10 +79,11 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 object FlexiprepTest {
   val outputDir = Files.createTempDir()
 
-  val excutables = Map(
+  val executables = Map(
     "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
-    "sickle" -> Map("exe" -> "test")
+    "sickle" -> Map("exe" -> "test"),
+    "cutadapt" -> Map("exe" -> "test")
   )
 }
