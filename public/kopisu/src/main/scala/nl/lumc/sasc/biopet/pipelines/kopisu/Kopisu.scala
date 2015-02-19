@@ -16,38 +16,25 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.FreeC
 import org.broadinstitute.gatk.queue.QScript
 
-class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
+class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Input(doc = "Input bamfile", required = true)
   var bamFile: File = config("bam")
+  var outputDirectory: File = outputDir
 
   def init() {
-    if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
   def biopetScript() {
-    addSamplesJobs()
-  }
+    val FreeC = new FreeC(this)
+    FreeC.bamFile = bamFile
+    FreeC.outputPath = outputDirectory
+    add(FreeC)
 
-  def makeSample(id: String) = new Sample(id)
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    def makeLibrary(id: String) = new Library(id)
-    class Library(libId: String) extends AbstractLibrary(libId) {
-      def addJobs(): Unit = {
-
-      }
-    }
-
-    def addJobs(): Unit = {
-
-    }
-  }
-
-  def addMultiSampleJobs(): Unit = {
   }
 }
 

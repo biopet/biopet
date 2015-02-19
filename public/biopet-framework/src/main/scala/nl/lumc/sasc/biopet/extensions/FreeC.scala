@@ -24,11 +24,12 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
-
 class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Bam file", required = false)
   var bamFile: File = _
+
+  var outputPath: File = null
 
   @Output(doc = "Output", shortName = "out")
   protected var output: File = _
@@ -39,22 +40,27 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   var chrLenFile: String = config("chrLenFile")
   var gemMappabilityFile: String = config("gemMappabilityFile")
 
-  var ploidy: Option[Int] = config("ploidy", default=2)
-  var telocentromeric: Option[Int] = config("telocentromeric", default=50000)
+  var ploidy: Option[Int] = config("ploidy", default = 2)
+  var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
   // Default of 10k bins
-  var window: Option[Int] = config("window", default=10000)
+  var window: Option[Int] = config("window", default = 10000)
 
+  var samtools: String = config(key = "exe", submodule = "samtools")
 
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
-  override val versionRegex = """FREEC v(.*)\(""".r
-  override def versionCommand = executable + " --version"
+  override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
   override val defaultThreads = 4
+  override val defaultVmem = "2G"
   private var config_file: File = _
 
-  override def afterGraph {
-    this.checkExecutable
-    config_file = new File(output.getParent + File.separator + output.getName + ".freec_config.txt"  )
-    this.output = new File(this.bamFile.getCanonicalPath + "_CNVs")
+  override def beforeGraph {
+    super.beforeGraph
+    config_file = new File(outputPath, bamFile.getName + ".freec_config.txt")
+    this.output = new File(outputPath, "CNV")
+  }
+
+  override def freezeFieldValues(): Unit = {
+    super.freezeFieldValues()
     createConfigFile
   }
 
@@ -68,18 +74,19 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
 
     // header
     writer.write("[general]\n")
-    writer.write("chrFiles="+ this.chrFiles +"\n")
-    writer.write("chrLenFile="+config("chrLenFile")+"\n")
-    writer.write("gemMappabilityFile="+config("gemMappabilityFile")+"\n")
-    writer.write("maxThreads="+ this.nCoresRequest +"\n")
-    writer.write("outputDir="+ this.output.getParent +"/\n")
-    writer.write("ploidy="+ this.ploidy +"\n")
-    writer.write("samtools="+ config(key="exe", submodule="samtools" ) +"\n")
-    writer.write("telocentromeric="+ this.telocentromeric +"\n")
-    writer.write("window="+ this.window +"\n")
+    writer.write("BedGraphOutput=TRUE\n")
+    writer.write("chrFiles=" + this.chrFiles + "\n")
+    writer.write("chrLenFile=" + this.chrLenFile + "\n")
+    writer.write("gemMappabilityFile=" + this.gemMappabilityFile + "\n")
+    writer.write("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) + "\n")
+    writer.write("outputDir=" + this.output.getParent + "/\n")
+    writer.write("ploidy=" + this.ploidy.getOrElse(2) + "\n")
+    writer.write("samtools=" + this.samtools + "\n")
+    writer.write("telocentromeric=" + this.telocentromeric.getOrElse(50000) + "\n")
+    writer.write("window=" + this.window.getOrElse(10000) + "\n")
 
-    writer.write("[sample]")
-    writer.write("mateFile="+this.bamFile+"\n")
+    writer.write("[sample]\n")
+    writer.write("mateFile=" + this.bamFile + "\n")
     writer.write("inputFormat=bam\n")
     // TODO: determine mateOrientation!
     // FR = Paired End Illumina
