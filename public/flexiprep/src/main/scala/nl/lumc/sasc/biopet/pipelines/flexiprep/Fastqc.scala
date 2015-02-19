@@ -155,7 +155,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         "fastqc_data" -> "fastqc_data.txt")
         .map {
           case (name, relPath) =>
-            name -> Map("path" -> (outputDir + relPath))
+            name -> Map("path" -> (outputDir + File.separator + relPath))
         }
 
     ConfigUtils.mapToJson(outputMap)
