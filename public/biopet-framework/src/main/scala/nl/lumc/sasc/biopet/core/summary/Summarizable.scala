@@ -5,12 +5,22 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
+ * Trait for class to let them accept into a Summary
+ *
  * Created by pjvan_thof on 2/14/15.
  */
 trait Summarizable extends Configurable {
 
+  /**
+   * Must return files to store into summary
+   * @return
+   */
   def summaryFiles: Map[String, File]
 
+  /**
+   * Must returns stats to store into summary
+   * @return
+   */
   def summaryStats: Map[String, Any]
 
   /**

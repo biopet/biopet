@@ -14,16 +14,30 @@ trait SummaryQScript extends BiopetQScript {
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
+
+  /** Qscripts summaries that need to be merge into this summary */
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
 
+  /** Name of the pipeline in the summary */
   var summaryName = configName
 
+  /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any]
 
+  /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File]
 
+  /** Name of summary output file */
   def summaryFile: File
 
+  /**
+   * Add a module to summary for this pipeline
+   *
+   * Auto detect sample and library from pipeline
+   *
+   * @param summarizable summarizable to add to summary for this pipeline
+   * @param name Name of module
+   */
   def addSummarizable(summarizable: Summarizable, name: String): Unit = {
     this match {
       case tag: SampleLibraryTag => addSummarizable(summarizable, name, tag.sampleId, tag.libId)
@@ -31,19 +45,39 @@ trait SummaryQScript extends BiopetQScript {
     }
   }
 
+  /**
+   * Add a module to summary for this pipeline
+   *
+   * @param summarizable summarizable to add to summary for this pipeline
+   * @param name Name of module
+   * @param sampleId
+   */
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String]): Unit = {
     addSummarizable(summarizable, name, sampleId, None)
   }
 
+  /**
+   * Add a module to summary for this pipeline
+   *
+   * @param summarizable summarizable to add to summary for this pipeline
+   * @param name Name of module
+   * @param sampleId
+   * @param libraryId
+   */
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String], libraryId: Option[String]): Unit = {
     if (libraryId.isDefined) require(sampleId.isDefined) // Library always require a sample
     summarizables += (name, sampleId, libraryId) -> (summarizable :: summarizables.getOrElse((name, sampleId, libraryId), Nil))
   }
 
+  /**
+   * Add an other qscript to merge in output summary
+   * @param summaryQScript
+   */
   def addSummaryQScript(summaryQScript: SummaryQScript): Unit = {
     summaryQScripts :+= summaryQScript
   }
 
+  /** Add jobs to qscript to execute summary, also add checksum jobs */
   def addSummaryJobs: Unit = {
     val writeSummary = new WriteSummary(this)
 
@@ -73,11 +107,11 @@ trait SummaryQScript extends BiopetQScript {
 
     add(writeSummary)
   }
-
-  protected[summary] val executables: mutable.Map[String, (File, String)] = mutable.Map()
 }
 
 object SummaryQScript {
   import scala.collection.mutable.Map
+
+  /** Cache to have no duplicate jobs */
   protected[summary] val md5sumCache: Map[File, File] = Map()
 }

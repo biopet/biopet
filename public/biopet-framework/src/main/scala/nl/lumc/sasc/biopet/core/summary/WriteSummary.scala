@@ -20,6 +20,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   require(root.isInstanceOf[SummaryQScript], "root is not a SummaryQScript")
 
+  /** To access qscript for this summary */
   val qscript = root.asInstanceOf[SummaryQScript]
 
   @Input(doc = "deps", required = false)
@@ -43,8 +44,8 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     super.freezeFieldValues()
   }
 
+  /** Function to create summary */
   def run(): Unit = {
-
     val pipelineMap = {
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
@@ -100,6 +101,12 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }
   }
 
+  /**
+   * Convert summarizable to a summary map
+   * @param summarizable
+   * @param name
+   * @return
+   */
   def parseSummarizable(summarizable: Summarizable, name: String) = {
     val data = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
@@ -108,10 +115,20 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 
+  /**
+   * Parse files map to summary map
+   * @param files
+   * @return
+   */
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
     for ((key, file) <- files) yield key -> parseFile(file)
   }
 
+  /**
+   * parse single file summary map
+   * @param file
+   * @return
+   */
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
@@ -119,6 +136,11 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     map.toMap
   }
 
+  /**
+   * Retrive checksum from file
+   * @param checksumFile
+   * @return
+   */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }
