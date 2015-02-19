@@ -61,17 +61,6 @@ trait SummaryQScript extends BiopetQScript {
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles)
       addChecksum(file)
 
-    for ((_, sl) <- summarizables) {
-      for (s <- sl) {
-        s match {
-          case c: BiopetCommandLineFunctionTrait => {
-            executables += c.configName -> (new File(c.executable), c.getVersion)
-          }
-          case _ =>
-        }
-      }
-    }
-
     for ((_, file) <- this.summaryFiles)
       addChecksum(file)
 

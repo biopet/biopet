@@ -94,7 +94,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
-  def summaryFiles = Map()
+  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1) ++
+    (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
   def summarySettings = Map(
     "skip_metrics" -> skipMetrics,

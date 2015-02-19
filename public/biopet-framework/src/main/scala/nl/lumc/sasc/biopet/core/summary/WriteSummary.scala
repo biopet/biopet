@@ -48,10 +48,17 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     val pipelineMap = {
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
-      val executables = {
-        for ((name, (file, version)) <- qscript.executables) yield {
-          name -> Map("version" -> version, "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(file.getCanonicalPath, "N/A"))
-        }
+      val executables: Map[String, Any] = {
+        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
+          f match {
+            case f: BiopetCommandLineFunctionTrait => {
+              f.configName -> Map("version" -> f.getVersion,
+                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None))
+            }
+            case _ => throw new IllegalStateException("This should not be possible")
+          }
+
+        }).toMap
       }
 
       val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
