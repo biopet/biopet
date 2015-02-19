@@ -20,6 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
@@ -38,7 +39,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true)
+    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa")
   ), super.defaults)
 
   def makeSample(id: String) = new Sample(id)
@@ -80,9 +81,9 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript {
         merge.sortOrder = "coordinate"
         merge.output = bamFile
         add(merge)
-
-        //TODO: Add BigWIg track
       }
+
+      addAll(Bam2Wig(qscript, bamFile).functions)
 
       val macs2 = new Macs2CallPeak(qscript)
       macs2.treatment = bamFile

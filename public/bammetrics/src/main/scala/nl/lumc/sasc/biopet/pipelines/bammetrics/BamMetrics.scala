@@ -41,8 +41,6 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
   var wholeGenome = false
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on BamMetrics module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
     if (config.contains("target_bed")) {
       for (file <- config("target_bed").asList) {
         bedFiles +:= new File(file.toString)
@@ -63,7 +61,7 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
       add(BedToInterval(this, baitBedFile, inputBam, outputDir), true)
 
     for (bedFile <- bedFiles) {
-      val targetDir = outputDir + bedFile.getName.stripSuffix(".bed") + "/"
+      val targetDir = new File(outputDir, bedFile.getName.stripSuffix(".bed"))
       val targetInterval = BedToInterval(this, bedFile, inputBam, targetDir)
       add(targetInterval, true)
       add(CalculateHsMetrics(this, inputBam, if (baitIntervalFile != null) baitIntervalFile
@@ -71,12 +69,12 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
 
       val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default = 1.0)), true)
-      add(SamtoolsFlagstat(this, strictOutputBam))
+      add(SamtoolsFlagstat(this, strictOutputBam, targetDir))
       add(BiopetFlagstat(this, strictOutputBam, targetDir))
 
       val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
       add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default = 0.01)), true)
-      add(SamtoolsFlagstat(this, looseOutputBam))
+      add(SamtoolsFlagstat(this, looseOutputBam, targetDir))
       add(BiopetFlagstat(this, looseOutputBam, targetDir))
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
@@ -87,7 +85,7 @@ class BamMetrics(val root: Configurable) extends QScript with BiopetQScript {
 }
 
 object BamMetrics extends PipelineCommand {
-  def apply(root: Configurable, bamFile: File, outputDir: String): BamMetrics = {
+  def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir

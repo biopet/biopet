@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Cat
@@ -60,7 +62,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      val inputFastq: File = config("R1", required = true)
+      val inputFastq: File = config("R1")
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
@@ -72,7 +74,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.sampleId = sampleId
 
       protected def addJobs(): Unit = {
-        flexiprep.outputDir = libDir + "flexiprep/"
+        flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq
         flexiprep.init
         flexiprep.biopetScript
@@ -123,7 +125,6 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def init() {
-    if (!outputDir.endsWith("/")) outputDir += "/"
     if (transcriptome.isEmpty && tagsLibrary.isEmpty)
       throw new IllegalStateException("No transcriptome or taglib found")
     if (countBed.isEmpty)
@@ -138,10 +139,10 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     if (tagsLibrary.isEmpty) {
       val cdl = new SageCreateLibrary(this)
       cdl.input = transcriptome.get
-      cdl.output = outputDir + "taglib/tag.lib"
-      cdl.noAntiTagsOutput = outputDir + "taglib/no_antisense_genes.txt"
-      cdl.noTagsOutput = outputDir + "taglib/no_sense_genes.txt"
-      cdl.allGenesOutput = outputDir + "taglib/all_genes.txt"
+      cdl.output = new File(outputDir, "taglib/tag.lib")
+      cdl.noAntiTagsOutput = new File(outputDir, "taglib/no_antisense_genes.txt")
+      cdl.noTagsOutput = new File(outputDir, "taglib/no_sense_genes.txt")
+      cdl.allGenesOutput = new File(outputDir, "taglib/all_genes.txt")
       add(cdl)
       tagsLibrary = Some(cdl.output)
     }

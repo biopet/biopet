@@ -43,14 +43,17 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @param valueName Name of value
    */
   def loadConfigEnv(valueName: String) {
-    val globalFiles = sys.env.get(valueName).getOrElse("").split(":")
-    if (globalFiles.isEmpty) logger.info(valueName + " value not found, no global config is loaded")
-    for (globalFile <- globalFiles) {
-      val file: File = new File(globalFile)
-      if (file.exists()) {
-        logger.info("Loading config file: " + file)
-        loadConfigFile(file)
-      } else logger.warn(valueName + " value found but file does not exist, no global config is loaded")
+    sys.env.get(valueName) match {
+      case Some(globalFiles) => {
+        for (globalFile <- globalFiles.split(":")) {
+          val file: File = new File(globalFile)
+          if (file.exists) {
+            logger.info("Loading config file: " + file)
+            loadConfigFile(file)
+          } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
+        }
+      }
+      case _ => logger.info(valueName + " value not found, no global config is loaded")
     }
   }
 
@@ -133,14 +136,15 @@ class Config(var map: Map[String, Any]) extends Logging {
    */
   protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    if (contains(requestedIndex)) return foundCache(requestedIndex)
+    if (contains(requestedIndex)) foundCache(requestedIndex)
     else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
-      return defaultCache(requestedIndex)
-    } else throw new IllegalStateException("Value in config could not be found but it seems required, index: " + requestedIndex)
+      defaultCache(requestedIndex)
+    } else ConfigValue(requestedIndex, null, null, freeVar)
   }
 
-  def writeReport(id: String, directory: String): Unit = {
+  def writeReport(id: String, directory: File): Unit = {
+    directory.mkdirs()
 
     def convertIndexValuesToMap(input: List[(ConfigValueIndex, Any)], forceFreeVar: Option[Boolean] = None): Map[String, Any] = {
       input.foldLeft(Map[String, Any]())(
@@ -155,8 +159,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     }
 
     def writeMapToJsonFile(map: Map[String, Any], name: String): Unit = {
-      val file = new File(directory + "/" + id + "." + name + ".json")
-      file.getParentFile.mkdirs()
+      val file = new File(directory, id + "." + name + ".json")
       val writer = new PrintWriter(file)
       writer.write(ConfigUtils.mapToJson(map).spaces2)
       writer.close()
@@ -174,7 +177,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(Config.global.map, "input")
+    writeMapToJsonFile(this.map, "input")
     writeMapToJsonFile(found, "found")
     writeMapToJsonFile(effectiveFound, "effective.found")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")

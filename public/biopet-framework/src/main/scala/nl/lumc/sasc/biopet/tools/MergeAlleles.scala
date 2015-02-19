@@ -49,8 +49,8 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
   override val defaultVmem = "8G"
   memoryLimit = Option(4)
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
   }

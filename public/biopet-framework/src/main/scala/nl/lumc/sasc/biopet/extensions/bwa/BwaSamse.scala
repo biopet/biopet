@@ -16,7 +16,7 @@ class BwaSamse(val root: Configurable) extends Bwa {
   var sai: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _

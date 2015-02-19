@@ -52,10 +52,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @throws FileNotFoundException if the FastQC data file can not be found.
    * @throws IllegalStateException if the module lines have no content or mapping is empty.
    */
-  @throws(classOf[FileNotFoundException])
-  @throws(classOf[IllegalStateException])
   def qcModules: Map[String, FastQCModule] = {
-
     val fqModules = Source.fromFile(dataFile)
       // drop all the characters before the first module delimiter (i.e. '>>')
       .dropWhile(_ != '>')
@@ -93,14 +90,16 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @throws NoSuchElementException when the "Basic Statistics" key does not exist in the mapping or
    *                                when a line starting with "Encoding" does not exist.
    */
-  @throws(classOf[NoSuchElementException])
-  def encoding: String =
-    qcModules("Basic Statistics")
-      .lines
-      .dropWhile(!_.startsWith("Encoding"))
-      .head
-      .stripPrefix("Encoding\t")
-      .stripSuffix("\t")
+  def encoding: String = {
+    if (dataFile.exists) // On a dry run this file does not yet exist
+      qcModules("Basic Statistics") //FIXME: not save
+        .lines
+        .dropWhile(!_.startsWith("Encoding"))
+        .head
+        .stripPrefix("Encoding\t")
+        .stripSuffix("\t")
+    else ""
+  }
 
   /** Case class representing a known adapter sequence */
   protected case class AdapterSequence(name: String, seq: String)
@@ -111,32 +110,33 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @return a [[Set]] of [[AdapterSequence]] objects.
    */
   def foundAdapters: Set[AdapterSequence] = {
+    if (dataFile.exists) { // On a dry run this file does not yet exist
+      /** Returns a list of adapter and/or contaminant sequences known to FastQC */
+      def getFastqcSeqs(file: Option[File]): Set[AdapterSequence] = file match {
+        case None => Set.empty[AdapterSequence]
+        case Some(f) =>
+          (for {
+            line <- Source.fromFile(f).getLines()
+            if !line.startsWith("#")
+            values = line.split("\t+")
+            if values.size >= 2
+          } yield AdapterSequence(values(0), values(1))).toSet
+      }
 
-    /** Returns a list of adapter and/or contaminant sequences known to FastQC */
-    def getFastqcSeqs(file: Option[File]): Set[AdapterSequence] = file match {
-      case None => Set.empty[AdapterSequence]
-      case Some(f) =>
-        (for {
-          line <- Source.fromFile(f).getLines()
-          if !line.startsWith("#")
-          values = line.split("\t+")
-          if values.size >= 2
-        } yield AdapterSequence(values(0), values(1))).toSet
-    }
+      val found = qcModules.get("Overrepresented sequences") match {
+        case None => Seq.empty[String]
+        case Some(qcModule) =>
+          for (
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            values = line.split("\t") if values.size >= 4
+          ) yield values(3)
+      }
 
-    val found = qcModules.get("Overrepresented sequences") match {
-      case None => Seq.empty[String]
-      case Some(qcModule) =>
-        for (
-          line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
-          values = line.split("\t") if values.size >= 4
-        ) yield values(3)
-    }
-
-    // select full sequences from known adapters and contaminants
-    // based on overrepresented sequences results
-    (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
-      .filter(x => found.exists(_.startsWith(x.name)))
+      // select full sequences from known adapters and contaminants
+      // based on overrepresented sequences results
+      (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
+        .filter(x => found.exists(_.startsWith(x.name)))
+    } else Set()
   }
 
   /** Summary of the FastQC run, stored in a [[Json]] object */
@@ -164,7 +164,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
 object Fastqc {
 
-  def apply(root: Configurable, fastqfile: File, outDir: String): Fastqc = {
+  def apply(root: Configurable, fastqfile: File, outDir: File): Fastqc = {
     val fastqcCommand = new Fastqc(root)
     fastqcCommand.fastqfile = fastqfile
     var filename: String = fastqfile.getName()
@@ -172,8 +172,8 @@ object Fastqc {
     if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.size - 5)
     if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.size - 6)
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
-    fastqcCommand.output = new File(outDir + "/" + filename + "_fastqc.zip")
-    fastqcCommand.afterGraph
+    fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")
+    fastqcCommand.beforeGraph
     fastqcCommand
   }
 }

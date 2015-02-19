@@ -33,16 +33,15 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   var samples: List[String] = Nil
 
   def init() {
-    if (outputFile == null) outputFile = outputDir + outputName + ".vcf.gz"
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
+    require(outputName != null, "Outputname is null")
+    if (outputFile == null) outputFile = new File(outputDir, outputName + ".vcf.gz")
   }
 
   def biopetScript() {
     addGenotypeGVCFs(inputGvcfs, outputFile)
     if (!samples.isEmpty) {
-      if (samples.size > 1) addSelectVariants(outputFile, samples, outputDir + "samples/", "all")
-      for (sample <- samples) addSelectVariants(outputFile, List(sample), outputDir + "samples/", sample)
+      if (samples.size > 1) addSelectVariants(outputFile, samples, new File(outputDir, "samples/"), "all")
+      for (sample <- samples) addSelectVariants(outputFile, List(sample), new File(outputDir, "samples/"), sample)
     }
   }
 
@@ -52,8 +51,8 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
     return genotypeGVCFs.out
   }
 
-  def addSelectVariants(inputFile: File, samples: List[String], outputDir: String, name: String) {
-    val selectVariants = SelectVariants(this, inputFile, outputDir + name + ".vcf.gz")
+  def addSelectVariants(inputFile: File, samples: List[String], outputDir: File, name: String) {
+    val selectVariants = SelectVariants(this, inputFile, new File(outputDir, name + ".vcf.gz"))
     selectVariants.excludeNonVariants = true
     for (sample <- samples) selectVariants.sample_name :+= sample
     add(selectVariants)

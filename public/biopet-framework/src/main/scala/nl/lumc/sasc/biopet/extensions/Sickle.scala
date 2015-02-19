@@ -53,7 +53,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
 
-  override def afterGraph {
+  override def beforeGraph {
     if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 

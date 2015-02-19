@@ -13,7 +13,7 @@ class IndelRealigner(val root: Configurable) extends org.broadinstitute.gatk.que
 }
 
 object IndelRealigner {
-  def apply(root: Configurable, input: File, targetIntervals: File, outputDir: String): IndelRealigner = {
+  def apply(root: Configurable, input: File, targetIntervals: File, outputDir: File): IndelRealigner = {
     val ir = new IndelRealigner(root)
     ir.input_file :+= input
     ir.targetIntervals = targetIntervals

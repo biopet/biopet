@@ -54,7 +54,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")
 
-  override def afterGraph {
+  override def beforeGraph {
     if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
     //require(reference.exists)
   }
@@ -72,7 +72,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
 }
 
 object CollectInsertSizeMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectInsertSizeMetrics = {
+  def apply(root: Configurable, input: File, outputDir: File): CollectInsertSizeMetrics = {
     val collectInsertSizeMetrics = new CollectInsertSizeMetrics(root)
     collectInsertSizeMetrics.input = input
     collectInsertSizeMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".insertsizemetrics")
