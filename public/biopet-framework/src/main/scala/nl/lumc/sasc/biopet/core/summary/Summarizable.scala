@@ -24,10 +24,10 @@ trait Summarizable extends Configurable {
   def summaryStats: Map[String, Any]
 
   /**
-   * This function is used to merge
-   * @param v1
-   * @param v2
-   * @param key
+   * This function is used to merge value that are found at the same path in the map. Default there will throw a exception at conflicting values.
+   * @param v1 Value of new map
+   * @param v2 Value of old map
+   * @param key Key of value
    * @return
    */
   def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
