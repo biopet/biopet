@@ -36,6 +36,7 @@
         <module>yamsvp</module>
         <module>bam2wig</module>
         <module>carp</module>
+	<module>toucan</module>
     </modules>
     
     <properties>

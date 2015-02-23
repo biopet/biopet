@@ -40,17 +40,11 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
 }
 
 object BiopetFlagstat extends ToolCommand {
-  def apply(root: Configurable, input: File, output: File): BiopetFlagstat = {
-    val flagstat = new BiopetFlagstat(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
-  }
-  def apply(root: Configurable, input: File, outputDir: String): BiopetFlagstat = {
+  def apply(root: Configurable, input: File, outputDir: File): BiopetFlagstat = {
     val flagstat = new BiopetFlagstat(root)
     flagstat.input = input
     flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
-    return flagstat
+    flagstat
   }
 
   case class Args(inputFile: File = null, region: Option[String] = None) extends AbstractArgs
