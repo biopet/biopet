@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.tools.Seqstat
 import nl.lumc.sasc.biopet.tools.FastqSync
 
