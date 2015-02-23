@@ -66,7 +66,7 @@ trait SummaryQScript extends BiopetQScript {
    */
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String], libraryId: Option[String]): Unit = {
     if (libraryId.isDefined) require(sampleId.isDefined) // Library always require a sample
-    summarizables += (name, sampleId, libraryId) -> (summarizable :: summarizables.getOrElse((name, sampleId, libraryId), Nil))
+    summarizables.get((name, sampleId, libraryId)).foreach(summarizables += (name, sampleId, libraryId) -> _)
   }
 
   /**
