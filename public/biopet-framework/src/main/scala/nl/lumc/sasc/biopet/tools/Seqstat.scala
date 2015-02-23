@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.JavaConverters._
@@ -28,7 +29,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * @param root Configuration object for the pipeline
  */
-class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
@@ -42,10 +43,21 @@ class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   override def commandLine = super.commandLine + required("-i", input) + " > " + required(output)
 
-  def summary: Json = {
-    val json = Parse.parseOption(Source.fromFile(output).mkString)
-    if (json.isEmpty) jNull
-    else json.get.fieldOrEmptyObject("stats")
+  def summaryStats: Map[String, Any] = {
+    val map = ConfigUtils.fileToConfigMap(output)
+
+    ConfigUtils.any2map(map.getOrElse("stats", Map()))
+  }
+
+  def summaryFiles: Map[String, File] = Map()
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) if key == "len_min" => if (v1 < v2) v1 else v2
+      case (v1: Int, v2: Int) if key == "len_max" => if (v1 > v2) v1 else v2
+      case (v1: Int, v2: Int)                     => v1 + v2
+      case _                                      => v1
+    }
   }
 }
 
@@ -69,65 +81,6 @@ object Seqstat extends ToolCommand {
     seqstat.input = fastqfile
     seqstat.output = new File(outDir, fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
-  }
-
-  def mergeSummaries(jsons: List[Json]): Json = {
-    def addJson(json: Json, total: mutable.Map[String, Long]) {
-      for (key <- json.objectFieldsOrEmpty) {
-        if (json.field(key).get.isObject) addJson(json.field(key).get, total)
-        else if (json.field(key).get.isNumber) {
-          val number = json.field(key).get.numberOrZero.toLong
-          if (total.contains(key)) {
-            if (key == "len_min") {
-              if (total(key) > number) total(key) = number
-            } else if (key == "len_max") {
-              if (total(key) < number) total(key) = number
-            } else total(key) += number
-          } else total += (key -> number)
-        }
-      }
-    }
-
-    var basesTotal: mutable.Map[String, Long] = mutable.Map()
-    var readsTotal: mutable.Map[String, Long] = mutable.Map()
-    var encoding: Set[Json] = Set()
-    for (json <- jsons) {
-      encoding += json.fieldOrEmptyString("qual_encoding")
-
-      val bases = json.fieldOrEmptyObject("bases")
-      addJson(bases, basesTotal)
-
-      val reads = json.fieldOrEmptyObject("reads")
-      addJson(reads, readsTotal)
-    }
-    ("bases" := (
-      ("num_n" := basesTotal("num_n")) ->:
-      ("num_total" := basesTotal("num_total")) ->:
-      ("num_qual_gte" := (
-        ("1" := basesTotal("1")) ->:
-        ("10" := basesTotal("10")) ->:
-        ("20" := basesTotal("20")) ->:
-        ("30" := basesTotal("30")) ->:
-        ("40" := basesTotal("40")) ->:
-        ("50" := basesTotal("50")) ->:
-        ("60" := basesTotal("60")) ->:
-        jEmptyObject)) ->: jEmptyObject)) ->:
-        ("reads" := (
-          ("num_with_n" := readsTotal("num_with_n")) ->:
-          ("num_total" := readsTotal("num_total")) ->:
-          ("len_min" := readsTotal("len_min")) ->:
-          ("len_max" := readsTotal("len_max")) ->:
-          ("num_mean_qual_gte" := (
-            ("1" := readsTotal("1")) ->:
-            ("10" := readsTotal("10")) ->:
-            ("20" := readsTotal("20")) ->:
-            ("30" := readsTotal("30")) ->:
-            ("40" := readsTotal("40")) ->:
-            ("50" := readsTotal("50")) ->:
-            ("60" := readsTotal("60")) ->:
-            jEmptyObject)) ->: jEmptyObject)) ->:
-            ("qual_encoding" := encoding.head) ->:
-            jEmptyObject
   }
 
   import FqEncoding._
