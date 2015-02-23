@@ -60,15 +60,14 @@ object Seqstat extends ToolCommand {
   def apply(root: Configurable, input: File, output: File): Seqstat = {
     val seqstat = new Seqstat(root)
     seqstat.input = input
-    seqstat.output = output
+    seqstat.output = new File(output, input.getName.substring(0, input.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
   }
 
   def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
     val seqstat = new Seqstat(root)
-    val ext = fastqfile.getName.substring(fastqfile.getName.lastIndexOf("."))
     seqstat.input = fastqfile
-    seqstat.output = new File(outDir + fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
+    seqstat.output = new File(outDir, fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
   }
 
