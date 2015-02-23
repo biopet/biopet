@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.FreeC
+import nl.lumc.sasc.biopet.extensions.{ RscriptCommandLineFunction, FreeC }
 import org.broadinstitute.gatk.queue.QScript
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
@@ -34,6 +34,16 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     FreeC.bamFile = bamFile
     FreeC.outputPath = outputDirectory
     add(FreeC)
+
+    /*
+    * These scripts will wait for FreeC to Finish
+    *
+    * R-scripts to plot FreeC results
+    * */
+    val FCCnvPlot = new FreeCCNVPlot(this)
+    FCCnvPlot.input = FreeC.CNVoutput
+    FCCnvPlot.output = new File(outputDirectory, "freec_cnv.png")
+    add(FCCnvPlot)
 
   }
 }

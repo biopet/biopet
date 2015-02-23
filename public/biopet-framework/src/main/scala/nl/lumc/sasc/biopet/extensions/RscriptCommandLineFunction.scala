@@ -21,6 +21,7 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
   protected var script: File = _
   protected var scriptName: String = _
   protected var arguments: ListBuffer[String] = ListBuffer()
+  override val defaultVmem: String = "4G"
 
   executable = config("exe", default = "Rscript", submodule = "R")
 
@@ -41,20 +42,30 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
    *
    * @param filename RScript file location
    */
-  def setScript(filename: File): Unit = {
-    require(filename.getAbsoluteFile.exists(), "Need to specify file-path to rscript")
-    script = filename
-    scriptName = filename.getName
+  def setScript(filename: String): Unit = {
+    val f: File = new File(filename)
+    f.getAbsoluteFile.exists() match {
+      case true => {
+        script = f
+        scriptName = f.getName
+      }
+      case false => setScript(f, "")
+    }
+
   }
 
   def setScript(filename: File, subpackage: String): Unit = {
     val RScript: File = new File(".queue/tmp/" + subpackage + filename)
     if (!RScript.getParentFile.exists) RScript.getParentFile.mkdirs
+
     val is = getClass.getResourceAsStream(subpackage + RScript.getName)
     val os = new FileOutputStream(RScript)
+
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
-    setScript(RScript)
+
+    script = RScript
+    scriptName = RScript.getName
   }
 
   override def cmdLine: String = {
