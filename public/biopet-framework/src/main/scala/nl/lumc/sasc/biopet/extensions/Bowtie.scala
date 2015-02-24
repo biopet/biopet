@@ -23,16 +23,16 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file R1", shortName = "R1")
-  var R1: File = _
+  var R1: File = null
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
-  var R2: File = _
+  var R2: Option[File] = None
 
-  @Input(doc = "The reference file for the bam files.", shortName = "R")
+  @Input(doc = "The reference file for the bam files.", shortName = "R", required = true)
   var reference: File = config("reference")
 
-  @Output(doc = "Output file SAM", shortName = "output")
-  var output: File = _
+  @Output(doc = "Output file SAM", shortName = "output", required = true)
+  var output: File = null
 
   executable = config("exe", default = "bowtie", freeVar = false)
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r
@@ -67,8 +67,13 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--maxbts", maxbts) +
       optional("--maqerr", maqerr) +
       required(reference) +
-      required(R1) +
-      optional(R2) +
+      (R2 match {
+        case Some(r2) => {
+          required("-1", R1) +
+            optional("-2", r2)
+        }
+        case _ => required(R1)
+      }) +
       " > " + required(output)
   }
 }

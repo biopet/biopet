@@ -368,7 +368,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   def addBowtie(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
-    if (paired) bowtie.R2 = R2
+    if (paired) bowtie.R2 = Some(R2)
     bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
