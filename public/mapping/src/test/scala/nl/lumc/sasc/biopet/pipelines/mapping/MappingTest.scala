@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions._
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -12,10 +13,7 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Cutadapt
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
-import nl.lumc.sasc.biopet.pipelines.flexiprep._
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{ SeqtkSeq, Cutadapt, Fastqc }
 import nl.lumc.sasc.biopet.tools.{ Seqstat, FastqSync }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
