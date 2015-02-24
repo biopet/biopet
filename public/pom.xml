@@ -45,9 +45,19 @@
     </properties>
     
     <build>
+        <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+        <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>${basedir}/src/test/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>${basedir}/src/main/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>

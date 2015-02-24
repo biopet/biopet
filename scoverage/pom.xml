@@ -38,11 +38,14 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>${basedir}/target/src/main</sourceDirectory>
+        <sourceDirectory>${basedir}/target/src/main/scala</sourceDirectory>
         <testSourceDirectory>${basedir}/target/src/test/scala</testSourceDirectory>
         <testResources>
             <testResource>
                 <directory>${basedir}/target/src/test/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
             </testResource>
         </testResources>
         <plugins>
