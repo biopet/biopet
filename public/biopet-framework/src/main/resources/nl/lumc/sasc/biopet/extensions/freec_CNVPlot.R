@@ -1,24 +1,29 @@
+library('optparse')
 # Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
+option_list <- list(
+    make_option(c("-p", "--ploidy"), default=2, type="integer", dest="ploidy"),
+    make_option(c("-i", "--input"), dest="input"),
+    make_option(c("-o", "--output"), dest="output")
+    )
+
+parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
+opt = parse_args(parser)
+
+
 #
-#args <- commandArgs(TRUE)
-#chromosome <- args[1]
-#ploidy <- args[2]
-#input <- args[3]
-#output <- args[4]
+# Load Data
+#
 
-
-args <- commandArgs()
-
-dataTable <-read.table(args[5], header=TRUE);
+dataTable <-read.table( opt$input , header=TRUE);
 
 ratio<-data.frame(dataTable)
-ploidy <- type.convert(args[4])
+ploidy <- opt$ploidy
+chromosomes <- levels(ratio$Chromosome)
+ppi <- 300
+plot_margins <- c(3,4,1,2)+0.1
+label_positions <- c(2,0.5,0)
 
-png(filename = paste(args[5],".png",sep = ""), width = 1180, height = 1180,
-    units = "px", pointsize = 20, bg = "white", res = NA)
-plot(1:10)
-op <- par(mfrow = c(5,5))
 
 maxLevelToPlot <- 3
 for (i in c(1:length(ratio$Ratio))) {
@@ -27,29 +32,98 @@ for (i in c(1:length(ratio$Ratio))) {
 	}
 }
 
-for (i in c(1:22,'X','Y')) {
-	tt <- which(ratio$Chromosome==i)
-	if (length(tt)>0) {
-	 plot(ratio$Start[tt],ratio$Ratio[tt]*ploidy,ylim = c(0,maxLevelToPlot*ploidy),xlab = paste ("position, chr",i),ylab = "normalized copy number profile",pch = ".",col = colors()[88])
-	 tt <- which(ratio$Chromosome==i  & ratio$CopyNumber>ploidy )
-	 points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
-	
-	tt <- which(ratio$Chromosome==i  & ratio$Ratio==maxLevelToPlot & ratio$CopyNumber>ploidy)	
-	points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
-	 
-	tt <- which(ratio$Chromosome==i  & ratio$CopyNumber<ploidy & ratio$CopyNumber!= -1)
-	 points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[461])
-	 tt <- which(ratio$Chromosome==i)
-	 
-	 #UNCOMMENT HERE TO SEE THE PREDICTED COPY NUMBER LEVEL:
-	 #points(ratio$Start[tt],ratio$CopyNumber[tt], pch = ".", col = colors()[24],cex=4)
-	 
-	}
-	tt <- which(ratio$Chromosome==i)
-	
+#
+# Plot the graphs per chromosome
+#
+
+for (i in chromosomes) {
+
+    png(filename = paste(opt$output, ".", i,".png",sep=""), width = 4 * ppi, height = 2.5 * ppi,
+        res=ppi, bg = "white")
+    par(mfrow = c(1,1))
+    par(mar=plot_margins)
+    par(mgp=label_positions)
+
+
+    tt <- which(ratio$Chromosome==i)
+    if (length(tt)>0) {
+        plot(ratio$Start[tt],
+                ratio$Ratio[tt]*ploidy,
+                ylim = c(0,maxLevelToPlot*ploidy),
+                xlab = paste ("position, chr",i),
+                ylab = "normalized CN",
+                pch = ".",
+                col = colors()[88])
+
+        title(outer=TRUE)
+        tt <- which(ratio$Chromosome==i  & ratio$CopyNumber>ploidy )
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
+
+        tt <- which(ratio$Chromosome==i  & ratio$Ratio==maxLevelToPlot & ratio$CopyNumber>ploidy)
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
+
+        tt <- which(ratio$Chromosome==i  & ratio$CopyNumber<ploidy & ratio$CopyNumber!= -1)
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[461])
+        tt <- which(ratio$Chromosome==i)
+
+        #UNCOMMENT HERE TO SEE THE PREDICTED COPY NUMBER LEVEL:
+        #points(ratio$Start[tt],ratio$CopyNumber[tt], pch = ".", col = colors()[24],cex=4)
+    }
+    #tt <- which(ratio$Chromosome==i)
+
 	#UNCOMMENT HERE TO SEE THE EVALUATED MEDIAN LEVEL PER SEGMENT:
 	#points(ratio$Start[tt],ratio$MedianRatio[tt]*ploidy, pch = ".", col = colors()[463],cex=4)
-	
+
+    dev.off()
+}
+
+
+
+
+
+
+
+
+
+
+png(filename = opt$output, width = 16 * ppi, height = 10 * ppi,
+    res=ppi, bg = "white")
+par(mfrow = c(6,4))
+par(mar=plot_margins)
+par(mgp=label_positions)
+
+for (i in chromosomes) {
+    tt <- which(ratio$Chromosome==i)
+    if (length(tt)>0) {
+        plot(ratio$Start[tt],
+                ratio$Ratio[tt]*ploidy,
+                ylim = c(0,maxLevelToPlot*ploidy),
+                xlab = paste ("position, chr",i),
+                ylab = "normalized CN",
+                pch = ".",
+                col = colors()[88])
+
+        tt <- which(ratio$Chromosome==i  & ratio$CopyNumber>ploidy )
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
+
+        tt <- which(ratio$Chromosome==i  & ratio$Ratio==maxLevelToPlot & ratio$CopyNumber>ploidy)
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
+
+        tt <- which(ratio$Chromosome==i  & ratio$CopyNumber<ploidy & ratio$CopyNumber!= -1)
+        points(ratio$Start[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[461])
+        tt <- which(ratio$Chromosome==i)
+
+        #UNCOMMENT HERE TO SEE THE PREDICTED COPY NUMBER LEVEL:
+        #points(ratio$Start[tt],ratio$CopyNumber[tt], pch = ".", col = colors()[24],cex=4)
+	}
+	#tt <- which(ratio$Chromosome==i)
+
+	#UNCOMMENT HERE TO SEE THE EVALUATED MEDIAN LEVEL PER SEGMENT:
+	#points(ratio$Start[tt],ratio$MedianRatio[tt]*ploidy, pch = ".", col = colors()[463],cex=4)
+
 }
 
 dev.off()
+
+
+
