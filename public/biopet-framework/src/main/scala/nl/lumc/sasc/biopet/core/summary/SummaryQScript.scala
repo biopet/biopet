@@ -87,7 +87,7 @@ trait SummaryQScript extends BiopetQScript {
 
         // Need to not write a md5 file outside the outputDir
         if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
-          md5sum.output = new File(outputDir, ".queue" + File.separator + "md5" + file.getAbsolutePath)
+          md5sum.output = new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
 
         writeSummary.deps :+= md5sum.output
         SummaryQScript.md5sumCache += file -> md5sum.output
