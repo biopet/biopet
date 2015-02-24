@@ -9,19 +9,18 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+
 import scala.io.Source
 import scala.util.matching.Regex
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -29,7 +28,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
 
   javaMainClass = getClass.getName
 
@@ -63,9 +62,9 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
       required("-p", outputFastq2) + " > " +
       required(outputStats)
 
-  // summary statistics
-  def summary: Json = {
+  def summaryFiles: Map[String, File] = Map()
 
+  def summaryStats: Map[String, Any] = {
     val regex = new Regex("""Filtered (\d*) reads from first read file.
                             |Filtered (\d*) reads from second read file.
                             |Synced read files contain (\d*) reads.""".stripMargin,
@@ -83,10 +82,17 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
         }
       } else (0, 0, 0)
 
-    ("num_reads_discarded_R1" := countFilteredR1) ->:
-      ("num_reads_discarded_R2" := countFilteredR2) ->:
-      ("num_reads_kept" := countRLeft) ->:
-      jEmptyObject
+    Map("num_reads_discarded_R1" -> countFilteredR1,
+      "num_reads_discarded_R2" -> countFilteredR2,
+      "num_reads_kept" -> countRLeft
+    )
+  }
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) => v1 + v2
+      case _                  => v1
+    }
   }
 }
 
@@ -165,30 +171,6 @@ object FastqSync extends ToolCommand {
     syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream)
 
     (numDiscA, numDiscB, numKept)
-  }
-
-  /** Function to merge this tool's summary with summaries from other objects */
-  // TODO: refactor this into the object? At least make it work on the summary object
-  def mergeSummaries(jsons: List[Json]): Json = {
-
-    val (read1FilteredCount, read2FilteredCount, readsLeftCount) = jsons
-      // extract the values we require from each JSON object into tuples
-      .map {
-        case json =>
-          (json.field("num_reads_discarded_R1").get.numberOrZero.toInt,
-            json.field("num_reads_discarded_R2").get.numberOrZero.toInt,
-            json.field("num_reads_kept").get.numberOrZero.toInt)
-      }
-      // reduce the tuples
-      .reduceLeft {
-        (x: (Int, Int, Int), y: (Int, Int, Int)) =>
-          (x._1 + y._1, x._2 + y._2, x._3 + y._3)
-      }
-
-    ("num_reads_discarded_R1" := read1FilteredCount) ->:
-      ("num_reads_discarded_R2" := read2FilteredCount) ->:
-      ("num_reads_kept" := readsLeftCount) ->:
-      jEmptyObject
   }
 
   case class Args(refFastq: File = new File(""),

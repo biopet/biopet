@@ -33,7 +33,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var outputFiles: List[File] = Nil
 
   @Argument(required = true)
-  var outputDirectory: String = _
+  var outputDirectory: File = null
 
   executable = config("exe", default = "run_gubbins.py")
   var outgroup: Option[String] = config("outgroup")
@@ -49,7 +49,8 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def beforeGraph: Unit = {
     super.beforeGraph
-    jobLocalDir = new File(outputDirectory)
+    require(outputDirectory != null)
+    jobLocalDir = outputDirectory
     if (prefix.isEmpty) prefix = Some(fastafile.getName)
     val out: List[String] = List(".recombination_predictions.embl",
       ".recombination_predictions.gff",

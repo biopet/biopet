@@ -15,7 +15,6 @@ import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGr
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Cutadapt
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Sickle
 import nl.lumc.sasc.biopet.pipelines.flexiprep._
 import nl.lumc.sasc.biopet.tools.{ Seqstat, FastqSync }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -62,8 +61,8 @@ class MappingTest extends TestNGSuite with Matchers {
 
     mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq")
     if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq"))
-    mapping.sampleId = "1"
-    mapping.libId = "1"
+    mapping.sampleId = Some("1")
+    mapping.libId = Some("1")
     mapping.script()
 
     //Flexiprep

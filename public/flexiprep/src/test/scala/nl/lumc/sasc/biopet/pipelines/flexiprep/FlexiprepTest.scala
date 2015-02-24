@@ -10,7 +10,7 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.extensions.{ Sickle, Gzip, Zcat }
 import nl.lumc.sasc.biopet.tools.Seqstat
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -54,8 +54,8 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
     flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
     if (paired) flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq" + (if (zipped) ".gz" else "")))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
+    flexiprep.sampleId = Some("1")
+    flexiprep.libId = Some("1")
     flexiprep.script()
 
     flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (

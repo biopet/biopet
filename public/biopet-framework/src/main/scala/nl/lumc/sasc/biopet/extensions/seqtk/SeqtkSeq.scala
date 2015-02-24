@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
@@ -23,7 +24,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Wrapper for the seqtk seq subcommand.
  * Written based on seqtk version 1.0-r63-dirty.
  */
-class SeqtkSeq(val root: Configurable) extends Seqtk {
+class SeqtkSeq(val root: Configurable) extends Seqtk with Summarizable {
 
   /** input file */
   @Input(doc = "Input file (FASTQ or FASTA)")
@@ -80,6 +81,10 @@ class SeqtkSeq(val root: Configurable) extends Seqtk {
 
   /** shift quality by '(-Q) - 33' */
   var V: Boolean = config("V", default = false)
+
+  def summaryStats: Map[String, Any] = Map()
+
+  def summaryFiles: Map[String, File] = Map()
 
   def cmdLine = {
     required(executable) +

@@ -21,6 +21,9 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 
+  override val defaultVmem = "4G"
+  override val defaultThreads = 3
+
   protected var outputDir: File = _
 
   /**
@@ -161,8 +164,8 @@ object VcfStats extends ToolCommand {
     val intervals: List[Interval] = (
       for (
         seq <- header.getSequenceDictionary.getSequences;
-        chunks = seq.getSequenceLength / 10000000;
-        i <- 1 until chunks
+        chunks = (seq.getSequenceLength / 10000000) + (if (seq.getSequenceLength % 10000000 == 0) 0 else 1);
+        i <- 1 to chunks
       ) yield {
         val size = seq.getSequenceLength / chunks
         val begin = size * (i - 1) + 1

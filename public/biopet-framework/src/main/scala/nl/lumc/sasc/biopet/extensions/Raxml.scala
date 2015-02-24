@@ -48,7 +48,7 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   var f: String = "d"
 
   @Argument(doc = "Output directory", required = true)
-  var w: String = _
+  var w: File = null
 
   var noBfgs: Boolean = config("no_bfgs", default = false)
 
@@ -65,6 +65,7 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   var executableThreads: Option[String] = config("exe_pthreads")
 
   override def beforeGraph {
+    require(w != null)
     if (threads == 0) threads = getThreads(defaultThreads)
     executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
     super.beforeGraph
@@ -73,24 +74,24 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
       case "d" if b.isEmpty => {
         out +:= getBestTreeFile
         for (t <- 0 until N.getOrElse(1)) {
-          out +:= new File(w + File.separator + "RAxML_log." + n + ".RUN." + t)
-          out +:= new File(w + File.separator + "RAxML_parsimonyTree." + n + ".RUN." + t)
-          out +:= new File(w + File.separator + "RAxML_result." + n + ".RUN." + t)
+          out +:= new File(w, "RAxML_log." + n + ".RUN." + t)
+          out +:= new File(w, "RAxML_parsimonyTree." + n + ".RUN." + t)
+          out +:= new File(w, "RAxML_result." + n + ".RUN." + t)
         }
       }
       case "d" if b.isDefined => out +:= getBootstrapFile
       case "b" => {
-        out +:= new File(w + File.separator + "RAxML_bipartitionsBranchLabels." + n)
-        out +:= new File(w + File.separator + "RAxML_bipartitions." + n)
+        out +:= new File(w, "RAxML_bipartitionsBranchLabels." + n)
+        out +:= new File(w, "RAxML_bipartitions." + n)
       }
       case _ =>
     }
   }
 
-  def getBestTreeFile: File = new File(w + File.separator + "RAxML_bestTree." + n)
-  def getBootstrapFile: File = new File(w + File.separator + "RAxML_bootstrap." + n)
-  def getBipartitionsFile: File = new File(w + File.separator + "RAxML_bipartitions." + n)
-  def getInfoFile: File = new File(w + File.separator + "RAxML_info." + n)
+  def getBestTreeFile: File = new File(w, "RAxML_bestTree." + n)
+  def getBootstrapFile: File = new File(w, "RAxML_bootstrap." + n)
+  def getBipartitionsFile: File = new File(w, "RAxML_bipartitions." + n)
+  def getInfoFile: File = new File(w, "RAxML_info." + n)
 
   def cmdLine = required(executable) +
     required("-m", m) +
@@ -103,6 +104,6 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
     optional("-f", f) +
     optional("-t", t) +
     optional("-z", z) +
-    conditional(noBfgs, "--no-bgfs") +
+    conditional(noBfgs, "--no-bfgs") +
     required("-T", threads)
 }
