@@ -84,6 +84,11 @@ trait SummaryQScript extends BiopetQScript {
     def addChecksum(file: File): Unit = {
       if (writeSummary.md5sum && !SummaryQScript.md5sumCache.contains(file)) {
         val md5sum = Md5sum(this, file)
+
+        // Need to not write a md5 file outside the outputDir
+        if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
+          md5sum.output = new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+
         writeSummary.deps :+= md5sum.output
         SummaryQScript.md5sumCache += file -> md5sum.output
         add(md5sum)
