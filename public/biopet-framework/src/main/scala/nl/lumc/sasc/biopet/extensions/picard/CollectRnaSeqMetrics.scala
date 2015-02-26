@@ -9,6 +9,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
  * Wrapper for the Picard CollectRnaSeqMetrics tool
@@ -55,6 +56,15 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard {
 
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
+
+  override def beforeGraph: Unit = {
+    val validFlags = StrandSpecificity.values.map(_.toString).toSet
+    strandSpecificity match {
+      case Some(s) => require(validFlags.contains(s),
+        s"Invalid Picard CollectRnaSeqMetrics strand specificity flag: $s. Valid values are " + validFlags.mkString(", "))
+      case None    => ;
+    }
+  }
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
