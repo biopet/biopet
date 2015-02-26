@@ -26,7 +26,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     addSummaryJobs
   }
 
-  def makeVariantcalling(multisample:Boolean = false) = {
+  def makeVariantcalling(multisample: Boolean = false) = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def configName = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
@@ -132,6 +132,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
         if (config("library_variantcalling", default = false).asBoolean && (bamFile.isDefined || preProcessBam.isDefined)) {
           val vc = makeVariantcalling(multisample = false)
+          vc.namePrefix = sampleId + "-" + libId
           vc.outputDir = new File(libDir, "variantcalling")
           if (preProcessBam.isDefined) vc.inputBams = preProcessBam.get :: Nil
           else vc.inputBams = bamFile.get :: Nil
@@ -171,14 +172,16 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       (lib._2.bamFile, lib._2.preProcessBam) match {
         case (_, Some(file)) => Some(file)
         case (Some(file), _) => Some(file)
-        case _ => None
-      }}).flatten.toList)
+        case _               => None
+      }
+    }).flatten.toList)
 
     def addJobs(): Unit = {
       addPerLibJobs()
 
       if (config("single_sample_variantcalling", default = false).asBoolean && preProcessBam.isDefined) {
         val vc = makeVariantcalling(multisample = false)
+        vc.namePrefix = sampleId
         vc.outputDir = new File(sampleDir, "variantcalling")
         vc.inputBams = preProcessBam.get :: Nil
         vc.init
@@ -191,6 +194,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
   def addMultiSampleJobs(): Unit = {
     if (config("multisample_sample_variantcalling", default = true).asBoolean) {
       val vc = makeVariantcalling(multisample = true)
+      vc.namePrefix = "multisample"
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.map(_._2.preProcessBam).flatten.toList
       vc.init
