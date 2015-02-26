@@ -193,7 +193,6 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
 
-
         if (config("single_sample_variantcalling", default = false).asBoolean) {
           val vc = makeVariantcalling(multisample = false)
           vc.sampleId = Some(sampleId)

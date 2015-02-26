@@ -5,7 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.tools.{VcfStats, VcfFilter, MpileupToVcf}
+import nl.lumc.sasc.biopet.tools.{ VcfStats, VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 
