@@ -312,8 +312,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
 
       def addJobs(): Unit = {
         // create per-library alignment file
-        mapping.sampleId = sampleId
-        mapping.libId = libId
+        mapping.sampleId = Option(sampleId)
+        mapping.libId = Option(libId)
         mapping.outputDir = libDir
         mapping.input_R1 = config("R1")
         // R2 is optional here (input samples could be paired-end or single-end)
