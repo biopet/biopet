@@ -4,9 +4,9 @@ import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.picard.{AddOrReplaceReadGroups, SamToFastq, MarkDuplicates}
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import scala.collection.JavaConversions._
 
@@ -62,7 +62,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
             mapping.input_R1 = config("R1")
             mapping.input_R2 = config("R2")
           })
-          case (false, true) =>  config("bam_to_fastq", default = false).asBoolean match {
+          case (false, true) => config("bam_to_fastq", default = false).asBoolean match {
             case true => {
               val samToFastq = SamToFastq(qscript, config("bam"),
                 new File(libDir, sampleId + "-" + libId + ".R1.fastq"),
@@ -78,7 +78,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
               val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
               val readGroups = inputSam.getFileHeader.getReadGroups
 
-              val readGroupOke = readGroups.forall( readGroup => {
+              val readGroupOke = readGroups.forall(readGroup => {
                 if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
                 if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
                 readGroup.getSample == sampleId && readGroup.getLibrary == libId
