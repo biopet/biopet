@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 2/26/15.
@@ -24,7 +24,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
 
   var inputMap: Map[File, String] = Map()
 
-  def addInput(file:File, name:String): Unit = {
+  def addInput(file: File, name: String): Unit = {
     inputFiles :+= file
     inputMap += file -> name
   }
@@ -40,8 +40,9 @@ class CombineVariants(val root: Configurable) extends Gatk {
     (for (file <- inputFiles) yield {
       inputMap.get(file) match {
         case Some(name) => required("--variant:" + name, file)
-        case _ => required("--variant", file)
-      }}).mkString +
+        case _          => required("--variant", file)
+      }
+    }).mkString +
     required("-o", outputFile) +
     optional("--setKey", setKey) +
     (if (rodPriorityList.isEmpty) "" else optional("--rod_priority_list", rodPriorityList.mkString(","))) +
