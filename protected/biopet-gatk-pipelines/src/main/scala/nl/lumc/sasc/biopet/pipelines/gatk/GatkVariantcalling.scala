@@ -8,9 +8,9 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript

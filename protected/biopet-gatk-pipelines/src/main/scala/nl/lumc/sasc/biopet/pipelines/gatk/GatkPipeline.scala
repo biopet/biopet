@@ -10,9 +10,9 @@ import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import scala.collection.JavaConversions._
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics

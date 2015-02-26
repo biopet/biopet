@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.tools.{VcfFilter, MpileupToVcf}
+import nl.lumc.sasc.biopet.tools.{ VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -34,7 +34,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val use: Boolean = config("use_" + name, default = defaultUse)
     val defaultPrio: Int
     val prio: Int = config("prio_" + name, default = defaultPrio)
-    def addJobs() : File
+    def addJobs(): File
   }
 
   class RawVcf extends Variantcaller {
@@ -42,7 +42,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val defaultPrio = 999
     val defaultUse = true
 
-    def addJobs() : File = {
+    def addJobs(): File = {
       val rawFiles = inputBams.map(bamFile => {
         val m2v = new MpileupToVcf(qscript)
         m2v.inputBam = bamFile

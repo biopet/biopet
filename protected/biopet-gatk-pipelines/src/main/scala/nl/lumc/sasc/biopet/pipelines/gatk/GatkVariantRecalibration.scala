@@ -8,9 +8,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.ApplyRecalibration
-import nl.lumc.sasc.biopet.extensions.gatk.VariantAnnotator
-import nl.lumc.sasc.biopet.extensions.gatk.VariantRecalibrator
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ ApplyRecalibration, VariantAnnotator, VariantRecalibrator }
 import org.broadinstitute.gatk.queue.QScript
 
 class GatkVariantRecalibration(val root: Configurable) extends QScript with BiopetQScript {

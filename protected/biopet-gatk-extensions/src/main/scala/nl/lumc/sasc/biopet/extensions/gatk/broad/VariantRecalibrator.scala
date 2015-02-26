@@ -3,7 +3,7 @@
  * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
  * on how to use this protected part of biopet or contact us at sasc@lumc.nl
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
