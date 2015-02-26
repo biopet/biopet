@@ -15,14 +15,14 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.File
-
 import org.broadinstitute.gatk.queue.QScript
+import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
+
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
-import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
@@ -56,7 +56,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   var annotationBed: Option[File] = config("annotation_bed")
 
   /** refFlat reference file */
-  var annotationRefFlat: Option[File] = config("annotation_refflat")
+  var annotationRefFlat: File = config("annotation_refflat")
 
   /*
   /** Variant calling */
@@ -246,12 +246,30 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         job
       }
 
+    /** Picard CollectRnaSeqMetrics job */
+    private lazy val collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
+      val job = new CollectRnaSeqMetrics(qscript)
+      job.input = alnFile
+      job.output = createFile(".rna_metrics")
+      job.refFlat  = annotationRefFlat
+      job.chartOutput = Option(createFile(".coverage_bias.pdf"))
+      job.assumeSorted = true
+      job.strandSpecificity = strProtocol match {
+        case NonSpecific => Option(StrandSpecificity.NONE.toString)
+        case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
+        case _           => throw new IllegalStateException
+      }
+      job
+    }
+
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
       addPerLibJobs()
       // merge or symlink per-library alignments
       addSampleAlnJob()
+      // general RNA-seq metrics
+      add(collectRnaSeqMetricsJob)
       // measure expression depending on modes set in expMeasures
       idSortingJob.foreach(add(_))
       geneReadsJob.foreach(add(_))
