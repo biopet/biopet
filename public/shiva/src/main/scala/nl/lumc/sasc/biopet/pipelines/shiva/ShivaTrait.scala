@@ -28,6 +28,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
   def makeVariantcalling(multisample: Boolean = false) = {
     if (multisample) new ShivaVariantcalling(qscript) {
+      override def namePrefix = "multisample."
       override def configName = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }
@@ -132,13 +133,15 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
         if (config("library_variantcalling", default = false).asBoolean && (bamFile.isDefined || preProcessBam.isDefined)) {
           val vc = makeVariantcalling(multisample = false)
-          vc.namePrefix = sampleId + "-" + libId
+          vc.sampleId = Some(libId)
+          vc.libId = Some(sampleId)
           vc.outputDir = new File(libDir, "variantcalling")
           if (preProcessBam.isDefined) vc.inputBams = preProcessBam.get :: Nil
           else vc.inputBams = bamFile.get :: Nil
           vc.init
           vc.biopetScript
           addAll(vc.functions)
+          addSummaryQScript(vc)
         }
       }
     }
@@ -181,12 +184,13 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
       if (config("single_sample_variantcalling", default = false).asBoolean && preProcessBam.isDefined) {
         val vc = makeVariantcalling(multisample = false)
-        vc.namePrefix = sampleId
+        vc.sampleId = Some(sampleId)
         vc.outputDir = new File(sampleDir, "variantcalling")
         vc.inputBams = preProcessBam.get :: Nil
         vc.init
         vc.biopetScript
         addAll(vc.functions)
+        addSummaryQScript(vc)
       }
     }
   }
@@ -194,12 +198,12 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
   def addMultiSampleJobs(): Unit = {
     if (config("multisample_sample_variantcalling", default = true).asBoolean) {
       val vc = makeVariantcalling(multisample = true)
-      vc.namePrefix = "multisample"
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.map(_._2.preProcessBam).flatten.toList
       vc.init
       vc.biopetScript
       addAll(vc.functions)
+      addSummaryQScript(vc)
     }
   }
 

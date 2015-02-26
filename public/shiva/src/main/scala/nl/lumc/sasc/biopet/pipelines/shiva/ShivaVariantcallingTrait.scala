@@ -20,7 +20,13 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   var inputBams: List[File] = Nil
 
-  var namePrefix: String = ""
+  def namePrefix: String = {
+    (sampleId, libId) match {
+      case (Some(sampleId), Some(libId)) => sampleId + "-" + libId + "."
+      case (Some(sampleId), _) => sampleId + "."
+      case _ => ""
+    }
+  }
 
   def init: Unit = {
     if (!namePrefix.isEmpty && !namePrefix.endsWith(".")) namePrefix += "."
