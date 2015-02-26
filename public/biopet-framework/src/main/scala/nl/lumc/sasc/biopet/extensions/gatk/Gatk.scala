@@ -9,18 +9,35 @@ import org.broadinstitute.gatk.utils.commandline.Input
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-class Gatk(val root: Configurable) extends BiopetJavaCommandLineFunction {
+abstract class Gatk extends BiopetJavaCommandLineFunction {
   override def subPath = "gatk" :: super.subPath
 
   jarFile = config("gatk_jar")
 
+  val analysisType: String
+
   override val defaultVmem = "5G"
 
   @Input(required = true)
-  val reference: File = config("reference")
+  var reference: File = config("reference")
 
   @Input(required = false)
-  val gatkKey: File = config("gatk_key")
+  var gatkKey: File = config("gatk_key")
 
-  //val intervals: List[File] = config("intervals")
+  @Input(required = false)
+  var intervals: List[File] = config("intervals")
+
+  @Input(required = false)
+  var excludeIntervals: List[File] = config("exclude_intervals")
+
+  @Input(required = false)
+  var pedigree: List[File] = config("pedigree")
+
+  override def commandLine = super.commandLine +
+    required("-T", analysisType) +
+    required("-R", reference) +
+    optional("-K", gatkKey) +
+    repeat("-I", intervals) +
+    repeat("-XL", excludeIntervals) +
+    repeat("-ped", pedigree)
 }
