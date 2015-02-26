@@ -220,31 +220,31 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
     private lazy val cufflinksGuidedJob: Option[Cufflinks] = expMeasures
       .contains(CufflinksStrict)
       .option {
-      val job = new Cufflinks(qscript) {
-        override def configName = "cufflinks"
-        override def configPath: List[String] = super.configPath ::: "cufflinks_guided" :: Nil
+        val job = new Cufflinks(qscript) {
+          override def configName = "cufflinks"
+          override def configPath: List[String] = super.configPath ::: "cufflinks_guided" :: Nil
+        }
+        job.input = alnFile
+        job.GTF = None
+        job.GTF_guide = annotationGtf
+        job.output_dir = new File(sampleDir, "cufflinks_guided")
+        job
       }
-      job.input = alnFile
-      job.GTF = None
-      job.GTF_guide = annotationGtf
-      job.output_dir = new File(sampleDir, "cufflinks_guided")
-      job
-    }
 
     /** Cufflinks blind job */
     private lazy val cufflinksBlindJob: Option[Cufflinks] = expMeasures
       .contains(CufflinksStrict)
       .option {
-      val job = new Cufflinks(qscript) {
-        override def configName = "cufflinks"
-        override def configPath: List[String] = super.configPath ::: "cufflinks_blind" :: Nil
+        val job = new Cufflinks(qscript) {
+          override def configName = "cufflinks"
+          override def configPath: List[String] = super.configPath ::: "cufflinks_blind" :: Nil
+        }
+        job.input = alnFile
+        job.GTF = None
+        job.GTF_guide = None
+        job.output_dir = new File(sampleDir, "cufflinks_blind")
+        job
       }
-      job.input = alnFile
-      job.GTF = None
-      job.GTF_guide = None
-      job.output_dir = new File(sampleDir, "cufflinks_blind")
-      job
-    }
 
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
