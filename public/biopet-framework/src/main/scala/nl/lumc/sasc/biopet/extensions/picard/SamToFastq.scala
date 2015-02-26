@@ -50,7 +50,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   var includeNonPjReads: Boolean = config("includeNonPjReads", default = false)
 
   @Argument(doc = "clippingAtribute", required = false)
-  var clippingAtribute: String = config("clippingAtribute")
+  var clippingAtribute: Option[String] = config("clippingAtribute")
 
   @Argument(doc = "clippingAction", required = false)
   var clippingAction: Option[String] = config("clippingAction")
