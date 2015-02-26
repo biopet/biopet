@@ -26,6 +26,16 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     addSummaryJobs
   }
 
+  def makeVariantcalling(multisample:Boolean = false) = {
+    if (multisample) new ShivaVariantcalling(qscript) {
+      override def configName = "shivavariantcalling"
+      override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
+    }
+    else new ShivaVariantcalling(qscript) {
+      override def configName = "shivavariantcalling"
+    }
+  }
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
@@ -120,7 +130,15 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
           addSummaryQScript(mapping)
         })
 
-        //TODO: library variantcalling
+        if (config("library_variantcalling", default = false).asBoolean && (bamFile.isDefined || preProcessBam.isDefined)) {
+          val vc = makeVariantcalling(multisample = false)
+          vc.outputDir = new File(libDir, "variantcalling")
+          if (preProcessBam.isDefined) vc.inputBams = preProcessBam.get :: Nil
+          else vc.inputBams = bamFile.get :: Nil
+          vc.init
+          vc.biopetScript
+          addAll(vc.functions)
+        }
       }
     }
 
@@ -149,17 +167,36 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       }
     }
 
-    lazy val preProcessBam: Option[File] = doublePreProcess(libraries.map(_._2.preProcessBam).filter(_.isDefined).map(_.get).toList)
+    lazy val preProcessBam: Option[File] = doublePreProcess(libraries.map(lib => {
+      (lib._2.bamFile, lib._2.preProcessBam) match {
+        case (_, Some(file)) => Some(file)
+        case (Some(file), _) => Some(file)
+        case _ => None
+      }}).flatten.toList)
 
     def addJobs(): Unit = {
       addPerLibJobs()
 
-      //TODO: Singlesample variantcalling
+      if (config("single_sample_variantcalling", default = false).asBoolean && preProcessBam.isDefined) {
+        val vc = makeVariantcalling(multisample = false)
+        vc.outputDir = new File(sampleDir, "variantcalling")
+        vc.inputBams = preProcessBam.get :: Nil
+        vc.init
+        vc.biopetScript
+        addAll(vc.functions)
+      }
     }
   }
 
   def addMultiSampleJobs(): Unit = {
-    //TODO: Mutisample variantcalling
+    if (config("multisample_sample_variantcalling", default = true).asBoolean) {
+      val vc = makeVariantcalling(multisample = true)
+      vc.outputDir = new File(outputDir, "variantcalling")
+      vc.inputBams = samples.map(_._2.preProcessBam).flatten.toList
+      vc.init
+      vc.biopetScript
+      addAll(vc.functions)
+    }
   }
 
   def summaryFile = new File(outputDir, "Shiva.summary.json")
