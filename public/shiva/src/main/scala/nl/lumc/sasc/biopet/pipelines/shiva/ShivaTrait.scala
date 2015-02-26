@@ -26,7 +26,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     addSummaryJobs
   }
 
-  def makeVariantcalling(multisample: Boolean = false) = {
+  def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample."
       override def configName = "shivavariantcalling"

@@ -29,13 +29,15 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   }
 
   def init: Unit = {
-    if (!namePrefix.isEmpty && !namePrefix.endsWith(".")) namePrefix += "."
   }
+
+  def finalFile = new File(outputDir, namePrefix + "final.vcf.gz")
 
   def biopetScript: Unit = {
     val cv = new CombineVariants(qscript)
-    cv.outputFile = new File(outputDir, namePrefix + ".final.vcf.gz")
-    for (caller <- callers) {
+    cv.outputFile = finalFile
+    cv.setKey = "VariantCaller"
+    for (caller <- usedCallers) {
       caller.addJobs()
       cv.addInput(caller.outputFile, caller.name)
     }
@@ -44,7 +46,9 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     addSummaryJobs
   }
 
-  def callers = List(new RawVcf).filter(_.use)
+  def callers: List[Variantcaller] = List(new RawVcf)
+
+  def usedCallers: List[Variantcaller] = callers.filter(_.use)
 
   trait Variantcaller {
     val name: String
@@ -96,5 +100,5 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
 
   def summarySettings = Map()
 
-  def summaryFiles = Map()
+  def summaryFiles: Map[String, File] = usedCallers.map(x => (x.name -> x.outputFile)).toMap + ("final" -> finalFile)
 }
