@@ -89,7 +89,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
   def add(functions: QFunction*)
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
-  def addAll(functions : scala.Traversable[org.broadinstitute.gatk.queue.function.QFunction])
+  def addAll(functions: scala.Traversable[org.broadinstitute.gatk.queue.function.QFunction])
 
   /**
    * Function to set isIntermediate and add in 1 line
