@@ -22,16 +22,16 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
   var reference: File = config("reference")
 
   @Input(required = false)
-  var gatkKey: File = config("gatk_key")
+  var gatkKey: Option[File] = config("gatk_key")
 
   @Input(required = false)
-  var intervals: List[File] = config("intervals")
+  var intervals: List[File] = config("intervals", default = Nil)
 
   @Input(required = false)
-  var excludeIntervals: List[File] = config("exclude_intervals")
+  var excludeIntervals: List[File] = config("exclude_intervals", default = Nil)
 
   @Input(required = false)
-  var pedigree: List[File] = config("pedigree")
+  var pedigree: List[File] = config("pedigree", default = Nil)
 
   override def commandLine = super.commandLine +
     required("-T", analysisType) +

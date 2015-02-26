@@ -11,16 +11,16 @@ import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 class CombineVariants(val root: Configurable) extends Gatk {
   val analysisType = "CombineVariants"
 
-  @Input(required = true)
+  @Input(doc = "", required = true)
   var inputFiles: List[File] = Nil
 
-  @Output(required = true)
+  @Output(doc = "", required = true)
   var outputFile: File = null
 
   var setKey: String = null
   var rodPriorityList: List[String] = Nil
   var minimumN: Int = config("minimumN", default = 1)
-  var genotypeMergeOptions: String = config("genotypeMergeOptions")
+  var genotypeMergeOptions: Option[String] = config("genotypeMergeOptions")
 
   var inputMap: Map[File, String] = Map()
 
@@ -31,7 +31,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
 
   override def beforeGraph: Unit = {
     genotypeMergeOptions match {
-      case null | "UNIQUIFY" | "PRIORITIZE" | "UNSORTED" | "REQUIRE_UNIQUE" =>
+      case Some("UNIQUIFY") | Some("PRIORITIZE") | Some("UNSORTED") | Some("REQUIRE_UNIQUE") | None =>
       case _ => throw new IllegalArgumentException("Wrong option for genotypeMergeOptions")
     }
   }
@@ -42,7 +42,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
         case Some(name) => required("--variant:" + name, file)
         case _ => required("--variant", file)
       }}).mkString +
-    required(outputFile) +
+    required("-o", outputFile) +
     optional("--setKey", setKey) +
     (if (rodPriorityList.isEmpty) "" else optional("--rod_priority_list", rodPriorityList.mkString(","))) +
     optional("-genotypeMergeOptions", genotypeMergeOptions)
