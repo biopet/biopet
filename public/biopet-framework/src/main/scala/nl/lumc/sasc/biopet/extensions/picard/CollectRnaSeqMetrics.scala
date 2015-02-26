@@ -18,43 +18,43 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard {
   javaMainClass = "picard.analysis.CollectRnaSeqMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
-  var input: File = _
+  var input: File = null
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
-  var refFlat: File = _
+  var refFlat: File = null
 
   @Output(doc = "Output metrics file", required = true)
-  var output: File = _
+  var output: File = null
 
   @Argument(doc = "Location of rRNA sequences in interval list format", required = false)
-  var ribosomalIntervals: File = config("ribosomal_intervals")
+  var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
 
   @Argument(doc = "Strand specificity", required = false)
-  var strandSpecificity: String = config("strand_specificity")
+  var strandSpecificity: Option[String] = config("strand_specificity")
 
   @Argument(doc = "Minimum length of transcripts to use for coverage-based values calculation", required = false)
   var minimumLength: Option[Int] = config("minimum_length")
 
   @Argument(doc = "PDF output of the coverage chart", required = false)
-  var chartOutput: File = _
+  var chartOutput: Option[File] = config("chart_output")
 
   @Argument(doc = "Sequences to ignore for mapped reads", required = false)
-  var ignoreSequence: String = config("ignore_sequence")
+  var ignoreSequence: Option[String] = config("ignore_sequence")
 
   @Argument(doc = "Minimum overlap percentage a fragment must have to be considered rRNA", required = false)
-  var rRNAFragmentPercentage: Double = config("rrna_fragment_percentage")
+  var rRNAFragmentPercentage: Option[Double] = config("rrna_fragment_percentage")
 
   @Argument(doc = "Metric accumulation level", required = false)
-  var metricAccumulationLevel: String = config("metric_accumulation_level")
+  var metricAccumulationLevel: Option[String] = config("metric_accumulation_level")
 
   @Argument(doc = "Reference FASTA sequence", required = false)
-  var referenceSequence: File = config("reference_sequence")
+  var referenceSequence: Option[File] = config("reference_sequence")
 
   @Argument(doc = "Assume alignment file is sorted by position", required = false)
-  var assumeSorted: Boolean = config("assume_sorted")
+  var assumeSorted: Boolean = config("assume_sorted", default = false)
 
   @Argument(doc = "Stop after processing N reads", required = false)
-  var stopAfter: Long = config("stop_after")
+  var stopAfter: Option[Long] = config("stop_after")
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
