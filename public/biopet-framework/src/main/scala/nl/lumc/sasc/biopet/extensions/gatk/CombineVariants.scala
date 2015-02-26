@@ -18,7 +18,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
   var outputFile: File = null
 
   var setKey: String = null
-  var rodPriorityList: List[String] = Nil
+  var rodPriorityList: String = null
   var minimumN: Int = config("minimumN", default = 1)
   var genotypeMergeOptions: Option[String] = config("genotypeMergeOptions")
 
@@ -45,6 +45,6 @@ class CombineVariants(val root: Configurable) extends Gatk {
     }).mkString +
     required("-o", outputFile) +
     optional("--setKey", setKey) +
-    (if (rodPriorityList.isEmpty) "" else optional("--rod_priority_list", rodPriorityList.mkString(","))) +
+    optional("--rod_priority_list", rodPriorityList) +
     optional("-genotypeMergeOptions", genotypeMergeOptions)
 }

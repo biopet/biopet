@@ -12,7 +12,13 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   qscript =>
   def this() = this(null)
 
-  override def callers = new UnifiedGenotyper :: new HaplotypeCaller :: super.callers
+  override def callers = {
+    new HaplotypeCallerAllele ::
+      new UnifiedGenotyperAllele ::
+      new UnifiedGenotyper ::
+      new HaplotypeCaller ::
+      super.callers
+  }
 
   class HaplotypeCaller extends Variantcaller {
     val name = "haplotypecaller"
@@ -37,10 +43,44 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     def outputFile = new File(outputDir, namePrefix + "unifiedgenotyper.vcf.gz")
 
     def addJobs() {
-      val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.UnifiedGenotyper(qscript)
+      val ug = new nl.lumc.sasc.biopet.extensions.gatk.broad.UnifiedGenotyper(qscript)
+      ug.input_file = inputBams
+      ug.out = outputFile
+      add(ug)
+    }
+  }
+
+  class HaplotypeCallerAllele extends Variantcaller {
+    val name = "haplotypecaller_allele"
+    protected val defaultPrio = 5
+    protected val defaultUse = false
+
+    def outputFile = new File(outputDir, namePrefix + "haplotypecaller_allele.vcf.gz")
+
+    def addJobs() {
+      val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(qscript)
       hc.input_file = inputBams
       hc.out = outputFile
+      hc.alleles = config("input_alleles")
+      hc.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
       add(hc)
+    }
+  }
+
+  class UnifiedGenotyperAllele extends Variantcaller {
+    val name = "unifiedgenotyper_allele"
+    protected val defaultPrio = 6
+    protected val defaultUse = false
+
+    def outputFile = new File(outputDir, namePrefix + "unifiedgenotyper_allele.vcf.gz")
+
+    def addJobs() {
+      val ug = new nl.lumc.sasc.biopet.extensions.gatk.broad.UnifiedGenotyper(qscript)
+      ug.input_file = inputBams
+      ug.out = outputFile
+      ug.alleles = config("input_alleles")
+      ug.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
+      add(ug)
     }
   }
 }

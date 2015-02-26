@@ -5,7 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.tools.{ VcfFilter, MpileupToVcf }
+import nl.lumc.sasc.biopet.tools.{VcfStats, VcfFilter, MpileupToVcf}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -34,14 +34,21 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   def finalFile = new File(outputDir, namePrefix + "final.vcf.gz")
 
   def biopetScript: Unit = {
+    val callers = usedCallers
+
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
     cv.setKey = "VariantCaller"
-    for (caller <- usedCallers) {
+    for (caller <- callers.sortBy(_.prio)) {
       caller.addJobs()
       cv.addInput(caller.outputFile, caller.name)
     }
     add(cv)
+
+    val vcfStats = new VcfStats(qscript)
+    vcfStats.input = finalFile
+    vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
+    add(vcfStats)
 
     addSummaryJobs
   }

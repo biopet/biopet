@@ -7,6 +7,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import scala.collection.JavaConversions._
 
@@ -182,15 +183,27 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     def addJobs(): Unit = {
       addPerLibJobs()
 
-      if (config("single_sample_variantcalling", default = false).asBoolean && preProcessBam.isDefined) {
-        val vc = makeVariantcalling(multisample = false)
-        vc.sampleId = Some(sampleId)
-        vc.outputDir = new File(sampleDir, "variantcalling")
-        vc.inputBams = preProcessBam.get :: Nil
-        vc.init
-        vc.biopetScript
-        addAll(vc.functions)
-        addSummaryQScript(vc)
+      if (preProcessBam.isDefined) {
+        val bamMetrics = new BamMetrics(root)
+        bamMetrics.sampleId = Some(sampleId)
+        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.outputDir = outputDir
+        bamMetrics.init
+        bamMetrics.biopetScript
+        addAll(bamMetrics.functions)
+        addSummaryQScript(bamMetrics)
+
+
+        if (config("single_sample_variantcalling", default = false).asBoolean) {
+          val vc = makeVariantcalling(multisample = false)
+          vc.sampleId = Some(sampleId)
+          vc.outputDir = new File(sampleDir, "variantcalling")
+          vc.inputBams = preProcessBam.get :: Nil
+          vc.init
+          vc.biopetScript
+          addAll(vc.functions)
+          addSummaryQScript(vc)
+        }
       }
     }
   }
