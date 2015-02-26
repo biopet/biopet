@@ -15,7 +15,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
  */
 class CollectRnaSeqMetrics(val root: Configurable) extends Picard {
 
-  javaMainClass = "picard.analysis.directed.CollectRnaSeqMetrics"
+  javaMainClass = "picard.analysis.CollectRnaSeqMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = _
