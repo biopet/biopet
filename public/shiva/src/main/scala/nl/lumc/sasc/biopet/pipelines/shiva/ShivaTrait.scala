@@ -51,6 +51,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         mapping.sampleId = Some(sampleId)
         mapping.libId = Some(libId)
         mapping.outputDir = libDir
+        mapping.outputName = sampleId + "-" + libId
         (Some(mapping), Some(mapping.finalBamFile), preProcess(mapping.finalBamFile))
       }
 
@@ -187,7 +188,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         val bamMetrics = new BamMetrics(root)
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = preProcessBam.get
-        bamMetrics.outputDir = outputDir
+        bamMetrics.outputDir = sampleDir
         bamMetrics.init
         bamMetrics.biopetScript
         addAll(bamMetrics.functions)
