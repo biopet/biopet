@@ -8,13 +8,14 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
  * Wrapper for the Picard CollectRnaSeqMetrics tool
  */
-class CollectRnaSeqMetrics(val root: Configurable) extends Picard {
+class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summarizable {
 
   javaMainClass = "picard.analysis.CollectRnaSeqMetrics"
 
@@ -64,6 +65,23 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard {
         s"Invalid Picard CollectRnaSeqMetrics strand specificity flag: $s. Valid values are " + validFlags.mkString(", "))
       case None    => ;
     }
+  }
+
+  def summaryFiles: Map[String, File] = Map(
+      "metrics" -> output,
+      "annotation" -> refFlat
+    ) ++ Map(
+      "ribosomal_intervals" -> ribosomalIntervals,
+      "output_chart" -> chartOutput
+    ).collect { case (key, Some(value)) => key -> value }
+
+  def summaryStats: Map[String, Any] = {
+    val (header, content) = Picard.getMetrics(output)
+
+    header
+      .zip(content)
+      .map { case (h, c) => h.toLowerCase -> c.head }
+      .toMap
   }
 
   override def commandLine = super.commandLine +
