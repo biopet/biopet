@@ -25,7 +25,8 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
     nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
     nl.lumc.sasc.biopet.pipelines.kopisu.ConiferPipeline,
-    nl.lumc.sasc.biopet.pipelines.carp.Carp
+    nl.lumc.sasc.biopet.pipelines.carp.Carp,
+    nl.lumc.sasc.biopet.pipelines.toucan.Toucan
   )
 
   def tools: List[MainCommand] = List(
@@ -48,5 +49,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
+    nl.lumc.sasc.biopet.tools.Seqstat,
+    nl.lumc.sasc.biopet.tools.VEPNormalizer,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
 }

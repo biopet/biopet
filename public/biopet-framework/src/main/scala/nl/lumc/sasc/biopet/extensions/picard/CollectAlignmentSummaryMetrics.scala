@@ -17,9 +17,10 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
-class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
+class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectAlignmentSummaryMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -59,6 +60,22 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
     optional("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     repeat("ADAPTER_SEQUENCE=", adapterSequence, spaceSeparated = false)
+
+  def summaryFiles: Map[String, File] = Map()
+
+  def summaryStats: Map[String, Any] = {
+    val (header, content) = Picard.getMetrics(output)
+
+    (for (category <- 0 until content.size) yield {
+      content(category)(0) -> (
+        for (
+          i <- 1 until header.size if i < content(category).size
+        ) yield {
+          header(i).toLowerCase -> content(category)(i)
+        }).toMap
+    }
+    ).toMap
+  }
 }
 
 object CollectAlignmentSummaryMetrics {

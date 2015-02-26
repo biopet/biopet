@@ -66,12 +66,13 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     else if (files.size == 1) {
       val bamFile = new File(outputDir, files.head.getName)
       if (bamFile != files.head) {
-        val oldIndex: File = files.head.getAbsolutePath.stripSuffix(".bam") + ".bai"
-        val newIndex: File = bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai"
-        add(Ln(this, oldIndex, newIndex))
+        val oldIndex: File = new File(files.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex: File = swapExt(outputDir, bamFile, ".bam", ".bai")
+        val baiLn = Ln(this, oldIndex, newIndex)
+        add(baiLn)
 
         val bamLn = Ln(this, files.head, bamFile)
-        bamLn.deps :+= newIndex
+        bamLn.deps :+= baiLn.out
         add(bamLn)
       }
       List(bamFile)

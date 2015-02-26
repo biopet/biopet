@@ -30,7 +30,7 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   @Output(doc = "Link destination")
   var out: File = _
 
-  @Output
+  @Input(required = false)
   var deps: List[File] = Nil
 
   var relative: Boolean = true

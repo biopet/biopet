@@ -9,6 +9,7 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
@@ -19,7 +20,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
   qscript =>
   def this() = this(null)
 
@@ -40,13 +41,19 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
+  def summaryFile = new File(outputDir, "GatkPipeline.summary.json")
+
+  def summaryFiles = Map()
+
+  def summarySettings = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
       val mapping = new Mapping(qscript)
-      mapping.sampleId = sampleId
-      mapping.libId = libId
+      mapping.sampleId = Some(sampleId)
+      mapping.libId = Some(libId)
       mapping.outputDir = libDir
 
       /** Library variantcalling */
@@ -118,13 +125,15 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
           gatkVariantcalling.biopetScript
           addAll(gatkVariantcalling.functions)
         }
+
+        addSummaryQScript(mapping)
       }
     }
 
     /** sample variantcalling */
     val gatkVariantcalling = new GatkVariantcalling(qscript)
     gatkVariantcalling.sampleID = sampleId
-    gatkVariantcalling.outputDir = new File(sampleDir, "variantcalling/")
+    gatkVariantcalling.outputDir = new File(sampleDir, "variantcalling")
 
     protected def addJobs(): Unit = {
       addPerLibJobs()
@@ -152,6 +161,8 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   def biopetScript(): Unit = {
     addSamplesJobs()
+
+    addSummaryJobs
   }
 
   def addMultiSampleJobs(): Unit = {

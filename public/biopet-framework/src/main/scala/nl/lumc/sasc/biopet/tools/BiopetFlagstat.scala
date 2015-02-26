@@ -16,15 +16,16 @@
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
-import java.io.File
+import java.io.{ PrintWriter, File }
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
-import scala.collection.mutable.Map
 
-class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input bam", shortName = "input", required = true)
@@ -33,29 +34,44 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
   @Output(doc = "Output flagstat", shortName = "output", required = true)
   var output: File = _
 
+  @Output(doc = "summary output file", shortName = "output", required = false)
+  var summaryFile: File = _
+
   override val defaultVmem = "8G"
   memoryLimit = Option(4.0)
 
-  override def commandLine = super.commandLine + required("-I", input) + " > " + required(output)
+  override def commandLine = super.commandLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
+
+  def summaryFiles: Map[String, File] = Map()
+
+  def summaryStats: Map[String, Any] = {
+    ConfigUtils.fileToConfigMap(summaryFile)
+  }
 }
 
 object BiopetFlagstat extends ToolCommand {
+  import scala.collection.mutable.Map
+
   def apply(root: Configurable, input: File, outputDir: File): BiopetFlagstat = {
     val flagstat = new BiopetFlagstat(root)
     flagstat.input = input
     flagstat.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat")
+    flagstat.summaryFile = new File(outputDir, input.getName.stripSuffix(".bam") + ".biopetflagstat.json")
     flagstat
   }
 
-  case class Args(inputFile: File = null, region: Option[String] = None) extends AbstractArgs
+  case class Args(inputFile: File = null, summaryFile: Option[File] = None, region: Option[String] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
+    } text ("input bam file")
+    opt[File]('s', "summaryFile") valueName ("<file>") action { (x, c) =>
+      c.copy(summaryFile = Some(x))
+    } text ("summary output file")
     opt[String]('r', "region") valueName ("<chr:start-stop>") action { (x, c) =>
       c.copy(region = Some(x))
-    } text ("out is a required file property")
+    }
   }
 
   /**
@@ -125,6 +141,14 @@ object BiopetFlagstat extends ToolCommand {
       if (flagstatCollector.readsCount % 1e6 == 0 && flagstatCollector.readsCount > 0)
         logger.info("Reads prosessed: " + flagstatCollector.readsCount)
       flagstatCollector.loadRecord(record)
+    }
+
+    commandArgs.summaryFile.foreach {
+      case file => {
+        val writer = new PrintWriter(file)
+        writer.println(flagstatCollector.summary)
+        writer.close()
+      }
     }
 
     println(flagstatCollector.report)
@@ -205,6 +229,14 @@ object BiopetFlagstat extends ToolCommand {
       buffer.append(crossReport(fraction = true) + "\n")
 
       return buffer.toString
+    }
+
+    def summary: String = {
+      val map = (for (t <- 0 until names.size) yield {
+        names(t) -> totalCounts(t)
+      }).toMap
+
+      return ConfigUtils.mapToJson(map).spaces4
     }
 
     def crossReport(fraction: Boolean = false): String = {

@@ -17,9 +17,10 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
-class MarkDuplicates(val root: Configurable) extends Picard {
+class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.sam.MarkDuplicates"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -91,6 +92,22 @@ class MarkDuplicates(val root: Configurable) extends Picard {
     optional("SORTING_COLLECTION_SIZE_RATIO=", sortingCollectionSizeRatio, spaceSeparated = false) +
     optional("READ_NAME_REGEX=", readNameRegex, spaceSeparated = false) +
     optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=", opticalDuplicatePixelDistance, spaceSeparated = false)
+
+  def summaryFiles: Map[String, File] = Map()
+
+  def summaryStats: Map[String, Any] = {
+    val (header, content) = Picard.getMetrics(outputMetrics)
+
+    (for (category <- 0 until content.size) yield {
+      content(category)(0) -> (
+        for (
+          i <- 1 until header.size if i < content(category).size
+        ) yield {
+          header(i).toLowerCase -> content(category)(i)
+        }).toMap
+    }
+    ).toMap
+  }
 }
 object MarkDuplicates {
   def apply(root: Configurable, input: List[File], outputDir: String): MarkDuplicates = {
