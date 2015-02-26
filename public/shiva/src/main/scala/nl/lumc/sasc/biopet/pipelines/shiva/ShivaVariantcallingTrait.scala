@@ -23,8 +23,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   def namePrefix: String = {
     (sampleId, libId) match {
       case (Some(sampleId), Some(libId)) => sampleId + "-" + libId + "."
-      case (Some(sampleId), _) => sampleId + "."
-      case _ => ""
+      case (Some(sampleId), _)           => sampleId + "."
+      case _                             => ""
     }
   }
 
