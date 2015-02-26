@@ -21,5 +21,5 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
   if (config.contains("exclude_intervals")) excludeIntervals = config("exclude_intervals").asFileList
   reference_sequence = config("reference")
   if (config.contains("gatk_key")) gatk_key = config("gatk_key")
-  if (config.contains("pedigree")) pedigree = config("pedigree").asFileList
+  if (config.contains("pedigree")) pedigree = config("pedigree")
 }
