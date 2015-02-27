@@ -18,13 +18,16 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.{ Config }
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 /**
  * This trait creates a structured way of use multisample pipelines
  */
-trait MultiSampleQScript extends BiopetQScript {
+trait MultiSampleQScript extends SummaryQScript {
+  qscript =>
+
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   private val onlySamples: List[String] = Nil
 
@@ -34,7 +37,7 @@ trait MultiSampleQScript extends BiopetQScript {
    * Sample class with basic functions build in
    * @param sampleId
    */
-  abstract class AbstractSample(val sampleId: String) {
+  abstract class AbstractSample(val sampleId: String) extends Summarizable {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
@@ -42,7 +45,7 @@ trait MultiSampleQScript extends BiopetQScript {
      * Library class with basic functions build in
      * @param libId
      */
-    abstract class AbstractLibrary(val libId: String) {
+    abstract class AbstractLibrary(val libId: String) extends Summarizable {
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
@@ -51,6 +54,7 @@ trait MultiSampleQScript extends BiopetQScript {
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
+        addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
         currentLib = None
         currentSample = None
       }
@@ -87,6 +91,7 @@ trait MultiSampleQScript extends BiopetQScript {
     final def addAndTrackJobs(): Unit = {
       currentSample = Some(sampleId)
       addJobs()
+      addSummarizable(this, "pipeline", Some(sampleId))
       currentSample = None
     }
 

@@ -33,10 +33,24 @@ class Kopisu(val root: Configurable) extends QScript with MultiSampleQScript {
     addSamplesJobs()
   }
 
+  def summaryFile: File = new File(outputDir, "Kopisu.summary.json")
+
+  def summaryFiles: Map[String, File] = Map()
+
+  def summarySettings: Map[String, Any] = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def summaryFiles: Map[String, File] = Map()
+
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      def summaryFiles: Map[String, File] = Map()
+
+      def summaryStats: Map[String, Any] = Map()
+
       def addJobs(): Unit = {
 
       }

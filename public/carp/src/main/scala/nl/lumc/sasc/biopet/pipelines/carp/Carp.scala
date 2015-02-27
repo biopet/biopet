@@ -51,8 +51,16 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    def summaryFiles: Map[String, File] = Map()
+
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      def summaryFiles: Map[String, File] = Map()
+
+      def summaryStats: Map[String, Any] = Map()
+
       val mapping = new Mapping(qscript)
       mapping.libId = Some(libId)
       mapping.sampleId = Some(sampleId)
