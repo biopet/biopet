@@ -105,17 +105,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
-    if (expMeasures.contains(GeneReads))
-      require(annotationGtf.isDefined, "GTF file must be defined for counting reads per gene")
+    if (expMeasures.contains(FragmentsPerGene))
+      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per gene")
 
-    if (expMeasures.contains(ExonReads))
+    if (expMeasures.contains(FragmentsPerExon))
       // TODO: validate that GTF file contains exon features
-      require(annotationGtf.isDefined, "GTF file must be defined for counting reads per exon")
+      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per exon")
 
-    if (expMeasures.contains(GeneBases))
+    if (expMeasures.contains(BasesPerGene))
       require(annotationBed.isDefined, "BED file must be defined for counting bases per gene")
 
-    if (expMeasures.contains(ExonBases))
+    if (expMeasures.contains(BasesPerExon))
       require(annotationBed.isDefined, "BED file must be defined for counting bases per exon")
 
     if (expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict))
@@ -146,8 +146,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       "alignment" -> alnFile,
       "metrics" -> collectRnaSeqMetricsJob.output
     ) ++ Map(
-        "gene_reads_count" -> geneReadsCount,
-        "exon_reads_count" -> exonReadsCount,
+        "gene_fragments_count" -> geneFragmentsCount,
+        "exon_fragments_count" -> exonFragmentsCount,
         "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
         "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksStrict,
         "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksStrict
@@ -157,11 +157,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     def alnFile: File = createFile(".bam")
 
     /** Read count per gene file */
-    def geneReadsCount: Option[File] = geneReadsJob
+    def geneFragmentsCount: Option[File] = fragmentsPerGeneJob
       .collect { case job => job.output }
 
     /** Read count per exon file */
-    def exonReadsCount: Option[File] = exonReadsJob
+    def exonFragmentsCount: Option[File] = fragmentsPerExonJob
       .collect { case job => job.output }
 
     /** Gene tracking file from Cufflinks strict mode */
@@ -189,7 +189,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       .collect { case job => job.outputIsoformsFpkm }
 
     /** ID-sorting job for HTseq-count jobs */
-    private def idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
+    private def idSortingJob: Option[SortSam] = (expMeasures.contains(FragmentsPerExon) || expMeasures.contains(FragmentsPerGene))
       .option {
         val job = new SortSam(qscript)
         job.input = alnFile
@@ -199,14 +199,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Read counting job per gene */
-    private def geneReadsJob: Option[HtseqCount] = expMeasures
-      .contains(GeneReads)
+    private def fragmentsPerGeneJob: Option[HtseqCount] = expMeasures
+      .contains(FragmentsPerGene)
       .option {
         require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
         job.inputAnnotation = annotationGtf.get
         job.inputAlignment = idSortingJob.get.output
-        job.output = createFile(".gene_reads_count")
+        job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
         job.order = Option("name")
         job.stranded = strProtocol match {
@@ -218,14 +218,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Read counting job per exon */
-    private def exonReadsJob: Option[HtseqCount] = expMeasures
-      .contains(ExonReads)
+    private def fragmentsPerExonJob: Option[HtseqCount] = expMeasures
+      .contains(FragmentsPerExon)
       .option {
         require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
         job.inputAnnotation = annotationGtf.get
         job.inputAlignment = idSortingJob.get.output
-        job.output = createFile(".exon_reads_count")
+        job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
         job.order = Option("name")
         job.stranded = strProtocol match {
@@ -309,8 +309,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       add(collectRnaSeqMetricsJob)
       // measure expression depending on modes set in expMeasures
       idSortingJob.foreach(add(_))
-      geneReadsJob.foreach(add(_))
-      exonReadsJob.foreach(add(_))
+      fragmentsPerGeneJob.foreach(add(_))
+      fragmentsPerExonJob.foreach(add(_))
       cufflinksStrictJob.foreach(add(_))
       cufflinksGuidedJob.foreach(add(_))
       cufflinksBlindJob.foreach(add(_))
@@ -335,7 +335,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
     }
 
-    /** Add jobs for reads per gene counting using HTSeq */
+    /** Add jobs for fragments per gene counting using HTSeq */
     // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
     // to its buffer not being large enough.
 
@@ -387,7 +387,7 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val GeneReads, ExonReads, GeneBases, ExonBases, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
+    val FragmentsPerGene, FragmentsPerExon, BasesPerGene, BasesPerExon, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
   }
 
   /** Enumeration of available strandedness */
