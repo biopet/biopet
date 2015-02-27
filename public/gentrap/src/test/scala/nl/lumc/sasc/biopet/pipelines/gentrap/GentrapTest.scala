@@ -29,6 +29,7 @@ class GentrapTest extends TestNGSuite with Matchers {
   private val minimumConfig = Map(
     "output_dir" -> "/tmp",
     "aligner" -> "gsnap",
+    "strand_protocol" -> "non_specific",
     "reference" -> "mock",
     "gsnap" -> Map("db" -> "fixt_gentrap_hg19"),
     "samples" -> Map(
