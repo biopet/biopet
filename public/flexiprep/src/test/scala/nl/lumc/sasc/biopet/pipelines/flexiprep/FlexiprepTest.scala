@@ -29,7 +29,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "flexiprepOptions", parallel = true)
+  @DataProvider(name = "flexiprepOptions")
   def flexiprepOptions = {
     val paired = Array(true, false)
     val skipTrims = Array(true, false)
