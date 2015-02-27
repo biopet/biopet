@@ -15,7 +15,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * Wrapper for the gsnap command line tool
- * Written based on cufflinks version 2014-05-15
+ * Written based on gsnap version 2014-05-15
  */
 class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
 
