@@ -53,17 +53,30 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultVmem = "2G"
   private var config_file: File = _
 
+  /*
+  * Output file from FreeC
+  * */
   def CNVoutput: File = {
     new File(output, bamFile.getName + "_CNVs")
   }
 
+  /*
+  * Output file from FreeC
+  * */
   def BAFoutput: File = {
     new File(output, bamFile.getName + "_BAF.txt")
   }
 
+  /*
+  * Output file from FreeC
+  * */
   def RatioOutput: File = {
     new File(output, bamFile.getName + "_ratio.txt")
   }
+
+  /*
+  * Output file from FreeC
+  * */
   def RatioBedGraph: File = {
     new File(output, bamFile.getName + "_ratio.BedGraph")
   }
@@ -94,7 +107,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
     writer.write("chrLenFile=" + this.chrLenFile + "\n")
     writer.write("gemMappabilityFile=" + this.gemMappabilityFile + "\n")
     writer.write("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) + "\n")
-    writer.write("outputDir=" + this.output + "/\n")
+    writer.write("outputDir=" + this.output.getAbsolutePath + "/\n")
     writer.write("ploidy=" + this.ploidy.getOrElse(2) + "\n")
     writer.write("samtools=" + this.samtools + "\n")
     writer.write("telocentromeric=" + this.telocentromeric.getOrElse(50000) + "\n")

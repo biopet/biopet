@@ -1,6 +1,6 @@
-# Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 args <- commandArgs()
+#Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 dataTable <-read.table(args[4], header=TRUE);
 BAF<-data.frame(dataTable)
