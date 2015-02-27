@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.gatk.broad.GenotypeGVCFs
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcallingTrait
 import org.broadinstitute.gatk.queue.QScript
 
@@ -13,7 +14,8 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   def this() = this(null)
 
   override def callers = {
-    new HaplotypeCallerAllele ::
+    new HaplotypeCallerGvcf ::
+      new HaplotypeCallerAllele ::
       new UnifiedGenotyperAllele ::
       new UnifiedGenotyper ::
       new HaplotypeCaller ::
@@ -69,7 +71,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
 
   class UnifiedGenotyperAllele extends Variantcaller {
     val name = "unifiedgenotyper_allele"
-    protected val defaultPrio = 6
+    protected val defaultPrio = 9
     protected val defaultUse = false
 
     def outputFile = new File(outputDir, namePrefix + "unifiedgenotyper_allele.vcf.gz")
@@ -81,6 +83,28 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
       ug.alleles = config("input_alleles")
       ug.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
       add(ug)
+    }
+  }
+
+  class HaplotypeCallerGvcf extends Variantcaller {
+    val name = "haplotypecaller_gvcf"
+    protected val defaultPrio = 5
+    protected val defaultUse = false
+
+    def outputFile = new File(outputDir, namePrefix + "haplotypecaller_gvcf.vcf.gz")
+
+    def addJobs() {
+      val gvcfFiles = for (inputBam <- inputBams) yield {
+        val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(qscript)
+        hc.input_file = List(inputBam)
+        hc.out = new File(outputDir, inputBam.getName.stripSuffix(".bam") + ".gvcf.gz")
+        hc.useGvcf()
+        add(hc)
+        hc.out
+      }
+
+      val genotypeGVCFs = GenotypeGVCFs(qscript, gvcfFiles, outputFile)
+      add(genotypeGVCFs)
     }
   }
 }
