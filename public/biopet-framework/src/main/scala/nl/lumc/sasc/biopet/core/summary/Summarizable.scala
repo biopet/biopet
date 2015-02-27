@@ -9,7 +9,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * Created by pjvan_thof on 2/14/15.
  */
-trait Summarizable extends Configurable {
+trait Summarizable {
 
   /**
    * Must return files to store into summary
