@@ -73,7 +73,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override def commandLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
-      samtoolsMpileup.input = inputBam
+      samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +
       super.commandLine +

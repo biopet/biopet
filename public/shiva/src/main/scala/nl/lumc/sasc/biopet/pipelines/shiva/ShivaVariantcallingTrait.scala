@@ -4,10 +4,14 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.Gzip
+import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.tools.{ VcfStats, VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.queue.function.CommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.generic.Sorted
 
@@ -62,7 +66,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     addSummaryJobs
   }
 
-  def callers: List[Variantcaller] = List(new RawVcf)
+  def callers: List[Variantcaller] = List(new RawVcf, new Bcftools)
 
   def usedCallers: List[Variantcaller] = callers.filter(_.use)
 
@@ -75,6 +79,36 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     lazy val prio: Int = config("prio_" + name, default = defaultPrio)
     def addJobs()
     def outputFile: File
+  }
+
+  class Bcftools extends Variantcaller {
+    val name = "bcftools"
+    protected val defaultPrio = 8
+    protected val defaultUse = true
+
+    def outputFile = new File(outputDir, namePrefix + ".bcftools.vcf.gz")
+
+    def addJobs() {
+      val mp = new SamtoolsMpileup(qscript)
+      mp.input = inputBams
+      mp.u = true
+
+      val bt = new BcftoolsCall(qscript)
+      bt.O = "z"
+      bt.v = true
+      bt.c = true
+
+      //TODO: add proper class
+      add(new CommandLineFunction {
+        @Input
+        var input = inputBams
+
+        @Output
+        var output = outputFile
+
+        def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + outputFile + " && tabix -p vcf " + outputFile
+      })
+    }
   }
 
   class RawVcf extends Variantcaller {
