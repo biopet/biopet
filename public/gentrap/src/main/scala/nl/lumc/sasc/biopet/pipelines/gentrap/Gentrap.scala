@@ -154,42 +154,42 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file */
-    lazy val alnFile: File = createFile(".bam")
+    def alnFile: File = createFile(".bam")
 
     /** Read count per gene file */
-    lazy val geneReadsCount: Option[File] = geneReadsJob
+    def geneReadsCount: Option[File] = geneReadsJob
       .collect { case job => job.output }
 
     /** Read count per exon file */
-    lazy val exonReadsCount: Option[File] = exonReadsJob
+    def exonReadsCount: Option[File] = exonReadsJob
       .collect { case job => job.output }
 
     /** Gene tracking file from Cufflinks strict mode */
-    lazy val geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
+    def geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
       .collect { case job => job.outputGenesFpkm }
 
     /** Isoforms tracking file from Cufflinks strict mode */
-    lazy val isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
+    def isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
       .collect { case job => job.outputIsoformsFpkm }
 
     /** Gene tracking file from Cufflinks guided mode */
-    lazy val geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
+    def geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
       .collect { case job => job.outputGenesFpkm }
 
     /** Isoforms tracking file from Cufflinks guided mode */
-    lazy val isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
+    def isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
       .collect { case job => job.outputIsoformsFpkm }
 
     /** Gene tracking file from Cufflinks guided mode */
-    lazy val geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
+    def geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
       .collect { case job => job.outputGenesFpkm }
 
     /** Isoforms tracking file from Cufflinks blind mode */
-    lazy val isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
+    def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
       .collect { case job => job.outputIsoformsFpkm }
 
     /** ID-sorting job for HTseq-count jobs */
-    private lazy val idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
+    private def idSortingJob: Option[SortSam] = (expMeasures.contains(ExonReads) || expMeasures.contains(GeneReads))
       .option {
         val job = new SortSam(qscript)
         job.input = alnFile
@@ -199,7 +199,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Read counting job per gene */
-    private lazy val geneReadsJob: Option[HtseqCount] = expMeasures
+    private def geneReadsJob: Option[HtseqCount] = expMeasures
       .contains(GeneReads)
       .option {
         require(idSortingJob.nonEmpty)
@@ -218,7 +218,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Read counting job per exon */
-    private lazy val exonReadsJob: Option[HtseqCount] = expMeasures
+    private def exonReadsJob: Option[HtseqCount] = expMeasures
       .contains(ExonReads)
       .option {
         require(idSortingJob.nonEmpty)
@@ -239,7 +239,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Cufflinks strict job */
-    private lazy val cufflinksStrictJob: Option[Cufflinks] = expMeasures
+    private def cufflinksStrictJob: Option[Cufflinks] = expMeasures
       .contains(CufflinksStrict)
       .option {
         val job = new Cufflinks(qscript) {
@@ -254,7 +254,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Cufflinks guided job */
-    private lazy val cufflinksGuidedJob: Option[Cufflinks] = expMeasures
+    private def cufflinksGuidedJob: Option[Cufflinks] = expMeasures
       .contains(CufflinksStrict)
       .option {
         val job = new Cufflinks(qscript) {
@@ -269,7 +269,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Cufflinks blind job */
-    private lazy val cufflinksBlindJob: Option[Cufflinks] = expMeasures
+    private def cufflinksBlindJob: Option[Cufflinks] = expMeasures
       .contains(CufflinksStrict)
       .option {
         val job = new Cufflinks(qscript) {
@@ -284,7 +284,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Picard CollectRnaSeqMetrics job */
-    private lazy val collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
+    private def collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
       val job = new CollectRnaSeqMetrics(qscript)
       job.input = alnFile
       job.output = createFile(".rna_metrics")
