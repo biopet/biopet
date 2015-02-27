@@ -18,9 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
-
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -30,7 +30,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  * Gentrap pipeline
  * Generic transcriptome analysis pipeline
  */
-class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { qscript =>
+class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript { qscript =>
 
   import Gentrap._
   import Gentrap.ExpMeasures._
@@ -81,6 +81,18 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   /** Private value for strand protocol */
   private val strProtocol: StrandProtocol.Value = makeStrandProtocol(strandProtocol)
 
+  /** Output summary file */
+  def summaryFile: File = new File(outputDir, "gentrap.summary.json")
+
+  /** Files that will be listed in the summary file */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Statistics shown in the summary file */
+  def summaryStats: Map[String, Any] = Map()
+
+  /** Pipeline settings shown in the summary file */
+  def summarySettings: Map[String, Any] = Map()
+
   /** Steps to run before biopetScript */
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
@@ -107,6 +119,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
   }
 
   def addMultiSampleJobs(): Unit = {
+    // TODO: use proper notation
+    addSummaryJobs
   }
 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
@@ -251,7 +265,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       val job = new CollectRnaSeqMetrics(qscript)
       job.input = alnFile
       job.output = createFile(".rna_metrics")
-      job.refFlat  = annotationRefFlat
+      job.refFlat = annotationRefFlat
       job.chartOutput = Option(createFile(".coverage_bias.pdf"))
       job.assumeSorted = true
       job.strandSpecificity = strProtocol match {
@@ -261,6 +275,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       }
       job
     }
+
+    /** Convenience method for adding the sample's summarizable */
+    def addSummarizable(summarizable: Summarizable, name: String): Unit =
+      qscript.addSummarizable(summarizable, name, Option(sampleId), None)
 
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
@@ -277,6 +295,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
       cufflinksStrictJob.foreach(add(_))
       cufflinksGuidedJob.foreach(add(_))
       cufflinksBlindJob.foreach(add(_))
+      addSummaries()
+    }
+
+    def addSummaries(): Unit = {
+      addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
@@ -321,6 +344,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript { 
         mapping.init()
         mapping.biopetScript()
         addAll(mapping.functions)
+        addSummaryQScript(mapping)
       }
     }
   }
