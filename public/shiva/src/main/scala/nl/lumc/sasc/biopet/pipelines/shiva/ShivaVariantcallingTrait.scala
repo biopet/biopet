@@ -22,16 +22,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
 
   def namePrefix: String = {
     (sampleId, libId) match {
-      case (Some(sampleId), Some(libId)) => sampleId + "-" + libId + "."
-      case (Some(sampleId), _)           => sampleId + "."
-      case _                             => ""
+      case (Some(sampleId), Some(libId)) => sampleId + "-" + libId
+      case (Some(sampleId), _)           => sampleId
+      case _                             => config("name_prefix")
     }
   }
 
   def init: Unit = {
   }
 
-  def finalFile = new File(outputDir, namePrefix + "final.vcf.gz")
+  def finalFile = new File(outputDir, namePrefix + ".final.vcf.gz")
 
   def biopetScript: Unit = {
     val callers = usedCallers.sortBy(_.prio)
@@ -44,6 +44,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     for (caller <- callers) {
       caller.addJobs()
       cv.addInput(caller.outputFile, caller.name)
+
+      val vcfStats = new VcfStats(qscript)
+      vcfStats.input = caller.outputFile
+      vcfStats.setOutputDir(new File(caller.outputDir, "vcfstats"))
+      add(vcfStats)
+      addSummarizable(vcfStats, namePrefix + "-vcfstats-" + caller.name)
     }
     add(cv)
 
@@ -51,6 +57,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     vcfStats.input = finalFile
     vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
     add(vcfStats)
+    addSummarizable(vcfStats, namePrefix + "-vcfstats-final")
 
     addSummaryJobs
   }
@@ -75,7 +82,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     protected val defaultPrio = 999
     protected val defaultUse = true
 
-    def outputFile = new File(outputDir, namePrefix + "raw.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".raw.vcf.gz")
 
     def addJobs() {
       val rawFiles = inputBams.map(bamFile => {

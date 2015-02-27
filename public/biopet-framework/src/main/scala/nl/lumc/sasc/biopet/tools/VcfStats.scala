@@ -4,22 +4,30 @@ import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import htsjdk.samtools.util.Interval
 
 /**
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
+
+  @Output
+  protected var generalStats: File = null
+
+  @Output
+  protected var genotypeStats: File = null
 
   override val defaultVmem = "4G"
   override val defaultThreads = 3
@@ -32,7 +40,9 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
    */
   def setOutputDir(dir: File): Unit = {
     outputDir = dir
-    this.jobOutputFile = new File(dir, ".vcfstats.out")
+    generalStats = new File(dir, "general.tsv")
+    genotypeStats = new File(dir, "genotype_general.tsv")
+    jobOutputFile = new File(dir, ".vcfstats.out")
   }
 
   /**
@@ -42,6 +52,27 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction {
   override def commandLine = super.commandLine +
     required("-I", input) +
     required("-o", outputDir)
+
+  /**
+   * Returns general stats to the summary
+   * @return
+   */
+  def summaryStats: Map[String, Any] = {
+    (for (
+      line <- Source.fromFile(generalStats).getLines();
+      values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
+    ) yield values(0) -> values(1).toInt
+    ).toMap
+  }
+
+  /**
+   * return only general files to summary
+   * @return
+   */
+  def summaryFiles: Map[String, File] = Map(
+    "general_stats" -> generalStats,
+    "genotype_stats" -> genotypeStats
+  )
 }
 
 object VcfStats extends ToolCommand {

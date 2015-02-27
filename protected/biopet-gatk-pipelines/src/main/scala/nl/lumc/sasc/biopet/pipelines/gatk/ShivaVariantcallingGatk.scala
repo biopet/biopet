@@ -27,7 +27,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     protected val defaultPrio = 1
     protected val defaultUse = true
 
-    def outputFile = new File(outputDir, namePrefix + "haplotypecaller.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".haplotypecaller.vcf.gz")
 
     def addJobs() {
       val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(qscript)
@@ -42,7 +42,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     protected val defaultPrio = 20
     protected val defaultUse = false
 
-    def outputFile = new File(outputDir, namePrefix + "unifiedgenotyper.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".unifiedgenotyper.vcf.gz")
 
     def addJobs() {
       val ug = new nl.lumc.sasc.biopet.extensions.gatk.broad.UnifiedGenotyper(qscript)
@@ -57,7 +57,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     protected val defaultPrio = 5
     protected val defaultUse = false
 
-    def outputFile = new File(outputDir, namePrefix + "haplotypecaller_allele.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".haplotypecaller_allele.vcf.gz")
 
     def addJobs() {
       val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(qscript)
@@ -74,7 +74,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     protected val defaultPrio = 9
     protected val defaultUse = false
 
-    def outputFile = new File(outputDir, namePrefix + "unifiedgenotyper_allele.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".unifiedgenotyper_allele.vcf.gz")
 
     def addJobs() {
       val ug = new nl.lumc.sasc.biopet.extensions.gatk.broad.UnifiedGenotyper(qscript)
@@ -91,7 +91,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
     protected val defaultPrio = 5
     protected val defaultUse = false
 
-    def outputFile = new File(outputDir, namePrefix + "haplotypecaller_gvcf.vcf.gz")
+    def outputFile = new File(outputDir, namePrefix + ".haplotypecaller_gvcf.vcf.gz")
 
     def addJobs() {
       val gvcfFiles = for (inputBam <- inputBams) yield {
