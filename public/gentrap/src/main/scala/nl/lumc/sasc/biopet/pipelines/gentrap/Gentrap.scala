@@ -149,8 +149,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "gene_fragments_count" -> geneFragmentsCount,
         "exon_fragments_count" -> exonFragmentsCount,
         "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
-        "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksStrict,
-        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksStrict
+        "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuided,
+        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file */
