@@ -49,12 +49,21 @@ trait MultiSampleQScript extends SummaryQScript {
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
+      /**
+       * Name overules the one from qscript
+       * @param summarizable
+       * @param name
+       */
+      def addSummarizable(summarizable: Summarizable, name: String): Unit = {
+        qscript.addSummarizable(summarizable, name, Some(sampleId), Some(libId))
+      }
+
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
-        addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
+        qscript.addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
         currentLib = None
         currentSample = None
       }
@@ -87,11 +96,20 @@ trait MultiSampleQScript extends SummaryQScript {
       ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
     }
 
+    /**
+     * Name overules the one from qscript
+     * @param summarizable
+     * @param name
+     */
+    def addSummarizable(summarizable: Summarizable, name: String): Unit = {
+      qscript.addSummarizable(summarizable, name, Some(sampleId))
+    }
+
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
       currentSample = Some(sampleId)
       addJobs()
-      addSummarizable(this, "pipeline", Some(sampleId))
+      qscript.addSummarizable(this, "pipeline", Some(sampleId))
       currentSample = None
     }
 
