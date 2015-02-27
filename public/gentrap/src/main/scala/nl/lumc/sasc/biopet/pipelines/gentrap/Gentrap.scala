@@ -91,7 +91,15 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   def summaryStats: Map[String, Any] = Map()
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map()
+  def summarySettings: Map[String, Any] = Map(
+    "aligner" -> aligner,
+    "expression_measures" -> expressionMeasures,
+    "strand_protocol" -> strandProtocol,
+    "annotation_refflat" -> annotationRefFlat
+  ) ++ Map(
+      "annotation_gtf" -> annotationGtf,
+      "annotation_bed" -> annotationBed
+    ).collect { case (key, Some(value)) => key -> value }
 
   /** Steps to run before biopetScript */
   def init(): Unit = {
