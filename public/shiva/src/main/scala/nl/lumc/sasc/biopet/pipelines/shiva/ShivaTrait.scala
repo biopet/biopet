@@ -29,7 +29,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {
-      override def namePrefix = "multisample."
+      override def namePrefix = "multisample"
       override def configName = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }

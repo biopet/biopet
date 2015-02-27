@@ -15,7 +15,7 @@ class ShivaGatk(val root: Configurable) extends QScript with ShivaTrait {
 
   override def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcallingGatk(qscript) {
-      override def namePrefix = "multisample."
+      override def namePrefix = "multisample"
       override def configName = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }
