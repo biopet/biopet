@@ -348,26 +348,29 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
       /** Summary files of the library */
       def summaryFiles: Map[String, File] = Map(
-        "alignment" -> mapping.outputFiles("finalBamFile")
+        "alignment" -> mappingJob.outputFiles("finalBamFile")
       )
 
-      val mapping: Mapping = new Mapping(qscript)
-
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
-      def alnFile: File = mapping.outputFiles("finalBamFile")
+      def alnFile: File = mappingJob.outputFiles("finalBamFile")
+
+      /** Per-library mapping job */
+      def mappingJob: Mapping = {
+        val job = new Mapping(qscript)
+        job.sampleId = Option(sampleId)
+        job.libId = Option(libId)
+        job.outputDir = libDir
+        job.input_R1 = config("R1")
+        job.input_R2 = config("R2")
+        job.init()
+        job.biopetScript()
+        job
+      }
 
       def addJobs(): Unit = {
         // create per-library alignment file
-        mapping.sampleId = Option(sampleId)
-        mapping.libId = Option(libId)
-        mapping.outputDir = libDir
-        mapping.input_R1 = config("R1")
-        // R2 is optional here (input samples could be paired-end or single-end)
-        mapping.input_R2 = config("R2")
-        mapping.init()
-        mapping.biopetScript()
-        addAll(mapping.functions)
-        qscript.addSummaryQScript(mapping)
+        addAll(mappingJob.functions)
+        qscript.addSummaryQScript(mappingJob)
         qscript.addSummarizable(this, "gentrap", Option(sampleId), Option(libId))
       }
 
