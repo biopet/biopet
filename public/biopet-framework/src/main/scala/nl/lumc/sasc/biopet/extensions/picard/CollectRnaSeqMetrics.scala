@@ -63,16 +63,18 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     strandSpecificity match {
       case Some(s) => require(validFlags.contains(s),
         s"Invalid Picard CollectRnaSeqMetrics strand specificity flag: $s. Valid values are " + validFlags.mkString(", "))
-      case None    => ;
+      case None => ;
     }
   }
 
   def summaryFiles: Map[String, File] = Map(
-      "metrics" -> output,
-      "annotation" -> refFlat
-    ) ++ Map(
-      "ribosomal_intervals" -> ribosomalIntervals,
-      "output_chart" -> chartOutput
+    "metrics" -> output,
+    "annotation" -> refFlat
+  ) ++ Map(
+      "ribosomal_intervals" -> ribosomalIntervals
+    // TODO: this is disabled now since the file *may* not exist (e.g. when gene coverage is low)
+    //       and it breaks the summary md5 creation
+    //"output_chart" -> chartOutput
     ).collect { case (key, Some(value)) => key -> value }
 
   def summaryStats: Map[String, Any] = {
