@@ -28,7 +28,7 @@ class CarpTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "carpOptions", parallel = true)
+  @DataProvider(name = "carpOptions")
   def carpOptions = {
     val bool = Array(true, false)
 
