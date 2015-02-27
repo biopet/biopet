@@ -39,8 +39,8 @@ class CombineVariants(val root: Configurable) extends Gatk {
   override def commandLine = super.commandLine +
     (for (file <- inputFiles) yield {
       inputMap.get(file) match {
-        case Some(name) => required("--variant:" + name, file)
-        case _          => required("--variant", file)
+        case Some(name) => required("-V:" + name, file)
+        case _          => required("-V", file)
       }
     }).mkString +
     required("-o", outputFile) +

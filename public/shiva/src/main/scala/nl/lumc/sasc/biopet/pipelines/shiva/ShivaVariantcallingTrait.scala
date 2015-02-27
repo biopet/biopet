@@ -34,12 +34,14 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   def finalFile = new File(outputDir, namePrefix + "final.vcf.gz")
 
   def biopetScript: Unit = {
-    val callers = usedCallers
+    val callers = usedCallers.sortBy(_.prio)
 
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
     cv.setKey = "VariantCaller"
-    for (caller <- callers.sortBy(_.prio)) {
+    cv.genotypeMergeOptions = Some("PRIORITIZE")
+    cv.rodPriorityList = callers.map(_.name).mkString(",")
+    for (caller <- callers) {
       caller.addJobs()
       cv.addInput(caller.outputFile, caller.name)
     }
@@ -99,6 +101,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
       val cv = new CombineVariants(qscript)
       cv.inputFiles = rawFiles
       cv.outputFile = outputFile
+      cv.setKey = "null"
       add(cv)
     }
   }
