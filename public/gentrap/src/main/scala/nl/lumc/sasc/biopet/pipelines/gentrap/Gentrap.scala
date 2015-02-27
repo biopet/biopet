@@ -133,10 +133,25 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) with Summarizable {
 
     /** Sample output directory */
     override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
+
+    /** Summary stats of the sample */
+    def summaryStats: Map[String, Any] = Map()
+
+    /** Summary files of the sample */
+    def summaryFiles: Map[String, File] = Map(
+      "alignment" -> alnFile,
+      "metrics" -> collectRnaSeqMetricsJob.output
+    ) ++ Map(
+        "gene_reads_count" -> geneReadsCount,
+        "exon_reads_count" -> exonReadsCount,
+        "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
+        "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksStrict,
+        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksStrict
+      ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file */
     lazy val alnFile: File = createFile(".bam")
@@ -284,10 +299,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       job
     }
 
-    /** Convenience method for adding the sample's summarizable */
-    def addSummarizable(summarizable: Summarizable, name: String): Unit =
-      qscript.addSummarizable(summarizable, name, Option(sampleId), None)
-
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
       // add per-library jobs
@@ -303,11 +314,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       cufflinksStrictJob.foreach(add(_))
       cufflinksGuidedJob.foreach(add(_))
       cufflinksBlindJob.foreach(add(_))
-      addSummaries()
-    }
-
-    def addSummaries(): Unit = {
-      addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
+      qscript.addSummarizable(this, "gentrap", Option(sampleId), None)
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
@@ -334,7 +341,15 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     def makeLibrary(libId: String): Library = new Library(libId)
 
-    class Library(libId: String) extends AbstractLibrary(libId) {
+    class Library(libId: String) extends AbstractLibrary(libId) with Summarizable {
+
+      /** Summary stats of the library */
+      def summaryStats: Map[String, Any] = Map()
+
+      /** Summary files of the library */
+      def summaryFiles: Map[String, File] = Map(
+        "alignment" -> mapping.outputFiles("finalBamFile")
+      )
 
       val mapping: Mapping = new Mapping(qscript)
 
@@ -352,8 +367,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         mapping.init()
         mapping.biopetScript()
         addAll(mapping.functions)
-        addSummaryQScript(mapping)
+        qscript.addSummaryQScript(mapping)
+        qscript.addSummarizable(this, "gentrap", Option(sampleId), Option(libId))
       }
+
     }
   }
 }
