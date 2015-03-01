@@ -29,11 +29,19 @@ object MergeTables extends ToolCommand {
   case class InputTable(name: String, source: BufferedSource)
 
   /** Processes the current line into a pair of feature identifier and its value */
-  def processLine(line: String, idIdces: Seq[Int], valIdx: Int, fallback: String = "-",
-                  delimiter: String = "\t", idSeparator: String = ","): (Feature, Value) = {
-    val split = line.split(delimiter)
+  def processLine(line: String, idIdces: Seq[Int], valIdx: Int, delimiter: Char = '\t',
+                  idSeparator: String = ","): (Feature, Value) = {
+
+    // split on delimiter and remove empty strings
+    val split = line
+      .split(delimiter)
+      .filter(_.nonEmpty)
+    val colSize = split.size
+    require(idIdces.forall(_ < colSize), "All feature ID indices must be smaller than number of columns")
+    require(valIdx < colSize, "Value index must be smaller than number of columns")
+
     val featureId = idIdces.map { split }.mkString(idSeparator)
-    (featureId, split.lift(valIdx).getOrElse(fallback))
+    (featureId, split(valIdx))
   }
 
   /** Merges multiple tables into a single map */
