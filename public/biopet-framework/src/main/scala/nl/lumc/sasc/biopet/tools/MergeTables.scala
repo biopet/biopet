@@ -177,26 +177,28 @@ object MergeTables extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
+  /** Transforms the input file seq into a seq of [[InputTable]] objects */
+  def prepInput(inFiles: Seq[File], ext: String = ""): Seq[InputTable] = {
+    require(inFiles.map(_.getName.stripSuffix(ext)).distinct.size == inFiles.size, "Duplicate samples exist in inputs")
+    inFiles
+      .map(tableFile => InputTable(tableFile.getName.stripSuffix(ext), Source.fromFile(tableFile)))
+  }
+
+  /** Creates the output writer object */
+  def prepOutput(outFile: File): BufferedWriter = outFile match {
+    case f if f.toString == "-" => new BufferedWriter(new OutputStreamWriter(System.out))
+    case otherwise              => new BufferedWriter(new FileWriter(otherwise))
+  }
+
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = parseArgs(args)
 
-    val ext = commandArgs.fileExtension
-    val idIdces = commandArgs.idColumnIndices
-    val valIdx = commandArgs.valueColumnIndex
-    val numHeaderLines = commandArgs.numHeaderLines
-    val idName = commandArgs.idColumnName
-    val fallback = commandArgs.fallbackString
+    import commandArgs._
 
-    val inputs = commandArgs.inputTables
-      .map(tableFile => InputTable(tableFile.getName, Source.fromFile(tableFile)))
-
-    val out = commandArgs.out match {
-      case f if f.toString == "-" => new BufferedWriter(new OutputStreamWriter(System.out))
-      case otherwise              => new BufferedWriter(new FileWriter(otherwise))
-    }
-
-    val results = mergeTables(inputs, ext, idIdces, valIdx, numHeaderLines)
-    writeOutput(results, out, fallback, idName)
-    out.close()
+    val outStream = prepOutput(out)
+    val merged = mergeTables(prepInput(inputTables, fileExtension),
+      idColumnIndices, valueColumnIndex, numHeaderLines, delimiter)
+    writeOutput(merged, outStream, fallbackString, idColumnName)
+    outStream.close()
   }
 }
