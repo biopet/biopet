@@ -45,18 +45,15 @@ object MergeTables extends ToolCommand {
   }
 
   /** Merges multiple tables into a single map */
-  def mergeTables(inputs: Seq[InputTable], ext: String, idIdces: Seq[Int], valIdx: Int,
-                  numHeaderLines: Int): Map[Sample, Map[Feature, Value]] = {
+  def mergeTables(inputs: Seq[InputTable], idIdces: Seq[Int], valIdx: Int,
+                  numHeaderLines: Int, delimiter: Char = '\t'): Map[Sample, Map[Feature, Value]] = {
 
-    require(inputs.forall(_.name.endsWith(ext)),
-      s"One or more input files does not end with the '$ext' extension")
+    require(numHeaderLines >= 0, "Number of input header lines less than zero")
 
     inputs
       // make a map of the base name and the file object
-      .map(input => input.name.stripSuffix(ext) -> input.source)
-      // make the final map
       .map {
-        case (name, source) =>
+        case InputTable(name, source) =>
           val featureValues: Seq[(Feature, Value)] = source
             .getLines()
             // drop header lines according to input
@@ -69,8 +66,7 @@ object MergeTables extends ToolCommand {
           require(featureValues.map(_._1).distinct.size == featureValues.size,
             s"Duplicate features exist in $name")
           name -> featureValues.toMap
-      }
-      .toMap
+      }.toMap
   }
 
   /** Writes results to stdout */
@@ -106,10 +102,16 @@ object MergeTables extends ToolCommand {
                   fileExtension: String = "",
                   numHeaderLines: Int = 1,
                   fallbackString: String = "-",
+                  delimiter: Char = '\t',
                   out: File = new File("-")) extends AbstractArgs
 
   /** Command line argument parser */
   class OptParser extends AbstractOptParser {
+
+    import scopt.Read
+
+    // implicit conversion for argument parsing
+    implicit val charRead: Read[Char] = Read.reads { _.toCharArray.head }
 
     head(
       s"""
@@ -146,6 +148,10 @@ object MergeTables extends ToolCommand {
 
     opt[String]('f', "fallback") optional () action { (x, c) =>
       c.copy(fallbackString = x)
+    } text "The string to use when a value for a feature is missing in one or more sample(s) (default: '-')"
+
+    opt[Char]('d', "delimiter") optional () action { (x, c) =>
+      c.copy(delimiter = x)
     } text "The string to use when a value for a feature is missing in one or more sample(s) (default: '-')"
 
     arg[File]("<input_tables> ...") unbounded () optional () action { (x, c) =>
