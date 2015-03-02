@@ -4,7 +4,6 @@ import java.io.File
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions.bcftools.Bcftools
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.tools.{VcfFilter, MpileupToVcf}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -28,7 +27,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "shivaVariantcallingOptions")
-  def mappingOptions = {
+  def shivaVariantcallingOptions = {
     val raw = Array(true, false)
     val bcftools = Array(true, false)
 
