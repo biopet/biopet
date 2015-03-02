@@ -225,7 +225,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         val job = new HtseqCount(qscript)
         job.inputAnnotation = annotationGtf.get
         job.inputAlignment = idSortingJob.get.output
-        job.output = createFile(".fragments_per_gene")
+        job.output = createFile(".fragments_per_exon")
         job.format = Option("bam")
         job.order = Option("name")
         job.stranded = strProtocol match {
