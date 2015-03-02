@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ PrintReads, BaseRecalibrator, RealignerTargetCreator, IndelRealigner }
+import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
 import nl.lumc.sasc.biopet.tools.VcfStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -29,13 +29,16 @@ class ShivaGatkTest extends TestNGSuite with Matchers {
   def shivaOptions = {
     val bool = Array(true, false)
 
-    for (s1 <- bool; s2 <- bool; s3 <- bool; multi <- bool; single <- bool; library <- bool; dbsnp <- bool)
-      yield Array("", s1, s2, s3, multi, single, library, dbsnp)
+    for (
+      s1 <- bool; s2 <- bool; s3 <- bool; multi <- bool; single <- bool;
+      library <- bool; dbsnp <- bool; covariates <- bool; realign <- bool; baseRecalibration <- bool
+    ) yield Array("", s1, s2, s3, multi, single, library, dbsnp, covariates, realign, baseRecalibration)
   }
 
   @Test(dataProvider = "shivaOptions")
   def testShiva(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean,
-                multi: Boolean, single: Boolean, library: Boolean, dbsnp: Boolean): Unit = {
+                multi: Boolean, single: Boolean, library: Boolean, dbsnp: Boolean,
+                covariates: Boolean, realign: Boolean, baseRecalibration: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = ShivaGatkTest.config
       if (sample1) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample1, m.toMap)
@@ -44,7 +47,8 @@ class ShivaGatkTest extends TestNGSuite with Matchers {
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m.toMap)
       ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
-        "library_variantcalling" -> library), m.toMap)
+        "library_variantcalling" -> library,
+        "use_analyze_covariates" -> covariates, "use_indel_realign" -> realign, "use_base_recalibration" -> baseRecalibration), m.toMap)
 
     }
 
@@ -64,10 +68,11 @@ class ShivaGatkTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
 
       // Gatk preprocess
-      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs + (if (sample3) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs + (if (sample3) 1 else 0))
-      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp) numberLibs else 0)
-      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs + (if (sample3) 1 else 0)) * (if (realign) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs + (if (sample3) 1 else 0)) * (if (realign) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0) * (if (covariates) 2 else 1)
+      pipeline.functions.count(_.isInstanceOf[AnalyzeCovariates]) shouldBe (if (dbsnp && covariates && baseRecalibration) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
 
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0) +
         (if (single) numberSamples * 2 else 0) + (if (library) numberLibs * 2 else 0)
