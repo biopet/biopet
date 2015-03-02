@@ -53,7 +53,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test def testProcessLineCustomIdSeparator() = {
     val line = "a\tb\tc\td\te"
-    processLine(line, Seq(0, 1), 3, idSeparator = "_") shouldBe("a_b", "d")
+    processLine(line, Seq(0, 1), 3, idSeparator = "_") shouldBe ("a_b", "d")
   }
 
   @Test def testProcessLineAdjacentDelimiters() = {
@@ -65,8 +65,8 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     val in1 = InputTable("file1", mock[BufferedSource])
     val in2 = InputTable("file2", mock[BufferedSource])
 
-    when (in1.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t1")
-    when (in2.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t100", "x\ty\t9")
+    when(in1.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t1")
+    when(in2.source.getLines()) thenReturn Iterator("feature\trandom\tvalue", "a\tb\t100", "x\ty\t9")
 
     val result = mergeTables(Seq(in1, in2), Seq(0), 2, 1)
     result.keySet shouldBe Set("file1", "file2")
