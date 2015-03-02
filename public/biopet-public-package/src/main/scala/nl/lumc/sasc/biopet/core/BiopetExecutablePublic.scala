@@ -30,6 +30,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
   )
 
   def tools: List[MainCommand] = List(
+    nl.lumc.sasc.biopet.tools.MergeTables,
     nl.lumc.sasc.biopet.tools.WipeReads,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSync,
