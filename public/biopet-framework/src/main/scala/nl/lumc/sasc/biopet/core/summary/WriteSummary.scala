@@ -46,6 +46,10 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   /** Function to create summary */
   def run(): Unit = {
+    for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {
+      summarizable.addToQscriptSummary(qscript)
+    }
+
     val pipelineMap = {
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings

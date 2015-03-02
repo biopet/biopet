@@ -17,6 +17,9 @@ trait Summarizable {
   /** Must returns stats to store into summary */
   def summaryStats: Map[String, Any]
 
+  /** Can be used to add additional Summarizable, this is executed at the start of WriteSummary*/
+  def addToQscriptSummary(qscript: SummaryQScript) {}
+
   /**
    * This function is used to merge value that are found at the same path in the map. Default there will throw a exception at conflicting values.
    * @param v1 Value of new map
