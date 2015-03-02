@@ -25,6 +25,7 @@ import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.tools.MergeTables
 
 /**
  * Gentrap pipeline
@@ -127,6 +128,26 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   }
 
   def addMultiSampleJobs(): Unit = {
+
+    /** Adds output merge jobs for the given expression mode */
+    // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
+    def addMergeTableJob(expMode: ExpMeasures.Value, inFunc: (Sample => Option[File]), ext: String,
+                         idCols: List[Int], valCol: Int, outName: String): Unit =
+      if (expMeasures.contains(expMode)) {
+        val job = new MergeTables(qscript)
+        job.inputTables = samples.values.map { inFunc }.toList.flatten
+        job.output = new File(outputDir, outName)
+        job.idColumnIndices = idCols.map(_.toString)
+        job.valueColumnIndex = valCol
+        job.fileExtension = Option(ext)
+        add(job)
+      }
+
+    addMergeTableJob(FragmentsPerGene, (s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2,
+      "all_samples.fragments_per_gene")
+    addMergeTableJob(FragmentsPerExon, (s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2,
+      "all_samples.fragments_per_exon")
+
     // TODO: use proper notation
     addSummaryJobs
   }
