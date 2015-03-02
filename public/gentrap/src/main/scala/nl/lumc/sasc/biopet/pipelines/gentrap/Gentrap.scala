@@ -133,7 +133,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
-  class Sample(sampleId: String) extends AbstractSample(sampleId) with Summarizable {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
     /** Sample output directory */
     override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
@@ -314,7 +314,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       cufflinksStrictJob.foreach(add(_))
       cufflinksGuidedJob.foreach(add(_))
       cufflinksBlindJob.foreach(add(_))
-      qscript.addSummarizable(this, "gentrap", Option(sampleId), None)
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
@@ -341,7 +340,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     def makeLibrary(libId: String): Library = new Library(libId)
 
-    class Library(libId: String) extends AbstractLibrary(libId) with Summarizable {
+    class Library(libId: String) extends AbstractLibrary(libId) {
 
       /** Summary stats of the library */
       def summaryStats: Map[String, Any] = Map()
@@ -371,7 +370,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         // create per-library alignment file
         addAll(mappingJob.functions)
         qscript.addSummaryQScript(mappingJob)
-        qscript.addSummarizable(this, "gentrap", Option(sampleId), Option(libId))
       }
 
     }
