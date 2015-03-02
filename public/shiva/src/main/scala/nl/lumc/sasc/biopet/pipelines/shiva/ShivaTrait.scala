@@ -185,7 +185,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       addPerLibJobs()
 
       if (preProcessBam.isDefined) {
-        val bamMetrics = new BamMetrics(root)
+        val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = preProcessBam.get
         bamMetrics.outputDir = sampleDir

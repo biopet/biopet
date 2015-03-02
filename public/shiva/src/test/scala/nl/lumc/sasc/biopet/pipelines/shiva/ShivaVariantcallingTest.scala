@@ -5,7 +5,7 @@ import java.io.File
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.tools.{VcfFilter, MpileupToVcf}
+import nl.lumc.sasc.biopet.tools.{ VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -30,15 +30,8 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
-    val raw = Array(true, false)
-    val bcftools = Array(true, false)
-
-    (for (
-      bams <- 0 to 3;
-      raw <- raw;
-      bcftools <- bcftools
-    ) yield Array[Any](bams, raw, bcftools)
-      ).toArray
+    val bool = Array(true, false)
+    (for (bams <- 0 to 3; raw <- bool; bcftools <- bool) yield Array(bams, raw, bcftools)).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
@@ -46,7 +39,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
-    val map = Map("variantcallers"-> callers.toList)
+    val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList

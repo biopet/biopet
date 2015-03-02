@@ -5,25 +5,25 @@ import java.io.File
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{UnifiedGenotyper, HaplotypeCaller}
-import nl.lumc.sasc.biopet.tools.{VcfStats, MpileupToVcf, VcfFilter}
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ UnifiedGenotyper, HaplotypeCaller }
+import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test, AfterClass}
+import org.testng.annotations.{ DataProvider, Test, AfterClass }
 
 import scala.collection.mutable.ListBuffer
 
 /**
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaVariantcallingTest extends TestNGSuite with Matchers {
+class ShivaVariantcallingGatkTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): ShivaVariantcallingGatk = {
     new ShivaVariantcallingGatk() {
       override def configName = "shivavariantcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingGatkTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -31,23 +31,17 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
-    val raw = Array(true, false)
-    val bcftools = Array(true, false)
-    val haplotypeCallerGvcf = Array(true, false)
-    val haplotypeCallerAllele = Array(true, false)
-    val unifiedGenotyperAllele = Array(true, false)
-    val unifiedGenotyper = Array(true, false)
-    val haplotypeCaller = Array(true, false)
+    val bool = Array(true, false)
 
     (for (
       bams <- 0 to 2;
-      raw <- raw;
-      bcftools <- bcftools;
-      haplotypeCallerGvcf <- haplotypeCallerGvcf;
-      haplotypeCallerAllele <- haplotypeCallerAllele;
-      unifiedGenotyperAllele <- unifiedGenotyperAllele;
-      unifiedGenotyper <- unifiedGenotyper;
-      haplotypeCaller <- haplotypeCaller
+      raw <- bool;
+      bcftools <- bool;
+      haplotypeCallerGvcf <- bool;
+      haplotypeCallerAllele <- bool;
+      unifiedGenotyperAllele <- bool;
+      unifiedGenotyper <- bool;
+      haplotypeCaller <- bool
     ) yield Array[Any](bams, raw, bcftools, unifiedGenotyper, haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele)
     ).toArray
   }
@@ -69,7 +63,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     if (haplotypeCallerAllele) callers.append("haplotypecaller_allele")
     if (unifiedGenotyperAllele) callers.append("unifiedgenotyper_allele")
     if (haplotypeCaller) callers.append("haplotypecaller")
-    val map = Map("variantcallers"-> callers.toList)
+    val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
@@ -100,11 +94,11 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   }
 
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
+    FileUtils.deleteDirectory(ShivaVariantcallingGatkTest.outputDir)
   }
 }
 
-object ShivaVariantcallingTest {
+object ShivaVariantcallingGatkTest {
   val outputDir = Files.createTempDir()
 
   val config = Map(
