@@ -31,10 +31,7 @@ trait MultiSampleQScript extends SummaryQScript {
 
   require(globalConfig.map.contains("samples"), "No Samples found in config")
 
-  /**
-   * Sample class with basic functions build in
-   * @param sampleId
-   */
+  /** Sample class with basic functions build in */
   abstract class AbstractSample(val sampleId: String) extends Summarizable {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
