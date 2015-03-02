@@ -1,9 +1,10 @@
-package nl.lumc.sasc.biopet.pipelines.shiva
+package nl.lumc.sasc.biopet.pipelines.gatk
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ PrintReads, BaseRecalibrator, RealignerTargetCreator, IndelRealigner }
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
 import nl.lumc.sasc.biopet.tools.VcfStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -14,11 +15,11 @@ import org.testng.annotations.{ Test, DataProvider }
 /**
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): Shiva = {
-    new Shiva() {
+class ShivaGatkTest extends TestNGSuite with Matchers {
+  def initPipeline(map: Map[String, Any]): ShivaGatk = {
+    new ShivaGatk() {
       override def configName = "shiva"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaGatkTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -28,18 +29,19 @@ class ShivaTest extends TestNGSuite with Matchers {
   def shivaOptions = {
     val bool = Array(true, false)
 
-    for (s1 <- bool; s2 <- bool; s3 <- bool; multi <- bool; single <- bool; library <- bool)
-      yield Array("", s1, s2, s3, multi, single, library)
+    for (s1 <- bool; s2 <- bool; s3 <- bool; multi <- bool; single <- bool; library <- bool; dbsnp <- bool)
+      yield Array("", s1, s2, s3, multi, single, library, dbsnp)
   }
 
   @Test(dataProvider = "shivaOptions")
   def testShiva(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean,
-                multi: Boolean, single: Boolean, library: Boolean): Unit = {
+                multi: Boolean, single: Boolean, library: Boolean, dbsnp: Boolean): Unit = {
     val map = {
-      var m: Map[String, Any] = ShivaTest.config
-      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m.toMap)
+      var m: Map[String, Any] = ShivaGatkTest.config
+      if (sample1) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample1, m.toMap)
+      if (sample2) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample2, m.toMap)
+      if (sample3) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample3, m.toMap)
+      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m.toMap)
       ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library), m.toMap)
@@ -61,13 +63,19 @@ class ShivaTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
 
+      // Gatk preprocess
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs + (if (sample3) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs + (if (sample3) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp) numberLibs else 0)
+
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0) +
         (if (single) numberSamples * 2 else 0) + (if (library) numberLibs * 2 else 0)
     }
   }
 }
 
-object ShivaTest {
+object ShivaGatkTest {
   val outputDir = Files.createTempDir()
 
   val config = Map(
