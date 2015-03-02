@@ -40,9 +40,22 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
 
     class Library(libId: String) extends AbstractLibrary(libId) {
+
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
 
       def preProcess(input: File): Option[File] = None
 
@@ -168,7 +181,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         md.outputMetrics = new File(sampleDir, sampleId + ".dedup.bam")
         md.isIntermediate = isIntermediate
         add(md)
-        addSummarizable(md, "mark_duplicates", Some(sampleId))
+        addSummarizable(md, "mark_duplicates")
         Some(md.output)
       }
     }
