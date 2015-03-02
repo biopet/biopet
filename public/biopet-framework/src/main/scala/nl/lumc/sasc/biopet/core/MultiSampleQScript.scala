@@ -22,9 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-/**
- * This trait creates a structured way of use multisample pipelines
- */
+/** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript {
   qscript =>
 
@@ -41,19 +39,12 @@ trait MultiSampleQScript extends SummaryQScript {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
-    /**
-     * Library class with basic functions build in
-     * @param libId
-     */
+    /** Library class with basic functions build in */
     abstract class AbstractLibrary(val libId: String) extends Summarizable {
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
-      /**
-       * Name overules the one from qscript
-       * @param summarizable
-       * @param name
-       */
+      /** Name overules the one from qscript */
       def addSummarizable(summarizable: Summarizable, name: String): Unit = {
         qscript.addSummarizable(summarizable, name, Some(sampleId), Some(libId))
       }
@@ -162,7 +153,7 @@ trait MultiSampleQScript extends SummaryQScript {
   }
 
   /**
-   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
   def addMultiSampleJobs()
 

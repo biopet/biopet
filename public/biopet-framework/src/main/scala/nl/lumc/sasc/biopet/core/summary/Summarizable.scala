@@ -11,16 +11,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  */
 trait Summarizable {
 
-  /**
-   * Must return files to store into summary
-   * @return
-   */
+  /** Must return files to store into summary */
   def summaryFiles: Map[String, File]
 
-  /**
-   * Must returns stats to store into summary
-   * @return
-   */
+  /** Must returns stats to store into summary */
   def summaryStats: Map[String, Any]
 
   /**
