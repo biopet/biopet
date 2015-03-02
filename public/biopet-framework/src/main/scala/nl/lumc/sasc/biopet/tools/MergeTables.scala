@@ -6,12 +6,42 @@ import scala.collection.mutable.{ Set => MutSet }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.config.{ Configurable, ConfigValue }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
 
+  override val defaultVmem = "5G"
+
+  @Input(doc = "Input table files", required = true)
+  var inputTables: List[File] = List.empty[File]
+
+  @Output(doc = "Output merged table", required = true)
+  var output: File = null
+
+  // TODO: should be List[Int] really
+  var idColumnIndices: List[String] = config("id_column_indices", default = List("1"))
+  var valueColumnIndex: Int = config("value_column_index", default = 2)
+  var idColumnName: Option[String] = config("id_column_name")
+  var fileExtension: Option[String] = config("file_extension")
+  var numHeaderLines: Option[Int] = config("num_header_lines")
+  var fallbackString: Option[String] = config("fallback_string")
+  var delimiter: Option[String] = config("delimiter")
+
+  // executed command line
+  override def commandLine =
+    super.commandLine +
+      required("-i", idColumnIndices.mkString(",")) +
+      required("-a", valueColumnIndex) +
+      optional("-n", idColumnName) +
+      optional("-e", fileExtension) +
+      optional("h", numHeaderLines) +
+      optional("f", fallbackString) +
+      optional("d", delimiter) +
+      required("-o", output) +
+      required("", repeat(inputTables), escape = false)
 }
 
 object MergeTables extends ToolCommand {
