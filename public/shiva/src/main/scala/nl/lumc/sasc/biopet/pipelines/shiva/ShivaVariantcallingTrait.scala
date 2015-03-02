@@ -38,10 +38,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   def finalFile = new File(outputDir, namePrefix + ".final.vcf.gz")
 
   def biopetScript: Unit = {
-    val callers = usedCallers.sortBy(_.prio)
+    val configCallers: Set[String] = config("variantcallers")
+    val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
 
     require(!inputBams.isEmpty, "No input bams found")
-    require(callers.exists(_.use), "must select atleast 1 variantcaller")
+    require(!callers.isEmpty, "must select atleast 1 variantcaller, possible to use: " + callersList.map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
@@ -69,15 +70,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     addSummaryJobs
   }
 
-  def callers: List[Variantcaller] = List(new RawVcf, new Bcftools)
-
-  def usedCallers: List[Variantcaller] = callers.filter(_.use)
+  protected def callersList: List[Variantcaller] = List(new RawVcf, new Bcftools)
 
   trait Variantcaller {
     val name: String
     def outputDir = new File(qscript.outputDir, name)
-    protected val defaultUse: Boolean
-    lazy val use: Boolean = config("use_" + name, default = defaultUse)
     protected val defaultPrio: Int
     lazy val prio: Int = config("prio_" + name, default = defaultPrio)
     def addJobs()
@@ -87,7 +84,6 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   class Bcftools extends Variantcaller {
     val name = "bcftools"
     protected val defaultPrio = 8
-    protected val defaultUse = true
 
     def outputFile = new File(outputDir, namePrefix + ".bcftools.vcf.gz")
 
@@ -117,7 +113,6 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   class RawVcf extends Variantcaller {
     val name = "raw"
     protected val defaultPrio = 999
-    protected val defaultUse = true
 
     def outputFile = new File(outputDir, namePrefix + ".raw.vcf.gz")
 
@@ -154,5 +149,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
 
   def summarySettings = Map()
 
-  def summaryFiles: Map[String, File] = usedCallers.map(x => (x.name -> x.outputFile)).toMap + ("final" -> finalFile)
+  def summaryFiles: Map[String, File] = {
+    val callers: Set[String] = config("variantcallers")
+    callersList.filter(x => callers.contains(x.name)).map(x => (x.name -> x.outputFile)).toMap + ("final" -> finalFile)
+  }
 }

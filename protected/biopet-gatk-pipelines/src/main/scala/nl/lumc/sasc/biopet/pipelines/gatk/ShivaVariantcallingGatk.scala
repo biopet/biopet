@@ -13,19 +13,18 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   qscript =>
   def this() = this(null)
 
-  override def callers = {
+  override def callersList = {
     new HaplotypeCallerGvcf ::
       new HaplotypeCallerAllele ::
       new UnifiedGenotyperAllele ::
       new UnifiedGenotyper ::
       new HaplotypeCaller ::
-      super.callers
+      super.callersList
   }
 
   class HaplotypeCaller extends Variantcaller {
     val name = "haplotypecaller"
     protected val defaultPrio = 1
-    protected val defaultUse = true
 
     def outputFile = new File(outputDir, namePrefix + ".haplotypecaller.vcf.gz")
 
@@ -40,7 +39,6 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   class UnifiedGenotyper extends Variantcaller {
     val name = "unifiedgenotyper"
     protected val defaultPrio = 20
-    protected val defaultUse = false
 
     def outputFile = new File(outputDir, namePrefix + ".unifiedgenotyper.vcf.gz")
 
@@ -55,7 +53,6 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   class HaplotypeCallerAllele extends Variantcaller {
     val name = "haplotypecaller_allele"
     protected val defaultPrio = 5
-    protected val defaultUse = false
 
     def outputFile = new File(outputDir, namePrefix + ".haplotypecaller_allele.vcf.gz")
 
@@ -72,7 +69,6 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   class UnifiedGenotyperAllele extends Variantcaller {
     val name = "unifiedgenotyper_allele"
     protected val defaultPrio = 9
-    protected val defaultUse = false
 
     def outputFile = new File(outputDir, namePrefix + ".unifiedgenotyper_allele.vcf.gz")
 
@@ -89,7 +85,6 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   class HaplotypeCallerGvcf extends Variantcaller {
     val name = "haplotypecaller_gvcf"
     protected val defaultPrio = 5
-    protected val defaultUse = false
 
     def outputFile = new File(outputDir, namePrefix + ".haplotypecaller_gvcf.vcf.gz")
 

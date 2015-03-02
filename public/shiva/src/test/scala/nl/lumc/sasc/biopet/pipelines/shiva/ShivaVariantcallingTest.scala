@@ -13,6 +13,8 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, Test, DataProvider }
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Created by pjvan_thof on 3/2/15.
  */
@@ -36,17 +38,20 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       raw <- raw;
       bcftools <- bcftools
     ) yield Array[Any](bams, raw, bcftools)
-    ).toArray
+      ).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
   def testShivaVariantcalling(bams: Int, raw: Boolean, bcftools: Boolean) = {
-    val map = Map("use_raw" -> raw, "use_bcftools" -> bcftools)
+    val callers: ListBuffer[String] = ListBuffer()
+    if (raw) callers.append("raw")
+    if (bcftools) callers.append("bcftools")
+    val map = Map("variantcallers"-> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || !raw && !bcftools
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -66,7 +71,6 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   @AfterClass def removeTempOutputDir() = {
     FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
   }
-
 }
 
 object ShivaVariantcallingTest {
