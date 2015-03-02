@@ -34,10 +34,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
 
   protected var outputDir: File = _
 
-  /**
-   * Set output dir and a output file
-   * @param dir
-   */
+  /** Set output dir and a output file */
   def setOutputDir(dir: File): Unit = {
     outputDir = dir
     generalStats = new File(dir, "general.tsv")
@@ -45,18 +42,12 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
     jobOutputFile = new File(dir, ".vcfstats.out")
   }
 
-  /**
-   * Creates command to execute extension
-   * @return
-   */
+  /** Creates command to execute extension */
   override def commandLine = super.commandLine +
     required("-I", input) +
     required("-o", outputDir)
 
-  /**
-   * Returns general stats to the summary
-   * @return
-   */
+  /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {
     (for (
       line <- Source.fromFile(generalStats).getLines();
@@ -65,10 +56,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
     ).toMap
   }
 
-  /**
-   * return only general files to summary
-   * @return
-   */
+  /** return only general files to summary */
   def summaryFiles: Map[String, File] = Map(
     "general_stats" -> generalStats,
     "genotype_stats" -> genotypeStats
@@ -387,7 +375,9 @@ object VcfStats extends ToolCommand {
       writer.println(values.mkString(key + "\t", "\t", ""))
     }
     writer.close()
-    plotLine(file)
+
+    //FIXME: plotting of thise value is broken
+    //plotLine(file)
   }
 
   /**
