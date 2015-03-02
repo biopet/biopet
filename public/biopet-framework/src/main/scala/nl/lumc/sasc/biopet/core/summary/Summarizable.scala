@@ -9,18 +9,12 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * Created by pjvan_thof on 2/14/15.
  */
-trait Summarizable extends Configurable {
+trait Summarizable {
 
-  /**
-   * Must return files to store into summary
-   * @return
-   */
+  /** Must return files to store into summary */
   def summaryFiles: Map[String, File]
 
-  /**
-   * Must returns stats to store into summary
-   * @return
-   */
+  /** Must returns stats to store into summary */
   def summaryStats: Map[String, Any]
 
   /**
