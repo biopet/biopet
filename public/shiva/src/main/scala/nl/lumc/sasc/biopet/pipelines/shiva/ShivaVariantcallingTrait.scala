@@ -40,6 +40,9 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   def biopetScript: Unit = {
     val callers = usedCallers.sortBy(_.prio)
 
+    require(!inputBams.isEmpty, "No input bams found")
+    require(callers.exists(_.use), "must select atleast 1 variantcaller")
+
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
     cv.setKey = "VariantCaller"
