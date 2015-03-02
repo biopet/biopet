@@ -98,7 +98,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
       bt.v = true
       bt.c = true
 
-      //TODO: add proper class
+      //TODO: add proper class with piping support, see also issue #114
       add(new CommandLineFunction {
         @Input
         var input = inputBams
