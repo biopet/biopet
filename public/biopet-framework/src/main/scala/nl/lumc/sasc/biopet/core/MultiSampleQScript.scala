@@ -87,11 +87,7 @@ trait MultiSampleQScript extends SummaryQScript {
       ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
     }
 
-    /**
-     * Name overules the one from qscript
-     * @param summarizable
-     * @param name
-     */
+    /** Name overules the one from qscript */
     def addSummarizable(summarizable: Summarizable, name: String): Unit = {
       qscript.addSummarizable(summarizable, name, Some(sampleId))
     }
