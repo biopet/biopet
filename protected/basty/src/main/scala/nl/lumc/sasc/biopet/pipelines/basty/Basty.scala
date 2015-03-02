@@ -31,10 +31,30 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   var gatkPipeline: GatkPipeline = new GatkPipeline(qscript)
 
+  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+
+  //TODO: Add summary
+  def summaryFiles: Map[String, File] = Map()
+
+  //TODO: Add summary
+  def summarySettings: Map[String, Any] = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
+
       protected def addJobs(): Unit = {}
     }
 
@@ -56,6 +76,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   def biopetScript() {
     gatkPipeline.biopetScript
     addAll(gatkPipeline.functions)
+    addSummaryQScript(gatkPipeline)
 
     addSamplesJobs()
   }
