@@ -70,6 +70,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val vcfStats = new VcfStats(qscript)
     vcfStats.input = finalFile
     vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
+    vcfStats.infoTags :+= cv.setKey
     add(vcfStats)
     addSummarizable(vcfStats, namePrefix + "-vcfstats-final")
 
@@ -147,6 +148,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
       cv.inputFiles = rawFiles
       cv.outputFile = outputFile
       cv.setKey = "null"
+      cv.excludeNonVariants = true
       add(cv)
     }
   }
