@@ -77,7 +77,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     addSummaryJobs
   }
 
-  protected def callersList: List[Variantcaller] = List(new RawVcf, new Bcftools)
+  protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools)
 
   trait Variantcaller {
     val name: String
@@ -86,6 +86,20 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     lazy val prio: Int = config("prio_" + name, default = defaultPrio)
     def addJobs()
     def outputFile: File
+  }
+
+  class Freebayes extends Variantcaller {
+    val name = "freebayes"
+    protected val defaultPrio = 7
+
+    def outputFile = new File(outputDir, namePrefix + ".freebayes.vcf")
+
+    def addJobs() {
+      val fb = new nl.lumc.sasc.biopet.extensions.Freebayes(qscript)
+      fb.bamfiles = inputBams
+      fb.outputVcf = outputFile
+      add(fb)
+    }
   }
 
   class Bcftools extends Variantcaller {

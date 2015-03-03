@@ -4,6 +4,7 @@ import java.io.File
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions.Freebayes
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.tools.{ VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -31,20 +32,21 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
     val bool = Array(true, false)
-    (for (bams <- 0 to 3; raw <- bool; bcftools <- bool) yield Array(bams, raw, bcftools)).toArray
+    (for (bams <- 0 to 3; raw <- bool; bcftools <- bool; freebayes <- bool) yield Array(bams, raw, bcftools, freebayes)).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
-  def testShivaVariantcalling(bams: Int, raw: Boolean, bcftools: Boolean) = {
+  def testShivaVariantcalling(bams: Int, raw: Boolean, bcftools: Boolean, freebayes: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
+    if (freebayes) callers.append("freebayes")
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !freebayes)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -56,6 +58,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe 1 + (if (raw) 1 else 0)
       //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
       //FIXME: Can not check for bcftools because of piping
+      pipeline.functions.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
       pipeline.functions.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
     }
@@ -75,6 +78,7 @@ object ShivaVariantcallingTest {
     "reference" -> "test",
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
-    "bcftools" -> Map("exe" -> "test")
+    "bcftools" -> Map("exe" -> "test"),
+    "freebayes" -> Map("exe" -> "test")
   )
 }
