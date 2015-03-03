@@ -102,7 +102,7 @@ object VcfStats extends ToolCommand {
    * @param genotypeStats Stores all genotype relative stats
    * @param sampleToSample Stores sample to sample compare stats
    */
-  case class SampleStats(val genotypeStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
+  case class SampleStats(val genotypeStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
                          val sampleToSample: mutable.Map[String, SampleToSampleStats] = mutable.Map()) {
     /** Add an other class */
     def +=(other: SampleStats): Unit = {
@@ -110,10 +110,11 @@ object VcfStats extends ToolCommand {
         if (this.sampleToSample.contains(key)) this.sampleToSample(key) += value
         else this.sampleToSample(key) = value
       }
-      for ((field, fieldMap) <- other.genotypeStats) {
-        val thisField = this.genotypeStats.get(field)
+      for ((chr, chrMap) <- other.genotypeStats; (field, fieldMap) <- chrMap) {
+        if (!this.genotypeStats.contains(chr))  genotypeStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
+        val thisField = this.genotypeStats(chr).get(field)
         if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
-        else this.genotypeStats += field -> fieldMap
+        else this.genotypeStats(chr) += field -> fieldMap
       }
     }
   }
@@ -123,7 +124,7 @@ object VcfStats extends ToolCommand {
    * @param generalStats Stores are general stats
    * @param samplesStats Stores all sample/genotype specific stats
    */
-  case class Stats(val generalStats: mutable.Map[String, mutable.Map[Any, Int]] = mutable.Map(),
+  case class Stats(val generalStats: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map(),
                    val samplesStats: mutable.Map[String, SampleStats] = mutable.Map()) {
     /** Add an other class */
     def +=(other: Stats): Stats = {
@@ -131,38 +132,34 @@ object VcfStats extends ToolCommand {
         if (this.samplesStats.contains(key)) this.samplesStats(key) += value
         else this.samplesStats(key) = value
       }
-      for ((field, fieldMap) <- other.generalStats) {
-        val thisField = this.generalStats.get(field)
+      for ((chr, chrMap) <- other.generalStats; (field, fieldMap) <- chrMap) {
+        if (!this.generalStats.contains(chr))  generalStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
+        val thisField = this.generalStats(chr).get(field)
         if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
-        else this.generalStats += field -> fieldMap
+        else this.generalStats(chr) += field -> fieldMap
       }
       this
     }
   }
 
-  /**
-   * Merge m2 into m1
-   * @param m1
-   * @param m2
-   */
+  /** Merge m2 into m1 */
   def mergeStatsMap(m1: mutable.Map[Any, Int], m2: mutable.Map[Any, Int]): Unit = {
     for (key <- m2.keySet)
       m1(key) = m1.getOrElse(key, 0) + m2(key)
   }
 
-  /**
-   * Merge m2 into m1
-   * @param m1
-   * @param m2
-   */
-  def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[Any, Int]], m2: Map[String, Map[Any, Int]]): Unit = {
-    for ((field, fieldMap) <- m2) {
-      if (m1.contains(field)) {
-        for ((key, value) <- fieldMap) {
-          if (m1(field).contains(key)) m1(field)(key) += value
-          else m1(field)(key) = value
-        }
-      } else m1(field) = mutable.Map(fieldMap.toList: _*)
+  /** Merge m2 into m1 */
+  def mergeNestedStatsMap(m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]],
+                          m2: Map[String, Map[String, Map[Any, Int]]]): Unit = {
+    for ((chr, chrMap) <- m2; (field, fieldMap) <- chrMap) {
+      if (m1.contains(chr)) {
+        if (m1(chr).contains(field)) {
+          for ((key, value) <- fieldMap) {
+            if (m1(chr)(field).contains(key)) m1(chr)(field)(key) += value
+            else m1(chr)(field)(key) = value
+          }
+        } else m1(chr)(field) = mutable.Map(fieldMap.toList: _*)
+      } else m1(chr) = mutable.Map(field -> mutable.Map(fieldMap.toList: _*))
     }
   }
 
@@ -227,8 +224,8 @@ object VcfStats extends ToolCommand {
       val stats = createStats
       logger.info("Starting on: " + interval)
 
-      for (
-        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+      for (record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
+        if record.getStart <= interval.getEnd
       ) {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record))
         for (sample1 <- samples) yield {
@@ -251,8 +248,8 @@ object VcfStats extends ToolCommand {
 
     logger.info("Done reading vcf records")
 
-    writeField("QUAL", stats.generalStats.getOrElse("QUAL", mutable.Map()))
-    writeField("general", stats.generalStats.getOrElse("general", mutable.Map()))
+    writeField("QUAL", stats.generalStats.getOrElse("total", mutable.Map()).getOrElse("QUAL", mutable.Map()))
+    writeField("general", stats.generalStats.getOrElse("total", mutable.Map()).getOrElse("general", mutable.Map()))
     writeGenotypeFields(stats, commandArgs.outputDir + "/genotype_", samples)
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
@@ -260,56 +257,49 @@ object VcfStats extends ToolCommand {
     logger.info("Done")
   }
 
-  /**
-   * Function to check all general stats, all info expect sample/genotype specific stats
-   * @param record
-   * @return
-   */
-  protected def checkGeneral(record: VariantContext): Map[String, Map[Any, Int]] = {
+  /** Function to check all general stats, all info expect sample/genotype specific stats */
+  protected def checkGeneral(record: VariantContext): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
-    def addToBuffer(key: String, value: Any): Unit = {
+    def addToBuffer(key: String, value: Any, found:Boolean): Unit = {
       val map = buffer.getOrElse(key, Map())
-      buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      if (found) buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      else buffer += key -> (map + (value -> (map.getOrElse(value, 0))))
     }
 
     buffer += "QUAL" -> Map(record.getPhredScaledQual -> 1)
 
-    addToBuffer("general", "Total")
-    if (record.isBiallelic) addToBuffer("general", "Biallelic")
-    if (record.isComplexIndel) addToBuffer("general", "ComplexIndel")
-    if (record.isFiltered) addToBuffer("general", "Filtered")
-    if (record.isFullyDecoded) addToBuffer("general", "FullyDecoded")
-    if (record.isIndel) addToBuffer("general", "Indel")
-    if (record.isMixed) addToBuffer("general", "Mixed")
-    if (record.isMNP) addToBuffer("general", "MNP")
-    if (record.isMonomorphicInSamples) addToBuffer("general", "MonomorphicInSamples")
-    if (record.isNotFiltered) addToBuffer("general", "NotFiltered")
-    if (record.isPointEvent) addToBuffer("general", "PointEvent")
-    if (record.isPolymorphicInSamples) addToBuffer("general", "PolymorphicInSamples")
-    if (record.isSimpleDeletion) addToBuffer("general", "SimpleDeletion")
-    if (record.isSimpleInsertion) addToBuffer("general", "SimpleInsertion")
-    if (record.isSNP) addToBuffer("general", "SNP")
-    if (record.isStructuralIndel) addToBuffer("general", "StructuralIndel")
-    if (record.isSymbolic) addToBuffer("general", "Symbolic")
-    if (record.isSymbolicOrSV) addToBuffer("general", "SymbolicOrSV")
-    if (record.isVariant) addToBuffer("general", "Variant")
+    addToBuffer("general", "Total", true)
+    addToBuffer("general", "Biallelic", record.isBiallelic)
+    addToBuffer("general", "ComplexIndel", record.isComplexIndel)
+    addToBuffer("general", "Filtered", record.isFiltered)
+    addToBuffer("general", "FullyDecoded", record.isFullyDecoded)
+    addToBuffer("general", "Indel", record.isIndel)
+    addToBuffer("general", "Mixed", record.isMixed)
+    addToBuffer("general", "MNP", record.isMNP)
+    addToBuffer("general", "MonomorphicInSamples", record.isMonomorphicInSamples)
+    addToBuffer("general", "NotFiltered", record.isNotFiltered)
+    addToBuffer("general", "PointEvent", record.isPointEvent)
+    addToBuffer("general", "PolymorphicInSamples", record.isPolymorphicInSamples)
+    addToBuffer("general", "SimpleDeletion", record.isSimpleDeletion)
+    addToBuffer("general", "SimpleInsertion", record.isSimpleInsertion)
+    addToBuffer("general", "SNP", record.isSNP)
+    addToBuffer("general", "StructuralIndel", record.isStructuralIndel)
+    addToBuffer("general", "Symbolic", record.isSymbolic)
+    addToBuffer("general", "SymbolicOrSV", record.isSymbolicOrSV)
+    addToBuffer("general", "Variant", record.isVariant)
 
-    buffer.toMap
+    Map(record.getChr -> buffer.toMap, "total" -> buffer.toMap)
   }
 
-  /**
-   * Function to check sample/genotype specific stats
-   * @param record
-   * @param genotype
-   * @return
-   */
-  protected def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[Any, Int]] = {
+  /** Function to check sample/genotype specific stats */
+  protected def checkGenotype(record: VariantContext, genotype: Genotype): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
-    def addToBuffer(key: String, value: Any): Unit = {
+    def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
       val map = buffer.getOrElse(key, Map())
-      buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      if (found) buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      else buffer += key -> (map + (value -> (map.getOrElse(value, 0))))
     }
 
     buffer += "DP" -> Map((if (genotype.hasDP) genotype.getDP else "not set") -> 1)
@@ -317,39 +307,35 @@ object VcfStats extends ToolCommand {
 
     val usedAlleles = (for (allele <- genotype.getAlleles) yield record.getAlleleIndex(allele)).toList
 
-    addToBuffer("general", "Total")
-    if (genotype.isHet) addToBuffer("general", "Het")
-    if (genotype.isHetNonRef) addToBuffer("general", "HetNonRef")
-    if (genotype.isHom) addToBuffer("general", "Hom")
-    if (genotype.isHomRef) addToBuffer("general", "HomRef")
-    if (genotype.isHomVar) addToBuffer("general", "HomVar")
-    if (genotype.isMixed) addToBuffer("general", "Mixed")
-    if (genotype.isNoCall) addToBuffer("general", "NoCall")
-    if (genotype.isNonInformative) addToBuffer("general", "NonInformative")
-    if (genotype.isAvailable) addToBuffer("general", "Available")
-    if (genotype.isCalled) addToBuffer("general", "Called")
-    if (genotype.isFiltered) addToBuffer("general", "Filtered")
+    addToBuffer("general", "Total", true)
+    addToBuffer("general", "Het", genotype.isHet)
+    addToBuffer("general", "HetNonRef", genotype.isHetNonRef)
+    addToBuffer("general", "Hom", genotype.isHom)
+    addToBuffer("general", "HomRef", genotype.isHomRef)
+    addToBuffer("general", "HomVar", genotype.isHomVar)
+    addToBuffer("general", "Mixed", genotype.isMixed)
+    addToBuffer("general", "NoCall", genotype.isNoCall)
+    addToBuffer("general", "NonInformative", genotype.isNonInformative)
+    addToBuffer("general", "Available", genotype.isAvailable)
+    addToBuffer("general", "Called", genotype.isCalled)
+    addToBuffer("general", "Filtered", genotype.isFiltered)
+    addToBuffer("general", "Variant", genotype.isHetNonRef || genotype.isHet || genotype.isHomVar)
 
     if (genotype.hasAD) {
       val ad = genotype.getAD
       for (i <- 0 until ad.size if ad(i) > 0) {
-        addToBuffer("AD", ad(i))
-        if (i == 0) addToBuffer("AD-ref", ad(i))
-        if (i > 0) addToBuffer("AD-alt", ad(i))
-        if (usedAlleles.exists(_ == i)) addToBuffer("AD-used", ad(i))
-        else addToBuffer("AD-not_used", ad(i))
+        addToBuffer("AD", ad(i), true)
+        if (i == 0) addToBuffer("AD-ref", ad(i), true)
+        if (i > 0) addToBuffer("AD-alt", ad(i), true)
+        if (usedAlleles.exists(_ == i)) addToBuffer("AD-used", ad(i), true)
+        else addToBuffer("AD-not_used", ad(i), true)
       }
     }
 
-    buffer.toMap
+    Map(record.getChr -> buffer.toMap, "total" -> buffer.toMap)
   }
 
-  /**
-   * Function to write stats to tsv files
-   * @param stats
-   * @param prefix
-   * @param samples
-   */
+  /** Function to write stats to tsv files */
   protected def writeGenotypeFields(stats: Stats, prefix: String, samples: List[String]) {
     val fields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
     for (field <- fields) {
@@ -357,21 +343,24 @@ object VcfStats extends ToolCommand {
     }
   }
 
-  /**
-   * Function to write 1 specific genotype field
-   * @param stats
-   * @param prefix
-   * @param samples
-   * @param field
-   */
   protected def writeGenotypeField(stats: Stats, prefix: String, samples: List[String], field: String): Unit = {
-    val file = new File(prefix + field + ".tsv")
+    val reader = new VCFFileReader(commandArgs.inputFile, true)
+    val header = reader.getFileHeader
+    for (line <- header.getContigLines) {
+      writeGenotypeField(stats, prefix, samples, field, line.getSAMSequenceRecord.getSequenceName)
+    }
+    writeGenotypeField(stats, prefix, samples, field, "total")
+  }
+
+  /** Function to write 1 specific genotype field */
+  protected def writeGenotypeField(stats: Stats, prefix: String, samples: List[String], field: String, chr:String): Unit = {
+    val file = new File(prefix + "-" + chr + "-" + field + ".tsv")
     file.getParentFile.mkdirs()
     val writer = new PrintWriter(file)
     writer.println(samples.mkString(field + "\t", "\t", ""))
-    val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
+    val keySet = (for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).keySet).fold(Set[Any]())(_ ++ _)
     for (key <- keySet.toList.sortWith(sortAnyAny(_, _))) {
-      val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
+      val values = for (sample <- samples) yield stats.samplesStats(sample).genotypeStats.getOrElse(chr, Map[String, Map[Any, Int]]()).getOrElse(field, Map[Any, Int]()).getOrElse(key, 0)
       writer.println(values.mkString(key + "\t", "\t", ""))
     }
     writer.close()
@@ -380,15 +369,9 @@ object VcfStats extends ToolCommand {
     //plotLine(file)
   }
 
-  /**
-   * Function to write 1 specific general field
-   * @param prefix
-   * @param data
-   * @return
-   */
+  /** Function to write 1 specific general field */
   protected def writeField(prefix: String, data: mutable.Map[Any, Int]): File = {
     val file = new File(commandArgs.outputDir + "/" + prefix + ".tsv")
-    println(file)
     file.getParentFile.mkdirs()
     val writer = new PrintWriter(file)
     writer.println("\t" + prefix)
@@ -399,12 +382,7 @@ object VcfStats extends ToolCommand {
     file
   }
 
-  /**
-   * Function to sort Any values
-   * @param a
-   * @param b
-   * @return
-   */
+  /** Function to sort Any values */
   def sortAnyAny(a: Any, b: Any): Boolean = {
     a match {
       case ai: Int => {
@@ -451,10 +429,7 @@ object VcfStats extends ToolCommand {
     plotHeatmap(relFile)
   }
 
-  /**
-   * Plots heatmaps on target tsv file
-   * @param file
-   */
+  /** Plots heatmaps on target tsv file */
   def plotHeatmap(file: File) {
     executeRscript("plotHeatmap.R", Array(file.getAbsolutePath,
       file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.png",
@@ -462,20 +437,13 @@ object VcfStats extends ToolCommand {
       file.getAbsolutePath.stripSuffix(".tsv") + ".heatmap.dendrogram.png"))
   }
 
-  /**
-   * Plots line graph with target tsv file
-   * @param file
-   */
+  /** Plots line graph with target tsv file */
   def plotLine(file: File) {
     executeRscript("plotXY.R", Array(file.getAbsolutePath,
       file.getAbsolutePath.stripSuffix(".tsv") + ".xy.png"))
   }
 
-  /**
-   * Function to execute Rscript as subproces
-   * @param resource
-   * @param args
-   */
+  /** Function to execute Rscript as subproces */
   def executeRscript(resource: String, args: Array[String]): Unit = {
     val is = getClass.getResourceAsStream(resource)
     val file = File.createTempFile("script.", "." + resource)
