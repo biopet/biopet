@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Gzip
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
@@ -39,6 +39,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
 
   def biopetScript: Unit = {
     val configCallers: Set[String] = config("variantcallers")
+
+    for (cal <- configCallers) {
+      if (!callersList.exists(_.name == cal))
+        BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
+    }
+
     val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
 
     require(!inputBams.isEmpty, "No input bams found")
