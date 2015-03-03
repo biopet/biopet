@@ -38,7 +38,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   def setOutputDir(dir: File): Unit = {
     outputDir = dir
     generalStats = new File(dir, "general.tsv")
-    genotypeStats = new File(dir, "genotype_general.tsv")
+    genotypeStats = new File(dir, "genotype-general.tsv")
     jobOutputFile = new File(dir, ".vcfstats.out")
   }
 
