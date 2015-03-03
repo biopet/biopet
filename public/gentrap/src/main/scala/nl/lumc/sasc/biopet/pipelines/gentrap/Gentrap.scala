@@ -186,28 +186,28 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       .collect { case job => job.output }
 
     /** Gene tracking file from Cufflinks strict mode */
-    def geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
-      .collect { case job => job.outputGenesFpkm }
+    def geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
+      .collect { case jobSet => jobSet.geneJob.out }
 
     /** Isoforms tracking file from Cufflinks strict mode */
-    def isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJob
-      .collect { case job => job.outputIsoformsFpkm }
+    def isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
+      .collect { case jobSet => jobSet.isoformJob.out }
 
     /** Gene tracking file from Cufflinks guided mode */
     def geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case job => job.outputGenesFpkm }
+      .collect { case jobSet => jobSet.geneJob.out }
 
     /** Isoforms tracking file from Cufflinks guided mode */
     def isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case job => job.outputIsoformsFpkm }
+      .collect { case jobSet => jobSet.isoformJob.out }
 
     /** Gene tracking file from Cufflinks guided mode */
     def geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case job => job.outputGenesFpkm }
+      .collect { case jobSet => jobSet.geneJob.out }
 
     /** Isoforms tracking file from Cufflinks blind mode */
     def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case job => job.outputIsoformsFpkm }
+      .collect { case jobSet => jobSet.isoformJob.out }
 
     /** ID-sorting job for HTseq-count jobs */
     private def idSortingJob: Option[SortSam] = (expMeasures.contains(FragmentsPerExon) || expMeasures.contains(FragmentsPerGene))
@@ -259,49 +259,82 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
+    /** Case class for containing cufflinks + its output symlink jobs */
+    private case class CufflinksJobSet(cuffJob: Cufflinks, geneJob: Ln, isoformJob: Ln) {
+      /** Adds all contained jobs to Queue */
+      def addAllJobs(): Unit = { add(cuffJob); add(geneJob); add(isoformJob) }
+    }
+
     /** Cufflinks strict job */
-    private def cufflinksStrictJob: Option[Cufflinks] = expMeasures
+    private def cufflinksStrictJobSet: Option[CufflinksJobSet] = expMeasures
       .contains(CufflinksStrict)
       .option {
-        val job = new Cufflinks(qscript) {
+        val cuff = new Cufflinks(qscript) {
           override def configName = "cufflinks"
           override def configPath: List[String] = super.configPath ::: "cufflinks_strict" :: Nil
         }
-        job.input = alnFile
-        job.GTF = annotationGtf
-        job.GTF_guide = None
-        job.output_dir = new File(sampleDir, "cufflinks_strict")
-        job
+        cuff.input = alnFile
+        cuff.GTF = annotationGtf
+        cuff.GTF_guide = None
+        cuff.output_dir = new File(sampleDir, "cufflinks_strict")
+
+        val geneLn = new Ln(qscript)
+        geneLn.in = cuff.outputGenesFpkm
+        geneLn.out = createFile(".genes_fpkm_cufflinks_strict")
+
+        val isoLn = new Ln(qscript)
+        isoLn.in = cuff.outputIsoformsFpkm
+        isoLn.out = createFile(".isoforms_fpkm_cufflinks_strict")
+
+        CufflinksJobSet(cuff, geneLn, isoLn)
       }
 
     /** Cufflinks guided job */
-    private def cufflinksGuidedJob: Option[Cufflinks] = expMeasures
+    private def cufflinksGuidedJob: Option[CufflinksJobSet] = expMeasures
       .contains(CufflinksStrict)
       .option {
-        val job = new Cufflinks(qscript) {
+        val cuff = new Cufflinks(qscript) {
           override def configName = "cufflinks"
           override def configPath: List[String] = super.configPath ::: "cufflinks_guided" :: Nil
         }
-        job.input = alnFile
-        job.GTF = None
-        job.GTF_guide = annotationGtf
-        job.output_dir = new File(sampleDir, "cufflinks_guided")
-        job
+        cuff.input = alnFile
+        cuff.GTF = None
+        cuff.GTF_guide = annotationGtf
+        cuff.output_dir = new File(sampleDir, "cufflinks_guided")
+
+        val geneLn = new Ln(qscript)
+        geneLn.in = cuff.outputGenesFpkm
+        geneLn.out = createFile(".genes_fpkm_cufflinks_guided")
+
+        val isoLn = new Ln(qscript)
+        isoLn.in = cuff.outputIsoformsFpkm
+        isoLn.out = createFile(".isoforms_fpkm_cufflinks_guided")
+
+        CufflinksJobSet(cuff, geneLn, isoLn)
       }
 
     /** Cufflinks blind job */
-    private def cufflinksBlindJob: Option[Cufflinks] = expMeasures
+    private def cufflinksBlindJob: Option[CufflinksJobSet] = expMeasures
       .contains(CufflinksStrict)
       .option {
-        val job = new Cufflinks(qscript) {
+        val cuff = new Cufflinks(qscript) {
           override def configName = "cufflinks"
           override def configPath: List[String] = super.configPath ::: "cufflinks_blind" :: Nil
         }
-        job.input = alnFile
-        job.GTF = None
-        job.GTF_guide = None
-        job.output_dir = new File(sampleDir, "cufflinks_blind")
-        job
+        cuff.input = alnFile
+        cuff.GTF = None
+        cuff.GTF_guide = None
+        cuff.output_dir = new File(sampleDir, "cufflinks_blind")
+
+        val geneLn = new Ln(qscript)
+        geneLn.in = cuff.outputGenesFpkm
+        geneLn.out = createFile(".genes_fpkm_cufflinks_blind")
+
+        val isoLn = new Ln(qscript)
+        isoLn.in = cuff.outputIsoformsFpkm
+        isoLn.out = createFile(".isoforms_fpkm_cufflinks_blind")
+
+        CufflinksJobSet(cuff, geneLn, isoLn)
       }
 
     /** Picard CollectRnaSeqMetrics job */
@@ -332,9 +365,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       idSortingJob.foreach(add(_))
       fragmentsPerGeneJob.foreach(add(_))
       fragmentsPerExonJob.foreach(add(_))
-      cufflinksStrictJob.foreach(add(_))
-      cufflinksGuidedJob.foreach(add(_))
-      cufflinksBlindJob.foreach(add(_))
+      // symlink results with distinct extensions ~ actually to make it easier to use MergeTables on these as well
+      // since the Queue argument parser doesn't play nice with Map[_, _] types
+      cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
+      cufflinksGuidedJob.foreach { case jobSet => jobSet.addAllJobs() }
+      cufflinksBlindJob.foreach { case jobSet => jobSet.addAllJobs() }
     }
 
     private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
