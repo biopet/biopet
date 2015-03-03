@@ -323,16 +323,117 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
-    /** Raw base counting job */
-    private def rawBaseCountJob: Option[RawBaseCounter] =
-      (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
-        .option {
-          val job = new RawBaseCounter(qscript)
-          job.inputBoth = alnFile
-          job.annotationBed = annotationBed.get
-          job.output = createFile(".raw_base_count")
+    /** Container for strand-separation jobs */
+    private case class StrandSeparationJobSet(pair1Job: SamtoolsView, pair2Job: Option[SamtoolsView],
+                                              mergeJob: MergeSamFiles) {
+      def addAllJobs(): Unit = {
+        add(pair1Job, isIntermediate = true)
+        pair2Job.foreach(add(_, isIntermediate = true))
+        add(mergeJob)
+      }
+    }
+
+    def alnFilePlusStrand: Option[File] = alnPlusStrandJobs
+      .collect { case jobSet => jobSet.mergeJob.output }
+
+    private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
+      case Dutp =>
+        val f1Job = new SamtoolsView(qscript)
+        f1Job.input = alnFile
+        f1Job.b = true
+        f1Job.h = true
+        f1Job.f = if (this.allSingle) List("0x10") else List("0x50")
+        f1Job.output = createFile(".f1.bam")
+
+        val r2Job = this.allSingle.option {
+          val job = new SamtoolsView(qscript)
+          job.input = alnFile
+          job.b = true
+          job.h = true
+          job.f = List("0x40")
+          job.F = List("0x10")
+          job.output = createFile(".r2.bam")
           job
         }
+        // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
+        // so we use MergeSamFiles for now
+        val mergeJob = new MergeSamFiles(qscript)
+        mergeJob.input = r2Job match {
+          case Some(r2j) => List(f1Job.output, r2j.output)
+          case None      => List(f1Job.output)
+        }
+        mergeJob.sortOrder = "coordinate"
+        mergeJob.output = swapExt(alnFile, ".bam", ".plus.bam")
+
+        Option(StrandSeparationJobSet(f1Job, r2Job, mergeJob))
+
+      case NonSpecific => None
+      case _           => throw new IllegalStateException
+    }
+
+    def alnFileMinusStrand: Option[File] = alnMinusStrandJobs
+      .collect { case jobSet => jobSet.mergeJob.output }
+
+    private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
+      case Dutp =>
+        val f2Job = new SamtoolsView(qscript)
+        f2Job.input = alnFile
+        f2Job.b = true
+        f2Job.h = true
+        f2Job.output = createFile(".f2.bam")
+        if (this.allSingle) f2Job.F = List("0x10")
+        else f2Job.f = List("0x90")
+
+        val r1Job = this.allSingle.option {
+          val job = new SamtoolsView(qscript)
+          job.input = alnFile
+          job.b = true
+          job.h = true
+          job.f = List("0x80")
+          job.F = List("0x10")
+          job.output = createFile(".r1.bam")
+          job
+        }
+        // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
+        // so we use MergeSamFiles for now
+        val mergeJob = new MergeSamFiles(qscript)
+        mergeJob.input = r1Job match {
+          case Some(r1j) => List(f2Job.output, r1j.output)
+          case None      => List(f2Job.output)
+        }
+        mergeJob.sortOrder = "coordinate"
+        mergeJob.output = swapExt(alnFile, ".bam", ".minus.bam")
+
+        Option(StrandSeparationJobSet(f2Job, r1Job, mergeJob))
+
+      case NonSpecific => None
+      case _           => throw new IllegalStateException
+    }
+    /** Raw base counting job */
+    private def rawBaseCountJob: Option[RawBaseCounter] = strProtocol match {
+      case NonSpecific =>
+        (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
+          .option {
+            val job = new RawBaseCounter(qscript)
+            job.inputBoth = alnFile
+            job.annotationBed = annotationBed.get
+            job.output = createFile(".raw_base_count")
+            job
+          }
+      case Dutp => {
+        (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
+          .option {
+            require(alnFilePlusStrand.isDefined && alnFileMinusStrand.isDefined)
+            val job = new RawBaseCounter(qscript)
+            job.inputPlus = alnFilePlusStrand.get
+            job.inputMinus = alnFileMinusStrand.get
+            job.annotationBed = annotationBed.get
+            job.output = createFile(".raw_base_count")
+            job
+          }
+      }
+      case _ => throw new IllegalStateException
+    }
 
     /** Base counting job per gene */
     private def basesPerGeneJob: Option[AggrBaseCount] = expMeasures

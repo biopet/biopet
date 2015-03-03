@@ -17,7 +17,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Reference BED file", required = true)
   var annotationBed: File = null
 
-  @Input(doc = "Input BAM file from both strands", required = true)
+  @Input(doc = "Input BAM file from both strands", required = false)
   var inputBoth: File = null
 
   @Input(doc = "Input BAM file from the plus strand", required = false)
