@@ -34,6 +34,11 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
 
   protected var outputDir: File = _
 
+  var infoTags: List[String] = Nil
+  var genotypeTags: List[String] = Nil
+  var allInfoTags = false
+  var allGenotypeTags = false
+
   /** Set output dir and a output file */
   def setOutputDir(dir: File): Unit = {
     outputDir = dir
@@ -45,7 +50,11 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   /** Creates command to execute extension */
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("-o", outputDir)
+    required("-o", outputDir) +
+    repeat("--infoTag", infoTags) +
+    repeat("--genotypeTag", genotypeTags) +
+    conditional(allInfoTags, "--allInfoTags") +
+    conditional(allGenotypeTags, "--allGenotypeTags")
 
   /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {
@@ -204,7 +213,7 @@ object VcfStats extends ToolCommand {
 
   val defaultGenotypeFields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
 
-  val defaultInfoFields = List("QUAL", "general")
+  val defaultInfoFields = List("QUAL", "general", "AC", "AF", "AN", "DP")
 
   /**
    * @param args the command line arguments
