@@ -21,16 +21,16 @@ import java.io.File
 
 class SamtoolsView(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "output File")
-  var output: File = _
+  var output: File = null
 
   var quality: Option[Int] = config("quality")
-  var b: Boolean = config("b")
-  var h: Boolean = config("h")
-  var f: List[String] = config("f")
-  var F: List[String] = config("F")
+  var b: Boolean = config("b", default = false)
+  var h: Boolean = config("h", default = false)
+  var f: List[String] = config("f", default = List.empty[String])
+  var F: List[String] = config("F", default = List.empty[String])
 
   def cmdBase = required(executable) +
     required("view") +
