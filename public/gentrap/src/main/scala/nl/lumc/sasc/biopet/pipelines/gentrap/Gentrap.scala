@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RawBaseCounter
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.tools.MergeTables
+import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
 
 /**
  * Gentrap pipeline
@@ -61,6 +61,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** refFlat reference file */
   var annotationRefFlat: File = config("annotation_refflat")
+
+  /** rRNA refFlat annotation */
+  var ribosomalRefFlat: Option[File] = config("ribosome_refflat")
 
   /*
   /** Variant calling */
@@ -567,6 +570,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
         case _           => throw new IllegalStateException
       }
+      job.ribosomalIntervals = ribosomalRefFlat
       job
     }
 
