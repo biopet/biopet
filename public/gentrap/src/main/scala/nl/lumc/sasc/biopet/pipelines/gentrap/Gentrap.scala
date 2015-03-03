@@ -15,7 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
+import java.io.File
+import scala.language.reflectiveCalls
+
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 import nl.lumc.sasc.biopet.core._
@@ -234,7 +238,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file */
-    def alnFile: File = createFile(".bam")
+    lazy val alnFile: File = sampleAlnJob.output
 
     /** Read count per gene file */
     def geneFragmentsCount: Option[File] = fragmentsPerGeneJob
@@ -574,6 +578,25 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       job
     }
 
+    private def sampleAlnJob: QFunction { def output: File } = libraries.values
+      .map(_.alnFile).toList match {
+        // library only has one file, then we symlink
+        case file :: Nil =>
+          val ln = new Ln(qscript)
+          ln.in = file
+          ln.out = createFile(".bam")
+          ln
+        // library has multiple files, then we merge
+        case files @ f :: fs =>
+          val merge = new MergeSamFiles(qscript)
+          merge.input = files
+          merge.sortOrder = "coordinate"
+          merge.output = createFile(".bam")
+          merge
+        // library has 0 or less files, error!
+        case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
+      }
+
     /** Whether all libraries are paired or not */
     def allPaired: Boolean = libraries.values.forall(_.paired)
 
@@ -587,7 +610,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       // add per-library jobs
       addPerLibJobs()
       // merge or symlink per-library alignments
-      addSampleAlnJob()
+      add(sampleAlnJob)
       // general RNA-seq metrics
       add(collectRnaSeqMetricsJob)
       // add htseq-count jobs, if defined
@@ -603,24 +626,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
       cufflinksGuidedJob.foreach { case jobSet => jobSet.addAllJobs() }
       cufflinksBlindJob.foreach { case jobSet => jobSet.addAllJobs() }
-    }
-
-    private def addSampleAlnJob(): Unit = libraries.values.map(_.alnFile).toList match {
-      // library only has one file, then we symlink
-      case file :: Nil =>
-        val ln = new Ln(qscript)
-        ln.in = file
-        ln.out = alnFile
-        add(ln)
-      // library has multiple files, then we merge
-      case files @ f :: fs =>
-        val merge = new MergeSamFiles(qscript)
-        merge.input = files
-        merge.sortOrder = "coordinate"
-        merge.output = alnFile
-        add(merge)
-      // library has 0 or less files, error!
-      case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
     }
 
     /** Add jobs for fragments per gene counting using HTSeq */
@@ -670,9 +675,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
 object Gentrap extends PipelineCommand {
 
-  /** implicit extension that allows to create option values based on boolean values */
+  /** Implicit extension that allows to create option values based on boolean values */
   implicit class RichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
+  }
+
+  /** Implicit extension so that Ln have the same output variable name as MergeSamFiles, so they can be used together */
+  implicit class ProperLn(val ln: Ln) extends QFunction {
+    def output: File = ln.out
   }
 
   /** Enumeration of available expression measures */
