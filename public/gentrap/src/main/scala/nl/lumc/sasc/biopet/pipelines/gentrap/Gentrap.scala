@@ -132,20 +132,20 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     /** Adds output merge jobs for the given expression mode */
     // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
     def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                                  outBaseName: String = "all_samples"): Option[MergeTables] = {
+                          outBaseName: String = "all_samples"): Option[MergeTables] = {
       val tables = samples.values.map { inFunc }.toList.flatten
       tables.nonEmpty
         .option {
-        val job = new MergeTables(qscript)
-        job.inputTables = tables
-        job.output = new File(outputDir, outBaseName + ext)
-        job.idColumnIndices = idCols.map(_.toString)
-        job.valueColumnIndex = valCol
-        job.fileExtension = Option(ext)
-        // TODO: separate the addition into another function?
-        add(job)
-        job
-      }
+          val job = new MergeTables(qscript)
+          job.inputTables = tables
+          job.output = new File(outputDir, outBaseName + ext)
+          job.idColumnIndices = idCols.map(_.toString)
+          job.valueColumnIndex = valCol
+          job.fileExtension = Option(ext)
+          // TODO: separate the addition into another function?
+          add(job)
+          job
+        }
     }
 
     // merge htseq outputs

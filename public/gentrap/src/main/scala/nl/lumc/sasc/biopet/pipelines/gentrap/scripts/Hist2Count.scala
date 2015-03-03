@@ -7,9 +7,10 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.scripts
 
 import java.io.File
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the hist2count.py script, used internally in Gentrap
