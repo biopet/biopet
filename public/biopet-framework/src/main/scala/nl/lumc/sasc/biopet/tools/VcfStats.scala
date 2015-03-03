@@ -4,7 +4,7 @@ import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
@@ -49,11 +49,11 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
 
   /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {
-    (for (
+    Map("info" -> (for (
       line <- Source.fromFile(generalStats).getLines();
       values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
     ) yield values(0) -> values(1).toInt
-    ).toMap
+    ).toMap)
   }
 
   /** return only general files to summary */
@@ -61,6 +61,25 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
     "general_stats" -> generalStats,
     "genotype_stats" -> genotypeStats
   )
+
+  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+    val data = Source.fromFile(genotypeStats).getLines().map(_.split("\t")).toArray
+
+    for (s <- 1 until data(0).size) {
+      val sample = data(0)(s)
+      val stats = Map("genotype" -> (for (f <- 1 until data.size) yield {
+        data(f)(0) -> data(f)(s)
+      }).toMap)
+
+      val sum = new Summarizable {
+        override def summaryFiles: Map[String, File] = Map()
+
+        override def summaryStats: Map[String, Any] = stats
+      }
+
+      qscript.addSummarizable(sum, name, Some(sample))
+    }
+  }
 }
 
 object VcfStats extends ToolCommand {
@@ -129,7 +148,7 @@ object VcfStats extends ToolCommand {
         else this.sampleToSample(key) = value
       }
       for ((chr, chrMap) <- other.genotypeStats; (field, fieldMap) <- chrMap) {
-        if (!this.genotypeStats.contains(chr))  genotypeStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
+        if (!this.genotypeStats.contains(chr)) genotypeStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
         val thisField = this.genotypeStats(chr).get(field)
         if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
         else this.genotypeStats(chr) += field -> fieldMap
@@ -151,7 +170,7 @@ object VcfStats extends ToolCommand {
         else this.samplesStats(key) = value
       }
       for ((chr, chrMap) <- other.generalStats; (field, fieldMap) <- chrMap) {
-        if (!this.generalStats.contains(chr))  generalStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
+        if (!this.generalStats.contains(chr)) generalStats += (chr -> mutable.Map[String, mutable.Map[Any, Int]]())
         val thisField = this.generalStats(chr).get(field)
         if (thisField.isDefined) mergeStatsMap(thisField.get, fieldMap)
         else this.generalStats(chr) += field -> fieldMap
@@ -199,26 +218,25 @@ object VcfStats extends ToolCommand {
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
 
-    val adInfoTags = (for (infoTag <- commandArgs.infoTags
-                          if !defaultInfoFields.exists(_ == infoTag)) yield {
+    val adInfoTags = (for (
+      infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
+    ) yield {
       require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
       infoTag
-    }) ::: (for (line <- header.getInfoHeaderLines
-               if commandArgs.allInfoTags
-               if !defaultInfoFields.exists(_ == line.getID)
-               if !commandArgs.infoTags.exists(_ == line.getID)) yield {
+    }) ::: (for (
+      line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
+    ) yield {
       line.getID
     }).toList
 
-    val adGenotypeTags = (for (genotypeTag <- commandArgs.genotypeTags
-                              if !defaultGenotypeFields.exists(_ == genotypeTag)) yield {
+    val adGenotypeTags = (for (
+      genotypeTag <- commandArgs.genotypeTags if !defaultGenotypeFields.exists(_ == genotypeTag)
+    ) yield {
       require(header.getFormatHeaderLine(genotypeTag) != null, "Format tag '" + genotypeTag + "' not found in header of vcf file")
       genotypeTag
-    }) ::: (for (line <- header.getFormatHeaderLines
-                 if commandArgs.allGenotypeTags
-                 if !defaultGenotypeFields.exists(_ == line.getID)
-                 if !commandArgs.genotypeTags.exists(_ == line.getID)
-                 if line.getID != "PL") yield {
+    }) ::: (for (
+      line <- header.getFormatHeaderLines if commandArgs.allGenotypeTags if !defaultGenotypeFields.exists(_ == line.getID) if !commandArgs.genotypeTags.exists(_ == line.getID) if line.getID != "PL"
+    ) yield {
       line.getID
     }).toList
 
@@ -269,8 +287,8 @@ object VcfStats extends ToolCommand {
       val stats = createStats
       logger.info("Starting on: " + interval)
 
-      for (record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
-        if record.getStart <= interval.getEnd
+      for (
+        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
       ) {
         mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
         for (sample1 <- samples) yield {
@@ -324,7 +342,7 @@ object VcfStats extends ToolCommand {
   protected def checkGeneral(record: VariantContext, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
-    def addToBuffer(key: String, value: Any, found:Boolean): Unit = {
+    def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
       val map = buffer.getOrElse(key, Map())
       if (found) buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
       else buffer += key -> (map + (value -> (map.getOrElse(value, 0))))
@@ -415,9 +433,9 @@ object VcfStats extends ToolCommand {
                                    prefix: String = "", chr: String = "total"): Unit = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     file.getParentFile.mkdirs()
@@ -438,16 +456,16 @@ object VcfStats extends ToolCommand {
   protected def writeField(stats: Stats, field: String, outputDir: File, prefix: String = "", chr: String = "total"): File = {
     val file = (prefix, chr) match {
       case ("", "total") => new File(outputDir, field + ".tsv")
-      case (_, "total") => new File(outputDir, prefix + "-" + field + ".tsv")
-      case ("", _) => new File(outputDir, chr + "-" + field + ".tsv")
-      case _ => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
+      case (_, "total")  => new File(outputDir, prefix + "-" + field + ".tsv")
+      case ("", _)       => new File(outputDir, chr + "-" + field + ".tsv")
+      case _             => new File(outputDir, prefix + "-" + chr + "-" + field + ".tsv")
     }
 
     val data = stats.generalStats.getOrElse(chr, mutable.Map[String, mutable.Map[Any, Int]]()).getOrElse(field, mutable.Map[Any, Int]())
 
     file.getParentFile.mkdirs()
     val writer = new PrintWriter(file)
-    writer.println("value\tcount" )
+    writer.println("value\tcount")
     for (key <- data.keySet.toList.sortWith(sortAnyAny(_, _))) {
       writer.println(key + "\t" + data(key))
     }
