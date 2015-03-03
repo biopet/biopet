@@ -236,7 +236,7 @@ object VcfStats extends ToolCommand {
       line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
     ) yield {
       line.getID
-    }).toList
+    }).toList ::: defaultInfoFields
 
     val adGenotypeTags = (for (
       genotypeTag <- commandArgs.genotypeTags if !defaultGenotypeFields.exists(_ == genotypeTag)
@@ -247,7 +247,7 @@ object VcfStats extends ToolCommand {
       line <- header.getFormatHeaderLines if commandArgs.allGenotypeTags if !defaultGenotypeFields.exists(_ == line.getID) if !commandArgs.genotypeTags.exists(_ == line.getID) if line.getID != "PL"
     ) yield {
       line.getID
-    }).toList
+    }).toList ::: defaultGenotypeFields
 
     val intervals: List[Interval] = (
       for (
@@ -322,7 +322,7 @@ object VcfStats extends ToolCommand {
 
     val infoOutputDir = new File(commandArgs.outputDir, "infotags")
     writeField(stats, "general", commandArgs.outputDir)
-    for (field <- (adInfoTags ::: defaultInfoFields).distinct.par) {
+    for (field <- (adInfoTags).distinct.par) {
       writeField(stats, field, infoOutputDir)
       for (line <- header.getContigLines) {
         val chr = line.getSAMSequenceRecord.getSequenceName
@@ -332,7 +332,7 @@ object VcfStats extends ToolCommand {
 
     val genotypeOutputDir = new File(commandArgs.outputDir, "genotypetags")
     writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
-    for (field <- (adGenotypeTags ::: defaultGenotypeFields).distinct.par) {
+    for (field <- (adGenotypeTags).distinct.par) {
       writeGenotypeField(stats, samples, field, genotypeOutputDir)
       for (line <- header.getContigLines) {
         val chr = line.getSAMSequenceRecord.getSequenceName
@@ -379,7 +379,9 @@ object VcfStats extends ToolCommand {
     addToBuffer("general", "SymbolicOrSV", record.isSymbolicOrSV)
     addToBuffer("general", "Variant", record.isVariant)
 
-    for (tag <- additionalTags) {
+    val skipTags = List("QUAL", "general")
+
+    for (tag <- additionalTags if !skipTags.contains(tag)) {
       val value = record.getAttribute(tag)
       if (value == null) addToBuffer(tag, "notset", true)
       else addToBuffer(tag, value, true)
@@ -428,7 +430,9 @@ object VcfStats extends ToolCommand {
       }
     }
 
-    for (tag <- additionalTags) {
+    val skipTags = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
+
+    for (tag <- additionalTags if !skipTags.contains(tag)) {
       val value = genotype.getAnyAttribute(tag)
       if (value == null) addToBuffer(tag, "notset", true)
       else addToBuffer(tag, value, true)
