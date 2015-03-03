@@ -131,35 +131,33 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     /** Adds output merge jobs for the given expression mode */
     // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
-    def addMergeTableJob(expMode: ExpMeasures.Value, inFunc: (Sample => Option[File]), ext: String,
-                         idCols: List[Int], valCol: Int, outBaseName: String = "all_samples"): Unit =
-      if (expMeasures.contains(expMode)) {
+    def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
+                                  outBaseName: String = "all_samples"): Option[MergeTables] = {
+      val tables = samples.values.map { inFunc }.toList.flatten
+      tables.nonEmpty
+        .option {
         val job = new MergeTables(qscript)
-        job.inputTables = samples.values.map { inFunc }.toList.flatten
+        job.inputTables = tables
         job.output = new File(outputDir, outBaseName + ext)
         job.idColumnIndices = idCols.map(_.toString)
         job.valueColumnIndex = valCol
         job.fileExtension = Option(ext)
+        // TODO: separate the addition into another function?
         add(job)
+        job
       }
+    }
 
     // merge htseq outputs
-    addMergeTableJob(FragmentsPerGene, (s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2)
-    addMergeTableJob(FragmentsPerExon, (s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2)
-
+    val geneFragmentsCount = makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2)
+    val exonFragmentsCount = makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2)
     // merge cufflinks outputs
-    addMergeTableJob(CufflinksStrict, (s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict",
-      List(1, 7), 10)
-    addMergeTableJob(CufflinksStrict, (s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict",
-      List(1, 7), 10)
-    addMergeTableJob(CufflinksGuided, (s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided",
-      List(1, 7), 10)
-    addMergeTableJob(CufflinksGuided, (s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided",
-      List(1, 7), 10)
-    addMergeTableJob(CufflinksBlind, (s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind",
-      List(1, 7), 10)
-    addMergeTableJob(CufflinksBlind, (s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind",
-      List(1, 7), 10)
+    val geneFpkmCufflinksStrict = makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10)
+    val isoFpkmCufflinksStrict = makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10)
+    val geneFpkmCufflinksGuided = makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10)
+    val isoFpkmCufflinksGuided = makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10)
+    val geneFpkmCufflinksBlind = makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10)
+    val isoFpkmCUfflinksBlind = makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10)
 
     // TODO: use proper notation
     addSummaryJobs
