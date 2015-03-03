@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RawBaseCounter
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.MergeTables
 
@@ -270,6 +271,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
+    /** Raw base counting job */
+    private def rawBaseCountJob: Option[RawBaseCounter] =
+      (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
+        .option {
+          val job = new RawBaseCounter(qscript)
+          job.inputBoth = alnFile
+          job.annotationBed = annotationBed.get
+          job.output = createFile(".raw_base_count")
+          job
+        }
+
     /** Case class for containing cufflinks + its output symlink jobs */
     private case class CufflinksJobSet(cuffJob: Cufflinks, geneJob: Ln, isoformJob: Ln) {
       /** Adds all contained jobs to Queue */
@@ -376,6 +388,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       idSortingJob.foreach(add(_))
       fragmentsPerGeneJob.foreach(add(_))
       fragmentsPerExonJob.foreach(add(_))
+      rawBaseCountJob.foreach(add(_))
       // symlink results with distinct extensions ~ actually to make it easier to use MergeTables on these as well
       // since the Queue argument parser doesn't play nice with Map[_, _] types
       cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
