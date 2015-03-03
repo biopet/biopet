@@ -17,31 +17,26 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
 
-  setRScript("aggr_base_count.R")
+  setRScript("aggr_base_count.R", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
 
   @Input(doc = "Raw base count files", required = true)
-  var inputRawCounts: List[File] = List.empty[File]
+  var input: File = null
 
-  var inputLabels: List[String] = config("input_labels")
+  @Output(doc = "Output count file", required = false)
+  var output: File = null
 
-  @Output(doc = "Gene level count file", required = false)
-  var outputGeneLevelCount: File = null
-
-  @Output(doc = "Exon level count file", required = false)
-  var outputExonLevelCount: File = null
+  var inputLabel: String = null
+  var mode: String = null
 
   override def beforeGraph: Unit = {
-    require(outputExonLevelCount != null || outputGeneLevelCount != null,
-      "Either output exon and/or output gene must be set")
-    require(inputRawCounts.size == inputLabels.size,
-      "Input files and input labels have the same length")
+    require(mode == "exon" || mode == "gene", "Mode must be either exon or gene")
+    require(input != null, "Input raw base count table must be defined")
   }
 
   def cmdLine = {
     RScriptCommand +
-      required("-I", inputRawCounts.mkString(":")) +
-      required("-N", inputLabels.mkString(":")) +
-      optional("-G", outputGeneLevelCount) +
-      optional("-E", outputExonLevelCount)
+      required("-I", input) +
+      required("-N", inputLabel) +
+      optional(if (mode == "gene") "-G" else "-E", output)
   }
 }
