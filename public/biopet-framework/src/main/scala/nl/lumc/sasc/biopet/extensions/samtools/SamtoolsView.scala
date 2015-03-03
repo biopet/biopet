@@ -29,10 +29,14 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   var quality: Option[Int] = config("quality")
   var b: Boolean = config("b")
   var h: Boolean = config("h")
+  var f: List[String] = config("f")
+  var F: List[String] = config("F")
 
   def cmdBase = required(executable) +
     required("view") +
     optional("-q", quality) +
+    optional("-f", f) +
+    optional("-F", F) +
     conditional(b, "-b") +
     conditional(h, "-h")
   def cmdPipeInput = cmdBase + "-"
