@@ -20,16 +20,15 @@ class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
   setRScript("aggr_base_count.R")
 
   @Input(doc = "Raw base count files", required = true)
-  var inputRawCounts: List[File] = _
+  var inputRawCounts: List[File] = List.empty[File]
 
-  @Input(doc = "Label for the raw count files", required = true)
   var inputLabels: List[String] = config("input_labels")
 
   @Output(doc = "Gene level count file", required = false)
-  var outputGeneLevelCount: File = _
+  var outputGeneLevelCount: File = null
 
   @Output(doc = "Exon level count file", required = false)
-  var outputExonLevelCount: File = _
+  var outputExonLevelCount: File = null
 
   def cmdLine = {
     // TODO: how to check that at least -G or -E is set?
