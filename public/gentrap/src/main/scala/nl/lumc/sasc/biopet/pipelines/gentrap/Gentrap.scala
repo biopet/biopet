@@ -222,6 +222,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     ) ++ Map(
         "gene_fragments_count" -> geneFragmentsCount,
         "exon_fragments_count" -> exonFragmentsCount,
+        "gene_bases_count" -> geneBasesCount,
+        "exon_bases_count" -> exonBasesCount,
         "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
         "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuided,
         "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind
