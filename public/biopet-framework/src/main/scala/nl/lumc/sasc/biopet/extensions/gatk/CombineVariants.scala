@@ -21,6 +21,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
   var rodPriorityList: String = null
   var minimumN: Int = config("minimumN", default = 1)
   var genotypeMergeOptions: Option[String] = config("genotypeMergeOptions")
+  var excludeNonVariants: Boolean = false
 
   var inputMap: Map[File, String] = Map()
 
@@ -46,5 +47,6 @@ class CombineVariants(val root: Configurable) extends Gatk {
     required("-o", outputFile) +
     optional("--setKey", setKey) +
     optional("--rod_priority_list", rodPriorityList) +
-    optional("-genotypeMergeOptions", genotypeMergeOptions)
+    optional("-genotypeMergeOptions", genotypeMergeOptions) +
+    conditional(excludeNonVariants, "--excludeNonVariants")
 }
