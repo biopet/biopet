@@ -33,6 +33,8 @@ class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
   override def beforeGraph: Unit = {
     require(outputExonLevelCount != null || outputGeneLevelCount != null,
       "Either output exon and/or output gene must be set")
+    require(inputRawCounts.size == inputLabels.size,
+      "Input files and input labels have the same length")
   }
 
   def cmdLine = {
