@@ -454,8 +454,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       job
     }
 
+    /** Whether all libraries are paired or not */
+    def allPaired: Boolean = libraries.values.forall(_.paired)
+
+    /** Whether all libraries are single or not */
+    def allSingle: Boolean = libraries.values.forall(!_.paired)
+
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     def addJobs(): Unit = {
+      // TODO: this is our requirement since it's easier to calculate base counts when all libraries are either paired or single
+      require(allPaired || allSingle, s"Sample $sampleId contains only single-end or paired-end libraries")
       // add per-library jobs
       addPerLibJobs()
       // merge or symlink per-library alignments
@@ -510,6 +518,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def summaryFiles: Map[String, File] = Map(
         "alignment" -> mappingJob.outputFiles("finalBamFile")
       )
+
+      /** Convenience method to check whether the library is paired or not */
+      def paired: Boolean = mappingJob.flexiprep.paired
 
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
