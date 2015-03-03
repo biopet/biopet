@@ -92,7 +92,7 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
       val gvcfFiles = for (inputBam <- inputBams) yield {
         val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(qscript)
         hc.input_file = List(inputBam)
-        hc.out = new File(outputDir, inputBam.getName.stripSuffix(".bam") + ".gvcf.gz")
+        hc.out = new File(outputDir, inputBam.getName.stripSuffix(".bam") + ".gvcf.vcf.gz")
         hc.useGvcf()
         add(hc)
         hc.out
