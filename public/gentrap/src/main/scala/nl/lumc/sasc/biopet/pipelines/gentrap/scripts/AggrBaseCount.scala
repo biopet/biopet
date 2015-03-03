@@ -30,8 +30,12 @@ class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
   @Output(doc = "Exon level count file", required = false)
   var outputExonLevelCount: File = null
 
+  override def beforeGraph: Unit = {
+    require(outputExonLevelCount != null || outputGeneLevelCount != null,
+      "Either output exon and/or output gene must be set")
+  }
+
   def cmdLine = {
-    // TODO: how to check that at least -G or -E is set?
     RScriptCommand +
       required("-I", inputRawCounts.mkString(":")) +
       required("-N", inputLabels.mkString(":")) +
