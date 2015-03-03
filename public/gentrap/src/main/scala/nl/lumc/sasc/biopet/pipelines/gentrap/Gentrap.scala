@@ -478,6 +478,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = annotationGtf
         cuff.GTF_guide = None
+        cuff.library_type = strProtocol match {
+          case NonSpecific => Option("fr-unstranded")
+          case Dutp        => Option("fr-firststrand")
+          case _           => throw new IllegalStateException
+        }
         cuff.output_dir = new File(sampleDir, "cufflinks_strict")
 
         val geneLn = new Ln(qscript)
@@ -502,6 +507,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = None
         cuff.GTF_guide = annotationGtf
+        cuff.library_type = strProtocol match {
+          case NonSpecific => Option("fr-unstranded")
+          case Dutp        => Option("fr-firststrand")
+          case _           => throw new IllegalStateException
+        }
         cuff.output_dir = new File(sampleDir, "cufflinks_guided")
 
         val geneLn = new Ln(qscript)
@@ -526,6 +536,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = None
         cuff.GTF_guide = None
+        cuff.library_type = strProtocol match {
+          case NonSpecific => Option("fr-unstranded")
+          case Dutp        => Option("fr-firststrand")
+          case _           => throw new IllegalStateException
+        }
         cuff.output_dir = new File(sampleDir, "cufflinks_blind")
 
         val geneLn = new Ln(qscript)
