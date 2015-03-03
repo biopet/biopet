@@ -243,8 +243,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind
       ).collect { case (key, Some(value)) => key -> value }
 
-    /** Per-sample alignment file */
-    lazy val alnFile: File = sampleAlnJob.output
+    /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
+    lazy val alnFileDirty: File = sampleAlnJob.output
+
+    /** Per-sample alignment file, post rRNA cleanup (if chosen) */
+    lazy val alnFile: File = wipeJob match {
+      case Some(j)  => j.outputBam
+      case None     => alnFileDirty
+    }
 
     /** Read count per gene file */
     def geneFragmentsCount: Option[File] = fragmentsPerGeneJob
@@ -570,7 +576,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     /** Picard CollectRnaSeqMetrics job */
     private def collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
       val job = new CollectRnaSeqMetrics(qscript)
-      job.input = alnFile
+      job.input = alnFileDirty
       job.output = createFile(".rna_metrics")
       job.refFlat = annotationRefFlat
       job.chartOutput = Option(createFile(".coverage_bias.pdf"))
@@ -583,6 +589,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       job.ribosomalIntervals = ribosomalRefFlat
       job
     }
+
+    private def wipeJob: Option[WipeReads] = removeRibosomalReads
+      .option {
+        require(ribosomalRefFlat.isDefined)
+        val job = new WipeReads(qscript)
+        job.inputBam = alnFileDirty
+        job.intervalFile = ribosomalRefFlat.get
+        job.outputBam = swapExt(alnFileDirty, ".bam", ".cleaned.bam")
+        job.discardedBam = createFile(".rrna.bam")
+        job
+      }
 
     private def sampleAlnJob: QFunction { def output: File } = libraries.values
       .map(_.alnFile).toList match {
