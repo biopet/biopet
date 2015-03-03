@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
@@ -24,8 +23,10 @@ import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RawBaseCounter
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.MergeTables
 
