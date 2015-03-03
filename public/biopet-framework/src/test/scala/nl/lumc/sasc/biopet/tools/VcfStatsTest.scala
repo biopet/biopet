@@ -42,9 +42,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     s2.genotypeOverlap shouldBe 3
   }
 
-
-  //FIXME: Test is broken
-  /*
   @Test
   def testSampleStats: Unit = {
     val s1 = SampleStats()
@@ -58,24 +55,24 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     s1.sampleToSample("s1").alleleOverlap = 1
     s2.sampleToSample("s2").alleleOverlap = 2
 
-    s1.genotypeStats += "1" -> mutable.Map(1 -> 1)
-    s2.genotypeStats += "2" -> mutable.Map(2 -> 2)
+    val bla1 = s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "1" -> mutable.Map(1 -> 1)
+    s1.genotypeStats += "chr" -> bla1
+    val bla2 = s2.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) += "2" -> mutable.Map(2 -> 2)
+    s2.genotypeStats += "chr" -> bla2
 
     val ss1 = SampleToSampleStats()
     val ss2 = SampleToSampleStats()
 
     s1 += s2
-    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 2))
+    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 2))
     ss1.alleleOverlap = 1
     ss2.alleleOverlap = 2
     s1.sampleToSample shouldBe mutable.Map("s1" -> ss1, "s2" -> ss2)
 
     s1 += s2
-    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 4))
+    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 1), "2" -> mutable.Map(2 -> 4))
 
     s1 += s1
-    s1.genotypeStats shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
+    s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
   }
-  */
-
 }
