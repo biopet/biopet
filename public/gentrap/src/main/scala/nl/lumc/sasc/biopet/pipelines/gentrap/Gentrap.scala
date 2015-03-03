@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
@@ -282,6 +283,32 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
           job
         }
 
+    /** Base counting job per gene */
+    private def basesPerGeneJob: Option[AggrBaseCount] = expMeasures
+      .contains(BasesPerGene)
+      .option {
+        require(rawBaseCountJob.nonEmpty)
+        val job = new AggrBaseCount(qscript)
+        job.input = rawBaseCountJob.get.output
+        job.output = createFile(".bases_per_gene")
+        job.inputLabel = sampleId
+        job.mode = "gene"
+        job
+      }
+
+    /** Base counting job per exon */
+    private def basesPerExonJob: Option[AggrBaseCount] = expMeasures
+      .contains(BasesPerExon)
+      .option {
+        require(rawBaseCountJob.nonEmpty)
+        val job = new AggrBaseCount(qscript)
+        job.input = rawBaseCountJob.get.output
+        job.output = createFile(".bases_per_exon")
+        job.inputLabel = sampleId
+        job.mode = "exon"
+        job
+      }
+
     /** Case class for containing cufflinks + its output symlink jobs */
     private case class CufflinksJobSet(cuffJob: Cufflinks, geneJob: Ln, isoformJob: Ln) {
       /** Adds all contained jobs to Queue */
@@ -384,11 +411,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       addSampleAlnJob()
       // general RNA-seq metrics
       add(collectRnaSeqMetricsJob)
-      // measure expression depending on modes set in expMeasures
+      // add htseq-count jobs, if defined
       idSortingJob.foreach(add(_))
       fragmentsPerGeneJob.foreach(add(_))
       fragmentsPerExonJob.foreach(add(_))
+      // add custom base count jobs, if defined
       rawBaseCountJob.foreach(add(_))
+      basesPerGeneJob.foreach(add(_))
+      basesPerExonJob.foreach(add(_))
       // symlink results with distinct extensions ~ actually to make it easier to use MergeTables on these as well
       // since the Queue argument parser doesn't play nice with Map[_, _] types
       cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
