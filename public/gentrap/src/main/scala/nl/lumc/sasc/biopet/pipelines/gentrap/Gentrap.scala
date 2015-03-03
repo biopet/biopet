@@ -153,6 +153,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     // merge htseq outputs
     val geneFragmentsCount = makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2)
     val exonFragmentsCount = makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2)
+    // merge base count outputs
+    val geneBasesCount = makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2)
+    val exonBasesCount = makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2)
     // merge cufflinks outputs
     val geneFpkmCufflinksStrict = makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10)
     val isoFpkmCufflinksStrict = makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10)
@@ -196,6 +199,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     /** Read count per exon file */
     def exonFragmentsCount: Option[File] = fragmentsPerExonJob
+      .collect { case job => job.output }
+
+    /** Base count per gene file */
+    def geneBasesCount: Option[File] = basesPerGeneJob
+      .collect { case job => job.output }
+
+    /** Base count per exon file */
+    def exonBasesCount: Option[File] = basesPerExonJob
       .collect { case job => job.output }
 
     /** Gene tracking file from Cufflinks strict mode */
