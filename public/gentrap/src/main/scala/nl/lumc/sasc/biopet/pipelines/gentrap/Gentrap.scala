@@ -88,19 +88,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                        outBaseName: String = "all_samples"): Option[MergeTables] = {
+                                outBaseName: String = "all_samples"): Option[MergeTables] = {
     val tables = samples.values.map { inFunc }.toList.flatten
     tables.nonEmpty
       .option {
-      val job = new MergeTables(qscript)
-      job.inputTables = tables
-      job.output = new File(outputDir, outBaseName + ext)
-      job.idColumnIndices = idCols.map(_.toString)
-      job.valueColumnIndex = valCol
-      job.fileExtension = Option(ext)
-      // TODO: separate the addition into another function?
-      job
-    }
+        val job = new MergeTables(qscript)
+        job.inputTables = tables
+        job.output = new File(outputDir, outBaseName + ext)
+        job.idColumnIndices = idCols.map(_.toString)
+        job.valueColumnIndex = valCol
+        job.fileExtension = Option(ext)
+        // TODO: separate the addition into another function?
+        job
+      }
   }
 
   /** Merged gene fragment count table */
@@ -144,14 +144,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10)
 
   private lazy val mergedTables: Map[String, Option[MergeTables]] = Map(
-      "gene_fragments_count" -> geneFragmentsCountJob,
-      "exon_fragments_count" -> exonFragmentsCountJob,
-      "gene_bases_count" -> geneBasesCountJob,
-      "exon_bases_count" -> exonBasesCountJob,
-      "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrictJob,
-      "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuidedJob,
-      "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlindJob
-    )
+    "gene_fragments_count" -> geneFragmentsCountJob,
+    "exon_fragments_count" -> exonFragmentsCountJob,
+    "gene_bases_count" -> geneBasesCountJob,
+    "exon_bases_count" -> exonBasesCountJob,
+    "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrictJob,
+    "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuidedJob,
+    "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlindJob
+  )
 
   /** Output summary file */
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
