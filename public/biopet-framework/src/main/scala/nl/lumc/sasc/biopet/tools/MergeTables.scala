@@ -37,9 +37,9 @@ class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction 
       required("-a", valueColumnIndex) +
       optional("-n", idColumnName) +
       optional("-e", fileExtension) +
-      optional("h", numHeaderLines) +
-      optional("f", fallbackString) +
-      optional("d", delimiter) +
+      optional("-h", numHeaderLines) +
+      optional("-f", fallbackString) +
+      optional("-d", delimiter) +
       required("-o", output) +
       required("", repeat(inputTables), escape = false)
 }
