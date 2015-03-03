@@ -32,6 +32,6 @@ class Hist2Count(val root: Configurable) extends PythonCommandLineFunction {
     getPythonCommand +
       required("-i", input) +
       required("-o", outputGeneLevelCount) +
-      optional("-c", copyColumn.mkString(" "))
+      optional("-c", repeat(copyColumn), escape = false)
   }
 }
