@@ -69,6 +69,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** rRNA refFlat annotation */
   var ribosomalRefFlat: Option[File] = config("ribosome_refflat")
 
+  /** Whether to remove rRNA regions or not */
+  var removeRibosomalReads: Boolean = config("remove_ribosomal_reads", default = false)
+
   /*
   /** Variant calling */
   @Argument(doc = "Variant caller", fullName = "variant_caller", shortName = "varCaller", required = false, validation = "varscan|snvmix")
@@ -200,6 +203,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     if (expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict))
       require(annotationGtf.isDefined, "GTF file must be defined for Cufflinks-based modes")
+
+    if (removeRibosomalReads)
+      require(ribosomalRefFlat.isDefined, "rRNA intervals must be supplied if removeRibosomalReads is set")
   }
 
   def biopetScript(): Unit = {
