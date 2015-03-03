@@ -50,7 +50,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {
     Map("info" -> (for (
-      line <- Source.fromFile(generalStats).getLines();
+      line <- Source.fromFile(generalStats).getLines().toList.tail;
       values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
     ) yield values(0) -> values(1).toInt
     ).toMap)
