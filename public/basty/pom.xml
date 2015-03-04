@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetGatkPipelines</artifactId>
+            <artifactId>Shiva</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

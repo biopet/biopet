@@ -11,7 +11,7 @@ object BiopetExecutableProtected extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline,
     nl.lumc.sasc.biopet.pipelines.gatk.Shiva,
     nl.lumc.sasc.biopet.pipelines.gatk.ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.basty.Basty)
+    nl.lumc.sasc.biopet.pipelines.gatk.Basty)
 
   def tools = BiopetExecutablePublic.tools
 }

@@ -8,17 +8,13 @@ package nl.lumc.sasc.biopet.pipelines.basty
 import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
-import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
-import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaTrait, Shiva }
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.queue.QScript
 
-class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
+trait BastyTrait extends MultiSampleQScript {
   qscript =>
-  def this() = this(null)
 
   case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
 
@@ -26,10 +22,10 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   override def defaults = ConfigUtils.mergeMaps(Map(
     "ploidy" -> 1,
-    "variantscallers" -> variantcallers
+    "variantcallers" -> variantcallers
   ), super.defaults)
 
-  val shiva = new Shiva(qscript)
+  lazy val shiva: ShivaTrait = new Shiva(qscript)
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
@@ -114,7 +110,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       val raxmlMl = new Raxml(this)
       raxmlMl.input = variants
       raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
-      raxmlMl.p = seed
+      raxmlMl.p = Some(seed)
       raxmlMl.n = outputName + "_ml"
       raxmlMl.w = dirSufixRaxml
       raxmlMl.N = config("ml_runs", default = 20, submodule = "raxml")
@@ -127,10 +123,10 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
         raxmlBoot.threads = 1
         raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
-        raxmlBoot.p = seed
-        raxmlBoot.b = math.abs(r.nextInt)
+        raxmlBoot.p = Some(seed)
+        raxmlBoot.b = Some(math.abs(r.nextInt))
         raxmlBoot.w = dirSufixRaxml
-        raxmlBoot.N = 1
+        raxmlBoot.N = Some(1)
         raxmlBoot.n = outputName + "_boot_" + t
         add(raxmlBoot)
         raxmlBoot.getBootstrapFile
@@ -144,7 +140,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       raxmlBi.t = raxmlMl.getBestTreeFile
       raxmlBi.z = cat.output
       raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
-      raxmlBi.p = seed
+      raxmlBi.p = Some(seed)
       raxmlBi.f = "b"
       raxmlBi.n = outputName + "_bi"
       raxmlBi.w = dirSufixRaxml
@@ -181,5 +177,3 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     return FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
   }
 }
-
-object Basty extends PipelineCommand

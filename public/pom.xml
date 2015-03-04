@@ -38,6 +38,7 @@
         <module>carp</module>
 	    <module>toucan</module>
         <module>shiva</module>
+        <module>basty</module>
     </modules>
     
     <properties>
