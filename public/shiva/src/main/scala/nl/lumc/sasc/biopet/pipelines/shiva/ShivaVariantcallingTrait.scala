@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.Gzip
+import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip, Gzip }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
@@ -92,13 +92,24 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val name = "freebayes"
     protected val defaultPrio = 7
 
-    def outputFile = new File(outputDir, namePrefix + ".freebayes.vcf")
+    def outputFile = new File(outputDir, namePrefix + ".freebayes.vcf.gz")
 
     def addJobs() {
       val fb = new nl.lumc.sasc.biopet.extensions.Freebayes(qscript)
       fb.bamfiles = inputBams
-      fb.outputVcf = outputFile
+      fb.outputVcf = new File(outputDir, namePrefix + ".freebayes.vcf")
+      fb.isIntermediate = true
       add(fb)
+
+      val bz = new Bgzip(qscript)
+      bz.input = List(fb.outputVcf)
+      bz.output = outputFile
+      add(bz)
+
+      val ti = new Tabix(qscript)
+      ti.input = bz.output
+      ti.p = Some("vcf")
+      add(ti)
     }
   }
 
