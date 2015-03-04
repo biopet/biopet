@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
-import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFiles, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RawBaseCounter
@@ -389,7 +389,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
           case Some(r2j)  => List(f1Job.output, r2j.output)
           case None       => List(f1Job.output)
         }
-        val combineJob = makeCombineJob(perStrandFiles, swapExt(alnFile, ".bam", ".plus.bam"))
+        val combineJob = makeCombineJob(perStrandFiles, createFile(".plus_strand.bam"), gather = true)
 
         Option(StrandSeparationJobSet(f1Job, r2Job, combineJob))
 
@@ -430,7 +430,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
           case Some(r1j)  => List(f2Job.output, r1j.output)
           case None       => List(f2Job.output)
         }
-        val combineJob = makeCombineJob(perStrandFiles, swapExt(alnFile, ".bam", ".minus.bam"))
+        val combineJob = makeCombineJob(perStrandFiles, createFile(".minus_strand.bam"), gather = true)
 
         Option(StrandSeparationJobSet(f2Job, r1Job, combineJob))
 
@@ -605,7 +605,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         val job = new WipeReads(qscript)
         job.inputBam = alnFileDirty
         job.intervalFile = ribosomalRefFlat.get
-        job.outputBam = swapExt(alnFileDirty, ".bam", ".cleaned.bam")
+        job.outputBam = createFile(".cleaned.bam")
         job.discardedBam = createFile(".rrna.bam")
         job
       }
@@ -614,12 +614,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     private type CombineFileFunction = QFunction { def output: File }
 
     /** Ln or MergeSamFile job, depending on how many inputs are supplied */
-    private def makeCombineJob(inFiles: List[File], outFile: File,
+    private def makeCombineJob(inFiles: List[File], outFile: File, gather: Boolean = false,
                                mergeSortOrder: String = "coordinate"): CombineFileFunction = {
       require(inFiles.nonEmpty, "At least one input files for combine job")
       if (inFiles.size == 1) {
         val job = new Ln(qscript)
         job.input = inFiles.head
+        job.output = outFile
+        job
+      } else if (gather) {
+        val job = new GatherBamFiles(qscript)
+        job.input = inFiles
         job.output = outFile
         job
       } else {
