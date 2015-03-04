@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaVariantcallingGatk(val root: Configurable) extends QScript with ShivaVariantcallingTrait {
+class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVariantcallingTrait {
   qscript =>
   def this() = this(null)
 
@@ -104,4 +104,4 @@ class ShivaVariantcallingGatk(val root: Configurable) extends QScript with Shiva
   }
 }
 
-object ShivaVariantcallingGatk extends PipelineCommand
+object ShivaVariantcalling extends PipelineCommand

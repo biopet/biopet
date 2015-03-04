@@ -15,11 +15,11 @@ import org.testng.annotations.{ Test, DataProvider }
 /**
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaGatkTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): ShivaGatk = {
-    new ShivaGatk() {
+class ShivaTest extends TestNGSuite with Matchers {
+  def initPipeline(map: Map[String, Any]): Shiva = {
+    new Shiva() {
       override def configName = "shiva"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaGatkTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -40,10 +40,10 @@ class ShivaGatkTest extends TestNGSuite with Matchers {
                 multi: Boolean, single: Boolean, library: Boolean, dbsnp: Boolean,
                 covariates: Boolean, realign: Boolean, baseRecalibration: Boolean): Unit = {
     val map = {
-      var m: Map[String, Any] = ShivaGatkTest.config
-      if (sample1) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(ShivaGatkTest.sample3, m.toMap)
+      var m: Map[String, Any] = ShivaTest.config
+      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m.toMap)
+      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m.toMap)
+      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m.toMap)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m.toMap)
       ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
@@ -80,7 +80,7 @@ class ShivaGatkTest extends TestNGSuite with Matchers {
   }
 }
 
-object ShivaGatkTest {
+object ShivaTest {
   val outputDir = Files.createTempDir()
 
   val config = Map(

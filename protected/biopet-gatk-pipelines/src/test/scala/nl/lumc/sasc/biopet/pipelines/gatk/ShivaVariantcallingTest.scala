@@ -19,11 +19,11 @@ import scala.collection.mutable.ListBuffer
 /**
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaVariantcallingGatkTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): ShivaVariantcallingGatk = {
-    new ShivaVariantcallingGatk() {
+class ShivaVariantcallingTest extends TestNGSuite with Matchers {
+  def initPipeline(map: Map[String, Any]): ShivaVariantcalling = {
+    new ShivaVariantcalling() {
       override def configName = "shivavariantcalling"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingGatkTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaVariantcallingTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -94,11 +94,11 @@ class ShivaVariantcallingGatkTest extends TestNGSuite with Matchers {
   }
 
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaVariantcallingGatkTest.outputDir)
+    FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
   }
 }
 
-object ShivaVariantcallingGatkTest {
+object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
 
   val config = Map(

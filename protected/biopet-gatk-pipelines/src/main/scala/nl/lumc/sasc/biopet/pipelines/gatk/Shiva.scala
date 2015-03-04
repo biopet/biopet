@@ -9,17 +9,17 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaGatk(val root: Configurable) extends QScript with ShivaTrait {
+class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   qscript =>
   def this() = this(null)
 
   override def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
-    if (multisample) new ShivaVariantcallingGatk(qscript) {
+    if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
       override def configName = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }
-    else new ShivaVariantcallingGatk(qscript) {
+    else new ShivaVariantcalling(qscript) {
       override def configName = "shivavariantcalling"
     }
   }
@@ -47,9 +47,9 @@ class ShivaGatk(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
-    override def doublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
-      if (input.size <= 1) super.doublePreProcess(input)
-      else super.doublePreProcess(input, true).collect {
+    override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
+      if (input.size <= 1) super.addDoublePreProcess(input)
+      else super.addDoublePreProcess(input, true).collect {
         case file => {
           config("use_indel_realign", default = true).asBoolean match {
             case true  => addIndelRealign(file, sampleDir, false)
@@ -98,4 +98,4 @@ class ShivaGatk(val root: Configurable) extends QScript with ShivaTrait {
   }
 }
 
-object ShivaGatk extends PipelineCommand
+object Shiva extends PipelineCommand
