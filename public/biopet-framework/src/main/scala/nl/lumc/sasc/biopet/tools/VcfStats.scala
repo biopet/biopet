@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ FileOutputStream, PrintWriter, File }
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
@@ -41,6 +42,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   var genotypeTags: List[String] = Nil
   var allInfoTags = false
   var allGenotypeTags = false
+  var reference: File = config("reference")
 
   override def beforeGraph: Unit = {
     index = new File(input.getAbsolutePath + ".tbi")
@@ -61,7 +63,8 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
     repeat("--infoTag", infoTags) +
     repeat("--genotypeTag", genotypeTags) +
     conditional(allInfoTags, "--allInfoTags") +
-    conditional(allGenotypeTags, "--allGenotypeTags")
+    conditional(allGenotypeTags, "--allGenotypeTags") +
+    required("-R", reference)
 
   /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {
@@ -102,6 +105,7 @@ object VcfStats extends ToolCommand {
   /** Commandline argument */
   case class Args(inputFile: File = null,
                   outputDir: File = null,
+                  referenceFile: File = null,
                   intervals: Option[File] = None,
                   infoTags: List[String] = Nil,
                   genotypeTags: List[String] = Nil,
@@ -112,6 +116,9 @@ object VcfStats extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(inputFile = x)
+    }
+    opt[File]('R', "referenceFile") required () unbounded () valueName ("<file>") action { (x, c) =>
+      c.copy(referenceFile = x)
     }
     opt[File]('o', "outputDir") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(outputDir = x)
@@ -256,9 +263,11 @@ object VcfStats extends ToolCommand {
       line.getID
     }).toList ::: defaultGenotypeFields
 
+    val referenceFile = new FastaSequenceFile(commandArgs.referenceFile, true)
+
     val intervals: List[Interval] = (
       for (
-        seq <- header.getSequenceDictionary.getSequences;
+        seq <- referenceFile.getSequenceDictionary.getSequences;
         chunks = (seq.getSequenceLength / 10000000) + (if (seq.getSequenceLength % 10000000 == 0) 0 else 1);
         i <- 1 to chunks
       ) yield {
@@ -331,8 +340,8 @@ object VcfStats extends ToolCommand {
     writeField(stats, "general", commandArgs.outputDir)
     for (field <- (adInfoTags).distinct.par) {
       writeField(stats, field, infoOutputDir)
-      for (line <- header.getContigLines) {
-        val chr = line.getSAMSequenceRecord.getSequenceName
+      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+        val chr = line.getSequenceName
         writeField(stats, field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
@@ -341,8 +350,8 @@ object VcfStats extends ToolCommand {
     writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
     for (field <- (adGenotypeTags).distinct.par) {
       writeGenotypeField(stats, samples, field, genotypeOutputDir)
-      for (line <- header.getContigLines) {
-        val chr = line.getSAMSequenceRecord.getSequenceName
+      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+        val chr = line.getSequenceName
         writeGenotypeField(stats, samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
