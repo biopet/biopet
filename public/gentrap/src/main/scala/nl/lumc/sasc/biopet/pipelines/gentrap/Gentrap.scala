@@ -344,25 +344,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     /** Container for strand-separation jobs */
     private case class StrandSeparationJobSet(pair1Job: SamtoolsView, pair2Job: Option[SamtoolsView],
-                                              mergeJob: MergeSamFiles) {
+                                              combineJob: QFunction { def output: File }) {
       def addAllJobs(): Unit = {
-        add(pair1Job); pair2Job.foreach(add(_)); add(mergeJob)
+        add(pair1Job); pair2Job.foreach(add(_)); add(combineJob)
       }
     }
 
     def alnFilePlusStrand: Option[File] = alnPlusStrandJobs
-      .collect { case jobSet => jobSet.mergeJob.output }
+      .collect { case jobSet => jobSet.combineJob.output }
 
     private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
       case Dutp =>
-        val f1Job = new SamtoolsView(qscript)
-        f1Job.input = alnFile
-        f1Job.b = true
-        f1Job.h = true
-        f1Job.f = if (this.allSingle) List("0x10") else List("0x50")
-        f1Job.output = createFile(".f1.bam")
-        f1Job.isIntermediate = true
-
         val r2Job = this.allSingle
           .option {
             val job = new SamtoolsView(qscript)
@@ -375,36 +367,42 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.isIntermediate = true
             job
           }
-        // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
-        // so we use MergeSamFiles for now
-        val mergeJob = new MergeSamFiles(qscript)
-        mergeJob.input = r2Job match {
-          case Some(r2j) => List(f1Job.output, r2j.output)
-          case None      => List(f1Job.output)
-        }
-        mergeJob.sortOrder = "coordinate"
-        mergeJob.output = swapExt(alnFile, ".bam", ".plus.bam")
 
-        Option(StrandSeparationJobSet(f1Job, r2Job, mergeJob))
+        val f1Job = new SamtoolsView(qscript)
+        f1Job.input = alnFile
+        f1Job.b = true
+        f1Job.h = true
+        f1Job.f = if (this.allSingle) List("0x10") else List("0x50")
+        f1Job.output = createFile(".f1.bam")
+        // since we are symlinking if the other pair does not exist,
+        // we want to keep this job as non-intermediate as well
+        f1Job.isIntermediate = r2Job.isDefined
+
+        val combineJob: QFunction { def output: File } =  r2Job match {
+          case Some(r2j) =>
+            val job = new MergeSamFiles(qscript)
+            job.input = List(f1Job.output, r2j.output)
+            job.sortOrder = "coordinate"
+            job.output = swapExt(alnFile, ".bam", ".plus.bam")
+            job
+          case None =>
+            val job = new Ln(qscript)
+            job.in = f1Job.output
+            job.out = swapExt(alnFile, ".bam", ".plus.bam")
+            job
+        }
+
+        Option(StrandSeparationJobSet(f1Job, r2Job, combineJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
     }
 
     def alnFileMinusStrand: Option[File] = alnMinusStrandJobs
-      .collect { case jobSet => jobSet.mergeJob.output }
+      .collect { case jobSet => jobSet.combineJob.output }
 
     private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
       case Dutp =>
-        val f2Job = new SamtoolsView(qscript)
-        f2Job.input = alnFile
-        f2Job.b = true
-        f2Job.h = true
-        f2Job.output = createFile(".f2.bam")
-        f2Job.isIntermediate = true
-        if (this.allSingle) f2Job.F = List("0x10")
-        else f2Job.f = List("0x90")
-
         val r1Job = this.allSingle
           .option {
             val job = new SamtoolsView(qscript)
@@ -417,17 +415,33 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.isIntermediate = true
             job
           }
-        // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
-        // so we use MergeSamFiles for now
-        val mergeJob = new MergeSamFiles(qscript)
-        mergeJob.input = r1Job match {
-          case Some(r1j) => List(f2Job.output, r1j.output)
-          case None      => List(f2Job.output)
-        }
-        mergeJob.sortOrder = "coordinate"
-        mergeJob.output = swapExt(alnFile, ".bam", ".minus.bam")
 
-        Option(StrandSeparationJobSet(f2Job, r1Job, mergeJob))
+        val f2Job = new SamtoolsView(qscript)
+        f2Job.input = alnFile
+        f2Job.b = true
+        f2Job.h = true
+        f2Job.output = createFile(".f2.bam")
+        // since we are symlinking if the other pair does not exist,
+        // we want to keep this job as non-intermediate as well
+        f2Job.isIntermediate = r1Job.isDefined
+        if (this.allSingle) f2Job.F = List("0x10")
+        else f2Job.f = List("0x90")
+
+        val combineJob: QFunction { def output: File } = r1Job match {
+          case Some(r1j) =>
+            val job = new MergeSamFiles(qscript)
+            job.input = List(f2Job.output, r1j.output)
+            job.sortOrder = "coordinate"
+            job.output = swapExt(alnFile, ".bam", ".minus.bam")
+            job
+          case None =>
+            val job = new Ln(qscript)
+            job.in = f2Job.output
+            job.out = swapExt(alnFile, ".bam", ".minus.bam")
+            job
+        }
+
+        Option(StrandSeparationJobSet(f2Job, r1Job, combineJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
