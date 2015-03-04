@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.File
 import scala.language.reflectiveCalls
 
 import org.broadinstitute.gatk.queue.QScript
@@ -741,7 +740,15 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene, FragmentsPerExon, BasesPerGene, BasesPerExon, CufflinksStrict, CufflinksGuided, CufflinksBlind, Cuffquant, Rsem = Value
+    val FragmentsPerGene,
+      FragmentsPerExon,
+      BasesPerGene,
+      BasesPerExon,
+      CufflinksStrict,
+      CufflinksGuided,
+      CufflinksBlind,
+      Cuffquant,
+      Rsem = Value
   }
 
   /** Enumeration of available strandedness */
