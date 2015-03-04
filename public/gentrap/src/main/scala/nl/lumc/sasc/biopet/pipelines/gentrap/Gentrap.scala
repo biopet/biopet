@@ -29,7 +29,7 @@ import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFiles, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RawBaseCounter
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, RawBaseCounter}
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
@@ -72,11 +72,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Whether to remove rRNA regions or not */
   var removeRibosomalReads: Boolean = config("remove_ribosomal_reads", default = false)
 
-  /*
-  /** Variant calling */
-  @Argument(doc = "Variant caller", fullName = "variant_caller", shortName = "varCaller", required = false, validation = "varscan|snvmix")
-  var varcaller: String = _
-  */
+  /** Whether to do simple variant calling on RNA or not */
+  var callVariants: Boolean = config("call_variants", default = false)
 
   /** Default pipeline config */
   override def defaults = ConfigUtils.mergeMaps(
@@ -247,7 +244,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuided,
         "isoform_fpkm_cufflinks_guided" -> isoformFpkmCufflinksGuided,
         "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind,
-        "isoform_fpkm_cufflinks_blind" -> isoformFpkmCufflinksBlind
+        "isoform_fpkm_cufflinks_blind" -> isoformFpkmCufflinksBlind,
+        "variant_calls" -> variantCalls
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
@@ -298,6 +296,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     /** Isoforms tracking file from Cufflinks blind mode */
     def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
       .collect { case jobSet => jobSet.isoformJob.output }
+
+    /** Raw variant calling file */
+    def variantCalls: Option[File] = varCallJob
+      .collect { case job => job.output }
 
     /** ID-sorting job for HTseq-count jobs */
     private def idSortingJob: Option[SortSam] = (expMeasures.contains(FragmentsPerExon) || expMeasures.contains(FragmentsPerGene))
@@ -582,6 +584,15 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         CufflinksJobSet(cuff, geneLn, isoLn)
       }
 
+    /** Variant calling job */
+    private def varCallJob: Option[CustomVarScan] = callVariants
+      .option {
+        val job = new CustomVarScan(qscript)
+        job.input = alnFile
+        job.output = createFile(".raw.vcf.gz")
+        job
+      }
+
     /** Picard CollectRnaSeqMetrics job */
     private def collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
       val job = new CollectRnaSeqMetrics(qscript)
@@ -672,6 +683,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
       cufflinksGuidedJob.foreach { case jobSet => jobSet.addAllJobs() }
       cufflinksBlindJob.foreach { case jobSet => jobSet.addAllJobs() }
+      // add variant calling job if requested
+      varCallJob.foreach(add(_))
     }
 
     /** Add jobs for fragments per gene counting using HTSeq */
