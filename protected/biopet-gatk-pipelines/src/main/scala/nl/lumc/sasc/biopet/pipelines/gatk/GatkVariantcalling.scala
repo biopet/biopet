@@ -72,7 +72,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         add(baiLn)
 
         val bamLn = Ln(this, files.head, bamFile)
-        bamLn.deps :+= baiLn.out
+        bamLn.deps :+= baiLn.output
         add(bamLn)
       }
       List(bamFile)

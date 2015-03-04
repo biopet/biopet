@@ -277,27 +277,27 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     /** Gene tracking file from Cufflinks strict mode */
     def geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
-      .collect { case jobSet => jobSet.geneJob.out }
+      .collect { case jobSet => jobSet.geneJob.output }
 
     /** Isoforms tracking file from Cufflinks strict mode */
     def isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
-      .collect { case jobSet => jobSet.isoformJob.out }
+      .collect { case jobSet => jobSet.isoformJob.output }
 
     /** Gene tracking file from Cufflinks guided mode */
     def geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case jobSet => jobSet.geneJob.out }
+      .collect { case jobSet => jobSet.geneJob.output }
 
     /** Isoforms tracking file from Cufflinks guided mode */
     def isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case jobSet => jobSet.isoformJob.out }
+      .collect { case jobSet => jobSet.isoformJob.output }
 
     /** Gene tracking file from Cufflinks guided mode */
     def geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case jobSet => jobSet.geneJob.out }
+      .collect { case jobSet => jobSet.geneJob.output }
 
     /** Isoforms tracking file from Cufflinks blind mode */
     def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case jobSet => jobSet.isoformJob.out }
+      .collect { case jobSet => jobSet.isoformJob.output }
 
     /** ID-sorting job for HTseq-count jobs */
     private def idSortingJob: Option[SortSam] = (expMeasures.contains(FragmentsPerExon) || expMeasures.contains(FragmentsPerGene))
@@ -514,12 +514,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.output_dir = new File(sampleDir, "cufflinks_strict")
 
         val geneLn = new Ln(qscript)
-        geneLn.in = cuff.outputGenesFpkm
-        geneLn.out = createFile(".genes_fpkm_cufflinks_strict")
+        geneLn.input = cuff.outputGenesFpkm
+        geneLn.output = createFile(".genes_fpkm_cufflinks_strict")
 
         val isoLn = new Ln(qscript)
-        isoLn.in = cuff.outputIsoformsFpkm
-        isoLn.out = createFile(".isoforms_fpkm_cufflinks_strict")
+        isoLn.input = cuff.outputIsoformsFpkm
+        isoLn.output = createFile(".isoforms_fpkm_cufflinks_strict")
 
         CufflinksJobSet(cuff, geneLn, isoLn)
       }
@@ -543,12 +543,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.output_dir = new File(sampleDir, "cufflinks_guided")
 
         val geneLn = new Ln(qscript)
-        geneLn.in = cuff.outputGenesFpkm
-        geneLn.out = createFile(".genes_fpkm_cufflinks_guided")
+        geneLn.input = cuff.outputGenesFpkm
+        geneLn.output = createFile(".genes_fpkm_cufflinks_guided")
 
         val isoLn = new Ln(qscript)
-        isoLn.in = cuff.outputIsoformsFpkm
-        isoLn.out = createFile(".isoforms_fpkm_cufflinks_guided")
+        isoLn.input = cuff.outputIsoformsFpkm
+        isoLn.output = createFile(".isoforms_fpkm_cufflinks_guided")
 
         CufflinksJobSet(cuff, geneLn, isoLn)
       }
@@ -572,12 +572,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.output_dir = new File(sampleDir, "cufflinks_blind")
 
         val geneLn = new Ln(qscript)
-        geneLn.in = cuff.outputGenesFpkm
-        geneLn.out = createFile(".genes_fpkm_cufflinks_blind")
+        geneLn.input = cuff.outputGenesFpkm
+        geneLn.output = createFile(".genes_fpkm_cufflinks_blind")
 
         val isoLn = new Ln(qscript)
-        isoLn.in = cuff.outputIsoformsFpkm
-        isoLn.out = createFile(".isoforms_fpkm_cufflinks_blind")
+        isoLn.input = cuff.outputIsoformsFpkm
+        isoLn.output = createFile(".isoforms_fpkm_cufflinks_blind")
 
         CufflinksJobSet(cuff, geneLn, isoLn)
       }
@@ -619,8 +619,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       require(inFiles.nonEmpty, "At least one input files for combine job")
       if (inFiles.size == 1) {
         val job = new Ln(qscript)
-        job.in = inFiles.head
-        job.out = outFile
+        job.input = inFiles.head
+        job.output = outFile
         job
       } else {
         val job = new MergeSamFiles(qscript)
@@ -716,11 +716,6 @@ object Gentrap extends PipelineCommand {
   /** Implicit extension that allows to create option values based on boolean values */
   implicit class RichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
-  }
-
-  /** Implicit extension so that Ln have the same output variable name as MergeSamFiles, so they can be used together */
-  implicit class ProperLn(val ln: Ln) extends QFunction {
-    def output: File = ln.out
   }
 
   /** Enumeration of available expression measures */
