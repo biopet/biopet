@@ -742,9 +742,9 @@ object Gentrap extends PipelineCommand {
       BasesPerExon,
       CufflinksStrict,
       CufflinksGuided,
-      CufflinksBlind,
-      Cuffquant,
-      Rsem = Value
+      CufflinksBlind = Value
+      //Cuffquant,
+      //Rsem = Value
   }
 
   /** Enumeration of available strandedness */
