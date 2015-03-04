@@ -87,7 +87,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
       val minusBtCov = bedtoolsCovHist
       minusBtCov.bam = inputMinus
 
-      plusGrep.commandLine + "|" + plusBtCov.commandLine + "|" + hist2Count.commandLine + " > " + output + " && " +
-        minusGrep.commandLine + "|" + minusBtCov.commandLine + "|" + hist2Count.commandLine + " >> " + output
+      plusGrep.commandLine + "|" + plusBtCov.commandLine + "|" + hist2Count.commandLine + " > " + required(output) + " && " +
+        minusGrep.commandLine + "|" + minusBtCov.commandLine + "|" + hist2Count.commandLine + " >> " + required(output)
     }
 }
