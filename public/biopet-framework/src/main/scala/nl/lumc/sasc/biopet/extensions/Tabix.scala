@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 3/4/15.
@@ -18,7 +18,10 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   protected var output: File = null
 
   var p: Option[String] = config("p")
-  executable = config("exe", default = "bgzip")
+
+  executable = config("exe", default = "tabix")
+  override val versionRegex = """version: (.*)""".r
+  override def versionCommand = executable
 
   override def beforeGraph: Unit = {
     output = new File(input.getAbsolutePath + ".tbi")
