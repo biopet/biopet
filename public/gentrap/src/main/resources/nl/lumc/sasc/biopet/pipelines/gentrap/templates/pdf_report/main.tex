@@ -1,0 +1,94 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{grffile}
+\usepackage[superscript]{cite}
+% must be located here, so we can handle filenames with underscores
+\newcommand{\UnderscoreCommands}{\do\IfFileExists \do\verbatiminput%
+    \do\verbatimtabinput \do\citeNP \do\citeA \do\citeANP \do\citeN%
+    \do\shortcite \do\shortciteNP \do\shortciteA \do\shortciteANP%
+    \do\shortciteN \do\citeyear \do\citeyearNP%
+}
+\usepackage[strings]{underscore}
+
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\setlength{\tabcolsep}{20pt}
+\renewcommand{\arraystretch}{1.3}
+\renewcommand{\familydefault}{\sfdefault}
+
+% requires the titling package, for subtitles
+%\newcommand{\subtitle}[1]{
+%    \posttitle{
+%        \par\end{center}
+%        \begin{center}\large#1\end{center}
+%       \vskip0.5em}}
+
+\pagestyle{fancy}
+\setlength{\headheight}{15.2pt}
+
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\textit{\nouppercase{\leftmark}}}
+\fancyhead[LO]{\textit{\nouppercase{\rightmark}}}
+
+\begin{document}
+\setlength{\parindent}{0in}
+\title{\Huge Gentrap: Generic Transcriptome Analysis Pipeline}
+\author{LUMC Sequencing Analysis Support Core}
+\maketitle
+\begin{center}
+    {\LARGE Run Report v((( gentrap.version )))}
+\end{center}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{((( gentrap.logo )))}
+\end{figure}
+\thispagestyle{empty}
+\clearpage
+
+\tableofcontents
+\clearpage
+
+
+\section{Introduction}
+\label{sec:intro}
+
+This document outlines the results obtained from running Gentrap, a generic
+pipeline for transcriptome analysis.
+
+
+% TODO: contents ~ preferrably in modules!
+((* include "test.tex" *))
+
+
+
+\section{About Gentrap}
+\label{apx:about}
+
+The Generic Transcript Analysis Pipeline (Gentrap) aims to to be a
+generic pipeline for analyzing transcripts from RNA-seq experiments.
+
+Gentrap was developed by Wibowo Arindrarto (\href{mailto:w.arindrarto@lumc.nl}{w.arindrarto@lumc.nl})
+based on raw scripts written by Jeroen Laros
+(\href{mailto:j.f.j.laros@lumc.nl}{j.f.j.laros@lumc.nl}) and
+Peter-Bram 't Hoen
+(\href{mailto:p.a.c._t_hoen@lumc.nl}{p.a.c._t_hoen@lumc.nl}).
+
+\indent
+
+Cover page image: T7 RNA Polymerase and a dsDNA template (PDB ID \texttt{1msw}).
+Created by Thomas Splettstoesser, taken from
+\href{http://commons.wikimedia.org/wiki/File:T7_RNA_polymerase.jpg}{Wikimedia Commons}.
+
+
+\end{document}
