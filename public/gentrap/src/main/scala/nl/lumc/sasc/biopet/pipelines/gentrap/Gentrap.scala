@@ -378,19 +378,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         // we want to keep this job as non-intermediate as well
         f1Job.isIntermediate = r2Job.isDefined
 
-        val combineJob: QFunction { def output: File } =  r2Job match {
-          case Some(r2j) =>
-            val job = new MergeSamFiles(qscript)
-            job.input = List(f1Job.output, r2j.output)
-            job.sortOrder = "coordinate"
-            job.output = swapExt(alnFile, ".bam", ".plus.bam")
-            job
-          case None =>
-            val job = new Ln(qscript)
-            job.in = f1Job.output
-            job.out = swapExt(alnFile, ".bam", ".plus.bam")
-            job
+        val perStrandFiles = r2Job match {
+          case Some(r2j)  => List(f1Job.output, r2j.output)
+          case None       => List(f1Job.output)
         }
+        val combineJob = makeCombineJob(perStrandFiles, swapExt(alnFile, ".bam", ".plus.bam"))
 
         Option(StrandSeparationJobSet(f1Job, r2Job, combineJob))
 
@@ -427,19 +419,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         if (this.allSingle) f2Job.F = List("0x10")
         else f2Job.f = List("0x90")
 
-        val combineJob: QFunction { def output: File } = r1Job match {
-          case Some(r1j) =>
-            val job = new MergeSamFiles(qscript)
-            job.input = List(f2Job.output, r1j.output)
-            job.sortOrder = "coordinate"
-            job.output = swapExt(alnFile, ".bam", ".minus.bam")
-            job
-          case None =>
-            val job = new Ln(qscript)
-            job.in = f2Job.output
-            job.out = swapExt(alnFile, ".bam", ".minus.bam")
-            job
+        val perStrandFiles = r1Job match {
+          case Some(r1j)  => List(f2Job.output, r1j.output)
+          case None       => List(f2Job.output)
         }
+        val combineJob = makeCombineJob(perStrandFiles, swapExt(alnFile, ".bam", ".minus.bam"))
 
         Option(StrandSeparationJobSet(f2Job, r1Job, combineJob))
 
@@ -619,24 +603,30 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
-    private def sampleAlnJob: QFunction { def output: File } = libraries.values
-      .map(_.alnFile).toList match {
-        // library only has one file, then we symlink
-        case file :: Nil =>
-          val ln = new Ln(qscript)
-          ln.in = file
-          ln.out = createFile(".bam")
-          ln
-        // library has multiple files, then we merge
-        case files @ f :: fs =>
-          val merge = new MergeSamFiles(qscript)
-          merge.input = files
-          merge.sortOrder = "coordinate"
-          merge.output = createFile(".bam")
-          merge
-        // library has 0 or less files, error!
-        case Nil => throw new IllegalStateException("Per-library alignment files nonexistent.")
+    /** Super type of Ln and MergeSamFile */
+    private type CombineFileFunction = QFunction { def output: File }
+
+    /** Ln or MergeSamFile job, depending on how many inputs are supplied */
+    private def makeCombineJob(inFiles: List[File], outFile: File,
+                               mergeSortOrder: String = "coordinate"): CombineFileFunction = {
+      require(inFiles.nonEmpty, "At least one input files for combine job")
+      if (inFiles.size == 1) {
+        val job = new Ln(qscript)
+        job.in = inFiles.head
+        job.out = outFile
+        job
+      } else {
+        val job = new MergeSamFiles(qscript)
+        job.input = inFiles
+        job.output = outFile
+        job.sortOrder = mergeSortOrder
+        job
       }
+    }
+
+    /** Job for combining all library BAMs */
+    private def sampleAlnJob: CombineFileFunction =
+      makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
 
     /** Whether all libraries are paired or not */
     def allPaired: Boolean = libraries.values.forall(_.paired)
