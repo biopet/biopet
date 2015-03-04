@@ -98,7 +98,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                                outBaseName: String = "all_samples"): Option[MergeTables] = {
+                                outBaseName: String = "all_samples", fallback: String = "-"): Option[MergeTables] = {
     val tables = samples.values.map { inFunc }.toList.flatten
     tables.nonEmpty
       .option {
@@ -108,6 +108,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.idColumnIndices = idCols.map(_.toString)
         job.valueColumnIndex = valCol
         job.fileExtension = Option(ext)
+        job.fallbackString = Option(fallback)
         // TODO: separate the addition into another function?
         job
       }
@@ -115,19 +116,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene fragment count table */
   private def geneFragmentsCountJob =
-    makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2)
+    makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, fallback = "0")
 
   /** Merged exon fragment count table */
   private def exonFragmentsCountJob =
-    makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2)
+    makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2, fallback = "0")
 
   /** Merged gene base count table */
   private def geneBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2)
+    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, fallback = "0")
 
   /** Merged exon base count table */
   private def exonBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2)
+    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, fallback = "0")
 
   /** Merged gene FPKM table for Cufflinks, strict mode */
   private def geneFpkmCufflinksStrictJob =
