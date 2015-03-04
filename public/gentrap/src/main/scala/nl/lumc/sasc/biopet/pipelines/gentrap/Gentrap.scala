@@ -248,8 +248,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     /** Per-sample alignment file, post rRNA cleanup (if chosen) */
     lazy val alnFile: File = wipeJob match {
-      case Some(j)  => j.outputBam
-      case None     => alnFileDirty
+      case Some(j) => j.outputBam
+      case None    => alnFileDirty
     }
 
     /** Read count per gene file */
@@ -346,9 +346,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     private case class StrandSeparationJobSet(pair1Job: SamtoolsView, pair2Job: Option[SamtoolsView],
                                               mergeJob: MergeSamFiles) {
       def addAllJobs(): Unit = {
-        add(pair1Job, isIntermediate = true)
-        pair2Job.foreach(add(_, isIntermediate = true))
-        add(mergeJob)
+        add(pair1Job); pair2Job.foreach(add(_)); add(mergeJob)
       }
     }
 
@@ -363,17 +361,20 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         f1Job.h = true
         f1Job.f = if (this.allSingle) List("0x10") else List("0x50")
         f1Job.output = createFile(".f1.bam")
+        f1Job.isIntermediate = true
 
-        val r2Job = this.allSingle.option {
-          val job = new SamtoolsView(qscript)
-          job.input = alnFile
-          job.b = true
-          job.h = true
-          job.f = List("0x40")
-          job.F = List("0x10")
-          job.output = createFile(".r2.bam")
-          job
-        }
+        val r2Job = this.allSingle
+          .option {
+            val job = new SamtoolsView(qscript)
+            job.input = alnFile
+            job.b = true
+            job.h = true
+            job.f = List("0x40")
+            job.F = List("0x10")
+            job.output = createFile(".r2.bam")
+            job.isIntermediate = true
+            job
+          }
         // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
         // so we use MergeSamFiles for now
         val mergeJob = new MergeSamFiles(qscript)
@@ -400,19 +401,22 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         f2Job.b = true
         f2Job.h = true
         f2Job.output = createFile(".f2.bam")
+        f2Job.isIntermediate = true
         if (this.allSingle) f2Job.F = List("0x10")
         else f2Job.f = List("0x90")
 
-        val r1Job = this.allSingle.option {
-          val job = new SamtoolsView(qscript)
-          job.input = alnFile
-          job.b = true
-          job.h = true
-          job.f = List("0x80")
-          job.F = List("0x10")
-          job.output = createFile(".r1.bam")
-          job
-        }
+        val r1Job = this.allSingle
+          .option {
+            val job = new SamtoolsView(qscript)
+            job.input = alnFile
+            job.b = true
+            job.h = true
+            job.f = List("0x80")
+            job.F = List("0x10")
+            job.output = createFile(".r1.bam")
+            job.isIntermediate = true
+            job
+          }
         // FIXME: no need to merge if we only have 1 pair, but having MergeSamFiles makes it easier to deal with the types
         // so we use MergeSamFiles for now
         val mergeJob = new MergeSamFiles(qscript)
