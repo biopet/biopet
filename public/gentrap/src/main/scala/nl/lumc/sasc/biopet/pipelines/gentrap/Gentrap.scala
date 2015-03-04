@@ -160,8 +160,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "gene_bases_count" -> geneBasesCountJob,
     "exon_bases_count" -> exonBasesCountJob,
     "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrictJob,
+    "isoform_fpkm_cufflinks_strict" -> isoFpkmCufflinksStrictJob,
     "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuidedJob,
-    "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlindJob
+    "isoform_fpkm_cufflinks_guided" -> isoFpkmCufflinksGuidedJob,
+    "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlindJob,
+    "isoform_fpkm_cufflinks_blind" -> isoFpkmCufflinksBlindJob
   )
 
   /** Output summary file */
@@ -240,8 +243,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "gene_bases_count" -> geneBasesCount,
         "exon_bases_count" -> exonBasesCount,
         "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
+        "isoform_fpkm_cufflinks_strict" -> isoformFpkmCufflinksStrict,
         "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuided,
-        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind
+        "isoform_fpkm_cufflinks_guided" -> isoformFpkmCufflinksGuided,
+        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind,
+        "isoform_fpkm_cufflinks_blind" -> isoformFpkmCufflinksBlind
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
