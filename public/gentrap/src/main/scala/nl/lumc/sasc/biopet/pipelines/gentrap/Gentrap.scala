@@ -51,10 +51,13 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Expression measurement modes */
   // see the enumeration below for valid modes
-  var expressionMeasures: List[String] = config("expression_measures")
+  var expMeasures: Set[ExpMeasures.Value] = config("expression_measures")
+    .asStringList
+    .map { makeExpMeasure }
+    .toSet
 
   /** Strandedness modes */
-  var strandProtocol: String = config("strand_protocol")
+  var strandProtocol: StrandProtocol.Value = makeStrandProtocol(config("strand_protocol").asString)
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf")
@@ -83,13 +86,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "format" -> "sam"
       )
     ), super.defaults)
-
-  /** Private container for expression modes */
-  private val expMeasures: Set[ExpMeasures.Value] = expressionMeasures
-    .map { makeExpMeasure }.toSet
-
-  /** Private value for strand protocol */
-  private val strProtocol: StrandProtocol.Value = makeStrandProtocol(strandProtocol)
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
@@ -176,7 +172,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map(
     "aligner" -> aligner,
-    "expression_measures" -> expressionMeasures,
+    "expression_measures" -> expMeasures.map(_.toString),
     "strand_protocol" -> strandProtocol,
     "annotation_refflat" -> annotationRefFlat
   ) ++ Map(
@@ -321,7 +317,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
         job.order = Option("name")
-        job.stranded = strProtocol match {
+        job.stranded = strandProtocol match {
           case NonSpecific => Option("no")
           case Dutp        => Option("reverse")
           case _           => throw new IllegalStateException
@@ -340,7 +336,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.output = createFile(".fragments_per_exon")
         job.format = Option("bam")
         job.order = Option("name")
-        job.stranded = strProtocol match {
+        job.stranded = strandProtocol match {
           case NonSpecific => Option("no")
           case Dutp        => Option("reverse")
           case _           => throw new IllegalStateException
@@ -361,7 +357,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     def alnFilePlusStrand: Option[File] = alnPlusStrandJobs
       .collect { case jobSet => jobSet.combineJob.output }
 
-    private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
+    private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strandProtocol match {
       case Dutp =>
         val r2Job = this.allPaired
           .option {
@@ -401,7 +397,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     def alnFileMinusStrand: Option[File] = alnMinusStrandJobs
       .collect { case jobSet => jobSet.combineJob.output }
 
-    private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
+    private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strandProtocol match {
       case Dutp =>
         val r1Job = this.allPaired
           .option {
@@ -439,7 +435,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       case _           => throw new IllegalStateException
     }
     /** Raw base counting job */
-    private def rawBaseCountJob: Option[RawBaseCounter] = strProtocol match {
+    private def rawBaseCountJob: Option[RawBaseCounter] = strandProtocol match {
       case NonSpecific =>
         (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
           .option {
@@ -507,7 +503,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = annotationGtf
         cuff.GTF_guide = None
-        cuff.library_type = strProtocol match {
+        cuff.library_type = strandProtocol match {
           case NonSpecific => Option("fr-unstranded")
           case Dutp        => Option("fr-firststrand")
           case _           => throw new IllegalStateException
@@ -536,7 +532,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = None
         cuff.GTF_guide = annotationGtf
-        cuff.library_type = strProtocol match {
+        cuff.library_type = strandProtocol match {
           case NonSpecific => Option("fr-unstranded")
           case Dutp        => Option("fr-firststrand")
           case _           => throw new IllegalStateException
@@ -565,7 +561,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         cuff.input = alnFile
         cuff.GTF = None
         cuff.GTF_guide = None
-        cuff.library_type = strProtocol match {
+        cuff.library_type = strandProtocol match {
           case NonSpecific => Option("fr-unstranded")
           case Dutp        => Option("fr-firststrand")
           case _           => throw new IllegalStateException
@@ -600,7 +596,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       job.refFlat = annotationRefFlat
       job.chartOutput = Option(createFile(".coverage_bias.pdf"))
       job.assumeSorted = true
-      job.strandSpecificity = strProtocol match {
+      job.strandSpecificity = strandProtocol match {
         case NonSpecific => Option(StrandSpecificity.NONE.toString)
         case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
         case _           => throw new IllegalStateException
