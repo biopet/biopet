@@ -23,6 +23,9 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _
 
+  @Input
+  protected var index: File = null
+
   @Output
   protected var generalStats: File = null
 
@@ -38,6 +41,10 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   var genotypeTags: List[String] = Nil
   var allInfoTags = false
   var allGenotypeTags = false
+
+  override def beforeGraph: Unit = {
+    index = new File(input.getAbsolutePath + ".tbi")
+  }
 
   /** Set output dir and a output file */
   def setOutputDir(dir: File): Unit = {
