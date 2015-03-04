@@ -82,7 +82,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
           case _ => (None, None, None)
         }
 
-      val variantcalling = if (config("library_variantcalling", default = false).asBoolean &&
+      lazy val variantcalling = if (config("library_variantcalling", default = false).asBoolean &&
         (bamFile.isDefined || preProcessBam.isDefined)) {
         Some(makeVariantcalling(multisample = false))
       } else None
@@ -198,7 +198,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       }
     }).flatten.toList)
 
-    val variantcalling = if (config("multisample_sample_variantcalling", default = true).asBoolean) {
+    lazy val variantcalling = if (config("single_sample_variantcalling", default = true).asBoolean) {
       Some(makeVariantcalling(multisample = true))
     } else None
 
@@ -228,7 +228,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     }
   }
 
-  val variantcalling = if (config("multisample_sample_variantcalling", default = true).asBoolean) {
+  lazy val variantcalling = if (config("multisample_sample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
   } else None
 
