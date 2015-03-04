@@ -32,7 +32,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Interval bed")
   var intervalBed: Option[File] = config("interval_bed")
 
-  var disableBaq: Boolean = config("disable_baq")
+  var disableBaq: Boolean = config("disable_baq", default = false)
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
   var depth: Option[Int] = config("depth")
