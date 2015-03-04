@@ -96,7 +96,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       val macs2 = new Macs2CallPeak(qscript)
       macs2.treatment = bamFile
       macs2.name = Some(sampleId)
-      macs2.outputdir = sampleDir + "macs2/" + sampleId + "/"
+      macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
     }
   }
@@ -123,7 +123,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         macs2.treatment = sample.bamFile
         macs2.control = samples(controlId).bamFile
         macs2.name = Some(sampleId + "_VS_" + controlId)
-        macs2.outputdir = sample.sampleDir + "/" + "macs2/" + macs2.name.get + "/"
+        macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
         add(macs2)
       }
     }
