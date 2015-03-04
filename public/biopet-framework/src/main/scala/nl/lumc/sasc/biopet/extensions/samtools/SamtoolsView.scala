@@ -35,8 +35,8 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   def cmdBase = required(executable) +
     required("view") +
     optional("-q", quality) +
-    optional("-f", f) +
-    optional("-F", F) +
+    repeat("-f", f) +
+    repeat("-F", F) +
     conditional(b, "-b") +
     conditional(h, "-h")
   def cmdPipeInput = cmdBase + "-"
