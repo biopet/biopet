@@ -21,6 +21,7 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction {
   var outputVcf: File = null
 
   var ploidy: Option[Int] = config("ploidy")
+  var haplotypeLength: Option[Int] = config("haplotype_length")
 
   executable = config("exe", default = "freebayes")
   override val versionRegex = """version:  (.*)""".r
@@ -30,5 +31,6 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction {
     required("--fasta-reference", reference) +
     repeat("--bam", bamfiles) +
     optional("--vcf", outputVcf) +
-    optional("--ploidy", ploidy)
+    optional("--ploidy", ploidy) +
+    optional("--haplotype-length", haplotypeLength)
 }
