@@ -52,7 +52,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Expression measurement modes */
   // see the enumeration below for valid modes
-  var expressionMeasures: List[String] = config("expression_measures", default = Nil)
+  var expressionMeasures: List[String] = config("expression_measures")
 
   /** Strandedness modes */
   var strandProtocol: String = config("strand_protocol")
