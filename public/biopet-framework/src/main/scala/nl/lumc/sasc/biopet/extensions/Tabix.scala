@@ -20,6 +20,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   var p: Option[String] = config("p")
 
   executable = config("exe", default = "tabix")
+  override val versionExitcode = List(0, 1)
   override val versionRegex = """Version: (.*)""".r
   override def versionCommand = executable
 
