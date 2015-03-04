@@ -198,7 +198,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       }
     }).flatten.toList)
 
-    lazy val variantcalling = if (config("single_sample_variantcalling", default = true).asBoolean) {
+    lazy val variantcalling = if (config("single_sample_variantcalling", default = false).asBoolean) {
       Some(makeVariantcalling(multisample = true))
     } else None
 
