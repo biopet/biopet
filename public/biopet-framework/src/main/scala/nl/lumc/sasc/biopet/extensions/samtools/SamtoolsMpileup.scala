@@ -35,6 +35,8 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   var disableBaq: Boolean = config("disable_baq")
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
+  var depth: Option[Int] = config("depth")
+  var outputMappingQuality: Boolean = config("output_mapping_quality", default = false)
 
   def cmdBase = required(executable) +
     required("mpileup") +
@@ -42,6 +44,8 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
     optional("-l", intervalBed) +
     optional("-q", minMapQuality) +
     optional("-Q", minBaseQuality) +
+    optional("-d", depth) +
+    conditional(outputMappingQuality, "-s") +
     conditional(disableBaq, "-B")
   def cmdPipeInput = cmdBase + "-"
   def cmdPipe = cmdBase + required(input)
