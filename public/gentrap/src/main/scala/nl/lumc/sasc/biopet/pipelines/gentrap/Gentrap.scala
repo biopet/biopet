@@ -691,7 +691,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       )
 
       /** Convenience method to check whether the library is paired or not */
-      def paired: Boolean = mappingJob.flexiprep.paired
+      def paired: Boolean = Option(config("R2").asFile).isDefined
 
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
