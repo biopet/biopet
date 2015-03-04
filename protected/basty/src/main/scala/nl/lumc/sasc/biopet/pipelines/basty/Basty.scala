@@ -11,6 +11,7 @@ import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
 import nl.lumc.sasc.biopet.pipelines.gatk.GatkPipeline
+import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -21,15 +22,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
 
   case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
 
+  def variantcallers = List("freebayes")
+
   override def defaults = ConfigUtils.mergeMaps(Map(
     "ploidy" -> 1,
-    "use_haplotypecaller" -> false,
-    "use_unifiedgenotyper" -> true,
-    "joint_variantcalling" -> true,
-    "single_sample_calling" -> false
+    "variantscallers" -> variantcallers
   ), super.defaults)
 
-  var gatkPipeline: GatkPipeline = new GatkPipeline(qscript)
+  val shiva = new Shiva(qscript)
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
@@ -69,14 +69,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def init() {
-    gatkPipeline.outputDir = outputDir
-    gatkPipeline.init
+    shiva.outputDir = outputDir
+    shiva.init
   }
 
   def biopetScript() {
-    gatkPipeline.biopetScript
-    addAll(gatkPipeline.functions)
-    addSummaryQScript(gatkPipeline)
+    shiva.biopetScript
+    addAll(shiva.functions)
+    addSummaryQScript(shiva)
 
     addSamplesJobs()
   }
@@ -168,9 +168,9 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
-    bastyGenerateFasta.inputVcf = gatkPipeline.multisampleVariantcalling.scriptOutput.finalVcfFile
-    if (gatkPipeline.samples.contains(sampleName)) {
-      bastyGenerateFasta.bamFile = gatkPipeline.samples(sampleName).gatkVariantcalling.scriptOutput.bamFiles.head
+    bastyGenerateFasta.inputVcf = shiva.variantcalling.get.finalFile
+    if (shiva.samples.contains(sampleName)) {
+      bastyGenerateFasta.bamFile = shiva.samples(sampleName).preProcessBam.get
     }
     bastyGenerateFasta.outputVariants = new File(outputDir, bastyGenerateFasta.outputName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
     bastyGenerateFasta.outputConsensus = new File(outputDir, bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
