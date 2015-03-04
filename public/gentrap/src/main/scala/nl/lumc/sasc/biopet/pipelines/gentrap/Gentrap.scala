@@ -362,7 +362,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
       case Dutp =>
-        val r2Job = this.allSingle
+        val r2Job = this.allPaired
           .option {
             val job = new SamtoolsView(qscript)
             job.input = alnFile
@@ -402,7 +402,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
     private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strProtocol match {
       case Dutp =>
-        val r1Job = this.allSingle
+        val r1Job = this.allPaired
           .option {
             val job = new SamtoolsView(qscript)
             job.input = alnFile
