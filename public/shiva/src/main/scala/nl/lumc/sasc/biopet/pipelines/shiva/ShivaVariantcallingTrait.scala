@@ -101,6 +101,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
       fb.isIntermediate = true
       add(fb)
 
+      //TODO: need piping for this
       val bz = new Bgzip(qscript)
       bz.input = List(fb.outputVcf)
       bz.output = outputFile
