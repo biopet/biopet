@@ -6,6 +6,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
+ * Extension for bwa aln
+ *
+ * Based on version 0.7.12-r1039
+ *
  * Created by pjvan_thof on 1/16/15.
  */
 class BwaAln(val root: Configurable) extends Bwa {
@@ -44,6 +48,7 @@ class BwaAln(val root: Configurable) extends Bwa {
   override val defaultVmem = "5G"
   override val defaultThreads = 8
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("aln") +
     optional("-n", n) +
