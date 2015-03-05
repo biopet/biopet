@@ -22,6 +22,11 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
 import scala.io.Source
 
+/**
+ * General picard extension
+ *
+ * This is based on using class files directly from the jar
+ */
 abstract class Picard extends BiopetJavaCommandLineFunction {
   override def subPath = "picard" :: super.subPath
 
@@ -66,6 +71,11 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 }
 
 object Picard {
+  /**
+   * This function parse a metrics file in separated values
+   * @param file input metrics file
+   * @return (header, content)
+   */
   def getMetrics(file: File) = {
     val lines = Source.fromFile(file).getLines().toArray
 

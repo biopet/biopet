@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard CollectGcBiasMetrics */
 class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   javaMainClass = "picard.analysis.CollectGcBiasMetrics"
 
@@ -51,9 +52,9 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
 
   override def beforeGraph {
     if (outputChart == null) outputChart = new File(output + ".pdf")
-    //require(reference.exists)
   }
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -67,6 +68,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
 }
 
 object CollectGcBiasMetrics {
+  /** Returns default CollectGcBiasMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectGcBiasMetrics = {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input

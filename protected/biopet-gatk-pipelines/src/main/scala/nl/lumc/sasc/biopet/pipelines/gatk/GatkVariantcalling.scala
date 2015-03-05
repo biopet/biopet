@@ -77,7 +77,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       }
       List(bamFile)
     } else {
-      val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
+      val markDup = MarkDuplicates(this, files, new File(outputDir, outputName + ".dedup.bam"))
       markDup.isIntermediate = useIndelRealigner
       add(markDup)
       if (useIndelRealigner) {
