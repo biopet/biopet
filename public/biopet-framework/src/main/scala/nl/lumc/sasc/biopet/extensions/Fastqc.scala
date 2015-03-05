@@ -64,8 +64,8 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
       // otherwise, use default contaminants file (depending on FastQC version)
       case None =>
         val defaultContams = getVersion match {
-          case "v0.11.2" => new File(fastqcDir + "/Configuration/contaminant_list.txt")
-          case _         => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
+          case Some("v0.11.2") => new File(fastqcDir + "/Configuration/contaminant_list.txt")
+          case _               => new File(fastqcDir + "/Contaminants/contaminant_list.txt")
         }
         config("contaminants", default = defaultContams)
     }
@@ -76,8 +76,8 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
       // otherwise, check if adapters are already present (depending on FastQC version)
       case None =>
         val defaultAdapters = getVersion match {
-          case "v0.11.2" => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
-          case _         => None
+          case Some("v0.11.2") => Option(new File(fastqcDir + "/Configuration/adapter_list.txt"))
+          case _               => None
         }
         defaultAdapters.collect { case adp => config("adapters", default = adp) }
     }

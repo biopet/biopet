@@ -135,10 +135,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0)
 
   /** Executes the version command */
-  private def getVersionInternal: String = {
-    if (versionCommand == null || versionRegex == null) return "N/A"
+  private def getVersionInternal: Option[String] = {
+    if (versionCommand == null || versionRegex == null) return None
     val exe = new File(versionCommand.trim.split(" ")(0))
-    if (!exe.exists()) return "N/A"
+    if (!exe.exists()) return None
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     def outputLog = "Version command: \n" + versionCommand +
@@ -147,25 +147,28 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
     if (!versionExitcode.contains(process.exitValue)) {
       logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
-      return "N/A"
+      return None
     }
     for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
       line match {
-        case versionRegex(m) => return m
+        case versionRegex(m) => return Some(m)
         case _               =>
       }
     }
     logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
-    return "N/A"
+    return None
   }
 
   /** Get version from cache otherwise execute the version command  */
-  def getVersion: String = {
+  def getVersion: Option[String] = {
     if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
       preProcesExecutable
-    if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
-      BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
-    return BiopetCommandLineFunctionTrait.versionCache(executable)
+    if (!BiopetCommandLineFunctionTrait.versionCache.contains(versionCommand))
+      getVersionInternal match {
+        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += versionCommand -> version
+        case _             =>
+      }
+    BiopetCommandLineFunctionTrait.versionCache.get(versionCommand)
   }
 
   /**
