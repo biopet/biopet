@@ -30,6 +30,8 @@ import scala.io.Source
 abstract class Picard extends BiopetJavaCommandLineFunction {
   override def subPath = "picard" :: super.subPath
 
+  if (config.contains("picard_jar")) jarFile = config("picard_jar")
+
   @Argument(doc = "VERBOSITY", required = false)
   var verbosity: Option[String] = config("verbosity")
 
@@ -51,10 +53,12 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc = "CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", default = false)
 
-  //FIXME: picard version
-  //  override def versionCommand = executable + " " + javaOpts + " " + javaExecutable + " -h"
-  //  override val versionRegex = """Version: (.*)""".r
-  //  override val versionExitcode = List(0, 1)
+  override def versionCommand = {
+    if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + " -h"
+    else null
+  }
+  override val versionRegex = """Version: (.*)""".r
+  override val versionExitcode = List(0, 1)
 
   override val defaultVmem = "8G"
   memoryLimit = Option(3.0)
