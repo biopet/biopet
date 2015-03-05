@@ -36,7 +36,6 @@ class Cat(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine = required(executable) + repeat(input) + " > " + required(output)
 }
 
-
 /**
  * Object for constructors for cat
  */
