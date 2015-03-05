@@ -41,7 +41,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
 
   private def removeEmptyPile = new BiopetCommandLineFunction {
     override val root: Configurable = wrapper.root
-    executable = "grep"
+    executable = config("exe", default = "grep", freeVar = false)
     override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
   }
 

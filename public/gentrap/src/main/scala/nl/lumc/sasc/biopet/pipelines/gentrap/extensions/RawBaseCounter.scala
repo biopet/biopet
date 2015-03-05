@@ -38,7 +38,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   private def grepForStrand = new BiopetCommandLineFunction {
     var strand: String = null
     override val root: Configurable = wrapper.root
-    executable = "grep"
+    executable = config("exe", default = "grep", freeVar = false)
     override def cmdLine: String = required(executable) +
       required("-P", """\""" + strand + """$""") +
       required(annotationBed)
@@ -47,7 +47,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   private def bedtoolsCovHist = new BiopetCommandLineFunction {
     var bam: File = null
     override val root: Configurable = wrapper.root
-    executable = "coverageBed"
+    executable = config("exe", default = "coverageBed", freeVar = false)
     override def cmdLine: String = required(executable) +
       required("-split") +
       required("-hist") +
