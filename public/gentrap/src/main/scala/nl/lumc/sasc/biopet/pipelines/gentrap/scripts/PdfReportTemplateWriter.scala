@@ -25,8 +25,7 @@ class PdfReportTemplateWriter(val root: Configurable) extends PythonCommandLineF
   @Input(doc = "Input summary file", required = true)
   var summaryFile: File = null
 
-  @Input(doc = "Main report template", required = true)
-  // def since we hard-code the template
+  @Input(doc = "Main report template", required = true) // def since we hard-code the template
   def mainTemplateFile: File = new File(templateWorkDir, "main.tex")
 
   @Output(doc = "Output file", required = true)
