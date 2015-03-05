@@ -126,7 +126,20 @@ plotHeatmap <- function(in.data, out.name=OUTPUT.PLOT, count.type=COUNT.TYPE, tm
   dev.off()
 }
 
+plotPlaceholder <- function(out.name=OUTPUT.PLOT) {
+  png(out.name, height=800, width=800, res=100)
+  par(mar=c(0,0,0,0))
+  plot(c(0, 1), c(0, 1), ann=F, bty='n', type='n', xaxt='n', yaxt='n')
+  text(x=0.5, y=0.5, paste("Not enough data points for plotting"),
+       cex=1.6, col="black")
+  dev.off()
+}
+
 
 parsed <- prepTable(INPUT.PATH)
-cors <- cor(parsed, method="spearman")
-plotHeatmap(cors)
+if (nrow(parsed) > 0) {
+  cors <- cor(parsed, method="spearman")
+  plotHeatmap(cors)
+} else {
+  plotPlaceholder()
+}
