@@ -21,12 +21,16 @@ class PdfReportTemplateWriter(val root: Configurable) extends PythonCommandLineF
 
   val templateResDir: File = new File(getClass.getResource("/nl/lumc/sasc/biopet/pipelines/gentrap/templates/pdf").toURI)
   val templateWorkDir: File = new File(".queue/tmp/nl/lumc/sasc/biopet/pipelines/gentrap/templates/pdf")
+  val imgWorkDir: File = new File(templateWorkDir, "img")
 
   @Input(doc = "Input summary file", required = true)
   var summaryFile: File = null
 
   @Input(doc = "Main report template", required = true) // def since we hard-code the template
   def mainTemplateFile: File = new File(templateWorkDir, "main.tex")
+
+  @Input(doc = "Main report logo", required = true) // def since we hard-code the logo
+  def logoFile: File = new File(imgWorkDir, "gentrap_front.png")
 
   @Output(doc = "Output file", required = true)
   var output: File = null
@@ -39,6 +43,7 @@ class PdfReportTemplateWriter(val root: Configurable) extends PythonCommandLineF
     getPythonCommand +
       required(summaryFile) +
       required(mainTemplateFile) +
+      required(logoFile.getAbsoluteFile) +
       " > " + required(output)
   }
 

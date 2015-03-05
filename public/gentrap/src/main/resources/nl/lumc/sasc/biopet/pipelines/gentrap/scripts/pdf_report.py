@@ -84,7 +84,7 @@ def natural_sort(inlist):
     return inlist
 
 
-def write_template(summary_file, template_file):
+def write_template(summary_file, template_file, logo_file):
 
     template_file = path.abspath(path.realpath(template_file))
     template_dir = path.dirname(template_file)
@@ -112,7 +112,7 @@ def write_template(summary_file, template_file):
     render_vars = {
         "gentrap": {
             "version": "--testing--",
-            "logo": "/home/warindrarto/devel/intellij/biopet/public/gentrap/src/main/resources/nl/lumc/sasc/biopet/pipelines/gentrap/templates/img/gentrap_front.png",
+            "logo": logo_file,
         },
     }
     rendered = jinja_template.render(**render_vars)
@@ -127,6 +127,8 @@ if __name__ == "__main__":
             help="Path to Gentrap summary file")
     parser.add_argument("template_file", type=str,
             help="Path to main template file")
+    parser.add_argument("logo_file", type=str,
+            help="Path to main logo file")
     args = parser.parse_args()
 
-    write_template(args.summary_file, args.template_file)
+    write_template(args.summary_file, args.template_file, args.logo_file)
