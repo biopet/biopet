@@ -24,6 +24,9 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   @Output(doc = "Output VCF file", required = true)
   var output: File = null
 
+  @Output(doc = "Output VCF file index", required = true)
+  lazy val outputIndex: File = new File(output.toString + ".tbi")
+
   // mpileup, varscan, fix_mpileup.py, binom_test.py, bgzip, tabix
   private def mpileup = new SamtoolsMpileup(wrapper.root) {
     this.input = wrapper.input
@@ -54,11 +57,16 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     this.output = wrapper.output
   }
 
+  private def index = new Tabix(wrapper.root) {
+    input = compress.output
+    p = Option("vcf")
+  }
+
   override def beforeGraph: Unit = {
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
   }
 
   def cmdLine: String =
     mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
-      varscan.commandLine + " | " + compress.commandLine
+      varscan.commandLine + " | " + compress.commandLine + " && " + index.commandLine
 }
