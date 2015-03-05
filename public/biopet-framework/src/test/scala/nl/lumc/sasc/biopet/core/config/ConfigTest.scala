@@ -48,7 +48,7 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
     Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
   }
 
-  @DataProvider(name = "testGetValueFromMapProvider", parallel = true)
+  @DataProvider(name = "testGetValueFromMapProvider")
   def testGetValueFromMapProvider() = {
     Array(
       Array("m1", Nil, "k1", true, "v2"),

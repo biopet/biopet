@@ -58,10 +58,30 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   ), super.defaults)
 
+  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+
+  //TODO: Add summary
+  def summaryFiles: Map[String, File] = Map()
+
+  //TODO: Add summary
+  def summarySettings: Map[String, Any] = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
+
       val inputFastq: File = config("R1")
       val prefixFastq: File = createFile(".prefix.fastq")
 
