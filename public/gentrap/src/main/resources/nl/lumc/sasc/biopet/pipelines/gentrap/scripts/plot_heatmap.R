@@ -56,6 +56,7 @@ TMM.NORM <- if (is.null(opt[["tmm-normalize"]])) { FALSE } else { TRUE }
 USE.LOG <- if (is.null(opt[["use-log"]])) { FALSE } else { TRUE }
 
 HTSEQ.STATS <- c("__alignment_not_unique", "__ambiguous", "__no_feature", "__not_aligned", "__too_low_aQual")
+# NOTE: These are string representations of the enums in the Gentrap Biopet pipeline
 VALID.COUNT.TYPES <- c("FragmentsPerGene", "FragmentsPerExon", "BasesPerGene", "BasesPerExon",
                        "CufflinksGene", "CufflinksIsoform")
 
@@ -112,9 +113,13 @@ plotHeatmap <- function(in.data, out.name=OUTPUT.PLOT, count.type=COUNT.TYPE, tm
       paste("Spearman Correlation of\n", var.title, sep="")
     }
 
-  img.len <- min(1200, nrow(in.data) * 200)
-  max.name.len <- max(sapply(rownames(in.data), nchar))
-  img.margin <- min(max.name.len, 7)
+  if (nrow(in.data) > 20) {
+    img.len <- 1200
+    img.margin <- 8
+  } else {
+    img.len <- 800
+    img.margin <- max(11, max(sapply(rownames(in.data), nchar)))
+  }
 
   png(out.name, height=img.len, width=img.len, res=100)
   heatmap.2(in.data, col=brewer.pal(9, "YlGnBu"), trace="none", density.info="histogram", main=title, margins=c(img.margin, img.margin))
