@@ -36,7 +36,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   var outputQuery: File = null
 
   @Output(doc = "Output (for indexing)", required = false) // NOTE: it's a def since we can't change the index name ~ it's always input_name + .tbi
-  def outputIndex: File = {
+  lazy val outputIndex: File = {
     require(input != null, "Input must be defined")
     new File(input.toString + ".tbi")
   }
@@ -44,7 +44,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Regions to query", required = false)
   var regions: List[String] = config("regions", default = List.empty[String])
 
-  var p: String = config("p")
+  var p: Option[String] = config("p")
   var s: Option[Int] = config("s")
   var b: Option[Int] = config("b")
   var e: Option[Int] = config("e")
@@ -67,7 +67,11 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   private val validFormats: Set[String] = Set("gff", "bed", "sam", "vcf", "psltbl")
 
   override def beforeGraph: Unit = {
-    require(validFormats.contains(p), "-p flag must be one of " + validFormats.mkString(", "))
+    p match {
+      case Some(fmt) =>
+        require(validFormats.contains(fmt), "-p flag must be one of " + validFormats.mkString(", "))
+      case None => ;
+    }
   }
 
   def cmdLine = {
