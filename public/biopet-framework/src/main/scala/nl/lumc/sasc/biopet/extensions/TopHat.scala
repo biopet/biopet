@@ -21,6 +21,9 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
+/**
+ * Extension for TopHad
+ */
 class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
@@ -70,11 +73,10 @@ class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   def cmdLine: String = {
-    var cmd: String = required(executable) +
+    required(executable) +
       optional("-p", nCoresRequest) +
       "--no-convert-bam" +
       required(bowtie_index) +
       required(R1) + optional(R2)
-    return cmd
   }
 }
