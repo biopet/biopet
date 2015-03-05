@@ -98,7 +98,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       .option {
         val job = new MergeTables(qscript)
         job.inputTables = tables
-        job.output = new File(outputDir, outBaseName + ext)
+        job.output = new File(outputDir, "expression_estimates" + File.separator + outBaseName + ext)
         job.idColumnIndices = idCols.map(_.toString)
         job.valueColumnIndex = valCol
         job.fileExtension = Option(ext)
