@@ -393,8 +393,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         f1Job.isIntermediate = r2Job.isDefined
 
         val perStrandFiles = r2Job match {
-          case Some(r2j)  => List(f1Job.output, r2j.output)
-          case None       => List(f1Job.output)
+          case Some(r2j) => List(f1Job.output, r2j.output)
+          case None      => List(f1Job.output)
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".plus_strand.bam"), gather = true)
 
@@ -434,8 +434,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         else f2Job.f = List("0x90")
 
         val perStrandFiles = r1Job match {
-          case Some(r1j)  => List(f2Job.output, r1j.output)
-          case None       => List(f2Job.output)
+          case Some(r1j) => List(f2Job.output, r1j.output)
+          case None      => List(f2Job.output)
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".minus_strand.bam"), gather = true)
 
@@ -746,15 +746,9 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene,
-      FragmentsPerExon,
-      BasesPerGene,
-      BasesPerExon,
-      CufflinksStrict,
-      CufflinksGuided,
-      CufflinksBlind = Value
-      //Cuffquant,
-      //Rsem = Value
+    val FragmentsPerGene, FragmentsPerExon, BasesPerGene, BasesPerExon, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
+    //Cuffquant,
+    //Rsem = Value
   }
 
   /** Enumeration of available strandedness */
