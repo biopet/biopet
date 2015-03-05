@@ -21,6 +21,7 @@ import scala.language.reflectiveCalls
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
+import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
@@ -770,11 +771,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 }
 
 object Gentrap extends PipelineCommand {
-
-  /** Implicit extension that allows to create option values based on boolean values */
-  implicit class RichBoolean(val b: Boolean) extends AnyVal {
-    final def option[A](a: => A): Option[A] = if (b) Some(a) else None
-  }
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
