@@ -25,11 +25,15 @@ class PlotHeatmap(val root: Configurable) extends RScriptCommandLineFunction {
   @Output(doc = "Output plot", required = false)
   var output: File = null
 
+  var countType: Option[String] = config("count_type")
+  var useLog: Boolean = config("use_log", default = false)
   var tmmNormalize: Boolean = config("tmm_normalize", default = false)
 
   def cmdLine = {
     RScriptCommand +
       conditional(tmmNormalize, "-T") +
+      conditional(useLog, "-L") +
+      required("-C", countType) +
       required("-I", input) +
       required("-O", output)
   }
