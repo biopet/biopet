@@ -34,13 +34,6 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** return commandline to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
-
-  def getSummary: Json = {
-    val data = Source.fromFile(output).mkString.split(" ")
-    return ("path" := output.getAbsolutePath) ->:
-      ("md5sum" := data(0)) ->:
-      jEmptyObject
-  }
 }
 
 /** Object for constructors for md5sum */
