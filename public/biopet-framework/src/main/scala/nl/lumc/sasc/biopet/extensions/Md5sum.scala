@@ -23,6 +23,7 @@ import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 import scala.io.Source
 
+/** Extension for md5sum */
 class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input")
   var input: File = _
