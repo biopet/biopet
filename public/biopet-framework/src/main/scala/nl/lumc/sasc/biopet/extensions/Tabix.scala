@@ -35,8 +35,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Output (for region query)", required = false)
   var outputQuery: File = null
 
-  @Output(doc = "Output (for indexing)", required = false)
-  // NOTE: it's a def since we can't change the index name ~ it's always input_name + .tbi
+  @Output(doc = "Output (for indexing)", required = false) // NOTE: it's a def since we can't change the index name ~ it's always input_name + .tbi
   def outputIndex: File = {
     require(input != null, "Input must be defined")
     new File(input.toString + ".tbi")

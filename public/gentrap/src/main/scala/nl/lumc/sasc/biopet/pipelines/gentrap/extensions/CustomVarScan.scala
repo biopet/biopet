@@ -60,5 +60,5 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
 
   def cmdLine: String =
     mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
-    varscan.commandLine + " | " + compress.commandLine
+      varscan.commandLine + " | " + compress.commandLine
 }

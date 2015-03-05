@@ -23,10 +23,11 @@ abstract class Varscan extends BiopetJavaCommandLineFunction {
 
   jarFile = config("varscan_jar")
 
-  /** TODO: test version
-  override def versionCommand = super.commandLine
-  override val versionRegex = """VarScan v(.*)""".r
-  */
+  /**
+   * TODO: test version
+   * override def versionCommand = super.commandLine
+   * override val versionRegex = """VarScan v(.*)""".r
+   */
 
   override val defaultVmem = "8G"
   memoryLimit = Option(3.0)
