@@ -32,6 +32,7 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "md5sum")
 
+  /** return commandline to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 
   def getSummary: Json = {
@@ -42,7 +43,9 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
   }
 }
 
+/** Object for constructors for md5sum */
 object Md5sum {
+  /** Makes md5sum with md5 file in given dir */
   def apply(root: Configurable, fastqfile: File, outDir: File): Md5sum = {
     val md5sum = new Md5sum(root)
     md5sum.input = fastqfile
@@ -50,6 +53,7 @@ object Md5sum {
     return md5sum
   }
 
+  /** Makes md5sum with md5 file in same dir as input file */
   def apply(root: Configurable, file: File): Md5sum = {
     val md5sum = new Md5sum(root)
     md5sum.input = file

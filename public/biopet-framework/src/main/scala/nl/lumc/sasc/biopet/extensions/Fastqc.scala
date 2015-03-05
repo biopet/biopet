@@ -22,6 +22,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 
+/**
+ * Extension for fastqc
+ * Based on version 0.10.1 and 0.11.2
+ */
 class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
@@ -48,6 +52,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
   override val defaultThreads = 4
 
+  /** Sets contaminants and adapters when not yet set */
   override def beforeGraph {
     this.preProcesExecutable
 
@@ -78,6 +83,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
     }
   }
 
+  /** return commandline to execute */
   def cmdLine = required(executable) +
     optional("--java", java_exe) +
     optional("--threads", threads) +
