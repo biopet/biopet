@@ -12,7 +12,7 @@ Biopet is an abbreviation of ( Bio Pipeline Execution Tool ) and packages severa
 
 ### System Requirements
 
-Biopet is build on top of GATK Queue, which requires having `java` installed on the analysis machine(s).
+Biopet is build on top of GATK Queue, which requires having `java 7 JVM` installed on the analysis machine(s).
 
 For end-users:
 
@@ -58,7 +58,7 @@ If one performs a dry run the config report will be generated. From this config 
 
 In the SHARK compute cluster, a module is available to load the necessary dependencies.
 
-    $ module load biopet/v0.2.0
+    $ module load biopet/v0.3.0
 
 Using this option, the `java -jar Biopet-<version>.jar` can be ommited and `biopet` can be started using:
 
@@ -70,25 +70,32 @@ Using this option, the `java -jar Biopet-<version>.jar` can be ommited and `biop
 
     $ biopet pipeline <pipeline_name>
 
-
 - [Flexiprep](pipelines/flexiprep)
 - [Mapping](pipelines/mapping)
 - [Gatk Variantcalling](https://git.lumc.nl/biopet/biopet/wikis/GATK-Variantcalling-Pipeline)
+- [Gentrap](pipelines/gentrap)
+- [Sage](pipelines/sage)
+- Bam2Wig
 - BamMetrics
+- Carp
+- ConiferPipeline
+- Toucan
+- Yamsvp
 - Basty
+    
+Note that all pipelines are still in the experimental phase and therefore one needs to be careful interpreting the results and stability of the pipelines
+
 - GatkBenchmarkGenotyping
 - GatkGenotyping
 - GatkPipeline
 - GatkVariantRecalibration
 - GatkVcfSampleCompare
-- [Gentrap](pipelines/gentrap)
-- [Sage](pipelines/sage)
 - Yamsvp (Under development)
 
 __Note that each pipeline needs a config file written in JSON format see [config](general/config.md) & [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config) __
 
 
-There are multiple configs that can be passed to a pipeline, for example the sample, settings and executables wherefrom sample and settings are mandatory.
+There are multiple configs that can be passed to a pipeline, for example the sample, settings and executables where from sample and settings are mandatory.
 
 - [Here](general/config.md) one can find how to create a sample and settings config
 - More info can be found here: [How To! Config](https://git.lumc.nl/biopet/biopet/wikis/Config)
@@ -97,20 +104,33 @@ There are multiple configs that can be passed to a pipeline, for example the sam
 
     $ biopet tool <tool_name>
 
-  - BedToInterval
-  - BedtoolsCoverageToCounts
-  - BiopetFlagstat
-  - CheckAllelesVcfInBam
-  - ExtractAlignedFastq
-  - FastqSplitter
-  - FindRepeatsPacBio
-  - MpileupToVcf
-  - SageCountFastq
-  - SageCreateLibrary
-  - SageCreateTagCounts
-  - VcfFilter
-  - VcfToTsv
-  - WipeReads
+- AnnotateVcfWithBed
+- BastyGenerateFasta
+- BedToInterval
+- BedtoolsCoverageToCounts
+- BiopetFlagstat
+- CheckAllelesVcfInBam
+- ExtractAlignedFastq
+- FastqSplitter
+- FastqSync
+- FindRepeatsPacBio
+- MergeAlleles
+- MpileupToVcf
+- SageCountFastq
+- SageCreateLibrary
+- SageCreateTagCounts
+- SamplesTsvToJson
+- Seqstat
+- VEPNormalizer
+- VcfFilter
+- VcfStats
+- VcfToTsv
+- WipeReads
+
+
+Each tool has its own help screen and can be accessed like this:
+    
+    $ biopet tool <tool_name> -h
 
 ## Developers
 
@@ -122,8 +142,7 @@ There are multiple configs that can be passed to a pipeline, for example the sam
 4. alternatively download the `queue.jar` from the GATK website
 5. run `mvn verify` to compile and package or do `mvn install` to install the jars also in local maven repository
 
-
-## About 
+## About
 Go to the [about page](about)
 
 ## License
