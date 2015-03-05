@@ -108,56 +108,95 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
   }
 
+  protected lazy val forTmmNormalization: Set[ExpMeasures.Value] =
+    Set(FragmentsPerGene, FragmentsPerExon, BasesPerGene, BasesPerExon)
+
+  private def makeHeatmapJob(mergeJob: Option[MergeTables], outName: String,
+                             expMeasure: ExpMeasures.Value, isCuffIsoform: Boolean = false): Option[PlotHeatmap] =
+    (mergeJob.isDefined && samples.size > 2)
+      .option {
+        val job = new PlotHeatmap(qscript)
+        job.input = mergeJob.get.output
+        job.output = new File(outputDir, "heatmaps" + File.separator + s"heatmap_$outName.png")
+        job.tmmNormalize = forTmmNormalization.contains(expMeasure)
+        job.useLog = job.tmmNormalize
+        job.countType =
+          if (expMeasure.toString.startsWith("Cufflinks")) {
+            if (isCuffIsoform) Option("CufflinksIsoform")
+            else Option("CufflinksGene")
+          } else Option(expMeasure.toString)
+        job
+      }
+
   /** Merged gene fragment count table */
   private lazy val geneFragmentsCountJob =
     makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, fallback = "0")
 
-  private lazy val geneFragmentsCountHeatmapJob = (geneFragmentsCountJob.isDefined && samples.size > 2)
-    .option {
-      val job = new PlotHeatmap(qscript)
-      job.input = geneFragmentsCountJob.get.output
-      job.output = new File(outputDir, "heatmap_fragments_per_gene.png")
-      job.tmmNormalize = true
-      job.useLog = true
-      job.countType = Option("FragmentsPerGene")
-      job
-    }
+  private lazy val geneFragmentsCountHeatmapJob =
+    makeHeatmapJob(geneFragmentsCountJob, "fragments_per_gene", FragmentsPerGene)
 
   /** Merged exon fragment count table */
-  private def exonFragmentsCountJob =
+  private lazy val exonFragmentsCountJob =
     makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2, fallback = "0")
 
+  private lazy val exonFragmentsCountHeatmapJob =
+    makeHeatmapJob(exonFragmentsCountJob, "fragments_per_exon", FragmentsPerExon)
+
   /** Merged gene base count table */
-  private def geneBasesCountJob =
+  private lazy val geneBasesCountJob =
     makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, fallback = "0")
 
+  private lazy val geneBasesCountHeatmapJob =
+    makeHeatmapJob(geneBasesCountJob, "bases_per_gene", BasesPerGene)
+
   /** Merged exon base count table */
-  private def exonBasesCountJob =
+  private lazy val exonBasesCountJob =
     makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, fallback = "0")
 
+  private lazy val exonBasesCountHeatmapJob =
+    makeHeatmapJob(exonBasesCountJob, "bases_per_exon", BasesPerExon)
+
   /** Merged gene FPKM table for Cufflinks, strict mode */
-  private def geneFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10)
+  private lazy val geneFpkmCufflinksStrictJob =
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val geneFpkmCufflinksStrictHeatmapJob =
+    makeHeatmapJob(geneFpkmCufflinksStrictJob, "genes_fpkm_cufflinks_strict", CufflinksStrict)
 
   /** Merged exon FPKM table for Cufflinks, strict mode */
-  private def isoFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10)
+  private lazy val isoFpkmCufflinksStrictJob =
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val isoFpkmCufflinksStrictHeatmapJob =
+    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, true)
 
   /** Merged gene FPKM table for Cufflinks, guided mode */
-  private def geneFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10)
+  private lazy val geneFpkmCufflinksGuidedJob =
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val geneFpkmCufflinksGuidedHeatmapJob =
+    makeHeatmapJob(geneFpkmCufflinksGuidedJob, "genes_fpkm_cufflinks_guided", CufflinksGuided)
 
   /** Merged isoforms FPKM table for Cufflinks, guided mode */
-  private def isoFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10)
+  private lazy val isoFpkmCufflinksGuidedJob =
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val isoFpkmCufflinksGuidedHeatmapJob =
+    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, true)
 
   /** Merged gene FPKM table for Cufflinks, blind mode */
-  private def geneFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10)
+  private lazy val geneFpkmCufflinksBlindJob =
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val geneFpkmCufflinksBlindHeatmapJob =
+    makeHeatmapJob(geneFpkmCufflinksBlindJob, "genes_fpkm_cufflinks_blind", CufflinksBlind)
 
   /** Merged isoforms FPKM table for Cufflinks, blind mode */
-  private def isoFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10)
+  private lazy val isoFpkmCufflinksBlindJob =
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+
+  private lazy val isoFpkmCufflinksBlindHeatmapJob =
+    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, true)
 
   private lazy val mergedTables: Map[String, Option[MergeTables]] = Map(
     "gene_fragments_count" -> geneFragmentsCountJob,
@@ -173,7 +212,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   )
 
   private lazy val heatmapJobs: Map[String, Option[PlotHeatmap]] = Map(
-    "gene_fragments_count_heatmap" -> geneFragmentsCountHeatmapJob
+    "gene_fragments_count_heatmap" -> geneFragmentsCountHeatmapJob,
+    "exon_fragments_count_heatmap" -> exonFragmentsCountHeatmapJob,
+    "gene_bases_count_heatmap" -> geneBasesCountHeatmapJob,
+    "exon_bases_count_heatmap" -> exonBasesCountHeatmapJob,
+    "gene_fpkm_cufflinks_strict_heatmap" -> geneFpkmCufflinksStrictHeatmapJob,
+    "isoform_fpkm_cufflinks_strict_heatmap" -> isoFpkmCufflinksStrictHeatmapJob,
+    "gene_fpkm_cufflinks_guided_heatmap" -> geneFpkmCufflinksGuidedHeatmapJob,
+    "isoform_fpkm_cufflinks_guided_heatmap" -> isoFpkmCufflinksGuidedHeatmapJob,
+    "gene_fpkm_cufflinks_blind_heatmap" -> geneFpkmCufflinksBlindHeatmapJob,
+    "isoform_fpkm_cufflinks_blind_heatmap" -> isoFpkmCufflinksBlindHeatmapJob
   )
 
   /** Output summary file */
