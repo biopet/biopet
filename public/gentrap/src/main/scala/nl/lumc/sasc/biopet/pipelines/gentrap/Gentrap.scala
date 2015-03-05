@@ -29,7 +29,7 @@ import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFiles, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, RawBaseCounter }
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
@@ -182,10 +182,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     ).collect { case (key, Some(value)) => key -> value }
 
   /** Job for writing PDF report template */
-  protected def pdfReportJob: PdfReportTemplateWriter = {
+  protected lazy val pdfTemplateJob: PdfReportTemplateWriter = {
     val job = new PdfReportTemplateWriter(qscript)
     job.summaryFile = summaryFile
-    job.output = new File(outputDir, "report" + File.separator + "gentrap_report.tex")
+    job.output = new File(outputDir, "gentrap_report.tex")
+    job
+  }
+
+  /** Job for writing PDF report */
+  protected def pdfReportJob: Pdflatex = {
+    val job = new Pdflatex(qscript)
+    job.input = pdfTemplateJob.output
+    job.outputDir = new File(outputDir, "report")
+    job.name = "gentrap_report"
     job
   }
 
@@ -222,6 +231,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     mergedTables.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
     // TODO: use proper notation
     addSummaryJobs
+    add(pdfTemplateJob)
     add(pdfReportJob)
   }
 

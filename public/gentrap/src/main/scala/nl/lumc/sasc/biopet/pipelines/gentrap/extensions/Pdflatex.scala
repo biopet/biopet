@@ -18,6 +18,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class Pdflatex(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "pdflatex", freeVar = false)
+  override val executableToCanonicalPath = false
 
   @Input(doc = "Input LaTeX template", required = true)
   var input: File = null
