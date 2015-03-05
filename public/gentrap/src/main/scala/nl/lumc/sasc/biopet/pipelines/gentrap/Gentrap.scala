@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
+import java.io.File
 import scala.language.reflectiveCalls
 
 import org.broadinstitute.gatk.queue.QScript
@@ -28,8 +29,8 @@ import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFiles, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, RawBaseCounter}
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, RawBaseCounter }
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
 
@@ -180,6 +181,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       "annotation_bed" -> annotationBed
     ).collect { case (key, Some(value)) => key -> value }
 
+  /** Job for writing PDF report template */
+  protected def pdfReportJob: PdfReportTemplateWriter = {
+    val job = new PdfReportTemplateWriter(qscript)
+    job.summaryFile = summaryFile
+    job.output = new File(outputDir, "report" + File.separator + "gentrap_report.tex")
+    job
+  }
+
   /** Steps to run before biopetScript */
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
@@ -213,6 +222,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     mergedTables.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
     // TODO: use proper notation
     addSummaryJobs
+    add(pdfReportJob)
   }
 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
