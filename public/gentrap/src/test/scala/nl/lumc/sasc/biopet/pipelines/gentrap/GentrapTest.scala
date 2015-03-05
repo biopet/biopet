@@ -4,50 +4,102 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
+import java.io.File
+
+import com.google.common.io.Files
+import org.apache.commons.io.FileUtils
+import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions._
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts._
+import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 class GentrapTest extends TestNGSuite with Matchers {
 
-  /** Method to set test config */
-  // since the pipeline Config is a global value, we first store the
-  // initial config into a value, store the supplied value, then return
-  // the initial config for restoring later
-  private def setConfig(map: Map[String, Any]): Map[String, Any] = {
-    val oldMap: Map[String, Any] = Config.global.map.toMap
-    Config.global.map = map
-    oldMap
+  def initPipeline(map: Map[String, Any]): Gentrap = {
+    new Gentrap() {
+      override def configName = "gentrap"
+      override def globalConfig = new Config(map)
+      qSettings = new QSettings
+      qSettings.runName = "test"
+    }
   }
 
-  /** Method to set the global config */
-  private def restoreConfig(initConfig: Map[String, Any]): Unit = Config.global.map = initConfig
+  private lazy val validExpressionMeasures = Set(
+    "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
+    "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
-  /** Minimum config required for Gentrap */
-  private val minimumConfig = Map(
-    "output_dir" -> "/tmp",
-    "aligner" -> "gsnap",
-    "expression_measures" -> List(),
-    "strand_protocol" -> "non_specific",
-    "reference" -> "mock",
-    "gsnap" -> Map("db" -> "fixt_gentrap_hg19"),
-    "samples" -> Map(
-      "sample_1" -> Map(
-        "libraries" -> Map(
-          "lib_1" -> Map(
-            "R1" -> "/tmp/mock.fq"
+  @DataProvider(name = "gentrapOptions")
+  def flexiprepOptions = {
+
+    //val paired = Array(true, false)
+    val paired = Array(false)
+    val expressionMeasures = validExpressionMeasures
+      .subsets
+      .map(_.toList)
+      .toArray
+
+    for (
+      pair <- paired;
+      expressionMeasure <- expressionMeasures
+    ) yield Array("", pair, expressionMeasure)
+  }
+
+  @Test(dataProvider = "gentrapOptions")
+  def testGentrap(name: String, paired: Boolean, expMeasures: List[String]) = {
+
+    val map = ConfigUtils.mergeMaps(
+      Map(
+        "output_dir" -> GentrapTest.outputDir,
+        "gsnap" -> Map("db" -> "test", "dir" -> "test"),
+        "aligner" -> "gsnap",
+        "expression_measures" -> expMeasures,
+        "strand_protocol" -> "non_specific",
+        "samples" -> Map(
+          "sample_1" -> Map(
+            "libraries" -> Map(
+              "lib_1" -> Map(
+                "R1" -> "test_R1.fq"
+              )
+            )
           )
         )
-      )
-    )
-  )
+      ),
+      Map(GentrapTest.executables.toSeq: _*))
+    val gentrap: Gentrap = initPipeline(map)
 
-  // Test pipeline initialization with minimum config -- there should be no exceptions raised
-  @Test def testInitMinimumConfig() = {
-    val initialConfig = setConfig(minimumConfig)
-    val gentrap = new Gentrap()
-    restoreConfig(initialConfig)
+    gentrap.script()
+
+    gentrap.functions.count(_.isInstanceOf[Gsnap]) shouldBe 1
   }
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(GentrapTest.outputDir)
+  }
+}
+
+object GentrapTest {
+  val outputDir = Files.createTempDir()
+
+  val executables = Map(
+    "reference" -> "test",
+    "annotation_gtf" -> "test",
+    "annotation_bed" -> "test",
+    "annotation_refflat" -> "test",
+    "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test")
+  ) ++ Seq(
+      // fastqc executables
+      "fastqc", "seqtk", "sickle", "cutadapt",
+      // mapping executables
+      "bwa", "star", "bowtie", "samtools", "gsnap",
+      // gentrap executables
+      "cufflinks", "htseq-count", "grep", "pdflatex", "Rscript", "tabix", "bgzip"
+    ).map { case exe => exe -> Map("exe" -> "test") }.toMap
 }
