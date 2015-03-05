@@ -30,7 +30,7 @@ import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFi
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter }
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
 
@@ -108,8 +108,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   }
 
   /** Merged gene fragment count table */
-  private def geneFragmentsCountJob =
+  private lazy val geneFragmentsCountJob =
     makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, fallback = "0")
+
+  private lazy val geneFragmentsCountHeatmapJob = (geneFragmentsCountJob.isDefined && samples.size > 2)
+    .option {
+      val job = new PlotHeatmap(qscript)
+      job.input = geneFragmentsCountJob.get.output
+      job.output = new File(outputDir, "heatmap_fragments_per_gene.png")
+      job.tmmNormalize = true
+      job.useLog = true
+      job.countType = Option("FragmentsPerGene")
+      job
+    }
 
   /** Merged exon fragment count table */
   private def exonFragmentsCountJob =
@@ -160,12 +171,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "isoform_fpkm_cufflinks_blind" -> isoFpkmCufflinksBlindJob
   )
 
+  private lazy val heatmapJobs: Map[String, Option[PlotHeatmap]] = Map(
+    "gene_fragments_count_heatmap" -> geneFragmentsCountHeatmapJob
+  )
+
   /** Output summary file */
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
   /** Files that will be listed in the summary file */
   def summaryFiles: Map[String, File] =
-    mergedTables.collect { case (key, Some(value)) => key -> value.output }
+    mergedTables.collect { case (key, Some(value)) => key -> value.output } ++
+    heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
 
   /** Statistics shown in the summary file */
   def summaryStats: Map[String, Any] = Map()
@@ -229,6 +245,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   def addMultiSampleJobs(): Unit = {
     // merge expression tables
     mergedTables.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
+    // add heatmap jobs
+    heatmapJobs.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
+    // plot heatmap for each expression measure if sample is > 1
+    if (samples.size > 1) {
+      geneFragmentsCountJob
+    }
     // TODO: use proper notation
     addSummaryJobs
     add(pdfTemplateJob)
