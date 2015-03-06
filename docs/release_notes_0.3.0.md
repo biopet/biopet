@@ -13,7 +13,7 @@ Since our first release in December 2014 many new functions have been added to t
     - mapping stats
     - Tool stats ( if pipeline uses a biopet tool, it will output the version of the tool and all other statistics that might be captured )
 - GATK variantcalling has a lot of new features and is now called SHIVA
-- A entire new pipeline named Gentrap based on our previous Makefile version, with extra features like:
+- A entire new pipeline named Gentrap based on our previous [Makefile version](http://sasc-server.lumcnet.prod.intern/pipelines/makefile-0.6.0/gentrap/), with extra features like:
     - remove all ribosomal reads
     - a tool for building the correct annotation for read.counting etc etc.
 
