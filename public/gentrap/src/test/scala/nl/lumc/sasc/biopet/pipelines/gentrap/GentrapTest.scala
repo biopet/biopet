@@ -19,6 +19,10 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 class GentrapTest extends TestNGSuite with Matchers {
 
+  import Gentrap._
+  import Gentrap.ExpMeasures._
+  import Gentrap.StrandProtocol._
+
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
       override def configName = "gentrap"
@@ -37,45 +41,58 @@ class GentrapTest extends TestNGSuite with Matchers {
     else (s"lib_$idx", files)
   }
 
-  /** Convenience method for making sample config */
-  private def makeSampleConfig(sampleIdx: Int, numLibs: Int, paired: String) =
-    Map("samples" ->
-      Map(s"sample_$sampleIdx" ->
-        Map("libraries" ->
-          (0 to numLibs)
-            // if paired == "mixed", alternate paired/not paired between each number
-            .map(n => makeLibConfig(n, if (paired == "mixed") n % 2 == 0 else paired == "paired"))
-            .toMap
-        )
+  /** Convenience type for sample config */
+  private type SamplesConfig = Map[String, Map[String, Map[String, Map[String, Map[String, String]]]]]
+
+  /** Convenience method for making a single sample config */
+  private def makeSampleConfig(sampleIdx: Int, numLibs: Int, paired: Boolean) =
+    (s"sample_$sampleIdx",
+      Map("libraries" ->
+        (0 to numLibs)
+          .map(n => makeLibConfig(n, paired))
+          .toMap
       )
     )
 
-  private val pairedOneSampleOneLib = makeSampleConfig(1, 1, "paired")
-  private val pairedOneSampleTwoLib = makeSampleConfig(1, 2, "paired")
-  private val pairedOneSampleThreeLib = makeSampleConfig(1, 3, "paired")
+  /** Convenience method for making all samples config */
+  private def makeSamplesConfig(numSamples: Int, numLibsEachSample: Int, pairMode: String): SamplesConfig =
+    Map("samples" ->
+      (0 to numSamples)
+        // if paired == "mixed", alternate paired/not paired between each number
+        .map(n => makeSampleConfig(n, numLibsEachSample, if (pairMode == "mixed") n % 2 == 0 else pairMode == "paired"))
+        .toMap
+    )
 
   private lazy val validExpressionMeasures = Set(
     "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
     "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
-  @DataProvider(name = "expMeasures_strandProtocol")
-  def flexiprepOptions = {
+  @DataProvider(name = "expMeasuresstrandProtocol")
+  def expMeasuresStrandProtocolProvider = {
+
+    //val sampleConfigs = Array(pairedOneSampleOneLib, pairedOneSampleTwoLib, pairedOneSampleThreeLib)
+    val sampleConfigs = for {
+      sampleNum <- 0 to 3
+      libNum <- 0 to 2
+      libType <- Seq("paired", "single", "mixed")
+    } yield makeSamplesConfig(sampleNum, libNum, libType)
 
     val strandProtocols = Array("non_specific", "dutp")
     // get all possible combinations of expression measures
     val expressionMeasures = validExpressionMeasures
-      .subsets
-      .map(_.toList)
+      //.subsets
+      //.map(_.toList)
       .toArray
 
     for {
+      sampleConfig <- sampleConfigs.toArray
       expressionMeasure <- expressionMeasures
       strandProtocol <- strandProtocols
-    } yield Array(expressionMeasure, strandProtocol)
+    } yield Array(sampleConfig, List(expressionMeasure), strandProtocol)
   }
 
-  @Test(dataProvider = "expMeasures_strandProtocol")
-  def testGentrap(expMeasures: List[String], strandProtocol: String) = {
+  @Test(dataProvider = "expMeasuresstrandProtocol")
+  def testGentrap(sampleConfig: SamplesConfig, expMeasures: List[String], strandProtocol: String) = {
 
     val settings = Map(
       "output_dir" -> GentrapTest.outputDir,
@@ -84,13 +101,17 @@ class GentrapTest extends TestNGSuite with Matchers {
       "expression_measures" -> expMeasures,
       "strand_protocol" -> strandProtocol
     )
-    val config = ConfigUtils.mergeMaps(settings ++ pairedOneSampleOneLib, Map(GentrapTest.executables.toSeq: _*))
+    val config = ConfigUtils.mergeMaps(settings ++ sampleConfig, Map(GentrapTest.executables.toSeq: _*))
     val gentrap: Gentrap = initPipeline(config)
 
     gentrap.script()
     val functions = gentrap.functions.groupBy(_.getClass)
 
     functions(classOf[Gsnap]).size should be >= 1
+
+    if (expMeasures.contains(FragmentsPerGene)) {
+      functions(classOf[HtseqCount]).size shouldBe sampleConfig("samples").size
+    }
   }
 
   // remove temporary run directory all tests in the class have been run
