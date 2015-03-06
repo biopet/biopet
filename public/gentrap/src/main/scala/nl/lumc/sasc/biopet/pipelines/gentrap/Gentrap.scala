@@ -691,9 +691,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       basesPerExonJob.foreach(add(_))
       // symlink results with distinct extensions ~ actually to make it easier to use MergeTables on these as well
       // since the Queue argument parser doesn't play nice with Map[_, _] types
-      cufflinksStrictJobSet.foreach(_.addAllJobs())
-      cufflinksGuidedJobSet.foreach(_.addAllJobs())
-      cufflinksBlindJobSet.foreach(_.addAllJobs())
+      cufflinksStrictJobSet.foreach(_.jobs.foreach(add(_)))
+      cufflinksGuidedJobSet.foreach(_.jobs.foreach(add(_)))
+      cufflinksBlindJobSet.foreach(_.jobs.foreach(add(_)))
       // add variant calling job if requested
       varCallJob.foreach(add(_))
     }

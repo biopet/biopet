@@ -38,6 +38,9 @@ trait CufflinksProducer { this: Gentrap#Sample =>
       case otherwise       => throw new IllegalStateException("Unexpected cufflinks type: " + otherwise.toString)
     }
 
+    /** Container for all jobs in this job set */
+    def jobs = Seq(cufflinksJob, geneFpkmJob, isoformFpkmJob)
+
     /** The main cufflinks job */
     lazy val cufflinksJob: Cufflinks = {
       val job = new Cufflinks(pipeline) {
@@ -73,8 +76,5 @@ trait CufflinksProducer { this: Gentrap#Sample =>
       job.output = new File(cufflinksJob.output_dir, s"$sampleId.isoformss_fpkm_$name")
       job
     }
-
-    /** Adds all contained jobs to Queue */
-    def addAllJobs(): Unit = { pipeline.add(cufflinksJob); pipeline.add(geneFpkmJob); pipeline.add(isoformFpkmJob) }
   }
 }
