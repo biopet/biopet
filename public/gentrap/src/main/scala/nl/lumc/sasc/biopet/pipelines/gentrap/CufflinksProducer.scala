@@ -13,7 +13,7 @@ trait CufflinksProducer { this: Gentrap#Sample =>
   import Gentrap.StrandProtocol._
 
   /** Valid cufflink measure types */
-  protected val cufflinksMeasures = Set(CufflinksStrict, CufflinksGuided, CufflinksStrict)
+  protected val cufflinksMeasures = Set(CufflinksStrict, CufflinksGuided, CufflinksBlind)
 
   /** Cufflink's terms for strand specificity */
   lazy val strandedness: String = {
@@ -28,7 +28,8 @@ trait CufflinksProducer { this: Gentrap#Sample =>
   /** Case class for containing cufflinks + its output symlink jobs */
   protected case class CufflinksJobSet(cuffType: ExpMeasures.Value) {
 
-    require(cufflinksMeasures.contains(cuffType), "Cufflinks measurement type is either strict, guided, or blind")
+    require(cufflinksMeasures.contains(cuffType),
+      "Cufflinks measurement type is either " + cufflinksMeasures.mkString(", ") + s"; not $cuffType")
 
     /** Base name for output file extensions and config path */
     lazy val name: String = cuffType match {
