@@ -49,8 +49,8 @@ class GentrapTest extends TestNGSuite with Matchers {
     (s"sample_$sampleIdx",
       Map("libraries" ->
         (1 to numLibs)
-          .map(n => makeLibConfig(n, paired))
-          .toMap
+        .map(n => makeLibConfig(n, paired))
+        .toMap
       )
     )
 
@@ -58,9 +58,9 @@ class GentrapTest extends TestNGSuite with Matchers {
   private def makeSamplesConfig(numSamples: Int, numLibsEachSample: Int, pairMode: String): SamplesConfig =
     Map("samples" ->
       (1 to numSamples)
-        // if paired == "mixed", alternate paired/not paired between each number
-        .map(n => makeSampleConfig(n, numLibsEachSample, if (pairMode == "mixed") n % 2 == 0 else pairMode == "paired"))
-        .toMap
+      // if paired == "mixed", alternate paired/not paired between each number
+      .map(n => makeSampleConfig(n, numLibsEachSample, if (pairMode == "mixed") n % 2 == 0 else pairMode == "paired"))
+      .toMap
     )
 
   private lazy val validExpressionMeasures = Set(
