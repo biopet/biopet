@@ -198,7 +198,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   private lazy val isoFpkmCufflinksBlindHeatmapJob =
     makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, true)
 
-  private lazy val mergedTables: Map[String, Option[MergeTables]] = Map(
+  private lazy val mergeTableJobs: Map[String, Option[MergeTables]] = Map(
     "gene_fragments_count" -> geneFragmentsCountJob,
     "exon_fragments_count" -> exonFragmentsCountJob,
     "gene_bases_count" -> geneBasesCountJob,
@@ -229,7 +229,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Files that will be listed in the summary file */
   def summaryFiles: Map[String, File] =
-    mergedTables.collect { case (key, Some(value)) => key -> value.output } ++
+    mergeTableJobs.collect { case (key, Some(value)) => key -> value.output } ++
       heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
 
   /** Statistics shown in the summary file */
@@ -293,7 +293,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   def addMultiSampleJobs(): Unit = {
     // merge expression tables
-    mergedTables.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
+    mergeTableJobs.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
     // add heatmap jobs
     heatmapJobs.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
     // plot heatmap for each expression measure if sample is > 1
