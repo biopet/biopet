@@ -26,7 +26,7 @@ Also a impressive list of tools have been added to the new framework:
 - FastqSync
 - SamplesTsvToJson
 - Seqstat ( this is a lift over tool based on our previous python implementation of seqstat )
-- VEPNormalizer ( This normalizer enables a user to parse VEP )
+- VEPNormalizer ( This normalizer enables a user to parse VEP output VCFs to the exact specs of [VCF 4.1](https://samtools.github.io/hts-specs/VCFv4.1.pdf) )
 - VcfStats
 
 Some tools have a new version for better compatibility with our latest pipelines. The tools that have a changed version are:
@@ -43,6 +43,3 @@ Some tools have a new version for better compatibility with our latest pipelines
 - tabix Version: 0.2.5 (r1005)
 - grep (GNU grep) 2.16
 - gzip 1.6
-
-
-
