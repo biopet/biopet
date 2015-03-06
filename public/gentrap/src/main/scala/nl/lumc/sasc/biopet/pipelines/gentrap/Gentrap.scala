@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
+import java.util.Properties
 import scala.language.reflectiveCalls
 
 import org.broadinstitute.gatk.queue.QScript
@@ -224,6 +225,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "isoform_fpkm_cufflinks_blind_heatmap" -> isoFpkmCufflinksBlindHeatmapJob
   )
 
+  private def version: String = {
+    val baseVersion = getClass.getPackage.getImplementationVersion
+    val commitHash = {
+      val prop = new Properties()
+      prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
+      prop.getProperty("git.commit.id.abbrev")
+    }
+    s"$baseVersion ($commitHash)"
+  }
+
   /** Output summary file */
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
@@ -240,7 +251,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "aligner" -> aligner,
     "expression_measures" -> expMeasures.map(_.toString),
     "strand_protocol" -> strandProtocol,
-    "annotation_refflat" -> annotationRefFlat
+    "annotation_refflat" -> annotationRefFlat,
+    "version" -> version
   ) ++ Map(
       "annotation_gtf" -> annotationGtf,
       "annotation_bed" -> annotationBed
