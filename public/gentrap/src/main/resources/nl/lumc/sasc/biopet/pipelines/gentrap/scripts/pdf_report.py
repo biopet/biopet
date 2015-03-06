@@ -30,6 +30,7 @@ from os import path
 
 from jinja2 import Environment, FileSystemLoader
 
+
 # set locale for digit grouping
 locale.setlocale(locale.LC_ALL, "")
 
@@ -68,11 +69,15 @@ class LongTable(object):
 
 
 # filter functions for the jinja environment
-def nice_int(num):
+def nice_int(num, default="None"):
+    if num is None:
+        return default
     return locale.format("%i", int(num), grouping=True)
 
 
-def nice_flt(num):
+def nice_flt(num, default="None"):
+    if num is None:
+        return default
     return locale.format("%.2f", float(num), grouping=True)
 
 
@@ -84,7 +89,7 @@ def natural_sort(inlist):
     return inlist
 
 
-def write_template(summary_file, template_file, logo_file):
+def write_template(run, template_file, logo_file):
 
     template_file = path.abspath(path.realpath(template_file))
     template_dir = path.dirname(template_file)
@@ -109,15 +114,72 @@ def write_template(summary_file, template_file, logo_file):
 
     # write tex template for pdflatex
     jinja_template = env.get_template(path.basename(template_file))
+    run.logo = logo_file
     render_vars = {
-        "gentrap": {
-            "version": "--testing--",
-            "logo": logo_file,
-        },
+        "run": run,
     }
     rendered = jinja_template.render(**render_vars)
 
     print(rendered, file=sys.stdout)
+
+
+class GentrapLib(object):
+
+    def __init__(self, run, sample, name, summary):
+        assert isinstance(run, GentrapRun)
+        assert isinstance(sample, GentrapSample)
+        self.run = run
+        self.sample = sample
+        self.name = name
+        self._raw = summary
+        self.flexiprep = summary.get("flexiprep", {})
+        self.clipping = not self.flexiprep["settings"]["skip_clip"]
+        self.trimming = not self.flexiprep["settings"]["skip_trim"]
+        self.is_paired_end = self.flexiprep["settings"]["paired"]
+
+    def __repr__(self):
+        return "{0}(sample=\"{1}\", lib=\"{2}\")".format(
+                self.__class__.__name__, self.sample.name, self.name)
+
+
+class GentrapSample(object):
+
+    def __init__(self, run, name, summary):
+        assert isinstance(run, GentrapRun)
+        self.run = run
+        self.name = name
+        self._raw = summary
+        self.lib_names = sorted(summary["libraries"].keys())
+        self.libs = \
+            {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
+                for l in self.lib_names}
+
+    def __repr__(self):
+        return "{0}(\"{1}\")".format(self.__class__.__name__, self.name)
+
+
+class GentrapRun(object):
+
+    def __init__(self, summary_file):
+
+        with open(summary_file, "r") as src:
+            summary = json.load(src)
+
+        self._raw = summary
+        self.summary_file = summary_file
+        self.sample_names = sorted(summary["samples"].keys())
+        self.samples = \
+            {s: GentrapSample(self, s, summary["samples"][s]) \
+                for s in self.sample_names}
+
+        self.files = summary["gentrap"]["files"]
+        self.executables = summary["gentrap"]["executables"]
+        self.settings = summary["gentrap"]["settings"]
+        self.version = self.settings["version"]
+
+    def __repr__(self):
+        return "{0}(\"{1}\")".format(self.__class__.__name__,
+                                        self.summary_file)
 
 
 if __name__ == "__main__":
@@ -131,4 +193,5 @@ if __name__ == "__main__":
             help="Path to main logo file")
     args = parser.parse_args()
 
-    write_template(args.summary_file, args.template_file, args.logo_file)
+    run = GentrapRun(args.summary_file)
+    write_template(run, args.template_file, args.logo_file)

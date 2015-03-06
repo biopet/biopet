@@ -43,46 +43,57 @@
 
 \begin{document}
 \setlength{\parindent}{0in}
-\title{\Huge Gentrap: Generic Transcriptome Analysis Pipeline}
+%\title{\Huge Gentrap Run Report}
+\title{\resizebox{0.7\linewidth}{!}{\itshape Gentrap Run Report}}
 \author{LUMC Sequencing Analysis Support Core}
 \maketitle
 \begin{center}
-    {\LARGE Run Report v((( gentrap.version )))}
+    {\LARGE version ((( run.version )))}
 \end{center}
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\textwidth]{((( gentrap.logo )))}
+    \includegraphics[width=0.8\textwidth]{((( run.logo )))}
 \end{figure}
 \thispagestyle{empty}
 \clearpage
 
+\addtocontents{toc}{\protect\hypertarget{toc}{}}
 \tableofcontents
 \clearpage
 
 
-\section{Introduction}
+\part{Overview}
 \label{sec:intro}
 
 This document outlines the results obtained from running Gentrap, a generic
 pipeline for transcriptome analysis.
 
+\clearpage
 
-% TODO: contents ~ preferrably in modules!
-((* include "test.tex" *))
+((* for sample in run.samples.values() *))
+((* include "sample.tex" *))
+\clearpage
+((* endfor *))
 
 
-
-\section{About Gentrap}
+\part{About Gentrap}
 \label{apx:about}
 
-The Generic Transcript Analysis Pipeline (Gentrap) aims to to be a
-generic pipeline for analyzing transcripts from RNA-seq experiments.
+The Generic Transcriptome Analysis Pipeline (Gentrap) is a
+generic pipeline for analyzing transcripts from RNA-seq experiments. \\
 
 Gentrap was developed by Wibowo Arindrarto (\href{mailto:w.arindrarto@lumc.nl}{w.arindrarto@lumc.nl})
 based on raw scripts written by Jeroen Laros
 (\href{mailto:j.f.j.laros@lumc.nl}{j.f.j.laros@lumc.nl}) and
 Peter-Bram 't Hoen
-(\href{mailto:p.a.c._t_hoen@lumc.nl}{p.a.c._t_hoen@lumc.nl}).
+(\href{mailto:p.a.c._t_hoen@lumc.nl}{p.a.c._t_hoen@lumc.nl}) as part of the
+\href{https://git.lumc/nl/biopet/biopet}{Biopet framework}. \\
+
+The Biopet framework is developed by the
+\href{http://sasc.lumc.nl}{Sequencing Analysis Support Core} of the
+\href{http://lumc.nl}{Leiden University Medical Center}, by extending the
+\href{http://http://gatkforums.broadinstitute.org/discussion/1306/overview-of-queue}{Queue framework}.
+Please see the respective web sites for licensing information.
 
 \indent
 
