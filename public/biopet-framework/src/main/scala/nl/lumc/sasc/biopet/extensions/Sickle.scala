@@ -75,9 +75,9 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
       required("-o", output_R1) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
-      optional("-x", noFiveprime) +
-      optional("-n", discardN) +
-      optional("--quiet", quiet) +
+      conditional(noFiveprime, "-x") +
+      conditional(discardN, "-n") +
+      conditional(quiet, "--quiet") +
       " > " + required(output_stats)
   }
 
