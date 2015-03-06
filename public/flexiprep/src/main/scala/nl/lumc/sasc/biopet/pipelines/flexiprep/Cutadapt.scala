@@ -41,7 +41,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     val adapterR = """Adapter '([C|T|A|G]*)'.*trimmed (\d*) times.""".r
 
     val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
-    val adapter_stats: mutable.Map[String, (String, Int)] = mutable.Map()
+    val adapter_stats: mutable.Map[String, List[Any]] = mutable.Map()
 
     if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
       line match {
@@ -53,7 +53,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
             case None    => "unknown"
             case Some(a) => a.name
           }
-          adapter_stats += (adapter -> (adapterName, count.toInt))
+          adapter_stats += (adapterName -> List(adapter, count.toInt))
         case _ =>
       }
     }
