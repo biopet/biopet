@@ -15,8 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.extensions.Ln
 import java.io.File
+import scala.collection.mutable
+import scala.io.Source
+
+import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
@@ -31,6 +34,36 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     else if (default_clip_mode == "both") opt_anywhere ++= foundAdapters
   }
 
+  override def summaryStats: Map[String, Any] = {
+    val trimR = """.*Trimmed reads: *(\d*) .*""".r
+    val tooShortR = """.*Too short reads: *(\d*) .*""".r
+    val tooLongR = """.*Too long reads: *(\d*) .*""".r
+    val adapterR = """Adapter '([C|T|A|G]*)'.*trimmed (\d*) times.""".r
+
+    val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
+    val adapter_stats: mutable.Map[String, (String, Int)] = mutable.Map()
+
+    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
+      line match {
+        case trimR(m)     => stats += ("trimmed" -> m.toInt)
+        case tooShortR(m) => stats += ("tooshort" -> m.toInt)
+        case tooLongR(m)  => stats += ("toolong" -> m.toInt)
+        case adapterR(adapter, count) =>
+          val adapterName = fastqc.foundAdapters.find(_.seq == adapter) match {
+            case None    => "unknown"
+            case Some(a) => a.name
+          }
+          adapter_stats += (adapter -> (adapterName, count.toInt))
+        case _ =>
+      }
+    }
+
+    Map("num_reads_affected" -> stats("trimmed"),
+      "num_reads_discarded_too_short" -> stats("tooshort"),
+      "num_reads_discarded_too_long" -> stats("toolong"),
+      "adapters" -> adapter_stats.toMap
+    )
+  }
   override def cmdLine = {
     if (opt_adapter.nonEmpty || opt_anywhere.nonEmpty || opt_front.nonEmpty) {
       analysisName = getClass.getSimpleName
