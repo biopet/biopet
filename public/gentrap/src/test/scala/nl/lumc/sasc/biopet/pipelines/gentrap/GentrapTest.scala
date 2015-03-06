@@ -38,21 +38,28 @@ class GentrapTest extends TestNGSuite with Matchers {
   @DataProvider(name = "gentrapOptions")
   def flexiprepOptions = {
 
-    //val paired = Array(true, false)
-    val paired = Array(false)
+    val pairTypes = Array(true, false)
+    val aligners = Array("gsnap")
+    val strandProtocols = Array("non_specific", "dutp")
+    val callVariants = Array(true, false)
+    // get all possible combinations of expression measures
     val expressionMeasures = validExpressionMeasures
       .subsets
       .map(_.toList)
       .toArray
 
     for (
-      pair <- paired;
-      expressionMeasure <- expressionMeasures
-    ) yield Array("", pair, expressionMeasure)
+      pair <- pairTypes;
+      aligner <- aligners;
+      expressionMeasure <- expressionMeasures;
+      strandProtocol <- strandProtocols;
+      callVariant <- callVariants
+    ) yield Array("", pair, aligner, expressionMeasure, strandProtocol, callVariant)
   }
 
   @Test(dataProvider = "gentrapOptions")
-  def testGentrap(name: String, paired: Boolean, expMeasures: List[String]) = {
+  def testGentrap(name: String, paired: Boolean, aligner: String, expMeasures: List[String],
+                  strandProtocol: String, callVariant: Boolean) = {
 
     val map = ConfigUtils.mergeMaps(
       Map(
@@ -60,7 +67,8 @@ class GentrapTest extends TestNGSuite with Matchers {
         "gsnap" -> Map("db" -> "test", "dir" -> "test"),
         "aligner" -> "gsnap",
         "expression_measures" -> expMeasures,
-        "strand_protocol" -> "non_specific",
+        "strand_protocol" -> strandProtocol,
+        "call_variants" -> callVariant,
         "samples" -> Map(
           "sample_1" -> Map(
             "libraries" -> Map(
@@ -93,12 +101,12 @@ object GentrapTest {
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
-    "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test")
+    "varscan_jar" -> "test"
   ) ++ Seq(
       // fastqc executables
       "fastqc", "seqtk", "sickle", "cutadapt",
       // mapping executables
-      "bwa", "star", "bowtie", "samtools", "gsnap",
+      "star", "bowtie", "samtools", "gsnap",
       // gentrap executables
       "cufflinks", "htseq-count", "grep", "pdflatex", "Rscript", "tabix", "bgzip"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap
