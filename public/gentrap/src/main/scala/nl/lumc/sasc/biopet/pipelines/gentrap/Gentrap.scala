@@ -26,7 +26,7 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
-import nl.lumc.sasc.biopet.extensions.{ Cufflinks, HtseqCount, Ln }
+import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, GatherBamFiles, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -308,7 +308,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+  class Sample(sampleId: String) extends AbstractSample(sampleId) with CufflinksProducer {
+
+    /** Shortcut to qscript object */
+    protected def pipeline: Gentrap = qscript
 
     /** Sample output directory */
     override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
@@ -325,12 +328,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "exon_fragments_count" -> exonFragmentsCount,
         "gene_bases_count" -> geneBasesCount,
         "exon_bases_count" -> exonBasesCount,
-        "gene_fpkm_cufflinks_strict" -> geneFpkmCufflinksStrict,
-        "isoform_fpkm_cufflinks_strict" -> isoformFpkmCufflinksStrict,
-        "gene_fpkm_cufflinks_guided" -> geneFpkmCufflinksGuided,
-        "isoform_fpkm_cufflinks_guided" -> isoformFpkmCufflinksGuided,
-        "gene_fpkm_cufflinks_blind" -> geneFpkmCufflinksBlind,
-        "isoform_fpkm_cufflinks_blind" -> isoformFpkmCufflinksBlind,
+        "gene_fpkm_cufflinks_strict" -> cufflinksStrictJobSet.collect { case js => js.geneFpkmJob.output },
+        "isoform_fpkm_cufflinks_strict" -> cufflinksStrictJobSet.collect { case js => js.isoformFpkmJob.output },
+        "gene_fpkm_cufflinks_guided" -> cufflinksGuidedJobSet.collect { case js => js.geneFpkmJob.output },
+        "isoform_fpkm_cufflinks_guided" -> cufflinksGuidedJobSet.collect { case js => js.isoformFpkmJob.output },
+        "gene_fpkm_cufflinks_blind" -> cufflinksBlindJobSet.collect { case js => js.geneFpkmJob.output },
+        "isoform_fpkm_cufflinks_blind" -> cufflinksBlindJobSet.collect { case js => js.isoformFpkmJob.output },
         "variant_calls" -> variantCalls
       ).collect { case (key, Some(value)) => key -> value }
 
@@ -359,29 +362,44 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     def exonBasesCount: Option[File] = basesPerExonJob
       .collect { case job => job.output }
 
+    /** JobSet for Cufflinks strict mode */
+    protected lazy val cufflinksStrictJobSet: Option[CufflinksJobSet] = expMeasures
+      .find(_ == CufflinksStrict)
+      .collect { case found => new CufflinksJobSet(found) }
+
     /** Gene tracking file from Cufflinks strict mode */
     def geneFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
-      .collect { case jobSet => jobSet.geneJob.output }
+      .collect { case jobSet => jobSet.geneFpkmJob.output }
 
     /** Isoforms tracking file from Cufflinks strict mode */
     def isoformFpkmCufflinksStrict: Option[File] = cufflinksStrictJobSet
-      .collect { case jobSet => jobSet.isoformJob.output }
+      .collect { case jobSet => jobSet.isoformFpkmJob.output }
+
+    /** JobSet for Cufflinks strict mode */
+    protected lazy val cufflinksGuidedJobSet: Option[CufflinksJobSet] = expMeasures
+      .find(_ == CufflinksGuided)
+      .collect { case found => new CufflinksJobSet(found) }
 
     /** Gene tracking file from Cufflinks guided mode */
-    def geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case jobSet => jobSet.geneJob.output }
+    def geneFpkmCufflinksGuided: Option[File] = cufflinksGuidedJobSet
+      .collect { case jobSet => jobSet.geneFpkmJob.output }
 
     /** Isoforms tracking file from Cufflinks guided mode */
-    def isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJob
-      .collect { case jobSet => jobSet.isoformJob.output }
+    def isoformFpkmCufflinksGuided: Option[File] = cufflinksGuidedJobSet
+      .collect { case jobSet => jobSet.isoformFpkmJob.output }
+
+    /** JobSet for Cufflinks blind mode */
+    protected lazy val cufflinksBlindJobSet: Option[CufflinksJobSet] = expMeasures
+      .find(_ == CufflinksBlind)
+      .collect { case found => new CufflinksJobSet(found) }
 
     /** Gene tracking file from Cufflinks guided mode */
-    def geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case jobSet => jobSet.geneJob.output }
+    def geneFpkmCufflinksBlind: Option[File] = cufflinksBlindJobSet
+      .collect { case jobSet => jobSet.geneFpkmJob.output }
 
     /** Isoforms tracking file from Cufflinks blind mode */
-    def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJob
-      .collect { case jobSet => jobSet.isoformJob.output }
+    def isoformFpkmCufflinksBlind: Option[File] = cufflinksBlindJobSet
+      .collect { case jobSet => jobSet.isoformFpkmJob.output }
 
     /** Raw variant calling file */
     def variantCalls: Option[File] = varCallJob
@@ -577,99 +595,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
-    /** Case class for containing cufflinks + its output symlink jobs */
-    private case class CufflinksJobSet(cuffJob: Cufflinks, geneJob: Ln, isoformJob: Ln) {
-      /** Adds all contained jobs to Queue */
-      def addAllJobs(): Unit = { add(cuffJob); add(geneJob); add(isoformJob) }
-    }
-
-    /** Cufflinks strict job */
-    private def cufflinksStrictJobSet: Option[CufflinksJobSet] = expMeasures
-      .contains(CufflinksStrict)
-      .option {
-        val cuff = new Cufflinks(qscript) {
-          override def configName = "cufflinks"
-          override def configPath: List[String] = super.configPath ::: "cufflinks_strict" :: Nil
-        }
-        cuff.input = alnFile
-        cuff.GTF = annotationGtf
-        cuff.GTF_guide = None
-        cuff.library_type = strandProtocol match {
-          case NonSpecific => Option("fr-unstranded")
-          case Dutp        => Option("fr-firststrand")
-          case _           => throw new IllegalStateException
-        }
-        cuff.output_dir = new File(sampleDir, "cufflinks_strict")
-
-        val geneLn = new Ln(qscript)
-        geneLn.input = cuff.outputGenesFpkm
-        geneLn.output = createFile(".genes_fpkm_cufflinks_strict")
-
-        val isoLn = new Ln(qscript)
-        isoLn.input = cuff.outputIsoformsFpkm
-        isoLn.output = createFile(".isoforms_fpkm_cufflinks_strict")
-
-        CufflinksJobSet(cuff, geneLn, isoLn)
-      }
-
-    /** Cufflinks guided job */
-    private def cufflinksGuidedJob: Option[CufflinksJobSet] = expMeasures
-      .contains(CufflinksStrict)
-      .option {
-        val cuff = new Cufflinks(qscript) {
-          override def configName = "cufflinks"
-          override def configPath: List[String] = super.configPath ::: "cufflinks_guided" :: Nil
-        }
-        cuff.input = alnFile
-        cuff.GTF = None
-        cuff.GTF_guide = annotationGtf
-        cuff.library_type = strandProtocol match {
-          case NonSpecific => Option("fr-unstranded")
-          case Dutp        => Option("fr-firststrand")
-          case _           => throw new IllegalStateException
-        }
-        cuff.output_dir = new File(sampleDir, "cufflinks_guided")
-
-        val geneLn = new Ln(qscript)
-        geneLn.input = cuff.outputGenesFpkm
-        geneLn.output = createFile(".genes_fpkm_cufflinks_guided")
-
-        val isoLn = new Ln(qscript)
-        isoLn.input = cuff.outputIsoformsFpkm
-        isoLn.output = createFile(".isoforms_fpkm_cufflinks_guided")
-
-        CufflinksJobSet(cuff, geneLn, isoLn)
-      }
-
-    /** Cufflinks blind job */
-    private def cufflinksBlindJob: Option[CufflinksJobSet] = expMeasures
-      .contains(CufflinksStrict)
-      .option {
-        val cuff = new Cufflinks(qscript) {
-          override def configName = "cufflinks"
-          override def configPath: List[String] = super.configPath ::: "cufflinks_blind" :: Nil
-        }
-        cuff.input = alnFile
-        cuff.GTF = None
-        cuff.GTF_guide = None
-        cuff.library_type = strandProtocol match {
-          case NonSpecific => Option("fr-unstranded")
-          case Dutp        => Option("fr-firststrand")
-          case _           => throw new IllegalStateException
-        }
-        cuff.output_dir = new File(sampleDir, "cufflinks_blind")
-
-        val geneLn = new Ln(qscript)
-        geneLn.input = cuff.outputGenesFpkm
-        geneLn.output = createFile(".genes_fpkm_cufflinks_blind")
-
-        val isoLn = new Ln(qscript)
-        isoLn.input = cuff.outputIsoformsFpkm
-        isoLn.output = createFile(".isoforms_fpkm_cufflinks_blind")
-
-        CufflinksJobSet(cuff, geneLn, isoLn)
-      }
-
     /** Variant calling job */
     private def varCallJob: Option[CustomVarScan] = callVariants
       .option {
@@ -766,9 +691,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       basesPerExonJob.foreach(add(_))
       // symlink results with distinct extensions ~ actually to make it easier to use MergeTables on these as well
       // since the Queue argument parser doesn't play nice with Map[_, _] types
-      cufflinksStrictJobSet.foreach { case jobSet => jobSet.addAllJobs() }
-      cufflinksGuidedJob.foreach { case jobSet => jobSet.addAllJobs() }
-      cufflinksBlindJob.foreach { case jobSet => jobSet.addAllJobs() }
+      cufflinksStrictJobSet.foreach(_.addAllJobs())
+      cufflinksGuidedJobSet.foreach(_.addAllJobs())
+      cufflinksBlindJobSet.foreach(_.addAllJobs())
       // add variant calling job if requested
       varCallJob.foreach(add(_))
     }
