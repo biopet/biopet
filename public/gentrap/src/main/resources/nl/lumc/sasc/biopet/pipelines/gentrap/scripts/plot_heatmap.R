@@ -126,11 +126,11 @@ plotHeatmap <- function(in.data, out.name=OUTPUT.PLOT, count.type=COUNT.TYPE, tm
   dev.off()
 }
 
-plotPlaceholder <- function(out.name=OUTPUT.PLOT) {
+plotPlaceholder <- function(out.name=OUTPUT.PLOT, text.display="Not enough data points for plotting") {
   png(out.name, height=800, width=800, res=100)
   par(mar=c(0,0,0,0))
   plot(c(0, 1), c(0, 1), ann=F, bty='n', type='n', xaxt='n', yaxt='n')
-  text(x=0.5, y=0.5, paste("Not enough data points for plotting"),
+  text(x=0.5, y=0.5, paste(text.display),
        cex=1.6, col="black")
   dev.off()
 }
@@ -139,7 +139,7 @@ plotPlaceholder <- function(out.name=OUTPUT.PLOT) {
 parsed <- prepTable(INPUT.PATH)
 if (nrow(parsed) > 0) {
   cors <- cor(parsed, method="spearman")
-  plotHeatmap(cors)
+  tryCatch(plotHeatmap(cors), error=function (e) plotPlaceholder(text.display="Error occured during plotting"))
 } else {
   plotPlaceholder()
 }
