@@ -48,7 +48,7 @@ class GentrapTest extends TestNGSuite with Matchers {
   private def makeSampleConfig(sampleIdx: Int, numLibs: Int, paired: Boolean) =
     (s"sample_$sampleIdx",
       Map("libraries" ->
-        (0 to numLibs)
+        (1 to numLibs)
           .map(n => makeLibConfig(n, paired))
           .toMap
       )
@@ -57,7 +57,7 @@ class GentrapTest extends TestNGSuite with Matchers {
   /** Convenience method for making all samples config */
   private def makeSamplesConfig(numSamples: Int, numLibsEachSample: Int, pairMode: String): SamplesConfig =
     Map("samples" ->
-      (0 to numSamples)
+      (1 to numSamples)
         // if paired == "mixed", alternate paired/not paired between each number
         .map(n => makeSampleConfig(n, numLibsEachSample, if (pairMode == "mixed") n % 2 == 0 else pairMode == "paired"))
         .toMap
@@ -72,8 +72,11 @@ class GentrapTest extends TestNGSuite with Matchers {
 
     //val sampleConfigs = Array(pairedOneSampleOneLib, pairedOneSampleTwoLib, pairedOneSampleThreeLib)
     val sampleConfigs = for {
-      sampleNum <- 0 to 3
-      libNum <- 0 to 2
+      (sampleNum, libNum) <- Seq(
+        // check multiple libs for single run only ~ to trim down less-informative tests
+        // need to check 2 and 3 samples since multi-sample plotting differs when sample is 1 or 2 and 3
+        (1, 1), (1, 2), (2, 1), (3, 1)
+      )
       libType <- Seq("paired", "single", "mixed")
     } yield makeSamplesConfig(sampleNum, libNum, libType)
 
