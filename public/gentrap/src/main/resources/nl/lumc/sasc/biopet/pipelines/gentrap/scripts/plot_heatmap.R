@@ -136,7 +136,13 @@ plotPlaceholder <- function(out.name=OUTPUT.PLOT, text.display="Not enough data 
 }
 
 
-parsed <- prepTable(INPUT.PATH)
+parsed <- tryCatch(
+    prepTable(INPUT.PATH),
+    error=function (e) {
+        plotPlaceholder(text.display="Error occured during table parsing")
+        q(status=0)
+    })
+
 if (nrow(parsed) > 0) {
   cors <- cor(parsed, method="spearman")
   tryCatch(plotHeatmap(cors), error=function (e) plotPlaceholder(text.display="Error occured during plotting"))
