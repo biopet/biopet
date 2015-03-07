@@ -24,6 +24,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   var inputBams: List[File] = Nil
 
+  /** Name prefix, can override this methods if neeeded */
   def namePrefix: String = {
     (sampleId, libId) match {
       case (Some(sampleId), Some(libId)) => sampleId + "-" + libId
@@ -32,14 +33,18 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     }
   }
 
+  /** Executed before script */
   def init: Unit = {
   }
 
+  /** Final merged output files of all variantcaller modes */
   def finalFile = new File(outputDir, namePrefix + ".final.vcf.gz")
 
-  def biopetScript: Unit = {
-    val configCallers: Set[String] = config("variantcallers")
+  /** Variantcallers requested by the config */
+  protected val configCallers: Set[String] = config("variantcallers")
 
+  /** This will add jobs for this pipeline */
+  def biopetScript: Unit = {
     for (cal <- configCallers) {
       if (!callersList.exists(_.name == cal))
         BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
@@ -77,21 +82,36 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     addSummaryJobs
   }
 
+  /** Will generate all available variantcallers */
   protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools)
 
+  /** General trait for a variantcaller mode */
   trait Variantcaller {
+    /** Name of mode, this should also be used in the config */
     val name: String
+
+    /** Output dir for this mode */
     def outputDir = new File(qscript.outputDir, name)
+
+    /** Prio in merging  in the final file */
     protected val defaultPrio: Int
+
+    /** Prio from the config */
     lazy val prio: Int = config("prio_" + name, default = defaultPrio)
+
+    /** This should add the variantcaller jobs */
     def addJobs()
+
+    /** Final output file of this mode */
     def outputFile: File
   }
 
+  /** default mode of freebayes */
   class Freebayes extends Variantcaller {
     val name = "freebayes"
     protected val defaultPrio = 7
 
+    /** Final output file of this mode */
     def outputFile = new File(outputDir, namePrefix + ".freebayes.vcf.gz")
 
     def addJobs() {
@@ -101,7 +121,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
       fb.isIntermediate = true
       add(fb)
 
-      //TODO: need piping for this
+      //TODO: need piping for this, see also issue #114
       val bz = new Bgzip(qscript)
       bz.input = List(fb.outputVcf)
       bz.output = outputFile
@@ -114,10 +134,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     }
   }
 
+  /** default mode of bcftools */
   class Bcftools extends Variantcaller {
     val name = "bcftools"
     protected val defaultPrio = 8
 
+    /** Final output file of this mode */
     def outputFile = new File(outputDir, namePrefix + ".bcftools.vcf.gz")
 
     def addJobs() {
@@ -143,10 +165,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     }
   }
 
+  /** Makes a vcf file from a mpileup without statistics */
   class RawVcf extends Variantcaller {
     val name = "raw"
     protected val defaultPrio = 999
 
+    /** Final output file of this mode */
     def outputFile = new File(outputDir, namePrefix + ".raw.vcf.gz")
 
     def addJobs() {
@@ -179,10 +203,13 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     }
   }
 
+  /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
 
-  def summarySettings = Map()
+  /** Settings for the summary */
+  def summarySettings = Map("variantcallers" -> configCallers.toList)
 
+  /** Files for the summary */
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = config("variantcallers")
     callersList.filter(x => callers.contains(x.name)).map(x => (x.name -> x.outputFile)).toMap + ("final" -> finalFile)

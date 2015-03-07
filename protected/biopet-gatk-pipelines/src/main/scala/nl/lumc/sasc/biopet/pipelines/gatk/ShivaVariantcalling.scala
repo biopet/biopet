@@ -13,6 +13,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
   qscript =>
   def this() = this(null)
 
+  /** Will generate all available variantcallers */
   override def callersList = {
     new HaplotypeCallerGvcf ::
       new HaplotypeCallerAllele ::
@@ -22,6 +23,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
       super.callersList
   }
 
+  /** Default mode for the haplotypecaller */
   class HaplotypeCaller extends Variantcaller {
     val name = "haplotypecaller"
     protected val defaultPrio = 1
@@ -36,6 +38,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
     }
   }
 
+  /** Default mode for UnifiedGenotyper */
   class UnifiedGenotyper extends Variantcaller {
     val name = "unifiedgenotyper"
     protected val defaultPrio = 20
@@ -50,6 +53,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
     }
   }
 
+  /** Allele mode for Haplotypecaller */
   class HaplotypeCallerAllele extends Variantcaller {
     val name = "haplotypecaller_allele"
     protected val defaultPrio = 5
@@ -66,6 +70,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
     }
   }
 
+  /** Allele mode for GenotyperAllele */
   class UnifiedGenotyperAllele extends Variantcaller {
     val name = "unifiedgenotyper_allele"
     protected val defaultPrio = 9
@@ -82,6 +87,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
     }
   }
 
+  /** Gvcf mode for haplotypecaller */
   class HaplotypeCallerGvcf extends Variantcaller {
     val name = "haplotypecaller_gvcf"
     protected val defaultPrio = 5
@@ -104,4 +110,5 @@ class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVari
   }
 }
 
+/** object to add default main method to pipeline */
 object ShivaVariantcalling extends PipelineCommand

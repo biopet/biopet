@@ -12,21 +12,25 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import scala.collection.JavaConversions._
 
 /**
+ * This is a trait for the Shiva pipeline
+ *
  * Created by pjvan_thof on 2/26/15.
  */
 trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
   qscript =>
 
+  /** Executed before running the script */
   def init: Unit = {
-
   }
 
+  /** Method to add jobs */
   def biopetScript: Unit = {
     addSamplesJobs()
 
     addSummaryJobs
   }
 
+  /** Method to make the variantcalling submodule of shiva */
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
@@ -38,27 +42,43 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     }
   }
 
+  /** Method to make a sample */
   def makeSample(id: String) = new Sample(id)
+
+  /** Class that will generate jobs for a sample */
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    /** Sample specific files to add to summary */
+    def summaryFiles: Map[String, File] = {
+      preProcessBam match {
+        case Some(preProcessBam) => Map("bamFile" -> preProcessBam)
+        case _                   => Map()
+      }
+    }
 
-    //TODO: Add summary
-    def summaryFiles: Map[String, File] = Map()
-
-    //TODO: Add summary
+    /** Sample specific stats to add to summary */
     def summaryStats: Map[String, Any] = Map()
 
+    /** Method to make a library */
     def makeLibrary(id: String) = new Library(id)
 
+    /** Class to generate jobs for a library */
     class Library(libId: String) extends AbstractLibrary(libId) {
+      /** Library specific files to add to the summary */
+      def summaryFiles: Map[String, File] = {
+        (bamFile, preProcessBam) match {
+          case (Some(bamFile), Some(preProcessBam)) => Map("bamFile" -> bamFile, "preProcessBam" -> preProcessBam)
+          case (Some(bamFile), _)                   => Map("bamFile" -> bamFile)
+          case _                                    => Map()
+        }
+      }
 
-      //TODO: Add summary
-      def summaryFiles: Map[String, File] = Map()
-
-      //TODO: Add summary
+      /** Library specific stats to add to summary */
       def summaryStats: Map[String, Any] = Map()
 
+      /** Method to execute library preprocess */
       def preProcess(input: File): Option[File] = None
 
+      /** Method to make the mapping submodule */
       def makeMapping = {
         val mapping = new Mapping(qscript)
         mapping.sampleId = Some(sampleId)
@@ -87,6 +107,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         Some(makeVariantcalling(multisample = false))
       } else None
 
+      /** This will add jobs for this library */
       def addJobs(): Unit = {
         (config.contains("R1"), config.contains("bam")) match {
           case (true, _) => mapping.foreach(mapping => {
@@ -165,6 +186,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       }
     }
 
+    /** This will add jobs for the double preprocessing */
     protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input == Nil) None
       else if (input.tail == Nil) {
@@ -202,6 +224,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
       Some(makeVariantcalling(multisample = true))
     } else None
 
+    /** This will add sample jobs */
     def addJobs(): Unit = {
       addPerLibJobs()
 
@@ -232,6 +255,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     Some(makeVariantcalling(multisample = true))
   } else None
 
+  /** This will add the mutisample variantcalling */
   def addMultiSampleJobs(): Unit = {
     variantcalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
@@ -243,9 +267,12 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     })
   }
 
+  /** Location of summary file */
   def summaryFile = new File(outputDir, "Shiva.summary.json")
 
+  /** Settings of pipeline for summary */
   def summarySettings = Map()
 
+  /** Files for the summary */
   def summaryFiles = Map()
 }

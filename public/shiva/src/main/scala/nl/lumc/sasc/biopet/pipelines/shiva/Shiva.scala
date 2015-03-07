@@ -11,4 +11,5 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   def this() = this(null)
 }
 
+/** This object give a default main method to the pipelines */
 object Shiva extends PipelineCommand

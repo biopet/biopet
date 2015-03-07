@@ -13,6 +13,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   qscript =>
   def this() = this(null)
 
+  /** Make variantcalling submodule, this with the gatk modes in there */
   override def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
@@ -24,10 +25,18 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     }
   }
 
+  /** Makes a sample */
   override def makeSample(id: String) = new this.Sample(id)
+
+  /** Class will generate sample jobs */
   class Sample(sampleId: String) extends super.Sample(sampleId) {
+    /** Makes a library */
     override def makeLibrary(id: String) = new this.Library(id)
+
+    /** Class will generate library jobs */
     class Library(libId: String) extends super.Library(libId) {
+
+      /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
       override def preProcess(input: File): Option[File] = {
         val useIndelRealigner: Boolean = config("use_indel_realign", default = true)
         val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
@@ -47,6 +56,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
+    /** This methods will add double preprocess steps, with GATK indel realignment */
     override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input.size <= 1) super.addDoublePreProcess(input)
       else super.addDoublePreProcess(input, true).collect {
@@ -60,6 +70,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     }
   }
 
+  /** Adds indel realignment jobs */
   def addIndelRealign(inputBam: File, dir: File, isIntermediate: Boolean): File = {
     val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
     realignerTargetCreator.isIntermediate = true
@@ -72,6 +83,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     return indelRealigner.o
   }
 
+  /** Adds base recalibration jobs */
   def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
@@ -98,4 +110,5 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   }
 }
 
+/** This object give a default main methods for this pipeline */
 object Shiva extends PipelineCommand
