@@ -32,6 +32,13 @@ object VcfUtils {
     alleles(longestAlleleId)
   }
 
+  /**
+   * Method will extend a allele till a new length
+   * @param bases Allele
+   * @param newSize New size of allele
+   * @param fillWith Char to fill gap
+   * @return
+   */
   def fillAllele(bases: String, newSize: Int, fillWith: Char = '-'): String = {
     bases + (Array.fill[Char](newSize - bases.size)(fillWith)).mkString
   }
