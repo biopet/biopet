@@ -77,13 +77,13 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     //"output_chart" -> chartOutput
     ).collect { case (key, Some(value)) => key -> value }
 
-  def summaryStats: Map[String, Any] = {
-    val (header, content) = Picard.getMetrics(output)
-
-    header
-      .zip(content)
-      .map { case (h, c) => h.toLowerCase -> c.head }
-      .toMap
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
+    case None => Map()
+    case Some((header, content)) =>
+      header
+        .zip(content)
+        .map { case (h, c) => h.toLowerCase -> c.head }
+        .toMap
   }
 
   override def commandLine = super.commandLine +
