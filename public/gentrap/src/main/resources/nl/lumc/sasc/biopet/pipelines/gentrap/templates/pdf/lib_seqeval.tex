@@ -214,7 +214,6 @@ clipping and trimming of the reads.
 
 % sequence length distribution
 \subsubsection{Read length distribution}
-\newcommand{\capSeqL}{Read length distribution }
     Read length distribution for the raw read pair data are shown below.
     Depending on your chosen preprocessing step, the length distribution for the
     preprocessed data may be shown as well. The length distribution for the
@@ -236,7 +235,7 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capSeqL for read 1.}
+        \caption{Read length distribution for read 1.}
         %\label{fig:length_dist_before_and_after_1}
     \end{figure}
 
@@ -257,14 +256,13 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capSeqL for read 2.}
+        \caption{Read length distribution for read 2.}
         %\label{fig:length_dist_before_and_after_2}
     \end{figure}
 ((* endif *))
 
 % per base sequence quality
 \subsubsection{Per base sequence quality}
-\newcommand{\capBaseQ}{Per base quality before and after processing }
     Here, the sequence quality for different base positions in all read pairs
     are shown. For each figure, the central line represents the median value,
     the blue represents the mean, the yellow box represents the inter-quartile
@@ -293,7 +291,7 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capBaseQ for read 1.}
+        \caption{Per base quality before and after processing read 1.}
         %\label{fig:per_base_qual_before_and_after_1}
     \end{figure}
 
@@ -314,14 +312,13 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capBaseQ for read 2.}
+        \caption{Per base quality before and after processing for read 2.}
         %\label{fig:per_base_qual_before_and_after_2}
     \end{figure}
 ((* endif *))
 
 % per sequence quality scores
 \subsubsection{Per sequence quality scores}
-\newcommand{\capSeqQ}{Per sequence quality scores before and after preprocessing }
     The read quality score distributions are shown below.
     \begin{figure}[h!]
         \centering
@@ -339,7 +336,7 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capSeqQ for read 1.}
+        \caption{Per sequence quality scores before and after preprocessing read 1.}
         %\label{fig:per_seq_qual_before_and_after_1}
     \end{figure}
 
@@ -360,14 +357,13 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capSeqQ for read 2.}
+        \caption{Per sequence quality scores before and after preprocessing for read 2.}
         %\label{fig:per_seq_qual_before_and_after_2}
     \end{figure}
 ((* endif *))
 
 % per base sequence content
 \subsubsection{Per base sequence content}
-\newcommand{\capBaseC}{Per base sequence content before and after preprocessing }
     The figures below plot the occurence of each nucleotide in each position in
     the reads. In a completely random library, you would expect the differences
     among each nucleotide to be minor. You may sometimes see a skewed
@@ -394,7 +390,7 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capBaseC for read 1.}
+        \caption{Per base sequence content before and after preprocessing for read 1.}
         %\label{fig:per_base_content_before_and_after_1}
     \end{figure}
 
@@ -415,7 +411,7 @@ clipping and trimming of the reads.
             }
             ((* endif *))
         \end{minipage}
-        \caption{\capBaseC for read 2.}
+        \caption{Per base sequence content before and after preprocessing for read 2.}
         %\label{fig:per_base_content_before_and_after_2}
     \end{figure}
 ((* endif *))
@@ -423,7 +419,6 @@ clipping and trimming of the reads.
 
 % per sequence GC content
 \subsubsection{Per sequence GC content}
-\newcommand{\capGCC}{Per sequence GC content before and after preprocessing }
     The figures below show the GC percentage distribution of all the read pair
     data.
     \begin{figure}[h!]
@@ -449,7 +444,7 @@ clipping and trimming of the reads.
             }
         \end{minipage}
         ((* endif *))
-        \caption{\capGCC for read 1.}
+        \caption{Per sequence GC content before and after preprocessing for read 1.}
         %\label{fig:per_base_content_before_and_after_1}
     \end{figure}
 
@@ -477,7 +472,7 @@ clipping and trimming of the reads.
             }
         \end{minipage}
         ((* endif *))
-        \caption{\capGCC for read 2.}
+        \caption{Per sequence GC content before and after preprocessing for read 2.}
         %\label{fig:per_base_content_before_and_after_2}
     \end{figure}
 ((* endif *))
