@@ -39,7 +39,7 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
    */
   override def beforeGraph {
     super.beforeGraph
-    memoryLimit = config("memory_limit")
+    if (memoryLimit.isEmpty) memoryLimit = config("memory_limit")
   }
 
   /**
