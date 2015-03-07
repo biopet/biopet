@@ -150,354 +150,335 @@ Table~\ref{tab:clipsync}.
         \end{tabular}
     \end{center}
 ((* endif *))
-\vspace{2mm}
+%\vspace{2mm}
 
 \subsubsection{Basic statistics}
 %\label{subsec:seq_basic}
-((=
-%Basic statistics on the FASTQ files are shown below. For paired-end reads, the
-%read count numbers of read 1 and read 2, both before and after preprocessing,
-%must match. Read lengths are likely to vary after preprocessing, due to selective
-%clipping and trimming of the reads.
-%
-%\begin{center}
-%    \captionof{table}{Basic Run Statistics}
-%    \label{tab:basestats}
-%((* if lib.clipping or lib.trimming *))
-%        \begin{longtable}{ l r r }
-%                \hline
-%                Parameter & Raw & Preprocessed \\ \hline \hline
-%                \hline \hline
-%            \endhead
-%                \hline
-%                \multicolumn{3}{c}{\textit{Continued on next page}}\\
-%                \hline
-%            \endfoot
-%                \hline
-%            \endlastfoot
-%            Read 1 count & ((( fastqc_stats['samplea']['raw']['count']|nice_int ))) & ((( fastqc_stats['samplea']['proc']['count']|nice_int )))\\
-%            Read 1 overall \%GC & ((( fastqc_stats['samplea']['raw']['gc'] ))) & ((( fastqc_stats['samplea']['proc']['gc'] )))\\
-%            Read 1 length range & ((( fastqc_stats['samplea']['raw']['length'] ))) & ((( fastqc_stats['samplea']['proc']['length'] )))\\
-%            \hline
-%    ((* if run.is_paired_end *))
-%            Read 2 count & ((( fastqc_stats['sampleb']['raw']['count']|nice_int ))) & ((( fastqc_stats['sampleb']['proc']['count']|nice_int )))\\
-%            Read 2 overall \%GC & ((( fastqc_stats['sampleb']['raw']['gc'] ))) & ((( fastqc_stats['sampleb']['proc']['gc'] )))\\
-%            Read 2 length range & ((( fastqc_stats['sampleb']['raw']['length'] ))) & ((( fastqc_stats['sampleb']['proc']['length'] )))\\
-%            \hline
-%    ((* endif *))
-%((* else *))
-%        \begin{longtable}{ l r }
-%                \hline
-%                Parameter & Raw \\ \hline \hline
-%                \hline \hline
-%            \endhead
-%                \hline
-%                \multicolumn{2}{c}{\textit{Continued on next page}}\\
-%                \hline
-%            \endfoot
-%                \hline
-%            \endlastfoot
-%            Read 1 count & ((( fastqc_stats['samplea']['raw']['count']|nice_int )))\\
-%            Read 1 overall \%GC & ((( fastqc_stats['samplea']['raw']['gc'] )))\\
-%            Read 1 length range & ((( fastqc_stats['samplea']['raw']['length'] )))\\
-%            \hline
-%    ((* if run.is_paired_end *))
-%            Read 1 count & ((( fastqc_stats['sampleb']['raw']['count']|nice_int )))\\
-%            Read 1 overall \%GC & ((( fastqc_stats['sampleb']['raw']['gc'] )))\\
-%            Read 1 length range & ((( fastqc_stats['sampleb']['raw']['length'] )))\\
-%            \hline
-%    ((* endif *))
-%((* endif *))
-%        \end{longtable}
-%\end{center}
-%
-%\clearpage
-%% sequence length distribution
-%\subsubsection{Read length distribution}
-%\newcommand{\pathSeqL}{Images/sequence_length_distribution.png}
-%\newcommand{\capSeqL}{Read length distribution }
-%    Read length distribution for the raw read pair data are shown below.
-%    Depending on your chosen preprocessing step, the length distribution for the
-%    preprocessed data may be shown as well. The length distribution for the
-%    preprocessed data usually becomes less uniform compared to the raw data due
-%    to the variable removal of the bases in each read.
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['raw']['res_dir'])))/\pathSeqL}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['proc']['res_dir'])))/\pathSeqL}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capSeqL for read 1.}
-%        %\label{fig:length_dist_before_and_after_1}
-%    \end{figure}
-%
-%((* if run.is_paired_end *))
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%            \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['raw']['res_dir'])))/\pathSeqL}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['proc']['res_dir'])))/\pathSeqL}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capSeqL for read 2.}
-%        %\label{fig:length_dist_before_and_after_2}
-%    \end{figure}
-%((* endif *))
-%
-%
-%% per base sequence quality
-%\clearpage
-%\subsubsection{Per base sequence quality}
-%\newcommand{\pathBaseQ}{Images/per_base_quality.png}
-%\newcommand{\capBaseQ}{Per base quality before and after processing }
-%    Here, the sequence quality for different base positions in all read pairs
-%    are shown. For each figure, the central line represents the median value,
-%    the blue represents the mean, the yellow box represents the inter-quartile
-%    range (25\%-75\%), and the upper and lower whiskers represent the 10\% and
-%    90\% points respectively. The green-shaded region marks good quality calls,
-%    orange-shaded regins mark reasonable quality calls, and red-shaded regions
-%    mark poor quality calls.
-%    
-%    \indent
-%
-%    Note that the latter base positions shown in the figures are
-%    sometimes aggregates of multiple positions.
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['raw']['res_dir'])))/\pathBaseQ}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['proc']['res_dir'])))/\pathBaseQ}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capBaseQ for read 1.}
-%        %\label{fig:per_base_qual_before_and_after_1}
-%    \end{figure}
-%
-%((* if run.is_paired_end *))
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%            \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['raw']['res_dir'])))/\pathBaseQ}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['proc']['res_dir'])))/\pathBaseQ}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capBaseQ for read 2.}
-%        %\label{fig:per_base_qual_before_and_after_2}
-%    \end{figure}
-%((* endif *))
-%
-%% per sequence quality scores
-%\clearpage
-%\subsubsection{Per sequence quality scores}
-%\newcommand{\pathSeqQ}{Images/per_sequence_quality.png}
-%\newcommand{\capSeqQ}{Per sequence quality scores before and after preprocessing }
-%    The read quality score distributions are shown below.
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['raw']['res_dir'])))/\pathSeqQ}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['proc']['res_dir'])))/\pathSeqQ}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capSeqQ for read 1.}
-%        %\label{fig:per_seq_qual_before_and_after_1}
-%    \end{figure}
-%
-%((* if run.is_paired_end *))
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['raw']['res_dir'])))/\pathSeqQ}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['proc']['res_dir'])))/\pathSeqQ}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capSeqQ for read 2.}
-%        %\label{fig:per_seq_qual_before_and_after_2}
-%    \end{figure}
-%((* endif *))
-%
-%% per base sequence content
-%\clearpage
-%\subsubsection{Per base sequence content}
-%\newcommand{\pathBaseC}{Images/per_base_sequence_content.png}
-%\newcommand{\capBaseC}{Per base sequence content before and after preprocessing }
-%    The figures below plot the occurence of each nucleotide in each position in
-%    the reads. In a completely random library, you would expect the differences
-%    among each nucleotide to be minor. You may sometimes see a skewed
-%    proportion of nucleotides near the start of the read due to the use of
-%    non-random cDNA during sample preparation.
-%
-%    \indent
-%
-%    Note that the latter base positions shown in the figures are
-%    sometimes aggregates of multiple positions.
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['raw']['res_dir'])))/\pathBaseC}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 1]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['samplea']['proc']['res_dir'])))/\pathBaseC}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capBaseC for read 1.}
-%        %\label{fig:per_base_content_before_and_after_1}
-%    \end{figure}
-%
-%((* if run.is_paired_end *))
-%    \begin{figure}[h!]
-%        \centering
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['raw']['res_dir'])))/\pathBaseC}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.495\textwidth}
-%            \centering
-%            ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%            \subfloat[Preprocessed read 2]{
-%                \includegraphics[width=\textwidth]{((( fastqc_stats['sampleb']['proc']['res_dir'])))/\pathBaseC}
-%            }
-%            ((* endif *))
-%        \end{minipage}
-%        \caption{\capBaseC for read 2.}
-%        %\label{fig:per_base_content_before_and_after_2}
-%    \end{figure}
-%((* endif *))
-%
-%
-%% per sequence GC content
-%\clearpage
-%\subsubsection{Per sequence GC content}
-%\newcommand{\capGCC}{Per sequence GC content before and after preprocessing }
-%    The figures below show the GC percentage distribution of all the read pair
-%    data. The green histogram represents the number of reads with a certain GC
-%    percentage. The blue shade behind the histogram represents the proportion of
-%    reads with a certain GC percentage, centered on the median. From the
-%    innermost to the outermost shade, the proportions represented are 20\%,
-%    40\%, 60\%, 80\%, and 99\%. The boxes in the boxplots show the interquartile
-%    range (25\%-75\%), centered on the median. Each of the whiskers in these
-%    plots extend to the data point within 1.5 of the interquartile range. Any
-%    data points outside of the whiskers' range are denoted as outliers, shown as
-%    red dots in the plots.
-%    \begin{figure}[h!]
-%        \centering
-%        ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEA'] ))).gc.png}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Preprocessed read 1]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEA'] ))).qc.gc.png}
-%            }
-%        \end{minipage}
-%        ((* else *)))
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Raw read 1]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEA'] ))).qc.gc.png}
-%            }
-%        \end{minipage}
-%        ((* endif *))
-%        \caption{\capGCC for read 1.}
-%        %\label{fig:per_base_content_before_and_after_1}
-%    \end{figure}
-%
-%((* if run.is_paired_end *))
-%    \begin{figure}[h!]
-%        \centering
-%        ((* if "none" not in vars['GENTRAP_QC_MODE'] *))
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEB'] ))).gc.png}
-%            }
-%        \end{minipage}
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Preprocessed read 2]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEB'] ))).qc.gc.png}
-%            }
-%        \end{minipage}
-%        ((* else *))
-%        \begin{minipage}[b]{0.47\textwidth}
-%            \centering
-%            \subfloat[Raw read 2]{
-%                \includegraphics[width=\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLEB'] ))).qc.gc.png}
-%            }
-%        \end{minipage}
-%        ((* endif *))
-%        \caption{\capGCC for read 2.}
-%        %\label{fig:per_base_content_before_and_after_2}
-%    \end{figure}
-%((* endif *))
-%
-%
-=))
+
+Basic statistics on the FASTQ files are shown below. For paired-end reads, the
+read count numbers of read 1 and read 2, both before and after preprocessing,
+must match. Read lengths are likely to vary after preprocessing, due to selective
+clipping and trimming of the reads.
+
+\begin{center}
+    \captionof{table}{Basic Run Statistics}
+    %\label{tab:basestats}
+((* if lib.clipping or lib.trimming *))
+        \begin{longtable}{ l r r }
+                \hline
+                Parameter & Raw & Preprocessed \\ \hline \hline
+                \hline \hline
+            \endhead
+                \hline
+                \multicolumn{3}{c}{\textit{Continued on next page}}\\
+                \hline
+            \endfoot
+                \hline
+            \endlastfoot
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* if run.is_paired_end *))
+            Read 2 count & ((( lib.fastqc_r2.basic_statistics.data["Total Sequences"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Total Sequences"] )))\\
+            Read 2 overall \%GC & ((( lib.fastqc_r2.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["%GC"] )))\\
+            Read 2 length range & ((( lib.fastqc_r2.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* endif *))
+((* else *))
+        \begin{longtable}{ l r }
+                \hline
+                Parameter & Raw \\ \hline \hline
+                \hline \hline
+            \endhead
+                \hline
+                \multicolumn{2}{c}{\textit{Continued on next page}}\\
+                \hline
+            \endfoot
+                \hline
+            \endlastfoot
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* if run.is_paired_end *))
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* endif *))
+((* endif *))
+        \end{longtable}
+\end{center}
+
+% sequence length distribution
+\subsubsection{Read length distribution}
+\newcommand{\capSeqL}{Read length distribution }
+    Read length distribution for the raw read pair data are shown below.
+    Depending on your chosen preprocessing step, the length distribution for the
+    preprocessed data may be shown as well. The length distribution for the
+    preprocessed data usually becomes less uniform compared to the raw data due
+    to the variable removal of the bases in each read.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_sequence_length_distribution.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_sequence_length_distribution.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capSeqL for read 1.}
+        %\label{fig:length_dist_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+            \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_sequence_length_distribution.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_sequence_length_distribution.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capSeqL for read 2.}
+        %\label{fig:length_dist_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per base sequence quality
+\subsubsection{Per base sequence quality}
+\newcommand{\capBaseQ}{Per base quality before and after processing }
+    Here, the sequence quality for different base positions in all read pairs
+    are shown. For each figure, the central line represents the median value,
+    the blue represents the mean, the yellow box represents the inter-quartile
+    range (25\%-75\%), and the upper and lower whiskers represent the 10\% and
+    90\% points respectively. The green-shaded region marks good quality calls,
+    orange-shaded regins mark reasonable quality calls, and red-shaded regions
+    mark poor quality calls.
+
+    \indent
+
+    Note that the latter base positions shown in the figures are
+    sometimes aggregates of multiple positions.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_base_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_base_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capBaseQ for read 1.}
+        %\label{fig:per_base_qual_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+            \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_base_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_base_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capBaseQ for read 2.}
+        %\label{fig:per_base_qual_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per sequence quality scores
+\subsubsection{Per sequence quality scores}
+\newcommand{\capSeqQ}{Per sequence quality scores before and after preprocessing }
+    The read quality score distributions are shown below.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_sequence_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capSeqQ for read 1.}
+        %\label{fig:per_seq_qual_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_sequence_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capSeqQ for read 2.}
+        %\label{fig:per_seq_qual_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per base sequence content
+\subsubsection{Per base sequence content}
+\newcommand{\capBaseC}{Per base sequence content before and after preprocessing }
+    The figures below plot the occurence of each nucleotide in each position in
+    the reads. In a completely random library, you would expect the differences
+    among each nucleotide to be minor. You may sometimes see a skewed
+    proportion of nucleotides near the start of the read due to the use of
+    non-random cDNA during sample preparation.
+
+    \indent
+
+    Note that the latter base positions shown in the figures are
+    sometimes aggregates of multiple positions.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_base_sequence_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_base_sequence_content.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capBaseC for read 1.}
+        %\label{fig:per_base_content_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_base_sequence_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_base_sequence_content.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{\capBaseC for read 2.}
+        %\label{fig:per_base_content_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+
+% per sequence GC content
+\subsubsection{Per sequence GC content}
+\newcommand{\capGCC}{Per sequence GC content before and after preprocessing }
+    The figures below show the GC percentage distribution of all the read pair
+    data.
+    \begin{figure}[h!]
+        \centering
+        ((* if lib.trimming or lib.clipping *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* else *)))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* endif *))
+        \caption{\capGCC for read 1.}
+        %\label{fig:per_base_content_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        ((* if lib.trimming or lib.clipping *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* else *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* endif *))
+        \caption{\capGCC for read 2.}
+        %\label{fig:per_base_content_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+

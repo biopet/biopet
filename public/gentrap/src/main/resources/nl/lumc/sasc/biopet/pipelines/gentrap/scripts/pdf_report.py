@@ -389,21 +389,17 @@ class GentrapLib(object):
         self.trimming = not self.flexiprep["settings"]["skip_trim"]
         self.is_paired_end = self.flexiprep["settings"]["paired"]
         if "fastqc_R1" in self.flexiprep["files"]:
-            self.fastqc_r1 = FastQC(self.flexiprep["files"]["fastqc_R1"]["fastqc_data"]["path"])
-        else:
-            self.fastqc_r1 = None
+            self.fastqc_r1_files = self.flexiprep["files"]["fastqc_R1"]
+            self.fastqc_r1 = FastQC(self.fastqc_r1_files["fastqc_data"]["path"])
         if "fastqc_R2" in self.flexiprep["files"]:
-            self.fastqc_r2 = FastQC(self.flexiprep["files"]["fastqc_R2"]["fastqc_data"]["path"])
-        else:
-            self.fastqc_r2 = None
+            self.fastqc_r2_files = self.flexiprep["files"]["fastqc_R2"]
+            self.fastqc_r2 = FastQC(self.fastqc_r2_files["fastqc_data"]["path"])
         if "fastqc_R1_qc" in self.flexiprep["files"]:
-            self.fastqc_r1_qc = FastQC(self.flexiprep["files"]["fastqc_R1_qc"]["fastqc_data"]["path"])
-        else:
-            self.fastqc_r1_qc = None
+            self.fastqc_r1_qc_files = self.flexiprep["files"]["fastqc_R1_qc"]
+            self.fastqc_r1_qc = FastQC(self.fastqc_r1_qc_files["fastqc_data"]["path"])
         if "fastqc_R2_qc" in self.flexiprep["files"]:
-            self.fastqc_r2_qc = FastQC(self.flexiprep["files"]["fastqc_R2_qc"]["fastqc_data"]["path"])
-        else:
-            self.fastqc_r2_qc = None
+            self.fastqc_r2_qc_files = self.flexiprep["files"]["fastqc_R2_qc"]
+            self.fastqc_r2_qc = FastQC(self.fastqc_r2_qc_files["fastqc_data"]["path"])
 
     def __repr__(self):
         return "{0}(sample=\"{1}\", lib=\"{2}\")".format(
