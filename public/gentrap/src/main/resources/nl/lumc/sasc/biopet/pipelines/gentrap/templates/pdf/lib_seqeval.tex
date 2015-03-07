@@ -143,9 +143,10 @@ Table~\ref{tab:clipsync}.
             Parameter & Count\\ \hline \hline
             Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R1|nice_int )))\\
             Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R2|nice_int )))\\
-            Discarded FASTQ records from both reads & ((( lib.flexiprep.stats.trimming.num_paired_reads_discarded|nice_int )))\\
             \hline
-            Total kept FASTQ read pairs & ((( lib.flexiprep.stats.trimming.num_paired_reads_kept|nice_int )))\\
+            Discarded FASTQ records from both reads & ((( lib.flexiprep.stats.trimming.num_reads_discarded_both|nice_int )))\\
+            \hline
+            Total kept FASTQ reads & ((( lib.flexiprep.stats.trimming.num_reads_kept|nice_int )))\\
             \hline
         \end{tabular}
     \end{center}
