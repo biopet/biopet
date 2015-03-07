@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for sambemba markdup  */
 class SambambaMarkdup(val root: Configurable) extends Sambamba {
   override val defaultThreads = 4
 
@@ -36,6 +37,7 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
   val overflow_list_size: Option[Int] = config("overflow-list-size", default = 200000)
   val io_buffer_size: Option[Int] = config("io-buffer-size", default = 128)
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("markdup") +
     conditional(remove_duplicates, "--remove-duplicates") +
@@ -46,25 +48,4 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
     optional("--io-buffer-size=", io_buffer_size, spaceSeparated = false) +
     required(input) +
     required(output)
-}
-
-object SambambaMarkdup {
-  def apply(root: Configurable, input: File, output: File): SambambaMarkdup = {
-    val flagstat = new SambambaMarkdup(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
-  }
-
-  def apply(root: Configurable, input: File, outputDir: String): SambambaMarkdup = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
-  }
-
-  def apply(root: Configurable, input: File): SambambaMarkdup = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
-  }
-
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"
 }

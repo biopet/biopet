@@ -25,7 +25,7 @@ import scala.io.Source
 /**
  * General picard extension
  *
- * This is based on using class files directly from the jar
+ * This is based on using class files directly from the jar, if needed other picard jar can be used
  */
 abstract class Picard extends BiopetJavaCommandLineFunction {
   override def subPath = "picard" :: super.subPath

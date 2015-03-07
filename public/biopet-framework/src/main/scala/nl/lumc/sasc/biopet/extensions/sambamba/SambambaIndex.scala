@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for sambemba index  */
 class SambambaIndex(val root: Configurable) extends Sambamba {
   override val defaultThreads = 2
 
@@ -28,30 +29,10 @@ class SambambaIndex(val root: Configurable) extends Sambamba {
   @Output(doc = "Output .bai file to")
   var output: File = _
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("index") +
     optional("-t", nCoresRequest) +
     required(input) +
     required(output)
-}
-
-object SambambaIndex {
-  def apply(root: Configurable, input: File, output: File): SambambaIndex = {
-    val flagstat = new SambambaIndex(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
-  }
-
-  def apply(root: Configurable, input: File, outputDir: String): SambambaIndex = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
-  }
-
-  def apply(root: Configurable, input: File): SambambaIndex = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
-  }
-
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"
 }
