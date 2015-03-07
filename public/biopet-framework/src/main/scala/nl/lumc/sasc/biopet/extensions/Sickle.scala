@@ -82,27 +82,42 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   }
 
   def summaryStats: Map[String, Any] = {
-    val pairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
-    val singleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
-    val pairDiscarded = """FastQ paired records discarded: (\d*) \((\d*) pairs\)""".r
-    val singleDiscarded = """FastQ single records discarded: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+    // regex for single run
+    val sKept = """FastQ records kept: (\d+)""".r
+    val sDiscarded = """FastQ records discarded: (\d+)""".r
+    // regex for paired run
+    val pPairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
+    val pSingleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+    val pPairDiscarded = """FastQ paired records discarded: (\d*) \((\d*) pairs\)""".r
+    val pSingleDiscarded = """FastQ single records discarded: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
 
     var stats: mutable.Map[String, Int] = mutable.Map()
 
     if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
       line match {
-        case pairKept(reads, pairs) => stats += ("num_paired_reads_kept" -> reads.toInt)
-        case singleKept(total, r1, r2) => {
+        // single run
+        case sKept(num) => stats += ("num_reads_kept" -> num.toInt)
+        case sDiscarded(num) => stats += ("num_reads_discarded_total" -> num.toInt)
+        // paired run
+        case pPairKept(reads, pairs) => stats += ("num_reads_kept" -> reads.toInt)
+        case pSingleKept(total, r1, r2) => {
           stats += ("num_reads_kept_R1" -> r1.toInt)
           stats += ("num_reads_kept_R2" -> r2.toInt)
         }
-        case pairDiscarded(reads, pairs) => stats += ("num_paired_reads_discarded" -> reads.toInt)
-        case singleDiscarded(total, r1, r2) => {
+        case pPairDiscarded(reads, pairs) => stats += ("num_reads_discarded_both" -> reads.toInt)
+        case pSingleDiscarded(total, r1, r2) => {
           stats += ("num_reads_discarded_R1" -> r1.toInt)
           stats += ("num_reads_discarded_R2" -> r2.toInt)
         }
         case _ =>
       }
+    }
+
+    if (stats.contains("num_reads_discarded_both")) {
+      stats += ("num_reads_discarded_total" -> {
+        stats.getOrElse("num_reads_discarded_R1", 0) + stats.getOrElse("num_reads_discarded_R2", 0) +
+        stats.getOrElse("num_reads_discarded_both", 0)
+        })
     }
 
     stats.toMap
