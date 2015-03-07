@@ -73,6 +73,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     super.freezeFieldValues()
   }
 
+  /** can override this value is executable may not be converted to CanonicalPath */
+  val executableToCanonicalPath = true
+
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
@@ -87,7 +90,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
           if (process.exitValue == 0) {
             executable = buffer.toString
             val file = new File(executable)
-            executable = file.getCanonicalPath
+            if (executableToCanonicalPath) executable = file.getCanonicalPath
+            else executable = file.getAbsolutePath
           } else {
             BiopetQScript.addError("executable: '" + executable + "' not found, please check config")
           }
@@ -207,6 +211,6 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
   private val versionCache: Map[String, String] = Map()
-  private val executableMd5Cache: Map[String, String] = Map()
+  private[core] val executableMd5Cache: Map[String, String] = Map()
   private val executableCache: Map[String, String] = Map()
 }

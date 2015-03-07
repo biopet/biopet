@@ -39,7 +39,7 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction {
 }
 
 object CoverageStats {
-  def apply(root: Configurable, input: File, outputDir: String): CoverageStats = {
+  def apply(root: Configurable, input: File, outputDir: File): CoverageStats = {
     val coverageStats = new CoverageStats(root)
     coverageStats.input = input
     coverageStats.output = new File(outputDir, input.getName + ".stats")

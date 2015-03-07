@@ -25,15 +25,36 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     "ploidy" -> 1,
     "use_haplotypecaller" -> false,
     "use_unifiedgenotyper" -> true,
-    "joint_variantcalling" -> true
+    "joint_variantcalling" -> true,
+    "single_sample_calling" -> false
   ), super.defaults)
 
   var gatkPipeline: GatkPipeline = new GatkPipeline(qscript)
 
+  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+
+  //TODO: Add summary
+  def summaryFiles: Map[String, File] = Map()
+
+  //TODO: Add summary
+  def summarySettings: Map[String, Any] = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
+
       protected def addJobs(): Unit = {}
     }
 
@@ -55,13 +76,14 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
   def biopetScript() {
     gatkPipeline.biopetScript
     addAll(gatkPipeline.functions)
+    addSummaryQScript(gatkPipeline)
 
     addSamplesJobs()
   }
 
   def addMultiSampleJobs(): Unit = {
-    val refVariants = addGenerateFasta(null, new File(outputDir, "reference"), outputName = "reference")
-    val refVariantSnps = addGenerateFasta(null, new File(outputDir, "reference"), outputName = "reference", snpsOnly = true)
+    val refVariants = addGenerateFasta(null, new File(outputDir, "fastas" + File.separator + "reference"), outputName = "reference")
+    val refVariantSnps = addGenerateFasta(null, new File(outputDir, "fastas" + File.separator + "reference"), outputName = "reference", snpsOnly = true)
 
     val catVariants = Cat(this, refVariants.variants :: samples.map(_._2.output.variants).toList,
       new File(outputDir, "fastas" + File.separator + "variant.fasta"))
@@ -94,7 +116,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       raxmlMl.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlMl.p = seed
       raxmlMl.n = outputName + "_ml"
-      raxmlMl.w = outputDir + dirSufixRaxml
+      raxmlMl.w = dirSufixRaxml
       raxmlMl.N = config("ml_runs", default = 20, submodule = "raxml")
       add(raxmlMl)
 
@@ -114,7 +136,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
         raxmlBoot.getBootstrapFile
       }
 
-      val cat = Cat(this, bootList.toList, outputDir + "/boot_list")
+      val cat = Cat(this, bootList.toList, new File(outputDir, "/boot_list"))
       add(cat)
 
       val raxmlBi = new Raxml(this)
@@ -125,7 +147,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
       raxmlBi.p = seed
       raxmlBi.f = "b"
       raxmlBi.n = outputName + "_bi"
-      raxmlBi.w = outputDir + dirSufixRaxml
+      raxmlBi.w = dirSufixRaxml
       add(raxmlBi)
 
       val gubbins = new RunGubbins(this)
@@ -150,9 +172,9 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     if (gatkPipeline.samples.contains(sampleName)) {
       bastyGenerateFasta.bamFile = gatkPipeline.samples(sampleName).gatkVariantcalling.scriptOutput.bamFiles.head
     }
-    bastyGenerateFasta.outputVariants = outputDir + bastyGenerateFasta.outputName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
-    bastyGenerateFasta.outputConsensus = outputDir + bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
-    bastyGenerateFasta.outputConsensusVariants = outputDir + bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta"
+    bastyGenerateFasta.outputVariants = new File(outputDir, bastyGenerateFasta.outputName + ".variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
+    bastyGenerateFasta.outputConsensus = new File(outputDir, bastyGenerateFasta.outputName + ".consensus" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
+    bastyGenerateFasta.outputConsensusVariants = new File(outputDir, bastyGenerateFasta.outputName + ".consensus_variants" + (if (snpsOnly) ".snps_only" else "") + ".fasta")
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
     qscript.add(bastyGenerateFasta)

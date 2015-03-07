@@ -28,7 +28,7 @@ class CarpTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "carpOptions", parallel = true)
+  @DataProvider(name = "carpOptions")
   def carpOptions = {
     val bool = Array(true, false)
 
@@ -84,7 +84,6 @@ object CarpTest {
 
   val executables = Map(
     "reference" -> "test",
-    "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

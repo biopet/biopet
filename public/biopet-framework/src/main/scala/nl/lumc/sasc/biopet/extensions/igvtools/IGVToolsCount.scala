@@ -24,6 +24,9 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   @Output
   var wig: Option[File] = None
 
+  @Output
+  def logFile = new File(jobLocalDir, "igv.log")
+
   var maxZoom: Option[Int] = config("maxZoom")
   var windowSize: Option[Int] = config("windowSize")
   var extFactor: Option[Int] = config("extFactor")
@@ -41,8 +44,16 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
+  override val defaultVmem = "6G"
+
   override def beforeGraph {
     super.beforeGraph
+
+    (tdf, wig) match {
+      case (Some(tdf), _) => jobLocalDir = tdf.getParentFile
+      case (_, Some(wig)) => jobLocalDir = wig.getParentFile
+      case _              => throw new IllegalArgumentException("Must have a wig or tdf file")
+    }
 
     wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
       throw new IllegalArgumentException("WIG file should have a .wig file-extension"))

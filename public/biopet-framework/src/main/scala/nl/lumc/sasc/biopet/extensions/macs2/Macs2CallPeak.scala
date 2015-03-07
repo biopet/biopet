@@ -40,7 +40,8 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var verbose: Boolean = config("verbose", default = false)
   var tsize: Option[Int] = config("tsize")
   var bandwith: Option[Int] = config("bandwith")
-  var mfold: Option[Float] = config("mfold")
+  // TODO: should use List[Float] or Option[List[Float]] here
+  var mfold: List[String] = config("mfold", default = List.empty[String])
   var fixbimodel: Boolean = config("fixbimodel", default = false)
   var nomodel: Boolean = config("nomodel", default = false)
   var shift: Option[Int] = config("shift")
@@ -80,7 +81,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
       conditional(verbose, "--verbose") + /* Whether to output verbosely */
       optional("--tsize", tsize) + /* Sets custom tag length, if not specified macs will use first 10 sequences to estimate the size */
       optional("--bw", bandwith) + /* The bandwith to use for model building. Set this parameter as the sonication fragment size estimated in the wetlab */
-      optional("--mfold", mfold) + /* The parameter to select regions within the model fold. Must be a upper and lower limit. */
+      (if (mfold.isEmpty) "" else optional("'--mfold'", repeat(mfold), escape = false)) + /* The parameter to select regions within the model fold. Must be a upper and lower limit. */
       conditional(fixbimodel, "--fix-bimodal") + /* Whether turn on the auto paired-peak model process. If it's set, when MACS failed to build paired model, it will use the nomodel settings, the '--extsize' parameter to extend each tags. If set, MACS will be terminated if paried-peak model is failed. */
       conditional(nomodel, "--nomodel") + /* While on, MACS will bypass building the shifting model */
       optional("--shift", shift) + /* You can set an arbitrary shift in basepairs here */
