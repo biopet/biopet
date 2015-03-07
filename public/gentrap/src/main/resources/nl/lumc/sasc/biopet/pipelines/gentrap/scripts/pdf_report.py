@@ -324,13 +324,28 @@ class LongTable(object):
 def nice_int(num, default="None"):
     if num is None:
         return default
-    return locale.format("%i", int(num), grouping=True)
+    try:
+        return locale.format("%i", int(num), grouping=True)
+    except:
+        return default
 
 
 def nice_flt(num, default="None"):
     if num is None:
         return default
-    return locale.format("%.2f", float(num), grouping=True)
+    try:
+        return locale.format("%.2f", float(num), grouping=True)
+    except:
+        return default
+
+
+def float2nice_pct(num, default="None"):
+    if num is None:
+        return default
+    try:
+        return locale.format("%.2f", float(num) * 100.0, grouping=True)
+    except:
+        return default
 
 
 # and some handy functions
@@ -363,6 +378,7 @@ def write_template(run, template_file, logo_file):
     # put in out filter functions
     env.filters["nice_int"] = nice_int
     env.filters["nice_flt"] = nice_flt
+    env.filters["float2nice_pct"] = float2nice_pct
 
     # write tex template for pdflatex
     jinja_template = env.get_template(path.basename(template_file))
@@ -384,6 +400,7 @@ class GentrapLib(object):
         self.sample = sample
         self.name = name
         self._raw = summary
+        # flexiprep settings
         self.flexiprep = summary.get("flexiprep", {})
         self.clipping = not self.flexiprep["settings"]["skip_clip"]
         self.trimming = not self.flexiprep["settings"]["skip_trim"]
@@ -400,6 +417,8 @@ class GentrapLib(object):
         if "fastqc_R2_qc" in self.flexiprep["files"]:
             self.fastqc_r2_qc_files = self.flexiprep["files"]["fastqc_R2_qc"]
             self.fastqc_r2_qc = FastQC(self.fastqc_r2_qc_files["fastqc_data"]["path"])
+        # mapping metrics settings
+        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
 
     def __repr__(self):
         return "{0}(sample=\"{1}\", lib=\"{2}\")".format(

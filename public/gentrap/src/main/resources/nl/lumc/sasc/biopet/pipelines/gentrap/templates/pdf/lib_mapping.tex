@@ -1,0 +1,96 @@
+\subsection{Mapping}
+\label{sec:map}
+
+\subsubsection{Mapping statistics}
+
+Table~\ref{tab:bamstat-((( lib.sample.name )))-((( lib.name ))))} shows the overview statistics of the
+generated alignment file.
+
+\indent
+
+% number + percentage of reads mapped to genome
+% number + percentage of properly paired reads
+\begin{center}
+    \captionof{table}{Mapping Overview}
+    \label{tab:bamstat-((( lib.sample.name )))-((( lib.name ))))}
+    \setlength{\tabcolsep}{11pt}
+    ((* if lib.is_paired_end *))
+    \begin{tabular}{ l r r r }
+        \hline
+        \multirow{2}{*}{Parameter} & \multicolumn{1}{c}{All Pairs} & \multicolumn{1}{c}{First in Pairs} & \multicolumn{1}{c}{Second in Pairs} \\
+         & Value & Value & Value \\
+        \hline \hline
+        Total reads & ((( lib.aln_metrics.PAIR.total_reads|nice_int ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.total_reads|nice_int ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.total_reads|nice_int ))) \\
+        Mean read length & ((( lib.aln_metrics.PAIR.mean_read_length|nice_flt ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.mean_read_length|nice_flt ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.mean_read_length|nice_flt ))) \\
+        Strand balance & ((( lib.aln_metrics.PAIR.strand_balance|nice_flt ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.strand_balance|nice_flt ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.strand_balance|nice_flt ))) \\
+        \% Mapped to reference & ((( lib.aln_metrics.PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        \% Mapped to reference (MAPQ >= 20) & ((( lib.aln_metrics.PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        Mismatch rate & ((( lib.aln_metrics.PAIR.pf_mismatch_rate|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pf_mismatch_rate|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pf_mismatch_rate|float2nice_pct )))\% \\
+        Indel rate & ((( lib.aln_metrics.PAIR.pf_indel_rate|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pf_indel_rate|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pf_indel_rate|float2nice_pct )))\% \\
+        Chimeras & ((( lib.aln_metrics.PAIR.pct_chimeras|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_chimeras|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_chimeras|float2nice_pct )))\% \\
+        \hline
+    ((* else *))
+    \begin{tabular}{ l r }
+        \hline
+        \multirow{1}{*}{Parameter} & \multicolumn{1}{c}{Value} \\
+        \hline \hline
+        Total reads & ((( lib.aln_metrics.UNPAIRED.total_reads|nice_int ))) \\
+        Mean read length & ((( lib.aln_metrics.UNPAIRED.mean_read_length|nice_flt ))) \\
+        Strand balance & ((( lib.aln_metrics.UNPAIRED.strand_balance|nice_flt ))) \\
+        \% Mapped to reference & ((( lib.aln_metrics.UNPAIRED.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        \% Mapped to reference (MAPQ >= 20) & ((( lib.aln_metrics.UNPAIRED.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        Mismatch rate & ((( lib.aln_metrics.UNPAIRED.pf_mismatch_rate|float2nice_pct )))\% \\
+        Indel rate & ((( lib.aln_metrics.UNPAIRED.pf_indel_rate|float2nice_pct )))\% \\
+        \hline
+    ((* endif *))
+    \end{tabular}
+\end{center}
+
+((=
+%((* if run.is_paired_end *))
+%% inferred insert size distribution
+%\subsection{Insert size distribution}
+%
+%This section contains a quick overview of the insert size distribution
+%of the mapped reads.
+%
+%\indent
+%
+%There are three possible types of inserts the graph may denote:
+%\begin{description}
+%    \item[\textit{inward}] \hfill \\
+%        Each read pair maps to opposite strands and point towards each other.
+%    \item[\textit{outward}] \hfill \\
+%        Each read pair maps to opposite strands and point away from each other.
+%    \item[\textit{same directions}] \hfill \\
+%        Both read pair map to the same strand.
+%\end{description}
+%
+%\IfFileExists{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).insertsizes.png}
+%{
+%    \begin{figure}[h!]
+%        \centering
+%        \includegraphics[width=0.7\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).insertsizes.png}
+%        \caption{Distribution of insert size length of paired-end reads mapped to opposite strands.}
+%    \end{figure}
+%}
+%{
+%    \IfFileExists{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).f.insertsizes.png}
+%    {
+%        \begin{figure}[h!]
+%            \centering
+%            \includegraphics[width=0.7\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).f.insertsizes.png}
+%            \caption{Distribution of insert size length of paired-end reads whose first read maps to the minus strand.}
+%        \end{figure}
+%    }{}
+%    \IfFileExists{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).r.insertsizes.png}
+%    {
+%        \begin{figure}[h!]
+%            \centering
+%            \includegraphics[width=0.7\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).r.insertsizes.png}
+%            \caption{Distribution of insert size length of paired-end reads whose first read maps to the plus strand.}
+%        \end{figure}
+%    }{}
+%}
+%((* endif *))
+=))
