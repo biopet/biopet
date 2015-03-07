@@ -70,11 +70,11 @@ More information about clipping using cutadapt is available on the
         ((* if lib.flexiprep.stats.clipping_R1 *))
             ((* if lib.flexiprep.stats.clipping_R1.adapters *))
                 Read 1 & ((( lib.flexiprep.stats.clipping_R1.num_reads_affected|nice_int )))
-                ((* for adapter, count in lib.flexiprep.stats.clipping_R1.adapters.iteritems() *))
+                ((* for adapter, stat in lib.flexiprep.stats.clipping_R1.adapters.iteritems() *))
                 ((* if loop.first *))
-                    & ((( adapter ))) & ((( count|nice_int )))\\
+                    & ((( adapter ))) & ((( stat[1]|nice_int )))\\
                 ((* else *))
-                    & & ((( adapter ))) & ((( count|nice_int )))\\
+                    & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
                 ((* endif *))
                 ((* endfor *))
             ((* else *))
@@ -83,11 +83,11 @@ More information about clipping using cutadapt is available on the
             ((* if lib.is_paired_end *))
                 ((* if lib.flexiprep.stats.clipping_R2.adapters *))
                     Read 2 & ((( lib.flexiprep.stats.clipping_R2.num_reads_affected|nice_int )))
-                    ((* for adapter, count in lib.flexiprep.stats.clipping_R2.adapters.iteritems() *))
+                    ((* for adapter, stat in lib.flexiprep.stats.clipping_R2.adapters.iteritems() *))
                     ((* if loop.first *))
-                        & ((( adapter ))) & ((( count|nice_int )))\\
+                        & ((( adapter ))) & ((( stat[1]|nice_int )))\\
                     ((* else *))
-                        & & ((( adapter ))) & ((( count|nice_int )))\\
+                        & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
                     ((* endif *))
                     ((* endfor *))
                 ((* else *))
