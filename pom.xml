@@ -16,6 +16,5 @@
     <modules>
         <module>public</module>
         <module>protected</module>
-        <module>scoverage</module>
     </modules>
 </project>
