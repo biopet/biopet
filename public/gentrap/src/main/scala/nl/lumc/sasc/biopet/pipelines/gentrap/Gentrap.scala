@@ -30,6 +30,7 @@ import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, SortSam, MergeSamFiles }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
@@ -640,6 +641,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
+    /** General metrics job, only when library > 1 */
+    private lazy val bamMetricsModule: Option[BamMetrics] = (libraries.size > 1)
+      .option {
+        val mod = new BamMetrics(qscript)
+        mod.inputBam = alnFile
+        mod.outputDir = new File(sampleDir, "metrics")
+        mod.sampleId = Option(sampleId)
+        mod
+      }
+
     /** Picard CollectRnaSeqMetrics job, only when library > 1 */
     private lazy val collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (libraries.size > 1)
       .option {
@@ -699,6 +710,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       // general RNA-seq metrics, if there are > 1 library
       collectRnaSeqMetricsJob match {
         case Some(j)  => add(j); addSummarizable(j, "rna_metrics")
+        case None     => ;
+      }
+      bamMetricsModule match {
+        case Some(m)  =>
+          m.init()
+          m.biopetScript()
+          addAll(m.functions)
+          addSummaryQScript(m)
         case None     => ;
       }
       // add strand-specific jobs if defined
