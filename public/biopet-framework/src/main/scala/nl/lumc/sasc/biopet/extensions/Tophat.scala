@@ -22,20 +22,28 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "FastQ file R1", shortName = "R1")
-  var R1: File = _
 
-  @Input(doc = "FastQ file R2", shortName = "R2", required = false)
-  var R2: File = _
+  @Input(doc = "FastQ file(s) R1", shortName = "R1")
+  var R1: List[File] = List.empty[File]
 
-  @Input(doc = "Bowtie index", shortName = "bti")
-  var bowtie_index: File = config("bowtie_index")
+  @Input(doc = "FastQ file(s) R2", shortName = "R2", required = false)
+  var R2: List[File] = List.empty[File]
 
-  @Argument(doc = "Output Directory")
-  var outputDir: String = _
+  /** output files, computed automatically from output directory */
 
-  @Output(doc = "Output file SAM", shortName = "output")
-  var output: File = _
+  @Output(doc = "Output SAM/BAM file")
+  lazy val outputGtf: File = {
+    require(R1.nonEmpty && output_dir != null,
+      "Read 1 input(s) are defined and output directory is defined")
+    // cufflinks always outputs a transcripts.gtf file in the output directory
+    new File(output_dir, "accepted_hits.bam")
+  }
+
+  @Argument(doc = "Bowtie index", shortName = "bti", required = true)
+  var bowtie_index: String = config("bowtie_index")
+
+  /** write all output files to this directory [./] */
+  var output_dir: File = config("output_dir", default = new File("tophat_out"))
 
   // options set via API or config
   //  var numrecords: String = config("numrecords", default = "all")
@@ -56,25 +64,18 @@ class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
   //  var logfile: String = config("logfile")
 
   executable = config("exe", default = "tophat", freeVar = false)
+
   override val versionRegex = """TopHat v(.*)""".r
   override val versionExitcode = List(0, 1)
+  override def versionCommand = executable + " --version"
 
   override val defaultVmem = "4G"
   override val defaultThreads = 8
 
-  override def versionCommand = executable + " --version"
+  //override def beforeGraph = {}
 
-  override def beforeGraph() {
-    if (!outputDir.endsWith("/")) outputDir += "/"
-    output = new File(outputDir + "accepted_hits.bam")
-  }
-
-  def cmdLine: String = {
-    var cmd: String = required(executable) +
-      optional("-p", nCoresRequest) +
-      "--no-convert-bam" +
-      required(bowtie_index) +
-      required(R1) + optional(R2)
-    return cmd
-  }
+  def cmdLine: String = required(executable) +
+    required(bowtie_index) +
+    required(R1.mkString(",")) +
+    optional(R2.mkString(","))
 }
