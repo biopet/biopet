@@ -279,6 +279,24 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     job
   }
 
+  /** General function to create CollectRnaSeqMetrics job, for per-sample and per-library runs */
+  protected def makeCollectRnaSeqMetricsJob(alnFile: File, outMetrics: File,
+                                            outChart: Option[File] = None): CollectRnaSeqMetrics = {
+    val job = new CollectRnaSeqMetrics(qscript)
+    job.input = alnFile
+    job.output = outMetrics
+    job.refFlat = annotationRefFlat
+    job.chartOutput = outChart
+    job.assumeSorted = true
+    job.strandSpecificity = strandProtocol match {
+      case NonSpecific => Option(StrandSpecificity.NONE.toString)
+      case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
+      case _           => throw new IllegalStateException
+    }
+    job.ribosomalIntervals = ribosomalRefFlat
+    job
+  }
+
   /** Steps to run before biopetScript */
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
@@ -338,7 +356,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     /** Summary files of the sample */
     def summaryFiles: Map[String, File] = Map(
       "alignment" -> alnFile,
-      "metrics" -> collectRnaSeqMetricsJob.output
     ) ++ Map(
         "gene_fragments_count" -> geneFragmentsCount,
         "exon_fragments_count" -> exonFragmentsCount,
@@ -621,21 +638,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Picard CollectRnaSeqMetrics job */
-    private def collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
-      val job = new CollectRnaSeqMetrics(qscript)
-      job.input = alnFile
-      job.output = createFile(".rna_metrics")
-      job.refFlat = annotationRefFlat
-      job.chartOutput = Option(createFile(".coverage_bias.pdf"))
-      job.assumeSorted = true
-      job.strandSpecificity = strandProtocol match {
-        case NonSpecific => Option(StrandSpecificity.NONE.toString)
-        case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
-        case _           => throw new IllegalStateException
-      }
-      job.ribosomalIntervals = ribosomalRefFlat
-      job
-    }
+    private lazy val collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
+      makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
 
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
@@ -732,6 +736,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
 
+      /** Library-level RNA-seq metrics job, only when we have more than 1 library in the sample */
+      def collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (Sample.this.libraries.size > 1)
+        .option {
+          makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
+        }
+
       /** Per-library mapping job */
       def mappingJob: Mapping = {
         val job = new Mapping(qscript)
@@ -748,6 +758,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // create RNA metrics job, if defined
+        collectRnaSeqMetricsJob match {
+          case Some(j)  => add(j); addSummarizable(j, "rna_metrics")
+          case None     => ;
+        }
         qscript.addSummaryQScript(mappingJob)
       }
 
