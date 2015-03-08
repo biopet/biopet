@@ -640,9 +640,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
-    /** Picard CollectRnaSeqMetrics job */
-    private lazy val collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
-      makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
+    /** Picard CollectRnaSeqMetrics job, only when library > 1 */
+    private lazy val collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (libraries.size > 1)
+      .option {
+        makeCollectRnaSeqMetricsJob(alnFileDirty, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
+      }
 
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
@@ -694,9 +696,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       addPerLibJobs()
       // merge or symlink per-library alignments
       add(sampleAlnJob)
-      // general RNA-seq metrics
-      add(collectRnaSeqMetricsJob)
-      addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
+      // general RNA-seq metrics, if there are > 1 library
+      collectRnaSeqMetricsJob match {
+        case Some(j)  => add(j); addSummarizable(j, "rna_metrics")
+        case None     => ;
+      }
       // add strand-specific jobs if defined
       alnPlusStrandJobs.foreach(_.addAllJobs())
       alnMinusStrandJobs.foreach(_.addAllJobs())
@@ -740,10 +744,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
 
       /** Library-level RNA-seq metrics job, only when we have more than 1 library in the sample */
-      def collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (Sample.this.libraries.size > 1)
-        .option {
-          makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
-        }
+      def collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
+        makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
 
       /** Per-library mapping job */
       def mappingJob: Mapping = {
@@ -761,11 +763,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
-        // create RNA metrics job, if defined
-        collectRnaSeqMetricsJob match {
-          case Some(j)  => add(j); addSummarizable(j, "rna_metrics")
-          case None     => ;
-        }
+        // create RNA metrics job
+        add(collectRnaSeqMetricsJob)
+        addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
         qscript.addSummaryQScript(mappingJob)
       }
 
