@@ -30,10 +30,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cufflinks")
 
   /** default threads */
-  override def defaultThreads = num_threads.getOrElse(1)
+  override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override def defaultVmem = "4G"
+  override val defaultVmem = "4G"
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
@@ -194,7 +194,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine =
     required(executable) +
       required("--output-dir", output_dir) +
-      optional("--num-threads", num_threads) +
+      optional("--num-threads", nCoresRequest) +
       optional("--seed", seed) +
       optional("--GTF", GTF) +
       optional("--GTF-guide", GTF_guide) +

@@ -23,10 +23,10 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "gsnap", freeVar = false)
 
   /** default threads */
-  override def defaultThreads = nthreads.getOrElse(1)
+  override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override def defaultVmem = "4G"
+  override val defaultVmem = "4G"
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
@@ -371,7 +371,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--use-tally", use_tally) +
       optional("--runlengthdir", runlengthdir) +
       optional("--use-runlength", use_runlength) +
-      optional("--nthreads", nthreads) +
+      optional("--nthreads", nCoresRequest) +
       optional("--gmap-mode", gmap_mode) +
       optional("--trigger-score-for-gmap", trigger_score_for_gmap) +
       optional("--gmap-min-match-length", gmap_min_match_length) +
