@@ -351,11 +351,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
 
     /** Summary stats of the sample */
-    def summaryStats: Map[String, Any] = Map()
+    def summaryStats: Map[String, Any] = Map(
+      "all_paired" -> allPaired,
+      "all_single" -> allSingle
+    )
 
     /** Summary files of the sample */
     def summaryFiles: Map[String, File] = Map(
-      "alignment" -> alnFile,
+      "alignment" -> alnFile
     ) ++ Map(
         "gene_fragments_count" -> geneFragmentsCount,
         "exon_fragments_count" -> exonFragmentsCount,
