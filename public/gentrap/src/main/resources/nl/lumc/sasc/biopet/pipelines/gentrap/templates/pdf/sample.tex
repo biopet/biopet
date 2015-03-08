@@ -1,7 +1,9 @@
 \part{Sample "((( sample.name )))" Results}
 \label{sample:(((sample.name)))}
 
+((* if sample.libs|length > 1 *))
 ((* include "sample_mapping.tex" *))
+((* endif *))
 
 ((* for lib in sample.libs.values() *))
 ((* include "lib.tex" *))

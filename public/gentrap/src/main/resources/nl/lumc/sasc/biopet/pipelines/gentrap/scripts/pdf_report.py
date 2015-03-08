@@ -422,9 +422,9 @@ class GentrapLib(object):
         # insert size metrics files
         self.inserts_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("insert_size_metrics", {})
         # rna metrics files and stats
+        self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
         _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
         if _rmetrics:
-            self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
             self.rna_metrics = {k: v for k, v in _rmetrics.items() }
             pf_bases = float(_rmetrics["pf_bases"])
             exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
@@ -461,10 +461,15 @@ class GentrapSample(object):
         self.libs = \
             {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
                 for l in self.lib_names}
+        self.is_paired_end = summary.get("gentrap", {}).get("stats", {}).get("pipeline", {})["all_paired"]
+        # mapping metrics settings
+        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
+        # insert size metrics files
+        self.inserts_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("insert_size_metrics", {})
         # rna metrics files and stats
+        self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
         _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
         if _rmetrics:
-            self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
             self.rna_metrics = {k: v for k, v in _rmetrics.items() }
             pf_bases = float(_rmetrics["pf_bases"])
             exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
