@@ -22,6 +22,12 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   /** default executable */
   executable = config("exe", default = "gsnap", freeVar = false)
 
+  /** default threads */
+  override def defaultThreads = nthreads.getOrElse(1)
+
+  /** default vmem for cluster jobs */
+  override def defaultVmem = "4G"
+
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
   var input: List[File] = List.empty[File]
