@@ -690,6 +690,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       add(sampleAlnJob)
       // general RNA-seq metrics
       add(collectRnaSeqMetricsJob)
+      addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
       // add strand-specific jobs if defined
       alnPlusStrandJobs.foreach(_.addAllJobs())
       alnMinusStrandJobs.foreach(_.addAllJobs())
