@@ -23,6 +23,7 @@ import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 import scala.io.Source
 
+/** Extension for md5sum */
 class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input")
   var input: File = _
@@ -32,17 +33,13 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "md5sum")
 
+  /** return commandline to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
-
-  def getSummary: Json = {
-    val data = Source.fromFile(output).mkString.split(" ")
-    return ("path" := output.getAbsolutePath) ->:
-      ("md5sum" := data(0)) ->:
-      jEmptyObject
-  }
 }
 
+/** Object for constructors for md5sum */
 object Md5sum {
+  /** Makes md5sum with md5 file in given dir */
   def apply(root: Configurable, fastqfile: File, outDir: File): Md5sum = {
     val md5sum = new Md5sum(root)
     md5sum.input = fastqfile
@@ -50,6 +47,7 @@ object Md5sum {
     return md5sum
   }
 
+  /** Makes md5sum with md5 file in same dir as input file */
   def apply(root: Configurable, file: File): Md5sum = {
     val md5sum = new Md5sum(root)
     md5sum.input = file

@@ -23,6 +23,7 @@ import argonaut._, Argonaut._
 import scalaz._, Scalaz._
 import scala.io.Source
 
+/** Extension for sha1sum */
 class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file")
   var input: File = _
@@ -32,21 +33,16 @@ class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "sha1sum")
 
+  /** Set correct output files */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
-
-  def getSummary: Json = {
-    val data = Source.fromFile(output).mkString.split(" ")
-    return ("path" := output.getAbsolutePath) ->:
-      ("sha1sum" := data(0)) ->:
-      jEmptyObject
-  }
 }
 
 object Sha1sum {
-  def apply(root: Configurable, fastqfile: File, outDir: String): Sha1sum = {
+  /** Create default sha1sum */
+  def apply(root: Configurable, input: File, outDir: File): Sha1sum = {
     val sha1sum = new Sha1sum(root)
-    sha1sum.input = fastqfile
-    sha1sum.output = new File(outDir + fastqfile.getName + ".sha1")
+    sha1sum.input = input
+    sha1sum.output = new File(outDir, input.getName + ".sha1")
     return sha1sum
   }
 }

@@ -21,6 +21,11 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
+/**
+ * Extension for gubbins
+ * See; https://github.com/sanger-pathogens/gubbins
+ * No version known
+ */
 class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
@@ -47,6 +52,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var verbose: Boolean = config("verbose", default = false)
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
+  /** Set correct output files */
   override def beforeGraph: Unit = {
     super.beforeGraph
     require(outputDirectory != null)
@@ -63,6 +69,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
     for (t <- out) outputFiles ::= new File(outputDirectory + File.separator + prefix.getOrElse("gubbins") + t)
   }
 
+  /** Return command to execute */
   def cmdLine = required("cd", outputDirectory) + " && " + required(executable) +
     optional("--outgroup", outgroup) +
     optional("--starting_tree", startingTree) +

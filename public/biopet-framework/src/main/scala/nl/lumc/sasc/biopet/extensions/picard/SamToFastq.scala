@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard SamToFastq */
 class SamToFastq(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.SamToFastq"
 
@@ -70,6 +71,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   @Argument(doc = "includeNonPrimaryAlignments", required = false)
   var includeNonPrimaryAlignments: Boolean = config("includeNonPrimaryAlignments", default = false)
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("FASTQ=", fastqR1, spaceSeparated = false) +
@@ -90,11 +92,12 @@ class SamToFastq(val root: Configurable) extends Picard {
 }
 
 object SamToFastq {
+  /** Returns default SamToFastq */
   def apply(root: Configurable, input: File, fastqR1: File, fastqR2: File = null): SamToFastq = {
     val samToFastq = new SamToFastq(root)
     samToFastq.input = input
     samToFastq.fastqR1 = fastqR1
     samToFastq.fastqR2 = fastqR2
-    return samToFastq
+    samToFastq
   }
 }

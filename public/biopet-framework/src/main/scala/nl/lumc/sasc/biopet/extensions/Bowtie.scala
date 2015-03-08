@@ -21,6 +21,11 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/**
+ * Extension for bowtie 1
+ *
+ * Based on version 1.1.1
+ */
 class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
@@ -53,6 +58,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
 
+  /** return commandline to execute */
   def cmdLine = {
     required(executable) +
       optional("--threads", nCoresRequest) +

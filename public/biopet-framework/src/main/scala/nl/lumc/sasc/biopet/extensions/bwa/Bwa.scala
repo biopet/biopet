@@ -3,6 +3,8 @@ package nl.lumc.sasc.biopet.extensions.bwa
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
 /**
+ * General bwa extension
+ *
  * Created by pjvan_thof on 1/16/15.
  */
 abstract class Bwa extends BiopetCommandLineFunction {

@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard CollectAlignmentSummaryMetrics */
 class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectAlignmentSummaryMetrics"
 
@@ -50,6 +51,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stopAfter")
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -63,6 +65,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
 
   def summaryFiles: Map[String, File] = Map()
 
+  /** Returns stats for summary */
   def summaryStats: Map[String, Any] = {
     val (header, content) = Picard.getMetrics(output)
 
@@ -79,6 +82,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
 }
 
 object CollectAlignmentSummaryMetrics {
+  /** Returns default CollectAlignmentSummaryMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectAlignmentSummaryMetrics = {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input

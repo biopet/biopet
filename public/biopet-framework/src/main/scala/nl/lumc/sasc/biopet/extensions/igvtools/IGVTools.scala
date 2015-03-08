@@ -6,6 +6,7 @@ package nl.lumc.sasc.biopet.extensions.igvtools
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
+/** General igvtools extension */
 abstract class IGVTools extends BiopetCommandLineFunction {
   executable = config("exe", default = "igvtools", submodule = "igvtools", freeVar = false)
   override def versionCommand = executable + " version"
