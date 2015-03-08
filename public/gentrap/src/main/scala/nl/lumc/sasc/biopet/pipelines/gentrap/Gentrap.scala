@@ -619,7 +619,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     /** Picard CollectRnaSeqMetrics job */
     private def collectRnaSeqMetricsJob: CollectRnaSeqMetrics = {
       val job = new CollectRnaSeqMetrics(qscript)
-      job.input = alnFileDirty
+      job.input = alnFile
       job.output = createFile(".rna_metrics")
       job.refFlat = annotationRefFlat
       job.chartOutput = Option(createFile(".coverage_bias.pdf"))
