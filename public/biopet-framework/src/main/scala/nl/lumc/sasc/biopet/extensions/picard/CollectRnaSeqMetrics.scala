@@ -71,10 +71,8 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     "metrics" -> output,
     "annotation" -> refFlat
   ) ++ Map(
-      "ribosomal_intervals" -> ribosomalIntervals
-    // TODO: this is disabled now since the file *may* not exist (e.g. when gene coverage is low)
-    //       and it breaks the summary md5 creation
-    //"output_chart" -> chartOutput
+      "ribosomal_intervals" -> ribosomalIntervals,
+      "output_chart" -> chartOutput
     ).collect { case (key, Some(value)) => key -> value }
 
   def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
