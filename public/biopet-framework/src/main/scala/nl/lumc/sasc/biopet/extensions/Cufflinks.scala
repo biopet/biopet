@@ -29,6 +29,12 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   /** default executable */
   executable = config("exe", default = "cufflinks")
 
+  /** default threads */
+  override def defaultThreads = num_threads.getOrElse(1)
+
+  /** default vmem for cluster jobs */
+  override def defaultVmem = "4G"
+
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
   var input: File = null
