@@ -419,6 +419,31 @@ class GentrapLib(object):
             self.fastqc_r2_qc = FastQC(self.fastqc_r2_qc_files["fastqc_data"]["path"])
         # mapping metrics settings
         self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
+        # insert size metrics files
+        self.inserts_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("insert_size_metrics", {})
+        # rna metrics files and stats
+        _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
+        if _rmetrics:
+            self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
+            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
+            pf_bases = float(_rmetrics["pf_bases"])
+            exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
+            # picard uses pct_ but it's actually ratio ~ we follow their convention
+            pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
+            pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
+            self.rna_metrics.update({
+                    "exonic_bases": exonic_bases,
+                    "pct_exonic_bases_all": pct_exonic_bases_all,
+                    "pct_exonic_bases": pct_exonic_bases,
+                    "pct_aligned_bases": 1.0,
+                    "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                    "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                    "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                    "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                    "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
+            })
+            if _rmetrics.get("ribosomal_bases", "") != "":
+                self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
 
     def __repr__(self):
         return "{0}(sample=\"{1}\", lib=\"{2}\")".format(
@@ -436,6 +461,30 @@ class GentrapSample(object):
         self.libs = \
             {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
                 for l in self.lib_names}
+        # rna metrics files and stats
+        _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
+        if _rmetrics:
+            self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
+            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
+            pf_bases = float(_rmetrics["pf_bases"])
+            exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
+            # picard uses pct_ but it's actually ratio ~ we follow their convention
+            pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
+            pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
+            self.rna_metrics.update({
+                    "exonic_bases": exonic_bases,
+                    "pct_exonic_bases_all": pct_exonic_bases_all,
+                    "pct_exonic_bases": pct_exonic_bases,
+                    "pct_aligned_bases": 1.0,
+                    "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                    "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                    "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                    "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                    "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
+            })
+            if _rmetrics.get("ribosomal_bases", "") != "":
+                self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
+
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__, self.name)

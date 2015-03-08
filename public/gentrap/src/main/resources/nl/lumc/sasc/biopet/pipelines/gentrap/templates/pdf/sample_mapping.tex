@@ -1,0 +1,41 @@
+\section{Mapping}
+\label{sec:map-((( sample.name )))}
+
+\subsection{Mapping statistics}
+
+\indent
+
+
+\subsection{RNA-specific metrics}
+
+\IfFileExists{((( sample.rna_metrics_files.output_chart.path )))}
+{
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.7\textwidth]{((( sample.rna_metrics_files.output_chart.path )))}
+        \caption{Normalized coverage bias plot.}
+    \end{figure}
+}
+
+\begin{center}
+    \captionof{table}{Functional annotation metrics}
+    \label{tab:fannot-((( sample.name )))}
+    \setlength{\tabcolsep}{11pt}
+    \begin{tabular}{ l r r r }
+        \hline
+        \multirow{2}{*}{Parameter} & \multicolumn{3}{c}{Value} \\
+                                   & Count & \% of all & \% of aligned \\
+        \hline \hline
+        Total bases & ((( sample.rna_metrics.pf_bases|nice_int ))) & 100\% & - \\
+        Aligned bases & ((( sample.rna_metrics.pf_aligned_bases|nice_int ))) & ((( sample.rna_metrics.pct_aligned_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_aligned_bases|float2nice_pct )))\% \\
+        Exonic bases & ((( sample.rna_metrics.exonic_bases|nice_int ))) & ((( sample.rna_metrics.pct_exonic_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_exonic_bases|float2nice_pct )))\% \\
+            \hspace*{4mm}Coding bases & ((( sample.rna_metrics.coding_bases|nice_int ))) & ((( sample.rna_metrics.pct_coding_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_coding_bases|float2nice_pct )))\% \\
+            \hspace*{4mm}UTR bases & ((( sample.rna_metrics.utr_bases|nice_int ))) & ((( sample.rna_metrics.pct_utr_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_utr_bases|float2nice_pct )))\% \\
+        Intronic bases & ((( sample.rna_metrics.intronic_bases|nice_int ))) & ((( sample.rna_metrics.pct_intronic_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_intronic_bases|float2nice_pct )))\% \\
+        Intergenic bases & ((( sample.rna_metrics.intergenic_bases|nice_int ))) & ((( sample.rna_metrics.pct_intergenic_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_intergenic_bases|float2nice_pct )))\% \\
+        ((* if sample.rna_metrics.ribosomal_bases != "" *))
+        Ribosomal bases & ((( sample.rna_metrics.ribosomal_bases|nice_int ))) & ((( sample.rna_metrics.pct_ribosomal_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_ribosomal_bases|float2nice_pct )))\% \\
+        ((* endif *))
+        \hline
+    \end{tabular}
+\end{center}
