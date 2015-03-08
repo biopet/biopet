@@ -87,6 +87,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "novelsplicing" -> 1,
         "batch" -> 4,
         "format" -> "sam"
+      ),
+      // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
+      "picard" -> Map (
+        "programrecordid" -> "null"
       )
     ), super.defaults)
 
