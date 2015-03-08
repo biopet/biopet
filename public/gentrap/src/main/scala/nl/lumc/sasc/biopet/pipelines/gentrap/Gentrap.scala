@@ -90,7 +90,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "format" -> "sam"
       ),
       // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
-      "picard" -> Map (
+      "picard" -> Map(
         "programrecordid" -> "null"
       )
     ), super.defaults)
@@ -709,16 +709,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       add(sampleAlnJob)
       // general RNA-seq metrics, if there are > 1 library
       collectRnaSeqMetricsJob match {
-        case Some(j)  => add(j); addSummarizable(j, "rna_metrics")
-        case None     => ;
+        case Some(j) =>
+          add(j); addSummarizable(j, "rna_metrics")
+        case None => ;
       }
       bamMetricsModule match {
-        case Some(m)  =>
+        case Some(m) =>
           m.init()
           m.biopetScript()
           addAll(m.functions)
           addSummaryQScript(m)
-        case None     => ;
+        case None => ;
       }
       // add strand-specific jobs if defined
       alnPlusStrandJobs.foreach(_.addAllJobs())

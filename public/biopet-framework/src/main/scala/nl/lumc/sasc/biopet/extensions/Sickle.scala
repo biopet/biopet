@@ -96,8 +96,8 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
     if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
       line match {
         // single run
-        case sKept(num) => stats += ("num_reads_kept" -> num.toInt)
-        case sDiscarded(num) => stats += ("num_reads_discarded_total" -> num.toInt)
+        case sKept(num)              => stats += ("num_reads_kept" -> num.toInt)
+        case sDiscarded(num)         => stats += ("num_reads_discarded_total" -> num.toInt)
         // paired run
         case pPairKept(reads, pairs) => stats += ("num_reads_kept" -> reads.toInt)
         case pSingleKept(total, r1, r2) => {
@@ -116,8 +116,8 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
     if (stats.contains("num_reads_discarded_both")) {
       stats += ("num_reads_discarded_total" -> {
         stats.getOrElse("num_reads_discarded_R1", 0) + stats.getOrElse("num_reads_discarded_R2", 0) +
-        stats.getOrElse("num_reads_discarded_both", 0)
-        })
+          stats.getOrElse("num_reads_discarded_both", 0)
+      })
     }
 
     stats.toMap

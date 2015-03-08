@@ -79,7 +79,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     case None => Map()
     case Some((header, content)) =>
       (for (i <- 0 to header.size if i < content.head.size)
-      yield header(i).toLowerCase -> content.head(i)).toMap
+        yield header(i).toLowerCase -> content.head(i)).toMap
   }
 
   override def commandLine = super.commandLine +
