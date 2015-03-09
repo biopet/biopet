@@ -41,6 +41,6 @@ class Pdflatex(val root: Configurable) extends BiopetCommandLineFunction {
       required("-output-directory", outputDir) +
       required("-jobname", name) +
       required(input)
-    Seq(singleCommand, singleCommand, singleCommand).mkString(" '&&' ")
+    Seq(singleCommand, singleCommand, singleCommand).mkString(" && ")
   }
 }
