@@ -53,7 +53,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
           f match {
             case f: BiopetCommandLineFunctionTrait => {
-              f.configName -> Map("version" -> f.getVersion,
+              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None))
             }
             case _ => throw new IllegalStateException("This should not be possible")
