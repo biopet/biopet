@@ -29,7 +29,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
 
   // mpileup, varscan, fix_mpileup.py, binom_test.py, bgzip, tabix
   private def mpileup = new SamtoolsMpileup(wrapper.root) {
-    this.input = wrapper.input
+    this.input = List(wrapper.input)
     disableBaq = true
     reference = config("reference")
     depth = Option(1000000)

@@ -156,7 +156,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
                 add(baiLn)
 
                 val bamLn = Ln(qscript, oldBamFile, bamFile.get)
-                bamLn.deps :+= baiLn.out
+                bamLn.deps :+= baiLn.output
                 add(bamLn)
               }
 
@@ -197,7 +197,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         add(baiLn)
 
         val bamLn = Ln(qscript, input.head, bamFile)
-        bamLn.deps :+= baiLn.out
+        bamLn.deps :+= baiLn.output
         add(bamLn)
         Some(bamFile)
       } else {
