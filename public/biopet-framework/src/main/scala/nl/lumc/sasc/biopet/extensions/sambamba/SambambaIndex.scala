@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for sambemba index  */
 class SambambaIndex(val root: Configurable) extends Sambamba {
   override val defaultThreads = 2
 
@@ -28,6 +29,7 @@ class SambambaIndex(val root: Configurable) extends Sambamba {
   @Output(doc = "Output .bai file to")
   var output: File = _
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("index") +
     optional("-t", nCoresRequest) +

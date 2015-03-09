@@ -8,9 +8,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.ApplyRecalibration
-import nl.lumc.sasc.biopet.extensions.gatk.VariantAnnotator
-import nl.lumc.sasc.biopet.extensions.gatk.VariantRecalibrator
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ ApplyRecalibration, VariantAnnotator, VariantRecalibrator }
 import org.broadinstitute.gatk.queue.QScript
 
 class GatkVariantRecalibration(val root: Configurable) extends QScript with BiopetQScript {
@@ -26,9 +24,7 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
   var outputVcf: File = _
 
   def init() {
-    if (inputVcf == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
+    require(inputVcf != null, "Missing Output directory on gatk module")
   }
 
   def biopetScript() {
@@ -37,7 +33,7 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
     vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir)
   }
 
-  def addSnpVariantRecalibrator(inputVcf: File, dir: String): File = {
+  def addSnpVariantRecalibrator(inputVcf: File, dir: File): File = {
     val snpRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"),
       swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = false)
     if (!snpRecal.resource.isEmpty) {
@@ -54,7 +50,7 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
     }
   }
 
-  def addIndelVariantRecalibrator(inputVcf: File, dir: String): File = {
+  def addIndelVariantRecalibrator(inputVcf: File, dir: File): File = {
     val indelRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"),
       swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = true)
     if (!indelRecal.resource.isEmpty) {
@@ -71,7 +67,7 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
     }
   }
 
-  def addVariantAnnotator(inputvcf: File, bamfiles: List[File], dir: String): File = {
+  def addVariantAnnotator(inputvcf: File, bamfiles: List[File], dir: File): File = {
     val variantAnnotator = VariantAnnotator(this, inputvcf, bamfiles, swapExt(dir, inputvcf, ".vcf", ".anotated.vcf"))
     add(variantAnnotator)
     return variantAnnotator.out

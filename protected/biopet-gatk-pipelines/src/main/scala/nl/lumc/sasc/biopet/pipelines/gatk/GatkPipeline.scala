@@ -9,8 +9,10 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CombineVariants, CombineGVCFs }
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import scala.collection.JavaConversions._
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, CombineGVCFs }
 import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -18,7 +20,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript {
+class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
   qscript =>
   def this() = this(null)
 
@@ -35,23 +37,44 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
   var jointGenotyping: Boolean = config("joint_genotyping", default = false)
 
   var singleSampleCalling = config("single_sample_calling", default = true)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
   var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   val externalGvcfs = config("external_gvcfs_files", default = Nil).asFileList
 
+  def summaryFile = new File(outputDir, "GatkPipeline.summary.json")
+
+  //TODO: Add summary
+  def summaryFiles = Map()
+
+  //TODO: Add summary
+  def summarySettings = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
+
       val mapping = new Mapping(qscript)
-      mapping.sampleId = sampleId
-      mapping.libId = libId
-      mapping.outputDir = libDir + "/variantcalling/"
+      mapping.sampleId = Some(sampleId)
+      mapping.libId = Some(libId)
+      mapping.outputDir = libDir
 
       /** Library variantcalling */
       val gatkVariantcalling = new GatkVariantcalling(qscript)
+      gatkVariantcalling.doublePreProces = false
       gatkVariantcalling.sampleID = sampleId
-      gatkVariantcalling.outputDir = libDir
+      gatkVariantcalling.outputDir = new File(libDir, "variantcalling")
 
       protected def addJobs(): Unit = {
         val bamFile: Option[File] = if (config.contains("R1")) {
@@ -112,18 +135,19 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         if (bamFile.isDefined) {
           gatkVariantcalling.inputBams = List(bamFile.get)
           gatkVariantcalling.variantcalling = config("library_variantcalling", default = false)
-          gatkVariantcalling.preProcesBams = true
           gatkVariantcalling.init
           gatkVariantcalling.biopetScript
           addAll(gatkVariantcalling.functions)
         }
+
+        addSummaryQScript(mapping)
       }
     }
 
     /** sample variantcalling */
     val gatkVariantcalling = new GatkVariantcalling(qscript)
     gatkVariantcalling.sampleID = sampleId
-    gatkVariantcalling.outputDir = sampleDir + "/variantcalling/"
+    gatkVariantcalling.outputDir = new File(sampleDir, "variantcalling")
 
     protected def addJobs(): Unit = {
       addPerLibJobs()
@@ -136,12 +160,12 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       gatkVariantcalling.init
       gatkVariantcalling.biopetScript
       addAll(gatkVariantcalling.functions)
+
+      gatkVariantcalling.inputBams.foreach(x => addAll(Bam2Wig(qscript, x).functions))
     }
   }
 
   def init() {
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
   }
 
   val multisampleVariantcalling = new GatkVariantcalling(this) {
@@ -151,11 +175,13 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
 
   def biopetScript(): Unit = {
     addSamplesJobs()
+
+    addSummaryJobs
   }
 
   def addMultiSampleJobs(): Unit = {
     val gvcfFiles: List[File] = if (mergeGvcfs && externalGvcfs.size + samples.size > 1) {
-      val newFile = outputDir + "merged.gvcf.vcf.gz"
+      val newFile = new File(outputDir, "merged.gvcf.vcf.gz")
       add(CombineGVCFs(this, externalGvcfs ++ samples.map(_._2.gatkVariantcalling.scriptOutput.gvcfFile), newFile))
       List(newFile)
     } else externalGvcfs ++ samples.map(_._2.gatkVariantcalling.scriptOutput.gvcfFile)
@@ -164,7 +190,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       if (jointGenotyping) {
         val gatkGenotyping = new GatkGenotyping(this)
         gatkGenotyping.inputGvcfs = gvcfFiles
-        gatkGenotyping.outputDir = outputDir + "genotyping/"
+        gatkGenotyping.outputDir = new File(outputDir, "genotyping")
         gatkGenotyping.init
         gatkGenotyping.biopetScript
         addAll(gatkGenotyping.functions)
@@ -182,7 +208,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       }
 
       if (gatkVariantcalling.useMpileup) {
-        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, outputDir + "variantcalling/multisample.raw.vcf.gz")
+        val cvRaw = CombineVariants(this, allRawVcfFiles.toList, new File(outputDir, "variantcalling/multisample.raw.vcf.gz"))
         add(cvRaw)
         gatkVariantcalling.rawVcfInput = cvRaw.out
       }
@@ -190,7 +216,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
       multisampleVariantcalling.preProcesBams = false
       multisampleVariantcalling.doublePreProces = false
       multisampleVariantcalling.inputBams = allBamfiles.toList
-      multisampleVariantcalling.outputDir = outputDir + "variantcalling"
+      multisampleVariantcalling.outputDir = new File(outputDir, "variantcalling")
       multisampleVariantcalling.outputName = "multisample"
       multisampleVariantcalling.init
       multisampleVariantcalling.biopetScript
@@ -200,7 +226,7 @@ class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScri
         val recalibration = new GatkVariantRecalibration(this)
         recalibration.inputVcf = multisampleVariantcalling.scriptOutput.finalVcfFile
         recalibration.bamFiles = allBamfiles
-        recalibration.outputDir = outputDir + "recalibration/"
+        recalibration.outputDir = new File(outputDir, "recalibration")
         recalibration.init
         recalibration.biopetScript
       }

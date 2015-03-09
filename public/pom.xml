@@ -34,7 +34,11 @@
         <module>sage</module>
         <module>kopisu</module>
         <module>yamsvp</module>
+        <module>bam2wig</module>
         <module>carp</module>
+	    <module>toucan</module>
+        <module>shiva</module>
+        <module>basty</module>
     </modules>
     
     <properties>

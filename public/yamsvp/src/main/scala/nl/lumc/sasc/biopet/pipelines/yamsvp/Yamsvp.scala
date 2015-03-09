@@ -42,11 +42,17 @@ import org.broadinstitute.gatk.queue.engine.JobRunInfo
 class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>
   def this() = this(null)
+  def summaryFile = null
+  def summaryFiles = Map()
+  def summarySettings = Map()
 
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
+    def summaryFiles = Map()
+    def summaryStats = Map()
 
     val alignmentDir: String = sampleDir + "alignment/"
     val svcallingDir: String = sampleDir + "svcalls/"
@@ -54,13 +60,16 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
     def makeLibrary(id: String) = new Library(id)
     class Library(libraryId: String) extends AbstractLibrary(libraryId) {
       //      val runDir: String = alignmentDir + "run_" + libraryId + "/"
+      def summaryFiles = Map()
+      def summaryStats = Map()
+
       val mapping = new Mapping(qscript)
-      mapping.libId = libraryId
-      mapping.sampleId = sampleId
+      mapping.libId = Some(libraryId)
+      mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
-        mapping.input_R1 = config("R1", required = true)
-        mapping.input_R2 = config("R2", required = true)
+        mapping.input_R1 = config("R1")
+        mapping.input_R2 = config("R2")
         mapping.outputDir = libDir
 
         mapping.init

@@ -19,9 +19,17 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
+import scala.collection.mutable
+import scala.io.Source
+
+/**
+ * Extension for sickle
+ * Based on version 1.33
+ */
+class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
   @Input(doc = "R1 input")
   var input_R1: File = _
 
@@ -53,10 +61,12 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
 
-  override def afterGraph {
+  /** Sets qualityType is still empty */
+  override def beforeGraph {
     if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 
+  /** Return command to execute */
   def cmdLine = {
     var cmd: String = required(executable)
     if (input_R2 != null) {
@@ -76,4 +86,42 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--quiet", quiet) +
       " > " + required(output_stats)
   }
+
+  /** returns stats map for summary */
+  def summaryStats: Map[String, Any] = {
+    val pairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
+    val singleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+    val pairDiscarded = """FastQ paired records discarded: (\d*) \((\d*) pairs\)""".r
+    val singleDiscarded = """FastQ single records discarded: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+
+    var stats: mutable.Map[String, Int] = mutable.Map()
+
+    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
+      line match {
+        case pairKept(reads, pairs) => stats += ("num_paired_reads_kept" -> reads.toInt)
+        case singleKept(total, r1, r2) => {
+          stats += ("num_reads_kept_R1" -> r1.toInt)
+          stats += ("num_reads_kept_R2" -> r2.toInt)
+        }
+        case pairDiscarded(reads, pairs) => stats += ("num_paired_reads_discarded" -> reads.toInt)
+        case singleDiscarded(total, r1, r2) => {
+          stats += ("num_reads_discarded_R1" -> r1.toInt)
+          stats += ("num_reads_discarded_R2" -> r2.toInt)
+        }
+        case _ =>
+      }
+    }
+
+    stats.toMap
+  }
+
+  /** Merge stats incase of chunking */
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) => v1 + v2
+      case _                  => v1
+    }
+  }
+
+  def summaryFiles: Map[String, File] = Map()
 }

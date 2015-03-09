@@ -18,39 +18,40 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.{ Config }
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-/**
- * This trait creates a structured way of use multisample pipelines
- */
-trait MultiSampleQScript extends BiopetQScript {
+/** This trait creates a structured way of use multisample pipelines */
+trait MultiSampleQScript extends SummaryQScript {
+  qscript =>
+
   @Argument(doc = "Only Sample", shortName = "sample", required = false)
   private val onlySamples: List[String] = Nil
 
-  require(Config.global.map.contains("samples"), "No Samples found in config")
+  require(globalConfig.map.contains("samples"), "No Samples found in config")
 
-  /**
-   * Sample class with basic functions build in
-   * @param sampleId
-   */
-  abstract class AbstractSample(val sampleId: String) {
+  /** Sample class with basic functions build in */
+  abstract class AbstractSample(val sampleId: String) extends Summarizable {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
-    /**
-     * Library class with basic functions build in
-     * @param libId
-     */
-    abstract class AbstractLibrary(val libId: String) {
+    /** Library class with basic functions build in */
+    abstract class AbstractLibrary(val libId: String) extends Summarizable {
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
+
+      /** Name overules the one from qscript */
+      def addSummarizable(summarizable: Summarizable, name: String): Unit = {
+        qscript.addSummarizable(summarizable, name, Some(sampleId), Some(libId))
+      }
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
+        qscript.addSummarizable(this, "pipeline", Some(sampleId), Some(libId))
         currentLib = None
         currentSample = None
       }
@@ -59,7 +60,7 @@ trait MultiSampleQScript extends BiopetQScript {
       def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
 
       /** Returns library directory */
-      def libDir = sampleDir + "lib_" + libId + File.separator
+      def libDir = new File(sampleDir, "lib_" + libId)
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -80,13 +81,19 @@ trait MultiSampleQScript extends BiopetQScript {
 
     /** returns a set with library names */
     protected def libIds: Set[String] = {
-      ConfigUtils.getMapFromPath(Config.global.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+      ConfigUtils.getMapFromPath(globalConfig.map, List("samples", sampleId, "libraries")).getOrElse(Map()).keySet
+    }
+
+    /** Name overules the one from qscript */
+    def addSummarizable(summarizable: Summarizable, name: String): Unit = {
+      qscript.addSummarizable(summarizable, name, Some(sampleId))
     }
 
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
       currentSample = Some(sampleId)
       addJobs()
+      qscript.addSummarizable(this, "pipeline", Some(sampleId))
       currentSample = None
     }
 
@@ -108,7 +115,7 @@ trait MultiSampleQScript extends BiopetQScript {
     def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
 
     /** Returns sample directory */
-    def sampleDir = outputDir + "samples" + File.separator + sampleId + File.separator
+    def sampleDir = new File(outputDir, "samples" + File.separator + sampleId)
   }
 
   /** Sample type, need implementation in pipeline */
@@ -125,7 +132,7 @@ trait MultiSampleQScript extends BiopetQScript {
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def sampleIds: Set[String] = ConfigUtils.any2map(Config.global.map("samples")).keySet
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
@@ -139,7 +146,7 @@ trait MultiSampleQScript extends BiopetQScript {
   }
 
   /**
-   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
   def addMultiSampleJobs()
 

@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for sambemba markdup  */
 class SambambaMarkdup(val root: Configurable) extends Sambamba {
   override val defaultThreads = 4
 
@@ -36,6 +37,7 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
   val overflow_list_size: Option[Int] = config("overflow-list-size", default = 200000)
   val io_buffer_size: Option[Int] = config("io-buffer-size", default = 128)
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("markdup") +
     conditional(remove_duplicates, "--remove-duplicates") +

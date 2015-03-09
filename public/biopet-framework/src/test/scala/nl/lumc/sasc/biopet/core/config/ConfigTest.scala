@@ -1,9 +1,7 @@
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
@@ -30,9 +28,6 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
   @Test def testApply: Unit = {
     ConfigTest.config("m1", Nil, "k1").asString shouldBe "v2"
     ConfigTest.config("m1", Nil, "notexist", default = "default").asString shouldBe "default"
-    intercept[IllegalStateException] {
-      ConfigTest.config("m1", Nil, "notexist")
-    }
   }
 
   @Test def testMergeConfigs: Unit = {
@@ -53,7 +48,7 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
     Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "dummy", "dummy", "4", "5"), "k1")).get.asString shouldBe "v1"
   }
 
-  @DataProvider(name = "testGetValueFromMapProvider", parallel = true)
+  @DataProvider(name = "testGetValueFromMapProvider")
   def testGetValueFromMapProvider() = {
     Array(
       Array("m1", Nil, "k1", true, "v2"),

@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
+import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -54,15 +55,25 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
     super.defaults)
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     val samtoolsMpileup = new SamtoolsMpileup(this)
+  }
+
+  override def beforeCmd: Unit = {
+    if (sample == null && inputBam.exists()) {
+      val inputSam = SamReaderFactory.makeDefault.open(inputBam)
+      val readGroups = inputSam.getFileHeader.getReadGroups
+      val samples = readGroups.map(readGroup => readGroup.getSample).distinct
+      sample = samples.head
+      inputSam.close
+    }
   }
 
   override def commandLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
-      samtoolsMpileup.input = inputBam
+      samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +
       super.commandLine +

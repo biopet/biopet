@@ -17,21 +17,23 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 import scala.collection.immutable.Nil
 
-class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
+/** Extension for picard CollectInsertSizeMetrics */
+class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "The output file to write statistics to", required = true)
-  var output: File = _
+  var output: File = null
 
   @Output(doc = "Output histogram", required = true)
-  var outputHistogram: File = _
+  protected var outputHistogram: File = null
 
   @Argument(doc = "Reference file", required = false)
   var reference: File = config("reference")
@@ -54,11 +56,11 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")
 
-  override def afterGraph {
-    if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
-    //require(reference.exists)
+  override def beforeGraph {
+    outputHistogram = new File(output + ".pdf")
   }
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -69,10 +71,21 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard {
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE")
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = {
+    val (header, content) = Picard.getMetrics(output)
+    (for (i <- 0 to header.size if i < content.head.size)
+      yield (header(i).toLowerCase -> content.head(i))).toMap
+  }
 }
 
 object CollectInsertSizeMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectInsertSizeMetrics = {
+  /** Returns default CollectInsertSizeMetrics */
+  def apply(root: Configurable, input: File, outputDir: File): CollectInsertSizeMetrics = {
     val collectInsertSizeMetrics = new CollectInsertSizeMetrics(root)
     collectInsertSizeMetrics.input = input
     collectInsertSizeMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".insertsizemetrics")
