@@ -379,6 +379,7 @@ def write_template(run, template_file, logo_file):
     env.filters["nice_int"] = nice_int
     env.filters["nice_flt"] = nice_flt
     env.filters["float2nice_pct"] = float2nice_pct
+    env.filters["basename"] = path.basename
 
     # write tex template for pdflatex
     jinja_template = env.get_template(path.basename(template_file))
@@ -508,10 +509,19 @@ class GentrapRun(object):
         self.samples = \
             {s: GentrapSample(self, s, summary["samples"][s]) \
                 for s in self.sample_names}
+        self.libs = []
+        for sample in self.samples.values():
+            self.libs.extend(sample.libs.values())
+        if all([s.is_paired_end for s in self.samples.values()]):
+            self.lib_type = "all paired end"
+        elif all([not s.is_paired_end for s in self.samples.values()]):
+            self.lib_type = "all single end"
+        else:
+            self.lib_type = "mixed (single end and paired end)"
 
-        self.files = summary["gentrap"]["files"]
+        self.files = summary["gentrap"].get("files", {}).get("pipeline", {})
         self.settings = summary["gentrap"]["settings"]
-        self.version = self.settings["version"]
+        self.version = self.settings.get("version", "unknown")
         # list containing all exes
         self.all_executables = summary["gentrap"]["executables"]
         # list containing exes we want to display
@@ -520,15 +530,23 @@ class GentrapRun(object):
             ("sickle", "base quality trimming"),
             ("fastqc", "sequence metrics collection"),
             ("gsnap", "alignment"),
+            ("tophat", "alignment"),
+            ("star", "alignment"),
             ("htseqcount", "fragment counting"),
         ]
-        self.executables = {k: self.all_executables[k] for k, _ in executables}
-        for exe, desc in executables:
-            self.executables[exe]["desc"] = desc
+        self.executables = {}
+        for k, desc in executables:
+            in_summary = self.all_executables.get(k)
+            if in_summary is not None:
+                self.executables[k] = in_summary
+                self.executables[k]["desc"] = desc
         # since we get the version from the tools we use
         if self.all_executables.get("collectalignmentsummarymetrics") is not None:
             self.executables["picard"] = self.all_executables["collectalignmentsummarymetrics"]
             self.executables["picard"]["desc"] = "alignment_metrics_collection"
+            # None means we are using the Queue built in Picard
+            if self.executables["picard"].get("version") is None:
+                self.executables["picard"]["version"] = "built-in"
         # since we get the version from the sub tools we use
         if self.all_executables.get("samtoolsview") is not None:
             self.executables["samtools"] = self.all_executables["samtoolsview"]
