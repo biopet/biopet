@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for samtools flagstat */
 class SamtoolsFlagstat(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
   var input: File = _
@@ -26,6 +27,7 @@ class SamtoolsFlagstat(val root: Configurable) extends Samtools {
   @Output(doc = "output File")
   var output: File = _
 
+  /** Returns command to execute */
   def cmdLine = required(executable) + required("flagstat") + required(input) + " > " + required(output)
 }
 

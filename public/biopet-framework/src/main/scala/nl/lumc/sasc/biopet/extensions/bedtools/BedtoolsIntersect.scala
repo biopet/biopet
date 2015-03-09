@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 
+/** Extension for bedtools intersect */
 class BedtoolsIntersect(val root: Configurable) extends Bedtools {
   @Input(doc = "Input file (bed/gff/vcf/bam)")
   var input: File = _
@@ -41,6 +42,7 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
+  /** Returns command to execute */
   def cmdLine = required(executable) + required("intersect") +
     required(inputTag, input) +
     required("-b", intersectFile) +
@@ -50,6 +52,7 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
 }
 
 object BedtoolsIntersect {
+  /** Returns default bedtools intersect */
   def apply(root: Configurable, input: File, intersect: File, output: File,
             minOverlap: Double = 0, count: Boolean = false): BedtoolsIntersect = {
     val bedtoolsIntersect = new BedtoolsIntersect(root)

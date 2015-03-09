@@ -129,7 +129,7 @@ trait BastyTrait extends MultiSampleQScript {
         raxmlBoot.N = Some(1)
         raxmlBoot.n = outputName + "_boot_" + t
         add(raxmlBoot)
-        raxmlBoot.getBootstrapFile
+        raxmlBoot.getBootstrapFile.get
       }
 
       val cat = Cat(this, bootList.toList, new File(outputDir, "/boot_list"))
@@ -138,7 +138,7 @@ trait BastyTrait extends MultiSampleQScript {
       val raxmlBi = new Raxml(this)
       raxmlBi.input = concensusVariants
       raxmlBi.t = raxmlMl.getBestTreeFile
-      raxmlBi.z = cat.output
+      raxmlBi.z = Some(cat.output)
       raxmlBi.m = config("raxml_ml_model", default = "GTRGAMMAX")
       raxmlBi.p = Some(seed)
       raxmlBi.f = "b"
@@ -148,7 +148,7 @@ trait BastyTrait extends MultiSampleQScript {
 
       val gubbins = new RunGubbins(this)
       gubbins.fastafile = concensusVariants
-      gubbins.startingTree = Some(raxmlBi.getBipartitionsFile)
+      gubbins.startingTree = raxmlBi.getBipartitionsFile
       gubbins.outputDirectory = dirSufixGubbins
       add(gubbins)
     }

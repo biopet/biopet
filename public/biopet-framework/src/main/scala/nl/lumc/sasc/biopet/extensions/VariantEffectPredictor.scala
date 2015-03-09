@@ -7,6 +7,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
+ * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction {
@@ -134,6 +135,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     }
   }
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required(vep_script) +
     required("-i", input) +

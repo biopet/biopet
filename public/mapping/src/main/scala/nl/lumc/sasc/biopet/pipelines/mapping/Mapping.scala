@@ -20,7 +20,7 @@ import java.io.File
 import java.util.Date
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
@@ -163,9 +163,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (
-      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    else if (skipFlexiprep) {
+      chunks += (outputDir -> (
+        extractIfNeeded(input_R1, flexiprep.outputDir),
+        if (paired) extractIfNeeded(input_R2.get, outputDir) else "")
+      )
+    } else chunks += (outputDir -> (
+      flexiprep.outputFiles("fastq_input_R1"),
+      if (paired) flexiprep.outputFiles("fastq_input_R2") else "")
     )
 
     if (chunking) {
@@ -441,6 +446,32 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     return RG.substring(0, RG.lastIndexOf("\\t"))
   }
+
+  //FIXME: This is code duplication from flexiprep, need general class to pass jobs inside a util function
+  /**
+   * Extracts file if file is compressed
+   * @param file
+   * @param runDir
+   * @return returns extracted file
+   */
+  def extractIfNeeded(file: File, runDir: File): File = {
+    if (file == null) return file
+    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+      var newFile: File = swapExt(runDir, file, ".gz", "")
+      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
+      val zcatCommand = Zcat(this, file, newFile)
+      zcatCommand.isIntermediate = true
+      add(zcatCommand)
+      return newFile
+    } else if (file.getName().endsWith(".bz2")) {
+      val newFile = swapExt(runDir, file, ".bz2", "")
+      val pbzip2 = Pbzip2(this, file, newFile)
+      pbzip2.isIntermediate = true
+      add(pbzip2)
+      return newFile
+    } else return file
+  }
+
 }
 
 object Mapping extends PipelineCommand

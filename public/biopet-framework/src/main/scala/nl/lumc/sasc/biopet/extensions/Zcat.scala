@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for zcat */
 class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Zipped file")
   var input: File = _
@@ -29,10 +30,12 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "zcat")
 
+  /** Returns command to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 }
 
 object Zcat {
+  /** Returns a default zcat */
   def apply(root: Configurable, input: File, output: File): Zcat = {
     val zcat = new Zcat(root)
     zcat.input = input

@@ -25,6 +25,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.mutable
 import scala.io.Source
 
+/**
+ * Extension for sickle
+ * Based on version 1.33
+ */
 class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
   @Input(doc = "R1 input")
   var input_R1: File = _
@@ -57,10 +61,12 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   override val versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
 
+  /** Sets qualityType is still empty */
   override def beforeGraph {
     if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 
+  /** Return command to execute */
   def cmdLine = {
     var cmd: String = required(executable)
     if (input_R2 != null) {
@@ -81,6 +87,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
       " > " + required(output_stats)
   }
 
+  /** returns stats map for summary */
   def summaryStats: Map[String, Any] = {
     val pairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
     val singleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
@@ -108,6 +115,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
     stats.toMap
   }
 
+  /** Merge stats incase of chunking */
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
       case (v1: Int, v2: Int) => v1 + v2
