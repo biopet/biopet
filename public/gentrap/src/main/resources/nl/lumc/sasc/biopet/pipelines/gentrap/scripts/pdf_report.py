@@ -510,9 +510,29 @@ class GentrapRun(object):
                 for s in self.sample_names}
 
         self.files = summary["gentrap"]["files"]
-        self.executables = summary["gentrap"]["executables"]
         self.settings = summary["gentrap"]["settings"]
         self.version = self.settings["version"]
+        # list containing all exes
+        self.all_executables = summary["gentrap"]["executables"]
+        # list containing exes we want to display
+        executables = [
+            ("cutadapt", "adapter clipping"),
+            ("sickle", "base quality trimming"),
+            ("fastqc", "sequence metrics collection"),
+            ("gsnap", "alignment"),
+            ("htseqcount", "fragment counting"),
+        ]
+        self.executables = {k: self.all_executables[k] for k, _ in executables}
+        for exe, desc in executables:
+            self.executables[exe]["desc"] = desc
+        # since we get the version from the tools we use
+        if self.all_executables.get("collectalignmentsummarymetrics") is not None:
+            self.executables["picard"] = self.all_executables["collectalignmentsummarymetrics"]
+            self.executables["picard"]["desc"] = "alignment_metrics_collection"
+        # since we get the version from the sub tools we use
+        if self.all_executables.get("samtoolsview") is not None:
+            self.executables["samtools"] = self.all_executables["samtoolsview"]
+            self.executables["samtools"]["desc"] = "various post-alignment processing"
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__,

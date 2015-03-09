@@ -66,7 +66,32 @@
 \label{sec:intro}
 
 This document outlines the results obtained from running Gentrap, a generic
-pipeline for transcriptome analysis.
+pipeline for transcriptome analysis. The pipeline itself is composed of several
+programs, listed in Table~\ref{tab:programs}. Note that the list only contains
+the programs used in this pipeline run.
+
+\begin{center}
+    \captionof{table}{Programs in Gentrap}
+    \label{tab:programs}
+    \begin{longtable}{ l l l p{0.2\textwidth} }
+            \hline
+            Program & Version & Checksum & Usage\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{3}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        Gentrap & ((( run.version ))) & - & the full pipeline\\
+        ((* for program, info in run.executables.items()|sort *))
+            ((( program ))) & ((( info.version ))) & ((( info.md5|truncate(7, True, "") ))) & ((( info.desc )))\\
+        ((* endfor *))
+    \end{longtable}
+\end{center}
+% HACK: to keep table counters in sync
+\addtocounter{table}{-1}
 
 \clearpage
 
