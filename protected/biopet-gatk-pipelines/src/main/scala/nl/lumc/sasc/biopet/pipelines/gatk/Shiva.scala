@@ -36,15 +36,21 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     /** Class will generate library jobs */
     class Library(libId: String) extends super.Library(libId) {
 
+      val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
+      val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
+
+      /** Return true when baserecalibration is executed */
+      protected def doneBaseRecalibrator: Boolean = {
+        val br = new BaseRecalibrator(qscript)
+        useBaseRecalibration && !br.knownSites.isEmpty
+      }
+
       /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
       override def preProcess(input: File): Option[File] = {
-        val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
-        val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
-
-        if (!useIndelRealigner && !useBaseRecalibration) None
+        if (!useIndelRealigner && !doneBaseRecalibrator) None
         else {
           val indelRealignFile = useIndelRealigner match {
-            case true  => addIndelRealign(input, libDir, useBaseRecalibration || libraries.size > 1)
+            case true  => addIndelRealign(input, libDir, doneBaseRecalibrator || libraries.size > 1)
             case false => input
           }
 
