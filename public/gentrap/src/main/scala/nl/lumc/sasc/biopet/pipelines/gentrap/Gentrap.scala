@@ -244,9 +244,15 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
   /** Files that will be listed in the summary file */
-  def summaryFiles: Map[String, File] =
+  def summaryFiles: Map[String, File] = Map(
+    "annotation_refflat" -> annotationRefFlat
+  ) ++ Map(
+      "annotation_gtf" -> annotationGtf,
+      "annotation_bed" -> annotationBed,
+      "ribosome_refflat" -> ribosomalRefFlat
+    ).collect { case (key, Some(value)) => key -> value } ++
     mergeTableJobs.collect { case (key, Some(value)) => key -> value.output } ++
-      heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
+    heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
 
   /** Statistics shown in the summary file */
   def summaryStats: Map[String, Any] = Map()
@@ -254,14 +260,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map(
     "aligner" -> aligner,
-    "expression_measures" -> expMeasures.map(_.toString),
-    "strand_protocol" -> strandProtocol,
-    "annotation_refflat" -> annotationRefFlat,
+    "expression_measures" -> expMeasures.toList.map(_.toString),
+    "strand_protocol" -> strandProtocol.toString,
+    "call_variants" -> callVariants,
+    "remove_ribosomal_reads" -> removeRibosomalReads,
     "version" -> version
-  ) ++ Map(
-      "annotation_gtf" -> annotationGtf,
-      "annotation_bed" -> annotationBed
-    ).collect { case (key, Some(value)) => key -> value }
+  )
 
   /** Job for writing PDF report template */
   protected lazy val pdfTemplateJob: PdfReportTemplateWriter = {
