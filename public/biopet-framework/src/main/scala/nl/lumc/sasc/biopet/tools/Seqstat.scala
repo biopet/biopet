@@ -194,6 +194,9 @@ object Seqstat extends ToolCommand {
     val readQual = record.getBaseQualityString
     val readNucleotides = record.getReadString
 
+    if (record.length >= readStats.lengths.size) // Extends array when length not yet possible
+      (0 to (record.length - readStats.lengths.size)).foreach(_ => readStats.lengths.append(0))
+
     readStats.lengths(record.length) += 1
 
     for (t <- 0 until record.length()) {
