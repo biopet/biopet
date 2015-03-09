@@ -126,7 +126,7 @@ plotHeatmap <- function(in.data, out.name=OUTPUT.PLOT, count.type=COUNT.TYPE, tm
   dev.off()
 }
 
-plotPlaceholder <- function(out.name=OUTPUT.PLOT, text.display="Not enough data points for plotting") {
+plotPlaceholder <- function(text.display, out.name=OUTPUT.PLOT) {
   png(out.name, height=800, width=800, res=100)
   par(mar=c(0,0,0,0))
   plot(c(0, 1), c(0, 1), ann=F, bty='n', type='n', xaxt='n', yaxt='n')
@@ -139,7 +139,7 @@ plotPlaceholder <- function(out.name=OUTPUT.PLOT, text.display="Not enough data 
 parsed <- tryCatch(
     prepTable(INPUT.PATH),
     error=function (e) {
-        plotPlaceholder(text.display="Error occured during table parsing")
+        plotPlaceholder(text.display="Error occured during table prep")
         q(status=0)
     })
 
@@ -147,5 +147,5 @@ if (nrow(parsed) > 0) {
   cors <- cor(parsed, method="spearman")
   tryCatch(plotHeatmap(cors), error=function (e) plotPlaceholder(text.display="Error occured during plotting"))
 } else {
-  plotPlaceholder()
+  plotPlaceholder(text.display="Not enough data points for plotting")
 }
