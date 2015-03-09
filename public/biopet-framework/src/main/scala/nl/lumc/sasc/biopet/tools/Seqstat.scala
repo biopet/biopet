@@ -211,10 +211,7 @@ object Seqstat extends ToolCommand {
       readStats.qual ++= mutable.ArrayBuffer.fill(avgQual - readStats.qual.length + 1)(0)
     }
     readStats.qual(avgQual) += 1
-    readStats.withN += {
-      if (readNucleotides.contains("N")) 1L
-      else 0L
-    }
+    if (readNucleotides.contains("N")) readStats.withN += 1L
   }
 
   /**
