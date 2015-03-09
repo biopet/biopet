@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
-import nl.lumc.sasc.biopet.extensions.Gsnap
+import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
@@ -209,6 +209,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
         case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
+        // TODO: make TopHat here accept multiple input files
+        case "tophat"     => addTophat(R1, R2, outputBam, deps)
         case "stampy"     => addStampy(R1, R2, outputBam, deps)
         case "star"       => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
@@ -346,6 +348,34 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.output
   }
 
+  def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
+    // TODO: merge mapped and unmapped BAM ~ also dealing with validation errors in the unmapped BAM
+    val tophat = new Tophat(this)
+    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
+    tophat.R1 = tophat.R1 :+ R1
+    if (R2 != null && R2.getPath != "") tophat.R2 = tophat.R2 :+ R2
+    tophat.output_dir = new File(outputDir, "tophat_out")
+    // always output BAM
+    tophat.no_convert_bam = false
+    tophat.deps = deps
+    // always output BAM
+    tophat.no_convert_bam = false
+    add(tophat)
+
+    val ln = new Ln(this)
+    ln.input = tophat.outputAcceptedHits
+    ln.output = swapExt(output.getParent, output, ".bam", ".raw.bam")
+    add(ln)
+
+    val sortSam = new SortSam(this)
+    sortSam.input = ln.output
+    sortSam.output = output
+    sortSam.sortOrder = "coordinate"
+    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    add(sortSam)
+
+    sortSam.output
+  }
   /**
    * Adds stampy jobs
    * @param R1
