@@ -35,7 +35,7 @@ trait CufflinksProducer { this: Gentrap#Sample =>
     lazy val name: String = cuffType match {
       case CufflinksStrict => "cufflinks_strict"
       case CufflinksGuided => "cufflinks_guided"
-      case CufflinksBlind  => "cufflinks_blin"
+      case CufflinksBlind  => "cufflinks_blind"
       case otherwise       => throw new IllegalStateException("Unexpected cufflinks type: " + otherwise.toString)
     }
 
@@ -74,7 +74,7 @@ trait CufflinksProducer { this: Gentrap#Sample =>
     lazy val isoformFpkmJob: Ln = {
       val job = new Ln(pipeline)
       job.input = cufflinksJob.outputIsoformsFpkm
-      job.output = new File(cufflinksJob.output_dir, s"$sampleId.isoformss_fpkm_$name")
+      job.output = new File(cufflinksJob.output_dir, s"$sampleId.isoforms_fpkm_$name")
       job
     }
   }
