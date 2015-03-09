@@ -38,7 +38,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
 
       /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
       override def preProcess(input: File): Option[File] = {
-        val useIndelRealigner: Boolean = config("use_indel_realign", default = true)
+        val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
         val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
 
         if (!useIndelRealigner && !useBaseRecalibration) None
@@ -61,7 +61,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       if (input.size <= 1) super.addDoublePreProcess(input)
       else super.addDoublePreProcess(input, true).collect {
         case file => {
-          config("use_indel_realign", default = true).asBoolean match {
+          config("use_indel_realigner", default = true).asBoolean match {
             case true  => addIndelRealign(file, sampleDir, false)
             case false => file
           }

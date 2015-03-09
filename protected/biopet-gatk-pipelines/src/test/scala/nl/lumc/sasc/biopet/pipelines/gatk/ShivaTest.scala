@@ -48,7 +48,9 @@ class ShivaTest extends TestNGSuite with Matchers {
       ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library,
-        "use_analyze_covariates" -> covariates, "use_indel_realign" -> realign, "use_base_recalibration" -> baseRecalibration), m.toMap)
+        "use_analyze_covariates" -> covariates,
+        "use_indel_realigner" -> realign,
+        "use_base_recalibration" -> baseRecalibration), m.toMap)
 
     }
 
