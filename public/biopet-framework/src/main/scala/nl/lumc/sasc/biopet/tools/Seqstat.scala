@@ -164,14 +164,11 @@ object Seqstat extends ToolCommand {
 
   case class ReadStat(qual: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer(),
                       nuc: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
-                      var withN: Long,
+                      var withN: Long = 0L,
                       lengths: mutable.ArrayBuffer[Int] = mutable.ArrayBuffer())
 
   val baseStats: mutable.ArrayBuffer[BaseStat] = mutable.ArrayBuffer()
-  val readStats: ReadStat = new ReadStat(mutable.ArrayBuffer(),
-    mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
-    0L,
-    mutable.ArrayBuffer())
+  val readStats: ReadStat = new ReadStat()
 
   /**
    * Compute the quality metric per read
@@ -194,6 +191,9 @@ object Seqstat extends ToolCommand {
     val readQual = record.getBaseQualityString
     val readNucleotides = record.getReadString
 
+    if (record.length >= readStats.lengths.size) // Extends array when length not yet possible
+      (0 to (record.length - readStats.lengths.size)).foreach(_ => readStats.lengths.append(0))
+
     readStats.lengths(record.length) += 1
 
     for (t <- 0 until record.length()) {
@@ -211,10 +211,7 @@ object Seqstat extends ToolCommand {
       readStats.qual ++= mutable.ArrayBuffer.fill(avgQual - readStats.qual.length + 1)(0)
     }
     readStats.qual(avgQual) += 1
-    readStats.withN += {
-      if (readNucleotides.contains("N")) 1L
-      else 0L
-    }
+    if (readNucleotides.contains("N")) readStats.withN += 1L
   }
 
   /**
@@ -278,7 +275,7 @@ object Seqstat extends ToolCommand {
     }
 
     for (pos <- 0 until readStats.qual.length) {
-      var key: Int = pos - phredEncoding.id
+      val key: Int = pos - phredEncoding.id
       if (key > 0) {
         // count till the max of baseHistogram.length
         for (histokey <- 0 until key + 1) {
@@ -319,7 +316,7 @@ object Seqstat extends ToolCommand {
       ),
       ("stats", Map(
         ("bases", Map(
-          ("num_n", nucleotideHistoMap('N')),
+          ("num_n", nucleotideHistoMap.getOrElse('N', 0)),
           ("num_total", nucleotideHistoMap.values.sum),
           ("num_qual_gte", baseQualHistoMap.toMap),
           ("nucleotides", nucleotideHistoMap.toMap)
@@ -335,9 +332,6 @@ object Seqstat extends ToolCommand {
       ))
     )
 
-    val jsonReport: Json = {
-      ConfigUtils.mapToJson(report)
-    }
-    println(jsonReport.spaces2)
+    println(ConfigUtils.mapToJson(report).spaces2)
   }
 }
