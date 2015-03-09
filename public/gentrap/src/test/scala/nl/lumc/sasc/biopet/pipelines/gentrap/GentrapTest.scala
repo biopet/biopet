@@ -7,6 +7,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -110,13 +111,57 @@ class GentrapTest extends TestNGSuite with Matchers {
     gentrap.script()
     val functions = gentrap.functions.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
-    val numLibPerSample = sampleConfig("samples").values.toSeq.head("libraries").size
 
     functions(classOf[Gsnap]).size should be >= 1
 
     if (expMeasures.contains("fragments_per_gene")) {
       gentrap.functions
         .collect { case x: HtseqCount => x.output.toString.endsWith(".fragments_per_gene") }.size shouldBe numSamples
+    }
+
+    if (expMeasures.contains("fragments_per_exon")) {
+      gentrap.functions
+        .collect { case x: HtseqCount => x.output.toString.endsWith(".fragments_per_exon") }.size shouldBe numSamples
+    }
+
+    if (expMeasures.contains("bases_per_gene")) {
+      gentrap.functions
+        .collect { case x: AggrBaseCount => x.output.toString.endsWith(".bases_per_gene") }.size shouldBe numSamples
+    }
+
+    if (expMeasures.contains("bases_per_exon")) {
+      gentrap.functions
+        .collect { case x: AggrBaseCount => x.output.toString.endsWith(".bases_per_exon") }.size shouldBe numSamples
+    }
+
+    if (expMeasures.contains("cufflinks_strict")) {
+      gentrap.functions
+        .collect {
+          case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_strict")
+          case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_strict") ||
+            x.output.toString.endsWith(".isoforms_fpkm_cufflinks_strict")
+        }
+        .count(identity) shouldBe numSamples * 3 // three types of jobs per sample
+    }
+
+    if (expMeasures.contains("cufflinks_guided")) {
+      gentrap.functions
+        .collect {
+        case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_guided")
+        case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_guided") ||
+          x.output.toString.endsWith(".isoforms_fpkm_cufflinks_guided")
+      }
+        .count(identity) shouldBe numSamples * 3 // three types of jobs per sample
+    }
+
+    if (expMeasures.contains("cufflinks_blind")) {
+      gentrap.functions
+        .collect {
+        case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_blind")
+        case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_blind") ||
+          x.output.toString.endsWith(".isoforms_fpkm_cufflinks_blind")
+      }
+        .count(identity) shouldBe numSamples * 3 // three types of jobs per sample
     }
   }
 
