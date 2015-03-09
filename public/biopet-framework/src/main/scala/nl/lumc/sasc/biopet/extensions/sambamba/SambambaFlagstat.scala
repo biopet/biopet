@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for sambemba flagstat  */
 class SambambaFlagstat(val root: Configurable) extends Sambamba {
   override val defaultThreads = 2
 
@@ -28,31 +29,11 @@ class SambambaFlagstat(val root: Configurable) extends Sambamba {
   @Output(doc = "output File")
   var output: File = _
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("flagstat") +
     optional("-t", nCoresRequest) +
     required(input) +
     " > " +
     required(output)
-}
-
-object SambambaFlagstat {
-  def apply(root: Configurable, input: File, output: File): SambambaFlagstat = {
-    val flagstat = new SambambaFlagstat(root)
-    flagstat.input = input
-    flagstat.output = output
-    return flagstat
-  }
-
-  def apply(root: Configurable, input: File, outputDir: String): SambambaFlagstat = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
-  }
-
-  def apply(root: Configurable, input: File): SambambaFlagstat = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
-  }
-
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".flagstat"
 }

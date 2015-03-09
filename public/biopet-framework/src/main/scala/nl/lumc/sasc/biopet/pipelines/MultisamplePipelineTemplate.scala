@@ -19,46 +19,63 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript, BiopetQSc
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
+/** Template for a multisample pipeline */
 class MultisamplePipelineTemplate(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
+  /** Location of summary file */
   def summaryFile: File = new File(outputDir, "MultisamplePipelineTemplate.summary.json")
 
+  /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map()
 
+  /** Pipeline settings to add to the summary */
   def summarySettings: Map[String, Any] = Map()
 
+  /** Function to make a sample */
   def makeSample(id: String) = new Sample(id)
 
+  /** This class will contain jobs and libraries for a sample */
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    /** Sample specific files for summary */
     def summaryFiles: Map[String, File] = Map()
 
+    /** Sample specific stats for summary */
     def summaryStats: Map[String, Any] = Map()
 
+    /** Function to make a library */
     def makeLibrary(id: String) = new Library(id)
+
+    /** This class will contain all jobs for a library */
     class Library(libId: String) extends AbstractLibrary(libId) {
+      /** Library specific files for summary */
       def summaryFiles: Map[String, File] = Map()
 
+      /** Library specific stats for summary */
       def summaryStats: Map[String, Any] = Map()
 
+      /** Method to add library jobs */
       protected def addJobs(): Unit = {
-        // Library jobs
       }
     }
 
+    /** Method to add sample jobs */
     protected def addJobs(): Unit = {
-      // Sample jobs
     }
   }
 
+  /** Method where multisample jobs are added */
   def addMultiSampleJobs(): Unit = {
   }
 
+  /** This is executed before the script starts */
   def init(): Unit = {
   }
 
+  /** Method where jobs must be added */
   def biopetScript() {
   }
 }
 
+/** Object to let to generate a main method */
 object MultisamplePipelineTemplate extends PipelineCommand

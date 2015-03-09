@@ -112,6 +112,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       macs2.name = Some(sampleId)
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
+
+      addSummaryJobs
     }
   }
 

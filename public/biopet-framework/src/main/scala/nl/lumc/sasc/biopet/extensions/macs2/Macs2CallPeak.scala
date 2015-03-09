@@ -5,6 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
+/** Extension for macs2*/
 class Macs2CallPeak(val root: Configurable) extends Macs2 {
   @Input(doc = "Treatment input", required = true)
   var treatment: File = _
@@ -56,6 +57,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var broadcutoff: Option[Int] = config("broadcutoff")
   var callsummits: Boolean = config("callsummits", default = false)
 
+  /** Sets output files */
   override def beforeGraph: Unit = {
     if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
     if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
@@ -67,6 +69,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
     output_gapped = new File(outputdir + name.get + ".gappedPeak")
   }
 
+  /** Returns command to execute */
   def cmdLine = {
     required(executable) + required("callpeak") +
       required("--treatment", treatment) + /* Treatment sample */
