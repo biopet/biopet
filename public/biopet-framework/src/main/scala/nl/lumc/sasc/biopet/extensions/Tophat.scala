@@ -21,7 +21,10 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class TopHat(val root: Configurable) extends BiopetCommandLineFunction {
+/**
+ * Extension for Tophat
+ */
+class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "FastQ file(s) R1", shortName = "R1")
   var R1: List[File] = List.empty[File]

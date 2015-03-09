@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard MarkDuplicates */
 class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.sam.MarkDuplicates"
 
@@ -76,6 +77,7 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -93,8 +95,10 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
     optional("READ_NAME_REGEX=", readNameRegex, spaceSeparated = false) +
     optional("OPTICAL_DUPLICATE_PIXEL_DISTANCE=", opticalDuplicatePixelDistance, spaceSeparated = false)
 
+  /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map()
 
+  /** Returns stats for summary */
   def summaryStats: Map[String, Any] = Picard.getMetrics(outputMetrics) match {
     case None => Map()
     case Some((header, content)) =>
@@ -110,19 +114,12 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   }
 }
 object MarkDuplicates {
-  def apply(root: Configurable, input: List[File], outputDir: String): MarkDuplicates = {
-    val markDuplicates = new MarkDuplicates(root)
-    markDuplicates.input = input
-    markDuplicates.output = new File(outputDir, input.head.getName.stripSuffix(".bam") + ".dedup.bam")
-    markDuplicates.outputMetrics = new File(outputDir, input.head.getName.stripSuffix(".bam") + ".dedup.metrics")
-    return markDuplicates
-  }
-
+  /** Returns default MarkDuplicates */
   def apply(root: Configurable, input: List[File], output: File): MarkDuplicates = {
     val markDuplicates = new MarkDuplicates(root)
     markDuplicates.input = input
     markDuplicates.output = output
     markDuplicates.outputMetrics = new File(output.getParent, output.getName.stripSuffix(".bam") + ".metrics")
-    return markDuplicates
+    markDuplicates
   }
 }

@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 
+/** Extension for bedtools coverage */
 class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
@@ -45,6 +46,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
+  /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +
     required(inputTag, input) +
     required("-b", intersectFile) +
@@ -55,6 +57,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 }
 
 object BedtoolsCoverage {
+  /** Returns defaul bedtools coverage */
   def apply(root: Configurable, input: File, intersect: File, output: File,
             depth: Boolean = true, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
     val bedtoolsCoverage = new BedtoolsCoverage(root)
@@ -64,6 +67,6 @@ object BedtoolsCoverage {
     bedtoolsCoverage.depth = depth
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand
-    return bedtoolsCoverage
+    bedtoolsCoverage
   }
 }

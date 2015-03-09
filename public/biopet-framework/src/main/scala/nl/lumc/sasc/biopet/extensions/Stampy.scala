@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/** Extension for stampy */
 class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
@@ -68,12 +69,14 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def versionCommand = executable + " --help"
 
+  /** Sets readgroup when not set yet */
   override def beforeGraph: Unit = {
     super.beforeGraph
     require(readgroup != null)
   }
 
-  def cmdLine: String = {
+  /** Returns command to execute */
+  def cmdLine = {
     var cmd: String = required(executable) +
       optional("-t", nCoresRequest) +
       conditional(solexa, "--solexa") +
@@ -99,6 +102,6 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
       " -h " + required(hash) +
       " -o " + required(output) +
       " -M " + required(R1) + optional(R2)
-    return cmd
+    cmd
   }
 }

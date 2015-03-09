@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions.samtools
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
+/** General class for samtools extensions */
 abstract class Samtools extends BiopetCommandLineFunction {
   override def subPath = "samtools" :: super.subPath
   executable = config("exe", default = "samtools")

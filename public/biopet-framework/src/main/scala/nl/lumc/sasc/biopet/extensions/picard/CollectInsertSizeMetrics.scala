@@ -22,6 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 import scala.collection.immutable.Nil
 
+/** Extension for picard CollectInsertSizeMetrics */
 class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
 
@@ -57,10 +58,9 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
 
   override def beforeGraph {
     outputHistogram = new File(output + ".pdf")
-    //if (outputHistogram == null) outputHistogram = new File(output + ".pdf")
-    //require(reference.exists)
   }
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -72,6 +72,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
     optional("HISTOGRAM_WIDTH=", histogramWidth, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE")
 
+  /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
 
   def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
@@ -84,6 +85,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
 }
 
 object CollectInsertSizeMetrics {
+  /** Returns default CollectInsertSizeMetrics */
   def apply(root: Configurable, input: File, outputDir: File): CollectInsertSizeMetrics = {
     val collectInsertSizeMetrics = new CollectInsertSizeMetrics(root)
     collectInsertSizeMetrics.input = input

@@ -21,6 +21,9 @@ import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
+/**
+ * This class can execute ln as InProcessFunction or used to only generate the ln command
+ */
 class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   this.analysisName = getClass.getSimpleName
 
@@ -35,12 +38,14 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
   var relative: Boolean = true
 
+  /** Generate out file for job */
   override def freezeFieldValues(): Unit = {
     val outLog: String = ".%s.%s.out".format(output.getName, analysisName)
     jobOutputFile = new File(output.getAbsoluteFile.getParentFile, outLog)
     super.freezeFieldValues()
   }
 
+  /** return commandline to execute */
   lazy val cmd: String = {
     lazy val inCanonical: String = {
       // need to remove "/~" to correctly expand path with tilde
@@ -113,7 +118,17 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   }
 }
 
+/** Object for constructors for ln */
 object Ln {
+  /**
+   * Basis constructor
+   * @param root root object for config
+   * @param input list of files to use
+   * @param output output File
+   * @param relative make reletive links (default true)
+   * @return
+   */
+
   def apply(root: Configurable, input: File, output: File, relative: Boolean = true): Ln = {
     val ln = new Ln(root)
     ln.input = input

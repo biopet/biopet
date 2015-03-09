@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for samtools mpileup */
 class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
   var input: File = _
@@ -49,6 +50,8 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
     conditional(disableBaq, "-B")
   def cmdPipeInput = cmdBase + "-"
   def cmdPipe = cmdBase + required(input)
+
+  /** Returns command to execute */
   def cmdLine = cmdPipe + " > " + required(output)
 }
 

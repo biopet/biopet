@@ -61,6 +61,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
       throw new IllegalArgumentException("TDF file should have a .tdf file-extension"))
   }
 
+  /** Returns command to execute */
   def cmdLine = {
     required(executable) +
       required("count") +
@@ -81,10 +82,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
       required(genomeChromSizes)
   }
 
-  /**
-   * This part should never fail, these values are set within this wrapper
-   *
-   */
+  /** This part should never fail, these values are set within this wrapper */
   private def outputArg: String = {
     (tdf, wig) match {
       case (None, None)       => throw new IllegalArgumentException("Either TDF or WIG should be supplied");

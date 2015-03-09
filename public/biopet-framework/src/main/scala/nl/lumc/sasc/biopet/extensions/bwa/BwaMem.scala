@@ -22,6 +22,11 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/**
+ * Extension for bwa mem
+ *
+ * Based on version 0.7.12-r1039
+ */
 class BwaMem(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
