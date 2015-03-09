@@ -1,11 +1,20 @@
 library(rtracklayer)
+library('optparse')
+# Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
-args <- commandArgs()
+option_list <- list(
+    make_option(c("-c", "--cnv"), dest="cnv"),
+    make_option(c("-r", "--ratios"), dest="ratios"),
+    make_option(c("-o", "--output"), dest="output")
+    )
 
-dataTable <-read.table(args[5], header=TRUE);
+parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
+opt = parse_args(parser)
+
+dataTable <-read.table(opt$ratios, header=TRUE);
 ratio<-data.frame(dataTable)
 
-dataTable <- read.table(args[4], header=FALSE)
+dataTable <- read.table(opt$cnv, header=FALSE)
 cnvs<- data.frame(dataTable)
 
 ratio$Ratio[which(ratio$Ratio==-1)]=NA
@@ -55,6 +64,6 @@ if (numberOfCol==7) {
 if (numberOfCol==9) {
   names(cnvs)=c("chr","start","end","copy number","status","genotype","uncertainty","somatic/germline","precentageOfGermline","WilcoxonRankSumTestPvalue","KolmogorovSmirnovPvalue")  
 }
-write.table(cnvs, file=paste(args[4],".p.value.txt",sep=""),sep="\t",quote=F,row.names=F)
+write.table(cnvs, file=opt$output, sep="\t",quote=F,row.names=F)
 
 

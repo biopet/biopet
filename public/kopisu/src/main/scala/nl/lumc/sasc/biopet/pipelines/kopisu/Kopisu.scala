@@ -40,10 +40,21 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     *
     * R-scripts to plot FreeC results
     * */
+    val FCAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
+    FCAssessSignificancePlot.cnv = FreeC.CNVoutput
+    FCAssessSignificancePlot.ratios = FreeC.RatioOutput
+    FCAssessSignificancePlot.output = new File(outputDirectory, "freec_significant_calls.txt")
+    add(FCAssessSignificancePlot)
+
     val FCCnvPlot = new FreeCCNVPlot(this)
-    FCCnvPlot.input = FreeC.CNVoutput
+    FCCnvPlot.input = FreeC.RatioOutput
     FCCnvPlot.output = new File(outputDirectory, "freec_cnv.png")
     add(FCCnvPlot)
+
+    val FCBAFPlot = new FreeCBAFPlot(this)
+    FCBAFPlot.input = FreeC.BAFoutput
+    FCBAFPlot.output = new File(outputDirectory, "freec_baf.png")
+    add(FCBAFPlot)
 
   }
 }

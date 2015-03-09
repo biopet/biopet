@@ -45,7 +45,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   // Default of 10k bins
   var window: Option[Int] = config("window", default = 10000)
 
-  var samtools: String = config(key = "exe", submodule = "samtools")
+  var samtools_exe: String = config(key = "exe", submodule = "samtools")
 
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
   override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
@@ -109,7 +109,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
     writer.write("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) + "\n")
     writer.write("outputDir=" + this.output.getAbsolutePath + "/\n")
     writer.write("ploidy=" + this.ploidy.getOrElse(2) + "\n")
-    writer.write("samtools=" + this.samtools + "\n")
+    writer.write("samtools=" + this.samtools_exe + "\n")
     writer.write("telocentromeric=" + this.telocentromeric.getOrElse(50000) + "\n")
     writer.write("window=" + this.window.getOrElse(10000) + "\n")
 

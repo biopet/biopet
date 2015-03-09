@@ -1,20 +1,45 @@
+library('optparse')
+# Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
-args <- commandArgs()
-#Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
+option_list <- list(
+    make_option(c("-i", "--input"), dest="input"),
+    make_option(c("-o", "--output"), dest="output")
+    )
 
-dataTable <-read.table(args[4], header=TRUE);
+parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
+opt = parse_args(parser)
+
+
+#
+# Load Data
+#
+
+dataTable <-read.table(opt$input, header=TRUE);
 BAF<-data.frame(dataTable)
+chromosomes <- levels(dataTable$Chromosome)
+ppi <- 300
+plot_margins <- c(3,4,1,2)+0.1
+label_positions <- c(2,0.5,0)
 
-png(filename = args[5], sep = ""), width = 1180, height = 1180,
-    units = "px", pointsize = 20, bg = "white", res = NA)
-plot(1:10)
-op <- par(mfrow = c(5,5))
 
-for (i in c(1:22,'X','Y')) {
+png(filename = opt$output, width = 16 * ppi, height = 10 * ppi,
+    res=ppi, bg = "white")
+par(mfrow = c(6,4))
+par(mar=plot_margins)
+par(mgp=label_positions)
+
+
+for (i in chromosomes) {
     tt <- which(BAF$Chromosome==i)
     if (length(tt)>0){
     lBAF <-BAF[tt,]
-    plot(lBAF$Position,lBAF$BAF,ylim = c(-0.1,1.1),xlab = paste ("position, chr",i),ylab = "BAF",pch = ".",col = colors()[1])
+    plot(lBAF$Position,
+        lBAF$BAF,
+        ylim = c(-0.1,1.1),
+        xlab = paste ("position, chr",i),
+        ylab = "BAF",
+        pch = ".",
+        col = colors()[1])
 
     tt <- which(lBAF$A==0.5)
     points(lBAF$Position[tt],lBAF$BAF[tt],pch = ".",col = colors()[92])
