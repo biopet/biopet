@@ -66,7 +66,10 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
   }
 
-  def cmdLine: String =
+  def cmdLine: String = {
+    // FIXME: manual trigger of commandLine for version retrieval
+    mpileup.commandLine
     mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
       varscan.commandLine + " | " + compress.commandLine + " && " + index.commandLine
+  }
 }
