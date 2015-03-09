@@ -403,6 +403,7 @@ class GentrapLib(object):
         self._raw = summary
         # flexiprep settings
         self.flexiprep = summary.get("flexiprep", {})
+        self.flexiprep_files = summary.get("flexiprep", {}).get("files", {}).get("pipeline", {})
         self.clipping = not self.flexiprep["settings"]["skip_clip"]
         self.trimming = not self.flexiprep["settings"]["skip_trim"]
         self.is_paired_end = self.flexiprep["settings"]["paired"]
