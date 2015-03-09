@@ -168,7 +168,9 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
   /** Makes a vcf file from a mpileup without statistics */
   class RawVcf extends Variantcaller {
     val name = "raw"
-    protected val defaultPrio = 999
+
+    // This caller is designed as fallback when other variantcallers fails to report
+    protected val defaultPrio = Int.MaxValue
 
     /** Final output file of this mode */
     def outputFile = new File(outputDir, namePrefix + ".raw.vcf.gz")
