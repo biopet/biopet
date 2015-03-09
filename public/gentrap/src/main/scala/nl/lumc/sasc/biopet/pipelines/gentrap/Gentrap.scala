@@ -251,8 +251,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       "annotation_bed" -> annotationBed,
       "ribosome_refflat" -> ribosomalRefFlat
     ).collect { case (key, Some(value)) => key -> value } ++
-    mergeTableJobs.collect { case (key, Some(value)) => key -> value.output } ++
-    heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
+      mergeTableJobs.collect { case (key, Some(value)) => key -> value.output } ++
+      heatmapJobs.collect { case (key, Some(value)) => key -> value.output }
 
   /** Statistics shown in the summary file */
   def summaryStats: Map[String, Any] = Map()
