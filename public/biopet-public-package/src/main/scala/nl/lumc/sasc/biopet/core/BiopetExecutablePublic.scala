@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.core
 
 object BiopetExecutablePublic extends BiopetExecutable {
-  def pipelines: List[MainCommand] = List(
+  def protectedPipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
     nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
@@ -28,6 +28,12 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
     nl.lumc.sasc.biopet.pipelines.toucan.Toucan
   )
+
+  def pipelines: List[MainCommand] = List(
+    nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
+    nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
+    nl.lumc.sasc.biopet.pipelines.basty.Basty
+  ) ::: protectedPipelines
 
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.MergeTables,

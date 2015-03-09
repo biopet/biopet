@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ FileInputStream, PrintWriter, File }
 import java.security.MessageDigest
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunctionTrait, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
@@ -46,13 +46,22 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   /** Function to create summary */
   def run(): Unit = {
+    for (((name, sampleId, libraryId), summarizables) <- qscript.summarizables; summarizable <- summarizables) {
+      summarizable.addToQscriptSummary(qscript, name)
+    }
+
     val pipelineMap = {
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
       val executables: Map[String, Any] = {
         (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
           f match {
-            case f: BiopetCommandLineFunctionTrait => {
+            case f: BiopetJavaCommandLineFunction => {
+              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+                "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
+                "jar_md5" -> SummaryQScript.md5sumCache.getOrElse(f.jarFile, None))
+            }
+            case f: BiopetCommandLineFunction => {
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None))
             }

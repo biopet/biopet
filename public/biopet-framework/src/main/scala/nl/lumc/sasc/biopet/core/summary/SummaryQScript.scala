@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunctionTrait, BiopetCommandLineFunction, SampleLibraryTag, BiopetQScript }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.extensions.Md5sum
 
 import scala.collection.mutable
@@ -110,8 +110,13 @@ trait SummaryQScript extends BiopetQScript {
     }
 
     //Automatic checksums
-    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles)
+    for ((_, summarizableList) <- summarizables; summarizable <- summarizableList; (_, file) <- summarizable.summaryFiles) {
       addChecksum(file)
+      summarizable match {
+        case f: BiopetJavaCommandLineFunction => if (f.jarFile != null) addChecksum(f.jarFile)
+        case _                                =>
+      }
+    }
 
     for ((_, file) <- this.summaryFiles)
       addChecksum(file)
