@@ -22,7 +22,7 @@ import java.io.File
 /** Extension for samtools mpileup */
 class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
-  var input: File = _
+  var input: List[File] = Nil
 
   @Output(doc = "output File")
   var output: File = _
@@ -33,7 +33,8 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Interval bed")
   var intervalBed: Option[File] = config("interval_bed")
 
-  var disableBaq: Boolean = config("disable_baq")
+  var disableBaq: Boolean = config("disable_baq", default = false)
+  var u: Boolean = config("u", default = false)
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
 
@@ -43,9 +44,10 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
     optional("-l", intervalBed) +
     optional("-q", minMapQuality) +
     optional("-Q", minBaseQuality) +
-    conditional(disableBaq, "-B")
+    conditional(disableBaq, "-B") +
+    conditional(u, "-u")
   def cmdPipeInput = cmdBase + "-"
-  def cmdPipe = cmdBase + required(input)
+  def cmdPipe = cmdBase + repeat(input)
 
   /** Returns command to execute */
   def cmdLine = cmdPipe + " > " + required(output)
@@ -54,7 +56,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
 object SamtoolsMpileup {
   def apply(root: Configurable, input: File, output: File): SamtoolsMpileup = {
     val mpileup = new SamtoolsMpileup(root)
-    mpileup.input = input
+    mpileup.input = List(input)
     mpileup.output = output
     return mpileup
   }
