@@ -164,14 +164,11 @@ object Seqstat extends ToolCommand {
 
   case class ReadStat(qual: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer(),
                       nuc: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
-                      var withN: Long,
+                      var withN: Long = 0L,
                       lengths: mutable.ArrayBuffer[Int] = mutable.ArrayBuffer())
 
   val baseStats: mutable.ArrayBuffer[BaseStat] = mutable.ArrayBuffer()
-  val readStats: ReadStat = new ReadStat(mutable.ArrayBuffer(),
-    mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
-    0L,
-    mutable.ArrayBuffer())
+  val readStats: ReadStat = new ReadStat()
 
   /**
    * Compute the quality metric per read
