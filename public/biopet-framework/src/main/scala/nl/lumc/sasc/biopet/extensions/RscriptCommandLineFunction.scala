@@ -26,9 +26,12 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
   executable = config("exe", default = "Rscript", submodule = "R")
 
   /**
+   * Adding arguments in order
    *
-   *
-   *
+   * @param argName
+   * @param argValue
+   * @param dash , is the dashsign a - or -- ?
+   * @param sep using a space or "=" to specify the "connector" between argName and argValue
    */
   def addArgument(argName: String, argValue: String, dash: String = "-", sep: String = " ") = {
     arguments += "%s%s%s%s".format(dash, argName, sep, argValue)
@@ -54,6 +57,11 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
 
   }
 
+  /**
+   * Gets the R-script from within Biopet
+   *
+   * throws ResourceNotFound if script doesn't exist
+   */
   def setScript(filename: File, subpackage: String): Unit = {
     val RScript: File = new File(".queue/tmp/" + subpackage + filename)
     if (!RScript.getParentFile.exists) RScript.getParentFile.mkdirs
