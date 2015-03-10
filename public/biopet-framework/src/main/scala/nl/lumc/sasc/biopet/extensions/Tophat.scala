@@ -32,7 +32,7 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultVmem = "4G"
+  override val defaultVmem = "6G"
   override val defaultThreads = 8
 
   @Input(doc = "FastQ file(s) R1", shortName = "R1")

@@ -26,7 +26,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "4G"
+  override val defaultVmem = "6G"
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
@@ -325,10 +325,6 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
 
   override val versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
-
-  override def beforeGraph: Unit = {
-    threads = nthreads.getOrElse(1)
-  }
 
   def cmdLine = {
     required(executable) +
