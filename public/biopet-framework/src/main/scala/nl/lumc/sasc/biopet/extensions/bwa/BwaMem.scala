@@ -77,7 +77,7 @@ class BwaMem(val root: Configurable) extends Bwa {
       required("mem") +
       optional("-k", k) +
       optional("-r", r) +
-      optional("-t", nCoresRequest) +
+      optional("-t", threads) +
       optional("-R", R) +
       conditional(M, "-M") +
       conditional(S, "-S") +

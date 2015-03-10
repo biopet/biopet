@@ -51,6 +51,7 @@ class BwaAln(val root: Configurable) extends Bwa {
   /** Returns command to execute */
   def cmdLine = required(executable) +
     required("aln") +
+    optional("-t", threads) +
     optional("-n", n) +
     optional("-o", o) +
     optional("-e", e) +
