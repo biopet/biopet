@@ -61,6 +61,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
+  var runThreadN: Option[Int] = config("runThreadN")
 
   override val defaultVmem = "6G"
   override val defaultThreads = 8
@@ -79,6 +80,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
       outputSAindex = new File(prefix + "SAindex")
       sjdbOverhang = config("sjdboverhang", 75)
     }
+    threads = runThreadN.getOrElse(1)
   }
 
   /** Returns command to execute */
@@ -92,7 +94,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
     }
     cmd += required("--genomeDir", genomeDir) +
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
-      optional("--runThreadN", nCoresRequest) +
+      optional("--runThreadN", threads) +
       optional("--outFileNamePrefix", outFileNamePrefix)
     if (sjdbOverhang > 0) cmd += optional("--sjdbOverhang", sjdbOverhang)
 
