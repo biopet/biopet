@@ -147,20 +147,20 @@ class GentrapTest extends TestNGSuite with Matchers {
     if (expMeasures.contains("cufflinks_guided")) {
       gentrap.functions
         .collect {
-        case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_guided")
-        case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_guided") ||
-          x.output.toString.endsWith(".isoforms_fpkm_cufflinks_guided")
-      }
+          case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_guided")
+          case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_guided") ||
+            x.output.toString.endsWith(".isoforms_fpkm_cufflinks_guided")
+        }
         .count(identity) shouldBe numSamples * 3 // three types of jobs per sample
     }
 
     if (expMeasures.contains("cufflinks_blind")) {
       gentrap.functions
         .collect {
-        case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_blind")
-        case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_blind") ||
-          x.output.toString.endsWith(".isoforms_fpkm_cufflinks_blind")
-      }
+          case x: Cufflinks => x.outputGenesFpkm.getParentFile.toString.endsWith("cufflinks_blind")
+          case x: Ln => x.output.toString.endsWith(".genes_fpkm_cufflinks_blind") ||
+            x.output.toString.endsWith(".isoforms_fpkm_cufflinks_blind")
+        }
         .count(identity) shouldBe numSamples * 3 // three types of jobs per sample
     }
   }
@@ -186,6 +186,8 @@ object GentrapTest {
       // mapping executables
       "star", "bowtie", "samtools", "gsnap",
       // gentrap executables
-      "cufflinks", "htseq-count", "grep", "pdflatex", "Rscript", "tabix", "bgzip"
+      "cufflinks", "htseq-count", "grep", "pdflatex", "Rscript", "tabix", "bgzip",
+      // bam2wig executables
+      "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap
 }
