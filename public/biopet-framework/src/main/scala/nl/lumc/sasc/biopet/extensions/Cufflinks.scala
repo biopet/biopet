@@ -191,10 +191,14 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable
   override val versionExitcode = List(0, 1)
 
+  override def beforeGraph: Unit = {
+    threads = num_threads.getOrElse(1)
+  }
+
   def cmdLine =
     required(executable) +
       required("--output-dir", output_dir) +
-      optional("--num-threads", nCoresRequest) +
+      optional("--num-threads", threads) +
       optional("--seed", seed) +
       optional("--GTF", GTF) +
       optional("--GTF-guide", GTF_guide) +
