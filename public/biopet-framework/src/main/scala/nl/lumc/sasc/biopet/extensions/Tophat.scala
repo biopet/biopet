@@ -266,6 +266,10 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
 
   var rg_platform: Option[String] = config("rg_platform")
 
+  override def beforeGraph: Unit = {
+    threads = num_threads.getOrElse(1)
+  }
+
   def cmdLine: String = required(executable) +
     optional("-o", output_dir) +
     conditional(bowtie1, "--bowtie1") +
@@ -291,7 +295,7 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
     conditional(color, "--color") +
     conditional(color_out, "--color-out") +
     optional("--library-type", library_type) +
-    optional("--num-threads", num_threads) +
+    optional("--num-threads", threads) +
     optional("--resume", resume) +
     optional("--GTF", GTF) +
     optional("--transcriptome-index", transcriptome_index) +
