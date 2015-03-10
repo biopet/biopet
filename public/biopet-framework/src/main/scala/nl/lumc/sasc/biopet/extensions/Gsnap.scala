@@ -326,6 +326,10 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
 
+  override def beforeGraph: Unit = {
+    threads = nthreads.getOrElse(1)
+  }
+
   def cmdLine = {
     required(executable) +
       optional("--dir", dir) +
@@ -371,7 +375,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--use-tally", use_tally) +
       optional("--runlengthdir", runlengthdir) +
       optional("--use-runlength", use_runlength) +
-      optional("--nthreads", nCoresRequest) +
+      optional("--nthreads", threads) +
       optional("--gmap-mode", gmap_mode) +
       optional("--trigger-score-for-gmap", trigger_score_for_gmap) +
       optional("--gmap-min-match-length", gmap_min_match_length) +
