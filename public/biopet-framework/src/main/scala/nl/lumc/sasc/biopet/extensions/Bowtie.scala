@@ -61,7 +61,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   /** return commandline to execute */
   def cmdLine = {
     required(executable) +
-      optional("--threads", nCoresRequest) +
+      optional("--threads", threads) +
       conditional(sam, "--sam") +
       conditional(best, "--best") +
       conditional(strata, "--strata") +
