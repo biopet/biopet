@@ -31,6 +31,7 @@ import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, SortSam, MergeSamFiles }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
@@ -725,6 +726,10 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
           addSummaryQScript(m)
         case None => ;
       }
+      // add bigwig output, also per-strand when possible
+      addAll(Bam2Wig(qscript, alnFile).functions)
+      alnFilePlusStrand.collect { case f => addAll(Bam2Wig(qscript, f).functions) }
+      alnFileMinusStrand.collect { case f => addAll(Bam2Wig(qscript, f).functions) }
       // add strand-specific jobs if defined
       alnPlusStrandJobs.foreach(_.addAllJobs())
       alnMinusStrandJobs.foreach(_.addAllJobs())
@@ -771,6 +776,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
         makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
 
+      /** Wiggle track job */
+      private lazy val bam2wigModule: Bam2Wig = Bam2Wig(qscript, alnFile)
+
       /** Per-library mapping job */
       def mappingJob: Mapping = {
         val job = new Mapping(qscript)
@@ -787,6 +795,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // add bigwig track
+        addAll(bam2wigModule.functions)
         // create RNA metrics job
         add(collectRnaSeqMetricsJob)
         addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
