@@ -184,9 +184,9 @@ object GentrapTest {
       // fastqc executables
       "fastqc", "seqtk", "sickle", "cutadapt",
       // mapping executables
-      "star", "bowtie", "samtools", "gsnap",
+      "star", "bowtie", "samtools", "gsnap", "tophat",
       // gentrap executables
-      "cufflinks", "htseq-count", "grep", "pdflatex", "Rscript", "tabix", "bgzip", "htseq-count",
+      "cufflinks", "htseqcount", "grep", "pdflatex", "Rscript", "tabix", "bgzip",
       // bam2wig executables
       "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap
