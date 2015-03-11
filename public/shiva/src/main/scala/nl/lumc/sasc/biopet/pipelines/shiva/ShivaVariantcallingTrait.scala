@@ -68,7 +68,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
 
     require(!inputBams.isEmpty, "No input bams found")
-    require(!callers.isEmpty, "must select atleast 1 variantcaller, possible to use: " + callersList.map(_.name).mkString(", "))
+    require(!callers.isEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
