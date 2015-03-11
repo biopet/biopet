@@ -346,12 +346,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val sortSam = new SortSam(this)
     sortSam.input = gsnapCommand.output
-    sortSam.output = output
+    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
 
-    sortSam.output
+    addAddOrReplaceReadGroups(sortSam.output, output)
   }
 
   def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
@@ -368,19 +368,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.no_convert_bam = false
     add(tophat)
 
-    val ln = new Ln(this)
-    ln.input = tophat.outputAcceptedHits
-    ln.output = swapExt(output.getParent, output, ".bam", ".raw.bam")
-    add(ln)
-
     val sortSam = new SortSam(this)
-    sortSam.input = ln.output
-    sortSam.output = output
+    sortSam.input = tophat.outputAcceptedHits
+    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
 
-    sortSam.output
+    addAddOrReplaceReadGroups(sortSam.output, output)
   }
   /**
    * Adds stampy jobs
