@@ -23,7 +23,6 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   override val versionRegex = """version (\d*)""".r
   override def versionCommand = executable + " " + vep_script + " --help"
-  //override val defaultThreads = 1
 
   //Boolean vars
   var v: Boolean = config("v", default = true)
@@ -121,7 +120,6 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   // Numeric args
   override val defaultThreads: Int = config("fork", default = 2)
-  //var fork: Option[Int] = config("fork", default = nCoresRequest)
   var cache_version: Option[Int] = config("cache_version")
   var freq_freq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")
