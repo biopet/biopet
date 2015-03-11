@@ -80,7 +80,6 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
       outputSAindex = new File(prefix + "SAindex")
       sjdbOverhang = config("sjdboverhang", 75)
     }
-    threads = runThreadN.getOrElse(1)
   }
 
   /** Returns command to execute */

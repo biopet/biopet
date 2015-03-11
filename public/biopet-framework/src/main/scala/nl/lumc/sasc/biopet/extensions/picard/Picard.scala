@@ -75,20 +75,25 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 }
 
 object Picard {
+
   /**
    * This function parse a metrics file in separated values
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File) = {
-    val lines = Source.fromFile(file).getLines().toArray
+  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
+    if (file.exists) {
+      val lines = Source.fromFile(file).getLines().toArray
 
-    val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
-    val end = lines.indexOf("", start)
+      val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
+      val end = lines.indexOf("", start)
 
-    val header = lines(start).split("\t")
-    val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val header = lines(start).split("\t")
+      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
 
-    (header, content)
-  }
+      Option((header, content))
+    } else {
+      None
+    }
+
 }

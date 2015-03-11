@@ -1,0 +1,480 @@
+\subsection{Sequencing Results Evaluation}
+\label{sec:seq}
+
+This section contains statistics of the raw sequencing results. Statistics of
+the preprocessing step(s) may be shown as well, depending on which preprocessing
+steps were performed.
+(Table~\ref{tab:pipelineparams}).
+
+\indent
+
+All statistics, except for the per sequence \%GC graph, were collected using
+FastQC. Visit the
+\href{http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}{FastQC website}
+for more detailed explanations of them.
+
+\subsubsection{Overview}
+\label{subsec:seq-overview}
+There are four types of preprocessing that may be done:
+
+\begin{description}
+    \item[\textit{none}] \hfill \\
+        No preprocessing step.
+    \item[\textit{adapter clipping}] \hfill \\
+        Removal of known adapter sequences present in the sequencing
+        reads. The list of sequences are retrieved from the FastQC contaminant
+        list, which is packaged with the FastQC released used in this pipeline.
+    \item[\textit{quality trimming}] \hfill \\
+        Removal of all low-quality bases that are often found in the 5'
+        or 3' ends of the reads.
+    \item[\textit{adapter clipping followed by quality trimming}] \hfill \\
+        Both adapter clipping and base quality trimming.
+\end{description}
+\indent
+Your chosen preprocessing method was:\textbf{
+((* if lib.clipping *))adapter clipping
+((* elif lib.trimming *))quality trimming
+((* elif lib.clipping and lib.trimming *))adapter clipping followed by quality trimming((* endif *))}.
+
+((* if lib.clipping *))
+\subsubsection{Adapter removal}
+Known adapter sequences found in the raw data are listed in
+Table~\ref{tab:adapters}. For each adapter sequence, the count of its
+occurence (partially or whole) is also listed. The presence of these
+adapters do not always result in the FASTQ records to be discarded.
+FASTQ records are only discarded if clipping of the adapter sequence
+results in sequences shorter than the threshold set in cutadapt.
+
+\indent
+
+For the complete list of known adapter sequences, consult the
+\href{http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}{official FastQC website}.
+More information about clipping using cutadapt is available on the
+\href{https://code.google.com/p/cutadapt/}{official cutadapt website}.
+
+%\ClipContamTable
+\begin{center}
+    \captionof{table}{Adapter Sequences Present in the Sample}
+    \label{tab:adapters}
+    \begin{longtable}{ p{14mm} r p{0.4\textwidth} r }
+            \hline
+            Read & Discarded & Adapter & Occurence\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{4}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        ((* if lib.flexiprep.stats.clipping_R1 *))
+            ((* if lib.flexiprep.stats.clipping_R1.adapters *))
+                Read 1 & ((( lib.flexiprep.stats.clipping_R1.num_reads_affected|nice_int )))
+                ((* for adapter, stat in lib.flexiprep.stats.clipping_R1.adapters.iteritems() *))
+                ((* if loop.first *))
+                    & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                ((* else *))
+                    & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                ((* endif *))
+                ((* endfor *))
+            ((* else *))
+                Read 1 & 0 & \textit{none found} & 0\\
+            ((* endif *))
+            ((* if lib.is_paired_end *))
+                ((* if lib.flexiprep.stats.clipping_R2.adapters *))
+                    Read 2 & ((( lib.flexiprep.stats.clipping_R2.num_reads_affected|nice_int )))
+                    ((* for adapter, stat in lib.flexiprep.stats.clipping_R2.adapters.iteritems() *))
+                    ((* if loop.first *))
+                        & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                    ((* else *))
+                        & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                    ((* endif *))
+                    ((* endfor *))
+                ((* else *))
+                    Read 2 & 0 & \textit{none found} & 0\\
+                ((* endif *))
+            ((* endif *))
+        ((* endif *))
+    \end{longtable}
+\end{center}
+\addtocounter{table}{-1}
+
+((* if lib.is_paired_end *))
+After clipping, all read pairs are then checked ('synced') for their
+completeness. Read pairs whose other half has been discarded during
+clipping, will also be discarded. The summary of this step is available in
+Table~\ref{tab:clipsync}.
+
+\begin{center}
+    \captionof{table}{Summary of Post-Clipping Sync Step}
+    \label{tab:clipsync}
+    \begin{tabular}{ l  r }
+        \hline
+        Parameter & Count\\ \hline \hline
+        Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.fastq_sync.num_reads_discarded_R1|nice_int )))\\
+        Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.fastq_sync.num_reads_discarded_R2|nice_int )))\\
+        \hline
+        Total kept FASTQ records & ((( lib.flexiprep.stats.fastq_sync.num_reads_kept|nice_int )))\\
+        \hline
+    \end{tabular}
+\end{center}
+((* endif *))
+((* endif *))
+
+\vspace{2mm}
+((* if lib.trimming and lib.is_paired_end *))
+\subsubsection{Base quality trimming}
+    Summary of the trimming step is available in Table~\ref{tab:trim}. In short,
+    sickle is used to trim the 5' and 3' ends of each FASTQ records so that low
+    quality bases are trimmed off. If after trimming the FASTQ record becomes
+    shorter than the threshold set by sickle, the entire sequence is discarded. For this
+    step, read pair completeness check was done along with trimming.
+
+    \indent
+
+    More information about sickle is available on the
+    \href{https://github.com/najoshi/sickle}{official sickle website}.
+
+    \begin{center}
+        \captionof{table}{Summary of quality trimming step}
+        \label{tab:trim}
+        \begin{tabular}{ l  r }
+            \hline
+            Parameter & Count\\ \hline \hline
+            Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R1|nice_int )))\\
+            Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R2|nice_int )))\\
+            \hline
+            Discarded FASTQ records from both reads & ((( lib.flexiprep.stats.trimming.num_reads_discarded_both|nice_int )))\\
+            \hline
+            Total kept FASTQ reads & ((( lib.flexiprep.stats.trimming.num_reads_kept|nice_int )))\\
+            \hline
+        \end{tabular}
+    \end{center}
+((* endif *))
+%\vspace{2mm}
+
+\subsubsection{Basic statistics}
+%\label{subsec:seq_basic}
+
+Basic statistics on the FASTQ files are shown below. For paired-end reads, the
+read count numbers of read 1 and read 2, both before and after preprocessing,
+must match. Read lengths are likely to vary after preprocessing, due to selective
+clipping and trimming of the reads.
+
+\begin{center}
+    \captionof{table}{Basic Run Statistics}
+    %\label{tab:basestats}
+((* if lib.clipping or lib.trimming *))
+        \begin{longtable}{ l r r }
+                \hline
+                Parameter & Raw & Preprocessed \\ \hline \hline
+                \hline \hline
+            \endhead
+                \hline
+                \multicolumn{3}{c}{\textit{Continued on next page}}\\
+                \hline
+            \endfoot
+                \hline
+            \endlastfoot
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* if run.is_paired_end *))
+            Read 2 count & ((( lib.fastqc_r2.basic_statistics.data["Total Sequences"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Total Sequences"] )))\\
+            Read 2 overall \%GC & ((( lib.fastqc_r2.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["%GC"] )))\\
+            Read 2 length range & ((( lib.fastqc_r2.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* endif *))
+((* else *))
+        \begin{longtable}{ l r }
+                \hline
+                Parameter & Raw \\ \hline \hline
+                \hline \hline
+            \endhead
+                \hline
+                \multicolumn{2}{c}{\textit{Continued on next page}}\\
+                \hline
+            \endfoot
+                \hline
+            \endlastfoot
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* if run.is_paired_end *))
+            Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] )))\\
+            Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
+            Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
+            \hline
+    ((* endif *))
+((* endif *))
+        \end{longtable}
+\end{center}
+
+% sequence length distribution
+\subsubsection{Read length distribution}
+    Read length distribution for the raw read pair data are shown below.
+    Depending on your chosen preprocessing step, the length distribution for the
+    preprocessed data may be shown as well. The length distribution for the
+    preprocessed data usually becomes less uniform compared to the raw data due
+    to the variable removal of the bases in each read.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_sequence_length_distribution.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_sequence_length_distribution.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Read length distribution for read 1.}
+        %\label{fig:length_dist_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+            \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_sequence_length_distribution.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_sequence_length_distribution.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Read length distribution for read 2.}
+        %\label{fig:length_dist_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per base sequence quality
+\subsubsection{Per base sequence quality}
+    Here, the sequence quality for different base positions in all read pairs
+    are shown. For each figure, the central line represents the median value,
+    the blue represents the mean, the yellow box represents the inter-quartile
+    range (25\%-75\%), and the upper and lower whiskers represent the 10\% and
+    90\% points respectively. The green-shaded region marks good quality calls,
+    orange-shaded regins mark reasonable quality calls, and red-shaded regions
+    mark poor quality calls.
+
+    \indent
+
+    Note that the latter base positions shown in the figures are
+    sometimes aggregates of multiple positions.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_base_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_base_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per base quality before and after processing read 1.}
+        %\label{fig:per_base_qual_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+            \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_base_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_base_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per base quality before and after processing for read 2.}
+        %\label{fig:per_base_qual_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per sequence quality scores
+\subsubsection{Per sequence quality scores}
+    The read quality score distributions are shown below.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_sequence_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per sequence quality scores before and after preprocessing read 1.}
+        %\label{fig:per_seq_qual_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_quality.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_sequence_quality.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per sequence quality scores before and after preprocessing for read 2.}
+        %\label{fig:per_seq_qual_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+% per base sequence content
+\subsubsection{Per base sequence content}
+    The figures below plot the occurence of each nucleotide in each position in
+    the reads. In a completely random library, you would expect the differences
+    among each nucleotide to be minor. You may sometimes see a skewed
+    proportion of nucleotides near the start of the read due to the use of
+    non-random cDNA during sample preparation.
+
+    \indent
+
+    Note that the latter base positions shown in the figures are
+    sometimes aggregates of multiple positions.
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_base_sequence_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_base_sequence_content.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per base sequence content before and after preprocessing for read 1.}
+        %\label{fig:per_base_content_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_base_sequence_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            ((* if lib.trimming or lib.clipping *))
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_base_sequence_content.path )))}
+            }
+            ((* endif *))
+        \end{minipage}
+        \caption{Per base sequence content before and after preprocessing for read 2.}
+        %\label{fig:per_base_content_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+
+% per sequence GC content
+\subsubsection{Per sequence GC content}
+    The figures below show the GC percentage distribution of all the read pair
+    data.
+    \begin{figure}[h!]
+        \centering
+        ((* if lib.trimming or lib.clipping *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Preprocessed read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_qc_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* else *)))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 1]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r1_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* endif *))
+        \caption{Per sequence GC content before and after preprocessing for read 1.}
+        %\label{fig:per_base_content_before_and_after_1}
+    \end{figure}
+
+((* if run.is_paired_end *))
+    \begin{figure}[h!]
+        \centering
+        ((* if lib.trimming or lib.clipping *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Preprocessed read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_qc_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* else *))
+        \begin{minipage}[b]{0.48\textwidth}
+            \centering
+            \subfloat[Raw read 2]{
+                \includegraphics[width=\textwidth]{((( lib.fastqc_r2_files.plot_per_sequence_gc_content.path )))}
+            }
+        \end{minipage}
+        ((* endif *))
+        \caption{Per sequence GC content before and after preprocessing for read 2.}
+        %\label{fig:per_base_content_before_and_after_2}
+    \end{figure}
+((* endif *))
+
+

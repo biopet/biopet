@@ -49,11 +49,16 @@ class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input BAM file (must be indexed)", shortName = "I", required = true)
-  var inputBam: File = _
+  var inputBam: File = null
+
+  @Input(doc = "Interval file", shortName = "r", required = true)
+  var intervalFile: File = null
 
   @Output(doc = "Output BAM", shortName = "o", required = true)
-  var outputBam: File = _
+  var outputBam: File = null
 
+  @Output(doc = "BAM containing discarded reads", shortName = "f", required = false)
+  var discardedBam: File = null
 }
 
 object WipeReads extends ToolCommand {

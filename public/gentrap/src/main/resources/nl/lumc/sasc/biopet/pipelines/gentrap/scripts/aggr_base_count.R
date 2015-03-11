@@ -8,6 +8,19 @@
 # (c) 2013 by Wibowo Arindrarto [LUMC - SASC]
 # Adapted from Peter-Bram 't Hoen's script: 'merge_table_script_shark_PH3.r'
 
+# General function to install package if it does not exist
+# Otherwise, it only loads the package
+usePackage <- function(p) {
+    r <- getOption("repos")
+    r["CRAN"] <- "http://cran.us.r-project.org"
+    options(repos = r)
+    rm(r)
+    if (!is.element(p, installed.packages()[,1]))
+        install.packages(p, dep = TRUE)
+    require(p, character.only = TRUE)
+}
+
+usePackage("getopt")
 
 ## FLAGS ##
 LEVELS <- c('gene', 'exon')
