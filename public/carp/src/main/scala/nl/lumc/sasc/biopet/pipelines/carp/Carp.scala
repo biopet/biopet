@@ -117,7 +117,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
     }
   }
 
-  def init() {
+  def init() = {
+    // ensure that no samples are called 'control' since that is our reserved keyword
+    require(!sampleIds.contains("control"),
+      "No sample should be named 'control' since it is a reserved for the Carp pipeline")
   }
 
   def biopetScript() {
