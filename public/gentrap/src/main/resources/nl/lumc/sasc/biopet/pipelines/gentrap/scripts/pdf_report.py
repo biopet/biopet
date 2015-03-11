@@ -14,9 +14,6 @@
 # license; For commercial users or users who do not want to follow the AGPL
 # license, please contact us to obtain a separate license.
 #
-# pdf_report.py
-#
-# TeX template generation script for Gentrap pipeline.
 
 from __future__ import print_function
 
