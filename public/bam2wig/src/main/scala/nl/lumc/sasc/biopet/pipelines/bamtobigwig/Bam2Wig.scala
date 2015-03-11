@@ -38,7 +38,7 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
     val wigToBigWig = new WigToBigWig(this)
     wigToBigWig.inputWigFile = igvCount.wig.get
     wigToBigWig.inputChromSizesFile = bs.chromSizesFile
-    wigToBigWig.outputBigWig = swapExt(outputDir, bamFile, ".bam", ".bigwig")
+    wigToBigWig.outputBigWig = swapExt(outputDir, bamFile, ".bam", ".bw")
     add(wigToBigWig)
   }
 }
