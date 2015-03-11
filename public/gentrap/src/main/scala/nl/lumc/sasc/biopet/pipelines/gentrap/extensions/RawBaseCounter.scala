@@ -61,6 +61,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
 
   private def bedtoolsCovHist = new BiopetCommandLineFunction {
     var bam: File = null
+    override val configName = "bedtoolscoverage"
     override val root: Configurable = wrapper.root
     executable = config("exe", default = "coverageBed", freeVar = false)
     override def cmdLine: String = required(executable) +
