@@ -119,7 +119,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var cache_region_size: Option[String] = config("cache_region_size")
 
   // Numeric args
-  var fork: Option[Int] = config("fork")
+  override val defaultThreads: Int = config("fork", default = 2)
   var cache_version: Option[Int] = config("cache_version")
   var freq_freq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")
@@ -229,7 +229,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     optional("--build", build) +
     optional("--compress", compress) +
     optional("--cache_region_size", cache_region_size) +
-    optional("--fork", fork) +
+    optional("--fork", threads) +
     optional("--cache_version", cache_version) +
     optional("--freq_freq", freq_freq) +
     optional("--port", port) +

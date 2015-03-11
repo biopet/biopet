@@ -33,11 +33,16 @@ class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
   var outputVCF: File = null
 
   var mode: String = config("mode", default = "explode")
+  var doNotRemove: Boolean = config("donotremove", default = false)
+
+  memoryLimit = Some(1.0)
+  override val defaultVmem = "4G"
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +
     required("-O", outputVCF) +
-    required("-m", mode)
+    required("-m", mode) +
+    conditional(doNotRemove, "--do-not-remove")
 }
 
 object VEPNormalizer extends ToolCommand {
