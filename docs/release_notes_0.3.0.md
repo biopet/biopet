@@ -17,7 +17,7 @@ Since our first release in December 2014 many new functions have been added to t
     - remove all ribosomal reads
     - a tool for building the correct annotation for read.counting etc etc.
 
-Also a impressive list of tools have been added to the new framework:
+Also a impressive list of tools have been added to the updated framework:
 
 - AnnotateVcfWithBed ( This enables the user to Annotate a VCF file based on a bed file containing the locations of interest )
 - CheckAllelesVcfInBam
@@ -43,3 +43,4 @@ Some tools have a new version for better compatibility with our latest pipelines
 - tabix Version: 0.2.5 (r1005)
 - grep (GNU grep) 2.16
 - gzip 1.6
+- Samtools Version: 1.1
