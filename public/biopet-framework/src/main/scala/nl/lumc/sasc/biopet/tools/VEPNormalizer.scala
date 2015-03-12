@@ -188,28 +188,27 @@ object VEPNormalizer extends ToolCommand {
    * @return An array with the new records
    */
   def explodeTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): Array[VariantContext] = {
-    val arti = parseCsq(record)
-
-    for (transcript <- arti) yield {
+    for (transcript <- parseCsq(record)) yield {
       (for (
         fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId);
-        value = transcript(fieldId).trim if value.nonEmpty
+        value = transcript(fieldId) if value.nonEmpty
       ) yield csqInfos(fieldId) -> value)
         .filterNot(_._2.isEmpty)
-        .foldLeft(createBuilder(record, removeCsq))((builder, artibute) => builder.attribute(artibute._1, artibute._2))
+        .foldLeft(createBuilder(record, removeCsq))((builder, attribute) => builder.attribute(attribute._1, attribute._2))
         .make()
     }
   }
 
   def standardTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): VariantContext = {
-    val arti = parseCsq(record)
+    val attribs = parseCsq(record)
 
     (for (fieldId <- 0 until csqInfos.size) yield csqInfos(fieldId) -> {
       for (
-        transcript <- arti if transcript.isDefinedAt(fieldId);
-        value = transcript(fieldId).trim if value.nonEmpty
+        transcript <- attribs if transcript.isDefinedAt(fieldId);
+        value = transcript(fieldId) if value.nonEmpty
       ) yield value
-    }).filter(_._2.nonEmpty)
+    })
+      .filter(_._2.nonEmpty)
       .foldLeft(createBuilder(record, removeCsq))((builder, attribute) => builder.attribute(attribute._1, attribute._2))
       .make()
   }
@@ -223,7 +222,7 @@ object VEPNormalizer extends ToolCommand {
     record.getAttributeAsString("CSQ", "unknown").
       stripPrefix("[").
       stripSuffix("]").
-      split(",").map(_.split("""\|"""))
+      split(",").map(_.split("""\|""").map(_.trim))
   }
 
   case class Args(inputVCF: File = null,
