@@ -33,7 +33,7 @@ class SambambaMerge(val root: Configurable) extends Sambamba {
 
   def cmdLine = required(executable) +
     required("merge") +
-    optional("-t", nCoresRequest) +
+    optional("-t", threads) +
     optional("-l", compression_level) +
     required(output) +
     repeat("", input)
