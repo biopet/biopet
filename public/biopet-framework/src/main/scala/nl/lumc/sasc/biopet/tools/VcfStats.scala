@@ -110,7 +110,11 @@ object VcfStats extends ToolCommand {
                   infoTags: List[String] = Nil,
                   genotypeTags: List[String] = Nil,
                   allInfoTags: Boolean = false,
-                  allGenotypeTags: Boolean = false) extends AbstractArgs
+                  allGenotypeTags: Boolean = false,
+                  binSize: Int = 10000000,
+                  writeBinStats: Boolean = false,
+                  generalWiggle: List[String] = Nil,
+                  genotypeWiggle: List[String] = Nil) extends AbstractArgs
 
   /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
@@ -140,6 +144,18 @@ object VcfStats extends ToolCommand {
     }
     opt[Unit]("allGenotypeTags") unbounded () action { (x, c) =>
       c.copy(allGenotypeTags = true)
+    }
+    opt[Int]("binSize") unbounded () action { (x, c) =>
+      c.copy(binSize = x)
+    }
+    opt[Unit]("writeBinStats") unbounded () action { (x, c) =>
+      c.copy(writeBinStats = true)
+    }
+    opt[String]("generalWiggle") unbounded () action { (x, c) =>
+      c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
+    }
+    opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
+      c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
     }
   }
 
@@ -241,6 +257,8 @@ object VcfStats extends ToolCommand {
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
 
+    reader.close()
+
     val adInfoTags = (for (
       infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
     ) yield {
@@ -268,7 +286,7 @@ object VcfStats extends ToolCommand {
     val intervals: List[Interval] = (
       for (
         seq <- referenceFile.getSequenceDictionary.getSequences;
-        chunks = (seq.getSequenceLength / 10000000) + (if (seq.getSequenceLength % 10000000 == 0) 0 else 1);
+        chunks = (seq.getSequenceLength / commandArgs.binSize) + (if (seq.getSequenceLength % commandArgs.binSize == 0) 0 else 1);
         i <- 1 to chunks
       ) yield {
         val size = seq.getSequenceLength / chunks
@@ -306,7 +324,7 @@ object VcfStats extends ToolCommand {
       logger.info("total: " + variantCounter + " rows processed, " + fraction + "% done")
     }
 
-    val statsChunks = for (interval <- intervals.par) yield {
+    val stats = (for (interval <- intervals.par) yield {
       val reader = new VCFFileReader(commandArgs.inputFile, true)
       var chunkCounter = 0
       val stats = createStats
@@ -328,11 +346,18 @@ object VcfStats extends ToolCommand {
         }
         chunkCounter += 1
       }
+      reader.close()
+
+      if (commandArgs.writeBinStats) {
+        val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
+
+        writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+        writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
+      }
+
       status(chunkCounter, interval)
       stats
-    }
-
-    val stats = statsChunks.toList.fold(createStats)(_ += _)
+    }).toList.fold(createStats)(_ += _)
 
     logger.info("Done reading vcf records")
 
@@ -356,11 +381,40 @@ object VcfStats extends ToolCommand {
       }
     }
 
+    for (field <- commandArgs.generalWiggle) {
+      writeWiggle(intervals, field, "count", new File(commandArgs.outputDir, field + ".wig"))
+    }
+
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
 
     logger.info("Done")
+  }
+
+  protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File): Unit = {
+    val bla = intervals.groupBy(_.getSequence).map { case (k,v) => k -> v.sortBy(_.getStart) }
+    val writer = new PrintWriter(outputFile)
+    writer.println("track type=wiggle_0")
+    for ((chr, intervals) <- bla) yield {
+      val length = intervals.head.length()
+      writer.println(s"fixedStep chrom=$chr start=1 step=$length span=$length")
+      for (interval <- intervals) {
+        val file = new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+        valueFromTsv(file, row, column).foreach(writer.println(_))
+      }
+    }
+    writer.close()
+  }
+
+  def valueFromTsv(file: File, row: String, column: String): Option[String] = {
+    val reader = Source.fromFile(file)
+    val it = reader.getLines()
+    val index = it.next().split("\t").indexOf(column)
+
+    val value = it.find(_.startsWith(row))
     reader.close()
+
+    value.collect { case x => x.split("\t")(index) }
   }
 
   /**
