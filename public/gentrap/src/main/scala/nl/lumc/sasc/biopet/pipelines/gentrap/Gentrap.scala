@@ -93,7 +93,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
       "picard" -> Map(
         "programrecordid" -> "null"
-      )
+      ),
+      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+      "mapping" -> Map("skip_markduplicates" -> true)
     ), super.defaults)
 
   /** Adds output merge jobs for the given expression mode */
