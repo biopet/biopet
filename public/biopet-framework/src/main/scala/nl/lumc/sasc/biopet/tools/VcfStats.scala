@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
+import htsjdk.variant.variantcontext.{ Allele, VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
@@ -323,7 +323,7 @@ object VcfStats extends ToolCommand {
             val genotype2 = record.getGenotype(sample2)
             if (genotype.getAlleles == genotype2.getAlleles)
               stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += genotype.getAlleles.count(allele => genotype2.getAlleles.exists(_.basesMatch(allele)))
+            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
           }
         }
         chunkCounter += 1
@@ -361,6 +361,26 @@ object VcfStats extends ToolCommand {
 
     logger.info("Done")
     reader.close()
+  }
+
+  /**
+   * Give back the number of alleles that overlap
+   * @param g1
+   * @param g2
+   * @param start start always at 0
+   * @return
+   */
+  def alleleOverlap(g1: List[Allele], g2: List[Allele], start: Int = 0): Int = {
+    if (g1.isEmpty) start
+    else {
+      val found = g2.contains(g1.head)
+      val g2tail = if (found) {
+        val index = g2.indexOf(g1.head)
+        g2.drop(index + 1) ++ g2.take(index)
+      } else g2
+
+      alleleOverlap(g1.tail, g2tail, if (found) start + 1 else start)
+    }
   }
 
   /** Function to check all general stats, all info expect sample/genotype specific stats */
