@@ -126,13 +126,17 @@ object VEPNormalizer extends ToolCommand {
     logger.info(s"""You have selected mode $mode""")
     logger.info("Start processing records")
 
+    var counter = 0
     for (record <- reader) {
       mode match {
         case "explode"  => explodeTranscripts(record, newInfos, removeCsq).foreach(vc => writer.add(vc))
         case "standard" => writer.add(standardTranscripts(record, newInfos, removeCsq))
         case _          => throw new IllegalArgumentException("Something odd happened!")
       }
+      counter += 1
+      if (counter % 100000 == 0) logger.info(counter + " variants processed")
     }
+    logger.info("done: " + counter + " variants processed")
   }
 
   /**
@@ -184,51 +188,42 @@ object VEPNormalizer extends ToolCommand {
    * @return An array with the new records
    */
   def explodeTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): Array[VariantContext] = {
-    val csq = record.getAttributeAsString("CSQ", "unknown")
-
-    val builder = {
-      if (removeCsq) new VariantContextBuilder(record).rmAttribute("CSQ")
-      else new VariantContextBuilder(record)
-    }
-
-    // atributes for each transcript (transcript)(csq field index)
-    val arti = csq.
-      stripPrefix("[").
-      stripSuffix("]").
-      split(",").map(_.split("""\|"""))
+    val arti = parseCsq(record)
 
     for (transcript <- arti) yield {
       (for (
-        fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId) && !transcript(fieldId).isEmpty
-      ) yield csqInfos(fieldId) -> transcript(fieldId).trim)
+        fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId);
+        value = transcript(fieldId).trim if value.nonEmpty
+      ) yield csqInfos(fieldId) -> value)
         .filterNot(_._2.isEmpty)
-        .foldLeft(builder)((builder, artibute) => builder.attribute(artibute._1, artibute._2))
+        .foldLeft(createBuilder(record, removeCsq))((builder, artibute) => builder.attribute(artibute._1, artibute._2))
         .make()
     }
   }
 
   def standardTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): VariantContext = {
-    val csq = record.getAttributeAsString("CSQ", "unknown")
-
-    val builder = {
-      if (removeCsq) new VariantContextBuilder(record).rmAttribute("CSQ")
-      else new VariantContextBuilder(record)
-    }
-
-    // atributes for each transcript (transcript)(csq field index)
-    val arti = csq.
-      stripPrefix("[").
-      stripSuffix("]").
-      split(",").map(_.split("""\|"""))
+    val arti = parseCsq(record)
 
     (for (fieldId <- 0 until csqInfos.size) yield csqInfos(fieldId) -> {
       for (
-        transcript <- arti if transcript.isDefinedAt(fieldId) && !transcript(fieldId).isEmpty
-      ) yield transcript(fieldId).trim
-    })
-      .filterNot(_._2.isEmpty)
-      .foldLeft(builder)((builder, artibute) => builder.attribute(artibute._1, artibute._2))
+        transcript <- arti if transcript.isDefinedAt(fieldId);
+        value = transcript(fieldId).trim if value.nonEmpty
+      ) yield value
+    }).filter(_._2.nonEmpty)
+      .foldLeft(createBuilder(record, removeCsq))((builder, attribute) => builder.attribute(attribute._1, attribute._2))
       .make()
+  }
+
+  protected def createBuilder(record: VariantContext, removeCsq: Boolean) = {
+    if (removeCsq) new VariantContextBuilder(record).rmAttribute("CSQ")
+    else new VariantContextBuilder(record)
+  }
+
+  protected def parseCsq(record: VariantContext) = {
+    record.getAttributeAsString("CSQ", "unknown").
+      stripPrefix("[").
+      stripSuffix("]").
+      split(",").map(_.split("""\|"""))
   }
 
   case class Args(inputVCF: File = null,
