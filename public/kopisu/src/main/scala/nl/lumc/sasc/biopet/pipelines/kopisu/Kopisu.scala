@@ -15,9 +15,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ RscriptCommandLineFunction, FreeC }
+import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
+import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.queue.QScript
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
@@ -32,7 +35,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript() {
     val FreeC = new FreeC(this)
     FreeC.bamFile = bamFile
-    FreeC.outputPath = outputDirectory
+    FreeC.outputPath = outputDirectory + File.separator + "CNV"
     add(FreeC)
 
     /*
@@ -41,17 +44,20 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     * R-scripts to plot FreeC results
     * */
     val FCAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
+    FCAssessSignificancePlot.deps = List(FreeC.CNVoutput)
     FCAssessSignificancePlot.cnv = FreeC.CNVoutput
     FCAssessSignificancePlot.ratios = FreeC.RatioOutput
     FCAssessSignificancePlot.output = new File(outputDirectory, "freec_significant_calls.txt")
     add(FCAssessSignificancePlot)
 
     val FCCnvPlot = new FreeCCNVPlot(this)
+    FCCnvPlot.deps = List(FreeC.RatioOutput)
     FCCnvPlot.input = FreeC.RatioOutput
     FCCnvPlot.output = new File(outputDirectory, "freec_cnv.png")
     add(FCCnvPlot)
 
     val FCBAFPlot = new FreeCBAFPlot(this)
+    FCBAFPlot.deps = List(FreeC.BAFoutput)
     FCBAFPlot.input = FreeC.BAFoutput
     FCBAFPlot.output = new File(outputDirectory, "freec_baf.png")
     add(FCBAFPlot)

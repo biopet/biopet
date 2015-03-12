@@ -13,16 +13,15 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions
+package nl.lumc.sasc.biopet.extensions.freec
 
-import java.io.{ FileWriter, BufferedWriter, File, PrintWriter }
-
-import java.io.File
-
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.reflect.io.Path
 
 class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
 
@@ -56,39 +55,46 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   /*
   * Output file from FreeC
   * */
+  @Output()
   def CNVoutput: File = {
-    new File(output, bamFile.getName + "_CNVs")
+    new File(outputPath, bamFile.getName + "_CNVs")
   }
 
   /*
   * Output file from FreeC
   * */
+  @Output()
   def BAFoutput: File = {
-    new File(output, bamFile.getName + "_BAF.txt")
+    new File(outputPath, bamFile.getName + "_BAF.txt")
   }
 
   /*
   * Output file from FreeC
   * */
+  @Output()
   def RatioOutput: File = {
-    new File(output, bamFile.getName + "_ratio.txt")
+    new File(outputPath, bamFile.getName + "_ratio.txt")
   }
 
   /*
   * Output file from FreeC
   * */
+  @Output()
   def RatioBedGraph: File = {
-    new File(output, bamFile.getName + "_ratio.BedGraph")
+    new File(outputPath, bamFile.getName + "_ratio.BedGraph")
   }
 
   override def beforeGraph {
     super.beforeGraph
     config_file = new File(outputPath, bamFile.getName + ".freec_config.txt")
-    this.output = new File(outputPath, "CNV")
+    output = CNVoutput
   }
 
   override def freezeFieldValues(): Unit = {
     super.freezeFieldValues()
+    logger.info("Creating directory for FREEC: " + outputPath.getAbsolutePath)
+    outputPath.mkdirs()
+    logger.info("Creating FREEC config file: " + config_file.getAbsolutePath)
     createConfigFile
   }
 
@@ -107,7 +113,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
     writer.write("chrLenFile=" + this.chrLenFile + "\n")
     writer.write("gemMappabilityFile=" + this.gemMappabilityFile + "\n")
     writer.write("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) + "\n")
-    writer.write("outputDir=" + this.output.getAbsolutePath + "/\n")
+    writer.write("outputDir=" + this.outputPath.getAbsolutePath + "/\n")
     writer.write("ploidy=" + this.ploidy.getOrElse(2) + "\n")
     writer.write("samtools=" + this.samtools_exe + "\n")
     writer.write("telocentromeric=" + this.telocentromeric.getOrElse(50000) + "\n")

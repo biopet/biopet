@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.kopisu
+package nl.lumc.sasc.biopet.extensions.freec
 
 import java.io.File
 
@@ -29,5 +29,4 @@ class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommand
 
     super.cmdLine
   }
-
 }

@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.pipelines.kopisu
+package nl.lumc.sasc.biopet.extensions.freec
 
 import java.io.File
 
@@ -6,10 +6,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class FreeCBAFPlot(val root: Configurable) extends RscriptCommandLineFunction {
-  setScript("freec_BAFPlot.R")
+class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
+  setScript("freec_CNVPlot.R")
 
-  @Input(doc = "Output file from FreeC. *_BAF.txt")
+  @Input(doc = "Output file from FreeC. *_CNV")
   var input: File = null
 
   @Output(doc = "Destination for the PNG file")
