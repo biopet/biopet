@@ -58,20 +58,40 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   )
   ), super.defaults)
 
+  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+
+  //TODO: Add summary
+  def summaryFiles: Map[String, File] = Map()
+
+  //TODO: Add summary
+  def summarySettings: Map[String, Any] = Map()
+
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    //TODO: Add summary
+    def summaryFiles: Map[String, File] = Map()
+
+    //TODO: Add summary
+    def summaryStats: Map[String, Any] = Map()
+
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+      //TODO: Add summary
+      def summaryFiles: Map[String, File] = Map()
+
+      //TODO: Add summary
+      def summaryStats: Map[String, Any] = Map()
+
       val inputFastq: File = config("R1")
       val prefixFastq: File = createFile(".prefix.fastq")
 
       val flexiprep = new Flexiprep(qscript)
-      flexiprep.sampleId = sampleId
-      flexiprep.libId = libId
+      flexiprep.sampleId = Some(sampleId)
+      flexiprep.libId = Some(libId)
 
       val mapping = new Mapping(qscript)
-      mapping.libId = libId
-      mapping.sampleId = sampleId
+      mapping.libId = Some(libId)
+      mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
         flexiprep.outputDir = new File(libDir, "flexiprep/")

@@ -10,7 +10,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
+import nl.lumc.sasc.biopet.extensions.{ Sickle, Gzip, Zcat }
+import nl.lumc.sasc.biopet.tools.Seqstat
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
@@ -28,7 +29,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "flexiprepOptions", parallel = true)
+  @DataProvider(name = "flexiprepOptions")
   def flexiprepOptions = {
     val paired = Array(true, false)
     val skipTrims = Array(true, false)
@@ -53,8 +54,8 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
     flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
     if (paired) flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq" + (if (zipped) ".gz" else "")))
-    flexiprep.sampleId = "1"
-    flexiprep.libId = "1"
+    flexiprep.sampleId = Some("1")
+    flexiprep.libId = Some("1")
     flexiprep.script()
 
     flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (
@@ -62,6 +63,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
       else if (!paired && (skipClip && skipTrim)) 1
       else if (paired && !(skipClip && skipTrim)) 4
       else if (!paired && !(skipClip && skipTrim)) 2)
+    flexiprep.functions.count(_.isInstanceOf[Seqstat]) shouldBe (if (paired) 4 else 2)
     flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (zipped) (if (paired) 2 else 1) else 0)
     flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe (if (paired) 2 else 1)
     flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe (if (skipClip) 0 else (if (paired) 2 else 1))

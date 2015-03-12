@@ -17,9 +17,7 @@ package nl.lumc.sasc.biopet.core
 
 import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
-/**
- * Biopet commandline class for java based programs
- */
+/** Biopet commandline class for java based programs */
 trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
   executable = config("java", default = "java", submodule = "java", freeVar = false)
 
@@ -27,25 +25,17 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
   javaGCTimeLimit = config("java_gc_timelimit")
 
-  /**
-   * Constructs java opts, this adds scala threads
-   * @return
-   */
+  /** Constructs java opts, this adds scala threads */
   override def javaOpts = super.javaOpts +
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
 
-  /**
-   * Sets memory limit
-   */
+  /** Sets memory limit */
   override def beforeGraph {
     super.beforeGraph
-    memoryLimit = config("memory_limit")
+    if (memoryLimit.isEmpty) memoryLimit = config("memory_limit")
   }
 
-  /**
-   * Creates command to execute extension
-   * @return
-   */
+  /** Creates command to execute extension */
   override def commandLine: String = {
     preCmdInternal
     val cmd = super.commandLine

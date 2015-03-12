@@ -30,7 +30,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript {
   def biopetScript(): Unit = {
     val vep = new VariantEffectPredictor(this)
     vep.input = inputVCF
-    vep.output = outputDir + inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf"
+    vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
     vep.isIntermediate = true
     add(vep)
 

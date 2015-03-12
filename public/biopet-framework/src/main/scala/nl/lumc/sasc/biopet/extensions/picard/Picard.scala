@@ -15,11 +15,22 @@
  */
 package nl.lumc.sasc.biopet.extensions.picard
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
+import scala.io.Source
+
+/**
+ * General picard extension
+ *
+ * This is based on using class files directly from the jar, if needed other picard jar can be used
+ */
 abstract class Picard extends BiopetJavaCommandLineFunction {
   override def subPath = "picard" :: super.subPath
+
+  if (config.contains("picard_jar")) jarFile = config("picard_jar")
 
   @Argument(doc = "VERBOSITY", required = false)
   var verbosity: Option[String] = config("verbosity")
@@ -42,9 +53,12 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc = "CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", default = false)
 
-  //  override def versionCommand = executable + " " + javaOpts + " " + javaExecutable + " -h"
-  //  override val versionRegex = """Version: (.*)""".r
-  //  override val versionExitcode = List(0, 1)
+  override def versionCommand = {
+    if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + " -h"
+    else null
+  }
+  override val versionRegex = """Version: (.*)""".r
+  override val versionExitcode = List(0, 1)
 
   override val defaultVmem = "8G"
   memoryLimit = Option(3.0)
@@ -58,4 +72,28 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     optional("MAX_RECORDS_IN_RAM=", maxRecordsInRam, spaceSeparated = false) +
     conditional(createIndex, "CREATE_INDEX=TRUE") +
     conditional(createMd5, "CREATE_MD5_FILE=TRUE")
+}
+
+object Picard {
+
+  /**
+   * This function parse a metrics file in separated values
+   * @param file input metrics file
+   * @return (header, content)
+   */
+  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
+    if (file.exists) {
+      val lines = Source.fromFile(file).getLines().toArray
+
+      val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
+      val end = lines.indexOf("", start)
+
+      val header = lines(start).split("\t")
+      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+
+      Option((header, content))
+    } else {
+      None
+    }
+
 }

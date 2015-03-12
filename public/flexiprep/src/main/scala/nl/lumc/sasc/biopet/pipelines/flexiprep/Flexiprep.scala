@@ -15,15 +15,17 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Pbzip2, Md5sum, Zcat, Seqstat }
+import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.tools.Seqstat
 import nl.lumc.sasc.biopet.tools.FastqSync
 
-class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
+class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
@@ -38,15 +40,17 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
-  // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
+  /** Location of summary file */
+  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
 
-  /** Sample name */
-  @Argument(doc = "Sample ID", shortName = "sample", required = true)
-  var sampleId: String = _
+  /** Returns files to store in summary */
+  def summaryFiles: Map[String, File] = {
+    Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
+      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
+  }
 
-  /** Library name */
-  @Argument(doc = "Library ID", shortName = "library", required = true)
-  var libId: String = _
+  /** returns settings to store in summary */
+  def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
   var R1_ext: String = _
@@ -59,8 +63,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
 
-  val summary = new FlexiprepSummary(this)
-
+  /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
     require(input_R1 != null, "Missing input R1 on flexiprep module")
@@ -86,10 +89,9 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       }
       case _ =>
     }
-
-    summary.out = new File(outputDir, sampleId + "-" + libId + ".qc.summary.json")
   }
 
+  /** Script to add jobs */
   def biopetScript() {
     runInitialJobs()
 
@@ -101,40 +103,63 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     runFinalize(R1_files.toList, R2_files.toList)
   }
 
+  /** Add init non chunkable jobs */
   def runInitialJobs() {
     outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
     if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2.get, outputDir))
 
     fastqc_R1 = Fastqc(this, input_R1, new File(outputDir, R1_name + ".fastqc/"))
     add(fastqc_R1)
-    summary.addFastqc(fastqc_R1)
+    addSummarizable(fastqc_R1, "fastqc_R1")
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
-
-    val md5sum_R1 = Md5sum(this, input_R1, outputDir)
-    add(md5sum_R1)
-    summary.addMd5sum(md5sum_R1, R2 = false, after = false)
 
     if (paired) {
       fastqc_R2 = Fastqc(this, input_R2.get, new File(outputDir, R2_name + ".fastqc/"))
       add(fastqc_R2)
-      summary.addFastqc(fastqc_R2, R2 = true)
+      addSummarizable(fastqc_R2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
-
-      val md5sum_R2 = Md5sum(this, input_R2.get, outputDir)
-      add(md5sum_R2)
-      summary.addMd5sum(md5sum_R2, R2 = true, after = false)
     }
   }
 
-  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) = {
+  //TODO: Refactor need to combine all this functions
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param outDir
+   * @param chunk
+   * @return
+   */
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, File, List[File]) =
     runTrimClip(R1_in, new File(""), outDir, chunk)
-  }
-  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) = {
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param outDir
+   * @return
+   */
+  def runTrimClip(R1_in: File, outDir: File): (File, File, List[File]) =
     runTrimClip(R1_in, new File(""), outDir, "")
-  }
-  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) = {
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param R2_in
+   * @param outDir
+   * @return
+   */
+  def runTrimClip(R1_in: File, R2_in: File, outDir: File): (File, File, List[File]) =
     runTrimClip(R1_in, R2_in, outDir, "")
-  }
+
+  /**
+   * Adds all chunkable jobs of flexiprep
+   * @param R1_in
+   * @param R2_in
+   * @param outDir
+   * @param chunkarg
+   * @return
+   */
   def runTrimClip(R1_in: File, R2_in: File, outDir: File, chunkarg: String): (File, File, List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String, File] = Map()
@@ -146,6 +171,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
     seqtkSeq_R1.isIntermediate = true
     add(seqtkSeq_R1)
+    addSummarizable(seqtkSeq_R1, "seqtkSeq_R1")
     R1 = seqtkSeq_R1.output
     deps ::= R1
 
@@ -153,6 +179,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       val seqtkSeq_R2 = SeqtkSeq(this, R2, swapExt(outDir, R2, R2_ext, ".sanger" + R2_ext), fastqc_R2)
       seqtkSeq_R2.isIntermediate = true
       add(seqtkSeq_R2)
+      addSummarizable(seqtkSeq_R2, "seqtkSeq_R2")
       R2 = seqtkSeq_R2.output
       deps ::= R2
     }
@@ -160,13 +187,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     val seqstat_R1 = Seqstat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
     add(seqstat_R1)
-    summary.addSeqstat(seqstat_R1, R2 = false, after = false, chunk)
+    addSummarizable(seqstat_R1, "seqstat_R1")
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
       seqstat_R2.isIntermediate = true
       add(seqstat_R2)
-      summary.addSeqstat(seqstat_R2, R2 = true, after = false, chunk)
+      addSummarizable(seqstat_R2, "seqstat_R2")
     }
 
     if (!skipClip) { // Adapter clipping
@@ -175,7 +202,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       cutadapt_R1.fastqc = fastqc_R1
       cutadapt_R1.isIntermediate = true
       add(cutadapt_R1)
-      summary.addCutadapt(cutadapt_R1, R2 = false, chunk)
+      addSummarizable(cutadapt_R1, "clipping_R1")
       R1 = cutadapt_R1.fastq_output
       deps ::= R1
       outputFiles += ("cutadapt_R1_stats" -> cutadapt_R1.stats_output)
@@ -186,7 +213,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         cutadapt_R2.fastqc = fastqc_R2
         cutadapt_R2.isIntermediate = true
         add(cutadapt_R2)
-        summary.addCutadapt(cutadapt_R2, R2 = true, chunk)
+        addSummarizable(cutadapt_R2, "clipping_R2")
         R2 = cutadapt_R2.fastq_output
         deps ::= R2
 
@@ -199,8 +226,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
         fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
         fqSync.deps :::= deps
         add(fqSync)
-
-        summary.addFastqcSync(fqSync, chunk)
+        addSummarizable(fqSync, "fastq_sync")
         outputFiles += ("syncStats" -> fqSync.outputStats)
         R1 = fqSync.outputFastq1
         R2 = fqSync.outputFastq2
@@ -221,7 +247,7 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
       sickle.deps = deps
       sickle.isIntermediate = true
       add(sickle)
-      summary.addSickle(sickle, chunk)
+      addSummarizable(sickle, "trimming")
       R1 = sickle.output_R1
       if (paired) R2 = sickle.output_R2
     }
@@ -229,13 +255,13 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     val seqstat_R1_after = Seqstat(this, R1, outDir)
     seqstat_R1_after.deps = deps
     add(seqstat_R1_after)
-    summary.addSeqstat(seqstat_R1_after, R2 = false, after = true, chunk)
+    addSummarizable(seqstat_R1_after, "seqstat_R1_after")
 
     if (paired) {
       val seqstat_R2_after = Seqstat(this, R2, outDir)
       seqstat_R2_after.deps = deps
       add(seqstat_R2_after)
-      summary.addSeqstat(seqstat_R2_after, R2 = true, after = true, chunk)
+      addSummarizable(seqstat_R2_after, "seqstat_R2_after")
     }
 
     outputFiles += (chunk + "output_R1" -> R1)
@@ -243,6 +269,11 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     return (R1, R2, deps)
   }
 
+  /**
+   * Adds last non chunkable jobs
+   * @param fastq_R1
+   * @param fastq_R2
+   */
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
     if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
     val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
@@ -255,27 +286,26 @@ class Flexiprep(val root: Configurable) extends QScript with BiopetQScript {
     if (paired) outputFiles += ("output_R2_gzip" -> R2)
 
     if (!skipTrim || !skipClip) {
-      val md5sum_R1 = Md5sum(this, R1, outputDir)
-      add(md5sum_R1)
-      summary.addMd5sum(md5sum_R1, R2 = false, after = true)
-      if (paired) {
-        val md5sum_R2 = Md5sum(this, R2, outputDir)
-        add(md5sum_R2)
-        summary.addMd5sum(md5sum_R2, R2 = true, after = true)
-      }
       fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
       add(fastqc_R1_after)
-      summary.addFastqc(fastqc_R1_after, after = true)
+      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
+
       if (paired) {
         fastqc_R2_after = Fastqc(this, R2, new File(outputDir, R2_name + ".qc.fastqc/"))
         add(fastqc_R2_after)
-        summary.addFastqc(fastqc_R2_after, R2 = true, after = true)
+        addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
       }
     }
 
-    add(summary)
+    addSummaryJobs
   }
 
+  /**
+   * Extracts file if file is compressed
+   * @param file
+   * @param runDir
+   * @return returns extracted file
+   */
   def extractIfNeeded(file: File, runDir: File): File = {
     if (file == null) return file
     else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {

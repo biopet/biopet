@@ -314,6 +314,16 @@ object ConfigUtils extends Logging {
   }
 
   /**
+   * Convert Any to List[File]
+   * @param any Input Any value
+   * @return
+   */
+  def any2fileList(any: Any): List[File] = {
+    if (any == null) return null
+    any2list(any).map(x => new File(x.toString))
+  }
+
+  /**
    * Convert Any to Map[String, Any]
    * @param any Input Any value
    * @return
@@ -502,6 +512,16 @@ object ConfigUtils extends Logging {
      */
     implicit def configValue2stringList(value: ConfigValue): List[String] = {
       if (requiredValue(value)) any2stringList(value.value)
+      else Nil
+    }
+
+    /**
+     * Convert ConfigValue to List[File]
+     * @param value Input ConfigValue
+     * @return
+     */
+    implicit def configValue2fileList(value: ConfigValue): List[File] = {
+      if (requiredValue(value)) any2fileList(value.value)
       else Nil
     }
 

@@ -17,9 +17,7 @@ package nl.lumc.sasc.biopet.extensions.seqtk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
-/**
- * Abstract class for all seqtk wrappers.
- */
+/** Abstract class for all seqtk wrappers. */
 abstract class Seqtk extends BiopetCommandLineFunction {
   override def subPath = "seqtk" :: super.subPath
   executable = config("exe", default = "seqtk", freeVar = true)

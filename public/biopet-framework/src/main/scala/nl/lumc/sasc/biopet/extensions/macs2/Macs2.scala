@@ -3,6 +3,8 @@ package nl.lumc.sasc.biopet.extensions.macs2
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
 /**
+ * General igvtools extension
+ *
  * Created by sajvanderzeeuw on 12/19/14.
  */
 abstract class Macs2 extends BiopetCommandLineFunction {

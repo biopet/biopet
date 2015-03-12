@@ -19,9 +19,17 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
+import scala.collection.mutable
+import scala.io.Source
+
+/**
+ * Extension for sickle
+ * Based on version 1.33
+ */
+class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
   @Input(doc = "R1 input")
   var input_R1: File = _
 
@@ -53,10 +61,12 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
 
+  /** Sets qualityType is still empty */
   override def beforeGraph {
     if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 
+  /** Return command to execute */
   def cmdLine = {
     var cmd: String = required(executable)
     if (input_R2 != null) {
@@ -71,9 +81,62 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction {
       required("-o", output_R1) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
-      optional("-x", noFiveprime) +
-      optional("-n", discardN) +
-      optional("--quiet", quiet) +
+      conditional(noFiveprime, "-x") +
+      conditional(discardN, "-n") +
+      conditional(quiet, "--quiet") +
       " > " + required(output_stats)
   }
+
+  /** returns stats map for summary */
+  def summaryStats: Map[String, Any] = {
+    // regex for single run
+    val sKept = """FastQ records kept: (\d+)""".r
+    val sDiscarded = """FastQ records discarded: (\d+)""".r
+    // regex for paired run
+    val pPairKept = """FastQ paired records kept: (\d*) \((\d*) pairs\)""".r
+    val pSingleKept = """FastQ single records kept: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+    val pPairDiscarded = """FastQ paired records discarded: (\d*) \((\d*) pairs\)""".r
+    val pSingleDiscarded = """FastQ single records discarded: (\d*) \(from PE1: (\d*), from PE2: (\d*)\)""".r
+
+    var stats: mutable.Map[String, Int] = mutable.Map()
+
+    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
+      line match {
+        // single run
+        case sKept(num)              => stats += ("num_reads_kept" -> num.toInt)
+        case sDiscarded(num)         => stats += ("num_reads_discarded_total" -> num.toInt)
+        // paired run
+        case pPairKept(reads, pairs) => stats += ("num_reads_kept" -> reads.toInt)
+        case pSingleKept(total, r1, r2) => {
+          stats += ("num_reads_kept_R1" -> r1.toInt)
+          stats += ("num_reads_kept_R2" -> r2.toInt)
+        }
+        case pPairDiscarded(reads, pairs) => stats += ("num_reads_discarded_both" -> reads.toInt)
+        case pSingleDiscarded(total, r1, r2) => {
+          stats += ("num_reads_discarded_R1" -> r1.toInt)
+          stats += ("num_reads_discarded_R2" -> r2.toInt)
+        }
+        case _ =>
+      }
+    }
+
+    if (stats.contains("num_reads_discarded_both")) {
+      stats += ("num_reads_discarded_total" -> {
+        stats.getOrElse("num_reads_discarded_R1", 0) + stats.getOrElse("num_reads_discarded_R2", 0) +
+          stats.getOrElse("num_reads_discarded_both", 0)
+      })
+    }
+
+    stats.toMap
+  }
+
+  /** Merge stats incase of chunking */
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) => v1 + v2
+      case _                  => v1
+    }
+  }
+
+  def summaryFiles: Map[String, File] = Map()
 }

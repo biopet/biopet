@@ -19,8 +19,14 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/**
+ * Extension for bwa mem
+ *
+ * Based on version 0.7.12-r1039
+ */
 class BwaMem(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
@@ -71,7 +77,7 @@ class BwaMem(val root: Configurable) extends Bwa {
       required("mem") +
       optional("-k", k) +
       optional("-r", r) +
-      optional("-t", nCoresRequest) +
+      optional("-t", threads) +
       optional("-R", R) +
       conditional(M, "-M") +
       conditional(S, "-S") +

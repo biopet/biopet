@@ -1,0 +1,43 @@
+<!--
+
+    Due to the license issue with GATK, this part of Biopet can only be used inside the
+    LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
+    on how to use this protected part of biopet or contact us at sasc@lumc.nl
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>nl.lumc.sasc</groupId>
+    <artifactId>Basty</artifactId>
+    <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.3.0-DEV</version>
+        <relativePath>../</relativePath>
+    </parent>
+    
+    <inceptionYear>2014</inceptionYear>
+    <name>Basty</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetFramework</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Shiva</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Mapping</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

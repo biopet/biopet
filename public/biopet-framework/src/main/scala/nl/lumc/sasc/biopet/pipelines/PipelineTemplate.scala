@@ -20,14 +20,18 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function._
 
+/** Template for a pipeline */
 class PipelineTemplate(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
+  /** This is executed before the script starts */
   def init() {
   }
 
+  /** Method where jobs must be added */
   def biopetScript() {
   }
 }
 
+/** Object to let to generate a main method */
 object PipelineTemplate extends PipelineCommand

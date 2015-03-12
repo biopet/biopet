@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard AddOrReplaceReadGroups */
 class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.AddOrReplaceReadGroups"
 
@@ -61,6 +62,7 @@ class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
   @Argument(doc = "RGPI", required = false)
   var RGPI: Option[Int] = _
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -77,6 +79,7 @@ class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
 }
 
 object AddOrReplaceReadGroups {
+  /** Returns default AddOrReplaceReadGroups */
   def apply(root: Configurable, input: File, output: File, sortOrder: String = null): AddOrReplaceReadGroups = {
     val addOrReplaceReadGroups = new AddOrReplaceReadGroups(root)
     addOrReplaceReadGroups.input = input

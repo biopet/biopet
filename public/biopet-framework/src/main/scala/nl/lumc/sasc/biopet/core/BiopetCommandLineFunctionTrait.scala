@@ -25,9 +25,7 @@ import scala.util.matching.Regex
 import java.io.FileInputStream
 import java.security.MessageDigest
 
-/**
- * Biopet command line trait to auto check executable and cluster values
- */
+/** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {
   analysisName = configName
 
@@ -47,14 +45,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    */
   protected[core] def beforeCmd {}
 
-  /**
-   * Can override this method. This is executed after the script is done en queue starts to generate the graph
-   */
+  /** Can override this method. This is executed after the script is done en queue starts to generate the graph */
   protected[core] def beforeGraph {}
 
-  /**
-   * Set default output file, threads and vmem for current job
-   */
+  /** Set default output file, threads and vmem for current job */
   override def freezeFieldValues() {
     preProcesExecutable
     beforeGraph
@@ -73,6 +67,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     super.freezeFieldValues()
   }
 
+  /** can override this value is executable may not be converted to CanonicalPath */
+  val executableToCanonicalPath = true
+
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
@@ -87,7 +84,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
           if (process.exitValue == 0) {
             executable = buffer.toString
             val file = new File(executable)
-            executable = file.getCanonicalPath
+            if (executableToCanonicalPath) executable = file.getCanonicalPath
+            else executable = file.getAbsolutePath
           } else {
             BiopetQScript.addError("executable: '" + executable + "' not found, please check config")
           }
@@ -114,9 +112,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     addJobReportBinding("md5sum_exe", md5.getOrElse("None"))
   }
 
-  /**
-   * executes checkExecutable method and fill job report
-   */
+  /** executes checkExecutable method and fill job report */
   final protected def preCmdInternal {
     preProcesExecutable
 
@@ -129,10 +125,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     addJobReportBinding("version", getVersion)
   }
 
-  /**
-   * Command to get version of executable
-   * @return
-   */
+  /** Command to get version of executable */
   protected def versionCommand: String = null
 
   /** Regex to get version from version command output */
@@ -142,10 +135,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0)
 
   /** Executes the version command */
-  private def getVersionInternal: String = {
-    if (versionCommand == null || versionRegex == null) return "N/A"
+  private def getVersionInternal: Option[String] = {
+    if (versionCommand == null || versionRegex == null) return None
     val exe = new File(versionCommand.trim.split(" ")(0))
-    if (!exe.exists()) return "N/A"
+    if (!exe.exists()) return None
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     def outputLog = "Version command: \n" + versionCommand +
@@ -154,25 +147,28 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
     if (!versionExitcode.contains(process.exitValue)) {
       logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
-      return "N/A"
+      return None
     }
     for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
       line match {
-        case versionRegex(m) => return m
+        case versionRegex(m) => return Some(m)
         case _               =>
       }
     }
     logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
-    return "N/A"
+    return None
   }
 
   /** Get version from cache otherwise execute the version command  */
-  def getVersion: String = {
+  def getVersion: Option[String] = {
     if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
       preProcesExecutable
-    if (!BiopetCommandLineFunctionTrait.versionCache.contains(executable))
-      BiopetCommandLineFunctionTrait.versionCache += executable -> getVersionInternal
-    return BiopetCommandLineFunctionTrait.versionCache(executable)
+    if (!BiopetCommandLineFunctionTrait.versionCache.contains(versionCommand))
+      getVersionInternal match {
+        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += versionCommand -> version
+        case _             =>
+      }
+    BiopetCommandLineFunctionTrait.versionCache.get(versionCommand)
   }
 
   /**
@@ -201,12 +197,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
 }
 
-/**
- * stores global caches
- */
+/** stores global caches */
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
   private val versionCache: Map[String, String] = Map()
-  private val executableMd5Cache: Map[String, String] = Map()
+  private[core] val executableMd5Cache: Map[String, String] = Map()
   private val executableCache: Map[String, String] = Map()
 }

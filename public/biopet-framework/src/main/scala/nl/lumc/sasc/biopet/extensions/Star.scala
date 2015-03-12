@@ -21,6 +21,9 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
+/**
+ * Extension for STAR
+ */
 class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "The reference file for the bam files.", required = false)
   var reference: File = new File(config("reference"))
@@ -58,10 +61,12 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
+  var runThreadN: Option[Int] = config("runThreadN")
 
   override val defaultVmem = "6G"
   override val defaultThreads = 8
 
+  /** Sets output files for the graph */
   override def beforeGraph() {
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
     val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
@@ -77,7 +82,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
     }
   }
 
-  def cmdLine: String = {
+  /** Returns command to execute */
+  def cmdLine = {
     var cmd: String = required("cd", outputDir) + "&&" + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
@@ -87,15 +93,26 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
     }
     cmd += required("--genomeDir", genomeDir) +
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
-      optional("--runThreadN", nCoresRequest) +
+      optional("--runThreadN", threads) +
       optional("--outFileNamePrefix", outFileNamePrefix)
     if (sjdbOverhang > 0) cmd += optional("--sjdbOverhang", sjdbOverhang)
 
-    return cmd
+    cmd
   }
 }
 
 object Star {
+  /**
+   * Create default star
+   * @param configurable root object
+   * @param R1 R1 fastq file
+   * @param R2 R2 fastq file
+   * @param outputDir Outputdir for Star
+   * @param isIntermediate
+   * @param deps Deps to add to wait on run
+   * @return Return Star
+   *
+   */
   def apply(configurable: Configurable, R1: File, R2: File, outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
@@ -107,7 +124,22 @@ object Star {
     return star
   }
 
-  def _2pass(configurable: Configurable, R1: File, R2: File, outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): (File, List[Star]) = {
+  /**
+   * returns Star with 2pass star method
+   * @param configurable root object
+   * @param R1 R1 fastq file
+   * @param R2 R2 fastq file
+   * @param outputDir Outputdir for Star
+   * @param isIntermediate
+   * @param deps Deps to add to wait on run
+   * @return Return Star
+   */
+  def _2pass(configurable: Configurable,
+             R1: File,
+             R2: File,
+             outputDir: File,
+             isIntermediate: Boolean = false,
+             deps: List[File] = Nil): (File, List[Star]) = {
     val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass1"))
     starCommand_pass1.isIntermediate = isIntermediate
     starCommand_pass1.deps = deps

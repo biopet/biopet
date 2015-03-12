@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions._
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -12,12 +13,8 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Cutadapt
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
-import nl.lumc.sasc.biopet.pipelines.flexiprep.Sickle
-import nl.lumc.sasc.biopet.pipelines.flexiprep._
-import nl.lumc.sasc.biopet.tools.FastqSync
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{ SeqtkSeq, Cutadapt, Fastqc }
+import nl.lumc.sasc.biopet.tools.{ Seqstat, FastqSync }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
@@ -33,25 +30,30 @@ class MappingTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "mappingOptions", parallel = true)
+  @DataProvider(name = "mappingOptions")
   def mappingOptions = {
     val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
     val skipFlexipreps = Array(true, false)
+    val zipped = Array(true, false)
 
     for (
       aligner <- aligners;
       pair <- paired;
       chunk <- chunks;
       skipMarkDuplicate <- skipMarkDuplicates;
-      skipFlexiprep <- skipFlexipreps
-    ) yield Array(aligner, pair, chunk, skipMarkDuplicate, skipFlexiprep)
+      skipFlexiprep <- skipFlexipreps;
+      zipped <- zipped
+    ) yield Array(aligner, pair, chunk, skipMarkDuplicate, skipFlexiprep, zipped)
   }
 
   @Test(dataProvider = "mappingOptions")
-  def testMapping(aligner: String, paired: Boolean, chunks: Int, skipMarkDuplicate: Boolean, skipFlexiprep: Boolean) = {
+  def testMapping(aligner: String, paired: Boolean, chunks: Int,
+                  skipMarkDuplicate: Boolean,
+                  skipFlexiprep: Boolean,
+                  zipped: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> MappingTest.outputDir,
       "aligner" -> aligner,
       "number_chunks" -> chunks,
@@ -60,15 +62,21 @@ class MappingTest extends TestNGSuite with Matchers {
     ), Map(MappingTest.executables.toSeq: _*))
     val mapping: Mapping = initPipeline(map)
 
-    mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq")
-    if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq"))
-    mapping.sampleId = "1"
-    mapping.libId = "1"
+    if (zipped) {
+      mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq.gz")
+      if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq.gz"))
+    } else {
+      mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq")
+      if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq"))
+    }
+    mapping.sampleId = Some("1")
+    mapping.libId = Some("1")
     mapping.script()
 
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
-    mapping.functions.count(_.isInstanceOf[Zcat]) shouldBe 0
+    mapping.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (!zipped || (chunks > 1 && skipFlexiprep)) 0 else if (paired) 2 else 1)
+    mapping.functions.count(_.isInstanceOf[Seqstat]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 4 else 2) * chunks)
     mapping.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[Cutadapt]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[FastqSync]) shouldBe ((if (skipFlexiprep) 0 else if (paired && !skipFlexiprep) 1 else 0) * chunks)
@@ -109,7 +117,6 @@ object MappingTest {
 
   val executables = Map(
     "reference" -> "test",
-    "seqstat" -> Map("exe" -> "test"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

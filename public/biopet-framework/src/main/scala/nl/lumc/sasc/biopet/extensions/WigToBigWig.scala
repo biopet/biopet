@@ -27,6 +27,7 @@ class WigToBigWig(val root: Configurable) extends BiopetCommandLineFunction {
   var clip: Boolean = config("clip", default = false)
   var unc: Boolean = config("unc", default = false)
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     optional("-blockSize=", blockSize, spaceSeparated = false) +
     optional("-itemsPerSlot=", itemsPerSlot, spaceSeparated = false) +

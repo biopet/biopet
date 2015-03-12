@@ -8,9 +8,9 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
 import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -66,17 +66,18 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     else if (files.size == 1) {
       val bamFile = new File(outputDir, files.head.getName)
       if (bamFile != files.head) {
-        val oldIndex: File = files.head.getAbsolutePath.stripSuffix(".bam") + ".bai"
-        val newIndex: File = bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai"
-        add(Ln(this, oldIndex, newIndex))
+        val oldIndex: File = new File(files.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex: File = swapExt(outputDir, bamFile, ".bam", ".bai")
+        val baiLn = Ln(this, oldIndex, newIndex)
+        add(baiLn)
 
         val bamLn = Ln(this, files.head, bamFile)
-        bamLn.deps :+= newIndex
+        bamLn.deps :+= baiLn.output
         add(bamLn)
       }
       List(bamFile)
     } else {
-      val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
+      val markDup = MarkDuplicates(this, files, new File(outputDir, outputName + ".dedup.bam"))
       markDup.isIntermediate = useIndelRealigner
       add(markDup)
       if (useIndelRealigner) {

@@ -21,6 +21,11 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
+/**
+ * Extension for gubbins
+ * See; https://github.com/sanger-pathogens/gubbins
+ * No version known
+ */
 class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Contaminants", required = false)
@@ -33,7 +38,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var outputFiles: List[File] = Nil
 
   @Argument(required = true)
-  var outputDirectory: String = _
+  var outputDirectory: File = null
 
   executable = config("exe", default = "run_gubbins.py")
   var outgroup: Option[String] = config("outgroup")
@@ -47,9 +52,11 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var verbose: Boolean = config("verbose", default = false)
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
+  /** Set correct output files */
   override def beforeGraph: Unit = {
     super.beforeGraph
-    jobLocalDir = new File(outputDirectory)
+    require(outputDirectory != null)
+    jobLocalDir = outputDirectory
     if (prefix.isEmpty) prefix = Some(fastafile.getName)
     val out: List[String] = List(".recombination_predictions.embl",
       ".recombination_predictions.gff",
@@ -62,6 +69,7 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
     for (t <- out) outputFiles ::= new File(outputDirectory + File.separator + prefix.getOrElse("gubbins") + t)
   }
 
+  /** Return command to execute */
   def cmdLine = required("cd", outputDirectory) + " && " + required(executable) +
     optional("--outgroup", outgroup) +
     optional("--starting_tree", startingTree) +
