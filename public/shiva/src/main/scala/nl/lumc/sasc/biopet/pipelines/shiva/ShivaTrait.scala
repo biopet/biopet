@@ -219,7 +219,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
         val md = new MarkDuplicates(qscript)
         md.input = input
         md.output = new File(sampleDir, sampleId + ".dedup.bam")
-        md.outputMetrics = new File(sampleDir, sampleId + ".dedup.bam")
+        md.outputMetrics = new File(sampleDir, sampleId + ".dedup.metrics")
         md.isIntermediate = isIntermediate
         add(md)
         addSummarizable(md, "mark_duplicates")
