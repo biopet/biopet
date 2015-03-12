@@ -88,8 +88,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
     for (bedFile <- bedFiles) {
       //TODO: Add target jobs to summary
-      val targetDir = bedFile.getParentFile
-      val targetFile = new File(outputDir, bedFile.getName.stripSuffix(".bed") + ".interval")
+      val targetDir = new File(outputDir, bedFile.getName.stripSuffix(".bed"))
+      val targetFile = new File(targetDir, bedFile.getName.stripSuffix(".bed") + ".interval")
       val targetInterval = BedToInterval(this, bedFile, inputBam, targetFile)
       add(targetInterval, true)
       add(CalculateHsMetrics(this, inputBam, if (baitIntervalFile != null) baitIntervalFile
