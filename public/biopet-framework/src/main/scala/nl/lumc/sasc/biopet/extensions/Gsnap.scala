@@ -176,9 +176,6 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   /** use this runlength iit file to resolve concordant multiple results */
   var use_runlength: Option[String] = config("use_runlength")
 
-  /** number of worker threads */
-  var nthreads: Option[Int] = config("nthreads")
-
   /** cases to use gmap for complex alignments containing multiple splices or indels */
   var gmap_mode: Option[String] = config("gmap_mode")
 
