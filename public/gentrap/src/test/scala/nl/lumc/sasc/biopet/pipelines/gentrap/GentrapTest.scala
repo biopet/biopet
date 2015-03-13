@@ -38,9 +38,10 @@ class GentrapTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
       override def configName = "gentrap"
-
       override def globalConfig = new Config(map)
-
+      // disable dict file check since it is based on the reference file name (which we can't modify here since
+      // we use the mock /usr/bin/test file
+      override def checkDictFile: Unit = {}
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -187,6 +188,7 @@ object GentrapTest {
 
   val executables = Map(
     "reference" -> "test",
+    "dict" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
