@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 
 class ReorderSam(val root: Configurable) extends Picard {
 
-  javaMainClass = "picard.sam.GatherBamFiles"
+  javaMainClass = "picard.sam.ReorderSam"
 
   @Input(doc = "Input SAM or BAM file", required = true)
   var input: File = null
