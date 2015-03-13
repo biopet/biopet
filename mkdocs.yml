@@ -7,6 +7,7 @@ pages:
 - ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
 - ['pipelines/mapping.md', 'Pipelines', 'Mapping']
 - ['pipelines/sage.md', 'Pipelines', 'Sage']
+- ['pipelines/toucan.md', 'Pipelines', 'Toucan']
 - ['tools/SamplesTsvToJson.md','Tools','SamplesTsvToJson']
 - ['tools/BastyGenerateFasta.md','Tools','BastyGenerateFasta']
 - ['tools/bedtointerval.md','Tools','BedToInterval']
