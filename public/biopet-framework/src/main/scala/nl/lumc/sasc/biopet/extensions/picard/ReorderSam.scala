@@ -35,10 +35,10 @@ class ReorderSam(val root: Configurable) extends Picard {
   var output: File = null
 
   @Argument(doc = "Allow incomplete dict concordance", required = false)
-  var allowIncompleteDictConcordance: Boolean = config("allow_incomplete_dict_concordance", default= false)
+  var allowIncompleteDictConcordance: Boolean = config("allow_incomplete_dict_concordance", default = false)
 
   @Argument(doc = "Allow contig length discordance", required = false)
-  var allowContigLengthDiscordance: Boolean = config("allow_contig_length_discordance", default= false)
+  var allowContigLengthDiscordance: Boolean = config("allow_contig_length_discordance", default = false)
 
   override def commandLine = super.commandLine +
     conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +
