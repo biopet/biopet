@@ -361,11 +361,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.R1 = tophat.R1 :+ R1
     if (R2 != null && R2.getPath != "") tophat.R2 = tophat.R2 :+ R2
     tophat.output_dir = new File(outputDir, "tophat_out")
-    // always output BAM
-    tophat.no_convert_bam = false
     tophat.deps = deps
     // always output BAM
     tophat.no_convert_bam = false
+    // and always keep input ordering
+    tophat.keep_fasta_order = true
     add(tophat)
 
     val sortSam = new SortSam(this)
