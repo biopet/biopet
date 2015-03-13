@@ -19,6 +19,7 @@ pages:
 - ['tools/VcfFilter.md','Tools','VcfFilter']
 - ['tools/MpileupToVcf.md', 'Tools', 'MpileupToVcf']
 - ['tools/sagetools.md', 'Tools', 'Sagetools']
+- ['tools/VEPNormalizer.md', 'Tools', 'VEPNormalizer']
 - ['tools/WipeReads.md', 'Tools', 'WipeReads']
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 - ['about.md', 'About']
