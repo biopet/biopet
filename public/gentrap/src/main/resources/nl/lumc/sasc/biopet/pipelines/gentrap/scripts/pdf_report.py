@@ -456,10 +456,6 @@ class GentrapSample(object):
         self.run = run
         self.name = name
         self._raw = summary
-        self.lib_names = sorted(summary["libraries"].keys())
-        self.libs = \
-            {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
-                for l in self.lib_names}
         self.is_paired_end = summary.get("gentrap", {}).get("stats", {}).get("pipeline", {})["all_paired"]
         # mapping metrics settings
         self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
@@ -486,9 +482,16 @@ class GentrapSample(object):
                     "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
                     "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
             })
+            if self.run.settings["strand_protocol"] != "non_specific":
+                self.rna_metrics.update({
+                })
             if _rmetrics.get("ribosomal_bases", "") != "":
                 self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
 
+        self.lib_names = sorted(summary["libraries"].keys())
+        self.libs = \
+            {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
+                for l in self.lib_names}
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__, self.name)
@@ -503,19 +506,6 @@ class GentrapRun(object):
 
         self._raw = summary
         self.summary_file = summary_file
-        self.sample_names = sorted(summary["samples"].keys())
-        self.samples = \
-            {s: GentrapSample(self, s, summary["samples"][s]) \
-                for s in self.sample_names}
-        self.libs = []
-        for sample in self.samples.values():
-            self.libs.extend(sample.libs.values())
-        if all([s.is_paired_end for s in self.samples.values()]):
-            self.lib_type = "all paired end"
-        elif all([not s.is_paired_end for s in self.samples.values()]):
-            self.lib_type = "all single end"
-        else:
-            self.lib_type = "mixed (single end and paired end)"
 
         self.files = summary["gentrap"].get("files", {}).get("pipeline", {})
         self.settings = summary["gentrap"]["settings"]
@@ -549,6 +539,20 @@ class GentrapRun(object):
         if self.all_executables.get("samtoolsview") is not None:
             self.executables["samtools"] = self.all_executables["samtoolsview"]
             self.executables["samtools"]["desc"] = "various post-alignment processing"
+
+        self.sample_names = sorted(summary["samples"].keys())
+        self.samples = \
+            {s: GentrapSample(self, s, summary["samples"][s]) \
+                for s in self.sample_names}
+        self.libs = []
+        for sample in self.samples.values():
+            self.libs.extend(sample.libs.values())
+        if all([s.is_paired_end for s in self.samples.values()]):
+            self.lib_type = "all paired end"
+        elif all([not s.is_paired_end for s in self.samples.values()]):
+            self.lib_type = "all single end"
+        else:
+            self.lib_type = "mixed (single end and paired end)"
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__,
