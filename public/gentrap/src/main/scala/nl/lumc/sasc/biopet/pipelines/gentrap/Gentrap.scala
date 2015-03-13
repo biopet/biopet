@@ -308,6 +308,13 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Steps to run before biopetScript */
   def init(): Unit = {
+    // TODO: refactor this out to a submodule (mapping / bammetrics?)
+    // We require the reference FASTA to be present, and also its companion DICT file
+    require(config.contains("reference"), "Reference FASTA must be defined")
+    val refName: File = config("reference")
+    val dict: File = new File(refName.toString.take(refName.toString.lastIndexOf('.')) + ".dict")
+    require(dict.exists, s"Dict file '$dict' must exist")
+
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(FragmentsPerGene))
