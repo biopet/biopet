@@ -30,7 +30,7 @@ import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups, ReorderSam }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 
@@ -351,7 +351,13 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
 
-    addAddOrReplaceReadGroups(sortSam.output, output)
+    val reorderSam = new ReorderSam(this)
+    reorderSam.input = sortSam.output
+    reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
+    reorderSam.reference = reference
+    add(reorderSam)
+
+    addAddOrReplaceReadGroups(reorderSam.output, output)
   }
 
   def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
