@@ -34,20 +34,20 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   @Input(doc = "Gene annotations in refFlat form", required = true)
   var refFlat: File = null
 
+  @Input(doc = "Location of rRNA sequences in interval list format", required = false)
+  var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
+
   @Output(doc = "Output metrics file", required = true)
   var output: File = null
 
-  @Argument(doc = "Location of rRNA sequences in interval list format", required = false)
-  var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
+  @Output(doc = "PDF output of the coverage chart", required = false)
+  var chartOutput: Option[File] = config("chart_output")
 
   @Argument(doc = "Strand specificity", required = false)
   var strandSpecificity: Option[String] = config("strand_specificity")
 
   @Argument(doc = "Minimum length of transcripts to use for coverage-based values calculation", required = false)
   var minimumLength: Option[Int] = config("minimum_length")
-
-  @Argument(doc = "PDF output of the coverage chart", required = false)
-  var chartOutput: Option[File] = config("chart_output")
 
   @Argument(doc = "Sequences to ignore for mapped reads", required = false)
   var ignoreSequence: Option[String] = config("ignore_sequence")
