@@ -312,7 +312,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     val refFile: File = config("reference")
     val refName: String = refFile.getName
     require(refName.contains('.'), "Reference file must have an extension")
-    val dictFile = new File(refName.take(refName.lastIndexOf('.')) + ".dict")
+    val dictFile = new File(Option(refFile.getParentFile).getOrElse(new File(".")),
+      refName.take(refName.lastIndexOf('.')) + ".dict")
     require(dictFile.exists, s"Dict file '$dictFile' must exist")
   }
 
