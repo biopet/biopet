@@ -3,6 +3,7 @@ pages:
 - ['index.md', 'Home']
 - ['general/config.md', 'General', 'Config']
 - ['pipelines/basty.md', 'Pipelines', 'Basty']
+- ['pipelines/gentrap.md', 'Pipelines', 'Gentrap']
 - ['pipelines/GATK-pipeline.md', 'Pipelines', 'GATK-pipeline']
 - ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
 - ['pipelines/mapping.md', 'Pipelines', 'Mapping']
