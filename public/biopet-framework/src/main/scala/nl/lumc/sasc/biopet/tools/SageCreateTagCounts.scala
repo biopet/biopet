@@ -51,11 +51,11 @@ class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineF
 
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("--taglib", tagLib) +
-    optional("--sense", countSense) +
-    optional("--allsense", countAllSense) +
-    optional("--antisense", countAntiSense) +
-    optional("--allantisense", countAllAntiSense)
+    required("--tagLib", tagLib) +
+    optional("--countSense", countSense) +
+    optional("--countAllSense", countAllSense) +
+    optional("--countAntiSense", countAntiSense) +
+    optional("--countAllAntiSense", countAllAntiSense)
 }
 
 object SageCreateTagCounts extends ToolCommand {
