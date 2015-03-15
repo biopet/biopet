@@ -1,18 +1,18 @@
-## <a href="https://git.lumc.nl/biopet/biopet/tree/develop/protected/basty/src/main/scala/nl/lumc/sasc/biopet/pipelines/basty" target="_blank">Basty</a>
+# Basty
 
-# Introduction
+## Introduction
 
 
 A pipeline for aligning bacterial genomes and detect structural variations on the level of SNPs. Basty will output phylogenetic trees.
 Which makes it very easy to look at the variations between certain species or strains.
 
-## Tools for this pipeline
+### Tools for this pipeline
 * [GATK-pipeline](GATK-pipeline.md)
 * [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 * <a href="http://sco.h-its.org/exelixis/software.html" target="_blank">RAxml</a>
 * <a href="https://github.com/sanger-pathogens/Gubbins" target="_blank">Gubbins</a>
 
-## Requirements
+### Requirements
 
 To run for a specific species, please do not forget to create the proper index files.
 The index files are created from the supplied reference:
@@ -22,21 +22,21 @@ The index files are created from the supplied reference:
 * ```.idxSpecificForAligner``` (depending on which aligner is used one should create a suitable index specific for that aligner. 
 Each aligner has his own way of creating index files. Therefore the options for creating the index files can be found inside the aligner itself)
 
-## Example
+### Example
 
-#### For the help screen:
+##### For the help screen:
 ~~~
 java -jar Biopet.0.2.0.jar pipeline basty -h
 ~~~
 
-#### Run the pipeline:
+##### Run the pipeline:
 Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~
 java -jar Biopet.0.2.0.jar pipeline basty -run -config MySamples.json -config MySettings.json -outDir myOutDir
 ~~~
 
-## Result files
+### Result files
 The output files this pipeline produces are:
 
 * A complete output from [Flexiprep](flexiprep.md)
@@ -107,7 +107,7 @@ The output files this pipeline produces are:
     ├── multisample.ug.discovery.vcf.gz
     └── multisample.ug.discovery.vcf.gz.tbi
 ~~~
-## Best practice
+### Best practice
 
 
-# References
+## References

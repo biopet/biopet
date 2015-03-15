@@ -1,21 +1,18 @@
-# Release notes BioPet version 0.3.0
+# Release notes Biopet version 0.3.0
 
 Since our first release in December 2014 many new functions have been added to the pipelines including:
 - Multisample compatibility
-- Copy number analysis
-- Structural variants analysis
-- Full RNA-seq pipeline
-- Annotation pipeline ( still under development )
 - Summary framework
     - Md5sum of all input/output files ( need to be provided in the summary )
     - Sequence stats
     - Program stats/versions
     - mapping stats
     - Tool stats ( if pipeline uses a biopet tool, it will output the version of the tool and all other statistics that might be captured )
-- GATK variantcalling has a lot of new features and is now called SHIVA
 - A entire new pipeline named Gentrap based on our previous [Makefile version](http://sasc-server.lumcnet.prod.intern/pipelines/makefile-0.6.0/gentrap/), with extra features like:
     - remove all ribosomal reads
-    - a tool for building the correct annotation for read.counting etc etc.
+    - multi sample runs
+- GATK VariantCalling has a lot of new features and is now called Shiva
+- Annotation pipeline ( development version )
 
 Also a impressive list of tools have been added to the updated framework:
 
@@ -24,6 +21,7 @@ Also a impressive list of tools have been added to the updated framework:
 - ExtractAlignedFastq
 - FastqSplitter
 - FastqSync
+- MergeTables
 - SamplesTsvToJson
 - Seqstat ( this is a lift over tool based on our previous python implementation of seqstat )
 - VEPNormalizer ( This normalizer enables a user to parse VEP output VCFs to the exact specs of [VCF 4.1](https://samtools.github.io/hts-specs/VCFv4.1.pdf) )

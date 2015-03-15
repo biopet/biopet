@@ -24,7 +24,15 @@ After loading the module, you can access the biopet package by simply typing `bi
 $ biopet
 ~~~
 
-This will show you a list of tools and pipelines that you can use straight away. You can also execute `biopet pipeline` to show only available pipelines or `biopet tool` to show only the tools. Almost all of the pipelines have a common usage pattern with a similar set of flags, for example:
+This will show you a list of tools and pipelines that you can use straight away. You can also execute `biopet pipeline` to show only available pipelines or `biopet tool` to show only the tools. What you should be aware of, is that this is actually a shell function that calls `java` on the system-wide available Biopet JAR file.
+
+~~~
+$ java -jar /path/to/current/biopet/release.jar
+~~~
+
+The actual path will vary from version to version, which is controlled by which module you loaded.
+
+Almost all of the pipelines have a common usage pattern with a similar set of flags, for example:
 
 ~~~
 $ biopet pipeline shiva -config myconfig.json -qsub -jobParaEnv BWA -retry 2
@@ -51,7 +59,7 @@ Biopet is based on the Queue framework developed by the Broad Institute as part 
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://git.lumc.nl/biopet/biopet](https://git.lumc.nl/biopet/biopet/issues), along with our issue tracker.
 
-## Setting up your local development environment
+## Local development setup
 
 To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.3 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
 

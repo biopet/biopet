@@ -1,6 +1,8 @@
-# Introduction
+# Gentrap
 
-Gentrap (generic transcriptome analysis pipeline) is a general data analysis pipelines for quantifying expression levels from RNA-seq libraries generated using the Illumina machines. It was designed to be flexible, providing several aligners and quantification modes to choose from, with optional steps in between. It can be used to run different experiment configurations, from single sample runs to multiple sample runs containing multiple sequencing libraries. It can also do a very simple variant calling (using VarScan).
+## Introduction
+
+Gentrap (*generic transcriptome analysis pipeline*) is a general data analysis pipelines for quantifying expression levels from RNA-seq libraries generated using the Illumina machines. It was designed to be flexible, providing several aligners and quantification modes to choose from, with optional steps in between. It can be used to run different experiment configurations, from single sample runs to multiple sample runs containing multiple sequencing libraries. It can also do a very simple variant calling (using VarScan).
 
 At the moment, Gentrap supports the following aligners:
 
@@ -16,11 +18,11 @@ and the following quantification modes:
 
 You can also provide a `.refFlat` file containing ribosomal sequence coordinates to measure how many of your libraries originate from ribosomal sequences. Then, you may optionally remove those regions as well.
 
-# Configuration file
+## Configuration File
 
 As with other biopet pipelines, Gentrap relies on a JSON configuration file to run its analyses. There are two important parts here, the configuration for the samples (to determine the sample layout of your experiment) and the configuration for the pipeline settings (to determine which analyses are run).
 
-## Sample Configuration
+### Sample Configuration
 
 Samples are single experimental units whose expression you want to measure. They usually consist of a single sequencing library, but in some cases (for example when the experiment demands each sample have a minimum library depth) a single sample may contain multiple sequencing libraries as well. All this is can be configured using the correct JSON nesting, with the following pattern:
 
@@ -70,7 +72,7 @@ In the example above, there is one sample (named `sample_A`) which contains one 
 
 In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has two different libraries (`lib_one` and `lib_two`). Notice that the names of the samples and libraries may change, but several keys such as `samples`, `libraries`, `R1`, and `R2` remain the same.
 
-## Pipeline Settings Configuration
+### Pipeline Settings Configuration
 
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
 
@@ -107,3 +109,28 @@ Thus, an example settings configuration is as follows:
   }
 }
 ~~~
+
+## Running Gentrap
+
+As with other pipelines in the Biopet suite, gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
+
+~~~
+java -jar /path/to/biopet.jar pipeline gentrap -config /path/to/config.json -qsub -jobParaEnv BWA -run
+~~~
+
+If you already have the `biopet` environment module loaded, you can also simply call `biopet`:
+
+~~~
+biopet pipeline gentrap -config /path/to/config.json -qsub -jobParaEnv BWA -run
+~~~
+
+It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
+
+## Output Files
+
+The number and types of output files depend on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
+
+## Getting Help
+
+If you have any questions on running Gentrap, suggestions on how to improve the overall flow, or requests for your favorite RNA-seq related program to be added, feel free to post an issue to our issue tracker at [https://git.lumc.nl/biopet/biopet/issues](https://git.lumc.nl/biopet/biopet/issues).
+
