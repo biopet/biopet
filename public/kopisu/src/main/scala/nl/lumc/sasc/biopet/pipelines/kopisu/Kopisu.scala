@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
 import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMpileup
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
@@ -33,8 +35,23 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
   }
 
   def biopetScript() {
+    // This script starts from a BAM alignment file and creates the pileup file using sambamba
+
+    //    val sambambapileup = new SambambaMpileup(this)
+    //    sambambapileup.input = List(bamFile)
+    //    sambambapileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
+    //    sambambapileup.isIntermediate = true
+    //    add(sambambapileup)
+
+    val sampileup = new SamtoolsMpileup(this)
+    sampileup.input = List(bamFile)
+    sampileup.reference = config("reference")
+    sampileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup")
+    sampileup.isIntermediate = true
+    add(sampileup)
+
     val FreeC = new FreeC(this)
-    FreeC.bamFile = bamFile
+    FreeC.input = sampileup.output
     FreeC.outputPath = outputDirectory + File.separator + "CNV"
     add(FreeC)
 
@@ -51,13 +68,13 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     add(FCAssessSignificancePlot)
 
     val FCCnvPlot = new FreeCCNVPlot(this)
-    FCCnvPlot.deps = List(FreeC.RatioOutput)
+    FCCnvPlot.deps = List(FreeC.CNVoutput, FreeC.RatioOutput)
     FCCnvPlot.input = FreeC.RatioOutput
     FCCnvPlot.output = new File(outputDirectory, "freec_cnv.png")
     add(FCCnvPlot)
 
     val FCBAFPlot = new FreeCBAFPlot(this)
-    FCBAFPlot.deps = List(FreeC.BAFoutput)
+    FCBAFPlot.deps = List(FreeC.CNVoutput, FreeC.BAFoutput)
     FCBAFPlot.input = FreeC.BAFoutput
     FCBAFPlot.output = new File(outputDirectory, "freec_baf.png")
     add(FCBAFPlot)
