@@ -25,13 +25,23 @@ import scala.reflect.io.Path
 
 class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
 
-  @Input(doc = "Bam file", required = false)
-  var bamFile: File = _
+  @Input(doc = "Pileup file", required = true)
+  var input: File = null
 
   var outputPath: File = null
 
   @Output(doc = "Output", shortName = "out")
   protected var output: File = _
+
+  @Output(doc = "FreeC GC_profile")
+  def gcprofile: File = {
+    new File(outputPath, "GC_profile.cnp")
+  }
+
+  @Output(doc = "FreeC Read numbers per bin")
+  def samplebins: File = {
+    new File(outputPath, input.getName + "_sample.cpn")
+  }
 
   executable = config("exe", default = "freec")
 
@@ -43,13 +53,14 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
   // Default of 10k bins
   var window: Option[Int] = config("window", default = 10000)
+  var snpfile: String = config("SNPfile")
 
   var samtools_exe: String = config(key = "exe", submodule = "samtools")
 
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
   override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
   override val defaultThreads = 4
-  override val defaultVmem = "2G"
+  override val defaultVmem = "4G"
   private var config_file: File = _
 
   /*
@@ -57,7 +68,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   * */
   @Output()
   def CNVoutput: File = {
-    new File(outputPath, bamFile.getName + "_CNVs")
+    new File(outputPath, input.getName + "_CNVs")
   }
 
   /*
@@ -65,7 +76,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   * */
   @Output()
   def BAFoutput: File = {
-    new File(outputPath, bamFile.getName + "_BAF.txt")
+    new File(outputPath, input.getName + "_BAF.txt")
   }
 
   /*
@@ -73,7 +84,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   * */
   @Output()
   def RatioOutput: File = {
-    new File(outputPath, bamFile.getName + "_ratio.txt")
+    new File(outputPath, input.getName + "_ratio.txt")
   }
 
   /*
@@ -81,12 +92,12 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   * */
   @Output()
   def RatioBedGraph: File = {
-    new File(outputPath, bamFile.getName + "_ratio.BedGraph")
+    new File(outputPath, input.getName + "_ratio.BedGraph")
   }
 
   override def beforeGraph {
     super.beforeGraph
-    config_file = new File(outputPath, bamFile.getName + ".freec_config.txt")
+    config_file = new File(outputPath, input.getName + ".freec_config.txt")
     output = CNVoutput
   }
 
@@ -120,14 +131,16 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
     writer.write("window=" + this.window.getOrElse(10000) + "\n")
 
     writer.write("[sample]\n")
-    writer.write("mateFile=" + this.bamFile + "\n")
-    writer.write("inputFormat=bam\n")
+    writer.write("mateFile=" + this.input + "\n")
+    writer.write("inputFormat=pileup\n")
     // TODO: determine mateOrientation!
     // FR = Paired End Illumina
     // FF = SOLiD mate pairs
     // RF = Illumina mate-pairs
     // 0 = Single End
     writer.write("mateOrientation=FR\n")
+    writer.write("[BAF]\n")
+    writer.write("SNPfile=" + this.snpfile + "\n")
 
     writer.close()
   }
