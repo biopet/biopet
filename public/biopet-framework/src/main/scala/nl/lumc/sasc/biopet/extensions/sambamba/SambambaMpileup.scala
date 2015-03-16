@@ -24,28 +24,25 @@ class SambambaMpileup(val root: Configurable) extends Sambamba {
   override val defaultThreads = 4
 
   @Input(doc = "Bam File")
-  var input: List[File] = null
+  var input: List[File] = Nil
 
+  @Output(doc = "Output file", required = false)
   var output: File = null
 
-  val buffer: Option[Int] = config("buffer")
+  val buffer: Option[Int] = config("buffer", default = 8 * 1024 * 1024)
 
-  def cmdLine = required(executable) +
-    required("mpileup") +
-    optional("-t", threads) +
-    optional("-b", buffer) +
-    required(input.mkString(" ")) + " | " +
-    "pigz -9 -p " + threads + " -i -c > " +
-    output.getAbsolutePath
-}
-
-object SambambaMpileup {
-  def apply(root: Configurable, input: List[File], output: File): SambambaMpileup = {
-    val mpileup = new SambambaMpileup(root)
-    mpileup.input = input
-    mpileup.output = output
-    return mpileup
+  def cmdLine = {
+    required(executable) +
+      required("mpileup") +
+      optional("-t", threads) +
+      optional("-b", buffer) +
+      repeat(input) + " | " +
+      "pigz -9 -p " + threads + " -i -c > " +
+      output.getAbsolutePath
   }
-
-  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"
 }
+
+/*
+*
+*
+* */ 
