@@ -13,67 +13,158 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.File
-import nl.lumc.sasc.biopet.core.config.Configurable
+import java.io.{ File, FileNotFoundException }
+
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import org.broadinstitute.gatk.utils.commandline.Output
+
 import scala.io.Source
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
+import nl.lumc.sasc.biopet.core.config.Configurable
 
-class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) {
-  def getDataBlock(name: String): Array[String] = { // Based on Fastqc v0.10.1
-    val outputDir = output.getAbsolutePath.stripSuffix(".zip")
-    val dataFile = new File(outputDir + "/fastqc_data.txt")
-    if (!dataFile.exists) return null
-    val data = Source.fromFile(dataFile).mkString
-    for (block <- data.split(">>END_MODULE\n")) {
-      val b = if (block.startsWith("##FastQC")) block.substring(block.indexOf("\n") + 1) else block
-      if (b.startsWith(">>" + name))
-        return for (line <- b.split("\n"))
-          yield line
-    }
-    return null
+/**
+ * FastQC wrapper with added functionality for the Flexiprep pipeline
+ *
+ * This wrapper implements additional methods for parsing FastQC output files and aggregating everything in a summary
+ * object. The current implementation is based on FastQC v0.10.1.
+ */
+class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) with Summarizable {
+
+  /** Class for storing a single FastQC module result */
+  protected case class FastQCModule(name: String, status: String, lines: Seq[String])
+
+  /** Default FastQC output directory containing actual results */
+  // this is a def instead of a val since the value depends on the variable `output`, which is null on class creation
+  def outputDir: File = new File(output.getAbsolutePath.stripSuffix(".zip"))
+
+  /** Default FastQC output data file */
+  // this is a def instead of a val since the value depends on the variable `output`, which is null on class creation
+  def dataFile: File = new File(outputDir, "fastqc_data.txt")
+
+  /**
+   * FastQC QC modules.
+   *
+   * @return Mapping of FastQC module names and its contents as array of strings (one item per line)
+   * @throws FileNotFoundException if the FastQC data file can not be found.
+   * @throws IllegalStateException if the module lines have no content or mapping is empty.
+   */
+  def qcModules: Map[String, FastQCModule] = {
+    val fqModules = Source.fromFile(dataFile)
+      // drop all the characters before the first module delimiter (i.e. '>>')
+      .dropWhile(_ != '>')
+      // pull everything into a string
+      .mkString
+      // split into modules
+      .split(">>END_MODULE\n")
+      // make map of module name -> module lines
+      .map {
+        case (modString) =>
+          // module name is in the first line, without '>>' and before the tab character
+          val Array(firstLine, otherLines) = modString
+            // drop all '>>' character (start of module)
+            .dropWhile(_ == '>')
+            // split first line and others
+            .split("\n", 2)
+            // and slice them
+            .slice(0, 2)
+          // extract module name and module status
+          val Array(modName, modStatus) = firstLine
+            .split("\t", 2)
+            .slice(0, 2)
+          modName -> FastQCModule(modName, modStatus, otherLines.split("\n").toSeq)
+      }
+      .toMap
+
+    if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
+    else fqModules
   }
 
-  def getEncoding: String = {
-    val block = getDataBlock("Basic Statistics")
-    if (block == null) return null
-    for (
-      line <- block if (line.startsWith("Encoding"))
-    ) return line.stripPrefix("Encoding\t")
-    return null // Could be default Sanger with a warning in the log
+  /**
+   * Retrieves the FASTQ file encoding as computed by FastQC.
+   *
+   * @return encoding name
+   * @throws NoSuchElementException when the "Basic Statistics" key does not exist in the mapping or
+   *                                when a line starting with "Encoding" does not exist.
+   */
+  def encoding: String = {
+    if (dataFile.exists) // On a dry run this file does not yet exist
+      qcModules("Basic Statistics") //FIXME: not save
+        .lines
+        .dropWhile(!_.startsWith("Encoding"))
+        .head
+        .stripPrefix("Encoding\t")
+        .stripSuffix("\t")
+    else ""
   }
 
-  def getSummary: Json = {
-    val subfixs = Map("plot_duplication_levels" -> "Images/duplication_levels.png",
-      "plot_kmer_profiles" -> "Images/kmer_profiles.png",
-      "plot_per_base_gc_content" -> "Images/per_base_gc_content.png",
-      "plot_per_base_n_content" -> "Images/per_base_n_content.png",
-      "plot_per_base_quality" -> "Images/per_base_quality.png",
-      "plot_per_base_sequence_content" -> "Images/per_base_sequence_content.png",
-      "plot_per_sequence_gc_content" -> "Images/per_sequence_gc_content.png",
-      "plot_per_sequence_quality" -> "Images/per_sequence_quality.png",
-      "plot_sequence_length_distribution" -> "Images/sequence_length_distribution.png",
-      "fastqc_data" -> "fastqc_data.txt")
-    val dir = output.getAbsolutePath.stripSuffix(".zip") + "/"
-    var outputMap: Map[String, Map[String, String]] = Map()
-    for ((k, v) <- subfixs) outputMap += (k -> Map("path" -> (dir + v)))
+  /** Case class representing a known adapter sequence */
+  protected case class AdapterSequence(name: String, seq: String)
 
-    val temp = ("" := outputMap) ->: jEmptyObject
-    return temp.fieldOrEmptyObject("")
+  /**
+   * Retrieves overrepresented sequences found by FastQ.
+   *
+   * @return a [[Set]] of [[AdapterSequence]] objects.
+   */
+  def foundAdapters: Set[AdapterSequence] = {
+    if (dataFile.exists) { // On a dry run this file does not yet exist
+      /** Returns a list of adapter and/or contaminant sequences known to FastQC */
+      def getFastqcSeqs(file: Option[File]): Set[AdapterSequence] = file match {
+        case None => Set.empty[AdapterSequence]
+        case Some(f) =>
+          (for {
+            line <- Source.fromFile(f).getLines()
+            if !line.startsWith("#")
+            values = line.split("\t+")
+            if values.size >= 2
+          } yield AdapterSequence(values(0), values(1))).toSet
+      }
+
+      val found = qcModules.get("Overrepresented sequences") match {
+        case None => Seq.empty[String]
+        case Some(qcModule) =>
+          for (
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            values = line.split("\t") if values.size >= 4
+          ) yield values(3)
+      }
+
+      // select full sequences from known adapters and contaminants
+      // based on overrepresented sequences results
+      (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
+        .filter(x => found.exists(_.startsWith(x.name)))
+    } else Set()
   }
+
+  @Output
+  var outputFiles: List[File] = Nil
+
+  def summaryFiles: Map[String, File] = {
+    val outputFiles = Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),
+      "plot_kmer_profiles" -> ("Images" + File.separator + "kmer_profiles.png"),
+      "plot_per_base_gc_content" -> ("Images" + File.separator + "per_base_gc_content.png"),
+      "plot_per_base_n_content" -> ("Images" + File.separator + "per_base_n_content.png"),
+      "plot_per_base_quality" -> ("Images" + File.separator + "per_base_quality.png"),
+      "plot_per_base_sequence_content" -> ("Images" + File.separator + "per_base_sequence_content.png"),
+      "plot_per_sequence_gc_content" -> ("Images" + File.separator + "per_sequence_gc_content.png"),
+      "plot_per_sequence_quality" -> ("Images" + File.separator + "per_sequence_quality.png"),
+      "plot_sequence_length_distribution" -> ("Images" + File.separator + "sequence_length_distribution.png"),
+      "fastqc_data" -> ("fastqc_data.txt"))
+      .map(x => (x._1 -> new File(outputDir, x._2)))
+
+    outputFiles.foreach(this.outputFiles :+= _._2)
+
+    outputFiles ++ Map("fastq_file" -> this.fastqfile)
+  }
+
+  def summaryStats: Map[String, Any] = Map()
 }
 
 object Fastqc {
-  def apply(root: Configurable, fastqfile: File, outDir: String): Fastqc = {
+
+  def apply(root: Configurable, fastqfile: File, outDir: File): Fastqc = {
     val fastqcCommand = new Fastqc(root)
     fastqcCommand.fastqfile = fastqfile
     var filename: String = fastqfile.getName()
@@ -81,8 +172,8 @@ object Fastqc {
     if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.size - 5)
     if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.size - 6)
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
-    fastqcCommand.output = new File(outDir + "/" + filename + "_fastqc.zip")
-    fastqcCommand.afterGraph
-    return fastqcCommand
+    fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")
+    fastqcCommand.beforeGraph
+    fastqcCommand
   }
 }

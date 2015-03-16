@@ -15,34 +15,50 @@
  */
 package nl.lumc.sasc.biopet.extensions.picard
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument }
 
-trait Picard extends BiopetJavaCommandLineFunction {
+import scala.io.Source
+
+/**
+ * General picard extension
+ *
+ * This is based on using class files directly from the jar, if needed other picard jar can be used
+ */
+abstract class Picard extends BiopetJavaCommandLineFunction {
+  override def subPath = "picard" :: super.subPath
+
+  if (config.contains("picard_jar")) jarFile = config("picard_jar")
+
   @Argument(doc = "VERBOSITY", required = false)
-  var verbosity: String = config("verbosity", submodule = "picard")
+  var verbosity: Option[String] = config("verbosity")
 
   @Argument(doc = "QUIET", required = false)
-  var quiet: Boolean = config("quiet", default = false, submodule = "picard")
+  var quiet: Boolean = config("quiet", default = false)
 
   @Argument(doc = "VALIDATION_STRINGENCY", required = false)
-  var stringency: String = config("validationstringency", submodule = "picard")
+  var stringency: Option[String] = config("validationstringency")
 
   @Argument(doc = "COMPRESSION_LEVEL", required = false)
-  var compression: Option[Int] = config("compressionlevel", submodule = "picard")
+  var compression: Option[Int] = config("compressionlevel")
 
   @Argument(doc = "MAX_RECORDS_IN_RAM", required = false)
-  var maxRecordsInRam: Option[Int] = config("maxrecordsinram", submodule = "picard")
+  var maxRecordsInRam: Option[Int] = config("maxrecordsinram")
 
   @Argument(doc = "CREATE_INDEX", required = false)
-  var createIndex: Boolean = config("createindex", default = true, submodule = "picard")
+  var createIndex: Boolean = config("createindex", default = true)
 
   @Argument(doc = "CREATE_MD5_FILE", required = false)
-  var createMd5: Boolean = config("createmd5", default = false, submodule = "picard")
+  var createMd5: Boolean = config("createmd5", default = false)
 
-  //  override def versionCommand = executable + " " + javaOpts + " " + javaExecutable + " -h"
-  //  override val versionRegex = """Version: (.*)""".r
-  //  override val versionExitcode = List(0, 1)
+  override def versionCommand = {
+    if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + " -h"
+    else null
+  }
+  override val versionRegex = """Version: (.*)""".r
+  override val versionExitcode = List(0, 1)
 
   override val defaultVmem = "8G"
   memoryLimit = Option(3.0)
@@ -56,4 +72,28 @@ trait Picard extends BiopetJavaCommandLineFunction {
     optional("MAX_RECORDS_IN_RAM=", maxRecordsInRam, spaceSeparated = false) +
     conditional(createIndex, "CREATE_INDEX=TRUE") +
     conditional(createMd5, "CREATE_MD5_FILE=TRUE")
+}
+
+object Picard {
+
+  /**
+   * This function parse a metrics file in separated values
+   * @param file input metrics file
+   * @return (header, content)
+   */
+  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
+    if (file.exists) {
+      val lines = Source.fromFile(file).getLines().toArray
+
+      val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
+      val end = lines.indexOf("", start)
+
+      val header = lines(start).split("\t")
+      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+
+      Option((header, content))
+    } else {
+      None
+    }
+
 }

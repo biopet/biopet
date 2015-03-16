@@ -19,9 +19,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for samtools mpileup */
 class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
-  var input: File = _
+  var input: List[File] = Nil
 
   @Output(doc = "output File")
   var output: File = _
@@ -30,11 +31,14 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   var reference: File = config("reference")
 
   @Input(doc = "Interval bed")
-  var intervalBed: File = config("interval_bed")
+  var intervalBed: Option[File] = config("interval_bed")
 
-  var disableBaq: Boolean = config("disable_baq")
+  var disableBaq: Boolean = config("disable_baq", default = false)
+  var u: Boolean = config("u", default = false)
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
+  var depth: Option[Int] = config("depth")
+  var outputMappingQuality: Boolean = config("output_mapping_quality", default = false)
 
   def cmdBase = required(executable) +
     required("mpileup") +
@@ -42,16 +46,21 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
     optional("-l", intervalBed) +
     optional("-q", minMapQuality) +
     optional("-Q", minBaseQuality) +
-    conditional(disableBaq, "-B")
+    optional("-d", depth) +
+    conditional(outputMappingQuality, "-s") +
+    conditional(disableBaq, "-B") +
+    conditional(u, "-u")
   def cmdPipeInput = cmdBase + "-"
-  def cmdPipe = cmdBase + required(input)
+  def cmdPipe = cmdBase + repeat(input)
+
+  /** Returns command to execute */
   def cmdLine = cmdPipe + " > " + required(output)
 }
 
 object SamtoolsMpileup {
   def apply(root: Configurable, input: File, output: File): SamtoolsMpileup = {
     val mpileup = new SamtoolsMpileup(root)
-    mpileup.input = input
+    mpileup.input = List(input)
     mpileup.output = output
     return mpileup
   }

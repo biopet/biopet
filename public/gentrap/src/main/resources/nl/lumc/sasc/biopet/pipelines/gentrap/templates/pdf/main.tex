@@ -1,0 +1,307 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{grffile}
+\usepackage[superscript]{cite}
+% must be located here, so we can handle filenames with underscores
+\newcommand{\UnderscoreCommands}{\do\IfFileExists \do\verbatiminput%
+    \do\verbatimtabinput \do\citeNP \do\citeA \do\citeANP \do\citeN%
+    \do\shortcite \do\shortciteNP \do\shortciteA \do\shortciteANP%
+    \do\shortciteN \do\citeyear \do\citeyearNP%
+}
+\usepackage[strings]{underscore}
+
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\setlength{\tabcolsep}{20pt}
+\renewcommand{\arraystretch}{1.3}
+\renewcommand{\familydefault}{\sfdefault}
+
+% requires the titling package, for subtitles
+%\newcommand{\subtitle}[1]{
+%    \posttitle{
+%        \par\end{center}
+%        \begin{center}\large#1\end{center}
+%       \vskip0.5em}}
+
+\pagestyle{fancy}
+\setlength{\headheight}{15.2pt}
+
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\textit{\nouppercase{\leftmark}}}
+\fancyhead[LO]{\textit{\nouppercase{\rightmark}}}
+
+\begin{document}
+\setlength{\parindent}{0in}
+%\title{\Huge Gentrap Run Report}
+\title{\resizebox{0.7\linewidth}{!}{\itshape Gentrap Run Report}}
+\author{LUMC Sequencing Analysis Support Core}
+\maketitle
+\begin{center}
+    {\LARGE version ((( run.version )))}
+\end{center}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{((( run.logo )))}
+\end{figure}
+\thispagestyle{empty}
+\clearpage
+
+\addtocontents{toc}{\protect\hypertarget{toc}{}}
+\tableofcontents
+\clearpage
+
+
+\part{Overview}
+\label{sec:overview}
+
+This document outlines the results obtained from running Gentrap, a generic
+pipeline for transcriptome analysis. The pipeline itself is composed of several
+programs, listed in Table~\ref{tab:programs}. Note that the list only contains
+the programs used in this pipeline run. General pipeline settings that applies
+to all samples are shown in Table~\ref{tab:runparams}, while general annotation
+files are shown in Table~\ref{tab:annotfiles}.
+
+\begin{center}
+    \captionof{table}{Programs in Gentrap}
+    \label{tab:programs}
+    \begin{longtable}{ l l l p{0.2\textwidth} }
+            \hline
+            Program & Version & Checksum & Usage\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{3}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        Gentrap & ((( run.version ))) & - & the full pipeline\\
+        ((* for program, info in run.executables.items()|sort *))
+            ((( program ))) & ((( info.version ))) & ((( info.md5|truncate(7, True, "") ))) & ((( info.desc )))\\
+        ((* endfor *))
+    \end{longtable}
+\end{center}
+% HACK: to keep table counters in sync
+\addtocounter{table}{-1}
+
+\begin{center}
+    \captionof{table}{General Run Parameters}
+    \label{tab:runparams}
+    \begin{longtable}{ p{0.4\textwidth}  p{0.4\textwidth} }
+            \hline
+            Parameter & Value\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{2}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        Number of samples & ((( run.samples|length )))\\
+        Number of libraries & ((( run.libs|length )))\\
+        Library types & ((( run.lib_type )))\\
+        Expression value measures & ((( run.settings.expression_measures|join(", ") )))\\
+        Strand protocol & ((( run.settings.strand_protocol|lower )))\\
+        Variant calling & ((* if run.settings.variant_calling *))enabled((* else *))disabled((* endif *))\\
+        Ribosomal reads removal & ((* if run.settings.remove_ribosomal_reads *))enabled((* else *))disabled((* endif *))\\
+    \end{longtable}
+\end{center}
+\addtocounter{table}{-1}
+
+
+\begin{center}
+    \captionof{table}{Annotation Files}
+    \label{tab:annotfiles}
+    \begin{longtable}{ l l p{0.4\textwidth} }
+            \hline
+            File & Checksum & Name\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{3}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        General refFlat file & ((( run.files.annotation_refflat.md5|truncate(7, True, "") ))) & ((( run.files.annotation_refflat.path|basename )))\\
+        ((* if run.files.annotation_gtf *))
+        General GTF file & ((( run.files.annotation_gtf.md5|truncate(7, True, "") ))) & ((( run.files.annotation_gtf.path|basename )))\\
+        ((* endif *))
+        ((* if run.files.annotation_bed *))
+        General BED file & ((( run.files.annotation_bed.md5|truncate(7, True, "") ))) & ((( run.files.annotation_bed.path|basename )))\\
+        ((* endif *))
+        ((* if run.files.ribosome_refflat *))
+        Ribosome refFlat & ((( run.files.ribosome_refflat.md5|truncate(7, True, "") ))) & ((( run.files.ribosome_refflat.path|basename )))\\
+        ((* endif *))
+    \end{longtable}
+\end{center}
+% HACK: to keep table counters in sync
+\addtocounter{table}{-1}
+
+\clearpage
+
+((* if run.samples|length > 2 and run.settings.expression_measures|length > 0 *))
+\part{Multi Sample Results}
+\label{sec:msr}
+This section shows results that are computed from multiple samples.
+
+\begin{center}
+    \captionof{table}{Multi Sample Result Files}
+    \label{tab:annotfiles}
+    \begin{longtable}{ l l p{0.4\textwidth} }
+            \hline
+            File & Checksum & Name\\
+            \hline \hline
+        \endhead
+            \hline
+            \multicolumn{3}{c}{\textit{Continued on next page}}\\
+            \hline
+        \endfoot
+            \hline
+        \endlastfoot
+        ((* if run.files.gene_fragments_count *))
+        Fragments per gene & ((( run.files.gene_fragments_count.md5|truncate(7, True, "") ))) & ((( run.files.gene_fragments_count.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.exon_fragments_count *))
+        Fragments per exon & ((( run.files.exon_fragments_count.md5|truncate(7, True, "") ))) & ((( run.files.exon_fragments_count.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.gene_bases_count *))
+        Bases per gene & ((( run.files.gene_bases_count.md5|truncate(7, True, "") ))) & ((( run.files.gene_bases_count.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.exon_bases_count *))
+        Bases per exon & ((( run.files.exon_bases_count.md5|truncate(7, True, "") ))) & ((( run.files.exon_bases_count.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.gene_fpkm_cufflinks_strict *))
+        Cufflinks (strict, gene) & ((( run.files.gene_fpkm_cufflinks_strict.md5|truncate(7, True, "") ))) & ((( run.files.gene_fpkm_cufflinks_strict.path|basename )))\\
+        ((* endif *))
+        ((* if run.files.isoform_fpkm_cufflinks_strict *))
+        Cufflinks (strict, isoform) & ((( run.files.isoform_fpkm_cufflinks_strict.md5|truncate(7, True, "") ))) & ((( run.files.isoform_fpkm_cufflinks_strict.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.gene_fpkm_cufflinks_guided *))
+        Cufflinks (guided, gene) & ((( run.files.gene_fpkm_cufflinks_guided.md5|truncate(7, True, "") ))) & ((( run.files.gene_fpkm_cufflinks_guided.path|basename )))\\
+        ((* endif *))
+        ((* if run.files.isoform_fpkm_cufflinks_guided *))
+        Cufflinks (guided, isoform) & ((( run.files.isoform_fpkm_cufflinks_guided.md5|truncate(7, True, "") ))) & ((( run.files.isoform_fpkm_cufflinks_guided.path|basename )))\\
+        ((* endif *))
+
+        ((* if run.files.gene_fpkm_cufflinks_blind *))
+        Cufflinks (blind, gene) & ((( run.files.gene_fpkm_cufflinks_blind.md5|truncate(7, True, "") ))) & ((( run.files.gene_fpkm_cufflinks_blind.path|basename )))\\
+        ((* endif *))
+        ((* if run.files.isoform_fpkm_cufflinks_blind *))
+        Cufflinks (blind, isoform) & ((( run.files.isoform_fpkm_cufflinks_blind.md5|truncate(7, True, "") ))) & ((( run.files.isoform_fpkm_cufflinks_blind.path|basename )))\\
+        ((* endif *))
+    \end{longtable}
+\end{center}
+% HACK: to keep table counters in sync
+\addtocounter{table}{-1}
+
+((* if run.files.gene_fragments_count *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.gene_fragments_count_heatmap.path )))}
+    \caption{Between-samples correlation of fragment count per gene.}
+\end{figure}
+((* endif *))
+
+((* if run.files.exon_fragments_count *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.exon_fragments_count_heatmap.path )))}
+    \caption{Between-samples correlation of fragment count per exon.}
+\end{figure}
+((* endif *))
+
+((* if run.files.gene_bases_count *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.gene_bases_count_heatmap.path )))}
+    \caption{Between-samples correlation of base count per gene.}
+\end{figure}
+((* endif *))
+
+((* if run.files.exon_bases_count *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.exon_bases_count_heatmap.path )))}
+    \caption{Between-samples correlation of base count per exon.}
+\end{figure}
+((* endif *))
+
+((* if run.files.gene_fpkm_cufflinks_strict_heatmap *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.gene_fpkm_cufflinks_strict_heatmap.path )))}
+    \caption{Between-samples correlation of the gene level FPKM (Cufflinks strict mode).}
+\end{figure}
+((* endif *))
+
+((* if run.files.gene_fpkm_cufflinks_guided_heatmap *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.gene_fpkm_cufflinks_guided_heatmap.path )))}
+    \caption{Between-samples correlation of the gene level FPKM (Cufflinks guided mode).}
+\end{figure}
+((* endif *))
+
+((* if run.files.gene_fpkm_cufflinks_blind_heatmap *))
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.65\textwidth]{((( run.files.gene_fpkm_cufflinks_blind_heatmap.path )))}
+    \caption{Between-samples correlation of the gene level FPKM (Cufflinks blind mode).}
+\end{figure}
+((* endif *))
+
+((* endif *))
+
+\clearpage
+
+((* for sample in run.samples.values()|sort *))
+((* include "sample.tex" *))
+\clearpage
+((* endfor *))
+
+
+\part{About Gentrap}
+\label{apx:about}
+
+The Generic Transcriptome Analysis Pipeline (Gentrap) is a
+generic pipeline for analyzing transcripts from RNA-seq experiments. \\
+
+Gentrap was developed by Wibowo Arindrarto (\href{mailto:w.arindrarto@lumc.nl}{w.arindrarto@lumc.nl})
+based on raw scripts written by Jeroen Laros
+(\href{mailto:j.f.j.laros@lumc.nl}{j.f.j.laros@lumc.nl}) and
+Peter-Bram 't Hoen
+(\href{mailto:p.a.c._t_hoen@lumc.nl}{p.a.c._t_hoen@lumc.nl}) as part of the
+\href{https://git.lumc/nl/biopet/biopet}{Biopet framework}. \\
+
+The Biopet framework is developed by the
+\href{http://sasc.lumc.nl}{Sequencing Analysis Support Core} of the
+\href{http://lumc.nl}{Leiden University Medical Center}, by extending the
+\href{http://http://gatkforums.broadinstitute.org/discussion/1306/overview-of-queue}{Queue framework}.
+Please see the respective web sites for licensing information.
+
+\indent
+
+Cover page image: T7 RNA Polymerase and a dsDNA template (PDB ID \texttt{1msw}).
+Created by Thomas Splettstoesser, taken from
+\href{http://commons.wikimedia.org/wiki/File:T7_RNA_polymerase.jpg}{Wikimedia Commons}.
+
+
+\end{document}

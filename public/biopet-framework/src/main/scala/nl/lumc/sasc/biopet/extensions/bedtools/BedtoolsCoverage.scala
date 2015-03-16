@@ -19,17 +19,19 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
 
+/** Extension for bedtools coverage */
 class BedtoolsCoverage(val root: Configurable) extends Bedtools {
+
   @Input(doc = "Input file (bed/gff/vcf/bam)")
-  var input: File = _
+  var input: File = null
 
   @Input(doc = "Intersect file (bed/gff/vcf)")
-  var intersectFile: File = _
+  var intersectFile: File = null
 
   @Output(doc = "output File")
-  var output: File = _
+  var output: File = null
 
-  @Argument(doc = "dept", required = false)
+  @Argument(doc = "depth", required = false)
   var depth: Boolean = false
 
   @Argument(doc = "sameStrand", required = false)
@@ -44,6 +46,9 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
+  override val defaultVmem = "6G"
+
+  /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +
     required(inputTag, input) +
     required("-b", intersectFile) +
@@ -54,6 +59,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 }
 
 object BedtoolsCoverage {
+  /** Returns defaul bedtools coverage */
   def apply(root: Configurable, input: File, intersect: File, output: File,
             depth: Boolean = true, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
     val bedtoolsCoverage = new BedtoolsCoverage(root)
@@ -63,6 +69,6 @@ object BedtoolsCoverage {
     bedtoolsCoverage.depth = depth
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand
-    return bedtoolsCoverage
+    bedtoolsCoverage
   }
 }

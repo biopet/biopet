@@ -15,11 +15,17 @@
  */
 package nl.lumc.sasc.biopet.core
 
+/**
+ * Trait for biopet tools, sets some default args
+ */
 trait ToolCommand extends MainCommand with Logging {
-  abstract class AbstractArgs {
-  }
+  /** Placeholder for args */
+  protected abstract class AbstractArgs {}
 
-  abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
+  /**
+   * Abstract opt parser to add efault args to each biopet tool
+   */
+  protected abstract class AbstractOptParser extends scopt.OptionParser[Args](commandName) {
     opt[String]('l', "log_level") foreach { x =>
       x.toLowerCase match {
         case "debug" => logger.setLevel(org.apache.log4j.Level.DEBUG)
@@ -44,6 +50,6 @@ trait ToolCommand extends MainCommand with Logging {
     } text ("Print version")
   }
 
-  type Args <: AbstractArgs
-  type OptParser <: AbstractOptParser
+  protected type Args <: AbstractArgs
+  protected type OptParser <: AbstractOptParser
 }

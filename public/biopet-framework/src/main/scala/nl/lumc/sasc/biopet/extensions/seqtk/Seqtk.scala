@@ -17,11 +17,10 @@ package nl.lumc.sasc.biopet.extensions.seqtk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
-/**
- * Abstract class for all seqtk wrappers.
- */
+/** Abstract class for all seqtk wrappers. */
 abstract class Seqtk extends BiopetCommandLineFunction {
-  executable = config("exe", default = "seqtk", submodule = "seqtk")
+  override def subPath = "seqtk" :: super.subPath
+  executable = config("exe", default = "seqtk", freeVar = true)
   override def versionCommand = executable
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0, 1)

@@ -20,6 +20,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for pbzip2 */
 class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Zipped file")
   var input: File = _
@@ -39,6 +40,7 @@ class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
     if (!memory.isEmpty) memory = Option(memory.get * threads)
   }
 
+  /** return commandline to execute */
   def cmdLine = required(executable) +
     conditional(decomrpess, "-d") +
     conditional(!decomrpess, "-z") +
@@ -48,7 +50,9 @@ class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
     required(input)
 }
 
+/** Object for constructors for Pbzip2 */
 object Pbzip2 {
+  /** Default constructor */
   def apply(root: Configurable, input: File, output: File): Pbzip2 = {
     val pbzip2 = new Pbzip2(root)
     pbzip2.input = input

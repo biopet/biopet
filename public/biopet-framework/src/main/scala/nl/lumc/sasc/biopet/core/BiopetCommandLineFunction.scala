@@ -15,8 +15,21 @@
  */
 package nl.lumc.sasc.biopet.core
 
+/**
+ * This class is for commandline programs where the executable is a non JVM based program
+ */
 abstract class BiopetCommandLineFunction extends BiopetCommandLineFunctionTrait {
+  /**
+   * This function needs to be implemented to define the command that is executed
+   * @return Command to run
+   */
   protected def cmdLine: String
+
+  /**
+   * implementing a final version of the commandLine from org.broadinstitute.gatk.queue.function.CommandLineFunction
+   * User needs to implement cmdLine instead
+   * @return Command to run
+   */
   final def commandLine: String = {
     preCmdInternal
     val cmd = cmdLine

@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard CalculateHsMetrics */
 class CalculateHsMetrics(val root: Configurable) extends Picard {
   javaMainClass = "picard.analysis.directed.CalculateHsMetrics"
 
@@ -41,11 +42,12 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
   var reference: File = config("reference")
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "BAIT_SET_NAME", required = false)
   var baitSetName: String = _
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -58,7 +60,8 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
 }
 
 object CalculateHsMetrics {
-  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: String): CalculateHsMetrics = {
+  /** Returns default CalculateHsMetrics */
+  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: File): CalculateHsMetrics = {
     val calculateHsMetrics = new CalculateHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals

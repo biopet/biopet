@@ -28,7 +28,25 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   executable = config("exe", default = "python", submodule = "python")
 
   protected var python_script_name: String = _
-  def setPythonScript(script: String) { setPythonScript(script, "") }
+
+  /**
+   * checks if script already exist in jar otherwise try to fetch from the jar
+   * @param script name / location of script
+   */
+  def setPythonScript(script: String) {
+    python_script = new File(script)
+    if (!python_script.exists()) {
+      setPythonScript(script, "")
+    } else {
+      python_script_name = script
+    }
+  }
+
+  /**
+   * Set and extract python script from jar file
+   * @param script name of script in jar
+   * @param subpackage location of script in jar
+   */
   def setPythonScript(script: String, subpackage: String) {
     python_script_name = script
     python_script = new File(".queue/tmp/" + subpackage + python_script_name)
@@ -39,6 +57,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
     os.close()
   }
 
+  /** return basic command to prefix the complete command with */
   def getPythonCommand(): String = {
     required(executable) + required(python_script)
   }

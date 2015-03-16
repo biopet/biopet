@@ -20,6 +20,9 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/**
+ * Extension for GNU cat
+ */
 class Cat(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
@@ -29,10 +32,21 @@ class Cat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "cat")
 
+  /** return commandline to execute */
   def cmdLine = required(executable) + repeat(input) + " > " + required(output)
 }
 
+/**
+ * Object for constructors for cat
+ */
 object Cat {
+  /**
+   * Basis constructor
+   * @param root root object for config
+   * @param input list of files to use
+   * @param output output File
+   * @return
+   */
   def apply(root: Configurable, input: List[File], output: File): Cat = {
     val cat = new Cat(root)
     cat.input = input

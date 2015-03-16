@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard SamToFastq */
 class SamToFastq(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.SamToFastq"
 
@@ -38,7 +39,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   var outputPerRg: Boolean = config("outputPerRg", default = false)
 
   @Argument(doc = "Output dir", required = false)
-  var outputDir: String = config("outputDir")
+  var outputDir: String = _
 
   @Argument(doc = "re reverse", required = false)
   var reReverse: Boolean = config("reReverse", default = false)
@@ -50,10 +51,10 @@ class SamToFastq(val root: Configurable) extends Picard {
   var includeNonPjReads: Boolean = config("includeNonPjReads", default = false)
 
   @Argument(doc = "clippingAtribute", required = false)
-  var clippingAtribute: String = config("clippingAtribute")
+  var clippingAtribute: Option[String] = config("clippingAtribute")
 
   @Argument(doc = "clippingAction", required = false)
-  var clippingAction: String = config("clippingAction")
+  var clippingAction: Option[String] = config("clippingAction")
 
   @Argument(doc = "read1Trim", required = false)
   var read1Trim: Option[Int] = config("read1Trim")
@@ -70,6 +71,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   @Argument(doc = "includeNonPrimaryAlignments", required = false)
   var includeNonPrimaryAlignments: Boolean = config("includeNonPrimaryAlignments", default = false)
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("FASTQ=", fastqR1, spaceSeparated = false) +
@@ -90,11 +92,12 @@ class SamToFastq(val root: Configurable) extends Picard {
 }
 
 object SamToFastq {
+  /** Returns default SamToFastq */
   def apply(root: Configurable, input: File, fastqR1: File, fastqR2: File = null): SamToFastq = {
     val samToFastq = new SamToFastq(root)
     samToFastq.input = input
     samToFastq.fastqR1 = fastqR1
     samToFastq.fastqR2 = fastqR2
-    return samToFastq
+    samToFastq
   }
 }

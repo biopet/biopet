@@ -268,7 +268,7 @@ object BastyGenerateFasta extends ToolCommand {
 
     val genotype = vcfRecord.getGenotype(cmdArgs.sampleName)
     if (genotype == null) return fillAllele("", maxSize)
-    val AD = genotype.getAD
+    val AD = if (genotype.hasAD) genotype.getAD else Array.fill(vcfRecord.getAlleles.size())(cmdArgs.minAD)
     if (AD == null) return fillAllele("", maxSize)
     val maxADid = AD.zipWithIndex.maxBy(_._1)._2
     if (AD(maxADid) < cmdArgs.minAD) return fillAllele("", maxSize)

@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard MergeSamFiles */
 class MergeSamFiles(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.MergeSamFiles"
 
@@ -41,8 +42,9 @@ class MergeSamFiles(val root: Configurable) extends Picard {
   var useThreading: Boolean = config("use_threading", default = false)
 
   @Argument(doc = "COMMENT", required = false)
-  var comment: String = config("comment")
+  var comment: Option[String] = config("comment")
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -53,12 +55,13 @@ class MergeSamFiles(val root: Configurable) extends Picard {
 }
 
 object MergeSamFiles {
-  def apply(root: Configurable, input: List[File], outputDir: String, sortOrder: String = null): MergeSamFiles = {
+  /** Returns default MergeSamFiles */
+  def apply(root: Configurable, input: List[File], outputDir: File, sortOrder: String = null): MergeSamFiles = {
     val mergeSamFiles = new MergeSamFiles(root)
     mergeSamFiles.input = input
     mergeSamFiles.output = new File(outputDir, input.head.getName.stripSuffix(".bam").stripSuffix(".sam") + ".merge.bam")
     if (sortOrder == null) mergeSamFiles.sortOrder = "coordinate"
     else mergeSamFiles.sortOrder = sortOrder
-    return mergeSamFiles
+    mergeSamFiles
   }
 }

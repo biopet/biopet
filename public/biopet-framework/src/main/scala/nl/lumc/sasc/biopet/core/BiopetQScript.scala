@@ -17,59 +17,112 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ Config, Configurable }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import scala.collection.mutable.ListBuffer
 
+/**
+ * Base for biopet pipeline
+ */
 trait BiopetQScript extends Configurable with GatkLogging {
 
   @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Output directory", fullName = "output_directory", shortName = "outDir", required = true)
-  var outputDir: String = _
+  var outputDir: File = {
+    Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
+      case Some(value) => new File(value.asString).getAbsoluteFile
+      case _           => new File(".")
+    }
+  }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
-  var disableScatterDefault: Boolean = false
+  var disableScatter: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
 
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var qSettings: QSettings
 
-  def init
-  def biopetScript
-
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var functions: Seq[QFunction]
 
+  /** Init for pipeline */
+  def init
+
+  /** Pipeline itself */
+  def biopetScript
+
+  /**
+   * Script from queue itself, final to force some checks for each pipeline and write report
+   */
   final def script() {
-    if (!outputDir.endsWith("/")) outputDir += "/"
+    outputDir = config("output_dir").asFile.getAbsoluteFile
     init
     biopetScript
 
-    if (disableScatterDefault) for (function <- functions) function match {
+    if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => f.afterGraph
-      case _                                 =>
+      case f: BiopetCommandLineFunctionTrait => {
+        f.preProcesExecutable
+        f.beforeGraph
+        f.commandLine
+      }
+      case _ =>
     }
-    val configReport = Config.global.getReport
-    val configReportFile = new File(outputDir + qSettings.runName + ".configreport.txt")
-    configReportFile.getParentFile.mkdir
-    val writer = new PrintWriter(configReportFile)
-    writer.write(configReport)
-    writer.close()
-    for (line <- configReport.split("\n")) logger.debug(line)
+
+    if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
+      globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
+    else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
+
+    BiopetQScript.checkErrors
   }
 
-  def add(functions: QFunction*) // Gets implemeted at org.broadinstitute.sting.queue.QScript
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
+  def add(functions: QFunction*)
+
+  /** Get implemented from org.broadinstitute.gatk.queue.QScript */
+  def addAll(functions: scala.Traversable[org.broadinstitute.gatk.queue.function.QFunction])
+
+  /**
+   * Function to set isIntermediate and add in 1 line
+   * @param function
+   * @param isIntermediate
+   */
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
 
+object BiopetQScript extends Logging {
+  private val errors: ListBuffer[Exception] = ListBuffer()
+
+  def addError(error: String, debug: String = null): Unit = {
+    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    errors.append(new Exception(msg))
+  }
+
+  protected def checkErrors: Unit = {
+    if (!errors.isEmpty) {
+      logger.error("*************************")
+      logger.error("Biopet found some errors:")
+      if (logger.isDebugEnabled) {
+        for (e <- errors) {
+          logger.error(e.getMessage)
+          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+        }
+      } else {
+        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
+      }
+      throw new IllegalStateException("Biopet found errors")
+    }
+  }
 }

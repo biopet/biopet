@@ -19,24 +19,31 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+/** Extension for samtools view */
 class SamtoolsView(val root: Configurable) extends Samtools {
   @Input(doc = "Bam File")
-  var input: File = _
+  var input: File = null
 
   @Output(doc = "output File")
-  var output: File = _
+  var output: File = null
 
   var quality: Option[Int] = config("quality")
-  var b: Boolean = config("b")
-  var h: Boolean = config("h")
+  var b: Boolean = config("b", default = false)
+  var h: Boolean = config("h", default = false)
+  var f: List[String] = config("f", default = List.empty[String])
+  var F: List[String] = config("F", default = List.empty[String])
 
   def cmdBase = required(executable) +
     required("view") +
     optional("-q", quality) +
+    repeat("-f", f) +
+    repeat("-F", F) +
     conditional(b, "-b") +
     conditional(h, "-h")
   def cmdPipeInput = cmdBase + "-"
   def cmdPipe = cmdBase + required(input)
+
+  /** Returns command to execute */
   def cmdLine = cmdPipe + " > " + required(output)
 }
 
