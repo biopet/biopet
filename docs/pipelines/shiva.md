@@ -24,6 +24,10 @@ The pipeline accepts ```.fastq & .bam``` files as input.
 
 Note that one should first create the appropriate [configs](../general/config.md).
 
+### Full pipeline
+
+The full pipeline can start from fastq or from bam file. This pipeline will include pre process steps for the bam files.
+
 To get the help menu:
 ~~~
 java -jar </path/to/biopet.jar> pipeline shiva -h
@@ -37,10 +41,35 @@ Arguments for Shiva:
 
 To run the pipeline:
 ~~~
-java -jar </path/to/biopet.jar> pipeline shiva -run -config MySamples.json -config MySettings.json
+java -jar </path/to/biopet.jar> pipeline shiva -config MySamples.json -config MySettings.json -run
 ~~~
 
 To perform a dry run simply remove `-run` from the commandline call. 
+
+### Just variantcalling
+
+This will not do any pre process steps on the bam files.
+
+To get the help menu:
+~~~
+java -jar </path/to/biopet.jar> pipeline shivavariantcalling -h
+
+Arguments for ShivaVariantcalling:
+ -BAM,--inputbams <inputbams>          Bam files (should be deduped bams)
+ -sample,--sampleid <sampleid>         Sample ID (only effects summary and not required)
+ -library,--libid <libid>              Library ID (only effects summary and not required)
+ -config,--config_file <config_file>   JSON config file(s)
+ -DSC,--disablescatter                 Disable all scatters
+
+~~~
+
+To run the pipeline:
+~~~
+java -jar </path/to/biopet.jar> pipeline shivavariantcalling -config MySettings.json -run
+~~~
+
+To perform a dry run simply remove `-run` from the commandline call.
+
 
 ----
 
@@ -100,6 +129,7 @@ To view all possible config options please navigate to our Gitlab wiki page
 	        }
 	    }
     },
+    "reference": "<location of fasta of reference>",
     "variantcallers": [ "haplotypecaller", "unifiedgenotyper" ],
     "output_dir": "<output directory>"
 }
