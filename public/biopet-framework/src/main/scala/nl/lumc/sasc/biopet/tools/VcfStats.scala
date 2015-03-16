@@ -324,40 +324,48 @@ object VcfStats extends ToolCommand {
       logger.info("total: " + variantCounter + " rows processed, " + fraction + "% done")
     }
 
-    val stats = (for (interval <- intervals.par) yield {
-      val reader = new VCFFileReader(commandArgs.inputFile, true)
-      var chunkCounter = 0
-      val stats = createStats
-      logger.info("Starting on: " + interval)
+    val chrIntervals = intervals.groupBy(_.getSequence)
 
-      for (
-        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
-      ) {
-        mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-        for (sample1 <- samples) yield {
-          val genotype = record.getGenotype(sample1)
-          mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
-          for (sample2 <- samples) {
-            val genotype2 = record.getGenotype(sample2)
-            if (genotype.getAlleles == genotype2.getAlleles)
-              stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+    val chrStats = for ((chr,intervals) <- chrIntervals) yield {
+
+      val binStats = for (interval <- intervals.par) yield {
+        val reader = new VCFFileReader(commandArgs.inputFile, true)
+        var chunkCounter = 0
+        val stats = createStats
+        logger.info("Starting on: " + interval)
+
+        for (
+          record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+        ) {
+          mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+          for (sample1 <- samples) yield {
+            val genotype = record.getGenotype(sample1)
+            mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
+            for (sample2 <- samples) {
+              val genotype2 = record.getGenotype(sample2)
+              if (genotype.getAlleles == genotype2.getAlleles)
+                stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
+              stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+            }
           }
+          chunkCounter += 1
         }
-        chunkCounter += 1
+        reader.close()
+
+        if (commandArgs.writeBinStats) {
+          val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
+
+          writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+          writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
+        }
+
+        status(chunkCounter, interval)
+        stats
       }
-      reader.close()
+      binStats.toList.fold(createStats)(_ += _)
+    }
 
-      if (commandArgs.writeBinStats) {
-        val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
-
-        writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
-        writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
-      }
-
-      status(chunkCounter, interval)
-      stats
-    }).toList.fold(createStats)(_ += _)
+    val stats = chrStats.toList.fold(createStats)(_ += _)
 
     logger.info("Done reading vcf records")
 
@@ -382,7 +390,13 @@ object VcfStats extends ToolCommand {
     }
 
     for (field <- commandArgs.generalWiggle) {
-      writeWiggle(intervals, field, "count", new File(commandArgs.outputDir, field + ".wig"))
+      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
+      writeWiggle(intervals, field, "count", file, false)
+    }
+
+    for (field <- commandArgs.genotypeWiggle; sample <- samples) {
+      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
+      writeWiggle(intervals, field, sample, file, true)
     }
 
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
@@ -391,16 +405,20 @@ object VcfStats extends ToolCommand {
     logger.info("Done")
   }
 
-  protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File): Unit = {
+  protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
     val bla = intervals.groupBy(_.getSequence).map { case (k,v) => k -> v.sortBy(_.getStart) }
+    outputFile.getParentFile.mkdirs()
     val writer = new PrintWriter(outputFile)
     writer.println("track type=wiggle_0")
     for ((chr, intervals) <- bla) yield {
       val length = intervals.head.length()
       writer.println(s"fixedStep chrom=$chr start=1 step=$length span=$length")
       for (interval <- intervals) {
-        val file = new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
-        valueFromTsv(file, row, column).foreach(writer.println(_))
+        val file = {
+          if (genotype) new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + "genotype-" + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+          else new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+        }
+        writer.println(valueFromTsv(file, row, column).getOrElse(0))
       }
     }
     writer.close()
