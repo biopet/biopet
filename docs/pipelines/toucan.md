@@ -1,5 +1,5 @@
-TOUCAN
-===========
+Toucan
+======
 
 Introduction
 -----------

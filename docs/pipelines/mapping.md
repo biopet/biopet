@@ -1,9 +1,10 @@
-# Introduction
+# Mapping
+
+## Introduction
+
 The mapping pipeline has been created for NGS users who want to align there data with the most commonly used alignment programs.
 The pipeline performs a quality control (QC) on the raw fastq files with our [Flexiprep](flexiprep.md) pipeline. 
 After the QC, the pipeline simply maps the reads with the chosen aligner. The resulting BAM files will be sorted on coordinates and indexed, for downstream analysis.
-
-----
 
 ## Tools for this pipeline:
 
@@ -16,14 +17,13 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star-2pass</a>
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
 
-----
-
 ## Example
+
 Note that one should first create the appropriate [configs](../general/config.md).
 
 For the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar pipeline mapping -h
+java -jar </path/to/biopet.jar> pipeline mapping -h
 
 Arguments for Mapping:
  -R1,--input_r1 <input_r1>                       R1 fastq file
@@ -52,7 +52,7 @@ Arguments for Mapping:
 
 To run the pipeline:
 ~~~
-java -jar Biopet.0.2.0.jar pipeline mapping -run --config mySettings.json \
+java -jar </path/to/biopet.jar> pipeline mapping -run --config mySettings.json \
 -R1 myReads1.fastq -R2 myReads2.fastq -outDir myOutDir -OutputName myReadsOutput \
 -R hg19.fasta -RGSM mySampleName -RGLB myLib1
 ~~~
@@ -61,8 +61,6 @@ Note that removing -R2 causes the pipeline to be able of handlind single end `.f
 To perform a dry run simply remove `-run` from the commandline call.
 
 ----
-
-## Examine results
 
 ## Result files
 ~~~
@@ -73,8 +71,3 @@ To perform a dry run simply remove `-run` from the commandline call.
     ├── flexiprep
     └── metrics
 ~~~
-
-
-## Best practice
-
-## References

@@ -112,16 +112,16 @@ Thus, an example settings configuration is as follows:
 
 ## Running Gentrap
 
-As with other pipelines in the Biopet suite, gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
+As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
 
 ~~~
-java -jar /path/to/biopet.jar pipeline gentrap -config /path/to/config.json -qsub -jobParaEnv BWA -run
+java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 If you already have the `biopet` environment module loaded, you can also simply call `biopet`:
 
 ~~~
-biopet pipeline gentrap -config /path/to/config.json -qsub -jobParaEnv BWA -run
+biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.

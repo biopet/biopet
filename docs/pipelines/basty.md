@@ -7,7 +7,7 @@ A pipeline for aligning bacterial genomes and detect structural variations on th
 Which makes it very easy to look at the variations between certain species or strains.
 
 ### Tools for this pipeline
-* [GATK-pipeline](GATK-pipeline.md)
+* [Shiva](../pipelines/shiva.md)
 * [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 * <a href="http://sco.h-its.org/exelixis/software.html" target="_blank">RAxml</a>
 * <a href="https://github.com/sanger-pathogens/Gubbins" target="_blank">Gubbins</a>
@@ -45,7 +45,7 @@ The output files this pipeline produces are:
 * The output from the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
     * FASTA containing variants only
     * FASTA containing all the consensus sequences based on min. coverage (default:8) but can be modified in the config
-* A phylogenetic tree based on the variants called with the GATK-pipeline generated with the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
+* A phylogenetic tree based on the variants called with the Shiva pipeline generated with the tool [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 
 
 ~~~
