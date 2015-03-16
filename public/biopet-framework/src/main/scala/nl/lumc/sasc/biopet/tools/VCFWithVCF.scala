@@ -4,9 +4,11 @@ import java.io.File
 
 import scala.collection.JavaConversions._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
+import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.core.ToolCommand
+
+import scala.collection.immutable
 
 /**
  * Created by ahbbollen on 11-2-15.
@@ -45,55 +47,40 @@ object VCFWithVCF extends ToolCommand {
       header.addMetaDataLine(tmpheaderline)
     }
 
-    val writerBuilder = new VariantContextWriterBuilder()
-    writerBuilder.
-      setOutputFile(commandArgs.outputFile).
-      setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
-    val writer = writerBuilder.build()
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(commandArgs.outputFile).build())
     writer.writeHeader(header)
 
+    var idx = 0
+
     for (record: VariantContext <- reader.iterator()) {
+      if (idx % 100000 == 0) {
+        logger.info(s"""Processed $idx records""")
+      }
       var attr = record.getAttributes.toMap
-      secondaryReader.query(record.getChr, record.getStart, record.getEnd).
-        foreach(x => attr = makeAttributesFromRecord(x, attr, commandArgs.fields))
-      val nmap = flattenAttributes(attr, commandArgs.fields)
-      val nrecord = new VariantContextBuilder(record).attributes(nmap).make()
-      writer.add(nrecord)
+      val field_map = scala.collection.mutable.Map[String, List[String]]()
+      for (snd_rec <- secondaryReader.query(record.getChr, record.getStart, record.getEnd)) {
+        for (f <- commandArgs.fields) {
+          if (field_map.contains(f)) {
+            field_map.update(f, snd_rec.getAttributeAsString(f, "unknown") :: field_map.get(f).get)
+          }
+          else {
+            field_map += (f -> List(snd_rec.getAttributeAsString(f, "unknown")))
+          }
+        }
+      }
+      writer.add(field_map.filter(_._2.nonEmpty).map(x => (x._1, x._2.mkString(",").stripPrefix("[").stripSuffix("]")))
+        .foldLeft(new VariantContextBuilder(record))((builder, attribute)
+        => builder.attribute(attribute._1, attribute._2))
+        .make())
+      idx += 1
     }
 
+    logger.debug("Closing readers")
     writer.close()
     reader.close()
     secondaryReader.close()
-  }
-
-  /**
-   * Makes a new attribute map with added fields from record
-   * @param record the record fields have to be taken from
-   * @param attr attribute map
-   * @param fields field to get
-   * @return new attribute map
-   */
-  def makeAttributesFromRecord(record: VariantContext, attr: Map[String, AnyRef], fields: List[String]): Map[String, AnyRef] = {
-    for (f <- fields) {
-      val value = record.getAttribute(f)
-      if (attr.contains(f)) {
-        attr ++ Map(f -> attr.get(f).toList.add(value))
-      } else {
-        attr ++ Map(f -> List(value))
-      }
-    }
-    attr
-  }
-
-  /**
-   * HTSJDK does not have a list type for fields, so we must make a string
-   * @param attr attribute map
-   * @param fields fields to flatten
-   * @return modified map
-   */
-  def flattenAttributes(attr: Map[String, AnyRef], fields: List[String]): Map[String, AnyRef] = {
-    fields.foreach(x => attr ++ Map(x -> attr.get(x).mkString(",")))
-    attr
+    logger.info("Done. Goodbye")
   }
 
 }
