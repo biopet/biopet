@@ -259,16 +259,18 @@ object VcfStats extends ToolCommand {
 
     reader.close()
 
-    val adInfoTags = (for (
-      infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
-    ) yield {
-      require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
-      infoTag
-    }) ::: (for (
-      line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
-    ) yield {
-      line.getID
-    }).toList ::: defaultInfoFields
+    val adInfoTags = {
+      (for (
+        infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
+      ) yield {
+        require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
+        infoTag
+      }) ::: (for (
+        line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
+      ) yield {
+        line.getID
+      }).toList ::: defaultInfoFields
+    }
 
     val adGenotypeTags = (for (
       genotypeTag <- commandArgs.genotypeTags if !defaultGenotypeFields.exists(_ == genotypeTag)
@@ -324,45 +326,46 @@ object VcfStats extends ToolCommand {
       logger.info("total: " + variantCounter + " rows processed, " + fraction + "% done")
     }
 
-    val chrIntervals = intervals.groupBy(_.getSequence)
+    val chrStats = for (intervals <- intervals.grouped(intervals.size / 10).toList.par) yield {
+      val chunkStats = for (intervals <- intervals.grouped(10)) yield {
+        val binStats = for (interval <- intervals.par) yield {
+          val reader = new VCFFileReader(commandArgs.inputFile, true)
+          var chunkCounter = 0
+          val stats = createStats
+          logger.info("Starting on: " + interval)
 
-    val chrStats = for ((chr,intervals) <- chrIntervals) yield {
-
-      val binStats = for (interval <- intervals.par) yield {
-        val reader = new VCFFileReader(commandArgs.inputFile, true)
-        var chunkCounter = 0
-        val stats = createStats
-        logger.info("Starting on: " + interval)
-
-        for (
-          record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
-        ) {
-          mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-          for (sample1 <- samples) yield {
-            val genotype = record.getGenotype(sample1)
-            mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
-            for (sample2 <- samples) {
-              val genotype2 = record.getGenotype(sample2)
-              if (genotype.getAlleles == genotype2.getAlleles)
-                stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-              stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+          for (
+            record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
+            if record.getStart <= interval.getEnd
+          ) {
+            mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+            for (sample1 <- samples) yield {
+              val genotype = record.getGenotype(sample1)
+              mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
+              for (sample2 <- samples) {
+                val genotype2 = record.getGenotype(sample2)
+                if (genotype.getAlleles == genotype2.getAlleles)
+                  stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
+                stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+              }
             }
+            chunkCounter += 1
           }
-          chunkCounter += 1
+          reader.close()
+
+          if (commandArgs.writeBinStats) {
+            val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
+
+            writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+            writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
+          }
+
+          status(chunkCounter, interval)
+          stats
         }
-        reader.close()
-
-        if (commandArgs.writeBinStats) {
-          val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
-
-          writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
-          writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
-        }
-
-        status(chunkCounter, interval)
-        stats
+        binStats.toList.fold(createStats)(_ += _)
       }
-      binStats.toList.fold(createStats)(_ += _)
+      chunkStats.toList.fold(createStats)(_ += _)
     }
 
     val stats = chrStats.toList.fold(createStats)(_ += _)
