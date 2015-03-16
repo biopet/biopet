@@ -1,8 +1,12 @@
-# Introduction
+# Sage
+
+## Introduction
+
 The Sage pipeline has been created to process SAGE data, which requires a different approach than standard NGS data.
 
+### Modules and Tools
 
-# Tools for this pipeline
+This pipeline uses the following modules and tools:
 
 * [Flexiprep](flexiprep.md)
 * [Mapping](mapping.md)
@@ -11,12 +15,17 @@ The Sage pipeline has been created to process SAGE data, which requires a differ
 * [SageCreateTagCounts](../tools/sagetools.md)
 
 
-# Example
+## Configuration
+
 Note that one should first create the appropriate [configs](../general/config.md).
 
-To get the help menu:
+## Running Sage
+
+As with other pipelines, you can run the Sage pipeline by invoking the `pipeline` subcommand. There is also a general help available which can be invoked using the `-h` flag:
+
 ~~~
-java -jar Biopet-0.2.0.jar pipeline Sage -h
+$ java -jar /path/to/biopet.jar pipeline sage -h
+
 Arguments for Sage:
  -outDir,--output_directory <output_directory>   Output directory
  --countbed <countbed>                           countBed
@@ -27,15 +36,24 @@ Arguments for Sage:
  -DSC,--disablescatterdefault                    Disable all scatters
 ~~~
 
+If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:
+
+~~~
+$ module load biopet/v0.3.0
+$ biopet pipeline sage
+
+~~~
+
 To run the pipeline:
 ~~~
- java -jar Biopet-0.2.0-DEV-801b72ed.jar pipeline Sage -run --config MySamples.json --config --MySettings.json
+ biopet pipeline sage -config /path/to/config.json -qsub -jobParaEnv BWA -run
 ~~~
 
 
-# Examine results
+## Output Files
 
-## Result files
+Below is an example of the output files that you will get after running Sage. Here, we have two samples (`1A` and `1B`) and each sample has two libraries (`run_1` and `run_2`).
+
 ~~~
 .
 ├── 1A
@@ -95,9 +113,3 @@ To run the pipeline:
     ├── no_sense_genes.txt
     └── tag.lib
 ~~~
-
-
-
-## Best practice
-
-# References
