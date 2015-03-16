@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.core.config.ConfigValue
 import argonaut._, Argonaut._
@@ -32,7 +33,8 @@ object ConfigUtils extends Logging {
    * @param map2 Backup for map1
    * @return merged map
    */
-  def mergeMaps(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
+  def mergeMaps(map1: Map[String, Any], map2: Map[String, Any],
+                resolveConflict: (Any, Any, String) => Any = (m1, m2, key) => m1): Map[String, Any] = {
     var newMap: Map[String, Any] = Map()
     for (key <- map1.keySet.++(map2.keySet)) {
       if (!map2.contains(key)) newMap += (key -> map1(key))
@@ -45,7 +47,7 @@ object ConfigUtils extends Logging {
               case _             => newMap += (key -> map1(key))
             }
           }
-          case _ => newMap += (key -> map1(key))
+          case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
         }
       }
     }
@@ -312,6 +314,16 @@ object ConfigUtils extends Logging {
   }
 
   /**
+   * Convert Any to List[File]
+   * @param any Input Any value
+   * @return
+   */
+  def any2fileList(any: Any): List[File] = {
+    if (any == null) return null
+    any2list(any).map(x => new File(x.toString))
+  }
+
+  /**
    * Convert Any to Map[String, Any]
    * @param any Input Any value
    * @return
@@ -330,14 +342,27 @@ object ConfigUtils extends Logging {
   trait ImplicitConversions {
     import scala.language.implicitConversions
 
+    private def requiredValue(value: ConfigValue): Boolean = {
+      val exist = valueExists(value)
+      if (!exist)
+        BiopetQScript.addError("Value does not exist but is required, key: " + value.requestIndex.key +
+          "  module: " + value.requestIndex.module,
+          (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null))
+      exist
+    }
+
+    private def valueExists(value: ConfigValue): Boolean = {
+      value != null && value.value != null && value.value != None
+    }
+
     /**
      * Convert ConfigValue to File
      * @param value Input ConfigValue
      * @return
      */
     implicit def configValue2file(value: ConfigValue): File = {
-      if (value != null && value.value != null && value.value != None) new File(any2string(value.value))
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) new File(any2string(value.value))
+      else new File("")
     }
 
     /**
@@ -346,7 +371,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionFile(value: ConfigValue): Option[File] = {
-      if (value != null && value.value != null && value.value != None) Some(new File(any2string(value.value)))
+      if (valueExists(value)) Some(new File(any2string(value.value)))
       else None
     }
 
@@ -356,8 +381,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2string(value: ConfigValue): String = {
-      if (value != null && value.value != null && value.value != None) any2string(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2string(value.value)
+      else ""
     }
 
     /**
@@ -366,7 +391,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionString(value: ConfigValue): Option[String] = {
-      if (value != null && value.value != null && value.value != None) Some(any2string(value.value))
+      if (valueExists(value)) Some(any2string(value.value))
       else None
     }
 
@@ -376,8 +401,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2long(value: ConfigValue): Long = {
-      if (value != null && value.value != null && value.value != None) any2long(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2long(value.value)
+      else 0L
     }
 
     /**
@@ -386,7 +411,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionLong(value: ConfigValue): Option[Long] = {
-      if (value != null && value.value != null && value.value != None) Option(any2long(value.value))
+      if (valueExists(value)) Option(any2long(value.value))
       else None
     }
 
@@ -396,8 +421,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2int(value: ConfigValue): Int = {
-      if (value != null && value.value != null && value.value != None) any2int(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2int(value.value)
+      else 0
     }
 
     /**
@@ -406,7 +431,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionInt(value: ConfigValue): Option[Int] = {
-      if (value != null && value.value != null && value.value != None) Option(any2int(value.value))
+      if (valueExists(value)) Option(any2int(value.value))
       else None
     }
 
@@ -416,8 +441,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2double(value: ConfigValue): Double = {
-      if (value != null && value.value != null && value.value != None) any2double(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2double(value.value)
+      else 0.0
     }
 
     /**
@@ -426,7 +451,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionDouble(value: ConfigValue): Option[Double] = {
-      if (value != null && value.value != null && value.value != None) Option(any2double(value.value))
+      if (valueExists(value)) Option(any2double(value.value))
       else None
     }
 
@@ -436,8 +461,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2float(value: ConfigValue): Float = {
-      if (value != null && value.value != null && value.value != None) any2float(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2float(value.value)
+      else 0f
     }
 
     /**
@@ -446,7 +471,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionFloat(value: ConfigValue): Option[Float] = {
-      if (value != null && value.value != null && value.value != None) Option(any2float(value.value))
+      if (valueExists(value)) Option(any2float(value.value))
       else None
     }
 
@@ -456,8 +481,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2boolean(value: ConfigValue): Boolean = {
-      if (value != null && value.value != null && value.value != None) any2boolean(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2boolean(value.value)
+      else false
     }
 
     /**
@@ -466,7 +491,7 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2optionBoolean(value: ConfigValue): Option[Boolean] = {
-      if (value != null && value.value != null && value.value != None) Option(any2boolean(value.value))
+      if (valueExists(value)) Option(any2boolean(value.value))
       else None
     }
 
@@ -476,8 +501,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2list(value: ConfigValue): List[Any] = {
-      if (value != null && value.value != null && value.value != None) any2list(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2list(value.value)
+      else Nil
     }
 
     /**
@@ -486,8 +511,18 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringList(value: ConfigValue): List[String] = {
-      if (value != null && value.value != null && value.value != None) any2stringList(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2stringList(value.value)
+      else Nil
+    }
+
+    /**
+     * Convert ConfigValue to List[File]
+     * @param value Input ConfigValue
+     * @return
+     */
+    implicit def configValue2fileList(value: ConfigValue): List[File] = {
+      if (requiredValue(value)) any2fileList(value.value)
+      else Nil
     }
 
     /**
@@ -496,8 +531,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
-      if (value != null && value.value != null && value.value != None) any2stringList(value.value).toSet
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2stringList(value.value).toSet
+      else Set()
     }
 
     /**
@@ -506,8 +541,8 @@ object ConfigUtils extends Logging {
      * @return
      */
     implicit def configValue2map(value: ConfigValue): Map[String, Any] = {
-      if (value != null && value.value != null && value.value != None) any2map(value.value)
-      else throw new IllegalStateException("Value does not exist")
+      if (requiredValue(value)) any2map(value.value)
+      else Map()
     }
   }
 }

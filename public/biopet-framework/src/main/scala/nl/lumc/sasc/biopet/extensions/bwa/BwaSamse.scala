@@ -6,7 +6,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
- * Created by pjvan_thof on 1/16/15.
+ * BWA samse wrapper
+ *
+ * based on executable version 0.7.10-r789
+ *
  */
 class BwaSamse(val root: Configurable) extends Bwa {
   @Input(doc = "Fastq file", required = true)
@@ -16,7 +19,7 @@ class BwaSamse(val root: Configurable) extends Bwa {
   var sai: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _
@@ -24,6 +27,7 @@ class BwaSamse(val root: Configurable) extends Bwa {
   var n: Option[Int] = config("n")
   var r: String = _
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     required("samse") +
     optional("-n", n) +

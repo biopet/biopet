@@ -26,8 +26,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testSameLevelRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/dir/nested/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/nested/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s target.txt /dir/nested/link.txt")
   }
 
@@ -35,8 +35,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testTargetOneLevelAboveRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/dir/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s ../target.txt /dir/nested/link.txt")
   }
 
@@ -44,8 +44,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testTargetTwoLevelsAboveRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s ../../target.txt /dir/nested/link.txt")
   }
 
@@ -53,8 +53,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testTargetOneLevelAboveChildRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/dir/another_nested/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/another_nested/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s ../another_nested/target.txt /dir/nested/link.txt")
   }
 
@@ -62,8 +62,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testTargetOneLevelBelowRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/dir/nested/deeper/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/nested/deeper/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s deeper/target.txt /dir/nested/link.txt")
   }
 
@@ -71,8 +71,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testTargetTwoLevelsBelowRelative() {
     val ln = new Ln(null)
     ln.relative = true
-    ln.in = new File("/dir/nested/even/deeper/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/nested/even/deeper/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s even/deeper/target.txt /dir/nested/link.txt")
   }
 
@@ -80,8 +80,8 @@ class LnTest extends TestNGSuite with Matchers {
   def testSameLevelAbsolute() {
     val ln = new Ln(null)
     ln.relative = false
-    ln.in = new File("/dir/nested/target.txt")
-    ln.out = new File("/dir/nested/link.txt")
+    ln.input = new File("/dir/nested/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
     ln.cmd should ===("ln -s /dir/nested/target.txt /dir/nested/link.txt")
   }
 

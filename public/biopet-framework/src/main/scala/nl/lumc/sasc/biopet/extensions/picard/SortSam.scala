@@ -19,6 +19,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
+/** Extension for picard SortSam */
 class SortSam(val root: Configurable) extends Picard {
   javaMainClass = "picard.sam.SortSam"
 
@@ -34,11 +35,12 @@ class SortSam(val root: Configurable) extends Picard {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def afterGraph {
-    super.afterGraph
+  override def beforeGraph {
+    super.beforeGraph
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -46,6 +48,7 @@ class SortSam(val root: Configurable) extends Picard {
 }
 
 object SortSam {
+  /** Returns default SortSam */
   def apply(root: Configurable, input: File, output: File, sortOrder: String = null): SortSam = {
     val sortSam = new SortSam(root)
     sortSam.input = input

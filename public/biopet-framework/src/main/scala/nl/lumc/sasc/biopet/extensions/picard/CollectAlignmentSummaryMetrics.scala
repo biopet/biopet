@@ -17,9 +17,11 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
-class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
+/** Extension for picard CollectAlignmentSummaryMetrics */
+class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = "picard.analysis.CollectAlignmentSummaryMetrics"
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -49,6 +51,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stopAfter")
 
+  /** Returns command to execute */
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
@@ -59,10 +62,28 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard {
     optional("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     repeat("ADAPTER_SEQUENCE=", adapterSequence, spaceSeparated = false)
+
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
+    case None => Map()
+    case Some((header, content)) =>
+      (for (category <- 0 until content.size) yield {
+        content(category)(0) -> (
+          for (
+            i <- 1 until header.size if i < content(category).size
+          ) yield {
+            header(i).toLowerCase -> content(category)(i)
+          }).toMap
+      }
+      ).toMap
+  }
 }
 
 object CollectAlignmentSummaryMetrics {
-  def apply(root: Configurable, input: File, outputDir: String): CollectAlignmentSummaryMetrics = {
+  /** Returns default CollectAlignmentSummaryMetrics */
+  def apply(root: Configurable, input: File, outputDir: File): CollectAlignmentSummaryMetrics = {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input
     collectAlignmentSummaryMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")

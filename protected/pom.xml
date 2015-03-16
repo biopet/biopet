@@ -20,7 +20,6 @@
     <modules>
         <module>biopet-gatk-extensions</module>
         <module>biopet-gatk-pipelines</module>
-        <module>basty</module>
         <module>biopet-protected-package</module>
     </modules>
 </project>

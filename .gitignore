@@ -7,7 +7,8 @@ git.properties
 # Vim
 *.swp
 # IntelliJ
-.idea/workspace.xml
-/target/
-/public/target/
-/protected/target/
+.idea/*
+*.iml
+target/
+public/target/
+protected/target/

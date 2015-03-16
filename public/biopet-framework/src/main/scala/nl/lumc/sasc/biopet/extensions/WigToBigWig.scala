@@ -14,10 +14,10 @@ class WigToBigWig(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input wig file")
   var inputWigFile: File = _
 
-  @Input(doc = "Input chrom sizes file")
+  @Input(doc = "Input chrom sizes file", required = true)
   var inputChromSizesFile: File = _
 
-  @Output(doc = "Output BigWig file")
+  @Output(doc = "Output BigWig file", required = true)
   var outputBigWig: File = _
 
   executable = config("exe", default = "wigToBigWig")
@@ -27,6 +27,7 @@ class WigToBigWig(val root: Configurable) extends BiopetCommandLineFunction {
   var clip: Boolean = config("clip", default = false)
   var unc: Boolean = config("unc", default = false)
 
+  /** Returns command to execute */
   def cmdLine = required(executable) +
     optional("-blockSize=", blockSize, spaceSeparated = false) +
     optional("-itemsPerSlot=", itemsPerSlot, spaceSeparated = false) +

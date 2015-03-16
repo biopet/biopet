@@ -7,9 +7,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
+import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.{ AnalyzeCovariates, BaseRecalibrator, GenotypeGVCFs, HaplotypeCaller, IndelRealigner, PrintReads, RealignerTargetCreator, SelectVariants, CombineVariants, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -30,7 +31,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   var rawVcfInput: File = _
 
   @Argument(doc = "Reference", shortName = "R", required = false)
-  var reference: File = config("reference", required = true)
+  var reference: File = config("reference")
 
   @Argument(doc = "OutputName", required = false)
   var outputName: String = _
@@ -38,12 +39,12 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   @Argument(doc = "Sample name", required = false)
   var sampleID: String = _
 
-  var preProcesBams: Option[Boolean] = config("pre_proces_bams", default = true)
+  var preProcesBams: Boolean = config("pre_proces_bams", default = true)
   var variantcalling: Boolean = true
-  var doublePreProces: Option[Boolean] = config("double_pre_proces", default = true)
-  var useHaplotypecaller: Option[Boolean] = config("use_haplotypecaller", default = true)
-  var useUnifiedGenotyper: Option[Boolean] = config("use_unifiedgenotyper", default = false)
-  var useAllelesOption: Option[Boolean] = config("use_alleles_option", default = false)
+  var doublePreProces: Boolean = config("double_pre_proces", default = true)
+  var useHaplotypecaller: Boolean = config("use_haplotypecaller", default = true)
+  var useUnifiedGenotyper: Boolean = config("use_unifiedgenotyper", default = false)
+  var useAllelesOption: Boolean = config("use_alleles_option", default = false)
   var useMpileup: Boolean = config("use_mpileup", default = true)
   var useIndelRealigner: Boolean = config("use_indel_realign", default = true)
   var useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
@@ -51,8 +52,6 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   def init() {
     if (outputName == null && sampleID != null) outputName = sampleID
     else if (outputName == null) outputName = config("output_name", default = "noname")
-    if (outputDir == null) throw new IllegalStateException("Missing Output directory on gatk module")
-    else if (!outputDir.endsWith("/")) outputDir += "/"
 
     val baseRecalibrator = new BaseRecalibrator(this)
     if (preProcesBams && useBaseRecalibration && baseRecalibrator.knownSites.isEmpty) {
@@ -62,69 +61,81 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
   }
 
   private def doublePreProces(files: List[File]): List[File] = {
-    if (files.size == 1) return files
     if (files.isEmpty) throw new IllegalStateException("Files can't be empty")
-    if (!doublePreProces.get) return files
-    val markDup = MarkDuplicates(this, files, new File(outputDir + outputName + ".dedup.bam"))
-    markDup.isIntermediate = useIndelRealigner
-    add(markDup)
-    if (useIndelRealigner) {
-      List(addIndelRealign(markDup.output, outputDir, isIntermediate = false))
+    else if (!doublePreProces) files
+    else if (files.size == 1) {
+      val bamFile = new File(outputDir, files.head.getName)
+      if (bamFile != files.head) {
+        val oldIndex: File = new File(files.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex: File = swapExt(outputDir, bamFile, ".bam", ".bai")
+        val baiLn = Ln(this, oldIndex, newIndex)
+        add(baiLn)
+
+        val bamLn = Ln(this, files.head, bamFile)
+        bamLn.deps :+= baiLn.output
+        add(bamLn)
+      }
+      List(bamFile)
     } else {
-      List(markDup.output)
+      val markDup = MarkDuplicates(this, files, new File(outputDir, outputName + ".dedup.bam"))
+      markDup.isIntermediate = useIndelRealigner
+      add(markDup)
+      if (useIndelRealigner) {
+        List(addIndelRealign(markDup.output, outputDir, isIntermediate = false))
+      } else {
+        List(markDup.output)
+      }
     }
   }
 
   def biopetScript() {
-    scriptOutput.bamFiles = if (preProcesBams.get) {
-      var bamFiles: List[File] = Nil
-      for (inputBam <- inputBams) {
-        var bamFile = inputBam
-        if (useIndelRealigner) {
-          bamFile = addIndelRealign(bamFile, outputDir, isIntermediate = useBaseRecalibration)
+    scriptOutput.bamFiles = {
+      doublePreProces(if (preProcesBams) {
+        for (inputBam <- inputBams) yield {
+          var bamFile = inputBam
+          if (useIndelRealigner)
+            bamFile = addIndelRealign(bamFile, outputDir, isIntermediate = useBaseRecalibration)
+          if (useBaseRecalibration)
+            bamFile = addBaseRecalibrator(bamFile, outputDir, isIntermediate = inputBams.size > 1)
+          bamFile
         }
-        if (useBaseRecalibration) {
-          bamFile = addBaseRecalibrator(bamFile, outputDir, isIntermediate = bamFiles.size > 1)
-        }
-        bamFiles :+= bamFile
-      }
-      doublePreProces(bamFiles)
-    } else if (inputBams.size > 1 && doublePreProces.get) {
-      doublePreProces(inputBams)
-    } else inputBams
+      } else {
+        inputBams
+      })
+    }
 
     if (variantcalling) {
       var mergBuffer: SortedMap[String, File] = SortedMap()
       def mergeList = mergBuffer map { case (key, file) => TaggedFile(removeNoneVariants(file), "name=" + key) }
 
-      if (sampleID != null && (useHaplotypecaller.get || config("joint_genotyping", default = false).asBoolean)) {
+      if (sampleID != null && (useHaplotypecaller || config("joint_genotyping", default = false).asBoolean)) {
         val hcGvcf = new HaplotypeCaller(this)
         hcGvcf.useGvcf
         hcGvcf.input_file = scriptOutput.bamFiles
-        hcGvcf.out = outputDir + outputName + ".hc.discovery.gvcf.vcf.gz"
+        hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.gvcf.vcf.gz")
         add(hcGvcf)
         scriptOutput.gvcfFile = hcGvcf.out
       }
 
-      if (useHaplotypecaller.get) {
+      if (useHaplotypecaller) {
         if (sampleID != null) {
-          val genotypeGVCFs = GenotypeGVCFs(this, List(scriptOutput.gvcfFile), outputDir + outputName + ".hc.discovery.vcf.gz")
+          val genotypeGVCFs = GenotypeGVCFs(this, List(scriptOutput.gvcfFile), new File(outputDir, outputName + ".hc.discovery.vcf.gz"))
           add(genotypeGVCFs)
           scriptOutput.hcVcfFile = genotypeGVCFs.out
         } else {
           val hcGvcf = new HaplotypeCaller(this)
           hcGvcf.input_file = scriptOutput.bamFiles
-          hcGvcf.out = outputDir + outputName + ".hc.discovery.vcf.gz"
+          hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.vcf.gz")
           add(hcGvcf)
           scriptOutput.hcVcfFile = hcGvcf.out
         }
         mergBuffer += ("1.HC-Discovery" -> scriptOutput.hcVcfFile)
       }
 
-      if (useUnifiedGenotyper.get) {
+      if (useUnifiedGenotyper) {
         val ugVcf = new UnifiedGenotyper(this)
         ugVcf.input_file = scriptOutput.bamFiles
-        ugVcf.out = outputDir + outputName + ".ug.discovery.vcf.gz"
+        ugVcf.out = new File(outputDir, outputName + ".ug.discovery.vcf.gz")
         add(ugVcf)
         scriptOutput.ugVcfFile = ugVcf.out
         mergBuffer += ("2.UG-Discovery" -> scriptOutput.ugVcfFile)
@@ -136,7 +147,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           val m2v = new MpileupToVcf(this)
           m2v.inputBam = scriptOutput.bamFiles.head
           m2v.sample = sampleID
-          m2v.output = outputDir + outputName + ".raw.vcf"
+          m2v.output = new File(outputDir, outputName + ".raw.vcf")
           add(m2v)
           scriptOutput.rawVcfFile = m2v.output
 
@@ -148,7 +159,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
             ), super.defaults)
           }
           vcfFilter.inputVcf = m2v.output
-          vcfFilter.outputVcf = this.swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
+          vcfFilter.outputVcf = swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")
           add(vcfFilter)
           scriptOutput.rawFilterVcfFile = vcfFilter.outputVcf
         } else if (rawVcfInput != null) scriptOutput.rawFilterVcfFile = rawVcfInput
@@ -156,15 +167,15 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
       }
 
       // Allele mode
-      if (useAllelesOption.get) {
+      if (useAllelesOption) {
         val mergeAlleles = MergeAlleles(this, mergeList.toList, outputDir + "raw.allele__temp_only.vcf.gz")
         mergeAlleles.isIntermediate = true
         add(mergeAlleles)
 
-        if (useHaplotypecaller.get) {
+        if (useHaplotypecaller) {
           val hcAlleles = new HaplotypeCaller(this)
           hcAlleles.input_file = scriptOutput.bamFiles
-          hcAlleles.out = outputDir + outputName + ".hc.allele.vcf.gz"
+          hcAlleles.out = new File(outputDir, outputName + ".hc.allele.vcf.gz")
           hcAlleles.alleles = mergeAlleles.output
           hcAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(hcAlleles)
@@ -172,10 +183,10 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           mergBuffer += ("3.HC-alleles" -> hcAlleles.out)
         }
 
-        if (useUnifiedGenotyper.get) {
+        if (useUnifiedGenotyper) {
           val ugAlleles = new UnifiedGenotyper(this)
           ugAlleles.input_file = scriptOutput.bamFiles
-          ugAlleles.out = outputDir + outputName + ".ug.allele.vcf.gz"
+          ugAlleles.out = new File(outputDir, outputName + ".ug.allele.vcf.gz")
           ugAlleles.alleles = mergeAlleles.output
           ugAlleles.genotyping_mode = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypingOutputMode.GENOTYPE_GIVEN_ALLELES
           add(ugAlleles)
@@ -194,32 +205,32 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
         sv.out
       }
 
-      val cvFinal = CombineVariants(this, mergeList.toList, outputDir + outputName + ".final.vcf.gz")
+      val cvFinal = CombineVariants(this, mergeList.toList, new File(outputDir, outputName + ".final.vcf.gz"))
       cvFinal.genotypemergeoption = org.broadinstitute.gatk.utils.variant.GATKVariantContextUtils.GenotypeMergeType.UNSORTED
       add(cvFinal)
 
       val vcfStats = new VcfStats(this)
       vcfStats.input = cvFinal.out
-      vcfStats.setOutputDir(outputDir + File.separator + "vcfstats")
+      vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
       add(vcfStats)
 
       scriptOutput.finalVcfFile = cvFinal.out
     }
   }
 
-  def addIndelRealign(inputBam: File, dir: String, isIntermediate: Boolean = true): File = {
+  def addIndelRealign(inputBam: File, dir: File, isIntermediate: Boolean = true): File = {
     val realignerTargetCreator = RealignerTargetCreator(this, inputBam, dir)
     realignerTargetCreator.isIntermediate = true
     add(realignerTargetCreator)
 
-    val indelRealigner = IndelRealigner.apply(this, inputBam, realignerTargetCreator.out, dir)
+    val indelRealigner = IndelRealigner(this, inputBam, realignerTargetCreator.out, dir)
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
     return indelRealigner.o
   }
 
-  def addBaseRecalibrator(inputBam: File, dir: String, isIntermediate: Boolean = false): File = {
+  def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean = false): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
     if (baseRecalibrator.knownSites.isEmpty) {

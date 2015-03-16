@@ -15,21 +15,28 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-import java.io.File
 import java.util.Date
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.{ Ln, Star, Stampy, Bowtie }
+import java.io.File
+import scala.math._
+
+import org.broadinstitute.gatk.queue.QScript
+
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
+import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument, ClassType }
-import scala.math._
 
-class Mapping(val root: Configurable) extends QScript with BiopetQScript {
+// TODO: documentation
+class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+
   def this() = this(null)
 
   @Input(doc = "R1 fastq file", shortName = "R1", required = true)
@@ -68,14 +75,6 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   // TODO: hide sampleId and libId from the command line so they do not interfere with our config values
 
-  /** Readgroup Library */
-  @Argument(doc = "Library ID", shortName = "library", required = true)
-  var libId: String = _
-
-  /**Readgroup sample */
-  @Argument(doc = "Sample ID", shortName = "sample", required = true)
-  var sampleId: String = _
-
   /** Readgroup Platform */
   protected var platform: String = config("platform", default = "illumina")
 
@@ -96,17 +95,35 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
 
   protected var paired: Boolean = false
   val flexiprep = new Flexiprep(this)
-  def finalBamFile: File = outputDir + outputName + ".final.bam"
+  def finalBamFile: File = new File(outputDir, outputName + ".final.bam")
 
+  /** location of summary file */
+  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
+
+  /** File to add to the summary */
+  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1) ++
+    (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
+
+  /** Settings to add to summary */
+  def summarySettings = Map(
+    "skip_metrics" -> skipMetrics,
+    "skip_flexiprep" -> skipFlexiprep,
+    "skip_markduplicates" -> skipMarkduplicates,
+    "aligner" -> aligner,
+    "chunking" -> chunking,
+    "numberChunks" -> numberChunks.getOrElse(1)
+  )
+
+  /** Will be executed before script */
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
     require(input_R1 != null, "Missing output directory on mapping module")
-    require(sampleId != null, "Missing sample ID on mapping module")
-    require(libId != null, "Missing library ID on mapping module")
+    require(sampleId.isDefined, "Missing sample ID on mapping module")
+    require(libId.isDefined, "Missing library ID on mapping module")
 
     paired = input_R2.isDefined
 
-    if (readgroupId == null && sampleId != null && libId != null) readgroupId = sampleId + "-" + libId
+    if (readgroupId == null) readgroupId = sampleId.get + "-" + libId.get
     else if (readgroupId == null) readgroupId = config("readgroup_id")
 
     if (outputName == null) outputName = readgroupId
@@ -115,7 +132,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       if (numberChunks.isEmpty) {
         if (config.contains("numberchunks")) numberChunks = config("numberchunks", default = None)
         else {
-          val chunkSize: Int = config("chunksize", (1 << 30))
+          val chunkSize: Int = config("chunksize", 1 << 30)
           val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3
           else input_R1.length
           numberChunks = Option(ceil(filesize.toDouble / chunkSize).toInt)
@@ -125,9 +142,10 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     }
   }
 
+  /** Adds all jobs of the pipeline */
   def biopetScript() {
     if (!skipFlexiprep) {
-      flexiprep.outputDir = outputDir + "flexiprep" + File.separator
+      flexiprep.outputDir = new File(outputDir, "flexiprep")
       flexiprep.input_R1 = input_R1
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
@@ -140,19 +158,24 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     var fastq_R2_output: List[File] = Nil
 
     def removeGz(file: String): String = {
-      if (file.endsWith(".gz")) return file.substring(0, file.lastIndexOf(".gz"))
-      else if (file.endsWith(".gzip")) return file.substring(0, file.lastIndexOf(".gzip"))
-      else return file
+      if (file.endsWith(".gz")) file.substring(0, file.lastIndexOf(".gz"))
+      else if (file.endsWith(".gzip")) file.substring(0, file.lastIndexOf(".gzip"))
+      else file
     }
-    var chunks: Map[String, (String, String)] = Map()
+    var chunks: Map[File, (String, String)] = Map()
     if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = outputDir + "chunks/" + t + "/"
+      val chunkDir = new File(outputDir, "chunks" + File.separator + t)
       chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
         if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
     }
-    else chunks += (outputDir -> (
-      flexiprep.extractIfNeeded(input_R1, flexiprep.outputDir),
-      if (paired) flexiprep.extractIfNeeded(input_R2.get, flexiprep.outputDir) else "")
+    else if (skipFlexiprep) {
+      chunks += (outputDir -> (
+        extractIfNeeded(input_R1, flexiprep.outputDir),
+        if (paired) extractIfNeeded(input_R2.get, outputDir) else "")
+      )
+    } else chunks += (outputDir -> (
+      flexiprep.outputFiles("fastq_input_R1"),
+      if (paired) flexiprep.outputFiles("fastq_input_R2") else "")
     )
 
     if (chunking) {
@@ -176,7 +199,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       var R2 = fastqfile._2
       var deps: List[File] = Nil
       if (!skipFlexiprep) {
-        val flexiout = flexiprep.runTrimClip(R1, R2, chunkDir + "flexiprep/", chunkDir)
+        val flexiout = flexiprep.runTrimClip(R1, R2, new File(chunkDir, "flexiprep"), chunkDir)
         logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
@@ -185,42 +208,65 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
         fastq_R2_output :+= R2
       }
 
-      val outputBam = new File(chunkDir + outputName + ".bam")
+      val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
         case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
+        case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
+        // TODO: make TopHat here accept multiple input files
+        case "tophat"     => addTophat(R1, R2, outputBam, deps)
         case "stampy"     => addStampy(R1, R2, outputBam, deps)
         case "star"       => addStar(R1, R2, outputBam, deps)
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
-        case _            => throw new IllegalStateException("Option Aligner: '" + aligner + "' is not valid")
+        case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
       if (config("chunk_metrics", default = false))
-        addAll(BamMetrics(this, outputBam, chunkDir + "metrics/").functions)
+        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
+      addSummaryQScript(flexiprep)
     }
 
     var bamFile = bamFiles.head
     if (!skipMarkduplicates) {
-      bamFile = new File(outputDir + outputName + ".dedup.bam")
-      add(MarkDuplicates(this, bamFiles, bamFile))
+      bamFile = new File(outputDir, outputName + ".dedup.bam")
+      val md = MarkDuplicates(this, bamFiles, bamFile)
+      add(md)
+      addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
       val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
 
-    if (!skipMetrics) addAll(BamMetrics(this, bamFile, outputDir + "metrics" + File.separator).functions)
+    if (!skipMetrics) {
+      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"))
+      addAll(bamMetrics.functions)
+      addSummaryQScript(bamMetrics)
+    }
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> bamFile)
+
+    if (config("generate_wig", default = false).asBoolean)
+      addAll(Bam2Wig(this, finalBamFile).functions)
+
+    addSummaryJobs
   }
 
+  /**
+   * Add bwa aln jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
@@ -242,7 +288,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       bwaSampe.fastqR2 = R2
       bwaSampe.saiR1 = bwaAlnR1.output
       bwaSampe.saiR2 = bwaAlnR2.output
-      bwaSampe.r = getReadGroup
+      bwaSampe.r = getReadGroupBwa
       bwaSampe.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSampe.isIntermediate = true
       add(bwaSampe)
@@ -252,7 +298,7 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
       val bwaSamse = new BwaSamse(this)
       bwaSamse.fastq = R1
       bwaSamse.sai = bwaAlnR1.output
-      bwaSamse.r = getReadGroup
+      bwaSamse.r = getReadGroupBwa
       bwaSamse.output = swapExt(output.getParent, output, ".bam", ".sam")
       bwaSamse.isIntermediate = true
       add(bwaSamse)
@@ -266,26 +312,89 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     return sortSam.output
   }
 
+  /**
+   * Adds bwa mem jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBwaMem(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2
     bwaCommand.deps = deps
-    bwaCommand.R = Some(getReadGroup)
+    bwaCommand.R = Some(getReadGroupBwa)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     add(bwaCommand)
     val sortSam = SortSam(this, bwaCommand.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
-    return sortSam.output
+    sortSam.output
   }
 
+  def addGsnap(R1: File, R2: File, output: File, deps: List[File]): File = {
+    val gsnapCommand = new Gsnap(this)
+    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
+    gsnapCommand.input = List(R1, R2).filterNot(x => x == null || x.getPath == "")
+    gsnapCommand.deps = deps
+    gsnapCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
+    gsnapCommand.isIntermediate = true
+    add(gsnapCommand)
+
+    val sortSam = new SortSam(this)
+    sortSam.input = gsnapCommand.output
+    sortSam.output = output
+    sortSam.sortOrder = "coordinate"
+    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    add(sortSam)
+
+    sortSam.output
+  }
+
+  def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
+    // TODO: merge mapped and unmapped BAM ~ also dealing with validation errors in the unmapped BAM
+    val tophat = new Tophat(this)
+    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
+    tophat.R1 = tophat.R1 :+ R1
+    if (R2 != null && R2.getPath != "") tophat.R2 = tophat.R2 :+ R2
+    tophat.output_dir = new File(outputDir, "tophat_out")
+    // always output BAM
+    tophat.no_convert_bam = false
+    tophat.deps = deps
+    // always output BAM
+    tophat.no_convert_bam = false
+    add(tophat)
+
+    val ln = new Ln(this)
+    ln.input = tophat.outputAcceptedHits
+    ln.output = swapExt(output.getParent, output, ".bam", ".raw.bam")
+    add(ln)
+
+    val sortSam = new SortSam(this)
+    sortSam.input = ln.output
+    sortSam.output = output
+    sortSam.sortOrder = "coordinate"
+    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    add(sortSam)
+
+    sortSam.output
+  }
+  /**
+   * Adds stampy jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
-    RG += "SM:" + sampleId + ","
-    RG += "LB:" + libId + ","
+    RG += "SM:" + sampleId.get + ","
+    RG += "LB:" + libId.get + ","
     if (readgroupDescription != null) RG += "DS" + readgroupDescription + ","
     RG += "PU:" + platformUnit + ","
     if (predictedInsertsize.getOrElse(0) > 0) RG += "PI:" + predictedInsertsize.get + ","
@@ -305,13 +414,21 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     val sortSam = SortSam(this, stampyCmd.output, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
-    return sortSam.output
+    sortSam.output
   }
 
+  /**
+   * Adds bowtie jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addBowtie(R1: File, R2: File, output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
-    if (paired) bowtie.R2 = R2
+    if (paired) bowtie.R2 = Some(R2)
     bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
@@ -319,48 +436,97 @@ class Mapping(val root: Configurable) extends QScript with BiopetQScript {
     return addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
+  /**
+   * Adds Star jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStar(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
-    return addAddOrReplaceReadGroups(starCommand.outputSam, output)
+    addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
 
+  /**
+   * Adds Start 2 pass jobs
+   * @param R1
+   * @param R2
+   * @param output
+   * @param deps
+   * @return
+   */
   def addStar2pass(R1: File, R2: File, output: File, deps: List[File]): File = {
     val starCommand = Star._2pass(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
-    return addAddOrReplaceReadGroups(starCommand._1, output)
+    addAddOrReplaceReadGroups(starCommand._1, output)
   }
 
+  /**
+   * Adds AddOrReplaceReadGroups
+   * @param input
+   * @param output
+   * @return
+   */
   def addAddOrReplaceReadGroups(input: File, output: File): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
 
     addOrReplaceReadGroups.RGID = readgroupId
-    addOrReplaceReadGroups.RGLB = libId
+    addOrReplaceReadGroups.RGLB = libId.get
     addOrReplaceReadGroups.RGPL = platform
     addOrReplaceReadGroups.RGPU = platformUnit
-    addOrReplaceReadGroups.RGSM = sampleId
+    addOrReplaceReadGroups.RGSM = sampleId.get
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
     if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
     add(addOrReplaceReadGroups)
 
-    return addOrReplaceReadGroups.output
+    addOrReplaceReadGroups.output
   }
 
-  def getReadGroup(): String = {
+  /** Returns readgroup for bwa */
+  def getReadGroupBwa(): String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
-    RG += "LB:" + libId + "\\t"
+    RG += "LB:" + libId.get + "\\t"
     RG += "PL:" + platform + "\\t"
     RG += "PU:" + platformUnit + "\\t"
-    RG += "SM:" + sampleId + "\\t"
+    RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
     if (readgroupDescription.isDefined) RG += "DS" + readgroupDescription.get + "\\t"
     if (readgroupDate != null) RG += "DT" + readgroupDate + "\\t"
     if (predictedInsertsize.isDefined) RG += "PI" + predictedInsertsize.get + "\\t"
 
-    return RG.substring(0, RG.lastIndexOf("\\t"))
+    RG.substring(0, RG.lastIndexOf("\\t"))
   }
+
+  //FIXME: This is code duplication from flexiprep, need general class to pass jobs inside a util function
+  /**
+   * Extracts file if file is compressed
+   * @param file
+   * @param runDir
+   * @return returns extracted file
+   */
+  def extractIfNeeded(file: File, runDir: File): File = {
+    if (file == null) return file
+    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+      var newFile: File = swapExt(runDir, file, ".gz", "")
+      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
+      val zcatCommand = Zcat(this, file, newFile)
+      zcatCommand.isIntermediate = true
+      add(zcatCommand)
+      return newFile
+    } else if (file.getName().endsWith(".bz2")) {
+      val newFile = swapExt(runDir, file, ".bz2", "")
+      val pbzip2 = Pbzip2(this, file, newFile)
+      pbzip2.isIntermediate = true
+      add(pbzip2)
+      return newFile
+    } else return file
+  }
+
 }
 
 object Mapping extends PipelineCommand

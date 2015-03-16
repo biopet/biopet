@@ -21,18 +21,23 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/**
+ * Extension for bowtie 1
+ *
+ * Based on version 1.1.1
+ */
 class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file R1", shortName = "R1")
-  var R1: File = _
+  var R1: File = null
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
-  var R2: File = _
+  var R2: Option[File] = None
 
-  @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = config("reference", required = true)
+  @Input(doc = "The reference file for the bam files.", shortName = "R", required = true)
+  var reference: File = config("reference")
 
-  @Output(doc = "Output file SAM", shortName = "output")
-  var output: File = _
+  @Output(doc = "Output file SAM", shortName = "output", required = true)
+  var output: File = null
 
   executable = config("exe", default = "bowtie", freeVar = false)
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r
@@ -53,9 +58,10 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
 
+  /** return commandline to execute */
   def cmdLine = {
     required(executable) +
-      optional("--threads", nCoresRequest) +
+      optional("--threads", threads) +
       conditional(sam, "--sam") +
       conditional(best, "--best") +
       conditional(strata, "--strata") +
@@ -67,8 +73,13 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
       optional("--maxbts", maxbts) +
       optional("--maqerr", maqerr) +
       required(reference) +
-      required(R1) +
-      optional(R2) +
+      (R2 match {
+        case Some(r2) => {
+          required("-1", R1) +
+            optional("-2", r2)
+        }
+        case _ => required(R1)
+      }) +
       " > " + required(output)
   }
 }

@@ -6,7 +6,6 @@ import argonaut.Argonaut._
 import argonaut.Json
 import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, ConfigValue }
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
@@ -170,79 +169,23 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     val index = ConfigValueIndex("test", Nil, "test")
     new ImplicitConversions {
       configValue2list(ConfigValue(index, index, List(""))) shouldBe List("")
-      intercept[IllegalStateException] {
-        configValue2list(ConfigValue(index, index, null))
-      }
-
       configValue2stringList(ConfigValue(index, index, List(""))) shouldBe List("")
-      intercept[IllegalStateException] {
-        configValue2stringList(ConfigValue(index, index, null))
-      }
-
       configValue2stringSet(ConfigValue(index, index, List(""))) shouldBe Set("")
-      intercept[IllegalStateException] {
-        configValue2stringSet(ConfigValue(index, index, null))
-      }
 
       var int: Int = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        int = ConfigValue(index, index, null)
-      }
-
       var long: Long = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        long = ConfigValue(index, index, null)
-      }
-
       var double: Double = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        double = ConfigValue(index, index, null)
-      }
-
       var float: Float = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        float = ConfigValue(index, index, null)
-      }
-
       var boolean: Boolean = ConfigValue(index, index, true)
-      intercept[IllegalStateException] {
-        boolean = ConfigValue(index, index, null)
-      }
-
       var intOption: Option[Int] = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        int = ConfigValue(index, index, null)
-      }
-
       var longOption: Option[Long] = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        long = ConfigValue(index, index, null)
-      }
-
       var doubleOption: Option[Double] = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        double = ConfigValue(index, index, null)
-      }
-
       var floatOption: Option[Float] = ConfigValue(index, index, 1)
-      intercept[IllegalStateException] {
-        float = ConfigValue(index, index, null)
-      }
-
       var booleanOption: Option[Boolean] = ConfigValue(index, index, true)
-      intercept[IllegalStateException] {
-        boolean = ConfigValue(index, index, null)
-      }
-
       var string: String = ConfigValue(index, index, "test")
-      intercept[IllegalStateException] {
-        string = ConfigValue(index, index, null)
-      }
-
       var file: File = ConfigValue(index, index, "test")
-      intercept[IllegalStateException] {
-        file = ConfigValue(index, index, null)
-      }
+
+      //TODO: test BiopetQScript error message
     }
   }
 }

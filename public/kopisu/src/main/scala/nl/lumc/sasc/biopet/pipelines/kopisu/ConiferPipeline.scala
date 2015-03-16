@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ BufferedWriter, FileWriter, File }
+import java.io.{ FileFilter, BufferedWriter, FileWriter, File }
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, _ }
 import nl.lumc.sasc.biopet.core.config._
@@ -80,17 +80,23 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
     val coniferRPKM = new ConiferRPKM(this)
     coniferRPKM.bamFile = this.inputBam.getAbsoluteFile
     coniferRPKM.probes = this.probeFile
-    coniferRPKM.output = new File(RPKMdir + File.separator + input2RPKM(inputBam))
+    coniferRPKM.output = new File(RPKMdir, input2RPKM(inputBam))
     add(coniferRPKM)
 
     if (!RPKMonly) {
       /** Collect the rpkm_output to a temp directory, where we merge with the control files */
       var refRPKMlist: List[File] = Nil
-      for (f <- controlsDir.listFiles()) {
-        var target = new File(RPKMdir + File.separator + f.getName)
-        if (!target.exists()) {
-          logger.info("Creating " + target.getAbsolutePath)
-          add(Ln(this, f, target, true))
+      // Sync the .txt only, these files contain the RPKM Values
+      for (controlRPKMfile <- controlsDir.list.filter(_.toLowerCase.endsWith(".txt"))) {
+        val target = new File(RPKMdir, controlRPKMfile)
+        val source = new File(controlsDir, controlRPKMfile)
+
+        if (!target.exists) {
+          add(Ln(this, source, target, false))
+          refRPKMlist :+= target
+        } else if (!target.equals(source)) {
+          target.delete()
+          add(Ln(this, source, target, false))
           refRPKMlist :+= target
         }
       }
@@ -99,18 +105,18 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
       coniferAnalyze.deps = List(coniferRPKM.output) ++ refRPKMlist
       coniferAnalyze.probes = this.probeFile
       coniferAnalyze.rpkmDir = RPKMdir
-      coniferAnalyze.output = new File(sampleDir + File.separator + input2HDF5(inputBam))
+      coniferAnalyze.output = new File(sampleDir, input2HDF5(inputBam))
       add(coniferAnalyze)
 
       val coniferCall = new ConiferCall(this)
       coniferCall.input = coniferAnalyze.output
-      coniferCall.output = new File(sampleDir + File.separator + "calls.txt")
+      coniferCall.output = new File(sampleDir, "calls.txt")
       add(coniferCall)
 
       summary.deps = List(coniferCall.output)
       summary.label = sampleLabel
       summary.calls = coniferCall.output
-      summary.out = new File(sampleDir + File.separator + input2Calls(inputBam))
+      summary.out = new File(sampleDir, input2Calls(inputBam))
 
       add(summary)
     }

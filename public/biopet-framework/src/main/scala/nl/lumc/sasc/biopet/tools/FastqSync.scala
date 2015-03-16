@@ -9,19 +9,18 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+
 import scala.io.Source
 import scala.util.matching.Regex
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -29,27 +28,30 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
 
   javaMainClass = getClass.getName
 
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
-  var refFastq: File = _
+  var refFastq: File = null
 
   @Input(doc = "Input read 1 FASTQ file", shortName = "i", required = true)
-  var inputFastq1: File = _
+  var inputFastq1: File = null
 
   @Input(doc = "Input read 2 FASTQ file", shortName = "j", required = true)
-  var inputFastq2: File = _
+  var inputFastq2: File = null
 
   @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
-  var outputFastq1: File = _
+  var outputFastq1: File = null
 
   @Output(doc = "Output read 2 FASTQ file", shortName = "p", required = true)
-  var outputFastq2: File = _
+  var outputFastq2: File = null
 
   @Output(doc = "Sync statistics", required = true)
-  var outputStats: File = _
+  var outputStats: File = null
+
+  override val defaultVmem = "4G"
+  memoryLimit = Some(1.7)
 
   // executed command line
   override def commandLine =
@@ -61,9 +63,9 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
       required("-p", outputFastq2) + " > " +
       required(outputStats)
 
-  // summary statistics
-  def summary: Json = {
+  def summaryFiles: Map[String, File] = Map()
 
+  def summaryStats: Map[String, Any] = {
     val regex = new Regex("""Filtered (\d*) reads from first read file.
                             |Filtered (\d*) reads from second read file.
                             |Synced read files contain (\d*) reads.""".stripMargin,
@@ -81,33 +83,29 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction {
         }
       } else (0, 0, 0)
 
-    ("num_reads_discarded_R1" := countFilteredR1) ->:
-      ("num_reads_discarded_R2" := countFilteredR2) ->:
-      ("num_reads_kept" := countRLeft) ->:
-      jEmptyObject
+    Map("num_reads_discarded_R1" -> countFilteredR1,
+      "num_reads_discarded_R2" -> countFilteredR2,
+      "num_reads_kept" -> countRLeft
+    )
+  }
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (v1: Int, v2: Int) => v1 + v2
+      case _                  => v1
+    }
   }
 }
 
 object FastqSync extends ToolCommand {
 
-  /**
-   * Implicit class to allow for lazy retrieval of FastqRecord ID
-   * without any read pair mark
-   *
-   * @param fq FastqRecord
-   */
-  private implicit class FastqPair(fq: FastqRecord) {
-    lazy val fragId = fq.getReadHeader.split("[_/][12]\\s??|\\s")(0)
-  }
+  /** Regex for capturing read ID ~ taking into account its read pair mark (if present) */
+  private val idRegex = "[_/][12]\\s??|\\s".r
 
-  /**
-   * Counts from syncing FastqRecords
-   *
-   * @param numDiscard1 Number of reads discarded from the initial read 1
-   * @param numDiscard2 Number of reads discarded from the initial read 2
-   * @param numKept Number of items in result
-   */
-  case class SyncCounts(numDiscard1: Int, numDiscard2: Int, numKept: Int)
+  /** Implicit class to allow for lazy retrieval of FastqRecord ID without any read pair mark */
+  private implicit class FastqPair(fq: FastqRecord) {
+    lazy val fragId = idRegex.split(fq.getReadHeader)(0)
+  }
 
   /**
    * Filters out FastqRecord that are not present in the input iterators, using
@@ -118,7 +116,8 @@ object FastqSync extends ToolCommand {
    * @param seqB FastqReader over read 2
    * @return
    */
-  def syncFastq(pre: FastqReader, seqA: FastqReader, seqB: FastqReader): (Stream[(FastqRecord, FastqRecord)], SyncCounts) = {
+  def syncFastq(pre: FastqReader, seqA: FastqReader, seqB: FastqReader,
+                seqOutA: AsyncFastqWriter, seqOutB: AsyncFastqWriter): (Long, Long, Long) = {
     // counters for discarded A and B seqections + total kept
     // NOTE: we are reasigning values to these variables in the recursion below
     var (numDiscA, numDiscB, numKept) = (0, 0, 0)
@@ -129,96 +128,50 @@ object FastqSync extends ToolCommand {
      * @param pre Reference sequence, assumed to be a superset of both seqA and seqB
      * @param seqA Sequence over read 1
      * @param seqB Sequence over read 2
-     * @param acc Stream containing pairs which are present in read 1 and read 2
      * @return
      */
     @tailrec def syncIter(pre: Stream[FastqRecord],
-                          seqA: Stream[FastqRecord], seqB: Stream[FastqRecord],
-                          acc: Stream[(FastqRecord, FastqRecord)]): Stream[(FastqRecord, FastqRecord)] =
+                          seqA: Stream[FastqRecord], seqB: Stream[FastqRecord]): Unit =
       (pre.headOption, seqA.headOption, seqB.headOption) match {
+        // where the magic happens!
+        case (Some(r), Some(a), Some(b)) =>
+          val (nextA, nextB) = (a.fragId == r.fragId, b.fragId == r.fragId) match {
+            // all IDs are equal to ref
+            case (true, true) =>
+              numKept += 1
+              seqOutA.write(a)
+              seqOutB.write(b)
+              (seqA.tail, seqB.tail)
+            // B not equal to ref and A is equal, then we discard A and progress
+            case (true, false) =>
+              numDiscA += 1
+              (seqA.tail, seqB)
+            // A not equal to ref and B is equal, then we discard B and progress
+            case (false, true) =>
+              numDiscB += 1
+              (seqA, seqB.tail)
+            case (false, false) =>
+              (seqA, seqB)
+          }
+          syncIter(pre.tail, nextA, nextB)
         // recursion base case: both iterators have been exhausted
-        case (_, None, None) => acc
+        case (_, None, None) => ;
         // illegal state: reference sequence exhausted but not seqA or seqB
         case (None, Some(_), _) | (None, _, Some(_)) =>
           throw new NoSuchElementException("Reference record stream shorter than expected")
         // keep recursion going if A still has items (we want to count how many)
         case (_, _, None) =>
           numDiscA += 1
-          syncIter(pre.tail, seqA.tail, Stream(), acc)
+          syncIter(pre.tail, seqA.tail, seqB)
         // like above but for B
         case (_, None, _) =>
           numDiscB += 1
-          syncIter(pre.tail, Stream(), seqB.tail, acc)
-        // where the magic happens!
-        case (Some(r), Some(a), Some(b)) =>
-          // value of A iterator in the next recursion
-          val nextA =
-            // hold A if its head is not equal to reference
-            if (a.fragId != r.fragId) {
-              if (b.fragId == r.fragId) numDiscB += 1
-              seqA
-              // otherwise, go to next item
-            } else seqA.tail
-          // like A above
-          val nextB =
-            if (b.fragId != r.fragId) {
-              if (a.fragId == r.fragId) numDiscA += 1
-              seqB
-            } else seqB.tail
-          // value of accumulator in the next recursion
-          val nextAcc =
-            // keep accumulator unchanged if any of the two post streams
-            // have different elements compared to the reference stream
-            if (a.fragId != r.fragId || b.fragId != r.fragId) acc
-            // otherwise, grow accumulator
-            else {
-              numKept += 1
-              acc ++ Stream((a, b))
-            }
-          syncIter(pre.tail, nextA, nextB, nextAcc)
+          syncIter(pre.tail, seqA, seqB.tail)
       }
 
-    (syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream,
-      Stream.empty[(FastqRecord, FastqRecord)]),
-      SyncCounts(numDiscA, numDiscB, numKept))
-  }
+    syncIter(pre.iterator.asScala.toStream, seqA.iterator.asScala.toStream, seqB.iterator.asScala.toStream)
 
-  def writeSyncedFastq(sync: Stream[(FastqRecord, FastqRecord)],
-                       counts: SyncCounts,
-                       outputFastq1: AsyncFastqWriter,
-                       outputFastq2: AsyncFastqWriter): Unit = {
-    sync.foreach {
-      case (rec1, rec2) =>
-        outputFastq1.write(rec1)
-        outputFastq2.write(rec2)
-    }
-    println("Filtered %d reads from first read file.".format(counts.numDiscard1))
-    println("Filtered %d reads from second read file.".format(counts.numDiscard2))
-    println("Synced read files contain %d reads.".format(counts.numKept))
-  }
-
-  /** Function to merge this tool's summary with summaries from other objects */
-  // TODO: refactor this into the object? At least make it work on the summary object
-  def mergeSummaries(jsons: List[Json]): Json = {
-
-    val (read1FilteredCount, read2FilteredCount, readsLeftCount) = jsons
-      // extract the values we require from each JSON object into tuples
-      .map {
-        case json =>
-          (json.field("num_reads_discarded_R1").get.numberOrZero.toInt,
-            json.field("num_reads_discarded_R2").get.numberOrZero.toInt,
-            json.field("num_reads_kept").get.numberOrZero.toInt)
-      }
-      // reduce the tuples
-      .reduceLeft {
-        (x: (Int, Int, Int), y: (Int, Int, Int)) =>
-          (x._1 + y._1, x._2 + y._2, x._3 + y._3)
-      }
-
-    ("num_reads_discarded_R1" := read1FilteredCount) ->:
-      ("num_reads_discarded_R2" := read2FilteredCount) ->:
-      ("num_reads_kept" := readsLeftCount) ->:
-      jEmptyObject
+    (numDiscA, numDiscB, numKept)
   }
 
   case class Args(refFastq: File = new File(""),
@@ -229,7 +182,6 @@ object FastqSync extends ToolCommand {
 
   class OptParser extends AbstractOptParser {
 
-    // TODO: make output format independent from input format?
     head(
       s"""
         |$commandName - Sync paired-end FASTQ files.
@@ -279,15 +231,23 @@ object FastqSync extends ToolCommand {
 
     val commandArgs: Args = parseArgs(args)
 
-    val (synced, counts) = syncFastq(
-      new FastqReader(commandArgs.refFastq),
-      new FastqReader(commandArgs.inputFastq1),
-      new FastqReader(commandArgs.inputFastq2))
+    val refReader = new FastqReader(commandArgs.refFastq)
+    val AReader = new FastqReader(commandArgs.inputFastq1)
+    val BReader = new FastqReader(commandArgs.inputFastq2)
+    val AWriter = new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000)
+    val BWriter = new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq2), 3000)
 
-    writeSyncedFastq(synced, counts,
-      // using 3000 for queue size to approximate NFS buffer
-      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq1), 3000),
-      new AsyncFastqWriter(new BasicFastqWriter(commandArgs.outputFastq2), 3000)
-    )
+    try {
+      val (numDiscA, numDiscB, numKept) = syncFastq(refReader, AReader, BReader, AWriter, BWriter)
+      println(s"Filtered $numDiscA reads from first read file.")
+      println(s"Filtered $numDiscB reads from second read file.")
+      println(s"Synced files contain $numKept reads.")
+    } finally {
+      refReader.close()
+      AReader.close()
+      BReader.close()
+      AWriter.close()
+      BWriter.close()
+    }
   }
 }
