@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import org.scalatest.testng.TestNGSuite
@@ -15,8 +30,8 @@ import htsjdk.variant.variantcontext.VariantContext
  * This class tests the VEPNormalizer
  * Created by ahbbollen on 11/24/14.
  */
-class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
-  import VEPNormalizer._
+class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
+  import VepNormalizer._
 
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
@@ -56,7 +71,10 @@ class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     }
 
     def check(item: String) = {
-      record.getAttribute(item).toString.split(""",""", -1).length should be(11)
+      record.getAttribute(item) match {
+        case l: List[_] => l.length should be(11)
+        case _          =>
+      }
     }
 
     val items = Array("AA_MAF", "AFR_MAF", "ALLELE_NUM", "AMR_MAF", "ASN_MAF", "Allele",

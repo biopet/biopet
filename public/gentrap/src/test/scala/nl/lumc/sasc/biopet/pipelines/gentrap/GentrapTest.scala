@@ -1,6 +1,17 @@
 /**
- * Copyright (c) 2015 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
- * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
@@ -27,9 +38,10 @@ class GentrapTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
       override def configName = "gentrap"
-
       override def globalConfig = new Config(map)
-
+      // disable dict file check since it is based on the reference file name (which we can't modify here since
+      // we use the mock /usr/bin/test file
+      override def checkDictFile: Unit = {}
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -176,6 +188,7 @@ object GentrapTest {
 
   val executables = Map(
     "reference" -> "test",
+    "dict" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
@@ -186,7 +199,7 @@ object GentrapTest {
       // mapping executables
       "star", "bowtie", "samtools", "gsnap", "tophat",
       // gentrap executables
-      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip",
+      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage",
       // bam2wig executables
       "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap

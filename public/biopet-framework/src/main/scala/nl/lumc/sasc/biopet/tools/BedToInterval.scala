@@ -43,14 +43,6 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
 }
 
 object BedToInterval extends ToolCommand {
-  def apply(root: Configurable, inputBed: File, inputBam: File, outputDir: String): BedToInterval = {
-    val bedToInterval = new BedToInterval(root)
-    bedToInterval.input = inputBed
-    bedToInterval.bamFile = inputBam
-    bedToInterval.output = new File(outputDir, inputBed.getName.stripSuffix(".bed") + ".interval")
-    return bedToInterval
-  }
-
   def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
     val bedToInterval = new BedToInterval(root)
     bedToInterval.input = inputBed

@@ -56,8 +56,8 @@ class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFun
     required("-I", input) +
     optional("--tag", tag) +
     optional("--length", length) +
-    optional("--notag", noTagsOutput) +
-    optional("--noantitag", noAntiTagsOutput) +
+    optional("--noTagsOutput", noTagsOutput) +
+    optional("--noAntiTagsOutput", noAntiTagsOutput) +
     required("-o", output)
 }
 
@@ -84,7 +84,7 @@ object SageCreateLibrary extends ToolCommand {
     opt[File]("noAntiTagsOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(noAntiTagsOutput = x)
     }
-    opt[File]("allGenesOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("allGenesOutput") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(allGenesOutput = x)
     }
   }

@@ -90,10 +90,13 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "batch" -> 4,
         "format" -> "sam"
       ),
+      "cutadapt" -> Map("minimum_length" -> 20),
       // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
       "picard" -> Map(
         "programrecordid" -> "null"
-      )
+      ),
+      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+      "mapping" -> Map("skip_markduplicates" -> true)
     ), super.defaults)
 
   /** Adds output merge jobs for the given expression mode */
@@ -303,8 +306,21 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     job
   }
 
+  // used to ensure that the required .dict file is present before the run starts
+  // can not store it in config since the tools that use it (Picard) have this value based on the reference file name
+  protected def checkDictFile(): Unit = {
+    val refFile: File = config("reference")
+    val refName: String = refFile.getName
+    require(refName.contains('.'), "Reference file must have an extension")
+    val dictFile = new File(Option(refFile.getParentFile).getOrElse(new File(".")),
+      refName.take(refName.lastIndexOf('.')) + ".dict")
+    require(dictFile.exists, s"Dict file '$dictFile' must exist")
+  }
+
   /** Steps to run before biopetScript */
   def init(): Unit = {
+    checkDictFile()
+
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(FragmentsPerGene))

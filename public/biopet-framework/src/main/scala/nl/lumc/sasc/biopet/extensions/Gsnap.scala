@@ -1,9 +1,18 @@
 /**
- * Copyright (c) 2014 Leiden University Medical Center
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
  *
- * @author  Wibowo Arindrarto
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
  */
-
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
@@ -26,7 +35,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "6G"
+  override val defaultVmem = "16G"
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
@@ -166,9 +175,6 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** use this runlength iit file to resolve concordant multiple results */
   var use_runlength: Option[String] = config("use_runlength")
-
-  /** number of worker threads */
-  var nthreads: Option[Int] = config("nthreads")
 
   /** cases to use gmap for complex alignments containing multiple splices or indels */
   var gmap_mode: Option[String] = config("gmap_mode")
