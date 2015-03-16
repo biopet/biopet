@@ -46,14 +46,14 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
     val igvCount = new IGVToolsCount(this)
     igvCount.input = bamFile
     igvCount.genomeChromSizes = bs.chromSizesFile
-    igvCount.wig = Some(swapExt(outputDir, bamFile, ".bam", ".wig"))
-    igvCount.tdf = Some(swapExt(outputDir, bamFile, ".bam", ".tdf"))
+    igvCount.wig = Some(new File(outputDir, bamFile.getName + ".wig"))
+    igvCount.tdf = Some(new File(outputDir, bamFile.getName + ".tdf"))
     add(igvCount)
 
     val wigToBigWig = new WigToBigWig(this)
     wigToBigWig.inputWigFile = igvCount.wig.get
     wigToBigWig.inputChromSizesFile = bs.chromSizesFile
-    wigToBigWig.outputBigWig = swapExt(outputDir, bamFile, ".bam", ".bw")
+    wigToBigWig.outputBigWig = new File(outputDir, bamFile.getName + ".bw")
     add(wigToBigWig)
   }
 }
