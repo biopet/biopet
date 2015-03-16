@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.toucan
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
-import nl.lumc.sasc.biopet.tools.VEPNormalizer
+import nl.lumc.sasc.biopet.tools.VepNormalizer
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
@@ -49,7 +49,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript {
     vep.isIntermediate = true
     add(vep)
 
-    val normalizer = new VEPNormalizer(this)
+    val normalizer = new VepNormalizer(this)
     normalizer.inputVCF = vep.output
     normalizer.outputVCF = swapExt(vep.output, ".vcf", ".normalized.vcf.gz")
     add(normalizer)

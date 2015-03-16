@@ -38,7 +38,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Created by ahbbollen on 10/27/14.
  */
 
-class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
@@ -60,7 +60,7 @@ class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
     conditional(doNotRemove, "--do-not-remove")
 }
 
-object VEPNormalizer extends ToolCommand {
+object VepNormalizer extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = new OptParser()

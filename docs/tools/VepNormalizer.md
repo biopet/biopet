@@ -1,4 +1,4 @@
-VEPNormalizer
+VepNormalizer
 ============
 
 Introduction
@@ -22,9 +22,9 @@ Example
 ---------
 
 ~~~~bash
-java -jar Biopet-0.3.0.jar tool VEPNormalizer -h
-|VEPNormalizer - Parse VEP-annotated VCF to standard VCF format 
-Usage: VEPNormalizer [options]
+java -jar Biopet-0.3.0.jar tool VepNormalizer -h
+|VepNormalizer - Parse VEP-annotated VCF to standard VCF format 
+Usage: VepNormalizer [options]
 
   -l <value> | --log_level <value>
         Log level

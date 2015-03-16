@@ -30,8 +30,8 @@ import htsjdk.variant.variantcontext.VariantContext
  * This class tests the VEPNormalizer
  * Created by ahbbollen on 11/24/14.
  */
-class VEPNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
-  import VEPNormalizer._
+class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
+  import VepNormalizer._
 
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString

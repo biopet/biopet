@@ -7,7 +7,7 @@ The Toucan pipeline is a VEP-based annotation pipeline.
 Currently, it comprises just two steps:
 
 * Variant Effect Predictor run
-* [VEP Normalizer on the VEP output](../tools/VEPNormalizer.md)
+* [VEP Normalizer on the VEP output](../tools/VepNormalizer.md)
 
 Example
 -----------
@@ -34,7 +34,7 @@ It is wise to set the `cache_version` field as well.
 Furthermore, the `fork` field will be overwritten by `threads` in case that one exists in the config. 
 Therefore, it is recommended not to use `fork`, but to rather use `threads`. 
 
-With that in mind, an example configuration using mode `standard` of the VEPNormalizer would thus be:
+With that in mind, an example configuration using mode `standard` of the VepNormalizer would thus be:
 ~~~~
 {
     "varianteffectpredictor": {
