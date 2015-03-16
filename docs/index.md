@@ -35,10 +35,10 @@ The actual path will vary from version to version, which is controlled by which 
 Almost all of the pipelines have a common usage pattern with a similar set of flags, for example:
 
 ~~~
-$ biopet pipeline shiva -config myconfig.json -qsub -jobParaEnv BWA -retry 2
+$ biopet pipeline <name of pipeline> -config myconfig.json -qsub -jobParaEnv BWA -retry 2
 ~~~
 
-The command above will do a *dry* run of the Shiva pipeline (one of our variant calling pipeline) using the config file `myconfig.json` as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
+The command above will do a *dry* run of a pipeline using the config file `myconfig.json` as if the command would be submitted to the SHARK cluster (the `-qsub` flag) to the `BWA` parallel environment (the `-jobParaEnv BWA` flag). We also set the maximum retry of failing jobs to two times (via the `-retry 2` flag). Doing a good run is a good idea to ensure that your real run proceeds smoothly. It may not catch all the errors, but if the dry run fails you can be sure that the real run will never succeed.
 
 If the dry run proceeds without problems, you can then do the real run by using the `-run` flag:
 
