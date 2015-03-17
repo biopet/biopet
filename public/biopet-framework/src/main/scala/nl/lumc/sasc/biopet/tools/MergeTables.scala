@@ -21,7 +21,7 @@ import scala.collection.mutable.{ Set => MutSet }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.{ Configurable, ConfigValue }
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction {
