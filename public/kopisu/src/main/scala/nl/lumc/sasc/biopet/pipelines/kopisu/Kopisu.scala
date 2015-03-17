@@ -24,6 +24,8 @@ import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMpileup
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.CommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -45,10 +47,21 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
 
     val sampileup = new SamtoolsMpileup(this)
     sampileup.input = List(bamFile)
+    sampileup.intervalBed = None
     sampileup.reference = config("reference")
-    sampileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup")
+    sampileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
     sampileup.isIntermediate = true
-    add(sampileup)
+
+    add(new CommandLineFunction {
+      analysisName = "smilepig"
+      nCoresRequest = 2
+      @Input
+      var input = List(bamFile)
+      @Output
+      var output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
+      isIntermediate = true
+      def commandLine: String = sampileup.cmdPipe + " | pigz -9 -p 4 -c > " + output.getAbsolutePath
+    })
 
     val FreeC = new FreeC(this)
     FreeC.input = sampileup.output
