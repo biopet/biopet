@@ -15,6 +15,8 @@ import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import htsjdk.samtools.util.Interval
 
+import scala.util.Random
+
 /**
  * Created by pjvan_thof on 1/10/15.
  */
@@ -326,8 +328,9 @@ object VcfStats extends ToolCommand {
       logger.info("total: " + variantCounter + " rows processed, " + fraction + "% done")
     }
 
-    val chrStats = for (intervals <- intervals.grouped(intervals.size / 10).toList.par) yield {
-      val chunkStats = for (intervals <- intervals.grouped(10)) yield {
+    // Triple for loop to not keep all bins in memory
+    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / 4).toList.par) yield {
+      val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
           val reader = new VCFFileReader(commandArgs.inputFile, true)
           var chunkCounter = 0
@@ -335,7 +338,7 @@ object VcfStats extends ToolCommand {
           logger.info("Starting on: " + interval)
 
           for (
-            record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd)
+            record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd);
             if record.getStart <= interval.getEnd
           ) {
             mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
@@ -366,9 +369,7 @@ object VcfStats extends ToolCommand {
         binStats.toList.fold(createStats)(_ += _)
       }
       chunkStats.toList.fold(createStats)(_ += _)
-    }
-
-    val stats = chrStats.toList.fold(createStats)(_ += _)
+    }).toList.fold(createStats)(_ += _)
 
     logger.info("Done reading vcf records")
 
@@ -409,7 +410,7 @@ object VcfStats extends ToolCommand {
   }
 
   protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
-    val bla = intervals.groupBy(_.getSequence).map { case (k,v) => k -> v.sortBy(_.getStart) }
+    val bla = intervals.groupBy(_.getSequence).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
     val writer = new PrintWriter(outputFile)
     writer.println("track type=wiggle_0")
