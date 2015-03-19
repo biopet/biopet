@@ -63,18 +63,25 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
   }
 
-  private def varscan = new Mpileup2cns(wrapper.root) {
+  private val varscan = new Mpileup2cns(wrapper.root) {
     strandFilter = Option(0)
     outputVcf = Option(1)
   }
 
-  private def compress = new Bgzip(wrapper.root) {
-    this.output = wrapper.output
-  }
+  private val compress = new Bgzip(wrapper.root)
 
-  private def index = new Tabix(wrapper.root) {
+  private val index = new Tabix(wrapper.root) {
     input = compress.output
     p = Option("vcf")
+  }
+
+  override def freezeFieldValues(): Unit = {
+    varscan.output = Option(new File(wrapper.output.toString.stripSuffix(".gz")))
+    compress.input = List(varscan.output.get)
+    compress.output = this.output
+    super.freezeFieldValues()
+    varscan.qSettings = this.qSettings
+    varscan.freezeFieldValues()
   }
 
   override def beforeGraph: Unit = {
@@ -85,6 +92,6 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
     mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
-      varscan.commandLine + " | " + compress.commandLine + " && " + index.commandLine
+      varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }
