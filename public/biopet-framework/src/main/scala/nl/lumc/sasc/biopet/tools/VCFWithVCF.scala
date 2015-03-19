@@ -15,7 +15,7 @@ import scala.collection.immutable
  */
 object VCFWithVCF extends ToolCommand {
   case class Args(inputFile: File = null, outputFile: File = null, secondaryVCF: File = null,
-                  fields: List[String] = Nil) extends AbstractArgs
+                  fields: List[String] = Nil, matchAllele: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -29,6 +29,9 @@ object VCFWithVCF extends ToolCommand {
     }
     opt[String]('f', "field") unbounded () action { (x, c) =>
       c.copy(fields = x :: c.fields)
+    }
+    opt[Boolean]("match") valueName ("<Boolean>") text ("Match alternative alleles; default true") maxOccurs (1) action { (x, c) =>
+      c.copy(matchAllele = x)
     }
   }
 
@@ -50,28 +53,36 @@ object VCFWithVCF extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(commandArgs.outputFile).build())
     writer.writeHeader(header)
-
     var idx = 0
 
     for (record: VariantContext <- reader.iterator()) {
       if (idx % 100000 == 0) {
         logger.info(s"""Processed $idx records""")
       }
-      var attr = record.getAttributes.toMap
-      val field_map = scala.collection.mutable.Map[String, List[String]]()
-      for (snd_rec <- secondaryReader.query(record.getChr, record.getStart, record.getEnd)) {
+      val field_map = scala.collection.mutable.Map[String, List[Any]]()
+
+
+      val secondary_records = if (commandArgs.matchAllele) {
+        secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
+          filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele(_)))
+      } else {
+        secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList
+      }
+
+      for (snd_rec <- secondary_records) {
         for (f <- commandArgs.fields) {
           if (field_map.contains(f)) {
-            field_map.update(f, snd_rec.getAttributeAsString(f, "unknown") :: field_map.get(f).get)
+            field_map.update(f, snd_rec.getAttribute(f, "unknown") :: field_map(f))
           }
           else {
-            field_map += (f -> List(snd_rec.getAttributeAsString(f, "unknown")))
+            field_map += (f -> List(snd_rec.getAttribute(f, "unknown")))
           }
         }
       }
-      writer.add(field_map.filter(_._2.nonEmpty).map(x => (x._1, x._2.mkString(",").stripPrefix("[").stripSuffix("]")))
+
+      writer.add(field_map.filter(_._2.nonEmpty)
         .foldLeft(new VariantContextBuilder(record))((builder, attribute)
-        => builder.attribute(attribute._1, attribute._2))
+        => builder.attribute(attribute._1, attribute._2.mkString(",").stripPrefix("[").stripSuffix("]")))
         .make())
       idx += 1
     }
