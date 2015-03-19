@@ -423,11 +423,11 @@ object VcfStats extends ToolCommand {
   }
 
   protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
-    val bla = intervals.groupBy(_.getSequence).map { case (k, v) => k -> v.sortBy(_.getStart) }
+    val groupedIntervals = intervals.groupBy(_.getSequence).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
     val writer = new PrintWriter(outputFile)
     writer.println("track type=wiggle_0")
-    for ((chr, intervals) <- bla) yield {
+    for ((chr, intervals) <- groupedIntervals) yield {
       val length = intervals.head.length()
       writer.println(s"fixedStep chrom=$chr start=1 step=$length span=$length")
       for (interval <- intervals) {
@@ -441,6 +441,13 @@ object VcfStats extends ToolCommand {
     writer.close()
   }
 
+  /**
+   * Gets single value from a tsv file
+   * @param file Input tsv file
+   * @param row Row id
+   * @param column column id
+   * @return value
+   */
   def valueFromTsv(file: File, row: String, column: String): Option[String] = {
     val reader = Source.fromFile(file)
     val it = reader.getLines()
