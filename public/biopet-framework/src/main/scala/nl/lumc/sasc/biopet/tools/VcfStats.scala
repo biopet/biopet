@@ -247,6 +247,9 @@ object VcfStats extends ToolCommand {
 
   val defaultInfoFields = List("QUAL", "general", "AC", "AF", "AN", "DP")
 
+  val sampleDistributions = List("Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall",
+    "NonInformative", "Available", "Called", "Filtered", "Variant")
+
   /**
    * @param args the command line arguments
    */
@@ -373,6 +376,7 @@ object VcfStats extends ToolCommand {
 
     logger.info("Done reading vcf records")
 
+    // Writing info fields to tsv files
     val infoOutputDir = new File(commandArgs.outputDir, "infotags")
     writeField(stats, "general", commandArgs.outputDir)
     for (field <- (adInfoTags).distinct.par) {
@@ -383,6 +387,7 @@ object VcfStats extends ToolCommand {
       }
     }
 
+    // Write genotype field to tsv files
     val genotypeOutputDir = new File(commandArgs.outputDir, "genotypetags")
     writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
     for (field <- (adGenotypeTags).distinct.par) {
@@ -393,11 +398,19 @@ object VcfStats extends ToolCommand {
       }
     }
 
+    // Write sample distributions to tsv files
+    val sampleDistributionsOutputDir = new File(commandArgs.outputDir, "sample_distributions")
+    for (field <- sampleDistributions) {
+      writeField(stats, "SampleDistribution-" + field, sampleDistributionsOutputDir)
+    }
+
+    // Write general wiggle tracks
     for (field <- commandArgs.generalWiggle) {
       val file = new File(commandArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
       writeWiggle(intervals, field, "count", file, false)
     }
 
+    // Write sample wiggle tracks
     for (field <- commandArgs.genotypeWiggle; sample <- samples) {
       val file = new File(commandArgs.outputDir, "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
       writeWiggle(intervals, field, sample, file, true)
@@ -470,6 +483,19 @@ object VcfStats extends ToolCommand {
     }
 
     buffer += "QUAL" -> Map(record.getPhredScaledQual -> 1)
+
+    addToBuffer("SampleDistribution-Het", record.getGenotypes.count(genotype => genotype.isHet), true)
+    addToBuffer("SampleDistribution-HetNonRef", record.getGenotypes.count(genotype => genotype.isHetNonRef), true)
+    addToBuffer("SampleDistribution-Hom", record.getGenotypes.count(genotype => genotype.isHom), true)
+    addToBuffer("SampleDistribution-HomRef", record.getGenotypes.count(genotype => genotype.isHomRef), true)
+    addToBuffer("SampleDistribution-HomVar", record.getGenotypes.count(genotype => genotype.isHomVar), true)
+    addToBuffer("SampleDistribution-Mixed", record.getGenotypes.count(genotype => genotype.isMixed), true)
+    addToBuffer("SampleDistribution-NoCall", record.getGenotypes.count(genotype => genotype.isNoCall), true)
+    addToBuffer("SampleDistribution-NonInformative", record.getGenotypes.count(genotype => genotype.isNonInformative), true)
+    addToBuffer("SampleDistribution-Available", record.getGenotypes.count(genotype => genotype.isAvailable), true)
+    addToBuffer("SampleDistribution-Called", record.getGenotypes.count(genotype => genotype.isCalled), true)
+    addToBuffer("SampleDistribution-Filtered", record.getGenotypes.count(genotype => genotype.isFiltered), true)
+    addToBuffer("SampleDistribution-Variant", record.getGenotypes.count(genotype => genotype.isHetNonRef || genotype.isHet || genotype.isHomVar), true)
 
     addToBuffer("general", "Total", true)
     addToBuffer("general", "Biallelic", record.isBiallelic)
