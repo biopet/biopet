@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.variant.variantcontext.Allele
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -89,5 +90,27 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
     s1 += s1
     s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
+  }
+
+  @Test
+  def testAlleleOverlap: Unit = {
+
+    val a1 = Allele.create("G")
+    val a2 = Allele.create("A")
+
+    alleleOverlap(List(a1, a1), List(a1, a1)) shouldBe 2
+    alleleOverlap(List(a2, a2), List(a2, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a2, a1)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a2, a1)) shouldBe 2
+
+    alleleOverlap(List(a1, a2), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a2, a1), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a1, a2)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a2, a1)) shouldBe 1
+
+    alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
+    alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
   }
 }
