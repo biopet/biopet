@@ -36,12 +36,15 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   val defaultThreads = 1
 
   var vmem: Option[String] = config("vmem")
-  var defaultCoreMemory: Double = 1.0
+  protected val defaultCoreMemory: Double = 1.0
   var vmemFactor: Double = config("vmem_factor", default =
     this match {
       case _: BiopetJavaCommandLineFunction => 2.5
       case _                                => 1.5
     })
+
+  private var coreMemory: Double = config("core_memory", default = defaultCoreMemory)
+
   var executable: String = _
 
   /**
@@ -62,18 +65,22 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
-    val coreMemory: Double = config("core_memory", default = defaultCoreMemory)
     if (memoryLimit.isEmpty) memoryLimit = Some(coreMemory * threads)
 
-    if (vmem.isEmpty) {
-      val vmemTemp = defaultCoreMemory * vmemFactor
-
-      vmem = Some(vmemTemp + "G")
-    }
+    if (vmem.isEmpty) vmem = Some((defaultCoreMemory * vmemFactor) + "G")
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
     super.freezeFieldValues()
+  }
+
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    coreMemory += 1.0
+    vmemFactor += 0.5
+    memoryLimit = Some(coreMemory * threads)
+    vmem = Some((defaultCoreMemory * vmemFactor) + "G")
+    jobResourceRequests :+= "h_vmem=" + vmem.get
   }
 
   /** can override this value is executable may not be converted to CanonicalPath */
