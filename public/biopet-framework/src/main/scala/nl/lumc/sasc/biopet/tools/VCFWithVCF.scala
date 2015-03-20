@@ -53,6 +53,11 @@ object VCFWithVCF extends ToolCommand {
     val secondHeader = secondaryReader.getFileHeader
 
     for (x <- commandArgs.fields) {
+      if (header.hasInfoLine(x.outputField))
+        throw new IllegalArgumentException("Field '" + x.outputField + "' already exist in input vcf")
+      if (!secondHeader.hasInfoLine(x.inputField))
+        throw new IllegalArgumentException("Field '" + x.inputField + "' does not exist in secondary vcf")
+
       val oldHeaderLine = secondHeader.getInfoHeaderLine(x.inputField)
 
       val newHeaderLine = new VCFInfoHeaderLine(x.outputField, VCFHeaderLineCount.UNBOUNDED,
@@ -65,7 +70,7 @@ object VCFWithVCF extends ToolCommand {
     writer.writeHeader(header)
     var idx = 0
 
-    for (record: VariantContext <- reader.iterator()) {
+    for (record <- reader) {
       val secondaryRecords = if (commandArgs.matchAllele) {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
           filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele(_)))
@@ -97,6 +102,7 @@ object VCFWithVCF extends ToolCommand {
         logger.info(s"""Processed $idx records""")
       }
     }
+    logger.info(s"""Processed $idx records""")
 
     logger.debug("Closing readers")
     writer.close()
