@@ -35,8 +35,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var threads = 0
   val defaultThreads = 1
 
-  var vmem: Option[String] = None
-  val defaultVmem: String = ""
+  var vmem: Option[String] = config("vmem")
+  var defaultCoreMemory: Double = 1.0
+  var vmemFactor: Double = config("vmem_factor", default =
+    this match {
+      case _: BiopetJavaCommandLineFunction => 2.5
+      case _                                => 1.5
+    })
   var executable: String = _
 
   /**
@@ -57,9 +62,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
+    val coreMemory: Double = config("core_memory", default = defaultCoreMemory)
+    if (memoryLimit.isEmpty) memoryLimit = Some(coreMemory * threads)
+
     if (vmem.isEmpty) {
-      vmem = config("vmem")
-      if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
+      val vmemTemp = defaultCoreMemory * vmemFactor
+
+      vmem = Some(vmemTemp + "G")
     }
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
