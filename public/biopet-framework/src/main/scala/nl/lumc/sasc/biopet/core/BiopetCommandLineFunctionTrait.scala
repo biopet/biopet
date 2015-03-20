@@ -79,6 +79,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     coreMemory += 1.0
     vmemFactor += 0.5
     memoryLimit = Some(coreMemory * threads)
+
+    if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filter(_ != "h_vmem=" + vmem.get)
     vmem = Some((defaultCoreMemory * vmemFactor) + "G")
     jobResourceRequests :+= "h_vmem=" + vmem.get
   }
