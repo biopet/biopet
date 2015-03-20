@@ -71,7 +71,6 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   private val compress = new Bgzip(wrapper.root)
 
   private val index = new Tabix(wrapper.root) {
-    input = compress.output
     p = Option("vcf")
   }
 
@@ -79,6 +78,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     varscan.output = Option(new File(wrapper.output.toString.stripSuffix(".gz")))
     compress.input = List(varscan.output.get)
     compress.output = this.output
+    index.input = compress.output
     super.freezeFieldValues()
     varscan.qSettings = this.qSettings
     varscan.freezeFieldValues()
