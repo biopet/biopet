@@ -84,7 +84,7 @@ object BreakdancerConfig {
 class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 1 // breakdancer can only work on 1 single thread
 
   override val versionRegex = """.*[Vv]ersion:? (.*)""".r

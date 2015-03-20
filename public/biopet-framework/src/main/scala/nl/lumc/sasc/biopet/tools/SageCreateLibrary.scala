@@ -49,8 +49,7 @@ class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFun
   var tag: String = config("tag", default = "CATG")
   var length: Option[Int] = config("length", default = 17)
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +

@@ -50,8 +50,7 @@ class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
   var mode: String = config("mode", default = "explode")
   var doNotRemove: Boolean = config("donotremove", default = false)
 
-  memoryLimit = Some(1.0)
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +
