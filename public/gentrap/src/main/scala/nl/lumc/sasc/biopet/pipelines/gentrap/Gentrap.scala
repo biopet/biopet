@@ -470,6 +470,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.input = alnFile
         job.output = createFile(".idsorted.bam")
         job.sortOrder = "queryname"
+        job.isIntermediate = true
         job
       }
 
