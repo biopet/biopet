@@ -4,7 +4,7 @@ import java.io.File
 
 import scala.collection.JavaConversions._
 import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.core.ToolCommand
 
@@ -14,8 +14,13 @@ import scala.collection.immutable
  * Created by ahbbollen on 11-2-15.
  */
 object VCFWithVCF extends ToolCommand {
-  case class Args(inputFile: File = null, outputFile: File = null, secondaryVCF: File = null,
-                  fields: List[String] = Nil, matchAllele: Boolean = true) extends AbstractArgs
+  case class Fields(inputField: String, outputField: String)
+
+  case class Args(inputFile: File = null,
+                  outputFile: File = null,
+                  secondaryVCF: File = null,
+                  fields: List[Fields] = Nil,
+                  matchAllele: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -27,12 +32,14 @@ object VCFWithVCF extends ToolCommand {
     opt[File]('S', "SecondaryVCF") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(secondaryVCF = x)
     }
-    opt[String]('f', "field") unbounded () action { (x, c) =>
-      c.copy(fields = x :: c.fields)
+    opt[String]('f', "field") unbounded () valueName ("<input_field:output_field>") action { (x, c) =>
+      val values = x.split(":")
+      if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
+      else c.copy(fields = Fields(x, x) :: c.fields)
     }
-    opt[Boolean]("match") valueName ("<Boolean>") text ("Match alternative alleles; default true") maxOccurs (1) action { (x, c) =>
+    opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
       c.copy(matchAllele = x)
-    }
+    } text ("Match alternative alleles; default true")
   }
 
   def main(args: Array[String]): Unit = {
@@ -43,11 +50,14 @@ object VCFWithVCF extends ToolCommand {
     val secondaryReader = new VCFFileReader(commandArgs.secondaryVCF)
 
     val header = reader.getFileHeader
+    val secondHeader = secondaryReader.getFileHeader
 
     for (x <- commandArgs.fields) {
-      val tmpheaderline = new VCFInfoHeaderLine(x, VCFHeaderLineCount.UNBOUNDED,
-        VCFHeaderLineType.String, "A custom annotation")
-      header.addMetaDataLine(tmpheaderline)
+      val oldHeaderLine = secondHeader.getInfoHeaderLine(x.inputField)
+
+      val newHeaderLine = new VCFInfoHeaderLine(x.outputField, VCFHeaderLineCount.UNBOUNDED,
+        oldHeaderLine.getType, oldHeaderLine.getDescription)
+      header.addMetaDataLine(newHeaderLine)
     }
 
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
@@ -56,35 +66,36 @@ object VCFWithVCF extends ToolCommand {
     var idx = 0
 
     for (record: VariantContext <- reader.iterator()) {
-      if (idx % 100000 == 0) {
-        logger.info(s"""Processed $idx records""")
-      }
-      val field_map = scala.collection.mutable.Map[String, List[Any]]()
-
-
-      val secondary_records = if (commandArgs.matchAllele) {
+      val secondaryRecords = if (commandArgs.matchAllele) {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
           filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele(_)))
       } else {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList
       }
 
-      for (snd_rec <- secondary_records) {
-        for (f <- commandArgs.fields) {
-          if (field_map.contains(f)) {
-            field_map.update(f, snd_rec.getAttribute(f, "unknown") :: field_map(f))
+      val fieldMap = (for (
+        f <- commandArgs.fields;
+        if secondaryRecords.exists(_.hasAttribute(f.inputField))
+      ) yield {
+        f.outputField -> (for (
+          secondRecord <- secondaryRecords;
+          if (secondRecord.hasAttribute(f.inputField))
+        ) yield {
+          secondRecord.getAttribute(f.inputField) match {
+            case l: List[_] => l
+            case x          => List(x)
           }
-          else {
-            field_map += (f -> List(snd_rec.getAttribute(f, "unknown")))
-          }
-        }
-      }
+        }).fold(Nil)(_ ::: _)
+      }).toMap
 
-      writer.add(field_map.filter(_._2.nonEmpty)
-        .foldLeft(new VariantContextBuilder(record))((builder, attribute)
-        => builder.attribute(attribute._1, attribute._2.mkString(",").stripPrefix("[").stripSuffix("]")))
-        .make())
+      writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
+        builder.attribute(attribute._1, attribute._2.toArray)
+      }).make())
+
       idx += 1
+      if (idx % 100000 == 0) {
+        logger.info(s"""Processed $idx records""")
+      }
     }
 
     logger.debug("Closing readers")
