@@ -122,10 +122,10 @@ trait BiopetExecutable extends Logging {
 
   def checkDirtyBuild(logger: Logger): Unit =
     if (LastCommitHash.endsWith("-dirty")) {
-      logger.warn("**********************************************************")
-      logger.warn("* This JAR was built while there are uncommited changes. *")
-      logger.warn("* Reproducible results are *not* guaranteed.             *")
-      logger.warn("**********************************************************")
+      logger.warn("***********************************************************")
+      logger.warn("* This JAR was built while there were uncommited changes. *")
+      logger.warn("* Reproducible results are *not* guaranteed.              *")
+      logger.warn("***********************************************************")
     }
 }
 
