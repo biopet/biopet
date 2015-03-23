@@ -51,7 +51,7 @@ trait BiopetExecutable extends Logging {
         u.mkString("\n\n")
       }
       """
-        |Usage   : java -jar BiopetFramework.jar {%s} <name> [args]
+        |Usage   : java -jar <path/to/biopet.jar> {%s} <name> [args]
         |Version : %s
         |
         |%s
