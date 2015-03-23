@@ -76,6 +76,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
   override def setupRetry(): Unit = {
     super.setupRetry()
+    logger.info("Auto raise memory on retry")
     coreMemory += 1.0
     vmemFactor += 0.5
     memoryLimit = Some(coreMemory * threads)
