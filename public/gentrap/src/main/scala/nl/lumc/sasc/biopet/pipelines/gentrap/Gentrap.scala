@@ -16,7 +16,6 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
-import java.util.Properties
 import scala.language.reflectiveCalls
 
 import org.broadinstitute.gatk.queue.QScript
@@ -24,6 +23,7 @@ import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 import scalaz._, Scalaz._
 
+import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
@@ -234,16 +234,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "isoform_fpkm_cufflinks_blind_heatmap" -> isoFpkmCufflinksBlindHeatmapJob
   )
 
-  private def version: String = {
-    val baseVersion = getClass.getPackage.getImplementationVersion
-    val commitHash = {
-      val prop = new Properties()
-      prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
-      prop.getProperty("git.commit.id.abbrev")
-    }
-    s"$baseVersion ($commitHash)"
-  }
-
   /** Output summary file */
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
@@ -268,7 +258,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> callVariants,
     "remove_ribosomal_reads" -> removeRibosomalReads,
-    "version" -> version
+    "version" -> FullVersion
   )
 
   /** Job for writing PDF report template */
