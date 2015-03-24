@@ -263,7 +263,7 @@ object ExtractAlignedFastq extends ToolCommand {
 
       case (None, None) => extractReads(memFunc,
         new FastqReader(commandArgs.inputFastq1),
-        new BasicFastqWriter(commandArgs.inputFastq1))
+        new BasicFastqWriter(commandArgs.outputFastq1))
 
       case (Some(i2), Some(o2)) => extractReads(memFunc,
         new FastqReader(commandArgs.inputFastq1),
