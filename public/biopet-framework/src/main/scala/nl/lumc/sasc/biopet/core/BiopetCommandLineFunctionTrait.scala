@@ -39,7 +39,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val defaultCoreMemory: Double = 1.0
   var vmemFactor: Double = config("vmem_factor", default = 1.5)
 
-  var ressFactor: Double = config("vmem_factor", default = 1.2)
+  var ressFactor: Double = config("ress_factor", default = 1.2)
 
   private var coreMemory: Double = _
 
