@@ -68,7 +68,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
     else memoryLimit = Some(coreMemory * threads)
 
-    if (config.contains("resident_limit")) memoryLimit = config("resident_limit")
+    if (config.contains("resident_limit")) residentLimit = config("resident_limit")
     else residentLimit = Some((coreMemory + (0.5 * retry)) * ressFactor)
 
     if (!config.contains("vmem")) vmem = Some((coreMemory * (vmemFactor + (0.5 * retry))) + "G")
