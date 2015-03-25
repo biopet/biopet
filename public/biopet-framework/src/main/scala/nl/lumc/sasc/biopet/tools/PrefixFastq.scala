@@ -31,8 +31,7 @@ import scala.collection.JavaConversions._
 class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
-  memoryLimit = Some(1.0)
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 1.0
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var inputFastq: File = _

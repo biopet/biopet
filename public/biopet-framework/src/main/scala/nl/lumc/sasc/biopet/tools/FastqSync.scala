@@ -57,8 +57,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
   @Output(doc = "Sync statistics", required = true)
   var outputStats: File = null
 
-  override val defaultVmem = "4G"
-  memoryLimit = Some(1.7)
+  override val defaultCoreMemory = 2.0
 
   // executed command line
   override def commandLine =

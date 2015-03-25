@@ -15,7 +15,7 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
 
   jarFile = config("gatk_jar")
 
-  override val defaultVmem = "7G"
+  override val defaultCoreMemory = 4.0
 
   if (config.contains("intervals")) intervals = config("intervals").asFileList
   if (config.contains("exclude_intervals")) excludeIntervals = config("exclude_intervals").asFileList

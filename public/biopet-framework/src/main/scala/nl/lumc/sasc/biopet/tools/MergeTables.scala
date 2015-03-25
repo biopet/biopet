@@ -33,7 +33,7 @@ class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction 
 
   javaMainClass = getClass.getName
 
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 2.0
 
   /** List of input tabular files */
   @Input(doc = "Input table files", required = true)

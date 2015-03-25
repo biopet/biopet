@@ -32,7 +32,7 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction {
   @Output(doc = "plot File (png)")
   var plot: File = _
 
-  override val defaultVmem = "12G"
+  override val defaultCoreMemory = 9.0
 
   def cmdLine = getPythonCommand +
     required(input) + required("--plot", plot) + " > " + required(output)

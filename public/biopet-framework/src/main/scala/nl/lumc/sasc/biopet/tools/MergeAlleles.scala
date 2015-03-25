@@ -46,8 +46,7 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   var reference: File = config("reference")
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4)
+  override val defaultCoreMemory = 1.0
 
   override def beforeGraph {
     super.beforeGraph
