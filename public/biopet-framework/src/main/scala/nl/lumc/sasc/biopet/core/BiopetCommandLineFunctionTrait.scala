@@ -39,7 +39,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val defaultCoreMemory: Double = 1.0
   var vmemFactor: Double = config("vmem_factor", default = 1.5)
 
-  var ressFactor: Double = config("ress_factor", default = 1.2)
+  var residentFactor: Double = config("resident_factor", default = 1.2)
 
   private var coreMemory: Double = _
 
@@ -69,7 +69,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     else memoryLimit = Some(coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((coreMemory + (0.5 * retry)) * ressFactor)
+    else residentLimit = Some((coreMemory + (0.5 * retry)) * residentFactor)
 
     if (!config.contains("vmem")) vmem = Some((coreMemory * (vmemFactor + (0.5 * retry))) + "G")
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
