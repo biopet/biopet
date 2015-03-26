@@ -210,7 +210,7 @@
               <artifactId>scoverage-maven-plugin</artifactId>
               <version>${scoverage.plugin.version}</version>
               <configuration>
-                  <scalaVersion>2.11.4</scalaVersion>
+                  <scalaVersion>2.10.2</scalaVersion>
                   <!-- other parameters -->
               </configuration>
             </plugin>
