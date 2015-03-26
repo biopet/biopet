@@ -27,6 +27,7 @@ trait CufflinksProducer {
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
 
+  //TODO: move vars that are used in gentrep
   protected def sampleDir: File
   protected def sampleId: String
   protected def pipeline: Gentrap
