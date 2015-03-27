@@ -30,7 +30,7 @@ import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups }
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups, ReorderSam }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 
@@ -346,12 +346,18 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val sortSam = new SortSam(this)
     sortSam.input = gsnapCommand.output
-    sortSam.output = output
+    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
 
-    sortSam.output
+    val reorderSam = new ReorderSam(this)
+    reorderSam.input = sortSam.output
+    reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
+    reorderSam.reference = reference
+    add(reorderSam)
+
+    addAddOrReplaceReadGroups(reorderSam.output, output)
   }
 
   def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
@@ -361,26 +367,21 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.R1 = tophat.R1 :+ R1
     if (R2 != null && R2.getPath != "") tophat.R2 = tophat.R2 :+ R2
     tophat.output_dir = new File(outputDir, "tophat_out")
-    // always output BAM
-    tophat.no_convert_bam = false
     tophat.deps = deps
     // always output BAM
     tophat.no_convert_bam = false
+    // and always keep input ordering
+    tophat.keep_fasta_order = true
     add(tophat)
 
-    val ln = new Ln(this)
-    ln.input = tophat.outputAcceptedHits
-    ln.output = swapExt(output.getParent, output, ".bam", ".raw.bam")
-    add(ln)
-
     val sortSam = new SortSam(this)
-    sortSam.input = ln.output
-    sortSam.output = output
+    sortSam.input = tophat.outputAcceptedHits
+    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
 
-    sortSam.output
+    addAddOrReplaceReadGroups(sortSam.output, output)
   }
   /**
    * Adds stampy jobs

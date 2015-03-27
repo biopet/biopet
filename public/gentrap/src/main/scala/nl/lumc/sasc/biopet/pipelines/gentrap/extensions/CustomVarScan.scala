@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
@@ -48,18 +63,25 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
   }
 
-  private def varscan = new Mpileup2cns(wrapper.root) {
+  private val varscan = new Mpileup2cns(wrapper.root) {
     strandFilter = Option(0)
     outputVcf = Option(1)
   }
 
-  private def compress = new Bgzip(wrapper.root) {
-    this.output = wrapper.output
-  }
+  private val compress = new Bgzip(wrapper.root)
 
-  private def index = new Tabix(wrapper.root) {
+  private val index = new Tabix(wrapper.root) {
     input = compress.output
     p = Option("vcf")
+  }
+
+  override def freezeFieldValues(): Unit = {
+    varscan.output = Option(new File(wrapper.output.toString.stripSuffix(".gz")))
+    compress.input = List(varscan.output.get)
+    compress.output = this.output
+    super.freezeFieldValues()
+    varscan.qSettings = this.qSettings
+    varscan.freezeFieldValues()
   }
 
   override def beforeGraph: Unit = {
@@ -70,6 +92,6 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
     mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
-      varscan.commandLine + " | " + compress.commandLine + " && " + index.commandLine
+      varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }

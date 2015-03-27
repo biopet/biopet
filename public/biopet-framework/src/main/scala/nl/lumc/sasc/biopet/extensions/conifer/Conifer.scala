@@ -26,7 +26,7 @@ abstract class Conifer extends PythonCommandLineFunction {
   override val versionExitcode = List(0)
   override def versionCommand = executable + " " + python_script + " --version"
 
-  override val defaultVmem = "8G"
+  override val defaultCoreMemory = 5.0
   override val defaultThreads = 1
 
   def cmdLine = getPythonCommand

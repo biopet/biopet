@@ -32,7 +32,7 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   @Input(doc = "FastQ file(s) R1", shortName = "R1")
@@ -133,8 +133,6 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
   var color_out: Boolean = config("color_out", default = false)
 
   var library_type: Option[String] = config("library_type")
-
-  var num_threads: Option[Int] = config("num_threads")
 
   var resume: Option[String] = config("resume")
 
@@ -265,10 +263,6 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
   var rg_date: Option[String] = config("rg_date")
 
   var rg_platform: Option[String] = config("rg_platform")
-
-  override def beforeGraph: Unit = {
-    threads = num_threads.getOrElse(1)
-  }
 
   def cmdLine: String = required(executable) +
     optional("-o", output_dir) +

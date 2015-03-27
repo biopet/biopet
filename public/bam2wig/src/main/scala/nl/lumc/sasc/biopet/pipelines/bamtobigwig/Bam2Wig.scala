@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.bamtobigwig
 
 import java.io.File
@@ -31,14 +46,14 @@ class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {
     val igvCount = new IGVToolsCount(this)
     igvCount.input = bamFile
     igvCount.genomeChromSizes = bs.chromSizesFile
-    igvCount.wig = Some(swapExt(outputDir, bamFile, ".bam", ".wig"))
-    igvCount.tdf = Some(swapExt(outputDir, bamFile, ".bam", ".tdf"))
+    igvCount.wig = Some(new File(outputDir, bamFile.getName + ".wig"))
+    igvCount.tdf = Some(new File(outputDir, bamFile.getName + ".tdf"))
     add(igvCount)
 
     val wigToBigWig = new WigToBigWig(this)
     wigToBigWig.inputWigFile = igvCount.wig.get
     wigToBigWig.inputChromSizesFile = bs.chromSizesFile
-    wigToBigWig.outputBigWig = swapExt(outputDir, bamFile, ".bam", ".bigwig")
+    wigToBigWig.outputBigWig = new File(outputDir, bamFile.getName + ".bw")
     add(wigToBigWig)
   }
 }

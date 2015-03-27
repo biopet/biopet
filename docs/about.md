@@ -1,23 +1,33 @@
-# About biopet
+# About Biopet
 
-## The philosophy
 
-We develop tools and pipelines for several purposes in analysis. Most of them 
-share the same methods. So the basic idea is to let them work on the same 
-platform and reduce code duplication and increase maintainability.
+## The Philosophy
 
-## The Team
-SASC:
-Currently our team exists out of 5 members
+Biopet is meant to be the core framework for data analysis pipelines developed
+by SASC (and collaborators). It consists of wrappers of common command-line tools,
+some production-level data analysis pipelines, and some custom command-line tools
+that we develop in-house.
 
-- Leon Mei (LUMC-SASC) 
-- Wibowo Arindrarto (LUMC-SASC)
-- Peter van 't Hof (LUMC-SASC)
-- Wai Yi Leung (LUMC-SASC)
-- Sander van der Zeeuw (LUMC-SASC)
+Pipelines developed using the Biopet framework are meant to be flexible, allowing
+users to modify the actual command line flags of the tools within to suit their
+need.
+
+
+## Contributors
+
+As of the 0.3.0 release, the following people (sorted by last name) have
+contributed to Biopet:
+
+- Wibowo Arindrarto
+- Sander Bollen
+- Peter van 't Hof
+- Wai Yi Leung
+- Leon Mei
+- Sander van der Zeeuw
+
 
 ## Contact
 
-check our website at: [SASC](https://sasc.lumc.nl/)
+Check our website at: [SASC](https://sasc.lumc.nl/)
 
 We are also reachable through email: [SASC mail](mailto:SASC@lumc.nl)

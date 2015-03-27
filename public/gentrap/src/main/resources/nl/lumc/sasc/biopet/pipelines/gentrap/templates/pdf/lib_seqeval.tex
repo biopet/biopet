@@ -180,7 +180,7 @@ clipping and trimming of the reads.
             Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["%GC"] )))\\
             Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r1_qc.basic_statistics.data["Sequence length"] )))\\
             \hline
-    ((* if run.is_paired_end *))
+    ((* if lib.is_paired_end *))
             Read 2 count & ((( lib.fastqc_r2.basic_statistics.data["Total Sequences"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Total Sequences"] )))\\
             Read 2 overall \%GC & ((( lib.fastqc_r2.basic_statistics.data["%GC"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["%GC"] )))\\
             Read 2 length range & ((( lib.fastqc_r2.basic_statistics.data["Sequence length"] ))) & ((( lib.fastqc_r2_qc.basic_statistics.data["Sequence length"] )))\\
@@ -202,7 +202,7 @@ clipping and trimming of the reads.
             Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
             Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
             \hline
-    ((* if run.is_paired_end *))
+    ((* if lib.is_paired_end *))
             Read 1 count & ((( lib.fastqc_r1.basic_statistics.data["Total Sequences"] )))\\
             Read 1 overall \%GC & ((( lib.fastqc_r1.basic_statistics.data["%GC"] )))\\
             Read 1 length range & ((( lib.fastqc_r1.basic_statistics.data["Sequence length"] )))\\
@@ -239,7 +239,7 @@ clipping and trimming of the reads.
         %\label{fig:length_dist_before_and_after_1}
     \end{figure}
 
-((* if run.is_paired_end *))
+((* if lib.is_paired_end *))
     \begin{figure}[h!]
         \centering
         \begin{minipage}[b]{0.48\textwidth}
@@ -295,7 +295,7 @@ clipping and trimming of the reads.
         %\label{fig:per_base_qual_before_and_after_1}
     \end{figure}
 
-((* if run.is_paired_end *))
+((* if lib.is_paired_end *))
     \begin{figure}[h!]
         \centering
         \begin{minipage}[b]{0.48\textwidth}
@@ -340,7 +340,7 @@ clipping and trimming of the reads.
         %\label{fig:per_seq_qual_before_and_after_1}
     \end{figure}
 
-((* if run.is_paired_end *))
+((* if lib.is_paired_end *))
     \begin{figure}[h!]
         \centering
         \begin{minipage}[b]{0.48\textwidth}
@@ -394,7 +394,7 @@ clipping and trimming of the reads.
         %\label{fig:per_base_content_before_and_after_1}
     \end{figure}
 
-((* if run.is_paired_end *))
+((* if lib.is_paired_end *))
     \begin{figure}[h!]
         \centering
         \begin{minipage}[b]{0.48\textwidth}
@@ -448,7 +448,7 @@ clipping and trimming of the reads.
         %\label{fig:per_base_content_before_and_after_1}
     \end{figure}
 
-((* if run.is_paired_end *))
+((* if lib.is_paired_end *))
     \begin{figure}[h!]
         \centering
         ((* if lib.trimming or lib.clipping *))

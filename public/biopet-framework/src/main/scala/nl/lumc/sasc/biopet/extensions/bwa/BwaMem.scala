@@ -69,7 +69,7 @@ class BwaMem(val root: Configurable) extends Bwa {
   var Y: Boolean = config("Y", default = false)
   var I: Option[String] = config("I")
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   def cmdLine = {

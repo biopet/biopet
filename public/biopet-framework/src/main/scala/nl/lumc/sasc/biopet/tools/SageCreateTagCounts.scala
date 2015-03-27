@@ -46,16 +46,15 @@ class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineF
   @Output(doc = "AntiSense all count file", shortName = "allantisense", required = true)
   var countAllAntiSense: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("--taglib", tagLib) +
-    optional("--sense", countSense) +
-    optional("--allsense", countAllSense) +
-    optional("--antisense", countAntiSense) +
-    optional("--allantisense", countAllAntiSense)
+    required("--tagLib", tagLib) +
+    optional("--countSense", countSense) +
+    optional("--countAllSense", countAllSense) +
+    optional("--countAntiSense", countAntiSense) +
+    optional("--countAllAntiSense", countAllAntiSense)
 }
 
 object SageCreateTagCounts extends ToolCommand {

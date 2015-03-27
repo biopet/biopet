@@ -44,7 +44,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)

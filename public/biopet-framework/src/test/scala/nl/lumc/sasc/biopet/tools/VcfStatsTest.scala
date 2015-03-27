@@ -1,5 +1,21 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.variant.variantcontext.Allele
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -74,5 +90,27 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
     s1 += s1
     s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
+  }
+
+  @Test
+  def testAlleleOverlap: Unit = {
+
+    val a1 = Allele.create("G")
+    val a2 = Allele.create("A")
+
+    alleleOverlap(List(a1, a1), List(a1, a1)) shouldBe 2
+    alleleOverlap(List(a2, a2), List(a2, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a2, a1)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a2, a1)) shouldBe 2
+
+    alleleOverlap(List(a1, a2), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a2, a1), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a1, a2)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a2, a1)) shouldBe 1
+
+    alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
+    alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
   }
 }
