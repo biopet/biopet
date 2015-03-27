@@ -18,7 +18,7 @@ object VCFWithVCF extends ToolCommand {
 
   case class Args(inputFile: File = null,
                   outputFile: File = null,
-                  secondaryVCF: File = null,
+                  secondaryVcf: File = null,
                   fields: List[Fields] = Nil,
                   matchAllele: Boolean = true) extends AbstractArgs
 
@@ -29,8 +29,8 @@ object VCFWithVCF extends ToolCommand {
     opt[File]('O', "outputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('S', "SecondaryVCF") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
-      c.copy(secondaryVCF = x)
+    opt[File]('S', "SecondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+      c.copy(secondaryVcf = x)
     }
     opt[String]('f', "field") unbounded () valueName ("<input_field:output_field>") action { (x, c) =>
       val values = x.split(":")
@@ -47,7 +47,7 @@ object VCFWithVCF extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val reader = new VCFFileReader(commandArgs.inputFile)
-    val secondaryReader = new VCFFileReader(commandArgs.secondaryVCF)
+    val secondaryReader = new VCFFileReader(commandArgs.secondaryVcf)
 
     val header = reader.getFileHeader
     val secondHeader = secondaryReader.getFileHeader
