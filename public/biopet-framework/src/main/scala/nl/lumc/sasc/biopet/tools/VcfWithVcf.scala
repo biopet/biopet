@@ -13,7 +13,7 @@ import scala.collection.immutable
 /**
  * Created by ahbbollen on 11-2-15.
  */
-object VCFWithVCF extends ToolCommand {
+object VcfWithVcf extends ToolCommand {
   case class Fields(inputField: String, outputField: String)
 
   case class Args(inputFile: File = null,
