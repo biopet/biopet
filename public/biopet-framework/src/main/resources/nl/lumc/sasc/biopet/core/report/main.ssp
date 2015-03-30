@@ -55,9 +55,16 @@
 #end
 </ul>
 </nav>
+<aside>
+<ul>
+#for ((name, url) <- page.sections)
+    <li><a href="#${name}">${name}</a></li>
+#end
+</ul>
+</aside>
 #for ((name, url) <- page.sections)
 <section id="${name}">
-${name}
+<h3>${name}</h3>
 </section>
 #end
 
