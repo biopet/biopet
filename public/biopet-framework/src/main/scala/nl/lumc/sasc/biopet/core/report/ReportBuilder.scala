@@ -39,6 +39,7 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
+    logger.info("Write Base files")
     // Write css to output dir
     val cssDir = new File (cmdArgs.outputDir, "css")
     cssDir.mkdirs()
@@ -46,8 +47,10 @@ trait ReportBuilder extends ToolCommand {
     Source.fromInputStream(getClass.getResourceAsStream("biopet.css")).getLines().foreach(cssWriter.println(_))
     cssWriter.close()
 
+    logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
 
+    logger.info("Generate pages")
     generatePage(summary, indexPage, cmdArgs.outputDir,
       args = pageArgs ++ Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
