@@ -91,3 +91,6 @@ th {
     border: 1px solid white;
     color: white;
 }
+aside {
+    float: left
+}
