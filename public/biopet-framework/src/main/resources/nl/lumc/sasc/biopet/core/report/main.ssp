@@ -1,0 +1,67 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var indexPage: ReportPage %>
+<%@ var reportName: String %>
+<%@ var page: ReportPage %>
+<%@ var path: List[String] %>
+<%@ var args: Map[String, Any] %>
+#{
+    val rootPath = "./" + Array.fill(path.size)("../").mkString("")
+
+    def createMenu(page: ReportPage, path: List[String] = Nil): String = {
+        val buffer: StringBuffer = new StringBuffer()
+        buffer.append("<ul>")
+
+        for (subPage <- page.subPages) {
+            val href: String = {
+                if (path.isEmpty) rootPath + subPage._1 + "/index.html"
+                else rootPath + path.mkString("","/","/") + subPage._1 + "/index.html"
+            }
+
+            buffer.append("<li><a href=\"" + href + "\">" + subPage._1 + "</a>")
+            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil))
+            buffer.append("</li>")
+        }
+
+        buffer.append("</ul>")
+        buffer.toString
+    }
+
+    def getSubPage(path:List[String]): ReportPage = {
+        path.foldLeft(indexPage)(_.subPages(_))
+    }
+}#
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="${rootPath}css/biopet.css">
+    </head>
+<body>
+
+<header><h1>${reportName}</h1></header>
+<nav>
+<ul>
+#for (t <- 0 to path.size)
+    <li>
+    #if (t == 0)
+        <a href="${rootPath}index.html">Home</a>
+        ${unescape(createMenu(indexPage))}
+    #else
+        <a href="${rootPath}${path.slice(0, t).mkString("","/","/")}index.html">${path(t - 1)}</a>
+        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
+    #end
+    </li>
+#end
+</ul>
+</nav>
+#for ((name, url) <- page.sections)
+<section id="${name}">
+${name}
+</section>
+#end
+
+<footer>Footer</footer>
+</body>
+
+</html>
