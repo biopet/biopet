@@ -110,18 +110,23 @@ Thus, an example settings configuration is as follows:
 }
 ~~~
 
+#### Example configurations
+
+In most cases, it's practical to combine the samples and settings configuration into one file. Here is an [example config file](/examples/gentrap_example.json) where both samples and settings are stored into one file. Note also that there are additional tool configurations in the config file.
+
 ## Running Gentrap
 
 As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
 
 ~~~
-java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+$ java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
-If you already have the `biopet` environment module loaded, you can also simply call `biopet`:
+You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
 ~~~
-biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+$ module load biopet/v0.3.1
+$ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
