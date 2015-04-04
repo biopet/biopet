@@ -16,8 +16,10 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
+import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
 
+import htsjdk.samtools.reference._
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
@@ -113,6 +115,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     require(dictFile.exists, s"Dict file '$dictFile' must exist")
     dictFile
   }
+
+  /** Information about reference file */
+  private lazy val refInfo: Map[String, String] =
+    new FastaSequenceFile(reference, false)
+      .getSequenceDictionary.getSequences.asScala
+      .map { case samrec =>
+        val md5 = samrec.getAttribute("M5")
+        val name = samrec.getSequenceName
+        if (md5 == null) throw new IllegalArgumentException(s"Reference sequence '$name' does not have an MD5 checksum")
+        md5 -> name
+      }.toMap
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
@@ -291,6 +304,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> callVariants,
     "remove_ribosomal_reads" -> removeRibosomalReads,
+    "reference" -> refInfo,
     "version" -> FullVersion
   )
 
@@ -337,6 +351,9 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Steps to run before biopetScript */
   def init(): Unit = {
     checkDictFile()
+
+    // initialize reference info ~ checking if all MD5 checksums are present
+    refInfo
 
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
