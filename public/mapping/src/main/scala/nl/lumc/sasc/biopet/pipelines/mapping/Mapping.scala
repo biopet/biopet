@@ -348,13 +348,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.input = gsnapCommand.output
     sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    sortSam.isIntermediate = true
     add(sortSam)
 
     val reorderSam = new ReorderSam(this)
     reorderSam.input = sortSam.output
     reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
     reorderSam.reference = reference
+    reorderSam.isIntermediate = true
     add(reorderSam)
 
     addAddOrReplaceReadGroups(reorderSam.output, output)
@@ -378,7 +379,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.input = tophat.outputAcceptedHits
     sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
+    sortSam.isIntermediate = true
     add(sortSam)
 
     addAddOrReplaceReadGroups(sortSam.output, output)
