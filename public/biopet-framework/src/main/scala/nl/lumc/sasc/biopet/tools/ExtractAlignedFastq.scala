@@ -146,9 +146,8 @@ object ExtractAlignedFastq extends ToolCommand {
   def extractReads(memFunc: FastqInput => Boolean,
                    inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
     inputFastq1.iterator.asScala
-      .zip(Iterator.continually(None))
-      .filter(rec => memFunc(rec._1, rec._2))
-      .foreach(rec => outputFastq1.write(rec._1))
+      .filter(rec => memFunc((rec, None)))
+      .foreach(rec => outputFastq1.write(rec))
 
   /**
    * Extracts reads from the given input Fastq pairs and writes to new output Fastq pair files
