@@ -438,7 +438,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
-    lazy val alnFileDirty: File = sampleAlnJob.output
+    lazy val alnFileDirty: File = sampleAlnJobSet.alnJob.output
 
     /** Per-sample alignment file, post rRNA cleanup (if chosen) */
     lazy val alnFile: File = wipeJob match {
@@ -602,7 +602,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".plus_strand.bam"))
 
-        Option(StrandSeparationJobSet(f1Job, r2Job, combineJob))
+        Option(StrandSeparationJobSet(f1Job, r2Job, combineJob.alnJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
@@ -645,7 +645,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".minus_strand.bam"))
 
-        Option(StrandSeparationJobSet(f2Job, r1Job, combineJob))
+        Option(StrandSeparationJobSet(f2Job, r1Job, combineJob.alnJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
@@ -739,28 +739,37 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Super type of Ln and MergeSamFiles */
-    private type CombineFileFunction = QFunction { def output: File }
+    case class CombineFileJobSet(alnJob: QFunction { def output: File }, idxJob: Option[Ln]) {
+      /** Adds all jobs in this jobset */
+      def addAll(): Unit = { add(alnJob); idxJob.foreach(add(_)) }
+    }
 
     /** Ln or MergeSamFile job, depending on how many inputs are supplied */
     private def makeCombineJob(inFiles: List[File], outFile: File,
-                               mergeSortOrder: String = "coordinate"): CombineFileFunction = {
+                               mergeSortOrder: String = "coordinate"): CombineFileJobSet = {
       require(inFiles.nonEmpty, "At least one input files for combine job")
       if (inFiles.size == 1) {
-        val job = new Ln(qscript)
-        job.input = inFiles.head
-        job.output = outFile
-        job
+
+        val jobBam = new Ln(qscript)
+        jobBam.input = inFiles.head
+        jobBam.output = outFile
+
+        val jobIdx = new Ln(qscript)
+        jobIdx.input = swapExt(jobBam.input, ".bam", ".bai")
+        jobIdx.output = swapExt(jobBam.output, ".bam", ".bai")
+
+        CombineFileJobSet(jobBam, Some(jobIdx))
       } else {
         val job = new MergeSamFiles(qscript)
         job.input = inFiles
         job.output = outFile
         job.sortOrder = mergeSortOrder
-        job
+        CombineFileJobSet(job, None)
       }
     }
 
     /** Job for combining all library BAMs */
-    private def sampleAlnJob: CombineFileFunction =
+    private def sampleAlnJobSet: CombineFileJobSet =
       makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
 
     /** Whether all libraries are paired or not */
@@ -777,7 +786,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       // add per-library jobs
       addPerLibJobs()
       // merge or symlink per-library alignments
-      add(sampleAlnJob)
+      sampleAlnJobSet.addAll()
       // general RNA-seq metrics, if there are > 1 library
       collectRnaSeqMetricsJob match {
         case Some(j) =>
