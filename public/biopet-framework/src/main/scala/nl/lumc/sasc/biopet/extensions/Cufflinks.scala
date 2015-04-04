@@ -33,7 +33,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "8G"
+  override val defaultCoreMemory = 6.0
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)

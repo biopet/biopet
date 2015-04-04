@@ -36,7 +36,7 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
   protected var script: File = _
   protected var scriptName: String = _
   protected var arguments: ListBuffer[String] = ListBuffer()
-  override val defaultVmem: String = "4G"
+  override val defaultCoreMemory = 2.0
 
   executable = config("exe", default = "Rscript", submodule = "R")
 

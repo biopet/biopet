@@ -55,5 +55,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
     nl.lumc.sasc.biopet.tools.Seqstat,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
-    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
+    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
+    nl.lumc.sasc.biopet.tools.VcfWithVcf)
 }

@@ -63,7 +63,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runThreadN")
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   /** Sets output files for the graph */

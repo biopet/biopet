@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.core
 
+import nl.lumc.sasc.biopet.FullVersion
+
 /**
  * Trait for biopet tools, sets some default args
  */
@@ -45,7 +47,7 @@ trait ToolCommand extends MainCommand with Logging {
       sys.exit(1)
     } text ("Print usage")
     opt[Unit]('v', "version") foreach { _ =>
-      System.err.println("Version: " + BiopetExecutable.getVersion)
+      System.err.println("Version: " + FullVersion)
       sys.exit(1)
     } text ("Print version")
   }

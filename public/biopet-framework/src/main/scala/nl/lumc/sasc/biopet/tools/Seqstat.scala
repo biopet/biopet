@@ -48,8 +48,7 @@ class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction with
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = null
 
-  override val defaultVmem = "3G"
-  memoryLimit = Option(1.0)
+  override val defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine + required("-i", input) + " > " + required(output)
 

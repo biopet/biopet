@@ -50,7 +50,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   @Output
   protected var genotypeStats: File = null
 
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 3.0
   override val defaultThreads = 3
 
   protected var outputDir: File = _

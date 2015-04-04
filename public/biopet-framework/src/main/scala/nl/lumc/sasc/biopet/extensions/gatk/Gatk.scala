@@ -31,7 +31,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
 
   val analysisType: String
 
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 3.0
 
   @Input(required = true)
   var reference: File = config("reference")

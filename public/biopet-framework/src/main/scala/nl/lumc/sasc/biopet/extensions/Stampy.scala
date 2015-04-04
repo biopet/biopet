@@ -64,7 +64,7 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   override def versionCommand = executable + " --help"

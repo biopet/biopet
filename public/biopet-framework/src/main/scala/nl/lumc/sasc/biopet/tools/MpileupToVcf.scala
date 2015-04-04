@@ -49,8 +49,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var sample: String = _
   var reference: String = config("reference")
 
-  override val defaultVmem = "6G"
-  memoryLimit = Option(2.0)
+  override val defaultCoreMemory = 3.0
 
   override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
     super.defaults)

@@ -60,7 +60,7 @@ class BwaAln(val root: Configurable) extends Bwa {
   var n2: Boolean = config("2", default = false)
   var Y: Boolean = config("Y", default = false)
 
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
   /** Returns command to execute */

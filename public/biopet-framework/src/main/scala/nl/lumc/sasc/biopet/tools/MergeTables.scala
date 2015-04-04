@@ -21,28 +21,48 @@ import scala.collection.mutable.{ Set => MutSet }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.{ Configurable, ConfigValue }
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+/**
+ * Biopet wrapper for the [[MergeTables]] command line tool.
+ *
+ * @param root [[Configurable]] object
+ */
 class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction {
 
   javaMainClass = getClass.getName
 
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 2.0
 
+  /** List of input tabular files */
   @Input(doc = "Input table files", required = true)
   var inputTables: List[File] = List.empty[File]
 
+  /** Output file */
   @Output(doc = "Output merged table", required = true)
   var output: File = null
 
   // TODO: should be List[Int] really
+  /** List of column indices to combine to make a unique identifier per row */
   var idColumnIndices: List[String] = config("id_column_indices", default = List("1"))
+
+  /** Index of column from each tabular file containing the values to be put in the final merged table */
   var valueColumnIndex: Int = config("value_column_index", default = 2)
+
+  /** Name of the identifier column in the output file */
   var idColumnName: Option[String] = config("id_column_name")
+
+  /** Common file extension of all input files */
   var fileExtension: Option[String] = config("file_extension")
+
+  /** Number of header lines from each input file to ignore */
   var numHeaderLines: Option[Int] = config("num_header_lines")
+
+  /** String to use when a value is missing from an input file */
   var fallbackString: Option[String] = config("fallback_string")
+
+  /** Column delimiter of each input file (used for splitting into columns */
   var delimiter: Option[String] = config("delimiter")
 
   // executed command line
@@ -197,7 +217,7 @@ object MergeTables extends ToolCommand {
 
     opt[Char]('d', "delimiter") optional () action { (x, c) =>
       c.copy(delimiter = x)
-    } text "The string to use when a value for a feature is missing in one or more sample(s) (default: '-')"
+    } text "The character used for separating columns in the input files (default: '\\t')"
 
     arg[File]("<input_tables> ...") unbounded () optional () action { (x, c) =>
       c.copy(inputTables = c.inputTables :+ x)
@@ -235,6 +255,7 @@ object MergeTables extends ToolCommand {
     case otherwise              => new BufferedWriter(new FileWriter(otherwise))
   }
 
+  /** Main entry point */
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = parseArgs(args)
 
