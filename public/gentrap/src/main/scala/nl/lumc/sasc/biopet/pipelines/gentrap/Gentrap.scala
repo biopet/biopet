@@ -644,7 +644,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.output = createFile(".raw_base_count")
             job
           }
-      case Dutp => {
+      case Dutp =>
         (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
           .option {
             require(alnFilePlusStrand.isDefined && alnFileMinusStrand.isDefined)
@@ -655,7 +655,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.output = createFile(".raw_base_count")
             job
           }
-      }
       case _ => throw new IllegalStateException
     }
 
