@@ -101,6 +101,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       "mapping" -> Map("skip_markduplicates" -> true)
     ), super.defaults)
 
+  /** Reference FASTA file */
+  private val reference: File = config("reference")
+
+  /** Reference DICT file */
+  private def referenceDict: File = {
+    val refName: String = reference.getName
+    require(refName.contains('.'), "Reference file must have an extension")
+    val dictFile = new File(Option(reference.getParentFile).getOrElse(new File(".")),
+      refName.take(refName.lastIndexOf('.')) + ".dict")
+    require(dictFile.exists, s"Dict file '$dictFile' must exist")
+    dictFile
+  }
+
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
@@ -314,14 +327,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   // used to ensure that the required .dict file is present before the run starts
   // can not store it in config since the tools that use it (Picard) have this value based on the reference file name
-  protected def checkDictFile(): Unit = {
-    val refFile: File = config("reference")
-    val refName: String = refFile.getName
-    require(refName.contains('.'), "Reference file must have an extension")
-    val dictFile = new File(Option(refFile.getParentFile).getOrElse(new File(".")),
-      refName.take(refName.lastIndexOf('.')) + ".dict")
-    require(dictFile.exists, s"Dict file '$dictFile' must exist")
-  }
+  protected def checkDictFile(): Unit =
+    require(referenceDict.exists, s"Dict file '$referenceDict' must exist")
 
   /** Steps to run before biopetScript */
   def init(): Unit = {
