@@ -37,10 +37,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
   val configValues: List[String] = Nil
 
   var outputDir: File = {
-    Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
-      case Some(value) => new File(value.asString).getAbsoluteFile
-      case _           => new File(".")
-    }
+    if (config.contains("output_dir", path = Nil)) config("output_dir", path = Nil).asFile
+    else new File(".")
   }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
@@ -64,11 +62,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
    * Script from queue itself, final to force some checks for each pipeline and write report
    */
   final def script() {
-    if (config.contains("output_dir")) outputDir = config("output_dir").asFile.getAbsoluteFile
-    else {
-      outputDir = new File(".").getAbsoluteFile
-      BiopetQScript.addError("No output_dir defined in config")
-    }
+    outputDir = config("output_dir")
+    outputDir = outputDir.getAbsoluteFile
     init
     biopetScript
 
