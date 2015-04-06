@@ -42,6 +42,17 @@ trait PipelineCommand extends MainCommand with GatkLogging {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")
         Config.global.loadConfigFile(new File(args(t + 1)))
       }
+
+      if (args(t) == "-cv" || args(t) == "--config_value") {
+        val v = args(t + 1).split("=")
+        require(v.size == 2, "Value should be formatted like 'key=value' or 'path:path:key=value'")
+        val value = v(1)
+        val p = v(0).split(":")
+        val key = p.last
+        val path = p.dropRight(1).toList
+        Config.global.addValue(key, value, path)
+      }
+
       if (args(t) == "--logging_level" || args(t) == "-l") {
         args(t + 1).toLowerCase match {
           case "debug" => Logging.logger.setLevel(org.apache.log4j.Level.DEBUG)

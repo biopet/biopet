@@ -79,6 +79,19 @@ class Config(var map: Map[String, Any],
     }
   }
 
+  /**
+   * Add a single vallue to the config
+   * @param key key of value
+   * @param value value itself
+   * @param path Path to value
+   * @param default if true value is put in default map
+   */
+  def addValue(key: String, value: Any, path: List[String] = Nil, default: Boolean = false): Unit = {
+    val valueMap = path.foldRight(Map(key -> value))((a, b) => Map(a -> b))
+    if (default) defaults = mergeMaps(valueMap, defaults)
+    else map = mergeMaps(valueMap, map)
+  }
+
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()

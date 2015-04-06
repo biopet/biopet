@@ -30,8 +30,11 @@ import scala.collection.mutable.ListBuffer
  */
 trait BiopetQScript extends Configurable with GatkLogging {
 
-  @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
+  @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
+
+  @Argument(doc = "JSON config file(s)", fullName = "config_value", shortName = "cv", required = false)
+  val configValues: List[String] = Nil
 
   var outputDir: File = {
     Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
@@ -61,7 +64,11 @@ trait BiopetQScript extends Configurable with GatkLogging {
    * Script from queue itself, final to force some checks for each pipeline and write report
    */
   final def script() {
-    outputDir = config("output_dir").asFile.getAbsoluteFile
+    if (config.contains("output_dir")) outputDir = config("output_dir").asFile.getAbsoluteFile
+    else {
+      outputDir = new File(".").getAbsoluteFile
+      BiopetQScript.addError("No output_dir defined in config")
+    }
     init
     biopetScript
 
