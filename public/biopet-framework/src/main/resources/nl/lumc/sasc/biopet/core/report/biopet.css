@@ -47,7 +47,7 @@ nav ul {
     		}
 
     	nav ul li a {
-    		display: block; padding: 25px 40px;
+    		display: block; padding: 10px 10px;
     		color: #757575; text-decoration: none;
     	}
     	nav ul ul {
@@ -71,8 +71,6 @@ nav ul ul ul {
 	position: absolute; left: 100%; top:0;
 }
 section {
-    width:350px;
-    float:left;
     padding:10px;
 }
 footer {
@@ -92,5 +90,6 @@ th {
     color: white;
 }
 aside {
-    float: left
+    #float: left;
+    height: 100%;
 }
