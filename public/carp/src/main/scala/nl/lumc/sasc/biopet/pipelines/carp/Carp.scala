@@ -46,10 +46,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
   //TODO: Add summary
-  def summaryFiles = Map()
+  def summaryFiles = Map("reference" -> referenceFasta())
 
   //TODO: Add summary
-  def summarySettings = Map()
+  def summarySettings = Map("reference" -> referenceSummary)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
