@@ -20,7 +20,10 @@ import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.core.config.ConfigValue
 import argonaut._, Argonaut._
+import org.yaml.snakeyaml.Yaml
+import scala.collection.mutable
 import scalaz._, Scalaz._
+import scala.collection.JavaConversions._
 
 /**
  * This object contains general function for the config
@@ -78,8 +81,9 @@ object ConfigUtils extends Logging {
     val value = map.get(path.head)
     if (path.tail == Nil || value == None) value
     else value.get match {
-      case map: Map[_, _] => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
-      case _              => None
+      case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
+      case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
+      case _                                  => None
     }
   }
 
@@ -105,9 +109,24 @@ object ConfigUtils extends Logging {
    * @return Config map
    */
   def fileToConfigMap(configFile: File): Map[String, Any] = {
-    val configJson = jsonToMap(fileToJson(configFile))
-    logger.debug("Contain: " + configJson)
-    return configJson
+
+    val configMap = {
+      if (configFile.getName.endsWith(".yaml")) yamlToMap(configFile)
+      else jsonToMap(fileToJson(configFile))
+    }
+    logger.debug("Contain: " + configMap)
+    return configMap
+  }
+
+  /**
+   * Convert a yaml file to map[String, Any]
+   * @param file Input file
+   * @return config map
+   */
+  def yamlToMap(file: File): Map[String, Any] = {
+    val yaml = new Yaml()
+    val a = yaml.load(scala.io.Source.fromFile(file).reader())
+    ConfigUtils.any2map(a)
   }
 
   /**
@@ -331,9 +350,20 @@ object ConfigUtils extends Logging {
   def any2map(any: Any): Map[String, Any] = {
     if (any == null) return null
     any match {
-      case m: Map[_, _] => m.map(x => x._1.toString -> x._2)
-      case _            => throw new IllegalStateException("Value '" + any + "' is not an Map")
+      case m: Map[_, _]                     => m.map(x => x._1.toString -> x._2)
+      case m: java.util.LinkedHashMap[_, _] => nestedJavaHashMaptoScalaMap(m)
+      case _                                => throw new IllegalStateException("Value '" + any + "' is not an Map")
     }
+  }
+
+  /** Convert nested java hash map to scala hash map */
+  def nestedJavaHashMaptoScalaMap(input: java.util.LinkedHashMap[_, _]): Map[String, Any] = {
+    input.map(value => {
+      value._2 match {
+        case m: java.util.LinkedHashMap[_, _] => value._1.toString -> nestedJavaHashMaptoScalaMap(m)
+        case _                                => value._1.toString -> value._2
+      }
+    }).toMap
   }
 
   /**
