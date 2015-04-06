@@ -15,9 +15,7 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
-import scala.collection.JavaConversions._
 
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
@@ -58,9 +56,7 @@ trait Configurable extends ImplicitConversions {
       (if (submodule != null) configPath ::: configName :: Nil else configPath)
   }
 
-  /**
-   * Class is used for retrieval of config values
-   */
+  /** Class is used for retrieval of config values */
   protected class ConfigFunctions(val defaultSample: Option[String] = None, val defaultLibrary: Option[String] = None) {
     def this(defaultSample: String, defaultLibrary: String) = {
       this(defaultSample = Some(defaultSample), defaultLibrary = Some(defaultLibrary))

@@ -20,8 +20,6 @@ import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
-import scala.reflect.io.Directory
-
 /**
  * This class can store nested config values
  * @param map Map with value for new config
