@@ -21,25 +21,34 @@ trait Reference extends Configurable {
   var referenceName: String = {
     root match {
       case r: Reference => r.referenceName
-      case _            => config("referenceName", default = "unknown_ref")
+      case _            => config("reference_name", default = "unknown_ref")
     }
   }
 
   def referenceFasta(): File = {
-    val file: File = config("referenceFasta", path = List("genomes", referenceSpecies, referenceName))
+    val file: File = config("reference_fasta", path = List("genomes", referenceSpecies, referenceName))
     Reference.checkFasta(file)
+
+    val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
+    val fai = new File(file.getAbsolutePath + ".fai")
+
+    this match {
+      case c: BiopetCommandLineFunctionTrait => c.deps :::= dict :: fai :: Nil
+      case _                                 =>
+    }
+
     file
   }
 
   def referenceSummary: Map[String, Any] = {
     val file = new IndexedFastaSequenceFile(referenceFasta())
-    Map(referenceSpecies ->
-      Map(referenceName ->
-        (for (seq <- file.getSequenceDictionary.getSequences) yield seq.getSequenceName -> {
-          val md5 = Option(seq.getAttribute("M5"))
-          Map("md5" -> md5, "length" -> seq.getSequenceLength)
-        }).toMap
-      )
+    Map("contigs" ->
+      (for (seq <- file.getSequenceDictionary.getSequences) yield seq.getSequenceName -> {
+        val md5 = Option(seq.getAttribute("M5"))
+        Map("md5" -> md5, "length" -> seq.getSequenceLength)
+      }).toMap,
+      "species" -> referenceSpecies,
+      "name" -> referenceName
     )
   }
 }

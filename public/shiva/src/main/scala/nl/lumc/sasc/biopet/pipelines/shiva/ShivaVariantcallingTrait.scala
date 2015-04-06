@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip, Gzip }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
@@ -33,7 +33,7 @@ import scala.collection.generic.Sorted
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
+trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with Reference {
   qscript =>
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)

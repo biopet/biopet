@@ -110,7 +110,7 @@ object CarpTest {
 
   val executables = Map(
     "reference" -> (outputDir + File.separator + "ref.fa"),
-    "referenceFasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),

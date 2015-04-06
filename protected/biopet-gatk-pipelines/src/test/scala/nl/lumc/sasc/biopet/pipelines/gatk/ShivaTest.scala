@@ -107,7 +107,7 @@ object ShivaTest {
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
     "reference" -> (outputDir + File.separator + "ref.fa"),
-    "referenceFasta" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
