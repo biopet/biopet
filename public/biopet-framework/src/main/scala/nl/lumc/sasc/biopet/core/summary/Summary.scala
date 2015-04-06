@@ -26,7 +26,15 @@ class Summary(file: File) {
     }).toMap
   }
 
-  def getValue(path: List[String]): Option[Any] = {
-    ConfigUtils.getValueFromPath(map, path)
+  def getValue(path: String*): Option[Any] = {
+    ConfigUtils.getValueFromPath(map, path.toList)
+  }
+
+  def getSampleValue(sampleId: String, path: String*): Option[Any] = {
+    ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: path.toList)
+  }
+
+  def getLibraryValue(sampleId: String, libId: String, path: String*): Option[Any] = {
+    ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: "libraries" :: libId :: path.toList)
   }
 }
