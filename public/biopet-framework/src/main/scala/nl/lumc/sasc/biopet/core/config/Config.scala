@@ -31,9 +31,7 @@ class Config(var map: Map[String, Any],
              protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
-  /**
-   * Default constructor
-   */
+  /** Default constructor */
   def this() = {
     this(Map())
     loadDefaultConfig()
@@ -42,6 +40,7 @@ class Config(var map: Map[String, Any],
   /**
    * Loading a environmental variable as location of config files to merge into the config
    * @param valueName Name of value
+   * @param default if true files are added to default instead of normal map
    */
   def loadConfigEnv(valueName: String, default: Boolean) {
     sys.env.get(valueName) match {
@@ -58,9 +57,7 @@ class Config(var map: Map[String, Any],
     }
   }
 
-  /**
-   * Loading default value for biopet
-   */
+  /** Loading default value for biopet */
   def loadDefaultConfig() {
     loadConfigEnv("BIOPET_CONFIG", true)
   }
