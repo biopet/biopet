@@ -27,7 +27,8 @@ import scala.reflect.io.Directory
  * @param map Map with value for new config
  * @constructor Load config with existing map
  */
-class Config(var map: Map[String, Any]) extends Logging {
+class Config(var map: Map[String, Any],
+             protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
   /**
@@ -42,14 +43,14 @@ class Config(var map: Map[String, Any]) extends Logging {
    * Loading a environmental variable as location of config files to merge into the config
    * @param valueName Name of value
    */
-  def loadConfigEnv(valueName: String) {
+  def loadConfigEnv(valueName: String, default: Boolean) {
     sys.env.get(valueName) match {
       case Some(globalFiles) => {
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
           if (file.exists) {
             logger.info("Loading config file: " + file)
-            loadConfigFile(file)
+            loadConfigFile(file, default)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
         }
       }
@@ -61,19 +62,24 @@ class Config(var map: Map[String, Any]) extends Logging {
    * Loading default value for biopet
    */
   def loadDefaultConfig() {
-    loadConfigEnv("BIOPET_CONFIG")
+    loadConfigEnv("BIOPET_CONFIG", true)
   }
 
   /**
    * Merge a json file into the config
    * @param configFile Location of file
    */
-  def loadConfigFile(configFile: File) {
+  def loadConfigFile(configFile: File, default: Boolean = false) {
     val configMap = fileToConfigMap(configFile)
-
-    if (map.isEmpty) map = configMap
-    else map = mergeMaps(configMap, map)
-    logger.debug("New config: " + map)
+    if (default) {
+      if (defaults.isEmpty) defaults = configMap
+      else defaults = mergeMaps(configMap, defaults)
+      logger.debug("New defaults: " + defaults)
+    } else {
+      if (map.isEmpty) map = configMap
+      else map = mergeMaps(configMap, map)
+      logger.debug("New config: " + map)
+    }
   }
 
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()

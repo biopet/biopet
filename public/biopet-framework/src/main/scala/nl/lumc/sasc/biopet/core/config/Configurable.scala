@@ -39,7 +39,7 @@ trait Configurable extends ImplicitConversions {
   /** Map to store defaults for config */
   def defaults: Map[String, Any] = {
     if (root != null) root.defaults
-    else Map()
+    else globalConfig.defaults
   }
 
   val config = new ConfigFunctions
