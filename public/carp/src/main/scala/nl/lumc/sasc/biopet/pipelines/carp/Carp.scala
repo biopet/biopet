@@ -35,7 +35,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
+class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript with Reference {
   qscript =>
   def this() = this(null)
 

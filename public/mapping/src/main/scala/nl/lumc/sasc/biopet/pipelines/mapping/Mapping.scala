@@ -21,10 +21,9 @@ import scala.math._
 
 import org.broadinstitute.gatk.queue.QScript
 
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
@@ -35,7 +34,7 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 
 // TODO: documentation
-class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
 
@@ -112,7 +111,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "aligner" -> aligner,
     "chunking" -> chunking,
     "numberChunks" -> numberChunks.getOrElse(1)
-  )
+  ) ++ (if (root == null) Map() else Map("reference" -> referenceSummary))
 
   /** Will be executed before script */
   def init() {

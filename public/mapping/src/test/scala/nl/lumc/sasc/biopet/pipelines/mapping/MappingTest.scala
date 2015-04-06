@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions._
@@ -130,8 +130,20 @@ class MappingTest extends TestNGSuite with Matchers {
 object MappingTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "referenceFasta" -> (outputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
