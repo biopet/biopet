@@ -33,7 +33,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
   @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "JSON config file(s)", fullName = "config_value", shortName = "cv", required = false)
+  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'path:path:key=value'", fullName = "config_value", shortName = "cv", required = false)
   val configValues: List[String] = Nil
 
   var outputDir: File = {
