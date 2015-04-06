@@ -4,7 +4,7 @@ import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.summary.Summary
-import org.fusesource.scalate.{TemplateSource, TemplateEngine}
+import org.fusesource.scalate.TemplateEngine
 
 import scala.io.Source
 
@@ -13,7 +13,7 @@ import scala.io.Source
  */
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null, outputDir: File = null) extends AbstractArgs
+  case class Args(summary: File = null, outputDir: File = null, pageArgs: Map[String, String] = Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('s', "summary") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -21,6 +21,9 @@ trait ReportBuilder extends ToolCommand {
     }
     opt[File]('o', "outputDir") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputDir = x)
+    }
+    opt[Map[String, String]]('a', "args") action { (x, c) =>
+      c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
 
@@ -41,10 +44,10 @@ trait ReportBuilder extends ToolCommand {
 
     logger.info("Write Base files")
     // Write css to output dir
-    val cssDir = new File (cmdArgs.outputDir, "css")
+    val cssDir = new File(cmdArgs.outputDir, "css")
     cssDir.mkdirs()
     val cssWriter = new PrintWriter(new File(cssDir, "biopet.css"))
-    Source.fromInputStream(getClass.getResourceAsStream("biopet.css")).getLines().foreach(cssWriter.println(_))
+    Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/biopet.css")).getLines().foreach(cssWriter.println(_))
     cssWriter.close()
 
     logger.info("Parsing summary")
@@ -52,7 +55,8 @@ trait ReportBuilder extends ToolCommand {
 
     logger.info("Generate pages")
     generatePage(summary, indexPage, cmdArgs.outputDir,
-      args = pageArgs ++ Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
+      args = pageArgs ++ cmdArgs.pageArgs ++
+        Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
     logger.info("Done")
   }
@@ -69,12 +73,9 @@ trait ReportBuilder extends ToolCommand {
                    path: List[String] = Nil,
                    args: Map[String, Any] = Map()): Unit = {
 
-    val templateText = Source.fromInputStream(getClass.getResourceAsStream("main.ssp")).getLines().mkString("\n")
-
+    val templateText = Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/main.ssp")).getLines().mkString("\n")
     val template = engine.compileText("ssp", templateText)
-
     val pageArgs = args ++ page.args ++ Map("page" -> page, "path" -> path)
-
     val output = engine.layout(template.source, pageArgs ++ Map("args" -> pageArgs))
 
     val file = new File(outputDir, path.mkString("", File.separator, File.separator) + "index.html")
