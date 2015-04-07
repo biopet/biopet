@@ -13,20 +13,26 @@ trait Reference extends Configurable {
 
   var referenceSpecies: String = {
     root match {
-      case r: Reference => r.referenceSpecies
-      case _            => config("species", default = "unknown_species")
+      case r: Reference if r.referenceSpecies != "unknown_species" => r.referenceSpecies
+      case _ => config("species", default = "unknown_species", path = super.configPath)
     }
   }
 
   var referenceName: String = {
     root match {
-      case r: Reference => r.referenceName
-      case _            => config("reference_name", default = "unknown_ref")
+      case r: Reference if r.referenceName != "unknown_ref" => r.referenceName
+      case _ => config("reference_name", default = "unknown_ref", path = super.configPath)
     }
   }
 
+  override def subPath = referenceConfigPath ::: super.subPath
+
+  /** Returns the reference config path */
+  def referenceConfigPath = List("genomes", referenceSpecies, referenceName)
+
+  /** Returns the fasta file */
   def referenceFasta(): File = {
-    val file: File = config("reference_fasta", path = List("genomes", referenceSpecies, referenceName))
+    val file: File = config("reference_fasta")
     Reference.checkFasta(file)
 
     val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
@@ -40,6 +46,7 @@ trait Reference extends Configurable {
     file
   }
 
+  /** Create summary part for reference */
   def referenceSummary: Map[String, Any] = {
     val file = new IndexedFastaSequenceFile(referenceFasta())
     Map("contigs" ->
