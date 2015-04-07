@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.report.{MultisampleReportBuilder, ReportPage}
+import nl.lumc.sasc.biopet.core.report.{ MultisampleReportBuilder, ReportPage }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 /**
