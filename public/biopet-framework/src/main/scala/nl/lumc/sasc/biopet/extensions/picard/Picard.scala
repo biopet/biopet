@@ -16,11 +16,11 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import scala.io.Source
+
+import org.broadinstitute.gatk.utils.commandline.Argument
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
-
-import scala.io.Source
 
 /**
  * General picard extension
