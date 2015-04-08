@@ -19,64 +19,34 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValueIndex, val value: Any, val default: Boolean) {
-  /**
-   * Get value as String
-   * @return value as String
-   */
+  /** Get value as String */
   def asString = any2string(value)
 
-  /**
-   * Get value as File
-   * @return value as File
-   */
+  /** Get value as File */
   def asFile = new File(any2string(value))
 
-  /**
-   * Get value as Int
-   * @return value as Int
-   */
+  /** Get value as Int */
   def asInt = any2int(value)
 
-  /**
-   * Get value as Double
-   * @return value as Double
-   */
+  /** Get value as Double */
   def asDouble = any2double(value)
 
-  /**
-   * Get value as List[Any]
-   * @return value as List[Any]
-   */
+  /** Get value as List[Any] */
   def asList = any2list(value)
 
-  /**
-   * Get value as List[File]
-   * @return value as List[File]
-   */
+  /** Get value as List[File] */
   def asFileList: List[File] = for (file <- any2stringList(value)) yield new File(file)
 
-  /**
-   * Get value as List[String]
-   * @return value as List[String]
-   */
+  /** Get value as List[String] */
   def asStringList: List[String] = any2stringList(value)
 
-  /**
-   * Get value as Map
-   * @return value as Map
-   */
+  /** Get value as Map */
   def asMap = any2map(value)
 
-  /**
-   * Get value as Boolean
-   * @return value as Boolean
-   */
+  /** Get value as Boolean */
   def asBoolean = any2boolean(value)
 
-  /**
-   * Readable output of indexes and value, just for debug
-   * @return
-   */
+  /** Readable output of indexes and value, just for debug */
   override def toString: String = {
     var output = "key = " + requestIndex.key
     output += ", value = " + value
