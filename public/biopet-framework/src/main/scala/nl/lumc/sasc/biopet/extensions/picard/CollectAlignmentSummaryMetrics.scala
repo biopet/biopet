@@ -70,7 +70,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
     case None => Map()
     case Some((header, content)) =>
       (for (category <- 0 until content.size) yield {
-        content(category)(0) -> (
+        content(category)(0).toString -> (
           for (
             i <- 1 until header.size if i < content(category).size
           ) yield {

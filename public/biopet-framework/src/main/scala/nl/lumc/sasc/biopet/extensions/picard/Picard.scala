@@ -21,6 +21,7 @@ import scala.io.Source
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 
 /**
  * General picard extension
@@ -80,7 +81,7 @@ object Picard {
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
+  def getMetrics(file: File): Option[(Array[String], List[Array[Any]])] =
     if (file.exists) {
       val lines = Source.fromFile(file).getLines().toArray
 
@@ -88,9 +89,10 @@ object Picard {
       val end = lines.indexOf("", start)
 
       val header = lines(start).split("\t")
-      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t"))
+        .map(row => row.map(col => tryToParseNumber(col).getOrElse(col)))
 
-      Option((header, content))
+      Option((header, content.toList))
     } else {
       None
     }
