@@ -59,14 +59,14 @@ object VcfFilter extends ToolCommand {
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
                   invertedOutputVcf: Option[File] = None,
-                  minQualscore: Option[Double] = None,
+                  minQualScore: Option[Double] = None,
                   minSampleDepth: Int = -1,
                   minTotalDepth: Int = -1,
                   minAlternateDepth: Int = -1,
                   minSamplesPass: Int = 0,
                   minBamAlternateDepth: Int = 0,
                   mustHaveVariant: List[String] = Nil,
-                  denovoInSample: String = null,
+                  deNovoInSample: String = null,
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   filterRefCalls: Boolean = false,
@@ -98,8 +98,8 @@ object VcfFilter extends ToolCommand {
     opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minBamAlternateDepth = x)
     } // TODO: Convert this to more generic filter
-    opt[String]("denovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
-      c.copy(denovoInSample = x)
+    opt[String]("deNovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
+      c.copy(deNovoInSample = x)
     } text ("Only show variants that contain unique alleles in complete set for given sample")
     opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
@@ -118,13 +118,13 @@ object VcfFilter extends ToolCommand {
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
       c.copy(filterNoCalls = true)
     } text ("Filter when there are only no calls")
-    opt[Double]("minQualscore") unbounded () action { (x, c) =>
-      c.copy(minQualscore = Some(x))
+    opt[Double]("minQualScore") unbounded () action { (x, c) =>
+      c.copy(minQualScore = Some(x))
     } text ("Min qual score")
     opt[String]("id") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset + x)
     } text ("Id that may pass the filter")
-    opt[File]("id-file") unbounded () action { (x, c) =>
+    opt[File]("idFile") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset ++ Source.fromFile(x).getLines())
     } text ("File that contain list of IDs to get from vcf file")
   }
@@ -183,8 +183,8 @@ object VcfFilter extends ToolCommand {
   }
 
   def minQualscore(record: VariantContext): Boolean = {
-    if (commandArgs.minQualscore.isEmpty) return true
-    record.getPhredScaledQual >= commandArgs.minQualscore.get
+    if (commandArgs.minQualScore.isEmpty) return true
+    record.getPhredScaledQual >= commandArgs.minQualScore.get
   }
 
   def filterRefCalls(record: VariantContext): Boolean = {
@@ -263,10 +263,10 @@ object VcfFilter extends ToolCommand {
   }
 
   def denovoInSample(record: VariantContext): Boolean = {
-    if (commandArgs.denovoInSample == null) return true
-    val genotype = record.getGenotype(commandArgs.denovoInSample)
+    if (commandArgs.deNovoInSample == null) return true
+    val genotype = record.getGenotype(commandArgs.deNovoInSample)
     for (allele <- genotype.getAlleles if allele.isNonReference) {
-      for (g <- record.getGenotypes if g.getSampleName != commandArgs.denovoInSample) {
+      for (g <- record.getGenotypes if g.getSampleName != commandArgs.deNovoInSample) {
         if (g.getAlleles.exists(_.basesMatch(allele))) return false
       }
     }
