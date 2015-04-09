@@ -14,6 +14,8 @@
     <th>Sample</th>
     <th colspan="2">Library</th>
     <th>Before QC</th>
+    <th>Clipping</th>
+    <th>Trimming</th>
     <th>After QC</th>
 </tr></thead>
 <tbody>
@@ -23,7 +25,6 @@
                 case Some(libId) => List(libId.toString)
                 case _ => summary.libraries(sample).toList
             }
-
             val sampleRowspan = {
                 libs.size +
                 libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
@@ -37,10 +38,18 @@
             #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
             #for (read <- reads)
                 #if (read == "R2") </tr><tr> #end
+                #{
+                    val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "reads", "num_total")
+                    val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "reads", "num_total")
+                    val clippingDiscardedToShort = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short").getOrElse(0).asInstanceOf[Long]
+                    val clippingDiscardedToLong = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long").getOrElse(0).asInstanceOf[Long]
+                    val trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming", "num_reads_discarded_" + read).getOrElse(0).asInstanceOf[Long]
+                }#
                 <td>${read}</td>
-                <td> ${summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "reads", "num_total")}
-                </td>
-                <td> ${summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "reads", "num_total")}</td>
+                <td>${beforeTotal}</td>
+                <td>${clippingDiscardedToShort + clippingDiscardedToLong}</td>
+                <td>${trimmingDiscarded}</td>
+                <td>${afterTotal}</td>
             #end
             </tr>
         #end

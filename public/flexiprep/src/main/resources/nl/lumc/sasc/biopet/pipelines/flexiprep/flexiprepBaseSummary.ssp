@@ -14,7 +14,8 @@
     <th>Sample</th>
     <th colspan="2">Library</th>
     <th>Before QC</th>
-    <th colspan="2">Discarded</th>
+    <th>Discarded</th>
+    <th>(%)</th>
     <th>After QC</th>
 </tr></thead>
 <tbody>
@@ -38,7 +39,6 @@
             #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
             #for (read <- reads)
                 #if (read == "R2") </tr><tr> #end
-
             #{
                     val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "bases", "num_total").getOrElse(0).asInstanceOf[Long]
                     val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total").getOrElse(0).asInstanceOf[Long]
