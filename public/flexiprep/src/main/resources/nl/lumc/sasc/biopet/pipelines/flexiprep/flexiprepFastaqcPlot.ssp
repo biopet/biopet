@@ -1,0 +1,44 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(org.apache.commons.io.FileUtils)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] %>
+<%@ var libId: Option[String] %>
+<%@ var plot: String %>
+<%@ var outputDir: File %>
+#{
+    val paired: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
+    val skipClip: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "skip_clip").get.asInstanceOf[Boolean]
+    val skipTrim: Boolean = summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "skip_trim").get.asInstanceOf[Boolean]
+
+    def getPlot(read:String) = {
+        summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "files", read, plot, "path").collect {
+            case value => {
+                val file = new File(value.toString)
+                val newFile = new File(outputDir, read + "_" + file.getName)
+                FileUtils.copyFile(file, newFile)
+                newFile.getName
+            }
+        }
+    }
+}#
+
+<table>
+<tbody>
+<tr><td></td>
+    <th>Before QC</th>
+    #if (!skipTrim || !skipClip) <th>after QC</th> #end
+</tr>
+<tr><th>R1</th>
+<td><img src="${getPlot("fastqc_R1")}" width="75%"></td>
+#if (!skipTrim || !skipClip) <td><img src="${getPlot("fastqc_R1_qc")}" width="75%"></td> #end
+</tr>
+#if (paired)
+    <tr><th>R2</th>
+        <td><img src="${getPlot("fastqc_R2")}" width="75%"></td>
+        #if (!skipTrim || !skipClip) <td><img src="${getPlot("fastqc_R2_qc")}" width="75%"></td> #end
+    </tr>
+#end
+</tbody>
+</table>

@@ -61,8 +61,6 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Done")
   }
 
-  protected val engine = new TemplateEngine()
-
   def indexPage: ReportPage
 
   def reportName: String
@@ -73,13 +71,14 @@ trait ReportBuilder extends ToolCommand {
                    path: List[String] = Nil,
                    args: Map[String, Any] = Map()): Unit = {
 
-    val templateText = Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/main.ssp")).getLines().mkString("\n")
-    val template = engine.compileText("ssp", templateText)
-    val pageArgs = args ++ page.args ++ Map("page" -> page, "path" -> path)
-    val output = engine.layout(template.source, pageArgs ++ Map("args" -> pageArgs))
+    val pageOutputDir = new File(outputDir, path.mkString(File.separator))
+    pageOutputDir.mkdirs()
+    val pageArgs = args ++ page.args ++ Map("page" -> page, "path" -> path, "outputDir" -> pageOutputDir)
 
-    val file = new File(outputDir, path.mkString("", File.separator, File.separator) + "index.html")
-    file.getParentFile.mkdirs()
+    val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
+      pageArgs ++ Map("args" -> pageArgs))
+
+    val file = new File(pageOutputDir, "index.html")
     val writer = new PrintWriter(file)
     writer.println(output)
     writer.close()
@@ -88,5 +87,17 @@ trait ReportBuilder extends ToolCommand {
     for ((name, subPage) <- page.subPages) {
       generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
     }
+  }
+}
+
+object ReportBuilder {
+
+  protected val engine = new TemplateEngine()
+
+  def renderTemplate(location: String, args:Map[String, Any]) : String = {
+    val templateText = Source.fromInputStream(getClass.getResourceAsStream(location)).getLines().mkString("\n")
+    val template = engine.compileText("ssp", templateText)
+
+    engine.layout(template.source, args)
   }
 }

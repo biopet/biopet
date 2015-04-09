@@ -40,7 +40,7 @@
 <body>
 
 <header><h1>${reportName}</h1></header>
-<nav>
+<nav id="menu">
 <ul>
 #for (t <- 0 to path.size)
     <li>
@@ -55,19 +55,21 @@
 #end
 </ul>
 </nav>
-<aside>
+<aside id="index">
 <ul>
 #for ((name, url) <- page.sections)
     <li><a href="#${name}">${name}</a></li>
 #end
 </ul>
 </aside>
+<aside id="main">
 #for ((name, url) <- page.sections)
-<section id="${name}">
-    <h3>${name}</h3>
-    ${include(url)}
-</section>
+    <section id="${name}">
+        <h3>${name}</h3>
+        ${unescape(url.render(args))}
+    </section>
 #end
+</aside>
 
 <footer>Footer</footer>
 </body>
