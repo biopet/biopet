@@ -73,7 +73,13 @@ trait ReportBuilder extends ToolCommand {
 
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
     pageOutputDir.mkdirs()
-    val pageArgs = args ++ page.args ++ Map("page" -> page, "path" -> path, "outputDir" -> pageOutputDir)
+    val rootPath = "./" + Array.fill(path.size)("../").mkString("")
+    val pageArgs = args ++ page.args ++
+      Map("page" -> page,
+        "path" -> path,
+        "outputDir" -> pageOutputDir,
+        "rootPath" -> rootPath
+      )
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
       pageArgs ++ Map("args" -> pageArgs))
@@ -94,7 +100,7 @@ object ReportBuilder {
 
   protected val engine = new TemplateEngine()
 
-  def renderTemplate(location: String, args:Map[String, Any]) : String = {
+  def renderTemplate(location: String, args: Map[String, Any]): String = {
     val templateText = Source.fromInputStream(getClass.getResourceAsStream(location)).getLines().mkString("\n")
     val template = engine.compileText("ssp", templateText)
 

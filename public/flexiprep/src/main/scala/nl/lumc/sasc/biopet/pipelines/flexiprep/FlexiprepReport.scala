@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.report.{ReportSection, ReportPage, ReportBuilder}
+import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, ReportBuilder }
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -23,7 +23,7 @@ object FlexiprepReport extends ReportBuilder {
     ), Map())
   }
 
-  protected def fastqcPlotSection(name:String, tag: String) = {
+  protected def fastqcPlotSection(name: String, tag: String) = {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastaqcPlot.ssp", Map("plot" -> tag))
   }
 

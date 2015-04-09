@@ -6,9 +6,9 @@
 <%@ var page: ReportPage %>
 <%@ var path: List[String] %>
 <%@ var args: Map[String, Any] %>
-#{
-    val rootPath = "./" + Array.fill(path.size)("../").mkString("")
+<%@ var rootPath: String %>
 
+#{
     def createMenu(page: ReportPage, path: List[String] = Nil): String = {
         val buffer: StringBuffer = new StringBuffer()
         buffer.append("<ul>")
@@ -35,6 +35,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>${reportName}</title>
         <link rel="stylesheet" type="text/css" href="${rootPath}css/biopet.css">
     </head>
 <body>

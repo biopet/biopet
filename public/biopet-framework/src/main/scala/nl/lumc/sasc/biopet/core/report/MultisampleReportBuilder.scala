@@ -1,22 +1,30 @@
 package nl.lumc.sasc.biopet.core.report
 
-import nl.lumc.sasc.biopet.core.summary.Summary
-
 /**
  * Created by pjvan_thof on 3/30/15.
  */
 trait MultisampleReportBuilder extends ReportBuilder {
-  def generalPage: ReportPage
-
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage
 
+  def samplesSections: List[(String, ReportSection)] = {
+    List(
+      ("Samples", ReportSection("/nl/lumc/sasc/biopet/core/report/samplesList.ssp"))
+    )
+  }
+
   def libraryPage(libraryId: String, args: Map[String, Any]): ReportPage
+
+  def libririesSections: List[(String, ReportSection)] = {
+    List(
+      ("Libraries", ReportSection("/nl/lumc/sasc/biopet/core/report/librariesList.ssp"))
+    )
+  }
 
   def generateSamplesPage(args: Map[String, Any]): ReportPage = {
     val samplePages = summary.samples
       .map(sampleId => (sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId)))))
       .toMap
-    ReportPage(samplePages, List(), args)
+    ReportPage(samplePages, samplesSections, args)
   }
 
   def generateLibraryPage(args: Map[String, Any]): ReportPage = {
@@ -26,8 +34,6 @@ trait MultisampleReportBuilder extends ReportBuilder {
     })
       .map(libId => (libId -> libraryPage(libId, args ++ Map("libId" -> Some(libId)))))
       .toMap
-    ReportPage(libPages, List(), args)
+    ReportPage(libPages, libririesSections, args)
   }
-
-  def indexPage = ReportPage(Map("General" -> generalPage, "Samples" -> generateSamplesPage(pageArgs)), List(), pageArgs)
 }
