@@ -106,7 +106,11 @@ object AnnotateVcfWithBed extends ToolCommand {
     val reader = new VCFFileReader(commandArgs.inputFile, false)
     val header = reader.getFileHeader
 
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(header.getSequenceDictionary).
+      build)
+
     val fieldType = commandArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
       case "Flag"      => VCFHeaderLineType.Flag

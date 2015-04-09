@@ -87,7 +87,8 @@ object CheckAllelesVcfInBam extends ToolCommand {
     val bamHeaders = bamReaders.map(x => (x._1, x._2.getFileHeader))
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(reader.getFileHeader.getSequenceDictionary).build)
 
     val header = reader.getFileHeader
     for ((sample, _) <- bamReaders) {

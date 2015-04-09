@@ -93,7 +93,10 @@ object MergeAlleles extends ToolCommand {
 
     val readers = commandArgs.inputFiles.map(new VCFFileReader(_, true))
     val referenceFile = new FastaSequenceFile(commandArgs.reference, true)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setReferenceDictionary(referenceFile.getSequenceDictionary).
+      setOutputFile(commandArgs.outputFile).
+      build)
     val header = new VCFHeader
     val referenceDict = referenceFile.getSequenceDictionary
     header.setSequenceDictionary(referenceDict)
