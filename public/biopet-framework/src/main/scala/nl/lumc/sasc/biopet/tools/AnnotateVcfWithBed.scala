@@ -56,10 +56,10 @@ object AnnotateVcfWithBed extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
+    } text ("Input is a required file property")
     opt[File]('B', "bedFile") required () unbounded () valueName ("<bed file>") action { (x, c) =>
       c.copy(bedFile = x)
-    } text ("out is a required file property")
+    } text ("Bedfile is a required file property")
     opt[File]('o', "output") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
       c.copy(outputFile = x)
     } text ("out is a required file property")
