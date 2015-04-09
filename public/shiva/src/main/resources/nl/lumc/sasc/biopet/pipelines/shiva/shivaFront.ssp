@@ -1,0 +1,11 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+
+<table>
+<tbody>
+    <tr><th>Pipeline</th><td>Shiva</td></tr>
+    <tr><th><a href="${rootPath}/Samples/index.html">Samples</a></th><td>${summary.samples.size}</td></tr>
+</tbody>
+</table>

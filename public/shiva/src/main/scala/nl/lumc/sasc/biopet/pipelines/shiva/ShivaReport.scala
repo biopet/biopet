@@ -10,19 +10,20 @@ object ShivaReport extends MultisampleReportBuilder {
   def indexPage = ReportPage(
     Map(
       "General" -> ReportPage(Map(), List(
-        "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/core/report/ShivaVariantcalling.ssp"),
+        "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
       ), Map()),
       "Samples" -> generateSamplesPage(pageArgs)
     ),
-    Nil,
+    List("Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")),
     pageArgs
   )
 
   def samplePage(sampleId: String, args: Map[String, Any]) = {
     ReportPage(Map("Libraries" -> generateLibraryPage(args)), List(
-      "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/core/report/ShivaVariantcalling.ssp"),
+      "Libraries" -> ReportSection("/nl/lumc/sasc/biopet/core/report/librariesList.ssp"),
+      "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
       "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
     ), args)
