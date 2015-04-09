@@ -147,10 +147,12 @@ object VcfFilter extends ToolCommand {
       build)
     writer.writeHeader(header)
 
-    val invertedWriter = commandArgs.invertedOutputVcf.collect { case x => new VariantContextWriterBuilder().
-      setOutputFile(x).
-      setReferenceDictionary(header.getSequenceDictionary).
-      build }
+    val invertedWriter = commandArgs.invertedOutputVcf.collect {
+      case x => new VariantContextWriterBuilder().
+        setOutputFile(x).
+        setReferenceDictionary(header.getSequenceDictionary).
+        build
+    }
     invertedWriter.foreach(_.writeHeader(header))
 
     var counterTotal = 0

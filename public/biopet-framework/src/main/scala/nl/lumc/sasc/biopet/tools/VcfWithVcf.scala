@@ -70,7 +70,6 @@ object VcfWithVcf extends ToolCommand {
       header.addMetaDataLine(newHeaderLine)
     }
 
-
     var idx = 0
 
     for (record <- reader) {

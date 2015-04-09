@@ -90,10 +90,9 @@ object VepNormalizer extends ToolCommand {
     logger.debug("Parsing header")
     val new_infos = parseCsq(header)
     header.setWriteCommandLine(true)
-
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(output).setReferenceDictionary(header.getSequenceDictionary)
-      build())
+      build ())
 
     for (info <- new_infos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
