@@ -10,7 +10,8 @@ object FlexiprepReport extends ReportBuilder {
 
   def indexPage = {
     ReportPage(Map(), List(
-      "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepSummary.ssp"),
+      "Read Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+      "Base Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"),
       fastqcPlotSection("Base quality", "plot_per_base_quality"),
       fastqcPlotSection("Sequence quality", "plot_per_sequence_quality"),
       fastqcPlotSection("Base GC content", "plot_per_base_gc_content"),

@@ -39,7 +39,7 @@
     </head>
 <body>
 
-<header><h1>${reportName}</h1></header>
+<!-- <header><h1>${reportName}</h1></header> -->
 <nav id="menu">
 <ul>
 #for (t <- 0 to path.size)

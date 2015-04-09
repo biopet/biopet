@@ -28,7 +28,7 @@
 <tbody>
 <tr><td></td>
     <th>Before QC</th>
-    #if (!skipTrim || !skipClip) <th>after QC</th> #end
+    #if (!skipTrim || !skipClip) <th>After QC</th> #end
 </tr>
 <tr><th>R1</th>
 <td><img src="${getPlot("fastqc_R1")}" width="75%"></td>

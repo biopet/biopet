@@ -92,6 +92,7 @@ footer {
 table, td, th {
     border: 1px solid green;
     border-collapse: collapse;
+    padding: 2px;
 }
 th {
     background-color: green;
