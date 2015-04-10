@@ -1,0 +1,43 @@
+package nl.lumc.sasc.biopet.tools
+
+import java.nio.file.Paths
+
+import org.scalatest.Matchers
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.testng.TestNGSuite
+
+import scala.util.Random
+
+/**
+ * Created by ahbbollen on 10-4-15.
+ */
+class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
+  import VcfWithVcf._
+
+  private def resourcePath(p: String): String = {
+    Paths.get(getClass.getResource(p).toURI).toString
+  }
+
+  val vepped_path = resourcePath("/VEP_oneline.vcf")
+  val unvepped_path = resourcePath("/unvepped.vcf")
+  val rand = new Random()
+
+  def testOutputTypeVcf() = {
+    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf"
+    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    main(arguments)
+  }
+
+  def testOutputTypeVcfGz() = {
+    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
+    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    main(arguments)
+  }
+
+  def testOutputTypeBcf() = {
+    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".bcf"
+    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    main(arguments)
+  }
+
+}
