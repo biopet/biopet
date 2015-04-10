@@ -19,24 +19,24 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf")
-  val unvepped_path = resourcePath("/unvepped.vcf")
+  val vepped_path = resourcePath("/VEP_oneline.vcf.gz")
+  val unvepped_path = resourcePath("/unvepped.vcf.gz")
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf"
+    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
+    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".bcf"
+    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".bcf"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
   }
