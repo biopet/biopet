@@ -2,6 +2,7 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
+<%@ var rootPath: String %>
 #{
     val fields = List("Hom", "HomVar", "HomRef", "NoCall", "Variant", "NonInformative", "Total")
     val samples = sampleId match {
@@ -16,7 +17,7 @@
 </tr></thead>
 <tbody>
     #for (sample <- samples.toList.sorted)
-        <tr><td>${sample}</td>
+        <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
         #for (field <- fields)
             <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", field)}</td>
         #end

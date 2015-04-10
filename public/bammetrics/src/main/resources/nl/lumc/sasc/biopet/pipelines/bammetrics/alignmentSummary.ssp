@@ -1,0 +1,55 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
+<%@ var sampleLevel: Boolean = false %>
+<%@ var rootPath: String %>
+#{
+    val samples = sampleId match {
+    case Some(sample) => List(sample.toString)
+    case _ => summary.samples.toList
+    }
+}#
+<table>
+    <thead><tr>
+        <th>Sample</th>
+        #if (!sampleLevel) <th>Library</th> #end
+        <th>Total</th>
+        <th>Mapped</th>
+        <th>(%)</th>
+        <th>Duplicates</th>
+        <th>(%)</th>
+        <th>Insert size</th>
+    </tr></thead>
+    <tbody>
+        #for (sample <- samples.toList.sorted)
+            #{
+                val libs = (libId, sampleLevel) match {
+                    case (_, true) => List("")
+                    case (Some(libId), _) => List(libId.toString)
+                    case _ => summary.libraries(sample).toList
+                }
+            }#
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            #for (libId <- libs)
+                #if (libs.head != libId) <tr> #end
+                #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
+                #{
+                    val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
+                    val total = summary.getValue((prefixPath ::: List("biopet_flagstat", "All")):_*).getOrElse(0L).asInstanceOf[Long]
+                    val mapped = summary.getValue((prefixPath ::: List("biopet_flagstat", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
+                    val duplicates = summary.getValue((prefixPath ::: List("biopet_flagstat", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
+                    val insertsizeMean = summary.getValue((prefixPath ::: List("insert_size_metrics", "mean_insert_size")):_*)
+                }#
+                <td>${total}</td>
+                <td>${mapped}</td>
+                <td>${mapped.toDouble / total * 100}%</td>
+                <td>${duplicates}</td>
+                <td>${duplicates.toDouble / total * 100}%</td>
+                <td>${insertsizeMean}</td>
+                </tr>
+            #end
+        #end
+    </tbody>
+</table>

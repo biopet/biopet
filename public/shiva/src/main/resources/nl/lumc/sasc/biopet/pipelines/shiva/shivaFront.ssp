@@ -6,6 +6,8 @@
 <table>
 <tbody>
     <tr><th>Pipeline</th><td>Shiva</td></tr>
-    <tr><th><a href="${rootPath}/Samples/index.html">Samples</a></th><td>${summary.samples.size}</td></tr>
 </tbody>
 </table>
+
+#{//TODO: Add settings}#
+Todo: settings
