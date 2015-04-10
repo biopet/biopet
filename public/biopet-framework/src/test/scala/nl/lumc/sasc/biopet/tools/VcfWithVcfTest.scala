@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.nio.file.Paths
 
+import org.testng.annotations.Test
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -22,19 +23,19 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   val unvepped_path = resourcePath("/unvepped.vcf")
   val rand = new Random()
 
-  def testOutputTypeVcf() = {
+  @Test def testOutputTypeVcf() = {
     val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
-  def testOutputTypeVcfGz() = {
+  @Test def testOutputTypeVcfGz() = {
     val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
-  def testOutputTypeBcf() = {
+  @Test def testOutputTypeBcf() = {
     val tmp_path = "/tmp_VcfWithVcf_" + rand.nextString(10) + ".bcf"
     val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
     main(arguments)
