@@ -29,7 +29,8 @@ class VcfToTsv {
 object VcfToTsv extends ToolCommand {
   case class Args(inputFile: File = null, outputFile: File = null, fields: List[String] = Nil, infoFields: List[String] = Nil,
                   sampleFields: List[String] = Nil, disableDefaults: Boolean = false,
-                  allInfo: Boolean = false, allFormat: Boolean = false) extends AbstractArgs
+                  allInfo: Boolean = false, allFormat: Boolean = false,
+                  separator: String = "\t", listSeparator: String = ",") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -56,6 +57,12 @@ object VcfToTsv extends ToolCommand {
     opt[Unit]('d', "disable_defaults") unbounded () action { (x, c) =>
       c.copy(disableDefaults = true)
     }
+    opt[String]("separator") maxOccurs (1) action { (x, c) =>
+      c.copy(separator = x)
+    } text ("Optional separator. Default is tab-delimited")
+    opt[String]("list_separator") maxOccurs (1) action { (x, c) =>
+      c.copy(listSeparator = x)
+    } text ("Optional list separator. By default, lists are separated by a comma")
   }
 
   val defaultFields = List("CHROM", "POS", "ID", "REF", "ALT", "QUAL")
@@ -99,7 +106,7 @@ object VcfToTsv extends ToolCommand {
     val writer = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
     else sys.process.stdout
 
-    writer.println(sortedFields.mkString("#", "\t", ""))
+    writer.println(sortedFields.mkString("#", commandArgs.separator, ""))
     for (vcfRecord <- reader) {
       val values: Map[String, Any] = Map()
       values += "CHROM" -> vcfRecord.getChr
@@ -108,16 +115,16 @@ object VcfToTsv extends ToolCommand {
       values += "REF" -> vcfRecord.getReference.getBaseString
       values += "ALT" -> {
         val t = for (a <- vcfRecord.getAlternateAlleles) yield a.getBaseString
-        t.mkString(",")
+        t.mkString(commandArgs.listSeparator)
       }
       values += "QUAL" -> (if (vcfRecord.getPhredScaledQual == -10) "." else scala.math.round(vcfRecord.getPhredScaledQual * 100.0) / 100.0)
       values += "INFO" -> vcfRecord.getFilters
       for ((field, content) <- vcfRecord.getAttributes) {
         values += "INFO-" + field -> {
           content match {
-            case a: List[_]                => a.mkString(",")
-            case a: Array[_]               => a.mkString(",")
-            case a: java.util.ArrayList[_] => a.mkString(",")
+            case a: List[_]                => a.mkString(commandArgs.listSeparator)
+            case a: Array[_]               => a.mkString(commandArgs.listSeparator)
+            case a: java.util.ArrayList[_] => a.mkString(commandArgs.listSeparator)
             case _                         => content
           }
         }
@@ -129,10 +136,10 @@ object VcfToTsv extends ToolCommand {
           val l = for (g <- genotype.getAlleles) yield vcfRecord.getAlleleIndex(g)
           l.map(x => if (x < 0) "." else x).mkString("/")
         }
-        if (genotype.hasAD) values += "AD-" + sample -> List(genotype.getAD: _*).mkString(",")
+        if (genotype.hasAD) values += "AD-" + sample -> List(genotype.getAD: _*).mkString(commandArgs.listSeparator)
         if (genotype.hasDP) values += "DP-" + sample -> genotype.getDP
         if (genotype.hasGQ) values += "GQ-" + sample -> genotype.getGQ
-        if (genotype.hasPL) values += "PL-" + sample -> List(genotype.getPL: _*).mkString(",")
+        if (genotype.hasPL) values += "PL-" + sample -> List(genotype.getPL: _*).mkString(commandArgs.listSeparator)
         for ((field, content) <- genotype.getExtendedAttributes) {
           values += sample + "-" + field -> content
         }
@@ -142,7 +149,7 @@ object VcfToTsv extends ToolCommand {
           values(f)
         } else ""
       }
-      writer.println(line.mkString("\t"))
+      writer.println(line.mkString(commandArgs.separator))
     }
   }
 }
