@@ -96,10 +96,10 @@ object VcfToTsv extends ToolCommand {
       else false
     })
 
-    val witter = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
+    val writer = if (commandArgs.outputFile != null) new PrintStream(commandArgs.outputFile)
     else sys.process.stdout
 
-    witter.println(sortedFields.mkString("#", "\t", ""))
+    writer.println(sortedFields.mkString("#", "\t", ""))
     for (vcfRecord <- reader) {
       val values: Map[String, Any] = Map()
       values += "CHROM" -> vcfRecord.getChr
@@ -142,7 +142,7 @@ object VcfToTsv extends ToolCommand {
           values(f)
         } else ""
       }
-      witter.println(line.mkString("\t"))
+      writer.println(line.mkString("\t"))
     }
   }
 }
