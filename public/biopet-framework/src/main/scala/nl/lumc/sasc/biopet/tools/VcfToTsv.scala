@@ -28,7 +28,7 @@ class VcfToTsv {
 
 object VcfToTsv extends ToolCommand {
   case class Args(inputFile: File = null, outputFile: File = null, fields: List[String] = Nil, infoFields: List[String] = Nil,
-                  sampleFileds: List[String] = Nil, disableDefaults: Boolean = false,
+                  sampleFields: List[String] = Nil, disableDefaults: Boolean = false,
                   allInfo: Boolean = false, allFormat: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -51,7 +51,7 @@ object VcfToTsv extends ToolCommand {
       c.copy(allFormat = true)
     }
     opt[String]('s', "sample_field") unbounded () action { (x, c) =>
-      c.copy(sampleFileds = x :: c.sampleFileds)
+      c.copy(sampleFields = x :: c.sampleFields)
     }
     opt[Unit]('d', "disable_defaults") unbounded () action { (x, c) =>
       c.copy(disableDefaults = true)
@@ -75,7 +75,7 @@ object VcfToTsv extends ToolCommand {
       commandArgs.fields.toSet[String] ++
       (if (commandArgs.allInfo) allInfoFields else commandArgs.infoFields).map("INFO-" + _) ++ {
         val buffer: ListBuffer[String] = ListBuffer()
-        for (f <- (if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFileds); sample <- samples) {
+        for (f <- (if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFields); sample <- samples) {
           buffer += sample + "-" + f
         }
         buffer.toSet[String]
@@ -102,16 +102,16 @@ object VcfToTsv extends ToolCommand {
     witter.println(sortedFields.mkString("#", "\t", ""))
     for (vcfRecord <- reader) {
       val values: Map[String, Any] = Map()
-      values += "chr" -> vcfRecord.getChr
-      values += "pos" -> vcfRecord.getStart
-      values += "id" -> vcfRecord.getID
-      values += "ref" -> vcfRecord.getReference.getBaseString
-      values += "alt" -> {
+      values += "CHROM" -> vcfRecord.getChr
+      values += "POS" -> vcfRecord.getStart
+      values += "ID" -> vcfRecord.getID
+      values += "REF" -> vcfRecord.getReference.getBaseString
+      values += "ALT" -> {
         val t = for (a <- vcfRecord.getAlternateAlleles) yield a.getBaseString
         t.mkString(",")
       }
-      values += "qual" -> (if (vcfRecord.getPhredScaledQual == -10) "." else scala.math.round(vcfRecord.getPhredScaledQual * 100.0) / 100.0)
-      values += "filter" -> vcfRecord.getFilters
+      values += "QUAL" -> (if (vcfRecord.getPhredScaledQual == -10) "." else scala.math.round(vcfRecord.getPhredScaledQual * 100.0) / 100.0)
+      values += "INFO" -> vcfRecord.getFilters
       for ((field, content) <- vcfRecord.getAttributes) {
         values += "INFO-" + field -> {
           content match {
@@ -129,10 +129,10 @@ object VcfToTsv extends ToolCommand {
           val l = for (g <- genotype.getAlleles) yield vcfRecord.getAlleleIndex(g)
           l.map(x => if (x < 0) "." else x).mkString("/")
         }
-        if (genotype.hasAD) values += sample + "-AD" -> List(genotype.getAD: _*).mkString(",")
-        if (genotype.hasDP) values += sample + "-DP" -> genotype.getDP
-        if (genotype.hasGQ) values += sample + "-GQ" -> genotype.getGQ
-        if (genotype.hasPL) values += sample + "-PL" -> List(genotype.getPL: _*).mkString(",")
+        if (genotype.hasAD) values += "AD-" + sample -> List(genotype.getAD: _*).mkString(",")
+        if (genotype.hasDP) values += "DP-" + sample -> genotype.getDP
+        if (genotype.hasGQ) values += "GQ-" + sample -> genotype.getGQ
+        if (genotype.hasPL) values += "PL-" + sample -> List(genotype.getPL: _*).mkString(",")
         for ((field, content) <- genotype.getExtendedAttributes) {
           values += sample + "-" + field -> content
         }
