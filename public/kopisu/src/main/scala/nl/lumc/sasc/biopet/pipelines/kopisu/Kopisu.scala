@@ -36,6 +36,10 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
   def init() {
   }
 
+  /*
+  * This script is in fact FreeC only.
+  * */
+
   def biopetScript() {
     // This script starts from a BAM alignment file and creates the pileup file using sambamba
 
@@ -44,6 +48,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     //    sambambapileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
     //    sambambapileup.isIntermediate = true
     //    add(sambambapileup)
+
 
     val sampileup = new SamtoolsMpileup(this)
     sampileup.input = List(bamFile)

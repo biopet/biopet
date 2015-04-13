@@ -24,8 +24,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Wrapper for the Cnmops command line tool.
  * Written based on Cnmops version v2.2.1.
  */
-class Cnmops(val root: Configurable) extends BiopetJavaCommandLineFunction {
-  javaMainClass = getClass.getName
+class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
   /** input file */
   @Input(doc = "Input file BAM", required = true)
@@ -53,11 +52,15 @@ class Cnmops(val root: Configurable) extends BiopetJavaCommandLineFunction {
     super.beforeGraph
     require(!output_dir.isEmpty, "Outputdir for cn.MOPS should not be empty")
     require(input.length > 1, "Please supply at least 2 BAM files for cn.MOPS")
+
   }
 
-  def cmdLine = {
-    required(executable) +
-      required("--output-dir", output_dir) +
-      required(input)
+  override def cmdLine = {
+
+    addPositionalArgument( input.foreach( f => f.getAbsolutePath ).toString.mkString(" ") )
+
+
+    super.cmdLine
   }
+
 }
