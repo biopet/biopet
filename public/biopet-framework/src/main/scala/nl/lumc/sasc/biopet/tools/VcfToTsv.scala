@@ -58,7 +58,7 @@ object VcfToTsv extends ToolCommand {
     }
   }
 
-  val defaultFields = List("chr", "pos", "id", "ref", "alt", "qual")
+  val defaultFields = List("CHROM", "POS", "ID", "REF", "ALT", "QUAL")
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
