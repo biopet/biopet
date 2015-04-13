@@ -56,10 +56,10 @@ object AnnotateVcfWithBed extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
+    } text ("Input is a required file property")
     opt[File]('B', "bedFile") required () unbounded () valueName ("<bed file>") action { (x, c) =>
       c.copy(bedFile = x)
-    } text ("out is a required file property")
+    } text ("Bedfile is a required file property")
     opt[File]('o', "output") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
       c.copy(outputFile = x)
     } text ("out is a required file property")
@@ -106,7 +106,11 @@ object AnnotateVcfWithBed extends ToolCommand {
     val reader = new VCFFileReader(commandArgs.inputFile, false)
     val header = reader.getFileHeader
 
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(header.getSequenceDictionary).
+      build)
+
     val fieldType = commandArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
       case "Flag"      => VCFHeaderLineType.Flag
