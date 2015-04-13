@@ -53,8 +53,10 @@ object SamplesTsvToJson extends ToolCommand {
         val values = tsvLine.split("\t")
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) values(libraryColumn) else null
-        val valuesMap = (for (t <- 0 until values.size;
-                              if !values(t).isEmpty && t != sampleColumn && t != libraryColumn) yield (header(t) -> values(t))).toMap
+        val valuesMap = (for (
+          t <- 0 until values.size;
+          if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
+        ) yield (header(t) -> values(t))).toMap
         val map: Map[String, Any] = if (library != null) {
           Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
         } else {
