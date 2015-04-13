@@ -20,7 +20,7 @@ object BammetricsReport extends ReportBuilder {
     Map(),
     List(
       "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-      "Flagstat" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/flagstat.ssp"),
+      "Bam Stats" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamStats.ssp"),
       "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp"),
       "GC Bias" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/gcBias.ssp")
   ),

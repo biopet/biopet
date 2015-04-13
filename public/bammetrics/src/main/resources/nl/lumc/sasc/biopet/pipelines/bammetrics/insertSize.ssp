@@ -1,3 +1,41 @@
-#{ //TODO: Need content }#
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(java.io.File)
+#import(org.apache.commons.io.FileUtils)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] %>
+<%@ var libId: Option[String] = None %>
+<%@ var rootPath: String %>
+<%@ var metricsTag: String = "bammetrics" %>
+<%@ var outputDir: File %>
+<%@ var fields: List[String] = List("mean_insert_size", "standard_deviation", "median_insert_size")%>
 
-Todo
+#{
+    def getPlot = {
+        (if (libId.isDefined) summary.getLibraryValue(sampleId.get, libId.get, metricsTag, "files", "insert_size_metrics", "output_histogram", "path")
+        else summary.getSampleValue(sampleId.get, metricsTag, "files", "insert_size_metrics", "output_histogram", "path")).collect {
+            case value => {
+                val file = new File(value.toString)
+                val newFile = new File(outputDir, file.getName)
+                FileUtils.copyFile(file, newFile)
+                newFile.getName
+            }
+        }
+    }
+}#
+
+<iframe src="${getPlot}" style="width:400px; height:400px;" frameborder="0"></iframe>
+
+<table>
+    <tbody>
+        #for (field <- fields)
+            <tr><th>${field}</th><td>
+            #if (libId.isDefined)
+                ${summary.getLibraryValue(sampleId.get, libId.get, metricsTag, "stats", "insert_size_metrics", field)}
+            #else
+                ${summary.getSampleValue(sampleId.get, metricsTag, "stats", "insert_size_metrics", field)}
+            #end
+            </td></tr>
+        #end
+    </tbody>
+</table>
