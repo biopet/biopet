@@ -344,15 +344,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     gsnapCommand.isIntermediate = true
     add(gsnapCommand)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = gsnapCommand.output
-    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = true
-    add(sortSam)
-
     val reorderSam = new ReorderSam(this)
-    reorderSam.input = sortSam.output
+    reorderSam.input = gsnapCommand.output
     reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
     reorderSam.reference = reference
     reorderSam.isIntermediate = true
@@ -375,14 +368,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.keep_fasta_order = true
     add(tophat)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = tophat.outputAcceptedHits
-    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = true
-    add(sortSam)
-
-    addAddOrReplaceReadGroups(sortSam.output, output)
+    addAddOrReplaceReadGroups(tophat.outputAcceptedHits, output)
   }
   /**
    * Adds stampy jobs
