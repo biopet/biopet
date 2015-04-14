@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import scala.util.Random
 import org.scalatest.testng.TestNGSuite
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.Matchers
@@ -40,6 +41,46 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   val vcf3 = new File(resourcePath("/VCFv3.vcf"))
   val vepped = new File(resourcePath("/VEP_oneline.vcf"))
   val unvepped = new File(resourcePath("/unvepped.vcf"))
+
+  val vepped_path = resourcePath("/VEP_oneline.vcf")
+
+  val rand = new Random()
+
+  @Test def testGzOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testVcfOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testBcfOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testGzOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
+
+  @Test def testVcfOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
+
+  @Test def testBcfOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
 
   @Test def testVEPHeaderLength() = {
     val reader = new VCFFileReader(vepped, false)

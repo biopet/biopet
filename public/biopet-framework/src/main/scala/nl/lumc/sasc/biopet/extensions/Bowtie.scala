@@ -57,6 +57,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var maxbts: Option[Int] = config("maxbts")
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
+  var maxins: Option[Int] = config("maxins")
 
   /** return commandline to execute */
   def cmdLine = {
@@ -72,6 +73,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-m", m) +
       optional("--maxbts", maxbts) +
       optional("--maqerr", maqerr) +
+      optional("--maxins", maxins) +
       required(reference) +
       (R2 match {
         case Some(r2) => {

@@ -205,8 +205,8 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 }
 object ConfigUtilsTest {
-  def writeTemp(text: String): File = {
-    val file = File.createTempFile("TestConfigUtils.", ".json")
+  def writeTemp(text: String, extension: String): File = {
+    val file = File.createTempFile("TestConfigUtils.", extension)
     val w = new PrintWriter(file)
     w.write(text)
     w.close()
@@ -229,7 +229,7 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file1 = writeTemp(jsonText1)
+  val file1 = writeTemp(jsonText1, ".json")
 
   val json1 = {
     ("int" := 1337) ->:
@@ -262,7 +262,7 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file2 = writeTemp(jsonText2)
+  val file2 = writeTemp(jsonText2, ".yaml")
 
   val json2 = {
     ("int" := 7331) ->:
@@ -283,5 +283,5 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val corruptFile = writeTemp(corruptJson)
+  val corruptFile = writeTemp(corruptJson, ".json")
 }
