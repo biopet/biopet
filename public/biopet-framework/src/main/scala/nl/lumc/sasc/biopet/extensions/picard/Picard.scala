@@ -90,7 +90,7 @@ object Picard {
 
       val header = lines(start).split("\t")
       val content = (for (i <- (start + 1) until end) yield lines(i).split("\t"))
-        .map(row => row.map(col => tryToParseNumber(col).getOrElse(col)))
+        .map(row => row.map(col => tryToParseNumber(col, true).getOrElse(col)))
 
       Option((header, content.toList))
     } else {

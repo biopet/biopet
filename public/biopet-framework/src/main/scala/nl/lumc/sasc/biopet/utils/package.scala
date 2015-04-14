@@ -25,13 +25,10 @@ package object utils {
    * @param funcs one or more conversion functions to apply.
    * @return a [[Try]] object encapsulating the conversion result.
    */
-  def tryToConvert(raw: String, funcs: (String => Any)*): Try[Any] = funcs match {
-
-    case Seq(firstFunc, otherFuncs @ _*) =>
-      Try(firstFunc(raw))
-        .transform(s => Success(s), f => tryToConvert(raw, otherFuncs: _*))
-
-    case Nil => Try(throw new Exception(s"Can not extract value from string $raw"))
+  def tryToConvert(raw: String, funcs: (String => Any)*): Try[Any] = {
+    if (funcs.isEmpty) Try(throw new Exception(s"Can not extract value from string $raw"))
+    else Try(funcs.head(raw))
+      .transform(s => Success(s), f => tryToConvert(raw, funcs.tail: _*))
   }
 
   /**
@@ -44,16 +41,13 @@ package object utils {
    * a [[Double]], then a [[BigDecimal]].
    *
    * @param raw the string to convert.
+   * @param fallBack Allows also to return the string itself when converting fails, default false.
    * @return a [[Try]] object encapsulating the conversion result.
    */
-  def tryToParseNumber(raw: String) = raw match {
-
-    case isInteger(i) =>
-      tryToConvert(i, x => x.toInt, x => x.toLong, x => BigInt(x))
-
-    case isDecimal(f) =>
-      tryToConvert(f, x => x.toDouble, x => BigDecimal(x))
-
-    case otherwise => Try(throw new Exception(s"Can not extract number from string $raw"))
+  def tryToParseNumber(raw: String, fallBack: Boolean = false) = raw match {
+    case isInteger(i)  => tryToConvert(i, x => x.toInt, x => x.toLong, x => BigInt(x))
+    case isDecimal(f)  => tryToConvert(f, x => x.toDouble, x => BigDecimal(x))
+    case _ if fallBack => Try(raw)
+    case _             => Try(throw new Exception(s"Can not extract number from string $raw"))
   }
 }
