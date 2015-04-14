@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import nl.lumc.sasc.biopet.core.report.{ReportBuilder, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -22,8 +22,10 @@ object BammetricsReport extends ReportBuilder {
       "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
       "Bam Stats" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamStats.ssp"),
       "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp"),
+      "RNA (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rna.ssp"),
+      "Target (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/target.ssp"),
       "GC Bias" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/gcBias.ssp")
-  ),
+    ),
     Map()
   )
 

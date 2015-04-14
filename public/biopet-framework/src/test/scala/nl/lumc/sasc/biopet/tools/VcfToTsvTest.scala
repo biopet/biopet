@@ -64,7 +64,7 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val sorted = sortFields(unsortedFields, samples)
     sorted should be(List("WeirdField", "INFO-AlleleScoreSomething", "INFO-ScoreSomething", "INFO-Something",
-    "Child01-GT", "Father03-GT", "Mother02-GT"))
+      "Child01-GT", "Father03-GT", "Mother02-GT"))
   }
 
 }
