@@ -120,11 +120,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   private lazy val refInfo: Map[String, String] =
     new FastaSequenceFile(reference, false)
       .getSequenceDictionary.getSequences.asScala
-      .map { case samrec =>
-        val md5 = samrec.getAttribute("M5")
-        val name = samrec.getSequenceName
-        if (md5 == null) throw new IllegalArgumentException(s"Reference sequence '$name' does not have an MD5 checksum")
-        md5 -> name
+      .map {
+        case samrec =>
+          val md5 = samrec.getAttribute("M5")
+          val name = samrec.getSequenceName
+          if (md5 == null) throw new IllegalArgumentException(s"Reference sequence '$name' does not have an MD5 checksum")
+          md5 -> name
       }.toMap
 
   /** Adds output merge jobs for the given expression mode */
