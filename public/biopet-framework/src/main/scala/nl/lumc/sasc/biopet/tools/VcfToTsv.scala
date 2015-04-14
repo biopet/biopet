@@ -66,7 +66,7 @@ object VcfToTsv extends ToolCommand {
     opt[String]("list_separator") maxOccurs (1) action { (x, c) =>
       c.copy(listSeparator = x)
     } text ("Optional list separator. By default, lists are separated by a comma")
-    opt[Int]("max_decimals") maxOccurs(1) action { (x, c) =>
+    opt[Int]("max_decimals") maxOccurs (1) action { (x, c) =>
       c.copy(maxDecimals = x)
     } text ("Number of decimal places for numbers. Default is 2")
   }
@@ -79,7 +79,7 @@ object VcfToTsv extends ToolCommand {
 
     // Throw exception if separator and listSeparator are identical
     if (commandArgs.separator == commandArgs.listSeparator) throw new IllegalArgumentException(
-    "Separator and list_separator should not be identical"
+      "Separator and list_separator should not be identical"
     )
 
     val formatter = createFormatter(commandArgs.maxDecimals)
@@ -100,7 +100,6 @@ object VcfToTsv extends ToolCommand {
         }
         buffer.toSet[String]
       }
-
 
     val sortedFields = sortFields(fields, samples.toList)
 
@@ -137,10 +136,10 @@ object VcfToTsv extends ToolCommand {
           val l = for (g <- genotype.getAlleles) yield vcfRecord.getAlleleIndex(g)
           l.map(x => if (x < 0) "." else x).mkString("/")
         }
-        if (genotype.hasAD) values += sample + "-AD"   -> List(genotype.getAD: _*).mkString(commandArgs.listSeparator)
-        if (genotype.hasDP) values += sample + "-DP"   -> genotype.getDP
-        if (genotype.hasGQ) values += sample + "-GQ"   -> genotype.getGQ
-        if (genotype.hasPL) values += sample + "-PL"   -> List(genotype.getPL: _*).mkString(commandArgs.listSeparator)
+        if (genotype.hasAD) values += sample + "-AD" -> List(genotype.getAD: _*).mkString(commandArgs.listSeparator)
+        if (genotype.hasDP) values += sample + "-DP" -> genotype.getDP
+        if (genotype.hasGQ) values += sample + "-GQ" -> genotype.getGQ
+        if (genotype.hasPL) values += sample + "-PL" -> List(genotype.getPL: _*).mkString(commandArgs.listSeparator)
         for ((field, content) <- genotype.getExtendedAttributes) {
           values += sample + "-" + field -> content
         }
@@ -164,7 +163,6 @@ object VcfToTsv extends ToolCommand {
     new DecimalFormat(patternString)
   }
 
-
   /**
    * This fields sorts fields, such that non-info and non-sample specific fields (e.g. general ones) are on front
    * followed by info fields
@@ -182,7 +180,7 @@ object VcfToTsv extends ToolCommand {
 
     fields.toList.sortWith((a, b) => {
       (fieldType(a), fieldType(b)) match {
-        case ('g','g') => {
+        case ('g', 'g') => {
           val ai = defaultFields.indexOf(a)
           val bi = defaultFields.indexOf(b)
           if (bi < 0) true else ai <= bi
@@ -191,16 +189,16 @@ object VcfToTsv extends ToolCommand {
           val sampleA = a.split("-").head
           val sampleB = b.split("-").head
           sampleA.compareTo(sampleB) match {
-            case 0 => !(a.compareTo(b) > 0)
+            case 0            => !(a.compareTo(b) > 0)
             case i if (i > 0) => false
-            case _  => true
+            case _            => true
           }
         }
-        case ('g', _) => true
-        case (_, 'g') => false
+        case ('g', _)         => true
+        case (_, 'g')         => false
         case (a, b) if a == b => !(a.compareTo(b) > 0)
-        case ('i', _) => true
-        case _ => false
+        case ('i', _)         => true
+        case _                => false
       }
     })
   }
