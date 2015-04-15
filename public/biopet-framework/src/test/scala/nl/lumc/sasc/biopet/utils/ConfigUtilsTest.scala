@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.utils
 
 import java.io.{ PrintWriter, File }
@@ -190,8 +205,8 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 }
 object ConfigUtilsTest {
-  def writeTemp(text: String): File = {
-    val file = File.createTempFile("TestConfigUtils.", ".json")
+  def writeTemp(text: String, extension: String): File = {
+    val file = File.createTempFile("TestConfigUtils.", extension)
     val w = new PrintWriter(file)
     w.write(text)
     w.close()
@@ -214,7 +229,7 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file1 = writeTemp(jsonText1)
+  val file1 = writeTemp(jsonText1, ".json")
 
   val json1 = {
     ("int" := 1337) ->:
@@ -247,7 +262,7 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val file2 = writeTemp(jsonText2)
+  val file2 = writeTemp(jsonText2, ".yaml")
 
   val json2 = {
     ("int" := 7331) ->:
@@ -268,5 +283,5 @@ object ConfigUtilsTest {
        |}
      """.stripMargin
 
-  val corruptFile = writeTemp(corruptJson)
+  val corruptFile = writeTemp(corruptJson, ".json")
 }

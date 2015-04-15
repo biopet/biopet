@@ -33,7 +33,7 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 6.0
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
@@ -66,9 +66,6 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** write all output files to this directory [./] */
   var output_dir: File = config("output_dir", default = new File("."))
-
-  /** number of threads used during analysis [1] */
-  var num_threads: Option[Int] = config("num_threads")
 
   /** value of random number generator seed [0] */
   var seed: Option[Int] = config("seed")
@@ -190,10 +187,6 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   override val versionRegex = """cufflinks v(.*)""".r
   override def versionCommand = executable
   override val versionExitcode = List(0, 1)
-
-  override def beforeGraph: Unit = {
-    threads = num_threads.getOrElse(1)
-  }
 
   def cmdLine =
     required(executable) +

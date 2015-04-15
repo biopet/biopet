@@ -119,9 +119,3 @@ The results from this pipeline will be a fastq file which is depending on the op
 ├── mySample_01.R2.qc.fastq.gz
 └── mySample_01.R2.qc.fastq.gz.md5
 ~~~
-
-
-
-## Best practice
-
-# References

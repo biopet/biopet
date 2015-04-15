@@ -49,15 +49,14 @@ class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFun
   var tag: String = config("tag", default = "CATG")
   var length: Option[Int] = config("length", default = 17)
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +
     optional("--tag", tag) +
     optional("--length", length) +
-    optional("--notag", noTagsOutput) +
-    optional("--noantitag", noAntiTagsOutput) +
+    optional("--noTagsOutput", noTagsOutput) +
+    optional("--noAntiTagsOutput", noAntiTagsOutput) +
     required("-o", output)
 }
 
@@ -84,7 +83,7 @@ object SageCreateLibrary extends ToolCommand {
     opt[File]("noAntiTagsOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(noAntiTagsOutput = x)
     }
-    opt[File]("allGenesOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("allGenesOutput") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(allGenesOutput = x)
     }
   }

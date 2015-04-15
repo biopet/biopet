@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, IOException }
@@ -23,7 +38,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Created by ahbbollen on 10/27/14.
  */
 
-class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
@@ -35,8 +50,7 @@ class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
   var mode: String = config("mode", default = "explode")
   var doNotRemove: Boolean = config("donotremove", default = false)
 
-  memoryLimit = Some(1.0)
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +
@@ -45,7 +59,7 @@ class VEPNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
     conditional(doNotRemove, "--do-not-remove")
 }
 
-object VEPNormalizer extends ToolCommand {
+object VepNormalizer extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = new OptParser()
@@ -76,6 +90,10 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Parsing header")
     val new_infos = parseCsq(header)
     header.setWriteCommandLine(true)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(output).setReferenceDictionary(header.getSequenceDictionary)
+      build ())
+
     for (info <- new_infos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
       header.addMetaDataLine(tmpheaderline)
@@ -83,9 +101,7 @@ object VEPNormalizer extends ToolCommand {
     logger.debug("Header parsing done")
 
     logger.debug("Writing header to file")
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setOutputFile(output).
-      build())
+
     writer.writeHeader(header)
     logger.debug("Wrote header to file")
 
@@ -111,13 +127,17 @@ object VEPNormalizer extends ToolCommand {
     logger.info(s"""You have selected mode $mode""")
     logger.info("Start processing records")
 
+    var counter = 0
     for (record <- reader) {
       mode match {
         case "explode"  => explodeTranscripts(record, newInfos, removeCsq).foreach(vc => writer.add(vc))
         case "standard" => writer.add(standardTranscripts(record, newInfos, removeCsq))
         case _          => throw new IllegalArgumentException("Something odd happened!")
       }
+      counter += 1
+      if (counter % 100000 == 0) logger.info(counter + " variants processed")
     }
+    logger.info("done: " + counter + " variants processed")
   }
 
   /**
@@ -165,44 +185,45 @@ object VEPNormalizer extends ToolCommand {
    * Explode a single VEP-annotated record to multiple normal records
    * Based on the number of annotated transcripts in the CSQ tag
    * @param record the record as a VariantContext object
-   * @param csq_infos An array with names of new info tags
+   * @param csqInfos An array with names of new info tags
    * @return An array with the new records
    */
-  def explodeTranscripts(record: VariantContext, csq_infos: Array[String], remove_CSQ: Boolean): Array[VariantContext] = {
-    val csq = record.getAttributeAsString("CSQ", "unknown")
-    val attributes = if (remove_CSQ) record.getAttributes.toMap - "CSQ" else record.getAttributes.toMap
-
-    csq.
-      stripPrefix("[").
-      stripSuffix("]").
-      split(",").
-      map(x => attributes ++ csq_infos.zip(x.split("""\|""", -1))).
-      map(x => {
-        if (remove_CSQ) new VariantContextBuilder(record)
-          .attributes(x)
-          .make()
-        else new VariantContextBuilder(record).attributes(x).make()
-      })
+  def explodeTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): Array[VariantContext] = {
+    for (transcript <- parseCsq(record)) yield {
+      (for (
+        fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId);
+        value = transcript(fieldId) if value.nonEmpty
+      ) yield csqInfos(fieldId) -> value)
+        .filterNot(_._2.isEmpty)
+        .foldLeft(createBuilder(record, removeCsq))((builder, attribute) => builder.attribute(attribute._1, attribute._2))
+        .make()
+    }
   }
 
   def standardTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): VariantContext = {
-    val csq = record.getAttributeAsString("CSQ", "unknown")
-    val attributes = if (removeCsq) record.getAttributes.toMap - "CSQ" else record.getAttributes.toMap
+    val attribs = parseCsq(record)
 
-    val newAttrs = attributes ++ csqInfos.zip(csq.
+    (for (fieldId <- 0 until csqInfos.size) yield csqInfos(fieldId) -> {
+      for (
+        transcript <- attribs if transcript.isDefinedAt(fieldId);
+        value = transcript(fieldId) if value.nonEmpty
+      ) yield value
+    })
+      .filter(_._2.nonEmpty)
+      .foldLeft(createBuilder(record, removeCsq))((builder, attribute) => builder.attribute(attribute._1, attribute._2))
+      .make()
+  }
+
+  protected def createBuilder(record: VariantContext, removeCsq: Boolean) = {
+    if (removeCsq) new VariantContextBuilder(record).rmAttribute("CSQ")
+    else new VariantContextBuilder(record)
+  }
+
+  protected def parseCsq(record: VariantContext) = {
+    record.getAttributeAsString("CSQ", "unknown").
       stripPrefix("[").
       stripSuffix("]").
-      split(",").
-      // This makes a list of lists with each annotation for every transcript in a top-level list element
-      foldLeft(List.fill(csqInfos.length) { List.empty[String] })(
-        (acc, x) => {
-          val broken = x.split("""\|""", -1)
-          acc.zip(broken).map(x => x._2 :: x._1)
-        }
-      ).
-        map(x => x.mkString(",")))
-
-    new VariantContextBuilder(record).attributes(newAttrs).make()
+      split(",").map(_.split("""\|""").map(_.trim))
   }
 
   case class Args(inputVCF: File = null,

@@ -42,7 +42,7 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
   var reference: File = config("reference")
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "BAIT_SET_NAME", required = false)
   var baitSetName: String = _

@@ -35,8 +35,7 @@ class BedtoolsCoverageToCounts(val root: Configurable) extends BiopetJavaCommand
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +

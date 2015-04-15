@@ -42,7 +42,7 @@ Usage: VcfFilter [options]
         Filter when there are only ref calls
   --filterNoCalls
         Filter when there are only no calls
-  --minQualscore <value>
+  --minQualScore <value>
         Min qual score
 ~~~
 

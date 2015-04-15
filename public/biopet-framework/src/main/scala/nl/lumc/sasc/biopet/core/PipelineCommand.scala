@@ -20,9 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 
-/**
- * Wrapper around executable from Queue
- */
+/** Wrapper around executable from Queue */
 trait PipelineCommand extends MainCommand with GatkLogging {
 
   /**
@@ -31,10 +29,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
    */
   def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
 
-  /**
-   * Class can be used directly from java with -cp option
-   * @param args
-   */
+  /** Class can be used directly from java with -cp option */
   def main(args: Array[String]): Unit = {
     val argsSize = args.size
     for (t <- 0 until argsSize) {
@@ -42,6 +37,17 @@ trait PipelineCommand extends MainCommand with GatkLogging {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")
         Config.global.loadConfigFile(new File(args(t + 1)))
       }
+
+      if (args(t) == "-cv" || args(t) == "--config_value") {
+        val v = args(t + 1).split("=")
+        require(v.size == 2, "Value should be formatted like 'key=value' or 'path:path:key=value'")
+        val value = v(1)
+        val p = v(0).split(":")
+        val key = p.last
+        val path = p.dropRight(1).toList
+        Config.global.addValue(key, value, path)
+      }
+
       if (args(t) == "--logging_level" || args(t) == "-l") {
         args(t + 1).toLowerCase match {
           case "debug" => Logging.logger.setLevel(org.apache.log4j.Level.DEBUG)

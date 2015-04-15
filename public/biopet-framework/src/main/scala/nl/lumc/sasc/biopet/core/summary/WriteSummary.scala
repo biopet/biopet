@@ -1,16 +1,31 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ FileInputStream, PrintWriter, File }
-import java.security.MessageDigest
+import java.io.{ File, PrintWriter }
+import scala.collection.mutable
+import scala.io.Source
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
-import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
-import scala.collection.mutable
-import scala.io.Source
+import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * Created by pjvan_thof on 2/14/15.
@@ -91,9 +106,13 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
     }).foldRight(pipelineMap)((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
-    val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
-      ConfigUtils.fileToConfigMap(qscript.summaryFile)
-    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
+    val combinedMap = Map("meta" -> Map(
+      "last_commit_hash" -> LastCommitHash,
+      "pipeline_version" -> Version
+    )) ++
+      (for (qscript <- qscript.summaryQScripts) yield {
+        ConfigUtils.fileToConfigMap(qscript.summaryFile)
+      }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
 
     val writer = new PrintWriter(out)
     writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)

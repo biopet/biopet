@@ -38,7 +38,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def this() = this(null)
 
   var countBed: Option[File] = config("count_bed")
-  var squishedCountBed: File = _
+  var squishedCountBed: File = null
   var transcriptome: Option[File] = config("transcriptome")
   var tagsLibrary: Option[File] = config("tags_library")
 
@@ -134,7 +134,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       } else null
       val fastqFile: File = if (libraryFastqFiles.size == 1) libraryFastqFiles.head
       else if (libraryFastqFiles.size > 1) {
-        val cat = Cat(qscript, libraryFastqFiles, sampleDir + sampleId + ".fastq")
+        val cat = Cat(qscript, libraryFastqFiles, createFile(".fastq"))
         qscript.add(cat)
         cat.output
       } else null
@@ -173,41 +173,41 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   def addMultiSampleJobs(): Unit = {
   }
 
-  def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: String) {
-    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.sense.coverage",
+  def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: File) {
+    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.sense.coverage"),
       depth = false, sameStrand = true, diffStrand = false)
     val countSense = new BedtoolsCoverageToCounts(this)
     countSense.input = bedtoolsSense.output
-    countSense.output = outputDir + outputPrefix + ".genome.sense.counts"
+    countSense.output = new File(outputDir, outputPrefix + ".genome.sense.counts")
 
-    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.antisense.coverage",
+    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.antisense.coverage"),
       depth = false, sameStrand = false, diffStrand = true)
     val countAntisense = new BedtoolsCoverageToCounts(this)
     countAntisense.input = bedtoolsAntisense.output
-    countAntisense.output = outputDir + outputPrefix + ".genome.antisense.counts"
+    countAntisense.output = new File(outputDir, outputPrefix + ".genome.antisense.counts")
 
-    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, outputDir + outputPrefix + ".genome.coverage",
+    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.coverage"),
       depth = false, sameStrand = false, diffStrand = false)
     val count = new BedtoolsCoverageToCounts(this)
     count.input = bedtools.output
-    count.output = outputDir + outputPrefix + ".genome.counts"
+    count.output = new File(outputDir, outputPrefix + ".genome.counts")
 
     add(bedtoolsSense, countSense, bedtoolsAntisense, countAntisense, bedtools, count)
   }
 
-  def addTablibCounts(fastq: File, outputPrefix: String, outputDir: String) {
+  def addTablibCounts(fastq: File, outputPrefix: String, outputDir: File) {
     val countFastq = new SageCountFastq(this)
     countFastq.input = fastq
-    countFastq.output = outputDir + outputPrefix + ".raw.counts"
+    countFastq.output = new File(outputDir, outputPrefix + ".raw.counts")
     add(countFastq)
 
     val createTagCounts = new SageCreateTagCounts(this)
     createTagCounts.input = countFastq.output
     createTagCounts.tagLib = tagsLibrary.get
-    createTagCounts.countSense = outputDir + outputPrefix + ".tagcount.sense.counts"
-    createTagCounts.countAllSense = outputDir + outputPrefix + ".tagcount.all.sense.counts"
-    createTagCounts.countAntiSense = outputDir + outputPrefix + ".tagcount.antisense.counts"
-    createTagCounts.countAllAntiSense = outputDir + outputPrefix + ".tagcount.all.antisense.counts"
+    createTagCounts.countSense = new File(outputDir, outputPrefix + ".tagcount.sense.counts")
+    createTagCounts.countAllSense = new File(outputDir, outputPrefix + ".tagcount.all.sense.counts")
+    createTagCounts.countAntiSense = new File(outputDir, outputPrefix + ".tagcount.antisense.counts")
+    createTagCounts.countAllAntiSense = new File(outputDir, outputPrefix + ".tagcount.all.antisense.counts")
     add(createTagCounts)
   }
 }

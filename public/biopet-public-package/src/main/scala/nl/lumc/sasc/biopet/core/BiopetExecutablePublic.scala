@@ -21,7 +21,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
     nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap,
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
-    nl.lumc.sasc.biopet.pipelines.yamsvp.Yamsvp,
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
     nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
     nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu,
@@ -47,7 +46,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.VcfFilter,
     nl.lumc.sasc.biopet.tools.VcfStats,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
-    nl.lumc.sasc.biopet.tools.BedToInterval,
     nl.lumc.sasc.biopet.tools.MpileupToVcf,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
     nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
@@ -58,6 +56,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
     nl.lumc.sasc.biopet.tools.Seqstat,
-    nl.lumc.sasc.biopet.tools.VEPNormalizer,
-    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed)
+    nl.lumc.sasc.biopet.tools.VepNormalizer,
+    nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
+    nl.lumc.sasc.biopet.tools.VcfWithVcf)
 }

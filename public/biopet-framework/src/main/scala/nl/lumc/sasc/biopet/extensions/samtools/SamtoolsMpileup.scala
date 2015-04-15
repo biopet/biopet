@@ -30,7 +30,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   @Input(doc = "Reference fasta")
   var reference: File = config("reference")
 
-  @Input(doc = "Interval bed")
+  @Input(doc = "Interval bed", required = false)
   var intervalBed: Option[File] = config("interval_bed")
 
   var disableBaq: Boolean = config("disable_baq", default = false)

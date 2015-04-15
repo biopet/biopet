@@ -1,9 +1,24 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.{ FileOutputStream, PrintWriter, File }
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ VariantContext, Genotype }
+import htsjdk.variant.variantcontext.{ Allele, VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
@@ -14,6 +29,8 @@ import scala.collection.mutable
 import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import htsjdk.samtools.util.Interval
+
+import scala.util.Random
 
 /**
  * Created by pjvan_thof on 1/10/15.
@@ -33,7 +50,7 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   @Output
   protected var genotypeStats: File = null
 
-  override val defaultVmem = "4G"
+  override val defaultCoreMemory = 3.0
   override val defaultThreads = 3
 
   protected var outputDir: File = _
@@ -110,7 +127,11 @@ object VcfStats extends ToolCommand {
                   infoTags: List[String] = Nil,
                   genotypeTags: List[String] = Nil,
                   allInfoTags: Boolean = false,
-                  allGenotypeTags: Boolean = false) extends AbstractArgs
+                  allGenotypeTags: Boolean = false,
+                  binSize: Int = 10000000,
+                  writeBinStats: Boolean = false,
+                  generalWiggle: List[String] = Nil,
+                  genotypeWiggle: List[String] = Nil) extends AbstractArgs
 
   /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
@@ -140,6 +161,18 @@ object VcfStats extends ToolCommand {
     }
     opt[Unit]("allGenotypeTags") unbounded () action { (x, c) =>
       c.copy(allGenotypeTags = true)
+    }
+    opt[Int]("binSize") unbounded () action { (x, c) =>
+      c.copy(binSize = x)
+    }
+    opt[Unit]("writeBinStats") unbounded () action { (x, c) =>
+      c.copy(writeBinStats = true)
+    }
+    opt[String]("generalWiggle") unbounded () action { (x, c) =>
+      c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
+    }
+    opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
+      c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
     }
   }
 
@@ -229,6 +262,9 @@ object VcfStats extends ToolCommand {
 
   val defaultInfoFields = List("QUAL", "general", "AC", "AF", "AN", "DP")
 
+  val sampleDistributions = List("Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall",
+    "NonInformative", "Available", "Called", "Filtered", "Variant")
+
   /**
    * @param args the command line arguments
    */
@@ -241,16 +277,20 @@ object VcfStats extends ToolCommand {
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
 
-    val adInfoTags = (for (
-      infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
-    ) yield {
-      require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
-      infoTag
-    }) ::: (for (
-      line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
-    ) yield {
-      line.getID
-    }).toList ::: defaultInfoFields
+    reader.close()
+
+    val adInfoTags = {
+      (for (
+        infoTag <- commandArgs.infoTags if !defaultInfoFields.exists(_ == infoTag)
+      ) yield {
+        require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
+        infoTag
+      }) ::: (for (
+        line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.exists(_ == line.getID) if !commandArgs.infoTags.exists(_ == line.getID)
+      ) yield {
+        line.getID
+      }).toList ::: defaultInfoFields
+    }
 
     val adGenotypeTags = (for (
       genotypeTag <- commandArgs.genotypeTags if !defaultGenotypeFields.exists(_ == genotypeTag)
@@ -268,7 +308,7 @@ object VcfStats extends ToolCommand {
     val intervals: List[Interval] = (
       for (
         seq <- referenceFile.getSequenceDictionary.getSequences;
-        chunks = (seq.getSequenceLength / 10000000) + (if (seq.getSequenceLength % 10000000 == 0) 0 else 1);
+        chunks = (seq.getSequenceLength / commandArgs.binSize) + (if (seq.getSequenceLength % commandArgs.binSize == 0) 0 else 1);
         i <- 1 to chunks
       ) yield {
         val size = seq.getSequenceLength / chunks
@@ -306,36 +346,52 @@ object VcfStats extends ToolCommand {
       logger.info("total: " + variantCounter + " rows processed, " + fraction + "% done")
     }
 
-    val statsChunks = for (interval <- intervals.par) yield {
-      val reader = new VCFFileReader(commandArgs.inputFile, true)
-      var chunkCounter = 0
-      val stats = createStats
-      logger.info("Starting on: " + interval)
+    // Triple for loop to not keep all bins in memory
+    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / 4).toList.par) yield {
+      val chunkStats = for (intervals <- intervals.grouped(25)) yield {
+        val binStats = for (interval <- intervals.par) yield {
+          val reader = new VCFFileReader(commandArgs.inputFile, true)
+          var chunkCounter = 0
+          val stats = createStats
+          logger.info("Starting on: " + interval)
 
-      for (
-        record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
-      ) {
-        mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
-        for (sample1 <- samples) yield {
-          val genotype = record.getGenotype(sample1)
-          mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
-          for (sample2 <- samples) {
-            val genotype2 = record.getGenotype(sample2)
-            if (genotype.getAlleles == genotype2.getAlleles)
-              stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
-            stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += genotype.getAlleles.count(allele => genotype2.getAlleles.exists(_.basesMatch(allele)))
+          for (
+            record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd);
+            if record.getStart <= interval.getEnd
+          ) {
+            mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
+            for (sample1 <- samples) yield {
+              val genotype = record.getGenotype(sample1)
+              mergeNestedStatsMap(stats.samplesStats(sample1).genotypeStats, checkGenotype(record, genotype, adGenotypeTags))
+              for (sample2 <- samples) {
+                val genotype2 = record.getGenotype(sample2)
+                if (genotype.getAlleles == genotype2.getAlleles)
+                  stats.samplesStats(sample1).sampleToSample(sample2).genotypeOverlap += 1
+                stats.samplesStats(sample1).sampleToSample(sample2).alleleOverlap += alleleOverlap(genotype.getAlleles.toList, genotype2.getAlleles.toList)
+              }
+            }
+            chunkCounter += 1
           }
-        }
-        chunkCounter += 1
-      }
-      status(chunkCounter, interval)
-      stats
-    }
+          reader.close()
 
-    val stats = statsChunks.toList.fold(createStats)(_ += _)
+          if (commandArgs.writeBinStats) {
+            val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
+
+            writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
+            writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
+          }
+
+          status(chunkCounter, interval)
+          stats
+        }
+        binStats.toList.fold(createStats)(_ += _)
+      }
+      chunkStats.toList.fold(createStats)(_ += _)
+    }).toList.fold(createStats)(_ += _)
 
     logger.info("Done reading vcf records")
 
+    // Writing info fields to tsv files
     val infoOutputDir = new File(commandArgs.outputDir, "infotags")
     writeField(stats, "general", commandArgs.outputDir)
     for (field <- (adInfoTags).distinct.par) {
@@ -346,6 +402,7 @@ object VcfStats extends ToolCommand {
       }
     }
 
+    // Write genotype field to tsv files
     val genotypeOutputDir = new File(commandArgs.outputDir, "genotypetags")
     writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
     for (field <- (adGenotypeTags).distinct.par) {
@@ -356,11 +413,85 @@ object VcfStats extends ToolCommand {
       }
     }
 
+    // Write sample distributions to tsv files
+    val sampleDistributionsOutputDir = new File(commandArgs.outputDir, "sample_distributions")
+    for (field <- sampleDistributions) {
+      writeField(stats, "SampleDistribution-" + field, sampleDistributionsOutputDir)
+    }
+
+    // Write general wiggle tracks
+    for (field <- commandArgs.generalWiggle) {
+      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
+      writeWiggle(intervals, field, "count", file, false)
+    }
+
+    // Write sample wiggle tracks
+    for (field <- commandArgs.genotypeWiggle; sample <- samples) {
+      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
+      writeWiggle(intervals, field, sample, file, true)
+    }
+
     writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
     writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
 
     logger.info("Done")
+  }
+
+  protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
+    val groupedIntervals = intervals.groupBy(_.getSequence).map { case (k, v) => k -> v.sortBy(_.getStart) }
+    outputFile.getParentFile.mkdirs()
+    val writer = new PrintWriter(outputFile)
+    writer.println("track type=wiggle_0")
+    for ((chr, intervals) <- groupedIntervals) yield {
+      val length = intervals.head.length()
+      writer.println(s"fixedStep chrom=$chr start=1 step=$length span=$length")
+      for (interval <- intervals) {
+        val file = {
+          if (genotype) new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + "genotype-" + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+          else new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+        }
+        writer.println(valueFromTsv(file, row, column).getOrElse(0))
+      }
+    }
+    writer.close()
+  }
+
+  /**
+   * Gets single value from a tsv file
+   * @param file Input tsv file
+   * @param row Row id
+   * @param column column id
+   * @return value
+   */
+  def valueFromTsv(file: File, row: String, column: String): Option[String] = {
+    val reader = Source.fromFile(file)
+    val it = reader.getLines()
+    val index = it.next().split("\t").indexOf(column)
+
+    val value = it.find(_.startsWith(row))
     reader.close()
+
+    value.collect { case x => x.split("\t")(index) }
+  }
+
+  /**
+   * Give back the number of alleles that overlap
+   * @param g1
+   * @param g2
+   * @param start start always at 0
+   * @return
+   */
+  def alleleOverlap(g1: List[Allele], g2: List[Allele], start: Int = 0): Int = {
+    if (g1.isEmpty) start
+    else {
+      val found = g2.contains(g1.head)
+      val g2tail = if (found) {
+        val index = g2.indexOf(g1.head)
+        g2.drop(index + 1) ++ g2.take(index)
+      } else g2
+
+      alleleOverlap(g1.tail, g2tail, if (found) start + 1 else start)
+    }
   }
 
   /** Function to check all general stats, all info expect sample/genotype specific stats */
@@ -374,6 +505,19 @@ object VcfStats extends ToolCommand {
     }
 
     buffer += "QUAL" -> Map(record.getPhredScaledQual -> 1)
+
+    addToBuffer("SampleDistribution-Het", record.getGenotypes.count(genotype => genotype.isHet), true)
+    addToBuffer("SampleDistribution-HetNonRef", record.getGenotypes.count(genotype => genotype.isHetNonRef), true)
+    addToBuffer("SampleDistribution-Hom", record.getGenotypes.count(genotype => genotype.isHom), true)
+    addToBuffer("SampleDistribution-HomRef", record.getGenotypes.count(genotype => genotype.isHomRef), true)
+    addToBuffer("SampleDistribution-HomVar", record.getGenotypes.count(genotype => genotype.isHomVar), true)
+    addToBuffer("SampleDistribution-Mixed", record.getGenotypes.count(genotype => genotype.isMixed), true)
+    addToBuffer("SampleDistribution-NoCall", record.getGenotypes.count(genotype => genotype.isNoCall), true)
+    addToBuffer("SampleDistribution-NonInformative", record.getGenotypes.count(genotype => genotype.isNonInformative), true)
+    addToBuffer("SampleDistribution-Available", record.getGenotypes.count(genotype => genotype.isAvailable), true)
+    addToBuffer("SampleDistribution-Called", record.getGenotypes.count(genotype => genotype.isCalled), true)
+    addToBuffer("SampleDistribution-Filtered", record.getGenotypes.count(genotype => genotype.isFiltered), true)
+    addToBuffer("SampleDistribution-Variant", record.getGenotypes.count(genotype => genotype.isHetNonRef || genotype.isHet || genotype.isHomVar), true)
 
     addToBuffer("general", "Total", true)
     addToBuffer("general", "Biallelic", record.isBiallelic)

@@ -35,8 +35,14 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var threads = 0
   val defaultThreads = 1
 
-  var vmem: Option[String] = None
-  val defaultVmem: String = ""
+  var vmem: Option[String] = config("vmem")
+  protected val defaultCoreMemory: Double = 1.0
+  var vmemFactor: Double = config("vmem_factor", default = 1.5)
+
+  var residentFactor: Double = config("resident_factor", default = 1.2)
+
+  private var coreMemory: Double = _
+
   var executable: String = _
 
   /**
@@ -57,14 +63,29 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
-    if (vmem.isEmpty) {
-      vmem = config("vmem")
-      if (vmem.isEmpty && defaultVmem.nonEmpty) vmem = Some(defaultVmem)
-    }
+    coreMemory = config("core_memory", default = defaultCoreMemory).asDouble + (0.5 * retry)
+
+    if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
+    else memoryLimit = Some(coreMemory * threads)
+
+    if (config.contains("resident_limit")) residentLimit = config("resident_limit")
+    else residentLimit = Some((coreMemory + (0.5 * retry)) * residentFactor)
+
+    if (!config.contains("vmem")) vmem = Some((coreMemory * (vmemFactor + (0.5 * retry))) + "G")
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
     super.freezeFieldValues()
+  }
+
+  var retry = 0
+
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filterNot(_.contains("h_vmem="))
+    logger.info("Auto raise memory on retry")
+    retry += 1
+    this.freeze()
   }
 
   /** can override this value is executable may not be converted to CanonicalPath */

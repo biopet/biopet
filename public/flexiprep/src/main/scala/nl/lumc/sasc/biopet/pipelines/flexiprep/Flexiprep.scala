@@ -166,14 +166,16 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     var R1: File = new File(R1_in)
     var R2: File = if (paired) new File(R2_in) else null
-    var deps: List[File] = if (paired) List(R1, R2) else List(R1)
+    var deps_R1: List[File] = R1 :: Nil
+    var deps_R2: List[File] = if (paired) R2 :: Nil else Nil
+    def deps: List[File] = deps_R1 ::: deps_R2
 
     val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
     seqtkSeq_R1.isIntermediate = true
     add(seqtkSeq_R1)
     addSummarizable(seqtkSeq_R1, "seqtkSeq_R1")
     R1 = seqtkSeq_R1.output
-    deps ::= R1
+    deps_R1 ::= R1
 
     if (paired) {
       val seqtkSeq_R2 = SeqtkSeq(this, R2, swapExt(outDir, R2, R2_ext, ".sanger" + R2_ext), fastqc_R2)
@@ -181,17 +183,19 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       add(seqtkSeq_R2)
       addSummarizable(seqtkSeq_R2, "seqtkSeq_R2")
       R2 = seqtkSeq_R2.output
-      deps ::= R2
+      deps_R2 ::= R2
     }
 
     val seqstat_R1 = Seqstat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
+    seqstat_R1.deps = deps_R1
     add(seqstat_R1)
     addSummarizable(seqstat_R1, "seqstat_R1")
 
     if (paired) {
       val seqstat_R2 = Seqstat(this, R2, outDir)
       seqstat_R2.isIntermediate = true
+      seqstat_R2.deps = deps_R2
       add(seqstat_R2)
       addSummarizable(seqstat_R2, "seqstat_R2")
     }
@@ -201,10 +205,11 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       val cutadapt_R1 = Cutadapt(this, R1, swapExt(outDir, R1, R1_ext, ".clip" + R1_ext))
       cutadapt_R1.fastqc = fastqc_R1
       cutadapt_R1.isIntermediate = true
+      cutadapt_R1.deps = deps_R1
       add(cutadapt_R1)
       addSummarizable(cutadapt_R1, "clipping_R1")
       R1 = cutadapt_R1.fastq_output
-      deps ::= R1
+      deps_R1 ::= R1
       outputFiles += ("cutadapt_R1_stats" -> cutadapt_R1.stats_output)
 
       if (paired) {
@@ -212,10 +217,11 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         outputFiles += ("cutadapt_R2_stats" -> cutadapt_R2.stats_output)
         cutadapt_R2.fastqc = fastqc_R2
         cutadapt_R2.isIntermediate = true
+        cutadapt_R2.deps = deps_R2
         add(cutadapt_R2)
         addSummarizable(cutadapt_R2, "clipping_R2")
         R2 = cutadapt_R2.fastq_output
-        deps ::= R2
+        deps_R2 ::= R2
 
         val fqSync = new FastqSync(this)
         fqSync.refFastq = cutadapt_R1.fastq_input
@@ -230,7 +236,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         outputFiles += ("syncStats" -> fqSync.outputStats)
         R1 = fqSync.outputFastq1
         R2 = fqSync.outputFastq2
-        deps :::= R1 :: R2 :: Nil
+        deps_R1 ::= R1
+        deps_R2 ::= R2
       }
     }
 
@@ -253,13 +260,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
 
     val seqstat_R1_after = Seqstat(this, R1, outDir)
-    seqstat_R1_after.deps = deps
+    seqstat_R1_after.deps = deps_R1
     add(seqstat_R1_after)
     addSummarizable(seqstat_R1_after, "seqstat_R1_after")
 
     if (paired) {
       val seqstat_R2_after = Seqstat(this, R2, outDir)
-      seqstat_R2_after.deps = deps
+      seqstat_R2_after.deps = deps_R2
       add(seqstat_R2_after)
       addSummarizable(seqstat_R2_after, "seqstat_R2_after")
     }

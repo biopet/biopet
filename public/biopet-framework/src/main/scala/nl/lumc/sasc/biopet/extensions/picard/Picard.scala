@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import scala.io.Source
+
+import org.broadinstitute.gatk.utils.commandline.Argument
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
-
-import scala.io.Source
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 
 /**
  * General picard extension
@@ -60,8 +61,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0, 1)
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(3.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("TMP_DIR=" + jobTempDir) +
@@ -81,7 +81,7 @@ object Picard {
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
+  def getMetrics(file: File): Option[(Array[String], List[Array[Any]])] =
     if (file.exists) {
       val lines = Source.fromFile(file).getLines().toArray
 
@@ -89,9 +89,10 @@ object Picard {
       val end = lines.indexOf("", start)
 
       val header = lines(start).split("\t")
-      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t"))
+        .map(row => row.map(col => tryToParseNumber(col, true).getOrElse(col)))
 
-      Option((header, content))
+      Option((header, content.toList))
     } else {
       None
     }

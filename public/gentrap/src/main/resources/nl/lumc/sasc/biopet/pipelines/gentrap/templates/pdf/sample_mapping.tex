@@ -109,5 +109,14 @@
         Ribosomal bases & ((( sample.rna_metrics.ribosomal_bases|nice_int ))) & ((( sample.rna_metrics.pct_ribosomal_bases_all|float2nice_pct )))\% & ((( sample.rna_metrics.pct_ribosomal_bases|float2nice_pct )))\% \\
         ((* endif *))
         \hline
+        Median 5' bias & ((( sample.rna_metrics.median_5prime_bias ))) & - & - \\
+        Median 3' bias & ((( sample.rna_metrics.median_3prime_bias ))) & - & - \\
+        Median 5' to 3' bias & ((( sample.rna_metrics.median_5prime_to_3prime_bias ))) & - & - \\
+        \hline
+        ((* if sample.run.settings.strand_protocol != "non_specific" *))
+        Correct strand reads & ((( sample.rna_metrics.correct_strand_reads|nice_int ))) & - & - \\
+        Incorrect strand reads & ((( sample.rna_metrics.incorrect_strand_reads|nice_int ))) & - & - \\
+        ((* endif *))
+        \hline
     \end{tabular}
 \end{center}
