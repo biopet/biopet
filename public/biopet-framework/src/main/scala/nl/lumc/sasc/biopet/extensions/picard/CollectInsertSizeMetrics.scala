@@ -24,7 +24,7 @@ import scala.collection.immutable.Nil
 
 /** Extension for picard CollectInsertSizeMetrics */
 class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
-  javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
+  javaMainClass = new picard.analysis.CollectInsertSizeMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = null

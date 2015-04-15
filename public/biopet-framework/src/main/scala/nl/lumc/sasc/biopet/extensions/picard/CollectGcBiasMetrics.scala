@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CollectGcBiasMetrics */
 class CollectGcBiasMetrics(val root: Configurable) extends Picard {
-  javaMainClass = "picard.analysis.CollectGcBiasMetrics"
+  javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: Seq[File] = Nil
