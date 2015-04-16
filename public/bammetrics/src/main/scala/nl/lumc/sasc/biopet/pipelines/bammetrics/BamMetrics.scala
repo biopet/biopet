@@ -72,6 +72,11 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
 
+    val wgsMetrics = new CollectWgsMetrics(this)
+    wgsMetrics.input = inputBam
+    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
+    add(wgsMetrics)
+
     if (rnaMetrics) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
       rnaMetrics.input = inputBam
@@ -135,7 +140,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
 
       //FIXME:should use piping
-      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), isIntermediate = true)
+      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), true)
       add(CoverageStats(this, coverageFile, targetDir))
     }
 

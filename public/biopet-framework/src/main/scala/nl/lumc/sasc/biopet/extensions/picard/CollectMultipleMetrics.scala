@@ -61,8 +61,8 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard {
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", outputName, spaceSeparated = false) +
-    required("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
-    required("STOP_AFTER=", stopAfter, spaceSeparated = false) +
+    conditional(assumeSorted, "ASSUME_SORTED=true") +
+    optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     repeat("PROGRAM=", program, spaceSeparated = false)
 }
 
