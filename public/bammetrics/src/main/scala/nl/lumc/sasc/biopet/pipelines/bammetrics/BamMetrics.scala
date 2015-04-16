@@ -38,6 +38,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   /** Bed of amplicon that is used */
   var ampliconBedFile: Option[File] = config("amplicon_bed")
 
+  var rnaMetrics: Boolean = config("rna_metrcis", default = false)
+
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
     case (Some(sampleId), Some(libId)) => new File(outputDir, sampleId + "-" + libId + ".BamMetrics.summary.json")
@@ -69,6 +71,14 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(multiMetrics)
 
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
+
+    if (rnaMetrics) {
+      val rnaMetrics = new CollectRnaSeqMetrics(this)
+      rnaMetrics.input = inputBam
+      rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
+      rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
+      add(rnaMetrics)
+    }
 
     case class Intervals(bed: File, intervals: File)
 

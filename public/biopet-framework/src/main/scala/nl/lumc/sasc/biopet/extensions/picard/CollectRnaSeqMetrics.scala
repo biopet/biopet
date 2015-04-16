@@ -32,7 +32,8 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   var input: File = null
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
-  var refFlat: File = null
+  var refFlat: File = config("refFlat")
+  //TODO: RefFlat could break gentrap, needs to be checked
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
   var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
@@ -99,9 +100,9 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     required("STRAND_SPECIFICITY=", strandSpecificity, spaceSeparated = false) +
     required("MINIMUM_LENGTH=", minimumLength, spaceSeparated = false) +
     required("CHART_OUTPUT=", chartOutput, spaceSeparated = false) +
-    repeat("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
+    optional("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
     required("RRNA_FRAGMENT_PERCENTAGE=", rRNAFragmentPercentage, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+    optional("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
     required("REFERENCE_SEQUENCE=", referenceSequence, spaceSeparated = false) +
     required("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
     required("STOP_AFTER=", stopAfter, spaceSeparated = false)
