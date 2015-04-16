@@ -89,9 +89,10 @@ object Picard {
       val start = lines.indexWhere(_.startsWith("## " + tag)) + 1
       val end = lines.indexOf("", start)
 
-      val header = lines(start).split("\t")
-      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t"))
-        .map(row => row.map(col => tryToParseNumber(col, true).getOrElse(col)))
+      val header = lines(start).split("\t").toList
+      val content = (for (i <- (start + 1) until end) yield {
+        lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
+      }).toList
 
       Some(Map("header" -> header, "content" -> content))
     }
