@@ -72,16 +72,15 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
         case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
           Picard.getMetrics(new File(outputName + ".alignment_summary_metrics")).getOrElse(Map())
         case _ if p == Programs.CollectInsertSizeMetrics.toString =>
-          Map()
-          Picard.getMetrics(new File(outputName + ".insert_size_metrics")).getOrElse(Map())
+          Map(
+            "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")).getOrElse(Map()),
+            "histogram" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics"), "HISTOGRAM").getOrElse(Map())
+          )
         case _ if p == Programs.QualityScoreDistribution.toString =>
-          Map()
-          Picard.getMetrics(new File(outputName + ".quality_distribution_metrics")).getOrElse(Map())
+          Picard.getMetrics(new File(outputName + ".quality_distribution_metrics"), "HISTOGRAM").getOrElse(Map())
         case _ if p == Programs.MeanQualityByCycle.toString =>
-          Map()
-          Picard.getMetrics(new File(outputName + ".quality_by_cycle_metrics")).getOrElse(Map())
+          Picard.getMetrics(new File(outputName + ".quality_by_cycle_metrics"), "HISTOGRAM").getOrElse(Map())
         case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-          Map()
           Picard.getMetrics(new File(outputName + ".base_distribution_by_cycle_metrics")).getOrElse(Map())
         case _ => Map()
       }
