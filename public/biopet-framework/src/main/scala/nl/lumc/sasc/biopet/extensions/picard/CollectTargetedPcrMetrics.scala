@@ -16,6 +16,9 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = _
 
+  @Input(doc = "Reference", required = true)
+  var reference: File = config("reference")
+
   @Input(doc = "AMPLICON_INTERVALS", required = true)
   var ampliconIntervals: File = _
 
@@ -37,6 +40,7 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
+    required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
     repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
     required("AMPLICON_INTERVALS=", ampliconIntervals, spaceSeparated = false) +
     repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
