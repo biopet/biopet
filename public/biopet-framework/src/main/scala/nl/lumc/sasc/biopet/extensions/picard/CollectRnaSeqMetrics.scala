@@ -33,7 +33,6 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
   var refFlat: File = config("refFlat")
-  //TODO: RefFlat could break gentrap, needs to be checked
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
   var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
