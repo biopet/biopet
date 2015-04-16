@@ -17,10 +17,11 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CalculateHsMetrics */
-class CalculateHsMetrics(val root: Configurable) extends Picard {
+class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizable {
   javaMainClass = new picard.analysis.directed.CalculateHsMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -57,6 +58,12 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
     repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
     optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
     optional("BAIT_SET_NAME=", baitSetName, spaceSeparated = false)
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CalculateHsMetrics {

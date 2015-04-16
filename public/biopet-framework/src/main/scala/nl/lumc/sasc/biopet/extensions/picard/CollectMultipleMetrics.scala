@@ -4,12 +4,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import org.broadinstitute.gatk.utils.commandline.{ Output, Argument, Input }
 
 /**
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectMultipleMetrics(val root: Configurable) extends Picard {
+class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable {
   import CollectMultipleMetrics._
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
@@ -64,6 +65,38 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard {
     conditional(assumeSorted, "ASSUME_SORTED=true") +
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     repeat("PROGRAM=", program, spaceSeparated = false)
+
+  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+    program.foreach(p => {
+      val stats: Map[String, Any] = p match {
+        case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
+          Picard.getMetrics(new File(outputName + ".alignment_summary_metrics")).getOrElse(Map())
+        case _ if p == Programs.CollectInsertSizeMetrics.toString =>
+          Map()
+          Picard.getMetrics(new File(outputName + ".insert_size_metrics")).getOrElse(Map())
+        case _ if p == Programs.QualityScoreDistribution.toString =>
+          Map()
+          Picard.getMetrics(new File(outputName + ".quality_distribution_metrics")).getOrElse(Map())
+        case _ if p == Programs.MeanQualityByCycle.toString =>
+          Map()
+          Picard.getMetrics(new File(outputName + ".quality_by_cycle_metrics")).getOrElse(Map())
+        case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
+          Map()
+          Picard.getMetrics(new File(outputName + ".base_distribution_by_cycle_metrics")).getOrElse(Map())
+        case _ => Map()
+      }
+      val sum = new Summarizable {
+        override def summaryFiles: Map[String, File] = Map()
+        override def summaryStats: Map[String, Any] = stats
+      }
+      qscript.addSummarizable(sum, p)
+    })
+
+  }
+
+  def summaryFiles = Map()
+
+  def summaryStats = Map()
 }
 
 object CollectMultipleMetrics {

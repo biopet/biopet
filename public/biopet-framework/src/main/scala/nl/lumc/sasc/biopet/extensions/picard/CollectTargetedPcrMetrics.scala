@@ -3,12 +3,13 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 
 /**
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectTargetedPcrMetrics(val root: Configurable) extends Picard {
+class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summarizable {
 
   javaMainClass = new picard.analysis.directed.CollectTargetedPcrMetrics().getClass.getName
 
@@ -41,6 +42,12 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard {
     repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
     optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
     optional("CUSTOM_AMPLICON_SET_NAME=", customAmpliconSetName, spaceSeparated = false)
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectTargetedPcrMetrics {

@@ -3,12 +3,13 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 
 /**
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectWgsMetrics(val root: Configurable) extends Picard {
+class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable {
 
   javaMainClass = new picard.analysis.CollectWgsMetrics().getClass.getName
 
@@ -45,4 +46,10 @@ class CollectWgsMetrics(val root: Configurable) extends Picard {
     optional("COVERAGE_CAP=", covCap, spaceSeparated = false) +
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
     conditional(includeBqHistogram, "INCLUDE_BQ_HISTOGRAM=true")
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 }
