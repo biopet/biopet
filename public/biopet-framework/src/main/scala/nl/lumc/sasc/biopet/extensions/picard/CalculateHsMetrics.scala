@@ -61,13 +61,17 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
 
 object CalculateHsMetrics {
   /** Returns default CalculateHsMetrics */
-  def apply(root: Configurable, input: File, baitIntervals: List[File], targetIntervals: List[File], outputDir: File): CalculateHsMetrics = {
+  def apply(root: Configurable,
+            input: File,
+            baitIntervals: List[File],
+            targetIntervals: List[File],
+            outputDir: File): CalculateHsMetrics = {
     val calculateHsMetrics = new CalculateHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals
     calculateHsMetrics.targetIntervals = targetIntervals
-    calculateHsMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".capmetrics")
-    calculateHsMetrics.perTargetCoverage = new File(outputDir, input.getName.stripSuffix(".bam") + ".per_target_coverage")
-    return calculateHsMetrics
+    calculateHsMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".HsMetrics")
+    calculateHsMetrics.perTargetCoverage = new File(outputDir, input.getName.stripSuffix(".bam") + ".HsMetrics.per_target_coverage")
+    calculateHsMetrics
   }
 }

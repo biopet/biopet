@@ -18,9 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.scripts.CoverageStats
 import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.{ BedToInterval, BiopetFlagstat }
+import nl.lumc.sasc.biopet.tools.BiopetFlagstat
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
@@ -103,7 +103,9 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
           List(ampIntervals), ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(chsMetrics)
 
-        //TODO: target pcr metrics
+        val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
+          ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
+        add(pcrMetrics)
 
         Intervals(ampliconBedFile, ampIntervals)
       }
@@ -133,7 +135,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
 
       //FIXME:should use piping
-      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, true), true)
+      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), isIntermediate = true)
       add(CoverageStats(this, coverageFile, targetDir))
     }
 
@@ -148,8 +150,8 @@ object BamMetrics extends PipelineCommand {
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir
 
-    bamMetrics.init
-    bamMetrics.biopetScript
-    return bamMetrics
+    bamMetrics.init()
+    bamMetrics.biopetScript()
+    bamMetrics
   }
 }
