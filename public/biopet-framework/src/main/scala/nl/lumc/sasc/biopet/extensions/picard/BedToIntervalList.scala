@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 4/15/15.
@@ -27,7 +27,7 @@ class BedToIntervalList(val root: Configurable) extends Picard {
 }
 
 object BedToIntervalList {
-  def apply(root:Configurable, input:File, output:File): BedToIntervalList = {
+  def apply(root: Configurable, input: File, output: File): BedToIntervalList = {
     val bi = new BedToIntervalList(root)
     bi.input = input
     bi.output = output

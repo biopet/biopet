@@ -23,7 +23,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.tools.{ BedToInterval, BiopetFlagstat }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
-import nl.lumc.sasc.biopet.extensions.picard.{ CollectInsertSizeMetrics, CollectGcBiasMetrics, CalculateHsMetrics, CollectAlignmentSummaryMetrics }
+import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 
 class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -32,14 +32,11 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
 
-  @Input(doc = "Bed tracks targets", shortName = "target", required = false)
-  var bedFiles: List[File] = Nil
+  /** Bed files for region of interests */
+  var roiBedFiles: List[File] = config("regions_of_interest", Nil)
 
-  @Input(doc = "Bed tracks bait", shortName = "bait", required = false)
-  var baitBedFile: File = _
-
-  @Argument(doc = "", required = false)
-  var wholeGenome = false
+  /** Bed of amplicon that is used */
+  var ampliconBedFile: Option[File] = config("amplicon_bed")
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
@@ -56,12 +53,6 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
   /** executed before script */
   def init() {
-    if (config.contains("target_bed")) {
-      for (file <- config("target_bed").asList) {
-        bedFiles +:= new File(file.toString)
-      }
-    }
-    if (baitBedFile == null && config.contains("target_bait")) baitBedFile = config("target_bait")
   }
 
   /** Script to add jobs */
@@ -82,31 +73,60 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(collectAlignmentSummaryMetrics)
     addSummarizable(collectAlignmentSummaryMetrics, "alignment_metrics")
 
-    val baitIntervalFile = if (baitBedFile != null) new File(outputDir, baitBedFile.getName.stripSuffix(".bed") + ".interval") else null
-    if (baitIntervalFile != null)
-      add(BedToInterval(this, baitBedFile, inputBam, outputDir), true)
+    case class Intervals(bed: File, intervals: File)
 
-    for (bedFile <- bedFiles) {
+    // Create temp jobs to convert bed files to intervals lists
+    val roiIntervals = roiBedFiles.map(roiBedFile => {
+      val roiIntervals = swapExt(outputDir, roiBedFile, ".bed", ".intervals")
+      val ampBedToInterval = BedToIntervalList(this, roiBedFile, roiIntervals)
+      ampBedToInterval.isIntermediate = true
+      add(ampBedToInterval)
+      Intervals(roiBedFile, roiIntervals)
+    })
+
+    // Metrics that require a amplicon bed file
+    val ampIntervals = ampliconBedFile.collect {
+      case ampliconBedFile => {
+        val ampIntervals = swapExt(outputDir, ampliconBedFile, ".bed", ".intervals")
+        val ampBedToInterval = BedToIntervalList(this, ampliconBedFile, ampIntervals)
+        ampBedToInterval.isIntermediate = true
+        add(ampBedToInterval)
+
+        val chsMetrics = CalculateHsMetrics(this, inputBam,
+          List(ampIntervals), ampIntervals :: roiIntervals.map(_.intervals), outputDir)
+        add(chsMetrics)
+
+        //TODO: target pcr metrics
+
+        Intervals(ampliconBedFile, ampIntervals)
+      }
+    }
+
+    // Create stats and coverage plot for each bed/interval file
+    for (intervals <- roiIntervals ++ ampIntervals) {
       //TODO: Add target jobs to summary
-      val targetDir = new File(outputDir, bedFile.getName.stripSuffix(".bed"))
-      val targetFile = new File(targetDir, bedFile.getName.stripSuffix(".bed") + ".interval")
-      val targetInterval = BedToInterval(this, bedFile, inputBam, targetFile)
-      add(targetInterval, true)
-      add(CalculateHsMetrics(this, inputBam, if (baitIntervalFile != null) baitIntervalFile
-      else targetInterval.output, targetInterval.output, targetDir))
+      val targetDir = new File(outputDir, intervals.bed.getName.stripSuffix(".bed"))
 
-      val strictOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam")
-      add(BedtoolsIntersect(this, inputBam, bedFile, strictOutputBam, minOverlap = config("strictintersectoverlap", default = 1.0)), true)
-      add(SamtoolsFlagstat(this, strictOutputBam, targetDir))
-      add(BiopetFlagstat(this, strictOutputBam, targetDir))
+      val biStrict = BedtoolsIntersect(this, inputBam, intervals.bed,
+        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam"),
+        minOverlap = config("strictintersectoverlap", default = 1.0))
+      biStrict.isIntermediate = true
+      add(biStrict)
+      add(SamtoolsFlagstat(this, biStrict.output, targetDir))
+      add(BiopetFlagstat(this, biStrict.output, targetDir))
 
-      val looseOutputBam = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam")
-      add(BedtoolsIntersect(this, inputBam, bedFile, looseOutputBam, minOverlap = config("looseintersectoverlap", default = 0.01)), true)
-      add(SamtoolsFlagstat(this, looseOutputBam, targetDir))
-      add(BiopetFlagstat(this, looseOutputBam, targetDir))
+      val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
+        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam"),
+        minOverlap = config("looseintersectoverlap", default = 0.01))
+      biLoose.isIntermediate = true
+      add(biLoose)
+      add(SamtoolsFlagstat(this, biLoose.output, targetDir))
+      add(BiopetFlagstat(this, biLoose.output, targetDir))
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
-      add(BedtoolsCoverage(this, inputBam, bedFile, coverageFile, true), true)
+
+      //FIXME:should use piping
+      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, true), true)
       add(CoverageStats(this, coverageFile, targetDir))
     }
 
@@ -115,13 +135,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 }
 
 object BamMetrics extends PipelineCommand {
-  /**
-   * Make default implementation of BamMetrics
-   * @param root
-   * @param bamFile
-   * @param outputDir
-   * @return
-   */
+  /** Make default implementation of BamMetrics */
   def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
     bamMetrics.inputBam = bamFile
