@@ -63,15 +63,12 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(biopetFlagstat)
     addSummarizable(biopetFlagstat, "biopet_flagstat")
 
+    val multiMetrics = new CollectMultipleMetrics(this)
+    multiMetrics.input = inputBam
+    multiMetrics.outputName = new File(outputDir, inputBam.getName.stripSuffix(".bam"))
+    add(multiMetrics)
+
     add(CollectGcBiasMetrics(this, inputBam, outputDir))
-
-    val collectInsertSizeMetrics = CollectInsertSizeMetrics(this, inputBam, outputDir)
-    add(collectInsertSizeMetrics)
-    addSummarizable(collectInsertSizeMetrics, "insert_size_metrics")
-
-    val collectAlignmentSummaryMetrics = CollectAlignmentSummaryMetrics(this, inputBam, outputDir)
-    add(collectAlignmentSummaryMetrics)
-    addSummarizable(collectAlignmentSummaryMetrics, "alignment_metrics")
 
     case class Intervals(bed: File, intervals: File)
 
@@ -135,7 +132,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 }
 
 object BamMetrics extends PipelineCommand {
-  /** Make default implementation of BamMetrics */
+  /** Make default implementation of BamMetrics and runs script already */
   def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
     bamMetrics.inputBam = bamFile
