@@ -27,10 +27,10 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
   var input: File = _
 
   @Input(doc = "BAIT_INTERVALS", required = true)
-  var baitIntervals: File = _
+  var baitIntervals: List[File] = _
 
   @Input(doc = "TARGET_INTERVALS", required = true)
-  var targetIntervals: File = _
+  var targetIntervals: List[File] = Nil
 
   @Output(doc = "The output file to write statistics to", required = true)
   var output: File = _
@@ -53,15 +53,15 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
     repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
-    required("BAIT_INTERVALS=", baitIntervals, spaceSeparated = false) +
-    required("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
+    repeat("BAIT_INTERVALS=", baitIntervals, spaceSeparated = false) +
+    repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
     optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
     optional("BAIT_SET_NAME=", baitSetName, spaceSeparated = false)
 }
 
 object CalculateHsMetrics {
   /** Returns default CalculateHsMetrics */
-  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: File): CalculateHsMetrics = {
+  def apply(root: Configurable, input: File, baitIntervals: List[File], targetIntervals: List[File], outputDir: File): CalculateHsMetrics = {
     val calculateHsMetrics = new CalculateHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals
