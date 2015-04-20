@@ -94,6 +94,6 @@ object Picard {
         lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
       }).toList
 
-      Some(Map("header" -> header, "content" -> content))
+      Some(Map("content" -> (header :: content)))
     }
 }
