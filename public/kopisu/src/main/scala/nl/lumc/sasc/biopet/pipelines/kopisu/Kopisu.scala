@@ -49,7 +49,6 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     //    sambambapileup.isIntermediate = true
     //    add(sambambapileup)
 
-
     val sampileup = new SamtoolsMpileup(this)
     sampileup.input = List(bamFile)
     sampileup.intervalBed = None

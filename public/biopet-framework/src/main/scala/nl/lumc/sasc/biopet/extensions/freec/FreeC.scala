@@ -60,7 +60,6 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
   override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
   override val defaultThreads = 4
-  override val defaultVmem = "4G"
   private var config_file: File = _
 
   /*

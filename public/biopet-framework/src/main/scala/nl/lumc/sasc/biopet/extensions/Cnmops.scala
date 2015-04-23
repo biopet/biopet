@@ -57,8 +57,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
   override def cmdLine = {
 
-    addPositionalArgument( input.foreach( f => f.getAbsolutePath ).toString.mkString(" ") )
-
+    addPositionalArgument(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
 
     super.cmdLine
   }
