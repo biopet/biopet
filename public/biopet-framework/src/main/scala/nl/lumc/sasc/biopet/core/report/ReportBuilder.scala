@@ -33,6 +33,9 @@ trait ReportBuilder extends ToolCommand {
 
   def pageArgs: Map[String, Any] = Map()
 
+  private var done = 0
+  private var total = 0
+
   def main(args: Array[String]): Unit = {
     logger.info("Start")
 
@@ -53,17 +56,24 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
 
+    total = countPages(indexPage)
+    logger.info(total + " pages to be generated")
+
     logger.info("Generate pages")
     generatePage(summary, indexPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
-    logger.info("Done")
+    logger.info(done + " Done")
   }
 
   def indexPage: ReportPage
 
   def reportName: String
+
+  def countPages(page: ReportPage): Int = {
+    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
+  }
 
   def generatePage(summary: Summary,
                    page: ReportPage,
@@ -93,6 +103,8 @@ trait ReportBuilder extends ToolCommand {
     for ((name, subPage) <- page.subPages.par) {
       generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
     }
+    done += 1
+    if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
   }
 }
 
