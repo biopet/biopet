@@ -34,7 +34,27 @@ class Summary(file: File) {
     ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: path.toList)
   }
 
+  def getSampleValues(path: String*): Map[String, Option[Any]] = {
+    (for (sample <- samples) yield sample -> getSampleValue(sample, path: _*)).toMap
+  }
+
+  def getSampleValues(function: (Summary, String) => Option[Any]): Map[String, Option[Any]] = {
+    (for (sample <- samples) yield sample -> function(this, sample)).toMap
+  }
+
   def getLibraryValue(sampleId: String, libId: String, path: String*): Option[Any] = {
     ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: "libraries" :: libId :: path.toList)
+  }
+
+  def getLibraryValues(path: String*): Map[(String, String), Option[Any]] = {
+    (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
+      (sample, lib) -> getLibraryValue(sample, lib, path: _*)
+    }).toMap
+  }
+
+  def getLibraryValues(function: (Summary, String, String) => Option[Any]): Map[(String, String), Option[Any]] = {
+    (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
+      (sample, lib) -> function(this, sample, lib)
+    }).toMap
   }
 }
