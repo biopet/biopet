@@ -4,7 +4,7 @@ import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.summary.Summary
-import org.fusesource.scalate.TemplateEngine
+import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 
 import scala.io.Source
 
@@ -90,7 +90,7 @@ trait ReportBuilder extends ToolCommand {
     writer.close()
 
     // Generating subpages
-    for ((name, subPage) <- page.subPages) {
+    for ((name, subPage) <- page.subPages.par) {
       generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
     }
   }
@@ -101,9 +101,6 @@ object ReportBuilder {
   protected val engine = new TemplateEngine()
 
   def renderTemplate(location: String, args: Map[String, Any]): String = {
-    val templateText = Source.fromInputStream(getClass.getResourceAsStream(location)).getLines().mkString("\n")
-    val template = engine.compileText("ssp", templateText)
-
-    engine.layout(template.source, args)
+    engine.layout(TemplateSource.fromFile(getClass.getResource(location).getPath), args)
   }
 }
