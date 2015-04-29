@@ -33,7 +33,11 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
     checkScript()
   }
 
-  def checkScript(local: Boolean = false): Unit = {
+  /**
+   * If script not exist in file system it try to copy it from the jar
+   * @param local if true it use File.createTempFile instead of ".queue/tmp/"
+   */
+  protected def checkScript(local: Boolean = false): Unit = {
     if (script.exists()) {
       script = script.getAbsoluteFile
     } else {
@@ -53,10 +57,22 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
     }
   }
 
+  /**
+   * Execute rscript on local system
+   * @param logger How to handle stdout and stderr
+   */
   def runLocal(logger: ProcessLogger): Unit = {
     checkScript(local = true)
 
     Process(cmdLine).run(logger)
+  }
+
+  /**
+   * Execute rscript on local system
+   * Stdout and stderr will go to biopet logger
+   */
+  def runLocal(): Unit = {
+    runLocal(ProcessLogger(logger.info(_)))
   }
 
   def cmdLine: String = {
