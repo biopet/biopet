@@ -22,9 +22,10 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
-import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import org.broadinstitute.gatk.queue.function.QFunction
 import scala.collection.JavaConversions._
 
 /**
@@ -73,6 +74,9 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
           case _                                    => Map()
         }
       }
+
+      /** Alignment results of this library ~ can only be accessed after addJobs is run! */
+      def alnFile: File = mapping.get.outputFiles("finalBamFile")
 
       /** Library specific stats to add to summary */
       def summaryStats: Map[String, Any] = Map()
@@ -163,11 +167,11 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
           }
           case _ => logger.warn("Sample: " + sampleId + "  Library: " + libId + ", no reads found")
         }
-
+        logger.info("Here before mapping")
         mapping.foreach(mapping => {
           mapping.init
           mapping.biopetScript
-          addAll(mapping.functions) // Add functions of mapping to curent function pool
+          addAll(mapping.functions) // Add functions of mapping to current function pool
           addSummaryQScript(mapping)
         })
       }
@@ -208,9 +212,39 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
       }
     }).flatten.toList)
 
+    lazy val alnFileDirty: File = sampleAlnJob.output
+    lazy val alnFile: File = sampleAlnJob.output
+
+    /** Job for combining all library BAMs */
+    private def sampleAlnJob: CombineFileFunction =
+      makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
+
+    /** Super type of Ln and MergeSamFiles */
+    private type CombineFileFunction = QFunction { def output: File }
+
+    /** Ln or MergeSamFile job, depending on how many inputs are supplied */
+    private def makeCombineJob(inFiles: List[File], outFile: File,
+                               mergeSortOrder: String = "coordinate"): CombineFileFunction = {
+      require(inFiles.nonEmpty, "At least one input files for combine job")
+      if (inFiles.size == 1) {
+        val job = new Ln(qscript)
+        job.input = inFiles.head
+        job.output = outFile
+        job
+      } else {
+        val job = new MergeSamFiles(qscript)
+        job.input = inFiles
+        job.output = outFile
+        job.sortOrder = mergeSortOrder
+        job
+      }
+    }
+
     /** This will add sample jobs */
     def addJobs(): Unit = {
       addPerLibJobs()
+      // merge or symlink per-library alignments
+      add(sampleAlnJob)
 
       if (preProcessBam.isDefined) {
         val bamMetrics = new BamMetrics(qscript)
@@ -221,10 +255,12 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
         bamMetrics.biopetScript
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
+      } else {
+
       }
 
       // start bam to fastq
-      val samToFastq = SamToFastq(qscript, preProcessBam.get,
+      val samToFastq = SamToFastq(qscript, alnFile,
         new File(sampleDir, sampleId + ".R1.fastq"),
         new File(sampleDir, sampleId + ".R2.fastq"))
       samToFastq.isIntermediate = true
