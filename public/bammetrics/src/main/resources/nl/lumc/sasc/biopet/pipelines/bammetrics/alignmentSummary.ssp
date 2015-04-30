@@ -1,16 +1,30 @@
 #import(nl.lumc.sasc.biopet.core.summary.Summary)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport)
+#import(java.io.File)
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
 <%@ var libId: Option[String] = None %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
 #{
     val samples = sampleId match {
-    case Some(sample) => List(sample.toString)
-    case _ => summary.samples.toList
+        case Some(sample) => {
+            List(sample.toString)
+        }
+        case _ => summary.samples.toList
     }
 }#
+
+#if (showPlot)
+#{ BammetricsReport.alignmentSummaryPlot(outputDir, "alignmentSummary", summary, !sampleLevel, sampleId = sampleId) }#
+    <img src="alignmentSummary.png"><br>
+    <a href="alignmentSummary.tsv">Tsv file</a>
+#end
+#if (showTable)
 <table>
     <thead><tr>
         <th>Sample</th>
@@ -53,3 +67,4 @@
         #end
     </tbody>
 </table>
+#end

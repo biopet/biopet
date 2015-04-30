@@ -1,8 +1,13 @@
 #import(nl.lumc.sasc.biopet.core.summary.Summary)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.shiva.ShivaReport)
+#import(java.io.File)
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
 <%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
 #{
     val fields = List("Hom", "HomVar", "HomRef", "NoCall", "Variant", "NonInformative", "Total")
     val samples = sampleId match {
@@ -11,6 +16,12 @@
     }
 }#
 
+#if (showPlot)
+    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId) }#
+    <img src="variantSummary.png"><br>
+    <a href="variantSummary.tsv">Tsv file</a>
+#end
+#if (showTable)
 <table>
 <thead><tr><th>Sample</th>
 #for (field <- fields) <th>${field}</th> #end
@@ -25,3 +36,4 @@
     #end
 </tbody>
 </table>
+#end

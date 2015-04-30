@@ -1,15 +1,35 @@
 #import(nl.lumc.sasc.biopet.core.summary.Summary)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
+#import(java.io.File)
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
 <%@ var libId: Option[String] = None %>
 <%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
 #{
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
         case _ => summary.samples.toList
     }
 }#
+
+#if (showPlot)
+    #{
+        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
+        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
+    }#
+    <table>
+        <tr><th>R1</th><th>R2</th></tr>
+        <tr>
+            <td><img src="QC_Reads_R1.png"><br><a href="QC_Reads_R1.tsv">Tsv file</a></td>
+            <td><img src="QC_Reads_R2.png"><br><a href="QC_Reads_R2.tsv">Tsv file</a></td>
+        </tr>
+    </table>
+#end
+#if (showTable)
 <table>
 <thead><tr>
     <th>Sample</th>
@@ -57,3 +77,4 @@
     #end
 </tbody>
 </table>
+#end

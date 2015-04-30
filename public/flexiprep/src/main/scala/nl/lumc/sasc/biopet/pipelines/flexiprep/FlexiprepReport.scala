@@ -1,6 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
+import java.io.{PrintWriter, File}
+
 import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, ReportBuilder }
+import nl.lumc.sasc.biopet.core.summary.{SummaryValue, Summary}
+import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -38,4 +42,88 @@ object FlexiprepReport extends ReportBuilder {
   }
 
   // FIXME: Not yet finished
+
+  def readSummaryPlot(outputDir: File,
+                         prefix: String,
+                         read: String,
+                         summary: Summary,
+                         sampleId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    tsvWriter.println("Library\tAfter_QC\tClipping\tTrimming\tSynced")
+
+    def getLine(summary: Summary, sample: String, lib: String): String = {
+      val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "reads", "num_total"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_after", "reads", "num_total"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+      val clippingDiscardedToShort = new SummaryValue(List("flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+      val clippingDiscardedToLong = new SummaryValue(List("flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+      val trimmingDiscarded = new SummaryValue(List("flexiprep", "stats", "trimming", "num_reads_discarded_" + read),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+
+      val sb = new StringBuffer()
+      sb.append(sample + "-" + lib + "\t")
+      sb.append(afterTotal + "\t")
+      sb.append((clippingDiscardedToShort + clippingDiscardedToLong) + "\t")
+      sb.append(trimmingDiscarded + "\t")
+      sb.append(beforeTotal - afterTotal - trimmingDiscarded - clippingDiscardedToShort - clippingDiscardedToLong)
+      sb.toString
+    }
+
+    for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+         lib <- summary.libraries(sample)) {
+      tsvWriter.println(getLine(summary, sample, lib))
+    }
+
+    tsvWriter.close()
+
+    val plot = new StackedBarPlot(null)
+    plot.input = tsvFile
+    plot.output = pngFile
+    plot.ylabel = Some("Reads")
+    plot.width = Some(750)
+    plot.runLocal()
+  }
+
+  def baseSummaryPlot(outputDir: File,
+                      prefix: String,
+                      read: String,
+                      summary: Summary,
+                      sampleId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    tsvWriter.println("Library\tAfter_QC\tDiscarded")
+
+    def getLine(summary: Summary, sample: String, lib: String): String = {
+      val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "bases", "num_total"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total"),
+        summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
+
+      val sb = new StringBuffer()
+      sb.append(sample + "-" + lib + "\t")
+      sb.append(afterTotal + "\t")
+      sb.append(beforeTotal - afterTotal)
+      sb.toString
+    }
+
+    for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+         lib <- summary.libraries(sample)) {
+      tsvWriter.println(getLine(summary, sample, lib))
+    }
+
+    tsvWriter.close()
+
+    val plot = new StackedBarPlot(null)
+    plot.input = tsvFile
+    plot.output = pngFile
+    plot.ylabel = Some("Bases")
+    plot.width = Some(750)
+    plot.runLocal()
+  }
 }
