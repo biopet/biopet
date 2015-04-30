@@ -48,10 +48,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   }
 
   /** returns files to store in summary */
-  def summaryFiles = Map("input_bam" -> inputBam)
+  def summaryFiles = Map("input_bam" -> inputBam) ++
+    ampliconBedFile.map("amplicon" -> _).toMap ++
+    ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
 
   /** return settings */
-  def summarySettings = Map("ampliconBedFile" -> ampliconBedFile, "roiBedFiles" -> roiBedFiles)
+  def summarySettings = Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
+    "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
 
   /** executed before script */
   def init() {
@@ -130,7 +133,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
       val biStrict = BedtoolsIntersect(this, inputBam, intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam"),
-        minOverlap = config("strictintersectoverlap", default = 1.0))
+        minOverlap = config("strict_intersect_overlap", default = 1.0))
       biStrict.isIntermediate = true
       add(biStrict)
       add(SamtoolsFlagstat(this, biStrict.output, targetDir))
@@ -140,7 +143,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
       val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
         output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam"),
-        minOverlap = config("looseintersectoverlap", default = 0.01))
+        minOverlap = config("loose_intersect_overlap", default = 0.01))
       biLoose.isIntermediate = true
       add(biLoose)
       add(SamtoolsFlagstat(this, biLoose.output, targetDir))
