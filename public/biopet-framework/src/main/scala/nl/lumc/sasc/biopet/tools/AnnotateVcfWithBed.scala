@@ -80,6 +80,9 @@ object AnnotateVcfWithBed extends ToolCommand {
    * @param args
    */
   def main(args: Array[String]): Unit = {
+
+    logger.info("Start")
+
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
@@ -92,16 +95,33 @@ object AnnotateVcfWithBed extends ToolCommand {
       bedRecords(bedRecord.getChr) = (bedRecord.getStart, bedRecord.getEnd, bedRecord.getName) :: bedRecords.getOrElse(bedRecord.getChr, Nil)
     }
     */
+
+    val fieldType = commandArgs.fieldType match {
+      case "Integer"   => VCFHeaderLineType.Integer
+      case "Flag"      => VCFHeaderLineType.Flag
+      case "Character" => VCFHeaderLineType.Character
+      case "Float"     => VCFHeaderLineType.Float
+      case _           => VCFHeaderLineType.String
+    }
+
+    logger.info("Reading bed file")
+
     for (line <- Source.fromFile(commandArgs.bedFile).getLines()) {
       val values = line.split("\t")
       if (values.size >= 4)
         bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
+      else (values.size >= 3 && fieldType == VCFHeaderLineType.Flag)
+      bedRecords(values(0)) = (values(1).toInt, values(2).toInt, "") :: bedRecords.getOrElse(values(0), Nil)
     }
+
+    logger.info("Sorting bed records")
 
     // Sort records when needed
     for ((chr, record) <- bedRecords) {
       bedRecords(chr) = record.sortBy(x => (x._1, x._2))
     }
+
+    logger.info("Starting output file")
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
     val header = reader.getFileHeader
@@ -111,16 +131,11 @@ object AnnotateVcfWithBed extends ToolCommand {
       setReferenceDictionary(header.getSequenceDictionary).
       build)
 
-    val fieldType = commandArgs.fieldType match {
-      case "Integer"   => VCFHeaderLineType.Integer
-      case "Flag"      => VCFHeaderLineType.Flag
-      case "Character" => VCFHeaderLineType.Character
-      case "Float"     => VCFHeaderLineType.Float
-      case _           => VCFHeaderLineType.String
-    }
     header.addMetaDataLine(new VCFInfoHeaderLine(commandArgs.fieldName,
       VCFHeaderLineCount.UNBOUNDED, fieldType, commandArgs.fieldDescription))
     writer.writeHeader(header)
+
+    logger.info("Start reading vcf records")
 
     for (record <- reader) {
       val overlaps = bedRecords.getOrElse(record.getChr, Nil).filter(x => {
@@ -130,11 +145,14 @@ object AnnotateVcfWithBed extends ToolCommand {
         writer.add(record)
       } else {
         val builder = new VariantContextBuilder(record)
-        builder.attribute(commandArgs.fieldName, overlaps.map(_._3).mkString(","))
+        if (fieldType == VCFHeaderLineType.Flag) builder.attribute(commandArgs.fieldName, true)
+        else builder.attribute(commandArgs.fieldName, overlaps.map(_._3).mkString(","))
         writer.add(builder.make)
       }
     }
     reader.close
     writer.close
+
+    logger.info("Done")
   }
 }
