@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard SortSam */
 class SortSam(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.SortSam"
+  javaMainClass = new picard.sam.SortSam().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _

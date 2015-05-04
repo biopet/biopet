@@ -26,13 +26,13 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
  */
 class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summarizable {
 
-  javaMainClass = "picard.analysis.CollectRnaSeqMetrics"
+  javaMainClass = new picard.analysis.CollectRnaSeqMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
-  var refFlat: File = null
+  var refFlat: File = config("refFlat")
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
   var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
@@ -84,12 +84,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
       "output_chart" -> chartOutput
     ).collect { case (key, Some(value)) => key -> value }
 
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
-    case None => Map()
-    case Some((header, content)) =>
-      (for (i <- 0 to header.size if i < content.head.size)
-        yield header(i).toLowerCase -> content.head(i)).toMap
-  }
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
@@ -99,9 +94,9 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     required("STRAND_SPECIFICITY=", strandSpecificity, spaceSeparated = false) +
     required("MINIMUM_LENGTH=", minimumLength, spaceSeparated = false) +
     required("CHART_OUTPUT=", chartOutput, spaceSeparated = false) +
-    repeat("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
+    optional("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
     required("RRNA_FRAGMENT_PERCENTAGE=", rRNAFragmentPercentage, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+    optional("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
     required("REFERENCE_SEQUENCE=", referenceSequence, spaceSeparated = false) +
     required("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
     required("STOP_AFTER=", stopAfter, spaceSeparated = false)

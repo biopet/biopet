@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard SamToFastq */
 class SamToFastq(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.SamToFastq"
+  javaMainClass = new picard.sam.SamToFastq().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _

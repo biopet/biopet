@@ -189,6 +189,7 @@ object GentrapTest {
   val executables = Map(
     "reference" -> "test",
     "dict" -> "test",
+    "refFlat" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
