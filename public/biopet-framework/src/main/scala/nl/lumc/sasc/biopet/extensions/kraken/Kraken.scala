@@ -39,18 +39,18 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   var min_hits: Option[Int] = config("min_hits")
 
   @Output(doc = "Unidentified reads", required = false)
-  var unclassified_out: File = config("unclassified_out")
+  var unclassified_out: Option[File] = None
   @Output(doc = "Identified reads", required = false)
-  var classified_out: File = config("classified_out")
+  var classified_out: Option[File] = None
 
   @Output(doc = "Output with hits per sequence")
-  var output: File = config("output")
+  var output: File = _
   var preload: Boolean = config("preload", default = true)
   var paired: Boolean = config("paired", default = false)
 
-  executable = config("exe", default = "kraken", freeVar = false)
-  override val versionRegex = """Kraken version (.*)\n""".r
-  override val versionExitcode = List(0)
+  executable = config("exe", default = "kraken")
+  override val versionRegex = """Kraken version (.*)""".r
+  override val versionExitcode = List(0, 1)
 
   override val defaultCoreMemory = 8.0
   override val defaultThreads = 4
@@ -76,9 +76,9 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
       case _       => cmd += ""
     }
 
-    cmd += optional("--unclassified-out " + unclassified_out.getAbsolutePath, unclassified_out) +
-      optional("--classified-out " + classified_out.getAbsolutePath, classified_out) +
-      "--output" + required(output.getAbsolutePath) +
+    cmd += optional("--unclassified-out ", unclassified_out.get) +
+      optional("--classified-out ", classified_out.get) +
+      "--output" + required(output) +
       conditional(preload, "--preload") +
       conditional(paired, "--paired")
 

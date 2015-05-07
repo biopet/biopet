@@ -25,9 +25,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /** Extension for Kraken */
 class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction {
 
-  executable = config("exe", default = "kraken-report", freeVar = false)
-  override val versionRegex = """Kraken version (.*)\n""".r
-  override val versionExitcode = List(0)
+  executable = config("exe", default = "kraken-report")
+  override val versionRegex = """Kraken version (.*)""".r
+  override val versionExitcode = List(0, 1)
 
   override val defaultCoreMemory = 4.0
   override val defaultThreads = 1

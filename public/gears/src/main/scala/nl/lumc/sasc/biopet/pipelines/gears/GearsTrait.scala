@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.FullVersion
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
@@ -25,6 +26,7 @@ import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import scala.collection.JavaConversions._
 
@@ -32,8 +34,7 @@ import scala.collection.JavaConversions._
  * This is a trait for the Gears pipeline
  * The ShivaTrait is used as template for this pipeline
  */
-trait GearsTrait extends MultiSampleQScript with SummaryQScript {
-  qscript =>
+trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
 
   /** Executed before running the script */
   def init: Unit = {
@@ -44,6 +45,24 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
     addSamplesJobs()
     addSummaryJobs
   }
+
+  /** Multisample meta-genome comparison */
+  def addMultiSampleJobs: Unit = {
+    // generate report from multiple samples, this is:
+    // - the TSV
+    // - the Spearman correlation plot + table
+  }
+
+  /** Location of summary file */
+  def summaryFile = new File(outputDir, "gears.summary.json")
+
+  /** Settings of pipeline for summary */
+  def summarySettings = Map(
+    "version" -> FullVersion
+  )
+
+  /** Files for the summary */
+  def summaryFiles = Map()
 
   /** Method to make a sample */
   def makeSample(id: String) = new Sample(id)
@@ -56,7 +75,9 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
         case Some(preProcessBam) => Map("bamFile" -> preProcessBam)
         case _                   => Map()
       }
-    }
+    } ++ Map(
+      "alignment" -> alnFile
+    )
 
     /** Sample specific stats to add to summary */
     def summaryStats: Map[String, Any] = Map()
@@ -76,7 +97,10 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
       }
 
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
-      def alnFile: File = mapping.get.outputFiles("finalBamFile")
+      def alnFile: File = bamFile match {
+        case Some(b) => b
+        case _       => throw new IllegalStateException("The bamfile is not generated yet")
+      }
 
       /** Library specific stats to add to summary */
       def summaryStats: Map[String, Any] = Map()
@@ -167,7 +191,6 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
           }
           case _ => logger.warn("Sample: " + sampleId + "  Library: " + libId + ", no reads found")
         }
-        logger.info("Here before mapping")
         mapping.foreach(mapping => {
           mapping.init
           mapping.biopetScript
@@ -211,7 +234,6 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
         case _               => None
       }
     }).flatten.toList)
-
     lazy val alnFileDirty: File = sampleAlnJob.output
     lazy val alnFile: File = sampleAlnJob.output
 
@@ -259,7 +281,10 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
 
       }
 
-      // start bam to fastq
+      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
+
+
+      // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = SamToFastq(qscript, alnFile,
         new File(sampleDir, sampleId + ".R1.fastq"),
         new File(sampleDir, sampleId + ".R2.fastq"))
@@ -275,9 +300,9 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
       val krakenAnalysis = new Kraken(qscript)
       krakenAnalysis.input = List(samToFastq.fastqR1, samToFastq.fastqR2)
       //      krakenAnalysis.inputFastQ = true
-      krakenAnalysis.output = new File(sampleDir, sampleId + ".krkn.raw")
-      krakenAnalysis.classified_out = new File(sampleDir, sampleId + ".krkn.classified.fastq")
-      krakenAnalysis.unclassified_out = new File(sampleDir, sampleId + ".krkn.unclassified.fastq")
+      krakenAnalysis.output = createFile(".krkn.raw")
+      krakenAnalysis.classified_out = Option(createFile(".krkn.classified.fastq"))
+      krakenAnalysis.unclassified_out = Option(createFile(".krkn.unclassified.fastq"))
       qscript.add(krakenAnalysis)
 
       // create kraken summary file
@@ -285,22 +310,10 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript {
       val krakenReport = new KrakenReport(qscript)
       krakenReport.input = krakenAnalysis.output
       krakenReport.show_zeros = true
-      krakenReport.output = new File(sampleDir, sampleId + ".krkn.full")
+      krakenReport.output = createFile(".krkn.full")
       qscript.add(krakenReport)
 
     }
   }
 
-  /**  */
-  def addMultiSampleJobs(): Unit = {
-  }
-
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, "Gears.summary.json")
-
-  /** Settings of pipeline for summary */
-  def summarySettings = Map()
-
-  /** Files for the summary */
-  def summaryFiles = Map()
 }
