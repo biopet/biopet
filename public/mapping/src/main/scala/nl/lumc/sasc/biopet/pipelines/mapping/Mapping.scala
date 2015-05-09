@@ -157,26 +157,27 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var fastq_R1_output: List[File] = Nil
     var fastq_R2_output: List[File] = Nil
 
-    def removeGz(file: String): String = {
-      if (file.endsWith(".gz")) file.substring(0, file.lastIndexOf(".gz"))
-      else if (file.endsWith(".gzip")) file.substring(0, file.lastIndexOf(".gzip"))
+    def removeGz(file: File): File = {
+      val absPath = file.getAbsolutePath
+      if (absPath.endsWith(".gz")) new File(absPath.substring(0, absPath.lastIndexOf(".gz")))
+      else if (absPath.endsWith(".gzip")) new File(absPath.substring(0, absPath.lastIndexOf(".gzip")))
       else file
     }
-    var chunks: Map[File, (String, String)] = Map()
-    if (chunking) for (t <- 1 to numberChunks.getOrElse(1)) {
-      val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-      chunks += (chunkDir -> (removeGz(chunkDir + input_R1.getName),
-        if (paired) removeGz(chunkDir + input_R2.get.getName) else ""))
+
+    val chunks: Map[File, (File, Option[File])] = {
+      if (chunking) {
+        (for (t <- 1 to numberChunks.getOrElse(1)) yield {
+          val chunkDir = new File(outputDir, "chunks" + File.separator + t)
+          (chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
+            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None))
+        }).toMap
+      } else if (skipFlexiprep) {
+        Map(outputDir -> (
+          extractIfNeeded(input_R1, flexiprep.outputDir),
+          if (paired) Some(extractIfNeeded(input_R2.get, outputDir)) else None)
+        )
+      } else Map(outputDir -> (input_R1, input_R2))
     }
-    else if (skipFlexiprep) {
-      chunks += (outputDir -> (
-        extractIfNeeded(input_R1, flexiprep.outputDir),
-        if (paired) extractIfNeeded(input_R2.get, outputDir) else "")
-      )
-    } else chunks += (outputDir -> (
-      flexiprep.outputFiles("fastq_input_R1"),
-      if (paired) flexiprep.outputFiles("fastq_input_R2") else "")
-    )
 
     if (chunking) {
       val fastSplitter_R1 = new FastqSplitter(this)
@@ -188,7 +189,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       if (paired) {
         val fastSplitter_R2 = new FastqSplitter(this)
         fastSplitter_R2.input = input_R2.get
-        for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2
+        for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2.get
         fastSplitter_R2.isIntermediate = true
         add(fastSplitter_R2)
       }
@@ -205,7 +206,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         if (paired) R2 = flexiout._2
         deps = flexiout._3
         fastq_R1_output :+= R1
-        fastq_R2_output :+= R2
+        R2.foreach(R2 => fastq_R2_output :+= R2)
       }
 
       val outputBam = new File(chunkDir, outputName + ".bam")
@@ -267,7 +268,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addBwaAln(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addBwaAln(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
     bwaAlnR1.deps = deps
@@ -277,7 +278,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val samFile: File = if (paired) {
       val bwaAlnR2 = new BwaAln(this)
-      bwaAlnR2.fastq = R2
+      bwaAlnR2.fastq = R2.get
       bwaAlnR2.deps = deps
       bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
       bwaAlnR2.isIntermediate = true
@@ -285,7 +286,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
       val bwaSampe = new BwaSampe(this)
       bwaSampe.fastqR1 = R1
-      bwaSampe.fastqR2 = R2
+      bwaSampe.fastqR2 = R2.get
       bwaSampe.saiR1 = bwaAlnR1.output
       bwaSampe.saiR2 = bwaAlnR2.output
       bwaSampe.r = getReadGroupBwa
@@ -320,10 +321,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addBwaMem(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addBwaMem(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
-    if (paired) bwaCommand.R2 = R2
+    if (paired) bwaCommand.R2 = R2.get
     bwaCommand.deps = deps
     bwaCommand.R = Some(getReadGroupBwa)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
@@ -335,10 +336,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.output
   }
 
-  def addGsnap(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addGsnap(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val gsnapCommand = new Gsnap(this)
-    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
-    gsnapCommand.input = List(R1, R2).filterNot(x => x == null || x.getPath == "")
+    gsnapCommand.input = if (paired) List(R1, R2.get) else List(R1)
     gsnapCommand.deps = deps
     gsnapCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     gsnapCommand.isIntermediate = true
@@ -360,12 +360,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addAddOrReplaceReadGroups(reorderSam.output, output)
   }
 
-  def addTophat(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addTophat(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     // TODO: merge mapped and unmapped BAM ~ also dealing with validation errors in the unmapped BAM
     val tophat = new Tophat(this)
-    // FIXME: ideally we should only check for null ~ but apparently it's possible to get a File object with "" as the path
     tophat.R1 = tophat.R1 :+ R1
-    if (R2 != null && R2.getPath != "") tophat.R2 = tophat.R2 :+ R2
+    if (paired) tophat.R2 = tophat.R2 :+ R2.get
     tophat.output_dir = new File(outputDir, "tophat_out")
     tophat.deps = deps
     // always output BAM
@@ -376,7 +375,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val sortSam = new SortSam(this)
     sortSam.input = tophat.outputAcceptedHits
-    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
+    sortSam.output = swapExt(output.getParentFile, output, ".bam", ".sorted.bam")
     sortSam.sortOrder = "coordinate"
     sortSam.isIntermediate = chunking || !skipMarkduplicates
     add(sortSam)
@@ -391,7 +390,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addStampy(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addStampy(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId.get + ","
@@ -405,7 +404,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     val stampyCmd = new Stampy(this)
     stampyCmd.R1 = R1
-    if (paired) stampyCmd.R2 = R2
+    if (paired) stampyCmd.R2 = R2.get
     stampyCmd.deps = deps
     stampyCmd.readgroup = RG
     stampyCmd.sanger = true
@@ -426,10 +425,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addBowtie(R1: File, R2: File, output: File, deps: List[File]): File = {
+  def addBowtie(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
-    if (paired) bowtie.R2 = Some(R2)
+    if (paired) bowtie.R2 = R2
     bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
@@ -445,8 +444,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addStar(R1: File, R2: File, output: File, deps: List[File]): File = {
-    val starCommand = Star(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
+  def addStar(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+    val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
     addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
@@ -459,8 +458,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param deps
    * @return
    */
-  def addStar2pass(R1: File, R2: File, output: File, deps: List[File]): File = {
-    val starCommand = Star._2pass(this, R1, if (paired) R2 else null, outputDir, isIntermediate = true, deps = deps)
+  def addStar2pass(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+    val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
     addAddOrReplaceReadGroups(starCommand._1, output)
   }
