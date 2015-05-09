@@ -154,6 +154,7 @@ object MpileupToVcf extends ToolCommand {
       val ref = values(2) match {
         case "A" | "T" | "G" | "C" => values(2)
         case "a" | "t" | "g" | "c" => values(2).toUpperCase
+        case "U" | "u"             => "T"
         case _                     => "N"
       }
       val reads = values(3).toInt
