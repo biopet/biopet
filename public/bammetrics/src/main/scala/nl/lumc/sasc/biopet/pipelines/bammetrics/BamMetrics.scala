@@ -80,7 +80,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
     val wgsMetrics = new CollectWgsMetrics(this)
     wgsMetrics.input = inputBam
-    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
+    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
     add(wgsMetrics)
     addSummarizable(wgsMetrics, "wgs")
 
