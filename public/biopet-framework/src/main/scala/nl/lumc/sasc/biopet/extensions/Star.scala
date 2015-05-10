@@ -113,10 +113,10 @@ object Star {
    * @return Return Star
    *
    */
-  def apply(configurable: Configurable, R1: File, R2: File, outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
+  def apply(configurable: Configurable, R1: File, R2: Option[File], outputDir: File, isIntermediate: Boolean = false, deps: List[File] = Nil): Star = {
     val star = new Star(configurable)
     star.R1 = R1
-    if (R2 != null) star.R2 = R2
+    R2.foreach(R2 => star.R2 = R2)
     star.outputDir = outputDir
     star.isIntermediate = isIntermediate
     star.deps = deps
@@ -136,11 +136,11 @@ object Star {
    */
   def _2pass(configurable: Configurable,
              R1: File,
-             R2: File,
+             R2: Option[File],
              outputDir: File,
              isIntermediate: Boolean = false,
              deps: List[File] = Nil): (File, List[Star]) = {
-    val starCommand_pass1 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass1"))
+    val starCommand_pass1 = Star(configurable, R1, R2, new File(outputDir, "aln-pass1"))
     starCommand_pass1.isIntermediate = isIntermediate
     starCommand_pass1.deps = deps
     starCommand_pass1.beforeGraph
@@ -152,7 +152,7 @@ object Star {
     starCommand_reindex.isIntermediate = isIntermediate
     starCommand_reindex.beforeGraph
 
-    val starCommand_pass2 = Star(configurable, R1, if (R2 != null) R2 else null, new File(outputDir, "aln-pass2"))
+    val starCommand_pass2 = Star(configurable, R1, R2, new File(outputDir, "aln-pass2"))
     starCommand_pass2.genomeDir = starCommand_reindex.outputDir
     starCommand_pass2.isIntermediate = isIntermediate
     starCommand_pass2.deps = deps
