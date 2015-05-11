@@ -56,6 +56,12 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 }
 
 object VcfFilter extends ToolCommand {
+  case class Trio(child: String, father: String, mother: String) {
+    def this(arg: String) = {
+      this(arg.split(":")(0), arg.split(":")(1), arg.split(":")(2))
+    }
+  }
+
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
                   invertedOutputVcf: Option[File] = None,
@@ -67,6 +73,8 @@ object VcfFilter extends ToolCommand {
                   minBamAlternateDepth: Int = 0,
                   mustHaveVariant: List[String] = Nil,
                   deNovoInSample: String = null,
+                  deNovoTrio: List[Trio] = Nil,
+                  trioLossOfHet: List[Trio] = Nil,
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   filterRefCalls: Boolean = false,
@@ -101,6 +109,12 @@ object VcfFilter extends ToolCommand {
     opt[String]("deNovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(deNovoInSample = x)
     } text ("Only show variants that contain unique alleles in complete set for given sample")
+    opt[String]("deNovoTrio") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+      c.copy(deNovoTrio = new Trio(x) :: c.deNovoTrio)
+    } text ("Only show variants that are denovo in the trio")
+    opt[String]("trioLossOfHet") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+      c.copy(trioLossOfHet = new Trio(x) :: c.trioLossOfHet)
+    } text ("Only show variants where a loss of hetrozygosity is detected")
     opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
     } text ("Given sample must have 1 alternative allele")
@@ -169,6 +183,8 @@ object VcfFilter extends ToolCommand {
         notSameGenotype(record) &&
         filterHetVarToHomVar(record) &&
         denovoInSample(record) &&
+        denovoTrio(record, commandArgs.deNovoTrio) &&
+        denovoTrio(record, commandArgs.trioLossOfHet, true) &&
         inIdSet(record)) {
         writer.add(record)
         counterLeft += 1
@@ -273,6 +289,24 @@ object VcfFilter extends ToolCommand {
       }
     }
     return true
+  }
+
+  def denovoTrio(record: VariantContext, trios: List[Trio], onlyLossHet: Boolean = false): Boolean = {
+    for (trio <- trios) {
+      val child = record.getGenotype(trio.child)
+      val father = record.getGenotype(trio.father)
+      val mother = record.getGenotype(trio.mother)
+
+      for (allele <- child.getAlleles) {
+        val childCount = child.countAllele(allele)
+        val fatherCount = father.countAllele(allele)
+        val motherCount = mother.countAllele(allele)
+
+        if (!onlyLossHet && childCount == 1 && fatherCount == 0 && motherCount == 0) return true
+        else if (childCount == 2 && (fatherCount == 0 || motherCount == 0)) return true
+      }
+    }
+    return trios.isEmpty
   }
 
   def inIdSet(record: VariantContext): Boolean = {
