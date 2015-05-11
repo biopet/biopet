@@ -69,9 +69,10 @@ object VcfFilter extends ToolCommand {
                   minSampleDepth: Int = -1,
                   minTotalDepth: Int = -1,
                   minAlternateDepth: Int = -1,
-                  minSamplesPass: Int = 0,
+                  minSamplesPass: Int = 1,
                   minBamAlternateDepth: Int = 0,
                   mustHaveVariant: List[String] = Nil,
+                  calledIn: List[String] = Nil,
                   deNovoInSample: String = null,
                   deNovoTrio: List[Trio] = Nil,
                   trioLossOfHet: List[Trio] = Nil,
@@ -118,6 +119,9 @@ object VcfFilter extends ToolCommand {
     opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
     } text ("Given sample must have 1 alternative allele")
+    opt[String]("calledIn") unbounded () valueName ("<sample>") action { (x, c) =>
+      c.copy(calledIn = x :: c.calledIn)
+    } text ("Must be called in this sample")
     opt[String]("diffGenotype") unbounded () valueName ("<sample:sample>") action { (x, c) =>
       c.copy(diffGenotype = (x.split(":")(0), x.split(":")(1)) :: c.diffGenotype)
     } validate { x => if (x.split(":").length == 2) success else failure("--notSameGenotype should be in this format: sample:sample")
@@ -180,6 +184,7 @@ object VcfFilter extends ToolCommand {
         minAlternateDepth(record) &&
         minBamAlternateDepth(record, header) &&
         mustHaveVariant(record) &&
+        called(record) &&
         notSameGenotype(record) &&
         filterHetVarToHomVar(record) &&
         denovoInSample(record) &&
@@ -198,6 +203,11 @@ object VcfFilter extends ToolCommand {
     writer.close
     invertedWriter.foreach(_.close())
     logger.info("Done")
+  }
+
+  def called(record: VariantContext): Boolean = {
+    if (!commandArgs.calledIn.forall(record.getGenotype(_).isCalled)) false
+    else true
   }
 
   def minQualscore(record: VariantContext): Boolean = {
@@ -302,8 +312,14 @@ object VcfFilter extends ToolCommand {
         val fatherCount = father.countAllele(allele)
         val motherCount = mother.countAllele(allele)
 
-        if (!onlyLossHet && childCount == 1 && fatherCount == 0 && motherCount == 0) return true
-        else if (childCount == 2 && (fatherCount == 0 || motherCount == 0)) return true
+        if (onlyLossHet) {
+          if (childCount == 2 && (
+            (fatherCount == 2 && motherCount == 0) ||
+            (fatherCount == 0 && motherCount == 2))) return true
+        } else {
+          if (childCount == 1 && fatherCount == 0 && motherCount == 0) return true
+          else if (childCount == 2 && (fatherCount == 0 || motherCount == 0)) return true
+        }
       }
     }
     return trios.isEmpty
