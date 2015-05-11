@@ -56,7 +56,8 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
 }
 
 object VcfFilter extends ToolCommand {
-  case class Trio(child: String, father: String, mother: String) {
+  /** Container class for a trio */
+  protected case class Trio(child: String, father: String, mother: String) {
     def this(arg: String) = {
       this(arg.split(":")(0), arg.split(":")(1), arg.split(":")(2))
     }
@@ -157,9 +158,7 @@ object VcfFilter extends ToolCommand {
 
   var commandArgs: Args = _
 
-  /**
-   * @param args the command line arguments
-   */
+  /** @param args the command line arguments */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
     val argsParser = new OptParser
@@ -184,15 +183,15 @@ object VcfFilter extends ToolCommand {
     var counterTotal = 0
     var counterLeft = 0
     for (record <- reader) {
-      if (minQualscore(record) &&
-        filterRefCalls(record) &&
-        filterNoCalls(record) &&
-        minTotalDepth(record) &&
-        minSampleDepth(record) &&
+      if (commandArgs.minQualScore.map(minQualscore(record,_)).getOrElse(true) &&
+        (!commandArgs.filterRefCalls || hasNonRefCalls(record)) &&
+        (!commandArgs.filterNoCalls || hasCalls(record)) &&
+        hasMinTotalDepth(record, commandArgs.minTotalDepth) &&
+        hasMinSampleDepth(record, commandArgs.minSampleDepth, commandArgs.minSamplesPass) &&
         minAlternateDepth(record) &&
         minBamAlternateDepth(record, header) &&
         mustHaveVariant(record) &&
-        called(record) &&
+        calledIn(record, commandArgs.calledIn) &&
         notSameGenotype(record) &&
         filterHetVarToHomVar(record) &&
         denovoInSample(record) &&
@@ -215,35 +214,44 @@ object VcfFilter extends ToolCommand {
     logger.info("Done")
   }
 
-  def called(record: VariantContext): Boolean = {
-    if (!commandArgs.calledIn.forall(record.getGenotype(_).isCalled)) false
+  /**
+   * Checks if given samples are called
+   * @param record VCF record
+   * @param samples Samples that need this sample to be called
+   * @return false when filters fail
+   */
+  def calledIn(record: VariantContext, samples: List[String]): Boolean = {
+    if (!samples.forall(record.getGenotype(_).isCalled)) false
     else true
   }
 
-  def minQualscore(record: VariantContext): Boolean = {
-    if (commandArgs.minQualScore.isEmpty) return true
-    record.getPhredScaledQual >= commandArgs.minQualScore.get
+  /**
+   * Checks if record has atleast minQualScore
+   * @param record VCF record
+   * @param minQualScore Minimal quality score
+   * @return false when filters fail
+   */
+  def minQualscore(record: VariantContext, minQualScore: Double): Boolean = {
+    record.getPhredScaledQual >= minQualScore
   }
 
-  def filterRefCalls(record: VariantContext): Boolean = {
-    if (commandArgs.filterNoCalls) record.getGenotypes.exists(g => !g.isHomRef)
-    else true
+  def hasNonRefCalls(record: VariantContext): Boolean = {
+    record.getGenotypes.exists(g => !g.isHomRef)
   }
 
-  def filterNoCalls(record: VariantContext): Boolean = {
-    if (commandArgs.filterNoCalls) record.getGenotypes.exists(g => !g.isNoCall)
-    else true
+  def hasCalls(record: VariantContext): Boolean = {
+    record.getGenotypes.exists(g => !g.isNoCall)
   }
 
-  def minTotalDepth(record: VariantContext): Boolean = {
-    record.getAttributeAsInt("DP", -1) >= commandArgs.minTotalDepth
+  def hasMinTotalDepth(record: VariantContext, minTotalDepth: Int): Boolean = {
+    record.getAttributeAsInt("DP", -1) >= minTotalDepth
   }
 
-  def minSampleDepth(record: VariantContext): Boolean = {
+  def hasMinSampleDepth(record: VariantContext, minSampleDepth: Int, minSamplesPass: Int): Boolean = {
     record.getGenotypes.count(genotype => {
       val DP = if (genotype.hasDP) genotype.getDP else -1
-      DP >= commandArgs.minSampleDepth
-    }) >= commandArgs.minSamplesPass
+      DP >= minSampleDepth
+    }) >= minSamplesPass
   }
 
   def minAlternateDepth(record: VariantContext): Boolean = {
