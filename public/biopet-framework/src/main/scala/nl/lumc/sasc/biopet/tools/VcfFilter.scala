@@ -74,6 +74,7 @@ object VcfFilter extends ToolCommand {
                   mustHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
                   deNovoInSample: String = null,
+                  resToDom: List[Trio] = Nil,
                   deNovoTrio: List[Trio] = Nil,
                   trioLossOfHet: List[Trio] = Nil,
                   diffGenotype: List[(String, String)] = Nil,
@@ -107,6 +108,9 @@ object VcfFilter extends ToolCommand {
     opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
       c.copy(minBamAlternateDepth = x)
     } // TODO: Convert this to more generic filter
+    opt[String]("resToDom") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+      c.copy(resToDom = new Trio(x) :: c.resToDom)
+    } text ("Only show variants that contain unique alleles in complete set for given sample")
     opt[String]("deNovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(deNovoInSample = x)
     } text ("Only show variants that contain unique alleles in complete set for given sample")
@@ -190,6 +194,7 @@ object VcfFilter extends ToolCommand {
         denovoInSample(record) &&
         denovoTrio(record, commandArgs.deNovoTrio) &&
         denovoTrio(record, commandArgs.trioLossOfHet, true) &&
+        resToDom(record, commandArgs.resToDom) &&
         inIdSet(record)) {
         writer.add(record)
         counterLeft += 1
@@ -299,6 +304,18 @@ object VcfFilter extends ToolCommand {
       }
     }
     return true
+  }
+
+  def resToDom(record: VariantContext, trios: List[Trio]): Boolean = {
+    for (trio <- trios) {
+      val child = record.getGenotype(trio.child)
+
+      if (child.isHomVar && child.getAlleles.forall(allele => {
+        record.getGenotype(trio.father).countAllele(allele) == 1 &&
+          record.getGenotype(trio.mother).countAllele(allele) == 1
+      })) return true
+    }
+    return trios.isEmpty
   }
 
   def denovoTrio(record: VariantContext, trios: List[Trio], onlyLossHet: Boolean = false): Boolean = {
