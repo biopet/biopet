@@ -75,6 +75,7 @@ object VcfFilter extends ToolCommand {
                   calledIn: List[String] = Nil,
                   deNovoInSample: String = null,
                   resToDom: List[Trio] = Nil,
+                  trioCompound: List[Trio] = Nil,
                   deNovoTrio: List[Trio] = Nil,
                   trioLossOfHet: List[Trio] = Nil,
                   diffGenotype: List[(String, String)] = Nil,
@@ -110,7 +111,10 @@ object VcfFilter extends ToolCommand {
     } // TODO: Convert this to more generic filter
     opt[String]("resToDom") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
       c.copy(resToDom = new Trio(x) :: c.resToDom)
-    } text ("Only show variants that contain unique alleles in complete set for given sample")
+    } text ("Only shows variants where child is homozygous and both parants hetrozygous")
+    opt[String]("trioCompound") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+      c.copy(trioCompound = new Trio(x) :: c.trioCompound)
+    } text ("Only shows variants where child is a compound variant combined from both parants")
     opt[String]("deNovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
       c.copy(deNovoInSample = x)
     } text ("Only show variants that contain unique alleles in complete set for given sample")
@@ -195,6 +199,7 @@ object VcfFilter extends ToolCommand {
         denovoTrio(record, commandArgs.deNovoTrio) &&
         denovoTrio(record, commandArgs.trioLossOfHet, true) &&
         resToDom(record, commandArgs.resToDom) &&
+        trioCompound(record, commandArgs.trioCompound) &&
         inIdSet(record)) {
         writer.add(record)
         counterLeft += 1
@@ -313,6 +318,18 @@ object VcfFilter extends ToolCommand {
       if (child.isHomVar && child.getAlleles.forall(allele => {
         record.getGenotype(trio.father).countAllele(allele) == 1 &&
           record.getGenotype(trio.mother).countAllele(allele) == 1
+      })) return true
+    }
+    return trios.isEmpty
+  }
+
+  def trioCompound(record: VariantContext, trios: List[Trio]): Boolean = {
+    for (trio <- trios) {
+      val child = record.getGenotype(trio.child)
+
+      if (child.isHetNonRef && child.getAlleles.forall(allele => {
+        record.getGenotype(trio.father).countAllele(allele) >= 1 &&
+          record.getGenotype(trio.mother).countAllele(allele) >= 1
       })) return true
     }
     return trios.isEmpty
