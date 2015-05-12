@@ -25,19 +25,19 @@ import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFun
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import scala.collection.mutable.ListBuffer
 
-/**
- * Base for biopet pipeline
- */
+/** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging {
 
-  @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
+  @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
+  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'path:path:key=value'", fullName = "config_value", shortName = "cv", required = false)
+  val configValues: List[String] = Nil
+
+  /** Output directory of pipeline */
   var outputDir: File = {
-    Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
-      case Some(value) => new File(value.asString).getAbsoluteFile
-      case _           => new File(".")
-    }
+    if (config.contains("output_dir", path = Nil)) config("output_dir", path = Nil).asFile
+    else new File(".")
   }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
@@ -57,11 +57,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
   /** Pipeline itself */
   def biopetScript
 
-  /**
-   * Script from queue itself, final to force some checks for each pipeline and write report
-   */
+  /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
-    outputDir = config("output_dir").asFile.getAbsoluteFile
+    outputDir = config("output_dir")
+    outputDir = outputDir.getAbsoluteFile
     init
     biopetScript
 

@@ -17,11 +17,12 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CollectGcBiasMetrics */
-class CollectGcBiasMetrics(val root: Configurable) extends Picard {
-  javaMainClass = "picard.analysis.CollectGcBiasMetrics"
+class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable {
+  javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: Seq[File] = Nil
@@ -65,6 +66,12 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
     optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
     conditional(isBisulfiteSequinced.getOrElse(false), "IS_BISULFITE_SEQUENCED=TRUE")
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectGcBiasMetrics {

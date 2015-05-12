@@ -201,6 +201,7 @@ object GentrapTest {
     "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "dict" -> "test",
+    "refFlat" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",

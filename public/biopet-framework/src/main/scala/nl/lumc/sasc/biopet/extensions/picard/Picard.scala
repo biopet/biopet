@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import scala.io.Source
+
+import org.broadinstitute.gatk.utils.commandline.Argument
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
-
-import scala.io.Source
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 
 /**
  * General picard extension
@@ -80,19 +81,19 @@ object Picard {
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
-    if (file.exists) {
+  def getMetrics(file: File, tag: String = "METRICS CLASS"): Option[Map[String, Any]] =
+    if (!file.exists) None
+    else {
       val lines = Source.fromFile(file).getLines().toArray
 
-      val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
+      val start = lines.indexWhere(_.startsWith("## " + tag)) + 1
       val end = lines.indexOf("", start)
 
-      val header = lines(start).split("\t")
-      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val header = lines(start).split("\t").toList
+      val content = (for (i <- (start + 1) until end) yield {
+        lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
+      }).toList
 
-      Option((header, content))
-    } else {
-      None
+      Some(Map("content" -> (header :: content)))
     }
-
 }

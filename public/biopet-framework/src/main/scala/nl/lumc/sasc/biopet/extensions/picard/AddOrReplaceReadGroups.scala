@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard AddOrReplaceReadGroups */
 class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.AddOrReplaceReadGroups"
+  javaMainClass = new picard.sam.AddOrReplaceReadGroups().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _

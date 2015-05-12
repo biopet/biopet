@@ -141,7 +141,7 @@ object ConfigTest {
     )
   )
 
-  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2)
+  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2, "json")
 
   val config = new Config
   config.loadConfigFile(file)

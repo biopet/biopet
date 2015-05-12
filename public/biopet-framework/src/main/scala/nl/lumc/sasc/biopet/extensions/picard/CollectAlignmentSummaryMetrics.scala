@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CollectAlignmentSummaryMetrics */
 class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
-  javaMainClass = "picard.analysis.CollectAlignmentSummaryMetrics"
+  javaMainClass = new picard.analysis.CollectAlignmentSummaryMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = _
@@ -66,19 +66,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
-    case None => Map()
-    case Some((header, content)) =>
-      (for (category <- 0 until content.size) yield {
-        content(category)(0) -> (
-          for (
-            i <- 1 until header.size if i < content(category).size
-          ) yield {
-            header(i).toLowerCase -> content(category)(i)
-          }).toMap
-      }
-      ).toMap
-  }
+  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectAlignmentSummaryMetrics {

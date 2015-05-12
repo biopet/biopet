@@ -51,6 +51,11 @@ object VcfWithVcf extends ToolCommand {
 
     val header = reader.getFileHeader
     val secondHeader = secondaryReader.getFileHeader
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(header.getSequenceDictionary).
+      build)
+    writer.writeHeader(header)
 
     for (x <- commandArgs.fields) {
       if (header.hasInfoLine(x.outputField))
@@ -65,9 +70,6 @@ object VcfWithVcf extends ToolCommand {
       header.addMetaDataLine(newHeaderLine)
     }
 
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setOutputFile(commandArgs.outputFile).build())
-    writer.writeHeader(header)
     var idx = 0
 
     for (record <- reader) {
