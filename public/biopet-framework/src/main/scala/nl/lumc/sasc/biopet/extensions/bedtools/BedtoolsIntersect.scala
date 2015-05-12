@@ -55,12 +55,12 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
 object BedtoolsIntersect {
   /** Returns default bedtools intersect */
   def apply(root: Configurable, input: File, intersect: File, output: File,
-            minOverlap: Double = 0, count: Boolean = false): BedtoolsIntersect = {
+            minOverlap: Option[Double] = None, count: Boolean = false): BedtoolsIntersect = {
     val bedtoolsIntersect = new BedtoolsIntersect(root)
     bedtoolsIntersect.input = input
     bedtoolsIntersect.intersectFile = intersect
     bedtoolsIntersect.output = output
-    if (minOverlap > 0) bedtoolsIntersect.minOverlap = Option(minOverlap)
+    bedtoolsIntersect.minOverlap = minOverlap
     bedtoolsIntersect.count = count
     return bedtoolsIntersect
   }

@@ -36,4 +36,9 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     val finalCmd = executable + cmd.substring(cmd.indexOf(" "))
     return cmd
   }
+
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    javaMemoryLimit = memoryLimit
+  }
 }
