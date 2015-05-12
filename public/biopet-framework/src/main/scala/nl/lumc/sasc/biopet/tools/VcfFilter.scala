@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.tools
 
 import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.{ VCFHeader, VCFFileReader }
+import htsjdk.variant.vcf.VCFFileReader
 import htsjdk.variant.variantcontext.VariantContext
 import java.io.File
-import java.util.ArrayList
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -71,7 +70,6 @@ object VcfFilter extends ToolCommand {
                   minTotalDepth: Int = -1,
                   minAlternateDepth: Int = -1,
                   minSamplesPass: Int = 1,
-                  minBamAlternateDepth: Int = 0,
                   mustHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
                   deNovoInSample: String = null,
@@ -86,93 +84,88 @@ object VcfFilter extends ToolCommand {
                   iDset: Set[String] = Set()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
-    } text ("Input vcf file")
-    opt[File]('o', "outputVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    } text "Input vcf file"
+    opt[File]('o', "outputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputVcf = x)
-    } text ("Output vcf file")
-    opt[File]("invertedOutputVcf") maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    } text "Output vcf file"
+    opt[File]("invertedOutputVcf") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(invertedOutputVcf = Some(x))
-    } text ("inverted output vcf file")
-    opt[Int]("minSampleDepth") unbounded () valueName ("<int>") action { (x, c) =>
+    } text "inverted output vcf file"
+    opt[Int]("minSampleDepth") unbounded () valueName "<int>" action { (x, c) =>
       c.copy(minSampleDepth = x)
-    } text ("Min value for DP in genotype fields")
-    opt[Int]("minTotalDepth") unbounded () valueName ("<int>") action { (x, c) =>
+    } text "Min value for DP in genotype fields"
+    opt[Int]("minTotalDepth") unbounded () valueName "<int>" action { (x, c) =>
       c.copy(minTotalDepth = x)
-    } text ("Min value of DP field in INFO fields")
-    opt[Int]("minAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
+    } text "Min value of DP field in INFO fields"
+    opt[Int]("minAlternateDepth") unbounded () valueName "<int>" action { (x, c) =>
       c.copy(minAlternateDepth = x)
-    } text ("Min value of AD field in genotype fields")
-    opt[Int]("minSamplesPass") unbounded () valueName ("<int>") action { (x, c) =>
+    } text "Min value of AD field in genotype fields"
+    opt[Int]("minSamplesPass") unbounded () valueName "<int>" action { (x, c) =>
       c.copy(minSamplesPass = x)
-    } text ("Min number off samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth")
-    opt[Int]("minBamAlternateDepth") unbounded () valueName ("<int>") action { (x, c) =>
-      c.copy(minBamAlternateDepth = x)
-    } // TODO: Convert this to more generic filter
-    opt[String]("resToDom") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+    } text "Min number off samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth"
+    opt[String]("resToDom") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(resToDom = new Trio(x) :: c.resToDom)
-    } text ("Only shows variants where child is homozygous and both parants hetrozygous")
-    opt[String]("trioCompound") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+    } text "Only shows variants where child is homozygous and both parants hetrozygous"
+    opt[String]("trioCompound") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(trioCompound = new Trio(x) :: c.trioCompound)
-    } text ("Only shows variants where child is a compound variant combined from both parants")
-    opt[String]("deNovoInSample") maxOccurs (1) unbounded () valueName ("<sample>") action { (x, c) =>
+    } text "Only shows variants where child is a compound variant combined from both parants"
+    opt[String]("deNovoInSample") maxOccurs 1 unbounded () valueName "<sample>" action { (x, c) =>
       c.copy(deNovoInSample = x)
-    } text ("Only show variants that contain unique alleles in complete set for given sample")
-    opt[String]("deNovoTrio") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+    } text "Only show variants that contain unique alleles in complete set for given sample"
+    opt[String]("deNovoTrio") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(deNovoTrio = new Trio(x) :: c.deNovoTrio)
-    } text ("Only show variants that are denovo in the trio")
-    opt[String]("trioLossOfHet") unbounded () valueName ("<child:father:mother>") action { (x, c) =>
+    } text "Only show variants that are denovo in the trio"
+    opt[String]("trioLossOfHet") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(trioLossOfHet = new Trio(x) :: c.trioLossOfHet)
-    } text ("Only show variants where a loss of hetrozygosity is detected")
-    opt[String]("mustHaveVariant") unbounded () valueName ("<sample>") action { (x, c) =>
+    } text "Only show variants where a loss of hetrozygosity is detected"
+    opt[String]("mustHaveVariant") unbounded () valueName "<sample>" action { (x, c) =>
       c.copy(mustHaveVariant = x :: c.mustHaveVariant)
-    } text ("Given sample must have 1 alternative allele")
-    opt[String]("calledIn") unbounded () valueName ("<sample>") action { (x, c) =>
+    } text "Given sample must have 1 alternative allele"
+    opt[String]("calledIn") unbounded () valueName "<sample>" action { (x, c) =>
       c.copy(calledIn = x :: c.calledIn)
-    } text ("Must be called in this sample")
-    opt[String]("diffGenotype") unbounded () valueName ("<sample:sample>") action { (x, c) =>
+    } text "Must be called in this sample"
+    opt[String]("diffGenotype") unbounded () valueName "<sample:sample>" action { (x, c) =>
       c.copy(diffGenotype = (x.split(":")(0), x.split(":")(1)) :: c.diffGenotype)
     } validate { x => if (x.split(":").length == 2) success else failure("--notSameGenotype should be in this format: sample:sample")
-    } text ("Given samples must have a different genotype")
-    opt[String]("filterHetVarToHomVar") unbounded () valueName ("<sample:sample>") action { (x, c) =>
+    } text "Given samples must have a different genotype"
+    opt[String]("filterHetVarToHomVar") unbounded () valueName "<sample:sample>" action { (x, c) =>
       c.copy(filterHetVarToHomVar = (x.split(":")(0), x.split(":")(1)) :: c.filterHetVarToHomVar)
     } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
-    } text ("If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered")
+    } text "If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered"
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
       c.copy(filterRefCalls = true)
-    } text ("Filter when there are only ref calls")
+    } text "Filter when there are only ref calls"
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
       c.copy(filterNoCalls = true)
-    } text ("Filter when there are only no calls")
+    } text "Filter when there are only no calls"
     opt[Double]("minQualScore") unbounded () action { (x, c) =>
       c.copy(minQualScore = Some(x))
-    } text ("Min qual score")
+    } text "Min qual score"
     opt[String]("id") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset + x)
-    } text ("Id that may pass the filter")
+    } text "Id that may pass the filter"
     opt[File]("idFile") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset ++ Source.fromFile(x).getLines())
-    } text ("File that contain list of IDs to get from vcf file")
+    } text "File that contain list of IDs to get from vcf file"
   }
-
-  var commandArgs: Args = _
 
   /** @param args the command line arguments */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
     val argsParser = new OptParser
-    commandArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val reader = new VCFFileReader(commandArgs.inputVcf, false)
+    val reader = new VCFFileReader(cmdArgs.inputVcf, false)
     val header = reader.getFileHeader
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setOutputFile(commandArgs.outputVcf).
+      setOutputFile(cmdArgs.outputVcf).
       setReferenceDictionary(header.getSequenceDictionary).
       build)
     writer.writeHeader(header)
 
-    val invertedWriter = commandArgs.invertedOutputVcf.collect {
+    val invertedWriter = cmdArgs.invertedOutputVcf.collect {
       case x => new VariantContextWriterBuilder().
         setOutputFile(x).
         setReferenceDictionary(header.getSequenceDictionary).
@@ -183,23 +176,25 @@ object VcfFilter extends ToolCommand {
     var counterTotal = 0
     var counterLeft = 0
     for (record <- reader) {
-      if (commandArgs.minQualScore.map(minQualscore(record,_)).getOrElse(true) &&
-        (!commandArgs.filterRefCalls || hasNonRefCalls(record)) &&
-        (!commandArgs.filterNoCalls || hasCalls(record)) &&
-        hasMinTotalDepth(record, commandArgs.minTotalDepth) &&
-        hasMinSampleDepth(record, commandArgs.minSampleDepth, commandArgs.minSamplesPass) &&
-        minAlternateDepth(record) &&
-        minBamAlternateDepth(record, header) &&
-        mustHaveVariant(record) &&
-        calledIn(record, commandArgs.calledIn) &&
-        notSameGenotype(record) &&
-        filterHetVarToHomVar(record) &&
-        denovoInSample(record) &&
-        denovoTrio(record, commandArgs.deNovoTrio) &&
-        denovoTrio(record, commandArgs.trioLossOfHet, true) &&
-        resToDom(record, commandArgs.resToDom) &&
-        trioCompound(record, commandArgs.trioCompound) &&
-        inIdSet(record)) {
+      if (cmdArgs.minQualScore.map(minQualscore(record, _)).getOrElse(true) &&
+        (!cmdArgs.filterRefCalls || hasNonRefCalls(record)) &&
+        (!cmdArgs.filterNoCalls || hasCalls(record)) &&
+        hasMinTotalDepth(record, cmdArgs.minTotalDepth) &&
+        hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
+        minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
+        (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
+        calledIn(record, cmdArgs.calledIn) &&
+        (cmdArgs.diffGenotype.isEmpty || cmdArgs.diffGenotype.forall(x => notSameGenotype(record, x._1, x._2))) &&
+        (
+          cmdArgs.filterHetVarToHomVar.isEmpty ||
+          cmdArgs.filterHetVarToHomVar.forall(x => filterHetVarToHomVar(record, x._1, x._2))
+        ) &&
+          denovoInSample(record, cmdArgs.deNovoInSample) &&
+          denovoTrio(record, cmdArgs.deNovoTrio) &&
+          denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
+          resToDom(record, cmdArgs.resToDom) &&
+          trioCompound(record, cmdArgs.trioCompound) &&
+          (cmdArgs.iDset.isEmpty || inIdSet(record, cmdArgs.iDset))) {
         writer.add(record)
         counterLeft += 1
       } else
@@ -208,8 +203,8 @@ object VcfFilter extends ToolCommand {
       if (counterTotal % 100000 == 0) logger.info(counterTotal + " variants processed, " + counterLeft + " left")
     }
     logger.info(counterTotal + " variants processed, " + counterLeft + " left")
-    reader.close
-    writer.close
+    reader.close()
+    writer.close()
     invertedWriter.foreach(_.close())
     logger.info("Done")
   }
@@ -254,69 +249,45 @@ object VcfFilter extends ToolCommand {
     }) >= minSamplesPass
   }
 
-  def minAlternateDepth(record: VariantContext): Boolean = {
+  def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int): Boolean = {
     record.getGenotypes.count(genotype => {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
-      if (!AD.isEmpty) AD.tail.count(_ >= commandArgs.minAlternateDepth) > 0 else true
-    }) >= commandArgs.minSamplesPass
+      if (!AD.isEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
+    }) >= minSamplesPass
   }
 
-  def minBamAlternateDepth(record: VariantContext, header: VCFHeader): Boolean = {
-    val bamADFields = (for (line <- header.getInfoHeaderLines if line.getID.startsWith("BAM-AD-")) yield line.getID).toList
-
-    val bamADvalues = (for (field <- bamADFields) yield {
-      record.getAttribute(field, new ArrayList) match {
-        case t: ArrayList[_] if t.length > 1 => {
-          for (i <- 1 until t.size) yield {
-            t(i) match {
-              case a: Int    => a > commandArgs.minBamAlternateDepth
-              case a: String => a.toInt > commandArgs.minBamAlternateDepth
-              case _         => false
-            }
-          }
-        }
-        case _ => List(false)
-      }
-    }).flatten
-
-    return commandArgs.minBamAlternateDepth <= 0 || bamADvalues.count(_ == true) >= commandArgs.minSamplesPass
+  def mustHaveVariant(record: VariantContext, mustHaveVariant: List[String]): Boolean = {
+    !mustHaveVariant.map(record.getGenotype).exists(a => a.isHomRef || a.isNoCall)
   }
 
-  def mustHaveVariant(record: VariantContext): Boolean = {
-    return !commandArgs.mustHaveVariant.map(record.getGenotype(_)).exists(a => a.isHomRef || a.isNoCall)
+  def notSameGenotype(record: VariantContext, sample1: String, sample2: String): Boolean = {
+    val genotype1 = record.getGenotype(sample1)
+    val genotype2 = record.getGenotype(sample2)
+    if (genotype1.sameGenotype(genotype2)) false
+    else true
   }
 
-  def notSameGenotype(record: VariantContext): Boolean = {
-    for ((sample1, sample2) <- commandArgs.diffGenotype) {
-      val genotype1 = record.getGenotype(sample1)
-      val genotype2 = record.getGenotype(sample2)
-      if (genotype1.sameGenotype(genotype2)) return false
-    }
-    return true
-  }
-
-  def filterHetVarToHomVar(record: VariantContext): Boolean = {
-    for ((sample1, sample2) <- commandArgs.filterHetVarToHomVar) {
-      val genotype1 = record.getGenotype(sample1)
-      val genotype2 = record.getGenotype(sample2)
-      if (genotype1.isHet && !genotype1.getAlleles.forall(_.isNonReference)) {
-        for (allele <- genotype1.getAlleles if allele.isNonReference) {
-          if (genotype2.getAlleles.forall(_.basesMatch(allele))) return false
-        }
+  def filterHetVarToHomVar(record: VariantContext, sample1: String, sample2: String): Boolean = {
+    val genotype1 = record.getGenotype(sample1)
+    val genotype2 = record.getGenotype(sample2)
+    if (genotype1.isHet && !genotype1.getAlleles.forall(_.isNonReference)) {
+      for (allele <- genotype1.getAlleles if allele.isNonReference) {
+        if (genotype2.getAlleles.forall(_.basesMatch(allele))) return false
       }
     }
-    return true
+    true
   }
 
-  def denovoInSample(record: VariantContext): Boolean = {
-    if (commandArgs.deNovoInSample == null) return true
-    val genotype = record.getGenotype(commandArgs.deNovoInSample)
-    for (allele <- genotype.getAlleles if allele.isNonReference) {
-      for (g <- record.getGenotypes if g.getSampleName != commandArgs.deNovoInSample) {
+  def denovoInSample(record: VariantContext, sample: String): Boolean = {
+    if (sample == null) return true
+    val genotype = record.getGenotype(sample)
+    if (genotype.isNoCall) return false
+    for (allele <- genotype.getAlleles) {
+      for (g <- record.getGenotypes if g.getSampleName != sample) {
         if (g.getAlleles.exists(_.basesMatch(allele))) return false
       }
     }
-    return true
+    true
   }
 
   def resToDom(record: VariantContext, trios: List[Trio]): Boolean = {
@@ -328,7 +299,7 @@ object VcfFilter extends ToolCommand {
           record.getGenotype(trio.mother).countAllele(allele) == 1
       })) return true
     }
-    return trios.isEmpty
+    trios.isEmpty
   }
 
   def trioCompound(record: VariantContext, trios: List[Trio]): Boolean = {
@@ -340,7 +311,7 @@ object VcfFilter extends ToolCommand {
           record.getGenotype(trio.mother).countAllele(allele) >= 1
       })) return true
     }
-    return trios.isEmpty
+    trios.isEmpty
   }
 
   def denovoTrio(record: VariantContext, trios: List[Trio], onlyLossHet: Boolean = false): Boolean = {
@@ -364,11 +335,10 @@ object VcfFilter extends ToolCommand {
         }
       }
     }
-    return trios.isEmpty
+    trios.isEmpty
   }
 
-  def inIdSet(record: VariantContext): Boolean = {
-    if (commandArgs.iDset.isEmpty) true
-    else record.getID.split(",").exists(commandArgs.iDset.contains(_))
+  def inIdSet(record: VariantContext, idSet: Set[String]): Boolean = {
+    record.getID.split(",").exists(idSet.contains)
   }
 }
