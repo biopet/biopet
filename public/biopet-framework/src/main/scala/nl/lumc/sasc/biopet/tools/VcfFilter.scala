@@ -230,36 +230,60 @@ object VcfFilter extends ToolCommand {
     record.getPhredScaledQual >= minQualScore
   }
 
+  /** returns true record contains Non reference genotypes */
   def hasNonRefCalls(record: VariantContext): Boolean = {
     record.getGenotypes.exists(g => !g.isHomRef)
   }
 
+  /** returns true when record has calls */
   def hasCalls(record: VariantContext): Boolean = {
     record.getGenotypes.exists(g => !g.isNoCall)
   }
 
+  /** returns true when DP INFO field is atleast the given value */
   def hasMinTotalDepth(record: VariantContext, minTotalDepth: Int): Boolean = {
     record.getAttributeAsInt("DP", -1) >= minTotalDepth
   }
 
-  def hasMinSampleDepth(record: VariantContext, minSampleDepth: Int, minSamplesPass: Int): Boolean = {
+  /**
+   * Checks if DP genotype field have a minimal value
+   * @param record VCF record
+   * @param minSampleDepth minimal depth
+   * @param minSamplesPass Minimal number of samples to pass filter
+   * @return true if filter passed
+   */
+  def hasMinSampleDepth(record: VariantContext, minSampleDepth: Int, minSamplesPass: Int = 1): Boolean = {
     record.getGenotypes.count(genotype => {
       val DP = if (genotype.hasDP) genotype.getDP else -1
       DP >= minSampleDepth
     }) >= minSamplesPass
   }
 
-  def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int): Boolean = {
+  /**
+   * Checks if AD genotype field have a minimal value
+   * @param record VCF record
+   * @param minAlternateDepth minimal depth
+   * @param minSamplesPass Minimal number of samples to pass filter
+   * @return true if filter passed
+   */
+  def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int = 1): Boolean = {
     record.getGenotypes.count(genotype => {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
       if (!AD.isEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
     }) >= minSamplesPass
   }
 
+  /**
+   * Checks if given samples does have a variant hin this record
+   * @param record VCF record
+   * @param mustHaveVariant List of samples that should have this variant
+   * @return true if filter passed
+   */
   def mustHaveVariant(record: VariantContext, mustHaveVariant: List[String]): Boolean = {
     !mustHaveVariant.map(record.getGenotype).exists(a => a.isHomRef || a.isNoCall)
   }
 
+  /** Checks if given samples have the same genotype */
   def notSameGenotype(record: VariantContext, sample1: String, sample2: String): Boolean = {
     val genotype1 = record.getGenotype(sample1)
     val genotype2 = record.getGenotype(sample2)
@@ -267,6 +291,7 @@ object VcfFilter extends ToolCommand {
     else true
   }
 
+  /** Checks if sample1 is hetrozygous and if sample2 is homozygous for a alternative allele in sample1 */
   def filterHetVarToHomVar(record: VariantContext, sample1: String, sample2: String): Boolean = {
     val genotype1 = record.getGenotype(sample1)
     val genotype2 = record.getGenotype(sample2)
@@ -278,6 +303,7 @@ object VcfFilter extends ToolCommand {
     true
   }
 
+  /** Checks if given sample have alternative alleles that are unique in the VCF record */
   def denovoInSample(record: VariantContext, sample: String): Boolean = {
     if (sample == null) return true
     val genotype = record.getGenotype(sample)
@@ -290,6 +316,7 @@ object VcfFilter extends ToolCommand {
     true
   }
 
+  /** Return true when variant is homozygous in the child and hetrozygous in parants */
   def resToDom(record: VariantContext, trios: List[Trio]): Boolean = {
     for (trio <- trios) {
       val child = record.getGenotype(trio.child)
@@ -302,6 +329,7 @@ object VcfFilter extends ToolCommand {
     trios.isEmpty
   }
 
+  /** Returns true when variant a compound variant in the child and hetrozygous in parants */
   def trioCompound(record: VariantContext, trios: List[Trio]): Boolean = {
     for (trio <- trios) {
       val child = record.getGenotype(trio.child)
@@ -314,6 +342,7 @@ object VcfFilter extends ToolCommand {
     trios.isEmpty
   }
 
+  /** Returns true when child got a deNovo variant */
   def denovoTrio(record: VariantContext, trios: List[Trio], onlyLossHet: Boolean = false): Boolean = {
     for (trio <- trios) {
       val child = record.getGenotype(trio.child)
@@ -338,6 +367,7 @@ object VcfFilter extends ToolCommand {
     trios.isEmpty
   }
 
+  /** Returns true when VCF record contains a ID from the given list */
   def inIdSet(record: VariantContext, idSet: Set[String]): Boolean = {
     record.getID.split(",").exists(idSet.contains)
   }
