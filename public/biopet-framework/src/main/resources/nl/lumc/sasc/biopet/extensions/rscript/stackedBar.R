@@ -28,6 +28,6 @@ ggplot(DF1, aes(x = Rank, y = value, fill = variable)) +
   ylab(arguments$ylabel) + 
   guides(fill=guide_legend(title=arguments$llabel)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) +
-  geom_bar(stat = "identity", width=0.75)
+  geom_bar(stat = "identity", width=1)
 
 dev.off()

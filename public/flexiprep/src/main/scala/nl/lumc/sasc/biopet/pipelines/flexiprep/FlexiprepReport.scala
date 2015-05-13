@@ -1,9 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, ReportBuilder }
-import nl.lumc.sasc.biopet.core.summary.{SummaryValue, Summary}
+import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 
 /**
@@ -44,10 +44,10 @@ object FlexiprepReport extends ReportBuilder {
   // FIXME: Not yet finished
 
   def readSummaryPlot(outputDir: File,
-                         prefix: String,
-                         read: String,
-                         summary: Summary,
-                         sampleId: Option[String] = None): Unit = {
+                      prefix: String,
+                      read: String,
+                      summary: Summary,
+                      sampleId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -74,8 +74,10 @@ object FlexiprepReport extends ReportBuilder {
       sb.toString
     }
 
-    for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
-         lib <- summary.libraries(sample)) {
+    for (
+      sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+      lib <- summary.libraries(sample)
+    ) {
       tsvWriter.println(getLine(summary, sample, lib))
     }
 
@@ -112,8 +114,10 @@ object FlexiprepReport extends ReportBuilder {
       sb.toString
     }
 
-    for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
-         lib <- summary.libraries(sample)) {
+    for (
+      sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+      lib <- summary.libraries(sample)
+    ) {
       tsvWriter.println(getLine(summary, sample, lib))
     }
 

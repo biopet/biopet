@@ -2,8 +2,9 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
+import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 
 import scala.io.Source
@@ -11,15 +12,40 @@ import scala.io.Source
 /**
  * Created by pjvan_thof on 3/27/15.
  */
+trait ReportBuilderExtension extends BiopetJavaCommandLineFunction {
+
+  val builder: ReportBuilder
+
+  @Input(required = true)
+  var summaryFile: File = _
+
+  var outputDir: File = _
+
+  var args: Map[String, String] = Map()
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    jobOutputFile = new File(outputDir, ".report.log.out")
+    javaMainClass = builder.getClass.getName.takeWhile(_ != '$')
+  }
+
+  override def commandLine: String = {
+    super.commandLine +
+      required("--summary", summaryFile) +
+      required("--outputDir", outputDir) +
+      args.map(x => required(x._1, x._2)).mkString
+  }
+}
+
 trait ReportBuilder extends ToolCommand {
 
   case class Args(summary: File = null, outputDir: File = null, pageArgs: Map[String, String] = Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('s', "summary") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('s', "summary") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
     }
-    opt[File]('o', "outputDir") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "outputDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     }
     opt[Map[String, String]]('a', "args") action { (x, c) =>
@@ -50,7 +76,7 @@ trait ReportBuilder extends ToolCommand {
     val cssDir = new File(cmdArgs.outputDir, "css")
     cssDir.mkdirs()
     val cssWriter = new PrintWriter(new File(cssDir, "biopet.css"))
-    Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/biopet.css")).getLines().foreach(cssWriter.println(_))
+    Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/biopet.css")).getLines().foreach(cssWriter.println)
     cssWriter.close()
 
     logger.info("Parsing summary")

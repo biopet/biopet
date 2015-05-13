@@ -1,9 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.report.{ ReportSection, MultisampleReportBuilder, ReportPage }
-import nl.lumc.sasc.biopet.core.summary.{SummaryValue, Summary}
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, MultisampleReportBuilder, ReportPage }
+import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
@@ -11,6 +12,10 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 /**
  * Created by pjvan_thof on 3/30/15.
  */
+class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = ShivaReport
+}
+
 object ShivaReport extends MultisampleReportBuilder {
 
   // FIXME: Not yet finished
@@ -74,10 +79,10 @@ object ShivaReport extends MultisampleReportBuilder {
   def reportName = "Shiva Report"
 
   def variantSummaryPlot(outputDir: File,
-                           prefix: String,
-                           summary: Summary,
-                           libraryLevel: Boolean = false,
-                           sampleId: Option[String] = None): Unit = {
+                         prefix: String,
+                         summary: Summary,
+                         libraryLevel: Boolean = false,
+                         sampleId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -103,8 +108,10 @@ object ShivaReport extends MultisampleReportBuilder {
     }
 
     if (libraryLevel) {
-      for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
-           lib <- summary.libraries(sample)) {
+      for (
+        sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+        lib <- summary.libraries(sample)
+      ) {
         tsvWriter.println(getLine(summary, sample, Some(lib)))
       }
     } else {

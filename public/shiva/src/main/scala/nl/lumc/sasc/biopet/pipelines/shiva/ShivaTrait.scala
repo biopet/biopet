@@ -45,6 +45,13 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     addSummaryJobs
   }
 
+  override def reportClass = {
+    val shiva = new ShivaReport(this)
+    shiva.outputDir = new File(outputDir, "report")
+    shiva.summaryFile = summaryFile
+    Some(shiva)
+  }
+
   /** Method to make the variantcalling submodule of shiva */
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {

@@ -1,9 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
-import nl.lumc.sasc.biopet.core.summary.{SummaryValue, Summary}
+import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 
 /**
@@ -65,8 +65,10 @@ object BammetricsReport extends ReportBuilder {
     }
 
     if (libraryLevel) {
-      for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
-           lib <- summary.libraries(sample)) {
+      for (
+        sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+        lib <- summary.libraries(sample)
+      ) {
         tsvWriter.println(getLine(summary, sample, Some(lib)))
       }
     } else {
@@ -84,6 +86,5 @@ object BammetricsReport extends ReportBuilder {
     plot.width = Some(750)
     plot.runLocal()
   }
-
 
 }
