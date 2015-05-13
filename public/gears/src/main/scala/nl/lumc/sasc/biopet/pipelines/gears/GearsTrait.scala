@@ -24,8 +24,10 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
+import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.tools.FastqSync
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import scala.collection.JavaConversions._
@@ -277,30 +279,39 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
         bamMetrics.biopetScript
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
-      } else {
-
       }
 
       // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
-
+      val samFilterUnmapped = new SambambaView(qscript)
+      samFilterUnmapped.input = alnFile
+      samFilterUnmapped.filter = Some("unmapped or mate_is_unmapped")
+      samFilterUnmapped.output = createFile(".unmapped.bam")
+      samFilterUnmapped.isIntermediate = true
+      qscript.add(samFilterUnmapped)
 
       // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = SamToFastq(qscript, alnFile,
-        new File(sampleDir, sampleId + ".R1.fastq"),
-        new File(sampleDir, sampleId + ".R2.fastq"))
+        createFile(".unmap.R1.fastq"),
+        createFile(".unmap.R2.fastq")
+      )
       samToFastq.isIntermediate = true
       qscript.add(samToFastq)
 
-      // start fastq to fasta
-
-      // start fasta cleaner (dedup) fastq toolkit?
+      // sync the fastq records
+      val fastqsync = new FastqSync(qscript)
+      fastqsync.refFastq = samToFastq.fastqR1
+      fastqsync.inputFastq1 = samToFastq.fastqR1
+      fastqsync.inputFastq2 = samToFastq.fastqR2
+      fastqsync.outputFastq1 = createFile(".unmapsynced.R1.fastq.gz")
+      fastqsync.outputFastq2 = createFile(".unmapsynced.R2.fastq.gz")
+      fastqsync.outputStats = createFile(".syncstats.json")
+      qscript.add(fastqsync)
 
       // start kraken
-
       val krakenAnalysis = new Kraken(qscript)
-      krakenAnalysis.input = List(samToFastq.fastqR1, samToFastq.fastqR2)
-      //      krakenAnalysis.inputFastQ = true
+      krakenAnalysis.input = List(fastqsync.outputFastq1, fastqsync.outputFastq2)
       krakenAnalysis.output = createFile(".krkn.raw")
+      krakenAnalysis.paired = true
       krakenAnalysis.classified_out = Option(createFile(".krkn.classified.fastq"))
       krakenAnalysis.unclassified_out = Option(createFile(".krkn.unclassified.fastq"))
       qscript.add(krakenAnalysis)

@@ -22,6 +22,8 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+import scala.util.matching.Regex
+
 /** Extension for Kraken */
 class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
 
@@ -49,7 +51,7 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
-  override val versionRegex = """Kraken version (.*)""".r
+  override val versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
   override val versionExitcode = List(0, 1)
 
   override val defaultCoreMemory = 8.0
