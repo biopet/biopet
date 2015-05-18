@@ -112,7 +112,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "aligner" -> aligner,
     "chunking" -> chunking,
     "numberChunks" -> numberChunks.getOrElse(1)
-  ) ++ (if (root == null) Map() else Map("reference" -> referenceSummary))
+  ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
   /** Will be executed before script */
   def init() {
