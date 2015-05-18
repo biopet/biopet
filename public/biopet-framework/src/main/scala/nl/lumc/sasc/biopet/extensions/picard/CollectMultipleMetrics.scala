@@ -81,7 +81,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
         case _ if p == Programs.MeanQualityByCycle.toString =>
           Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))
         case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-          Picard.getMetrics(new File(outputName + ".base_distribution_by_cycle_metrics"))
+          Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")
         case _ => None
       }
       val sum = new Summarizable {
