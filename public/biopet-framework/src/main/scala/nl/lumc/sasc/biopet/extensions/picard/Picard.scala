@@ -84,8 +84,8 @@ object Picard {
           case (_, Some(group)) => {
             val groupId = header.indexOf(group)
             if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
-            Some((for (c <- content) yield content(groupId).toString() -> {
-              header.zip(c).toMap
+            Some((for (c <- content) yield c(groupId).toString() -> {
+              header.filter(_ != group).zip(c).toMap
             }).toMap)
           }
           case (1, _) => Some(header.zip(content.head).toMap)
