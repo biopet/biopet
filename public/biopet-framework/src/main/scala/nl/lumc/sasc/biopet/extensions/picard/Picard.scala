@@ -76,12 +76,48 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 
 object Picard {
 
+  def getMetrics(file: File, tag: String = "METRICS CLASS",
+                 groupBy: Option[String] = None): Option[Any] = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) => {
+        (content.size, groupBy) match {
+          case (_, Some(group)) => {
+            val groupId = header.indexOf(group)
+            if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
+            Some((for (c <- content) yield content(groupId).toString() -> {
+              header.zip(c).toMap
+            }).toMap)
+          }
+          case (1, _) => Some(header.zip(content.head).toMap)
+          case _      => Some(header :: content)
+        }
+      }
+      case _ => None
+    }
+  }
+
+  /**
+   * This function parse the metrics but transpose for table
+   * @param file metrics file
+   * @param tag default to "HISTOGRAM"
+   * @return
+   */
+  def getHistogram(file: File, tag: String = "HISTOGRAM") = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) => {
+        val colums = header.zipWithIndex.map(x => x._1 -> content.map(_.lift(x._2))).toMap
+        Some(colums)
+      }
+      case _ => None
+    }
+  }
+
   /**
    * This function parse a metrics file in separated values
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File, tag: String = "METRICS CLASS"): Option[Map[String, Any]] =
+  def getMetricsContent(file: File, tag: String) = {
     if (!file.exists) None
     else {
       val lines = Source.fromFile(file).getLines().toArray
@@ -94,6 +130,7 @@ object Picard {
         lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
       }).toList
 
-      Some(Map("content" -> (header :: content)))
+      Some(header, content)
     }
+  }
 }
