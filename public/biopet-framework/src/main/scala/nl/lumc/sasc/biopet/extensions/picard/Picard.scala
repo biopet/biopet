@@ -20,7 +20,7 @@ import scala.io.Source
 
 import org.broadinstitute.gatk.utils.commandline.Argument
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Logging, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.tryToParseNumber
 
 /**
@@ -74,7 +74,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     conditional(createMd5, "CREATE_MD5_FILE=TRUE")
 }
 
-object Picard {
+object Picard extends Logging {
 
   def getMetrics(file: File, tag: String = "METRICS CLASS",
                  groupBy: Option[String] = None): Option[Any] = {
@@ -84,8 +84,9 @@ object Picard {
           case (_, Some(group)) => {
             val groupId = header.indexOf(group)
             if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
+            if (header.count(_ == group) > 1) logger.warn(group + " multiple times seen in header of: " + file)
             Some((for (c <- content) yield c(groupId).toString() -> {
-              header.filter(_ != group).zip(c).toMap
+              header.filter(_ != group).zip(c.take(groupId) ::: c.takeRight(c.size - groupId - 1)).toMap
             }).toMap)
           }
           case (1, _) => Some(header.zip(content.head).toMap)
