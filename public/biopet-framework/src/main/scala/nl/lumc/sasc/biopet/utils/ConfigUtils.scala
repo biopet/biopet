@@ -160,6 +160,7 @@ object ConfigUtils extends Logging {
     any match {
       case j: Json      => j
       case None         => Json.jNull
+      case Some(x)      => anyToJson(x)
       case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
       case l: List[_]   => Json.array(l.map(anyToJson(_)): _*)
       case b: Boolean   => Json.jBool(b)
