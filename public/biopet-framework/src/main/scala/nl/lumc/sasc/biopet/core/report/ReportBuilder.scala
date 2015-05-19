@@ -1,10 +1,11 @@
 package nl.lumc.sasc.biopet.core.report
 
-import java.io.{ PrintWriter, File }
+import java.io.{FileOutputStream, PrintWriter, File}
 import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
+import org.apache.commons.io.IOUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 
@@ -91,23 +92,20 @@ trait ReportBuilder extends ToolCommand {
       logger.info(srcFile.getPath)
 
       if (srcFile.isDirectory) {
-        var newPath: String = srcFile.getAbsolutePath.split(resourcePath).last
+        val newPath: String = srcFile.getAbsolutePath.split(resourcePath).last
         val workDir = new File(externalDir, newPath)
         workDir.mkdirs()
         logger.info("Writing to " + workDir.getAbsolutePath)
 
         for (f <- srcFile.listFiles()) {
           var newFilePath: String = f.getAbsolutePath.split(resourcePath+ newPath).last
-          val resourceWriter = new PrintWriter( new File(workDir, newFilePath) )
+          val resourceSrcPath: File = new File( resourcePath, newPath+"/"+newFilePath )
 
-          val resourceSrcPath: String = new File( resourcePath, newPath+"/"+newFilePath ).getAbsolutePath
+          val is = getClass.getResourceAsStream(resourceSrcPath.getPath)
+          val os = new FileOutputStream(new File(workDir, newFilePath).getAbsolutePath)
 
-          Source.fromInputStream(
-            getClass.getResourceAsStream(
-              resourceSrcPath
-            )
-          ).getLines().foreach(resourceWriter.println)
-          resourceWriter.close()
+          org.apache.commons.io.IOUtils.copy(is, os)
+          os.close()
         }
       }
     }

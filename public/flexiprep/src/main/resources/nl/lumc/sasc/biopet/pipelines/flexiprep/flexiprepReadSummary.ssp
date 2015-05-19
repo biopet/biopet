@@ -43,7 +43,7 @@
     <!-- Table -->
     <table class="table sortable-theme-bootstrap" data-sortable>
         <thead><tr>
-            <th>Sample</th>
+            <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
             <th colspan="2">Library</th>
             <th>Before QC</th>
             <th>Clipping</th>
