@@ -18,22 +18,31 @@
 
 #if (showPlot)
     #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId) }#
-    <img src="variantSummary.png"><br>
-    <a href="variantSummary.tsv">Tsv file</a>
+    <div class="panel-body">
+        <img src="variantSummary.png" class="img-responsive" />
+    </div>
+    <div class="panel-footer">
+        <i class="glyphicon glyphicon-file"></i> <a href="variantSummary.tsv">tsv file</a>
+    </div>
 #end
 #if (showTable)
-<table>
-<thead><tr><th>Sample</th>
-#for (field <- fields) <th>${field}</th> #end
-</tr></thead>
-<tbody>
-    #for (sample <- samples.toList.sorted)
-        <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
-        #for (field <- fields)
+    <div class="panel-body">
+
+    <!-- Table -->
+    <table class="table sortable-theme-bootstrap" data-sortable>
+        <thead><tr><th>Sample</th>
+            #for (field <- fields) <th>${field}</th> #end
+        </tr></thead>
+        <tbody>
+        #for (sample <- samples.toList.sorted)
+        <tr><td data-sorted="true"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            #for (field <- fields)
             <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", field)}</td>
-        #end
+            #end
         </tr>
-    #end
-</tbody>
-</table>
+        #end
+        </tbody>
+    </table>
+    </div>
+
 #end

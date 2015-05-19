@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io.{ PrintWriter, File }
+import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
@@ -72,12 +73,44 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
     logger.info("Write Base files")
-    // Write css to output dir
-    val cssDir = new File(cmdArgs.outputDir, "css")
-    cssDir.mkdirs()
-    val cssWriter = new PrintWriter(new File(cssDir, "biopet.css"))
-    Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/core/report/biopet.css")).getLines().foreach(cssWriter.println)
-    cssWriter.close()
+
+    /**
+     * Copying out the static files from this
+     * */
+
+    val resourcePath: String = "/nl/lumc/sasc/biopet/core/report/ext/"
+
+    val externalDir = new File(cmdArgs.outputDir, "ext")
+    externalDir.mkdirs()
+
+    val uri: URL = getClass.getResource(resourcePath)
+    val dir: File = new File( uri.toURI )
+
+    for ( srcFile <- dir.listFiles ) {
+
+      logger.info(srcFile.getPath)
+
+      if (srcFile.isDirectory) {
+        var newPath: String = srcFile.getAbsolutePath.split(resourcePath).last
+        val workDir = new File(externalDir, newPath)
+        workDir.mkdirs()
+        logger.info("Writing to " + workDir.getAbsolutePath)
+
+        for (f <- srcFile.listFiles()) {
+          var newFilePath: String = f.getAbsolutePath.split(resourcePath+ newPath).last
+          val resourceWriter = new PrintWriter( new File(workDir, newFilePath) )
+
+          val resourceSrcPath: String = new File( resourcePath, newPath+"/"+newFilePath ).getAbsolutePath
+
+          Source.fromInputStream(
+            getClass.getResourceAsStream(
+              resourceSrcPath
+            )
+          ).getLines().foreach(resourceWriter.println)
+          resourceWriter.close()
+        }
+      }
+    }
 
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)

@@ -2,11 +2,11 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
-<table>
-<thead><tr></tr><th>Sample</th></thead></tr>
-<tbody>
-#for (sample <- summary.samples)
-    <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
-#end
-</tbody>
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr></tr><th>Sample</th></thead></tr>
+    <tbody>
+        #for (sample <- summary.samples)
+            <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
+        #end
+    </tbody>
 </table>
