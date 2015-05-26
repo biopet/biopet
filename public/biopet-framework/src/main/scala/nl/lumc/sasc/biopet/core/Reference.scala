@@ -11,24 +11,28 @@ import scala.collection.JavaConversions._
  */
 trait Reference extends Configurable {
 
-  var referenceSpecies: String = {
+  def referenceSpecies: String = {
     root match {
       case r: Reference if r.referenceSpecies != "unknown_species" => r.referenceSpecies
       case _ => config("species", default = "unknown_species", path = super.configPath)
     }
   }
 
-  var referenceName: String = {
+  def referenceName: String = {
     root match {
       case r: Reference if r.referenceName != "unknown_ref" => r.referenceName
       case _ => config("reference_name", default = "unknown_ref", path = super.configPath)
     }
   }
 
-  override def subPath = referenceConfigPath ::: super.subPath
+  override def subPath = {
+    referenceConfigPath ::: super.subPath
+  }
 
   /** Returns the reference config path */
-  def referenceConfigPath = List("genomes", referenceSpecies, referenceName)
+  def referenceConfigPath = {
+    List("references", referenceSpecies, referenceName)
+  }
 
   /** Returns the fasta file */
   def referenceFasta(): File = {

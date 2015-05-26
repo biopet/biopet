@@ -92,7 +92,7 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = (if (path == null) getConfigPath(s, l, submodule) else path) ::: subPath
+      val p = (if (path == null) getConfigPath(s, l, submodule) ::: subPath else path)
       val d = {
         val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -119,11 +119,7 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-<<<<<<< HEAD
-      val p = (if (path == null) getConfigPath(s, l, submodule) else path) ::: subPath
-=======
-      val p = if (path == null) getConfigPath(s, l, submodule) else path
->>>>>>> develop
+      val p = (if (path == null) getConfigPath(s, l, submodule) ::: subPath else path)
 
       globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
     }
