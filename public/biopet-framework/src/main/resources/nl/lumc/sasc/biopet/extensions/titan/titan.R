@@ -24,74 +24,90 @@ library(doMC)
 registerDoMC()
 options(cores=opt$threads)
 
-# from 1 - 5
-numClusters <- opt$clusters
+library(TitanCNA)
 
-# from 5 - 8
-copyNumber <- opt$copynumbers
+library(doMC)
+registerDoMC()
+options(cores=16)
 
-params <- loadDefaultParameters(copyNumber=copyNumber ,numberClonalClusters=numClusters)
+#
+#infile <- "/data/DIV5/SASC/project-109-hettum/data/AL12255-H0G11ALXX.merge.allels.tsv"
+#tumWig <- "/data/DIV5/SASC/project-109-hettum/data/AL12255-H0G11ALXX.merge.dedup.reads.wig"
+#
+#infile <- "/data/DIV5/SASC/project-109-hettum/data/P0139-H0E4AALXX.merge.allels.tsv"
+#tumWig <- "/data/DIV5/SASC/project-109-hettum/data/P0139-H0E4AALXX.merge.dedup.reads.wig"
+#
+#infile <- "/data/DIV5/SASC/project-109-hettum/data/P0141-H0E4AALXX.merge.allels.tsv"
+#tumWig <- "/data/DIV5/SASC/project-109-hettum/data/P0141-H0E4AALXX.merge.dedup.reads.wig"
 
-params$normalParams$n_0 <- 0.5    #set initial normal proportion to 0.5
-
-params$ploidyParams$phi_0 <- opt$ploidy    #set initial ploidy to 2 (diploid)
-# params$ploidyParams$phi_0 <- 4    #set initial ploidy to 4 (tetraploid)
-
-extractAlleleReadCounts(bamFile, bamIndex, positions, outputFilename = NULL, pileupParam = PileupParam())
-
-id <- "test"
-infile <- system.file("extdata", "test_alleleCounts_chr2.txt", package = "TitanCNA")
-tumWig <- system.file("extdata", "test_tum_chr2.wig", package = "TitanCNA")
-normWig <- system.file("extdata", "test_norm_chr2.wig", package = "TitanCNA")
-gc <- system.file("extdata", "gc_chr2.wig", package = "TitanCNA")
-map <- system.file("extdata", "map_chr2.wig", package = "TitanCNA")
 
 data <- loadAlleleCounts(infile, genomeStyle = "UCSC")
-cnData <- correctReadDepth(tumWig,normWig,gc,map, genomeStyle = "UCSC")
+numClusters <- 2
+params <- loadDefaultParameters(copyNumber=5, numberClonalClusters=numClusters, symmetric=TRUE)
+params$normalParams$n_0 <- 0.5    #set initial normal proportion to 0.5
+params$ploidyParams$phi_0 <- 2    #set initial ploidy to 2 (diploid)
 
+
+normWig <- "/data/DIV5/SASC/project-109-hettum/data/PILS013-H0E4AALXX.merge.dedup.reads.wig"
+gc <- "/data/DIV5/SASC/project-109-hettum/data/hg19.1kb.gc.wig"
+map <- "/data/DIV5/SASC/project-109-hettum/data/hg19.1kb.map.wig"
+
+cnData <- correctReadDepth(tumWig,normWig,gc,map, genomeStyle = "UCSC")
 logR <- getPositionOverlap(data$chr,data$posn,cnData)
 data$logR <- log(2^logR)
 rm(logR,cnData)
 
+chromosomes <- unique(data$chr)
+chromosomes <- chromosomes[ chromosomes != "chrY" ]
+chromosomes <- chromosomes[ chromosomes != "chrM" ]
+
+workdata <- filterData(data,chromosomes,minDepth=10,maxDepth=200)
+
 mScore <- as.data.frame(wigToRangedData(map))
 mScore <- getPositionOverlap(data$chr,data$posn,mScore[,-4])
-data <- filterData(data,c(1:22,"X"),minDepth=10,maxDepth=200,map=mScore,mapThres=0.8)
+workdata <- filterData(workdata,chromosomes,minDepth=10,maxDepth=200,map=mScore,mapThres=0.8)
 
-convergeParams <- runEMclonalCN(data,gParams=params$genotypeParams,nParams=params$normalParams,
+options(cores=16)
+convergeParams <- runEMclonalCN(workdata,gParams=params$genotypeParams,nParams=params$normalParams,
                                 pParams=params$ploidyParams,sParams=params$cellPrevParams,
-                                maxiter=20,maxiterUpdate=1500,txnExpLen=1e15,txnZstrength=1e5,
+                                maxiter=20,maxiterUpdate=1500,txnExpLen=1e12,txnZstrength=1e5,
                                 useOutlierState=FALSE,
                                 normalEstimateMethod="map",estimateS=TRUE,estimatePloidy=TRUE)
 
+options(cores=1)
+optimalPath <- viterbiClonalCN(workdata,convergeParams)
 
-
-convergeParams$txnExpLen <- 1e12
-optimalPath <- viterbiClonalCN(data,convergeParams)
 
 outfile <- paste("test_cluster0",numClusters,"_titan.txt",sep="")
-results <- outputTitanResults(data,convergeParams,optimalPath,filename=outfile,posteriorProbs=F)
-results <- outputTitanResults(data,convergeParams,optimalPath,
+results <- outputTitanResults(workdata,convergeParams,optimalPath,filename=outfile,posteriorProbs=F)
+
+outfile <- paste("test_subclones0",numClusters,"_titan.txt",sep="")
+results <- outputTitanResults(workdata,convergeParams,optimalPath,
                                      filename=outfile,posteriorProbs=FALSE,subcloneProfiles=TRUE)
 
 outparam <- paste("test_cluster0",numClusters,"_params.txt",sep="")
 outputModelParameters(convergeParams,results,outparam)
 
 
-norm <- convergeParams$n[length(convergeParams$n)]
-ploidy <- convergeParams$phi[length(convergeParams$phi)]
-#library(SNPchip)  ## use this library to plot chromosome idiogram (optional)
-png(outplot,width=1200,height=1000,res=100)
-par(mfrow=c(3,1))
-plotCNlogRByChr(results, chr, ploidy=ploidy, geneAnnot=NULL, spacing=4,ylim=c(-4,6),cex=0.5,main="Chr 2")
-plotAllelicRatio(results, chr, geneAnnot=NULL, spacing=4, ylim=c(0,1),cex=0.5,main="Chr 2")
-plotClonalFrequency(results, chr, normal=tail(convergeParams$n,1), geneAnnot=NULL, spacing=4,ylim=c(0,1),cex=0.5,main="Chr 2")
-if (as.numeric(numClusters) <= 2){
-       ## NEW IN V1.2.0 ##
-       ## users can choose to plot the subclone copy number profiles for <= 2 clusters
-	plotSubcloneProfiles(results, chr, cex = 2, spacing=6, main="Chr 2")
+for( chr in chromosomes ) {
+    norm <- convergeParams$n[length(convergeParams$n)]
+    ploidy <- convergeParams$phi[length(convergeParams$phi)]
+    library(SNPchip)  ## use this library to plot chromosome idiogram (optional)
+    png(outplot,width=1200,height=1000,res=100)
+    par(mfrow=c(3,1))
+    plotCNlogRByChr(results, chr, ploidy=ploidy, geneAnnot=NULL, spacing=4,ylim=c(-4,6),cex=0.5,main=chr)
+    plotAllelicRatio(results, chr, geneAnnot=NULL, spacing=4, ylim=c(0,1),cex=0.5,main=chr)
+    plotClonalFrequency(results, chr, normal=tail(convergeParams$n,1), geneAnnot=NULL, spacing=4,ylim=c(0,1),cex=0.5,main=chr)
+    if (as.numeric(numClusters) <= 2){
+           ## NEW IN V1.2.0 ##
+           ## users can choose to plot the subclone copy number profiles for <= 2 clusters
+	    plotSubcloneProfiles(results, chr, cex = 2, spacing=6,main=chr)
+    }
+    pI <- plotIdiogram(chr,build="hg19",unit="bp",label.y=-4.25,new=FALSE,ylim=c(-2,-1))
+    dev.off()
+
+
 }
-#pI <- plotIdiogram(chr,build="hg19",unit="bp",label.y=-4.25,new=FALSE,ylim=c(-2,-1))
-dev.off()
 
 
 
