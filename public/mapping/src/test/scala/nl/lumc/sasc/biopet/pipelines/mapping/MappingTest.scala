@@ -109,9 +109,9 @@ class MappingTest extends TestNGSuite with Matchers {
 
     // Sort sam or replace readgroup
     val sort = aligner match {
-      case "bwa" | "bwa-aln" | "stampy"     => "sortsam"
+      case "bwa" | "bwa-aln" | "stampy" => "sortsam"
       case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
-      case _                                => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
+      case _ => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
     }
 
     mapping.functions.count(_.isInstanceOf[SortSam]) shouldBe ((if (sort == "sortsam") 1 else 0) * chunks)

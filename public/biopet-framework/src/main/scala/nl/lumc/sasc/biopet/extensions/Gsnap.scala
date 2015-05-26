@@ -19,7 +19,7 @@ import java.io.File
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
-import nl.lumc.sasc.biopet.core.{Reference, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**

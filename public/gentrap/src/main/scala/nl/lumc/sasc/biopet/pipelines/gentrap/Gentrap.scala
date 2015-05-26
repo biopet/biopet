@@ -45,9 +45,9 @@ import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
 class Gentrap(val root: Configurable) extends QScript
-    with MultiSampleQScript
-    with SummaryQScript
-    with Reference { qscript =>
+  with MultiSampleQScript
+  with SummaryQScript
+  with Reference { qscript =>
 
   import Gentrap._
   import Gentrap.ExpMeasures._
