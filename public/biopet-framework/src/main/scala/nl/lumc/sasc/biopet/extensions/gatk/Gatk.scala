@@ -34,7 +34,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   override val defaultCoreMemory = 3.0
 
   @Input(required = true)
-  var reference: File = referenceFasta()
+  var reference: File = null
 
   @Input(required = false)
   var gatkKey: Option[File] = config("gatk_key")
@@ -47,6 +47,11 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
 
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     required("-T", analysisType) +

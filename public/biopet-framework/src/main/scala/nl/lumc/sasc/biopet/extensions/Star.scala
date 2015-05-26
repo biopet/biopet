@@ -17,16 +17,16 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{Reference, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Extension for STAR
  */
-class Star(val root: Configurable) extends BiopetCommandLineFunction {
+class Star(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   @Input(doc = "The reference file for the bam files.", required = false)
-  var reference: File = new File(config("reference"))
+  var reference: File = null
 
   @Input(doc = "Fastq file R1", required = false)
   var R1: File = _
@@ -57,7 +57,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Output Directory")
   var outputDir: File = _
 
-  var genomeDir: File = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
+  var genomeDir: File = null
   var runmode: String = _
   var sjdbOverhang: Int = _
   var outFileNamePrefix: String = _
@@ -68,6 +68,9 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** Sets output files for the graph */
   override def beforeGraph() {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+    genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
     val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
     if (runmode == null) {

@@ -47,7 +47,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy")
+    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
@@ -110,7 +110,7 @@ class MappingTest extends TestNGSuite with Matchers {
     // Sort sam or replace readgroup
     val sort = aligner match {
       case "bwa" | "bwa-aln" | "stampy"     => "sortsam"
-      case "star" | "star-2pass" | "bowtie" => "replacereadgroups"
+      case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
       case _                                => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
     }
 
@@ -142,10 +142,13 @@ object MappingTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "db" -> "test",
+    "bowtie_index" -> "test",
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
+    "gsnap" -> Map("exe" -> "test"),
+    "tophat" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),

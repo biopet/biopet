@@ -59,9 +59,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** Aligner */
   protected var aligner: String = config("aligner", default = "bwa")
 
-  /** Reference */
-  protected var reference: File = config("reference")
-
   /** Number of chunks, when not defined pipeline will automatic calculate number of chunks */
   protected var numberChunks: Option[Int] = config("number_chunks")
 
@@ -344,17 +341,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     gsnapCommand.isIntermediate = true
     add(gsnapCommand)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = gsnapCommand.output
-    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
-    add(sortSam)
-
     val reorderSam = new ReorderSam(this)
-    reorderSam.input = sortSam.output
+    reorderSam.input = gsnapCommand.output
     reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
-    reorderSam.reference = reference
     add(reorderSam)
 
     addAddOrReplaceReadGroups(reorderSam.output, output)
@@ -373,14 +362,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.keep_fasta_order = true
     add(tophat)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = tophat.outputAcceptedHits
-    sortSam.output = swapExt(output.getParentFile, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
-    add(sortSam)
-
-    addAddOrReplaceReadGroups(sortSam.output, output)
+    addAddOrReplaceReadGroups(tophat.outputAcceptedHits, output)
   }
   /**
    * Adds stampy jobs

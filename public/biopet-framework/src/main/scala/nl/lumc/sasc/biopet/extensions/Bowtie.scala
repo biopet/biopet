@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{Reference, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 1.1.1
  */
-class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
+class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
 
@@ -34,7 +34,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: Option[File] = None
 
   @Input(doc = "The reference file for the bam files.", shortName = "R", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
   var output: File = null
@@ -58,6 +58,11 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
   var maxins: Option[Int] = config("maxins")
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** return commandline to execute */
   def cmdLine = {

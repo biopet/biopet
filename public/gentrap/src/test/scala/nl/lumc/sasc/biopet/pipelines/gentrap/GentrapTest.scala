@@ -41,7 +41,6 @@ class GentrapTest extends TestNGSuite with Matchers {
       override def globalConfig = new Config(map)
       // disable dict file check since it is based on the reference file name (which we can't modify here since
       // we use the mock /usr/bin/test file
-      override def checkDictFile: Unit = {}
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -198,7 +197,6 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "dict" -> "test",
     "refFlat" -> "test",

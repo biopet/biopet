@@ -35,7 +35,7 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = referenceFasta()
+  var reference: File = null
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -71,6 +71,11 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
 
   override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   def cmdLine = {
     required(executable) +

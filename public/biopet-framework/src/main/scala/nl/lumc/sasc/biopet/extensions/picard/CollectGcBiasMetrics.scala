@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CollectGcBiasMetrics */
-class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -36,8 +37,8 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   @Output(doc = "Output summary", required = false)
   var outputSummary: File = _
 
-  @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  @Input(doc = "Reference file", required = false)
+  var reference: File = null
 
   @Argument(doc = "Window size", required = false)
   var windowSize: Option[Int] = config("windowsize")
@@ -52,7 +53,9 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
   override def beforeGraph {
+    super.beforeGraph
     if (outputChart == null) outputChart = new File(output + ".pdf")
+    if (reference == null) reference = referenceFasta()
   }
 
   /** Returns command to execute */
