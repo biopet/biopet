@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
@@ -9,7 +10,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 /**
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
 
   javaMainClass = new picard.analysis.directed.CollectTargetedPcrMetrics().getClass.getName
 
@@ -17,7 +18,7 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
   var input: File = _
 
   @Input(doc = "Reference", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Input(doc = "AMPLICON_INTERVALS", required = true)
   var ampliconIntervals: File = _
@@ -36,6 +37,11 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
 
   @Argument(doc = "CUSTOM_AMPLICON_SET_NAME", required = false)
   var customAmpliconSetName: Option[String] = config("custom_amplicon_set_name")
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
