@@ -38,20 +38,16 @@ All other values should be provided in the config. Specific config values toward
 
 | Name | Type | Function |
 | ---- | ---- | -------- |
-| aligner | String (optional) | Which aligner to use. Defaults to `bwa-mem` |
-| skipflexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
-| skipmarkduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
-| skipmetrics | Boolean (optional) | Whether to skip the metrics gathering step (defualt = False) |
+| aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`] |
+| skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
+| skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
+| skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |
 | reference | Path (**required**) | Path to indexed fasta file to be used as reference |
-| rgid | String (**required**) | Read group ID |
-| rglb | String (**required**) | Read group Library |
-| rgpl | String (**required**) | Read group Platform |
-| rgpu | String (**required**) | Read group platform unit |
-| rgsm | String (**required**) | Read group sample |
-| rgcn | String (**required**) | Read group sequencing center |
-| rgds | String (**required**) | Read group description |
-| rgdt | ISO8601 date (**required**) | Read group sequencing date |
-| rgpi | Integer (**required**) | Read group predicted insert size |
+| platform | String (optional) | Read group Platform (defaults to `illumina`)|
+| platform_unit | String (**required**) | Read group platform unit |
+| readgroup_sequencing_center | String (**required**) | Read group sequencing center |
+| readgroup_description | String (**required**) | Read group description |
+| predicted_insertsize | Integer (**required**) | Read group predicted insert size |
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
@@ -65,17 +61,13 @@ Any supplied sample config will be ignored.
 ```json
 {
 "reference": "<path/to/reference">,
-"aligner": "bwa-mem",
-"skipmetrics": True,
-"rgid" : "our_id",
-"rglb": "our_lib",
-"rgpl": "our_platform",
-"rgpu":  "our_unit",
-"rgsm": "our_sample",
-"rgcn": "our_center",
-"rgds": "our_description",
-"rgdt": "2015-05-28",
-"rgpi": 300,
+"aligner": "bwa",
+"skip_metrics": true,
+"platform": "our_platform",
+"platform_unit":  "our_unit",
+"readgroup_sequencing_center": "our_center",
+"readgroup_description": "our_description",
+"predicted_insertsize": 300,
 "output_dir": "<path/to/output/dir">
 }
 ```
