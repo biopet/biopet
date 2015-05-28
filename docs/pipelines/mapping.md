@@ -43,15 +43,15 @@ All other values should be provided in the config. Specific config values toward
 | skipmarkduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skipmetrics | Boolean (optional) | Whether to skip the metrics gathering step (defualt = False) |
 | reference | Path (**required**) | Path to indexed fasta file to be used as reference |
-| rgid | String (**required**) | Readgroup ID |
-| rglb | String (**required**) | Readgroup Library |
-| rgpl | String (**required**) | Readgroup Platform |
-| rgpu | String (**required**) | Readgroup platform unit |
-| rgsm | String (**required**) | Readgroup sample |
-| rgcn | String (**required**) | Readgroup sequencing center |
-| rgds | String (**required**) | Readgroup description |
-| rgdt | ISO8601 date (**required**) | Readgroup sequencing date |
-| rgpi | Integer (**required**) | Readgroup predicted insert size |
+| rgid | String (**required**) | Read group ID |
+| rglb | String (**required**) | Read group Library |
+| rgpl | String (**required**) | Read group Platform |
+| rgpu | String (**required**) | Read group platform unit |
+| rgsm | String (**required**) | Read group sample |
+| rgcn | String (**required**) | Read group sequencing center |
+| rgds | String (**required**) | Read group description |
+| rgdt | ISO8601 date (**required**) | Read group sequencing date |
+| rgpi | Integer (**required**) | Read group predicted insert size |
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
