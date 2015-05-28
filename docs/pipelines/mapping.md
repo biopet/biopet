@@ -17,46 +17,94 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star-2pass</a>
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
 
+## Configuration and flags
+For technical reasons, single sample pipelines, such as this mapping pipeline do **not** take a sample config.
+Input files are in stead given on the command line as a flag.
+
+Command line flags for the mapping pipeline are:
+
+| Flag  (short)| Flag (long) | Type | Function |
+| ------------ | ----------- | ---- | -------- |
+| -R1 | --input_r1 | Path (**required**) | Path to input fastq file |
+| -R2 | --input_r2 | Path (optional) | Path to second read pair fastq file. |
+| -sample | --sampleid | String (**required**) | Name of sample |
+| -library | --libid | String (**required**) | Name of library |
+
+If `-R2` is given, the pipeline will assume a paired-end setup.
+
+### Config
+
+All other values should be provided in the config. Specific config values towards the mapping pipeline are:
+
+| Name | Type | Function |
+| ---- | ---- | -------- |
+| aligner | String (optional) | Which aligner to use. Defaults to `bwa-mem` |
+| skipflexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
+| skipmarkduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
+| skipmetrics | Boolean (optional) | Whether to skip the metrics gathering step (defualt = False) |
+| reference | Path (**required**) | Path to indexed fasta file to be used as reference |
+| rgid | String (**required**) | Readgroup ID |
+| rglb | String (**required**) | Readgroup Library |
+| rgpl | String (**required**) | Readgroup Platform |
+| rgpu | String (**required**) | Readgroup platform unit |
+| rgsm | String (**required**) | Readgroup sample |
+| rgcn | String (**required**) | Readgroup sequencing center |
+| rgds | String (**required**) | Readgroup description |
+| rgdt | ISO8601 date (**required**) | Readgroup sequencing date |
+| rgpi | Integer (**required**) | Readgroup predicted insert size |
+
+It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
+E.g. `-cv reference=<path/to/reference>` would set value `reference`.
+
 ## Example
 
-Note that one should first create the appropriate [configs](../general/config.md).
+Note that one should first create the appropriate [settings config](../general/config.md).
+Any supplied sample config will be ignored.
+
+### Example config
+```json
+{
+"reference": "<path/to/reference">,
+"aligner": "bwa-mem",
+"skipmetrics": True,
+"rgid" : "our_id",
+"rglb": "our_lib",
+"rgpl": "our_platform",
+"rgpu":  "our_unit",
+"rgsm": "our_sample",
+"rgcn": "our_center",
+"rgds": "our_description",
+"rgdt": "2015-05-28",
+"rgpi": 300,
+"output_dir": "<path/to/output/dir">
+}
+```
+
+
+### Running the pipeline
 
 For the help menu:
 ~~~
 java -jar </path/to/biopet.jar> pipeline mapping -h
 
 Arguments for Mapping:
- -R1,--input_r1 <input_r1>                       R1 fastq file
- -outDir,--output_directory <output_directory>   Output directory
- -R2,--input_r2 <input_r2>                       R2 fastq file
- -outputName,--outputname <outputname>           Output name
- -skipflexiprep,--skipflexiprep                  Skip flexiprep
- -skipmarkduplicates,--skipmarkduplicates        Skip mark duplicates
- -skipmetrics,--skipmetrics                      Skip metrics
- -ALN,--aligner <aligner>                        Aligner
- -R,--reference <reference>                      Reference
- -chunking,--chunking                            Chunking
- -numberChunks,--numberchunks <numberchunks>     Number of chunks, if not defined pipeline will automatically calculate the number of chunks
- -RGID,--rgid <rgid>                             Readgroup ID
- -RGLB,--rglb <rglb>                             Readgroup Library
- -RGPL,--rgpl <rgpl>                             Readgroup Platform
- -RGPU,--rgpu <rgpu>                             Readgroup platform unit
- -RGSM,--rgsm <rgsm>                             Readgroup sample
- -RGCN,--rgcn <rgcn>                             Readgroup sequencing center
- -RGDS,--rgds <rgds>                             Readgroup description
- -RGDT,--rgdt <rgdt>                             Readgroup sequencing date
- -RGPI,--rgpi <rgpi>                             Readgroup predicted insert size
- -config,--config_file <config_file>             JSON config file(s)
- -DSC,--disablescatterdefault                    Disable all scatters
+ -R1,--input_r1 <input_r1>             R1 fastq file
+ -R2,--input_r2 <input_r2>             R2 fastq file
+ -sample,--sampleid <sampleid>         Sample ID
+ -library,--libid <libid>              Library ID
+ -config,--config_file <config_file>   JSON / YAML config file(s)
+ -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or
+                                       'path:path:key=value'
+ -DSC,--disablescatter                 Disable all scatters
+
 ~~~
 
 To run the pipeline:
 ~~~
 java -jar </path/to/biopet.jar> pipeline mapping -run --config mySettings.json \
--R1 myReads1.fastq -R2 myReads2.fastq -outDir myOutDir -OutputName myReadsOutput \
--R hg19.fasta -RGSM mySampleName -RGLB myLib1
+-R1 myReads1.fastq -R2 myReads2.fastq
 ~~~
-Note that removing -R2 causes the pipeline to be able of handlind single end `.fastq` files.
+Note that removing -R2 causes the pipeline to assume single end `.fastq` files.
 
 To perform a dry run simply remove `-run` from the commandline call.
 
