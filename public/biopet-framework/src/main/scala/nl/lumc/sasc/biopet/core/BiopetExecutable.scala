@@ -100,7 +100,7 @@ trait BiopetExecutable extends Logging {
             val trace = (sWriter.toString.split("\n"))
 
             if (!logger.isDebugEnabled) {
-              logger.error(trace.head)
+              trace.filterNot(_.startsWith("\tat")).foreach(logger.error(_))
               logger.error("For more info please run with -l debug")
             } else {
               trace.foreach(logger.debug(_))
