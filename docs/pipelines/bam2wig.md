@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Bam2Wig is a small pipeline consisting of three steps that is used to convert BAM files into track coverage files: bigWig, wiggle, and TDF. While this seems like a task that should be tool, at the time of writing, there are no command line tools that can do such conversion in one go. Thus, the Bam2Wig pipeline was written.
+Bam2Wig is a small pipeline consisting of three steps that are used to convert BAM files into track coverage files: bigWig, wiggle, and TDF. While this seems like a task that should be tool, at the time of writing, there are no command line tools that can do such conversion in one go. Thus, the Bam2Wig pipeline was written.
 
 ## Configuration
 The required configuration file for Bam2Wig is really minimal, only a single JSON file containing an `output_dir` entry:
