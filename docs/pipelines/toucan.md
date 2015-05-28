@@ -46,7 +46,7 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
     "vepnormalizer": {
         "mode": "standard"
     },
-    "out_dir": <path_to_output_directory>
+    "output_dir": <path_to_output_directory>
 }
 ~~~~
 
