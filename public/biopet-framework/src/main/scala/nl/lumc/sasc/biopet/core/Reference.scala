@@ -21,7 +21,10 @@ trait Reference extends Configurable {
   def referenceName: String = {
     root match {
       case r: Reference if r.referenceName != "unknown_ref" => r.referenceName
-      case _ => config("reference_name", default = "unknown_ref", path = super.configPath)
+      case _ => {
+        val default: String = config("default", default = "unknown_ref", path = List("references", referenceSpecies))
+        config("reference_name", default = default, path = super.configPath)
+      }
     }
   }
 
