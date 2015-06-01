@@ -90,21 +90,7 @@ object VcfWithVcf extends ToolCommand {
           secondRecord <- secondaryRecords;
           if (secondRecord.hasAttribute(f.inputField))
         ) yield {
-            val values = {
-              secondRecord.getAttribute(f.inputField) match {
-                case l: List[_] => l
-                case x          => List(x)
-              }
-            }
-
-            values match {
-            case l: List[_] if f.t == "max" => {
-              header.getInfoHeaderLine(f.outputField).getType match {
-                case VCFHeaderLineType.Integer => List(l.map(_.toString.toInt).max)
-                case VCFHeaderLineType.Float => List(l.map(_.toString.toFloat).max)
-                case _ => throw new IllegalArgumentException("Type not fit for max function")
-              }
-            }
+            secondRecord.getAttribute(f.inputField) match {
             case l: List[_] => l
             case x          => List(x)
           }
@@ -112,7 +98,16 @@ object VcfWithVcf extends ToolCommand {
       }).toMap
 
       writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
-        builder.attribute(attribute._1, attribute._2.toArray)
+        builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.t match {
+          case "max" => {
+              header.getInfoHeaderLine(attribute._1).getType match {
+                case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
+                case VCFHeaderLineType.Float => Array(attribute._2.map(_.toString.toFloat).max)
+                case _ => throw new IllegalArgumentException("Type not fit for max function")
+              }
+          }
+          case _ => attribute._2.toArray
+        })
       }).make())
 
       idx += 1
