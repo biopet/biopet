@@ -14,7 +14,7 @@ import scala.collection.immutable
  * Created by ahbbollen on 11-2-15.
  */
 object VcfWithVcf extends ToolCommand {
-  case class Fields(inputField: String, outputField: String)
+  case class Fields(inputField: String, outputField: String, t: String = "Array")
 
   case class Args(inputFile: File = null,
                   outputFile: File = null,
@@ -34,7 +34,8 @@ object VcfWithVcf extends ToolCommand {
     }
     opt[String]('f', "field") unbounded () valueName ("<input_field:output_field>") action { (x, c) =>
       val values = x.split(":")
-      if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
+      if (values.size > 2) c.copy(fields = Fields(values(0), values(1), values(2)) :: c.fields)
+      else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
     }
     opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
@@ -55,7 +56,6 @@ object VcfWithVcf extends ToolCommand {
       setOutputFile(commandArgs.outputFile).
       setReferenceDictionary(header.getSequenceDictionary).
       build)
-    writer.writeHeader(header)
 
     for (x <- commandArgs.fields) {
       if (header.hasInfoLine(x.outputField))
@@ -69,6 +69,8 @@ object VcfWithVcf extends ToolCommand {
         oldHeaderLine.getType, oldHeaderLine.getDescription)
       header.addMetaDataLine(newHeaderLine)
     }
+
+    writer.writeHeader(header)
 
     var idx = 0
 
@@ -88,7 +90,21 @@ object VcfWithVcf extends ToolCommand {
           secondRecord <- secondaryRecords;
           if (secondRecord.hasAttribute(f.inputField))
         ) yield {
-          secondRecord.getAttribute(f.inputField) match {
+            val values = {
+              secondRecord.getAttribute(f.inputField) match {
+                case l: List[_] => l
+                case x          => List(x)
+              }
+            }
+
+            values match {
+            case l: List[_] if f.t == "max" => {
+              header.getInfoHeaderLine(f.outputField).getType match {
+                case VCFHeaderLineType.Integer => List(l.map(_.toString.toInt).max)
+                case VCFHeaderLineType.Float => List(l.map(_.toString.toFloat).max)
+                case _ => throw new IllegalArgumentException("Type not fit for max function")
+              }
+            }
             case l: List[_] => l
             case x          => List(x)
           }
