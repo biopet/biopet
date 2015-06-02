@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core.report
 
-import java.io.{FileOutputStream, PrintWriter, File}
+import java.io.{ FileOutputStream, PrintWriter, File }
 import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
@@ -9,6 +9,8 @@ import org.apache.commons.io.IOUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.io.Source
 
 /**
@@ -77,7 +79,7 @@ trait ReportBuilder extends ToolCommand {
 
     /**
      * Copying out the static files from this
-     * */
+     */
 
     val resourcePath: String = "/nl/lumc/sasc/biopet/core/report/ext/"
 
@@ -85,9 +87,9 @@ trait ReportBuilder extends ToolCommand {
     externalDir.mkdirs()
 
     val uri: URL = getClass.getResource(resourcePath)
-    val dir: File = new File( uri.toURI )
+    val dir: File = new File(uri.toURI)
 
-    for ( srcFile <- dir.listFiles ) {
+    for (srcFile <- dir.listFiles) {
 
       logger.info(srcFile.getPath)
 
@@ -98,8 +100,8 @@ trait ReportBuilder extends ToolCommand {
         logger.info("Writing to " + workDir.getAbsolutePath)
 
         for (f <- srcFile.listFiles()) {
-          var newFilePath: String = f.getAbsolutePath.split(resourcePath+ newPath).last
-          val resourceSrcPath: File = new File( resourcePath, newPath+"/"+newFilePath )
+          val newFilePath: String = f.getAbsolutePath.split(resourcePath + newPath).last
+          val resourceSrcPath: File = new File(resourcePath, newPath + "/" + newFilePath)
 
           val is = getClass.getResourceAsStream(resourceSrcPath.getPath)
           val os = new FileOutputStream(new File(workDir, newFilePath).getAbsolutePath)
@@ -117,11 +119,11 @@ trait ReportBuilder extends ToolCommand {
     logger.info(total + " pages to be generated")
 
     logger.info("Generate pages")
-    generatePage(summary, indexPage, cmdArgs.outputDir,
+    val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
       args = pageArgs ++ cmdArgs.pageArgs ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
-    logger.info(done + " Done")
+    logger.info(jobs + " Done")
   }
 
   def indexPage: ReportPage
@@ -136,7 +138,7 @@ trait ReportBuilder extends ToolCommand {
                    page: ReportPage,
                    outputDir: File,
                    path: List[String] = Nil,
-                   args: Map[String, Any] = Map()): Unit = {
+                   args: Map[String, Any] = Map()): Int = {
 
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
     pageOutputDir.mkdirs()
@@ -157,11 +159,12 @@ trait ReportBuilder extends ToolCommand {
     writer.close()
 
     // Generating subpages
-    for ((name, subPage) <- page.subPages.par) {
+    val jobs = for ((name, subPage) <- page.subPages.par) yield {
       generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
     }
     done += 1
     if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
+    jobs.fold(0)(_ + _) + 1
   }
 }
 
