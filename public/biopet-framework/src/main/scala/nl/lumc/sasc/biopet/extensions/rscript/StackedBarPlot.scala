@@ -23,6 +23,7 @@ class StackedBarPlot(val root: Configurable) extends RscriptCommandLineFunction 
   var xlabel: Option[String] = config("xlabel")
   var ylabel: Option[String] = config("ylabel")
   var llabel: Option[String] = config("llabel")
+  var title: Option[String] = config("title")
 
   override def cmdLine: String = super.cmdLine +
     required("--input", input) +
@@ -31,5 +32,6 @@ class StackedBarPlot(val root: Configurable) extends RscriptCommandLineFunction 
     optional("--height", height) +
     optional("--xlabel", xlabel) +
     required("--ylabel", ylabel) +
-    optional("--llabel", llabel)
+    optional("--llabel", llabel) +
+    optional("--title", title)
 }

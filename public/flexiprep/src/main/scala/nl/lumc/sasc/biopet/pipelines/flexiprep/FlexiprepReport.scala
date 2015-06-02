@@ -88,6 +88,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.output = pngFile
     plot.ylabel = Some("Reads")
     plot.width = Some(750)
+    plot.title = Some("QC summary on " + read + " reads")
     plot.runLocal()
   }
 
@@ -128,6 +129,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.output = pngFile
     plot.ylabel = Some("Bases")
     plot.width = Some(750)
+    plot.title = Some("QC summary on " + read + " bases")
     plot.runLocal()
   }
 }

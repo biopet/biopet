@@ -84,6 +84,7 @@ object BammetricsReport extends ReportBuilder {
     plot.output = pngFile
     plot.ylabel = Some("Reads")
     plot.width = Some(750)
+    plot.title = Some("Aligned reads")
     plot.runLocal()
   }
 

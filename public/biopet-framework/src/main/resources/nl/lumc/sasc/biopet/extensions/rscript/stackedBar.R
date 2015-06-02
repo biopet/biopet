@@ -10,6 +10,7 @@ parser$add_argument('--height', dest='height', type='integer', default = 500)
 parser$add_argument('--xlabel', dest='xlabel', type='character')
 parser$add_argument('--ylabel', dest='ylabel', type='character', required=TRUE)
 parser$add_argument('--llabel', dest='llabel', type='character')
+parser$add_argument('--title', dest='title', type='character')
 
 arguments <- parser$parse_args()
 
@@ -28,6 +29,7 @@ ggplot(DF1, aes(x = Rank, y = value, fill = variable)) +
   ylab(arguments$ylabel) + 
   guides(fill=guide_legend(title=arguments$llabel)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) +
-  geom_bar(stat = "identity", width=1)
+  geom_bar(stat = "identity", width=1) +
+  ggtitle(arguments$title)
 
 dev.off()
