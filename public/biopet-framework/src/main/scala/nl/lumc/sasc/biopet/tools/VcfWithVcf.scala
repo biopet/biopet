@@ -23,7 +23,7 @@ object VcfWithVcf extends ToolCommand {
                   matchAllele: Boolean = true) extends AbstractArgs
 
   object FieldMethod extends Enumeration {
-    val none, max = Value
+    val none, max, min = Value
   }
 
   class OptParser extends AbstractOptParser {
@@ -41,11 +41,10 @@ object VcfWithVcf extends ToolCommand {
       if (values.size > 2) c.copy(fields = Fields(values(0), values(1), FieldMethod.withName(values(2))) :: c.fields)
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
-    } text ("""
-           Only field mean the same field name in input vcf as in output vcf
-           type is optional, without all values found will be added as single values other options are:
-             - max: takes maximum of found value, only works for Intergers and Floats
-      """.stripMargin
+    } text ("""| Only field mean the same field name in input vcf as in output vcf
+               | type is optional, without all values found will be added as single values other options are:
+               |   - max: takes maximum of found value, only works for Intergers and Floats
+               |   - min: takes minemal of found value, only works for Intergers and Floats """.stripMargin
     )
     opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
       c.copy(matchAllele = x)
@@ -112,6 +111,13 @@ object VcfWithVcf extends ToolCommand {
             header.getInfoHeaderLine(attribute._1).getType match {
               case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
               case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).max)
+              case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
+            }
+          }
+          case FieldMethod.min => {
+            header.getInfoHeaderLine(attribute._1).getType match {
+              case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).min)
+              case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).min)
               case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
             }
           }
