@@ -32,12 +32,17 @@ object VcfWithVcf extends ToolCommand {
     opt[File]('S', "SecondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(secondaryVcf = x)
     }
-    opt[String]('f', "field") unbounded () valueName ("<input_field:output_field>") action { (x, c) =>
+    opt[String]('f', "field") unbounded () valueName ("<field> or <input_field:output_field> or <input_field:output_field:type>") action { (x, c) =>
       val values = x.split(":")
       if (values.size > 2) c.copy(fields = Fields(values(0), values(1), values(2)) :: c.fields)
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
-    }
+    } text ("""
+           Only field mean the same field name in input vcf as in output vcf
+           type is optional, without all values found will be added as single values other options are:
+             - max: takes maximum of found value, only works for Intergers and Floats
+      """.stripMargin
+    )
     opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
       c.copy(matchAllele = x)
     } text ("Match alternative alleles; default true")
@@ -90,7 +95,7 @@ object VcfWithVcf extends ToolCommand {
           secondRecord <- secondaryRecords;
           if (secondRecord.hasAttribute(f.inputField))
         ) yield {
-            secondRecord.getAttribute(f.inputField) match {
+          secondRecord.getAttribute(f.inputField) match {
             case l: List[_] => l
             case x          => List(x)
           }
@@ -100,11 +105,11 @@ object VcfWithVcf extends ToolCommand {
       writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
         builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.t match {
           case "max" => {
-              header.getInfoHeaderLine(attribute._1).getType match {
-                case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
-                case VCFHeaderLineType.Float => Array(attribute._2.map(_.toString.toFloat).max)
-                case _ => throw new IllegalArgumentException("Type not fit for max function")
-              }
+            header.getInfoHeaderLine(attribute._1).getType match {
+              case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
+              case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).max)
+              case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
+            }
           }
           case _ => attribute._2.toArray
         })
@@ -123,5 +128,4 @@ object VcfWithVcf extends ToolCommand {
     secondaryReader.close()
     logger.info("Done. Goodbye")
   }
-
 }
