@@ -11,7 +11,10 @@
 #{
     def createMenu(page: ReportPage, path: List[String] = Nil): String = {
         val buffer: StringBuffer = new StringBuffer()
-        buffer.append("<ul>")
+
+        if (page.subPages.size > 2){
+            buffer.append("<ul class=\"dropdown-menu\" role=\"menu\">")
+        }
 
         for (subPage <- page.subPages) {
             val href: String = {
@@ -23,8 +26,9 @@
             buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil))
             buffer.append("</li>")
         }
-
-        buffer.append("</ul>")
+        if(page.subPages.size > 2) {
+            buffer.append("</ul>\n")
+        }
         buffer.toString
     }
 
@@ -36,42 +40,107 @@
 <html>
     <head>
         <title>${reportName}</title>
-        <link rel="stylesheet" type="text/css" href="${rootPath}css/biopet.css">
     </head>
 <body>
 
-<!-- <header><h1>${reportName}</h1></header> -->
-<nav id="menu">
-<ul>
-#for (t <- 0 to path.size)
-    <li>
-    #if (t == 0)
-        <a href="${rootPath}index.html">Home</a>
-        ${unescape(createMenu(indexPage))}
-    #else
-        <a href="${rootPath}${path.slice(0, t).mkString("","/","/")}index.html">${path(t - 1)}</a>
-        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
-    #end
-    </li>
-#end
-</ul>
-</nav>
-<aside id="index">
-<ul>
-#for ((name, url) <- page.sections)
-    <li><a href="#${name}">${name}</a></li>
-#end
-</ul>
-</aside>
-<aside id="main">
-#for ((name, url) <- page.sections)
-    <section id="${name}">
-        <h3>${name}</h3>
-        ${unescape(url.render(args))}
-    </section>
-#end
-</aside>
 
-<footer>Footer</footer>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="container">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+            aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="${rootPath}index.html">Biopet report</a>
+    </div>
+    <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+            <!-- ${path.size} //-->
+            <!-- ${path} //-->
+            #for (t <- 0 to path.size)
+                #if(t == 0)
+                    <li>
+                        <a href="${rootPath}index.html">Home</a>
+                    </li>
+
+                    ${unescape(createMenu(indexPage))}
+                #else
+                    <!-- sub from the page, should only fetch last item in list
+                    <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}</a>
+                    ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
+                    //-->
+                #end
+            #end
+
+        </ul>
+    </div>
+    <!--/.nav-collapse -->
+</div>
+</nav>
+
+<div class="container-fluid">
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+            <li class="active">
+                <a href="./index.html">Home</a>
+            </li>
+            #for ((name, url) <- page.sections)
+                <li><a href="#${name}">${name}</a></li>
+            #end
+
+        </ul>
+    </div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        #for ((name, url) <- page.sections)
+
+            <a id="${name}"></a>
+            <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title" id="panel-title">
+                    ${name}
+                </h3>
+            </div>
+            ${unescape(url.render(args))}
+            </div>
+
+
+            <section id="${name}">
+
+            </section>
+        #end
+    </div>
+</div>
+</div>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="${rootPath}ext/js/jquery.min.js"></script>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="${rootPath}ext/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="${rootPath}ext/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="${rootPath}ext/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="${rootPath}ext/css/bootstrap_dashboard.css">
+<link rel="stylesheet" type="text/css" href="${rootPath}ext/css/sortable-theme-bootstrap.css">
+
+<!-- sortable tables //-->
+<script src="${rootPath}ext/js/sortable.min.js"></script>
+<script language="JavaScript">
+    <!--
+    $(document).ready(function() {
+        Sortable.init()
+
+        });
+    //--></script>
 </body>
 </html>
