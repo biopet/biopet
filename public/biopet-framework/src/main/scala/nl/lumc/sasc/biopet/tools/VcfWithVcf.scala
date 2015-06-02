@@ -34,15 +34,16 @@ object VcfWithVcf extends ToolCommand {
     opt[File]('S', "secondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(secondaryVcf = x)
     }
-    opt[String]('f', "field") unbounded () valueName ("<field> or <input_field:output_field> or <input_field:output_field:type>") action { (x, c) =>
+    opt[String]('f', "field") unbounded () valueName ("<field> or <input_field:output_field> or <input_field:output_field:method>") action { (x, c) =>
       val values = x.split(":")
       if (values.size > 2) c.copy(fields = Fields(values(0), values(1), FieldMethod.withName(values(2))) :: c.fields)
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
-    } text ("""| Only field mean the same field name in input vcf as in output vcf
-               | type is optional, without all values found will be added as single values other options are:
-               |   - max   : takes maximum of found value, only works for Intergers and Floats
-               |   - min   : takes minemal of found value, only works for Intergers and Floats
+    } text ("""| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
+               | By default we will return all values found for a given field.
+               | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
+               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
+               |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
                |   - unique: takes only unique values """.stripMargin
     )
     opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
