@@ -52,6 +52,8 @@ object VcfWithVcf extends ToolCommand {
   }
 
   def main(args: Array[String]): Unit = {
+    logger.info("Init phase")
+
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
@@ -77,11 +79,11 @@ object VcfWithVcf extends ToolCommand {
         oldHeaderLine.getType, oldHeaderLine.getDescription)
       header.addMetaDataLine(newHeaderLine)
     }
-
     writer.writeHeader(header)
 
-    var idx = 0
+    logger.info("Start reading records")
 
+    var counter = 0
     for (record <- reader) {
       val secondaryRecords = if (commandArgs.matchAllele) {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
@@ -125,17 +127,17 @@ object VcfWithVcf extends ToolCommand {
         })
       }).make())
 
-      idx += 1
-      if (idx % 100000 == 0) {
-        logger.info(s"""Processed $idx records""")
+      counter += 1
+      if (counter % 100000 == 0) {
+        logger.info(s"""Processed $counter records""")
       }
     }
-    logger.info(s"""Processed $idx records""")
+    logger.info(s"""Processed $counter records""")
 
     logger.debug("Closing readers")
     writer.close()
     reader.close()
     secondaryReader.close()
-    logger.info("Done. Goodbye")
+    logger.info("Done")
   }
 }
