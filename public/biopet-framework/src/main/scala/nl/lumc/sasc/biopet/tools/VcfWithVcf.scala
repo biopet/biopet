@@ -14,13 +14,17 @@ import scala.collection.immutable
  * Created by ahbbollen on 11-2-15.
  */
 object VcfWithVcf extends ToolCommand {
-  case class Fields(inputField: String, outputField: String, t: String = "Array")
+  case class Fields(inputField: String, outputField: String, fieldMethod: FieldMethod.Value = FieldMethod.none)
 
   case class Args(inputFile: File = null,
                   outputFile: File = null,
                   secondaryVcf: File = null,
                   fields: List[Fields] = Nil,
                   matchAllele: Boolean = true) extends AbstractArgs
+
+  object FieldMethod extends Enumeration {
+    val none, max = Value
+  }
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
@@ -29,12 +33,12 @@ object VcfWithVcf extends ToolCommand {
     opt[File]('O', "outputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('S', "SecondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('S', "secondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
       c.copy(secondaryVcf = x)
     }
     opt[String]('f', "field") unbounded () valueName ("<field> or <input_field:output_field> or <input_field:output_field:type>") action { (x, c) =>
       val values = x.split(":")
-      if (values.size > 2) c.copy(fields = Fields(values(0), values(1), values(2)) :: c.fields)
+      if (values.size > 2) c.copy(fields = Fields(values(0), values(1), FieldMethod.withName(values(2))) :: c.fields)
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
     } text ("""
@@ -103,8 +107,8 @@ object VcfWithVcf extends ToolCommand {
       }).toMap
 
       writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
-        builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.t match {
-          case "max" => {
+        builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.fieldMethod match {
+          case FieldMethod.max => {
             header.getInfoHeaderLine(attribute._1).getType match {
               case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
               case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).max)
