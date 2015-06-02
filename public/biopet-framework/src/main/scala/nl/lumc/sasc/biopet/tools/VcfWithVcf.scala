@@ -21,7 +21,7 @@ object VcfWithVcf extends ToolCommand {
                   matchAllele: Boolean = true) extends AbstractArgs
 
   object FieldMethod extends Enumeration {
-    val none, max, min = Value
+    val none, max, min, unique = Value
   }
 
   class OptParser extends AbstractOptParser {
@@ -41,8 +41,9 @@ object VcfWithVcf extends ToolCommand {
       else c.copy(fields = Fields(x, x) :: c.fields)
     } text ("""| Only field mean the same field name in input vcf as in output vcf
                | type is optional, without all values found will be added as single values other options are:
-               |   - max: takes maximum of found value, only works for Intergers and Floats
-               |   - min: takes minemal of found value, only works for Intergers and Floats """.stripMargin
+               |   - max   : takes maximum of found value, only works for Intergers and Floats
+               |   - min   : takes minemal of found value, only works for Intergers and Floats
+               |   - unique: takes only unique values """.stripMargin
     )
     opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
       c.copy(matchAllele = x)
@@ -121,7 +122,8 @@ object VcfWithVcf extends ToolCommand {
               case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
             }
           }
-          case _ => attribute._2.toArray
+          case FieldMethod.unique => attribute._2.distinct.toArray
+          case _                  => attribute._2.toArray
         })
       }).make())
 
