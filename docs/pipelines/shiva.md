@@ -118,6 +118,9 @@ To view all possible config options please navigate to our Gitlab wiki page
 | vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) |
 | vcffilter | filter_ref_calls | Boolean | true | Remove reference calls |
 
+Since Shiva uses the [Mapping](../mapping.md) pipeline internally, mapping config values can be specified as well.
+For all the options, please see the corresponding documentation for the mapping pipeline.
+
 ### Modes
 
 Shiva furthermore supports three modes. The default and recommended option is `multisample_variantcalling`.
