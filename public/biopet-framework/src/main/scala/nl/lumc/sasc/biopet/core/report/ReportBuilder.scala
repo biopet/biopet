@@ -5,10 +5,9 @@ import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
-import org.apache.commons.io.IOUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
-import scala.collection.JavaConversions._
+import nl.lumc.sasc.biopet.utils.IoUtils
 
 /**
  * Created by pjvan_thof on 3/27/15.
@@ -92,7 +91,7 @@ trait ReportBuilder extends ToolCommand {
     )
 
     for (resource <- extFiles.par) {
-      ReportBuilder.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), true)
+      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), true)
     }
 
     logger.info("Parsing summary")
@@ -162,37 +161,11 @@ object ReportBuilder {
       case Some(template) => template
       case _ => {
         val tempFile = File.createTempFile("ssp-template", new File(location).getName)
-        copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
+        IoUtils.copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
         templateCache += location -> tempFile
         tempFile
       }
     }
     engine.layout(TemplateSource.fromFile(templateFile), args)
-  }
-
-  //TODO: move to utils
-  def copyFile(in: File, out: File, createDirs: Boolean = false): Unit = {
-    copyStreamToFile(new FileInputStream(in), out, createDirs)
-  }
-
-  def copyStreamToFile(in: InputStream, out: File, createDirs: Boolean = false): Unit = {
-    if (createDirs) out.getParentFile.mkdirs()
-    val os = new FileOutputStream(out)
-
-    org.apache.commons.io.IOUtils.copy(in, os)
-    os.close()
-    in.close()
-  }
-
-  def copyDir(inputDir: File, externalDir: File): Unit = {
-    require(inputDir.isDirectory)
-    externalDir.mkdirs()
-    for (srcFile <- inputDir.listFiles) {
-      if (srcFile.isDirectory) copyDir(new File(inputDir, srcFile.getName), new File(externalDir, srcFile.getName))
-      else {
-        val newFile = new File(externalDir, srcFile.getName)
-        copyFile(srcFile, newFile)
-      }
-    }
   }
 }
