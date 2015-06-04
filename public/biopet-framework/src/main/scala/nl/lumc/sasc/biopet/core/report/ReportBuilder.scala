@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.core.report
 
-import java.io.{ FileOutputStream, PrintWriter, File }
+import java.io._
 import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
@@ -8,10 +8,7 @@ import nl.lumc.sasc.biopet.core.summary.Summary
 import org.apache.commons.io.IOUtils
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
-
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.io.Source
+import scala.collection.JavaConversions._
 
 /**
  * Created by pjvan_thof on 3/27/15.
@@ -75,41 +72,27 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
-    logger.info("Write Base files")
+    logger.info("Copy Base files")
 
-    /**
-     * Copying out the static files from this
-     */
+    // Copying out the static files from this
 
-    val resourcePath: String = "/nl/lumc/sasc/biopet/core/report/ext/"
+    val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
+    val resourceDir: String = "/nl/lumc/sasc/biopet/core/report/ext/"
+    val extFiles = List(
+      "css/bootstrap_dashboard.css",
+      "css/bootstrap.min.css",
+      "css/bootstrap-theme.min.css",
+      "css/sortable-theme-bootstrap.css",
+      "js/jquery.min.js",
+      "js/sortable.min.js",
+      "js/bootstrap.min.js",
+      "fonts/glyphicons-halflings-regular.woff",
+      "fonts/glyphicons-halflings-regular.ttf",
+      "fonts/glyphicons-halflings-regular.woff2"
+    )
 
-    val externalDir = new File(cmdArgs.outputDir, "ext")
-    externalDir.mkdirs()
-
-    val uri: URL = getClass.getResource(resourcePath)
-    val dir: File = new File(uri.toURI)
-
-    for (srcFile <- dir.listFiles) {
-
-      logger.info(srcFile.getPath)
-
-      if (srcFile.isDirectory) {
-        val newPath: String = srcFile.getAbsolutePath.split(resourcePath).last
-        val workDir = new File(externalDir, newPath)
-        workDir.mkdirs()
-        logger.info("Writing to " + workDir.getAbsolutePath)
-
-        for (f <- srcFile.listFiles()) {
-          val newFilePath: String = f.getAbsolutePath.split(resourcePath + newPath).last
-          val resourceSrcPath: File = new File(resourcePath, newPath + "/" + newFilePath)
-
-          val is = getClass.getResourceAsStream(resourceSrcPath.getPath)
-          val os = new FileOutputStream(new File(workDir, newFilePath).getAbsolutePath)
-
-          org.apache.commons.io.IOUtils.copy(is, os)
-          os.close()
-        }
-      }
+    for (resource <- extFiles.par) {
+      ReportBuilder.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), true)
     }
 
     logger.info("Parsing summary")
@@ -172,7 +155,44 @@ object ReportBuilder {
 
   protected val engine = new TemplateEngine()
 
+  private var templateCache: Map[String, File] = Map()
+
   def renderTemplate(location: String, args: Map[String, Any]): String = {
-    engine.layout(TemplateSource.fromFile(getClass.getResource(location).getPath), args)
+    val templateFile: File = templateCache.get(location) match {
+      case Some(template) => template
+      case _ => {
+        val tempFile = File.createTempFile("ssp-template", new File(location).getName)
+        copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
+        templateCache += location -> tempFile
+        tempFile
+      }
+    }
+    engine.layout(TemplateSource.fromFile(templateFile), args)
+  }
+
+  //TODO: move to utils
+  def copyFile(in: File, out: File, createDirs: Boolean = false): Unit = {
+    copyStreamToFile(new FileInputStream(in), out, createDirs)
+  }
+
+  def copyStreamToFile(in: InputStream, out: File, createDirs: Boolean = false): Unit = {
+    if (createDirs) out.getParentFile.mkdirs()
+    val os = new FileOutputStream(out)
+
+    org.apache.commons.io.IOUtils.copy(in, os)
+    os.close()
+    in.close()
+  }
+
+  def copyDir(inputDir: File, externalDir: File): Unit = {
+    require(inputDir.isDirectory)
+    externalDir.mkdirs()
+    for (srcFile <- inputDir.listFiles) {
+      if (srcFile.isDirectory) copyDir(new File(inputDir, srcFile.getName), new File(externalDir, srcFile.getName))
+      else {
+        val newFile = new File(externalDir, srcFile.getName)
+        copyFile(srcFile, newFile)
+      }
+    }
   }
 }
