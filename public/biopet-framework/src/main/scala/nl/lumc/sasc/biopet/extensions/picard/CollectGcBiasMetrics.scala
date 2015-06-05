@@ -74,7 +74,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats = Picard.getHistogram(output, tag = "METRICS CLASS")
 }
 
 object CollectGcBiasMetrics {

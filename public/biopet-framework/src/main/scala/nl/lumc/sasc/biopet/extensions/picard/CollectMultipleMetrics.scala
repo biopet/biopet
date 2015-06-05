@@ -68,25 +68,25 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
 
   override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
     program.foreach(p => {
-      val stats: Map[String, Any] = p match {
+      val stats: Any = p match {
         case _ if p == Programs.CollectAlignmentSummaryMetrics.toString =>
-          Picard.getMetrics(new File(outputName + ".alignment_summary_metrics")).getOrElse(Map())
+          Picard.getMetrics(new File(outputName + ".alignment_summary_metrics"), groupBy = Some("CATEGORY"))
         case _ if p == Programs.CollectInsertSizeMetrics.toString =>
           Map(
-            "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")).getOrElse(Map()),
-            "histogram" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics"), "HISTOGRAM").getOrElse(Map())
+            "metrics" -> Picard.getMetrics(new File(outputName + ".insert_size_metrics")),
+            "histogram" -> Picard.getHistogram(new File(outputName + ".insert_size_metrics"))
           )
         case _ if p == Programs.QualityScoreDistribution.toString =>
-          Picard.getMetrics(new File(outputName + ".quality_distribution_metrics"), "HISTOGRAM").getOrElse(Map())
+          Picard.getHistogram(new File(outputName + ".quality_distribution_metrics"))
         case _ if p == Programs.MeanQualityByCycle.toString =>
-          Picard.getMetrics(new File(outputName + ".quality_by_cycle_metrics"), "HISTOGRAM").getOrElse(Map())
+          Picard.getHistogram(new File(outputName + ".quality_by_cycle_metrics"))
         case _ if p == Programs.CollectBaseDistributionByCycle.toString =>
-          Picard.getMetrics(new File(outputName + ".base_distribution_by_cycle_metrics")).getOrElse(Map())
-        case _ => Map()
+          Picard.getHistogram(new File(outputName + ".base_distribution_by_cycle_metrics"), tag = "METRICS CLASS")
+        case _ => None
       }
       val sum = new Summarizable {
         override def summaryFiles: Map[String, File] = Map()
-        override def summaryStats: Map[String, Any] = stats
+        override def summaryStats = stats
       }
       qscript.addSummarizable(sum, p)
     })

@@ -57,5 +57,5 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
 }
