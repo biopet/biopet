@@ -30,7 +30,7 @@ trait Summarizable {
   def summaryFiles: Map[String, File]
 
   /** Must returns stats to store into summary */
-  def summaryStats: Map[String, Any]
+  def summaryStats: Any
 
   /** Can be used to add additional Summarizable, this is executed at the start of WriteSummary*/
   def addToQscriptSummary(qscript: SummaryQScript, name: String) {}

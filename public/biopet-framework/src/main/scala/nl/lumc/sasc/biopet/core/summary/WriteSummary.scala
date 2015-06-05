@@ -139,7 +139,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (if (stats.isEmpty) Map[String, Any]() else Map("stats" -> Map(name -> stats))) ++
+    (Map("stats" -> Map(name -> stats))) ++
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 

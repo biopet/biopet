@@ -100,7 +100,7 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Map[String, Any] = Picard.getMetrics(outputMetrics).getOrElse(Map())
+  def summaryStats = Picard.getMetrics(outputMetrics).getOrElse(Map())
 }
 object MarkDuplicates {
   /** Returns default MarkDuplicates */
