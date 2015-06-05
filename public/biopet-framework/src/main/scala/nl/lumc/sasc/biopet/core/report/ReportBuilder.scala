@@ -1,7 +1,6 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
-import java.net.URL
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
