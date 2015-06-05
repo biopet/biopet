@@ -48,6 +48,8 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
 
+  override def dictRequired = true
+
   override def beforeGraph: Unit = {
     super.beforeGraph
     if (reference == null) reference = referenceFasta()
