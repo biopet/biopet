@@ -4,7 +4,7 @@ import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
-import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
+import nl.lumc.sasc.biopet.extensions.rscript.{XYPlot, StackedBarPlot}
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -83,9 +83,68 @@ object BammetricsReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(750)
+    plot.width = Some(1200)
     plot.title = Some("Aligned reads")
     plot.runLocal()
   }
 
+  def insertSizePlot(outputDir: File,
+                           prefix: String,
+                           summary: Summary,
+                           libraryLevel: Boolean = false,
+                           sampleId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    if (libraryLevel) {
+      tsvWriter.print("Library")
+    } else {
+      sampleId match {
+        case Some(sample) => tsvWriter.println("\t" + sample)
+        case _ => tsvWriter.println(summary.samples.mkString("Sample\t","\t", ""))
+      }
+    }
+
+    var map: Map[Int, Map[String, Int]] = Map()
+
+    def fill(sample: String, lib: Option[String]): Unit = {
+      new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "content"),
+        summary, Some(sample), lib).value.getOrElse(List(List("insert_size","All_Reads.fr_count"))) match {
+        case l:List[_] => {
+          l.tail.foreach(_ match {
+            case l:List[_] => {
+              val insertSize = l.head.toString.toInt
+              val count = l.tail.head.toString.toInt
+              val old = map.getOrElse(insertSize, Map())
+              map += insertSize -> (old + ((sample + lib.getOrElse("")) -> count))
+            }
+            case _ => throw new IllegalStateException("Must be a list")
+          })
+        }
+        case _ => throw new IllegalStateException("Must be a list")
+      }
+    }
+
+    summary.samples.foreach(fill(_, None))
+
+    for ((insertSize, counts) <- map) {
+      tsvWriter.print(insertSize)
+      for (sample <- summary.samples) {
+        tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
+      }
+      tsvWriter.println()
+    }
+
+    tsvWriter.close()
+
+    val plot = new XYPlot(null)
+    plot.input = tsvFile
+    plot.output = pngFile
+    plot.ylabel = Some("Reads")
+    plot.xlabel = Some("Insertsize")
+    plot.width = Some(1200)
+    plot.title = Some("Insertsize")
+    plot.runLocal()
+
+  }
 }
