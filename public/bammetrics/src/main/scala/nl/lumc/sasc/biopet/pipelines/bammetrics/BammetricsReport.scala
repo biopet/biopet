@@ -27,7 +27,7 @@ object BammetricsReport extends ReportBuilder {
     List(
       "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
       "Bam Stats" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamStats.ssp"),
-      "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp"),
+      "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
       "RNA (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rna.ssp"),
       "Target (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/target.ssp"),
       "GC Bias" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/gcBias.ssp")

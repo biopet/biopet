@@ -28,12 +28,19 @@ object ShivaReport extends MultisampleReportBuilder {
             Map("showPlot" -> true, "showTable" -> true)),
           "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
             Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> true)),
+          "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> true)),
           "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
             Map("showPlot" -> true, "showTable" -> true)),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
             Map("showPlot" -> true, "showTable" -> true))
         ), Map()),
-        "Samples" -> generateSamplesPage(pageArgs)
+        "Samples" -> generateSamplesPage(pageArgs),
+        "Files" -> ReportPage(Map(), List(
+          "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
+          "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
+        ), Map()),
+        "Versions" -> ReportPage(Map(), List(), Map())
       ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
@@ -42,8 +49,10 @@ object ShivaReport extends MultisampleReportBuilder {
         "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
+        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false)),
+          Map("showPlot" -> true, "showTable" -> true)),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false))
       ),
