@@ -143,6 +143,7 @@ object BammetricsReport extends ReportBuilder {
     plot.ylabel = Some("Reads")
     plot.xlabel = Some("Insertsize")
     plot.width = Some(1200)
+    plot.removeZero = true
     plot.title = Some("Insertsize")
     plot.runLocal()
 

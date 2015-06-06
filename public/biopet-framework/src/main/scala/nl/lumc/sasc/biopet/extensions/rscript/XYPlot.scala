@@ -24,6 +24,7 @@ class XYPlot(val root: Configurable) extends RscriptCommandLineFunction {
   var ylabel: Option[String] = config("ylabel")
   var llabel: Option[String] = config("llabel")
   var title: Option[String] = config("title")
+  var removeZero: Boolean = config("removeZero", default = false)
 
   override def cmdLine: String = super.cmdLine +
     required("--input", input) +
@@ -33,5 +34,6 @@ class XYPlot(val root: Configurable) extends RscriptCommandLineFunction {
     optional("--xlabel", xlabel) +
     required("--ylabel", ylabel) +
     optional("--llabel", llabel) +
-    optional("--title", title)
+    optional("--title", title) +
+    optional("--removeZero", removeZero)
 }
