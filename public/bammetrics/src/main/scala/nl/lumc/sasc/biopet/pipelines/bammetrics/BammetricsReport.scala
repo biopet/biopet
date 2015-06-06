@@ -4,7 +4,7 @@ import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
-import nl.lumc.sasc.biopet.extensions.rscript.{XYPlot, StackedBarPlot}
+import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -89,19 +89,23 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def insertSizePlot(outputDir: File,
-                           prefix: String,
-                           summary: Summary,
-                           libraryLevel: Boolean = false,
-                           sampleId: Option[String] = None): Unit = {
+                     prefix: String,
+                     summary: Summary,
+                     libraryLevel: Boolean = false,
+                     sampleId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) {
-      tsvWriter.print("Library")
+      tsvWriter.println((for (
+        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        lib <- summary.libraries(sample)
+      ) yield s"$sample-$lib")
+        .mkString("library\t", "\t", ""))
     } else {
       sampleId match {
         case Some(sample) => tsvWriter.println("\t" + sample)
-        case _ => tsvWriter.println(summary.samples.mkString("Sample\t","\t", ""))
+        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
       }
     }
 
@@ -109,14 +113,15 @@ object BammetricsReport extends ReportBuilder {
 
     def fill(sample: String, lib: Option[String]): Unit = {
       new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "content"),
-        summary, Some(sample), lib).value.getOrElse(List(List("insert_size","All_Reads.fr_count"))) match {
-        case l:List[_] => {
+        summary, Some(sample), lib).value.getOrElse(List(List("insert_size", "All_Reads.fr_count"))) match {
+        case l: List[_] => {
           l.tail.foreach(_ match {
-            case l:List[_] => {
+            case l: List[_] => {
               val insertSize = l.head.toString.toInt
               val count = l.tail.head.toString.toInt
               val old = map.getOrElse(insertSize, Map())
-              map += insertSize -> (old + ((sample + lib.getOrElse("")) -> count))
+              if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
+              else map += insertSize -> (old + (sample -> count))
             }
             case _ => throw new IllegalStateException("Must be a list")
           })
@@ -125,12 +130,25 @@ object BammetricsReport extends ReportBuilder {
       }
     }
 
-    summary.samples.foreach(fill(_, None))
+    if (libraryLevel) {
+      for (
+        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        lib <- summary.libraries(sample)
+      ) fill(sample, Some(lib))
+    } else if (sampleId.isDefined) fill(sampleId.get, None)
+    else summary.samples.foreach(fill(_, None))
 
     for ((insertSize, counts) <- map) {
       tsvWriter.print(insertSize)
-      for (sample <- summary.samples) {
-        tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
+      if (libraryLevel) {
+        for (
+          sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+          lib <- summary.libraries(sample)
+        ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
+      } else {
+        for (sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample)) {
+          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
+        }
       }
       tsvWriter.println()
     }
