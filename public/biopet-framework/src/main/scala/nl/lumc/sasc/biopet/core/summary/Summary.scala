@@ -46,6 +46,14 @@ class Summary(file: File) {
     ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: "libraries" :: libId :: path.toList)
   }
 
+  def getLibraryValue(sampleId: Option[String], libId: Option[String], path: String*): Option[Any] = {
+    (sampleId, libId) match {
+      case (Some(sample), Some(lib)) => getLibraryValue(sample, lib, path: _*)
+      case (Some(sample), _)         => getSampleValue(sample, path: _*)
+      case _                         => getValue(path: _*)
+    }
+  }
+
   def getLibraryValues(path: String*): Map[(String, String), Option[Any]] = {
     (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
       (sample, lib) -> getLibraryValue(sample, lib, path: _*)

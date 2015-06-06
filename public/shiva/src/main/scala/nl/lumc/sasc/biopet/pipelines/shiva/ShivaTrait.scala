@@ -72,7 +72,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     /** Sample specific files to add to summary */
     def summaryFiles: Map[String, File] = {
       preProcessBam match {
-        case Some(preProcessBam) => Map("bamFile" -> preProcessBam)
+        case Some(preProcessBam) => Map("preProcessBam" -> preProcessBam)
         case _                   => Map()
       }
     }
