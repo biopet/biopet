@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, MultisampleReportBuilder, ReportPage }
+import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
@@ -49,7 +49,7 @@ object ShivaReport extends MultisampleReportBuilder {
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> true)),
+          Map("showPlot" -> true, "showTable" -> false)),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false))
       ),
