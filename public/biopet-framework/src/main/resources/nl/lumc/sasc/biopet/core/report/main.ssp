@@ -59,7 +59,7 @@
 
         <ul class="nav navbar-nav">
             <li class="root #if (path.size == 0) active #end">
-                <a class="navbar-brand" href="${rootPath}index.html">Biopet report
+                <a class="navbar-brand" href="${rootPath}index.html">${reportName}
                     #if (indexPage.subPages.size > 0) <b class="caret"></b> #end
                 </a>
                 ${unescape(createMenu(indexPage))}
@@ -97,22 +97,17 @@
 
 <div class="container-fluid">
 <div class="row">
-    <div class="col-sm-3 col-md-2 sidebar">
-        <ul class="nav nav-sidebar">
-            <li class="active">
-                <a href="./index.html">Home</a>
-            </li>
+    <div id="side-nav" class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar nav-list">
+            <li><a href="#">Top</a></li>
             #for ((name, url) <- page.sections)
                 <li><a href="#${name}">${name}</a></li>
             #end
-
         </ul>
     </div>
-    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main content">
         #for ((name, section) <- page.sections)
-
-            <a id="${name}"></a>
-            <div class="panel panel-primary">
+            <div id="${name}" class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title" id="panel-title">
                         ${name}
