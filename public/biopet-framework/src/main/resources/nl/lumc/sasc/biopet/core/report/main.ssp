@@ -8,11 +8,11 @@
 <%@ var args: Map[String, Any] %>
 <%@ var rootPath: String %>
 #{
-    def createMenu(page: ReportPage, path: List[String] = Nil): String = {
+    def createMenu(page: ReportPage, path: List[String] = Nil, first: Boolean = true): String = {
         val buffer: StringBuffer = new StringBuffer()
 
-        if (page.subPages.size > 2){
-            buffer.append("<ul class=\"dropdown-menu\" role=\"menu\">")
+        if (page.subPages.size > 0){
+            buffer.append("<ul class=\"dropdown-menu\">")
         }
 
         for (subPage <- page.subPages) {
@@ -21,11 +21,15 @@
                 else rootPath + path.mkString("","/","/") + subPage._1 + "/index.html"
             }
 
-            buffer.append("<li><a href=\"" + href + "\">" + subPage._1 + "</a>")
-            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil))
+            buffer.append("<li")
+            if(subPage._2.subPages.size > 0) buffer.append(" class=\"dropdown-submenu\"")
+            buffer.append("><a href=\"" + href + "\"")
+            if (first) buffer.append(" tabindex=\"-1\"")
+            buffer.append(">" + subPage._1 + "</a>")
+            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, false))
             buffer.append("</li>")
         }
-        if(page.subPages.size > 2) {
+        if(page.subPages.size > 0) {
             buffer.append("</ul>\n")
         }
         buffer.toString
@@ -46,31 +50,42 @@
 <nav class="navbar navbar-inverse navbar-fixed-top">
 <div class="container">
     <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-            aria-expanded="false" aria-controls="navbar">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="${rootPath}index.html">Biopet report</a>
+
+        <ul class="nav navbar-nav">
+            <li class="root #if (path.size == 0) active #end">
+                <a class="navbar-brand" href="${rootPath}index.html">Biopet report
+                    #if (indexPage.subPages.size > 0) <b class="caret"></b> #end
+                </a>
+                ${unescape(createMenu(indexPage))}
+            </li>
+        </ul>
     </div>
-    <div id="navbar" class="collapse navbar-collapse">
+
+    <div class="collapse navbar-collapse navbar-ex1-collapse">
         <ul class="nav navbar-nav">
             <!-- ${path.size} //-->
             <!-- ${path} //-->
-            #for (t <- 0 to path.size)
+            #for (t <- 1 to path.size)
                 #if(t == 0)
-                    <li>
-                        <a href="${rootPath}index.html">Home</a>
+                    <li class="root">
+                        <a href="${rootPath}index.html">Home
+                            #if (indexPage.subPages.size > 0) <b class="caret"></b> #end
+                        </a>
+                        ${unescape(createMenu(indexPage))}
                     </li>
-
-                    ${unescape(createMenu(indexPage))}
                 #else
-                    <!-- sub from the page, should only fetch last item in list
-                    <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}</a>
-                    ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
-                    //-->
+                    <li class="root #if (t == path.size) active #end">
+                        <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}
+                            #if (getSubPage(path.slice(0, t)).subPages.size > 0) <b class="caret"></b> #end
+                        </a>
+                        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
+                    </li>
                 #end
             #end
 
