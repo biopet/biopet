@@ -30,52 +30,51 @@
     </div>
     <div class="panel-footer">
         #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">Hide table</button>
+        #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">Show table</button>
         #end
         <i class="glyphicon glyphicon-file"></i> <a href="insertsize.tsv">tsv file</a>
     </div>
 #end
-#if (showTable)
-    <div class="panel-body collapse" id="insertsizeTable">
-    <!-- Table -->
-    <table class="table sortable-theme-bootstrap" data-sortable>
-        <thead><tr>
-            <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
-            #if (!sampleLevel) <th>Library</th> #end
-            #for (field <- fields)
-                <th>${field}</th>
+
+<div class="panel-body collapse #if (showTable)in#end" id="insertsizeTable">
+<!-- Table -->
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr>
+        <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        #if (!sampleLevel) <th>Library</th> #end
+        #for (field <- fields)
+            <th>${field}</th>
+        #end
+    </tr></thead>
+    <tbody>
+        #for (sample <- samples.toList.sorted)
+            #{
+                val libs = (libId, sampleLevel) match {
+                case (_, true) => List("")
+                case (Some(libId), _) => List(libId.toString)
+                case _ => summary.libraries(sample).toList
+                }
+            }#
+            <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            #for (libId <- libs)
+                #if (libs.head != libId) <tr> #end
+                    #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
+                    #{
+                        val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
+
+                        val fieldValues = for (field <- fields) yield {
+                            summary.getValue((prefixPath ::: List(metricsTag, "stats", "insert_size_metrics", field)):_*)
+                        }
+                    }#
+                    #for (value <- fieldValues)
+                        <td>${value}</td>
+                    #end
+                </tr>
             #end
-        </tr></thead>
-        <tbody>
-            #for (sample <- samples.toList.sorted)
-                #{
-                    val libs = (libId, sampleLevel) match {
-                    case (_, true) => List("")
-                    case (Some(libId), _) => List(libId.toString)
-                    case _ => summary.libraries(sample).toList
-                    }
-                }#
-                <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
-                #for (libId <- libs)
-                    #if (libs.head != libId) <tr> #end
-                        #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
-                        #{
-                            val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
+        #end
+    </tbody>
+</table>
 
-                            val fieldValues = for (field <- fields) yield {
-                                summary.getValue((prefixPath ::: List(metricsTag, "stats", "insert_size_metrics", field)):_*)
-                            }
-                        }#
-                        #for (value <- fieldValues)
-                            <td>${value}</td>
-                        #end
-                    </tr>
-                #end
-            #end
-        </tbody>
-    </table>
-
-    </div>
-
-#end
-
+</div>

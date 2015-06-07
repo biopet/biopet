@@ -30,16 +30,16 @@ object ShivaReport extends MultisampleReportBuilder {
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
         "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-          Map("showPlot" -> true, "showTable" -> true)),
+          Map("showPlot" -> true, "showTable" -> false)),
         "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> true)
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> true)),
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> true)),
+          Map("showPlot" -> true, "showTable" -> false)),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> true))
+          Map("showPlot" -> true, "showTable" -> false))
       ),
       pageArgs
     )

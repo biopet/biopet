@@ -9,7 +9,7 @@
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 #{
-    val fields = List("Hom", "HomVar", "HomRef", "NoCall", "Variant", "NonInformative", "Total")
+    val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
         case _ => summary.samples.toList
@@ -23,29 +23,29 @@
     </div>
     <div class="panel-footer">
         #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Hide table</button>
+        #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Show table</button>
         #end
         <i class="glyphicon glyphicon-file"></i> <a href="variantSummary.tsv">tsv file</a>
     </div>
 #end
-#if (showTable)
-    <div class="panel-body collapse" id="variantSummaryTable">
 
-    <!-- Table -->
-    <table class="table sortable-theme-bootstrap" data-sortable>
-        <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th>
-            #for (field <- fields) <th>${field}</th> #end
-        </tr></thead>
-        <tbody>
-        #for (sample <- samples.toList.sorted)
-        <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
-            #for (field <- fields)
-            <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", field)}</td>
-            #end
-        </tr>
+<div class="panel-body collapse #if (showTable)in#end" id="variantSummaryTable">
+
+<!-- Table -->
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        #for (field <- fields) <th>${field}</th> #end
+    </tr></thead>
+    <tbody>
+    #for (sample <- samples.toList.sorted)
+    <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+        #for (field <- fields)
+        <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", field)}</td>
         #end
-        </tbody>
-    </table>
-    </div>
-
-#end
+    </tr>
+    #end
+    </tbody>
+</table>
+</div>
