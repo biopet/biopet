@@ -108,7 +108,8 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
     val combinedMap = Map("meta" -> Map(
       "last_commit_hash" -> LastCommitHash,
-      "pipeline_version" -> Version
+      "pipeline_version" -> Version,
+      "pipeline_name" -> qscript.summaryName
     )) ++
       (for (qscript <- qscript.summaryQScripts) yield {
         ConfigUtils.fileToConfigMap(qscript.summaryFile)
