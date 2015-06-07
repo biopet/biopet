@@ -141,7 +141,7 @@ object ShivaReport extends MultisampleReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("VCF records")
-    plot.width = Some(750)
+    plot.width = Some(1200)
     plot.runLocal()
   }
 }
