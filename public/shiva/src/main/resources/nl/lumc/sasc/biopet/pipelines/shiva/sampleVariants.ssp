@@ -22,11 +22,14 @@
         <img src="variantSummary.png" class="img-responsive" />
     </div>
     <div class="panel-footer">
+        #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Show table</button>
+        #end
         <i class="glyphicon glyphicon-file"></i> <a href="variantSummary.tsv">tsv file</a>
     </div>
 #end
 #if (showTable)
-    <div class="panel-body">
+    <div class="panel-body collapse" id="variantSummaryTable">
 
     <!-- Table -->
     <table class="table sortable-theme-bootstrap" data-sortable>

@@ -26,12 +26,15 @@
         <img src="alignmentSummary.png" class="img-responsive" />
     </div>
         <div class="panel-footer">
+            #if (showTable)
+                <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">Show table</button>
+            #end
             <i class="glyphicon glyphicon-file"></i> <a href="alignmentSummary.tsv">tsv file</a>
         </div>
 #end
 #if (showTable)
 
-    <div class="panel-body">
+    <div class="panel-body collapse" id="alignmentSummaryTable">
     <!-- Table -->
     <table class="table sortable-theme-bootstrap" data-sortable>
         <thead><tr>
@@ -42,7 +45,6 @@
             <th>(%)</th>
             <th>Duplicates</th>
             <th>(%)</th>
-            <th>Insert size</th>
         </tr></thead>
         <tbody>
             #for (sample <- samples.toList.sorted)
@@ -62,14 +64,12 @@
                             val total = summary.getValue((prefixPath ::: List("biopet_flagstat", "All")):_*).getOrElse(0L).asInstanceOf[Long]
                             val mapped = summary.getValue((prefixPath ::: List("biopet_flagstat", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
                             val duplicates = summary.getValue((prefixPath ::: List("biopet_flagstat", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
-                            val insertsizeMean = summary.getValue((prefixPath ::: List("insert_size_metrics", "mean_insert_size")):_*)
                         }#
                         <td>${total}</td>
                         <td>${mapped}</td>
                         <td>${mapped.toDouble / total * 100}%</td>
                         <td>${duplicates}</td>
                         <td>${duplicates.toDouble / total * 100}%</td>
-                        <td>${insertsizeMean}</td>
                     </tr>
                 #end
             #end
