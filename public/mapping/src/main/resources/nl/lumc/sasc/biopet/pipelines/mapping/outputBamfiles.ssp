@@ -5,15 +5,24 @@
 <%@ var summary: Summary %>
 <%@ var sampleId: Option[String] = None %>
 <%@ var libId: Option[String] = None %>
-<%@ var sampleLevel: Boolean = false %>
+<%@ var sampleLevel: Boolean = true %>
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
+<%@ var pipelineName: String = "mapping" %>
+<%@ var fileTag: String = "output_bamfile" %>
 #{
     val samples = sampleId match {
-    case Some(sample) => {
-    List(sample.toString)
+        case Some(sample) => {
+            List(sample.toString)
+        }
+        case _ => summary.samples.toList
     }
-    case _ => summary.samples.toList
+    val pipelineOutputDir = summary.getValue("meta", "output_dir").getOrElse("").toString
+    def removeDir(value: Option[Any]): Option[Any] = {
+        value.collect { case a =>
+            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir)
+            else a
+        }
     }
 }#
 
@@ -39,8 +48,8 @@
             #for (libId <- libs)
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
-                    <td>${summary.getLibraryValue(sample, libId, "mapping", "files", "pipeline", "output_bamfile", "path")}</td>
-                    <td>${summary.getLibraryValue(sample, libId, "mapping", "files", "pipeline", "output_bamfile", "md5")}</td>
+                    <td>${removeDir(summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "path"))}</td>
+                    <td>${summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "md5")}</td>
                 </tr>
             #end
         #end

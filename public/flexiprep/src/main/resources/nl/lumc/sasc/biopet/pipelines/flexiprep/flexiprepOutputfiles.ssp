@@ -11,8 +11,15 @@
 <%@ var showTable: Boolean = true %>
 #{
     val samples = sampleId match {
-    case Some(sample) => List(sample.toString)
-    case _ => summary.samples.toList
+        case Some(sample) => List(sample.toString)
+        case _ => summary.samples.toList
+    }
+    val pipelineOutputDir = summary.getValue("meta", "output_dir").getOrElse("").toString
+    def removeDir(value: Option[Any]): Option[Any] = {
+        value.collect { case a =>
+            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir)
+            else a
+        }
     }
 }#
 
@@ -46,7 +53,7 @@
                 #for (read <- reads)
                     #if (read == "R2") </tr><tr> #end
                     <td>${read}</td>
-                    <td>${summary.getLibraryValue(sample, libId, "flexiprep", "files", "pipeline", "output_" + read, "path")}</td>
+                    <td>${removeDir(summary.getLibraryValue(sample, libId, "flexiprep", "files", "pipeline", "output_" + read, "path"))}</td>
                     <td>${summary.getLibraryValue(sample, libId, "flexiprep", "files", "pipeline", "output_" + read, "md5")}</td>
                 #end
             </tr>
