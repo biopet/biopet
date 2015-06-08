@@ -45,7 +45,7 @@
         <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
         #if (!sampleLevel) <th>Library</th> #end
         #for (field <- fields)
-            <th>${field}</th>
+            <th>${field.replaceAll("_", " ")}</th>
         #end
     </tr></thead>
     <tbody>
@@ -65,7 +65,7 @@
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
 
                         val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List(metricsTag, "stats", "insert_size_metrics", field)):_*)
+                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse(prefixPath ::: metricsTag :: Nil)
                         }
                     }#
                     #for (value <- fieldValues)
