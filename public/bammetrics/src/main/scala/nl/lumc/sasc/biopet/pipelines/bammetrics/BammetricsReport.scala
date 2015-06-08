@@ -112,18 +112,20 @@ object BammetricsReport extends ReportBuilder {
     var map: Map[Int, Map[String, Int]] = Map()
 
     def fill(sample: String, lib: Option[String]): Unit = {
-      new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "content"),
-        summary, Some(sample), lib).value.getOrElse(List(List("insert_size", "All_Reads.fr_count"))) match {
-        case l: List[_] => {
-          l.tail.foreach(_ match {
-            case l: List[_] => {
-              val insertSize = l.head.toString.toInt
-              val count = l.tail.head.toString.toInt
-              val old = map.getOrElse(insertSize, Map())
-              if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
-              else map += insertSize -> (old + (sample -> count))
-            }
-            case _ => throw new IllegalStateException("Must be a list")
+
+      val insertSize = new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "insert_size"),
+        summary, Some(sample), lib).value.getOrElse(List())
+      val counts = new SummaryValue(List("bammetrics", "stats", "CollectInsertSizeMetrics", "histogram", "All_Reads.fr_count"),
+        summary, Some(sample), lib).value.getOrElse(List())
+
+      (insertSize, counts) match {
+        case (l: List[_], l2: List[_]) => {
+          l.zip(l2).foreach(i => {
+            val insertSize = i._1.toString.toInt
+            val count = i._2.toString.toInt
+            val old = map.getOrElse(insertSize, Map())
+            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
+            else map += insertSize -> (old + (sample -> count))
           })
         }
         case _ => throw new IllegalStateException("Must be a list")
