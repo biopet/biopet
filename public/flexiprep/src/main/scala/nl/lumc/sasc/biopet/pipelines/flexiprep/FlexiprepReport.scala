@@ -87,7 +87,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.width = Some(750)
+    plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
     plot.title = Some("QC summary on " + read + " reads")
     plot.runLocal()
   }
@@ -128,7 +128,7 @@ object FlexiprepReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Bases")
-    plot.width = Some(750)
+    plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
     plot.title = Some("QC summary on " + read + " bases")
     plot.runLocal()
   }

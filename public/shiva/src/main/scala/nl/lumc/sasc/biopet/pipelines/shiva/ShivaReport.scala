@@ -129,7 +129,9 @@ object ShivaReport extends MultisampleReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("VCF records")
-    plot.width = Some(1200)
+    if (libraryLevel) {
+      plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
+    } else plot.width = Some(200 + (summary.samples.filter(s => sampleId.getOrElse(s) == s).size * 10))
     plot.runLocal()
   }
 }
