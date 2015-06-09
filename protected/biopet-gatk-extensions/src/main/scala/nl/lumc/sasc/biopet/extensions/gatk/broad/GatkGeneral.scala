@@ -22,4 +22,8 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
   reference_sequence = config("reference")
   if (config.contains("gatk_key")) gatk_key = config("gatk_key")
   if (config.contains("pedigree")) pedigree = config("pedigree")
+
+  override val versionRegex = """(.*)""".r
+  override val versionExitcode = List(0, 1)
+  override def versionCommand = commandLine + " -version"
 }

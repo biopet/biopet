@@ -48,6 +48,10 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
 
+  override val versionRegex = """(.*)""".r
+  override val versionExitcode = List(0, 1)
+  override def versionCommand = commandLine + " -version"
+
   override def commandLine = super.commandLine +
     required("-T", analysisType) +
     required("-R", reference) +
