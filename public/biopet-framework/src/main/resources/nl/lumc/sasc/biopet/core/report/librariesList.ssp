@@ -3,7 +3,7 @@
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
 <%@ var sampleId: Option[String] = None %>
-<table>
+<table class="table">
 <thead><tr></tr><th>Libraries</th></thead></tr>
 <tbody>
 #for (lib <- summary.libraries(sampleId.get))
