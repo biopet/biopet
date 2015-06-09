@@ -106,15 +106,15 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         (v1: Any, v2: Any, key: String) => summarizable.resolveSummaryConflict(v1, v2, key))
     }).foldRight(pipelineMap)((a, b) => ConfigUtils.mergeMaps(a._1, b, a._2))
 
-    val combinedMap = Map("meta" -> Map(
-      "last_commit_hash" -> LastCommitHash,
-      "pipeline_version" -> Version,
-      "pipeline_name" -> qscript.summaryName,
-      "output_dir" -> qscript.outputDir
-    )) ++
-      (for (qscript <- qscript.summaryQScripts) yield {
-        ConfigUtils.fileToConfigMap(qscript.summaryFile)
-      }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
+    val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
+      ConfigUtils.fileToConfigMap(qscript.summaryFile)
+    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
+      Map("meta" -> Map(
+        "last_commit_hash" -> LastCommitHash,
+        "pipeline_version" -> Version,
+        "pipeline_name" -> qscript.summaryName,
+        "output_dir" -> qscript.outputDir
+      ))
 
     val writer = new PrintWriter(out)
     writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
