@@ -43,9 +43,36 @@
 <html>
     <head>
         <title>${reportName}</title>
+
+        <!-- Bootstrap core JavaScript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="${rootPath}ext/js/jquery.min.js"></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="${rootPath}ext/css/bootstrap.min.css">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="${rootPath}ext/css/bootstrap-theme.min.css">
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="${rootPath}ext/js/bootstrap.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="${rootPath}ext/css/bootstrap_dashboard.css">
+        <link rel="stylesheet" type="text/css" href="${rootPath}ext/css/sortable-theme-bootstrap.css">
+
+        <!-- sortable tables //-->
+        <script src="${rootPath}ext/js/sortable.min.js"></script>
+        <script language="JavaScript">
+            <!--
+            $(document).ready(function() {
+            Sortable.init()
+
+            });
+            //-->
+        </script>
     </head>
 <body>
-
 
 <nav class="navbar navbar-inverse navbar-fixed-top">
 <div class="container">
@@ -119,31 +146,5 @@
 </div>
 </div>
 
-<!-- Bootstrap core JavaScript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="${rootPath}ext/js/jquery.min.js"></script>
-
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="${rootPath}ext/css/bootstrap.min.css">
-
-<!-- Optional theme -->
-<link rel="stylesheet" href="${rootPath}ext/css/bootstrap-theme.min.css">
-
-<!-- Latest compiled and minified JavaScript -->
-<script src="${rootPath}ext/js/bootstrap.min.js"></script>
-
-<link rel="stylesheet" type="text/css" href="${rootPath}ext/css/bootstrap_dashboard.css">
-<link rel="stylesheet" type="text/css" href="${rootPath}ext/css/sortable-theme-bootstrap.css">
-
-<!-- sortable tables //-->
-<script src="${rootPath}ext/js/sortable.min.js"></script>
-<script language="JavaScript">
-    <!--
-    $(document).ready(function() {
-        Sortable.init()
-
-        });
-    //--></script>
 </body>
 </html>
