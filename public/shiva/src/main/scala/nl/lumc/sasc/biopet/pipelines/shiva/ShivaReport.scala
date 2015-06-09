@@ -25,7 +25,9 @@ object ShivaReport extends MultisampleReportBuilder {
       Map(
         "Samples" -> generateSamplesPage(pageArgs),
         "Files" -> filesPage,
-        "Versions" -> ReportPage(Map(), List(), Map())
+        "Versions" -> ReportPage(Map(), List((
+          "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+        ))), Map())
       ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
