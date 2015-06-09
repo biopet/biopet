@@ -3,11 +3,15 @@
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
 
-<table>
+<table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Shiva</td></tr>
+    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
+    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
+    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
+    <tr>
+        <th>Variantcallers</th>
+        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").get.asInstanceOf[List[String]].mkString(", ")}</td>
+    </tr>
 </tbody>
 </table>
-
-#{//TODO: Add settings}#
-Todo: settings
