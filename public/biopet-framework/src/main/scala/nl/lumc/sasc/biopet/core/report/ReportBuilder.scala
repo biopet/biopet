@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.utils.IoUtils
 /**
  * Created by pjvan_thof on 3/27/15.
  */
-trait ReportBuilderExtension extends BiopetJavaCommandLineFunction {
+trait ReportBuilderExtension extends ToolCommandFuntion {
 
   val builder: ReportBuilder
 
