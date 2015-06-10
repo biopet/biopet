@@ -17,8 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
@@ -26,7 +25,7 @@ import scala.collection.SortedMap
 import scala.collection.mutable.Map
 import scala.io.Source
 
-class BedtoolsCoverageToCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)

@@ -25,7 +25,7 @@ import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, Variant
 import htsjdk.variant.vcf._
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -38,7 +38,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Created by ahbbollen on 10/27/14.
  */
 
-class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)

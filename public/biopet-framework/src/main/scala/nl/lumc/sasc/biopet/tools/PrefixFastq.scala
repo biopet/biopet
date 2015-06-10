@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import htsjdk.samtools.fastq.{ FastqRecord, AsyncFastqWriter, FastqReader, BasicFastqWriter }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
@@ -28,7 +28,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 1/13/15.
  */
-class PrefixFastq(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class PrefixFastq(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   override val defaultCoreMemory = 1.0

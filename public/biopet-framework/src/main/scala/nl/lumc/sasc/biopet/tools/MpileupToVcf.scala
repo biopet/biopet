@@ -18,8 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.io.PrintWriter
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -30,7 +29,7 @@ import scala.math.round
 import scala.math.floor
 import scala.collection.JavaConversions._
 
-class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)

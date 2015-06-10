@@ -17,8 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaReaderHelper
@@ -28,7 +27,7 @@ import scala.collection.mutable.{ Map, Set }
 import scala.collection.JavaConversions._
 import scala.util.matching.Regex
 
-class SageCreateLibrary(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCreateLibrary(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)

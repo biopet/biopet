@@ -27,7 +27,7 @@ import scala.collection.JavaConverters._
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.{ BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
@@ -35,7 +35,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summarizable {
 
   javaMainClass = getClass.getName
 
