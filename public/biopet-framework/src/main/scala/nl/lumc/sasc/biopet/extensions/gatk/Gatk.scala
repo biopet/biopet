@@ -50,7 +50,9 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
 
   override val versionRegex = """(.*)""".r
   override val versionExitcode = List(0, 1)
-  override def versionCommand = commandLine + " -version"
+  override def versionCommand = executable + " -jar " + jarFile + " -version"
+
+  override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
 
   override def commandLine = super.commandLine +
     required("-T", analysisType) +
