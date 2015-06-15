@@ -163,10 +163,10 @@ object BammetricsReport extends ReportBuilder {
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
-    plot.xlabel = Some("Insertsize")
+    plot.xlabel = Some("Insert size")
     plot.width = Some(1200)
     plot.removeZero = true
-    plot.title = Some("Insertsize")
+    plot.title = Some("Insert size")
     plot.runLocal()
 
   }
