@@ -7,7 +7,7 @@ import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class FreeCBAFPlot(val root: Configurable) extends RscriptCommandLineFunction {
-  setScript("freec_BAFPlot.R")
+  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_BAFPlot.R")
 
   @Input(doc = "Output file from FreeC. *_BAF.txt")
   var input: File = null
@@ -20,11 +20,9 @@ class FreeCBAFPlot(val root: Configurable) extends RscriptCommandLineFunction {
    * Unless some R library is used for named arguments
    * */
   override def cmdLine: String = {
-
-    addArgument("i", input.getAbsolutePath)
-    addArgument("o", output.getAbsolutePath)
-
-    super.cmdLine
+    super.cmdLine +
+      required("-i", input.getAbsolutePath) +
+      required("-o", output.getAbsolutePath)
   }
 
 }

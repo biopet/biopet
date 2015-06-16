@@ -7,7 +7,7 @@ import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommandLineFunction {
-  setScript("freec_assess_significance.R")
+  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_assess_significance.R")
 
   @Input(doc = "Output file from FreeC. *_CNV")
   var cnv: File = null
@@ -22,11 +22,10 @@ class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommand
    * Unless some R library is used for named arguments
    * */
   override def cmdLine: String = {
+    super.cmdLine +
+      required("--cnv", cnv.getAbsolutePath) +
+      required("--ratios", ratios.getAbsolutePath) +
+      required("--output", output.getAbsolutePath)
 
-    addArgument("c", cnv.getAbsolutePath)
-    addArgument("r", ratios.getAbsolutePath)
-    addArgument("o", output.getAbsolutePath)
-
-    super.cmdLine
   }
 }

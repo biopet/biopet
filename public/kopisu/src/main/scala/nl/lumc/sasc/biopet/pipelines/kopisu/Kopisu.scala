@@ -19,8 +19,9 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
+
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
-import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
+import nl.lumc.sasc.biopet.extensions.{Cnmops, RscriptCommandLineFunction}
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMpileup
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
@@ -48,6 +49,11 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     //    sambambapileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
     //    sambambapileup.isIntermediate = true
     //    add(sambambapileup)
+
+//    val cnmops = new Cnmops(this)
+//    cnmops.input
+
+    // below is FreeC specific
 
     val sampileup = new SamtoolsMpileup(this)
     sampileup.input = List(bamFile)

@@ -26,6 +26,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  */
 class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
+  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.rscript")
+
   /** input file */
   @Input(doc = "Input file BAM", required = true)
   var input: List[File] = List()
@@ -57,9 +59,8 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
   override def cmdLine = {
 
-    addPositionalArgument(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
-
-    super.cmdLine
+    super.cmdLine +
+      required(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
   }
 
 }

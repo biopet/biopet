@@ -7,7 +7,7 @@ import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
-  setScript("freec_CNVPlot.R")
+  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_CNVPlot.R")
 
   @Input(doc = "Output file from FreeC. *_CNV")
   var input: File = null
@@ -21,8 +21,8 @@ class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
    * */
   override def cmdLine: String = {
 
-    addArgument("i", input.getAbsolutePath)
-    addArgument("o", output.getAbsolutePath)
+    required("-i", input.getAbsolutePath)
+    required("-o", output.getAbsolutePath)
 
     super.cmdLine
   }
