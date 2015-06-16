@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.engine.phonehome.GATKRunReport
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
@@ -48,6 +49,8 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
 
+  var et: Option[String] = config("et")
+
   override def dictRequired = true
 
   override def beforeGraph: Unit = {
@@ -59,6 +62,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
     required("-T", analysisType) +
     required("-R", reference) +
     optional("-K", gatkKey) +
+    optional("-et", et) +
     repeat("-I", intervals) +
     repeat("-XL", excludeIntervals) +
     repeat("-ped", pedigree)
