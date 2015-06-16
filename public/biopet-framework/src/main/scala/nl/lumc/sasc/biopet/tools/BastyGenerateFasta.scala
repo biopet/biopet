@@ -56,8 +56,7 @@ class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFu
   var minDepth: Int = config("min_depth", default = 8)
   var outputName: String = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 4.0
 
   override def commandLine = super.commandLine +
     optional("--inputVcf", inputVcf) +

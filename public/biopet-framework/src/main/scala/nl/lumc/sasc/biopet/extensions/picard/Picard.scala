@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
-
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
-
 import scala.io.Source
+
+import org.broadinstitute.gatk.utils.commandline.Argument
+
+import nl.lumc.sasc.biopet.core.{ Logging, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 
 /**
  * General picard extension
@@ -60,8 +61,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   override val versionRegex = """Version: (.*)""".r
   override val versionExitcode = List(0, 1)
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(3.0)
+  override val defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("TMP_DIR=" + jobTempDir) +
@@ -74,21 +74,64 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     conditional(createMd5, "CREATE_MD5_FILE=TRUE")
 }
 
-object Picard {
+object Picard extends Logging {
+
+  def getMetrics(file: File, tag: String = "METRICS CLASS",
+                 groupBy: Option[String] = None): Option[Any] = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) => {
+        (content.size, groupBy) match {
+          case (_, Some(group)) => {
+            val groupId = header.indexOf(group)
+            if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
+            if (header.count(_ == group) > 1) logger.warn(group + " multiple times seen in header of: " + file)
+            Some((for (c <- content) yield c(groupId).toString() -> {
+              header.filter(_ != group).zip(c.take(groupId) ::: c.takeRight(c.size - groupId - 1)).toMap
+            }).toMap)
+          }
+          case (1, _) => Some(header.zip(content.head).toMap)
+          case _      => Some(header :: content)
+        }
+      }
+      case _ => None
+    }
+  }
+
+  /**
+   * This function parse the metrics but transpose for table
+   * @param file metrics file
+   * @param tag default to "HISTOGRAM"
+   * @return
+   */
+  def getHistogram(file: File, tag: String = "HISTOGRAM") = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) => {
+        val colums = header.zipWithIndex.map(x => x._1 -> content.map(_.lift(x._2))).toMap
+        Some(colums)
+      }
+      case _ => None
+    }
+  }
+
   /**
    * This function parse a metrics file in separated values
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File) = {
-    val lines = Source.fromFile(file).getLines().toArray
+  def getMetricsContent(file: File, tag: String) = {
+    if (!file.exists) None
+    else {
+      val lines = Source.fromFile(file).getLines().toArray
 
-    val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
-    val end = lines.indexOf("", start)
+      val start = lines.indexWhere(_.startsWith("## " + tag)) + 1
+      val end = lines.indexOf("", start)
 
-    val header = lines(start).split("\t")
-    val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val header = lines(start).split("\t").toList
+      val content = (for (i <- (start + 1) until end) yield {
+        lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
+      }).toList
 
-    (header, content)
+      Some(header, content)
+    }
   }
 }

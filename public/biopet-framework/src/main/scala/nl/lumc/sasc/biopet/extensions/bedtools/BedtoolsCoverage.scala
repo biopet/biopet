@@ -21,16 +21,17 @@ import java.io.File
 
 /** Extension for bedtools coverage */
 class BedtoolsCoverage(val root: Configurable) extends Bedtools {
+
   @Input(doc = "Input file (bed/gff/vcf/bam)")
-  var input: File = _
+  var input: File = null
 
   @Input(doc = "Intersect file (bed/gff/vcf)")
-  var intersectFile: File = _
+  var intersectFile: File = null
 
   @Output(doc = "output File")
-  var output: File = _
+  var output: File = null
 
-  @Argument(doc = "dept", required = false)
+  @Argument(doc = "depth", required = false)
   var depth: Boolean = false
 
   @Argument(doc = "sameStrand", required = false)
@@ -44,6 +45,8 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   override def beforeCmd {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
+
+  override val defaultCoreMemory = 4.0
 
   /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +

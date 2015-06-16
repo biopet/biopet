@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.bwa
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 0.7.12-r1039
  */
-class BwaMem(val root: Configurable) extends Bwa {
+class BwaMem(val root: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = _
 
@@ -35,7 +35,7 @@ class BwaMem(val root: Configurable) extends Bwa {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "R")
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Output(doc = "Output file SAM", shortName = "output")
   var output: File = _
@@ -69,15 +69,20 @@ class BwaMem(val root: Configurable) extends Bwa {
   var Y: Boolean = config("Y", default = false)
   var I: Option[String] = config("I")
 
-  override val defaultVmem = "6G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   def cmdLine = {
     required(executable) +
       required("mem") +
       optional("-k", k) +
       optional("-r", r) +
-      optional("-t", nCoresRequest) +
+      optional("-t", threads) +
       optional("-R", R) +
       conditional(M, "-M") +
       conditional(S, "-S") +

@@ -49,8 +49,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var sample: String = _
   var reference: String = config("reference")
 
-  override val defaultVmem = "6G"
-  memoryLimit = Option(2.0)
+  override val defaultCoreMemory = 3.0
 
   override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
     super.defaults)
@@ -138,7 +137,12 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
-    val inputStream = if (commandArgs.input != null) Source.fromFile(commandArgs.input).getLines else Source.stdin.getLines
+    val inputStream = if (commandArgs.input != null) {
+      Source.fromFile(commandArgs.input).getLines
+    } else {
+      logger.info("No input file as argument, waiting on stdin")
+      Source.stdin.getLines
+    }
     class Counts(var forward: Int, var reverse: Int)
     for (
       line <- inputStream;
@@ -147,7 +151,12 @@ object MpileupToVcf extends ToolCommand {
     ) {
       val chr = values(0)
       val pos = values(1)
-      val ref = values(2)
+      val ref = values(2) match {
+        case "A" | "T" | "G" | "C" => values(2)
+        case "a" | "t" | "g" | "c" => values(2).toUpperCase
+        case "U" | "u"             => "T"
+        case _                     => "N"
+      }
       val reads = values(3).toInt
       val mpileup = values(4)
       val qual = values(5)

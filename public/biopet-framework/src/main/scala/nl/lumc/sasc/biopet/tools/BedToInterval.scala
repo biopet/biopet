@@ -24,6 +24,9 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.PrintWriter
 import scala.io.Source
 
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
 class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
 
@@ -36,21 +39,15 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
   @Output(doc = "Output interval list", required = true)
   var output: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
 object BedToInterval extends ToolCommand {
-  def apply(root: Configurable, inputBed: File, inputBam: File, outputDir: String): BedToInterval = {
-    val bedToInterval = new BedToInterval(root)
-    bedToInterval.input = inputBed
-    bedToInterval.bamFile = inputBam
-    bedToInterval.output = new File(outputDir, inputBed.getName.stripSuffix(".bed") + ".interval")
-    return bedToInterval
-  }
-
   def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
     val bedToInterval = new BedToInterval(root)
     bedToInterval.input = inputBed

@@ -45,23 +45,24 @@
 
 package nl.lumc.sasc.biopet.core.workaround
 
-import java.io.File
+import collection.JavaConversions._
+import java.io.{ File, FileOutputStream }
+import java.net.URL
+import java.util.{ ResourceBundle, Arrays }
+
+import org.apache.commons.io.FilenameUtils
 import org.broadinstitute.gatk.utils.commandline._
 import org.broadinstitute.gatk.queue.util._
 import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
-import collection.JavaConversions._
 import org.broadinstitute.gatk.utils.classloader.PluginManager
 import org.broadinstitute.gatk.utils.exceptions.UserException
 import org.broadinstitute.gatk.utils.io.IOUtils
 import org.broadinstitute.gatk.utils.help.ApplicationDetails
-import java.io.FileOutputStream
-import java.net.URL
-import java.util.{ ResourceBundle, Arrays }
 import org.broadinstitute.gatk.utils.text.TextFormattingUtils
-import org.apache.commons.io.FilenameUtils
-import nl.lumc.sasc.biopet.core.BiopetExecutable
+
+import nl.lumc.sasc.biopet.FullVersion
 
 /**
  * Entry point of Queue.  Compiles and runs QScripts passed in to the command line.
@@ -291,7 +292,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   }
 
   private def createQueueHeader(): Seq[String] = {
-    Seq("Biopet version: " + BiopetExecutable.getVersion, "",
+    Seq("Biopet version: " + FullVersion, "",
       "Based on GATK Queue",
       //                     String.format("Queue v%s, Compiled %s", getQueueVersion, getBuildTimestamp),
       "Copyright (c) 2012 The Broad Institute",

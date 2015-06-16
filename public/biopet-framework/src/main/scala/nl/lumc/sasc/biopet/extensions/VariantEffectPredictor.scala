@@ -1,8 +1,23 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -10,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction {
+class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   executable = config("exe", submodule = "perl", default = "perl")
   var vep_script: String = config("vep_script")
@@ -119,7 +134,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var cache_region_size: Option[String] = config("cache_region_size")
 
   // Numeric args
-  var fork: Option[Int] = config("fork")
+  override val defaultThreads: Int = config("fork", default = 2)
   var cache_version: Option[Int] = config("cache_version")
   var freq_freq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")
@@ -229,7 +244,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     optional("--build", build) +
     optional("--compress", compress) +
     optional("--cache_region_size", cache_region_size) +
-    optional("--fork", fork) +
+    optional("--fork", threads) +
     optional("--cache_version", cache_version) +
     optional("--freq_freq", freq_freq) +
     optional("--port", port) +

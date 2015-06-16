@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.scripts
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
-class CoverageStats(val root: Configurable) extends PythonCommandLineFunction {
+class CoverageStats(val root: Configurable) extends PythonCommandLineFunction with Summarizable {
   setPythonScript("bedtools_cov_stats.py")
 
   @Input(doc = "Input file")
@@ -32,10 +33,14 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction {
   @Output(doc = "plot File (png)")
   var plot: File = _
 
-  override val defaultVmem = "12G"
+  override val defaultCoreMemory = 9.0
 
   def cmdLine = getPythonCommand +
     required(input) + required("--plot", plot) + " > " + required(output)
+
+  def summaryFiles: Map[String, File] = Map("output" -> output, "plot" -> plot)
+
+  def summaryStats: Map[String, Any] = Map()
 }
 
 object CoverageStats {
@@ -44,6 +49,6 @@ object CoverageStats {
     coverageStats.input = input
     coverageStats.output = new File(outputDir, input.getName + ".stats")
     coverageStats.plot = new File(outputDir, input.getName + ".stats.png")
-    return coverageStats
+    coverageStats
   }
 }

@@ -16,10 +16,12 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.{ PrintWriter, StringWriter }
-import java.util.Properties
-import nl.lumc.sasc.biopet.core.BiopetExecutable._
-import org.apache.log4j.Logger
 import scala.io.Source
+
+import org.apache.log4j.Logger
+
+import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
+import nl.lumc.sasc.biopet.core.BiopetExecutable._
 
 trait BiopetExecutable extends Logging {
 
@@ -49,7 +51,7 @@ trait BiopetExecutable extends Logging {
         u.mkString("\n\n")
       }
       """
-        |Usage   : java -jar BiopetFramework.jar {%s} <name> [args]
+        |Usage   : java -jar <path/to/biopet.jar> {%s} <name> [args]
         |Version : %s
         |
         |%s
@@ -59,7 +61,7 @@ trait BiopetExecutable extends Logging {
         |  - license
         |
         |Questions or comments? Email sasc@lumc.nl or check out the project page at https://git.lumc.nl/biopet/biopet.git
-      """.stripMargin.format(modules.keys.mkString(","), getVersion, usage)
+      """.stripMargin.format(modules.keys.mkString(","), FullVersion, usage)
     }
 
     def checkModule(module: String) {
@@ -81,7 +83,7 @@ trait BiopetExecutable extends Logging {
 
     args match {
       case Array("version") => {
-        println("version: " + getVersion)
+        println("version: " + FullVersion)
       }
       case Array("license") => {
         println(getLicense)
@@ -98,7 +100,7 @@ trait BiopetExecutable extends Logging {
             val trace = (sWriter.toString.split("\n"))
 
             if (!logger.isDebugEnabled) {
-              logger.error(trace.head)
+              trace.filterNot(_.startsWith("\tat")).foreach(logger.error(_))
               logger.error("For more info please run with -l debug")
             } else {
               trace.foreach(logger.debug(_))
@@ -118,30 +120,16 @@ trait BiopetExecutable extends Logging {
     }
   }
 
-  def checkDirtyBuild(logger: Logger) {
-    val prop = new Properties()
-    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
-    val describeShort = prop.getProperty("git.commit.id.describe-short")
-    if (describeShort.endsWith("-dirty")) {
-      logger.warn("**********************************************************")
-      logger.warn("* This JAR was built while there are uncommited changes. *")
-      logger.warn("* Reproducible results are *not* guaranteed.             *")
-      logger.warn("**********************************************************")
+  def checkDirtyBuild(logger: Logger): Unit =
+    if (LastCommitHash.endsWith("-dirty")) {
+      logger.warn("***********************************************************")
+      logger.warn("* This JAR was built while there were uncommited changes. *")
+      logger.warn("* Reproducible results are *not* guaranteed.              *")
+      logger.warn("***********************************************************")
     }
-  }
 }
 
 object BiopetExecutable {
-  def getVersion = {
-    getClass.getPackage.getImplementationVersion + " (" + getCommitHash + ")"
-  }
-
-  def getCommitHash = {
-    val prop = new Properties()
-    prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
-    prop.getProperty("git.commit.id.abbrev")
-  }
-
   def getLicense: String = {
     val stream = getClass.getClassLoader.getResourceAsStream("nl/lumc/sasc/biopet/License.txt")
     Source.fromInputStream(stream).getLines().mkString("\n", "\n", "\n")

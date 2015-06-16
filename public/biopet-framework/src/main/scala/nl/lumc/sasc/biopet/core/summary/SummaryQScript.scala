@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
@@ -83,7 +98,13 @@ trait SummaryQScript extends BiopetQScript {
 
     def addChecksum(file: File): Unit = {
       if (writeSummary.md5sum && !SummaryQScript.md5sumCache.contains(file)) {
-        val md5sum = Md5sum(this, file)
+        val md5sum = new Md5sum(this) {
+          override def configName = "md5sum"
+          override def cmdLine: String = super.cmdLine + " || " +
+            required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)
+        }
+        md5sum.input = file
+        md5sum.output = new File(file.getParentFile, file.getName + ".md5")
 
         // Need to not write a md5 file outside the outputDir
         if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))

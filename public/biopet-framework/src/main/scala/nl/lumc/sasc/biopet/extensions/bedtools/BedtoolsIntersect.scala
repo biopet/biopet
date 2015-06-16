@@ -21,14 +21,15 @@ import java.io.File
 
 /** Extension for bedtools intersect */
 class BedtoolsIntersect(val root: Configurable) extends Bedtools {
+
   @Input(doc = "Input file (bed/gff/vcf/bam)")
-  var input: File = _
+  var input: File = null
 
   @Input(doc = "Intersect file (bed/gff/vcf)")
-  var intersectFile: File = _
+  var intersectFile: File = null
 
   @Output(doc = "output File")
-  var output: File = _
+  var output: File = null
 
   @Argument(doc = "Min overlap", required = false)
   var minOverlap: Option[Double] = config("minoverlap")
@@ -54,12 +55,12 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
 object BedtoolsIntersect {
   /** Returns default bedtools intersect */
   def apply(root: Configurable, input: File, intersect: File, output: File,
-            minOverlap: Double = 0, count: Boolean = false): BedtoolsIntersect = {
+            minOverlap: Option[Double] = None, count: Boolean = false): BedtoolsIntersect = {
     val bedtoolsIntersect = new BedtoolsIntersect(root)
     bedtoolsIntersect.input = input
     bedtoolsIntersect.intersectFile = intersect
     bedtoolsIntersect.output = output
-    if (minOverlap > 0) bedtoolsIntersect.minOverlap = Option(minOverlap)
+    bedtoolsIntersect.minOverlap = minOverlap
     bedtoolsIntersect.count = count
     return bedtoolsIntersect
   }

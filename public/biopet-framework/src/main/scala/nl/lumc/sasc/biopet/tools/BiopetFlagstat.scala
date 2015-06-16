@@ -37,8 +37,7 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
   @Output(doc = "summary output file", shortName = "output", required = false)
   var summaryFile: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 2.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
 

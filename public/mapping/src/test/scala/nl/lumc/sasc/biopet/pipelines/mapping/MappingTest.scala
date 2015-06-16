@@ -1,6 +1,21 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions._
@@ -32,7 +47,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy")
+    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
@@ -94,9 +109,9 @@ class MappingTest extends TestNGSuite with Matchers {
 
     // Sort sam or replace readgroup
     val sort = aligner match {
-      case "bwa" | "bwa-aln" | "stampy"     => "sortsam"
-      case "star" | "star-2pass" | "bowtie" => "replacereadgroups"
-      case _                                => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
+      case "bwa" | "bwa-aln" | "stampy" => "sortsam"
+      case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
+      case _ => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
     }
 
     mapping.functions.count(_.isInstanceOf[SortSam]) shouldBe ((if (sort == "sortsam") 1 else 0) * chunks)
@@ -115,10 +130,25 @@ class MappingTest extends TestNGSuite with Matchers {
 object MappingTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "db" -> "test",
+    "bowtie_index" -> "test",
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
+    "gsnap" -> Map("exe" -> "test"),
+    "tophat" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),

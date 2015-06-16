@@ -16,21 +16,23 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CalculateHsMetrics */
-class CalculateHsMetrics(val root: Configurable) extends Picard {
-  javaMainClass = "picard.analysis.directed.CalculateHsMetrics"
+class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+  javaMainClass = new picard.analysis.directed.CalculateHsMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = _
 
   @Input(doc = "BAIT_INTERVALS", required = true)
-  var baitIntervals: File = _
+  var baitIntervals: List[File] = _
 
   @Input(doc = "TARGET_INTERVALS", required = true)
-  var targetIntervals: File = _
+  var targetIntervals: List[File] = Nil
 
   @Output(doc = "The output file to write statistics to", required = true)
   var output: File = _
@@ -39,13 +41,18 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
   var perTargetCoverage: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
-  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel")
+  var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "BAIT_SET_NAME", required = false)
   var baitSetName: String = _
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** Returns command to execute */
   override def commandLine = super.commandLine +
@@ -53,21 +60,31 @@ class CalculateHsMetrics(val root: Configurable) extends Picard {
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
     repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
-    required("BAIT_INTERVALS=", baitIntervals, spaceSeparated = false) +
-    required("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
+    repeat("BAIT_INTERVALS=", baitIntervals, spaceSeparated = false) +
+    repeat("TARGET_INTERVALS=", targetIntervals, spaceSeparated = false) +
     optional("PER_TARGET_COVERAGE=", perTargetCoverage, spaceSeparated = false) +
     optional("BAIT_SET_NAME=", baitSetName, spaceSeparated = false)
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats: Any = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CalculateHsMetrics {
   /** Returns default CalculateHsMetrics */
-  def apply(root: Configurable, input: File, baitIntervals: File, targetIntervals: File, outputDir: File): CalculateHsMetrics = {
+  def apply(root: Configurable,
+            input: File,
+            baitIntervals: List[File],
+            targetIntervals: List[File],
+            outputDir: File): CalculateHsMetrics = {
     val calculateHsMetrics = new CalculateHsMetrics(root)
     calculateHsMetrics.input = input
     calculateHsMetrics.baitIntervals = baitIntervals
     calculateHsMetrics.targetIntervals = targetIntervals
-    calculateHsMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".capmetrics")
-    calculateHsMetrics.perTargetCoverage = new File(outputDir, input.getName.stripSuffix(".bam") + ".per_target_coverage")
-    return calculateHsMetrics
+    calculateHsMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".HsMetrics")
+    calculateHsMetrics.perTargetCoverage = new File(outputDir, input.getName.stripSuffix(".bam") + ".HsMetrics.per_target_coverage")
+    calculateHsMetrics
   }
 }

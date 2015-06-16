@@ -1,0 +1,121 @@
+\subsection{Mapping}
+\label{sec:map-((( lib.sample.name )))-((( lib.name )))}
+
+\subsubsection{Mapping statistics}
+
+\indent
+
+% number + percentage of reads mapped to genome
+% number + percentage of properly paired reads
+\begin{center}
+    \captionof{table}{Mapping Overview}
+    \label{tab:bamstat-((( lib.sample.name )))-((( lib.name )))}
+    \setlength{\tabcolsep}{11pt}
+    ((* if lib.is_paired_end *))
+    \begin{tabular}{ l r r r }
+        \hline
+        \multirow{2}{*}{Parameter} & \multicolumn{1}{c}{All Pairs} & \multicolumn{1}{c}{First in Pairs} & \multicolumn{1}{c}{Second in Pairs} \\
+         & Value & Value & Value \\
+        \hline \hline
+        Total reads & ((( lib.aln_metrics.PAIR.total_reads|nice_int ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.total_reads|nice_int ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.total_reads|nice_int ))) \\
+        Mean read length & ((( lib.aln_metrics.PAIR.mean_read_length|nice_flt ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.mean_read_length|nice_flt ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.mean_read_length|nice_flt ))) \\
+        Strand balance & ((( lib.aln_metrics.PAIR.strand_balance|nice_flt ))) & ((( lib.aln_metrics.FIRST_OF_PAIR.strand_balance|nice_flt ))) & ((( lib.aln_metrics.SECOND_OF_PAIR.strand_balance|nice_flt ))) \\
+        \% Mapped to reference & ((( lib.aln_metrics.PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        \% Mapped to reference (MAPQ >= 20) & ((( lib.aln_metrics.PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        Mismatch rate & ((( lib.aln_metrics.PAIR.pf_mismatch_rate|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pf_mismatch_rate|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pf_mismatch_rate|float2nice_pct )))\% \\
+        Indel rate & ((( lib.aln_metrics.PAIR.pf_indel_rate|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pf_indel_rate|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pf_indel_rate|float2nice_pct )))\% \\
+        Chimeras & ((( lib.aln_metrics.PAIR.pct_chimeras|float2nice_pct )))\% & ((( lib.aln_metrics.FIRST_OF_PAIR.pct_chimeras|float2nice_pct )))\% & ((( lib.aln_metrics.SECOND_OF_PAIR.pct_chimeras|float2nice_pct )))\% \\
+        \hline
+    ((* else *))
+    \begin{tabular}{ l r }
+        \hline
+        \multirow{1}{*}{Parameter} & \multicolumn{1}{c}{Value} \\
+        \hline \hline
+        Total reads & ((( lib.aln_metrics.UNPAIRED.total_reads|nice_int ))) \\
+        Mean read length & ((( lib.aln_metrics.UNPAIRED.mean_read_length|nice_flt ))) \\
+        Strand balance & ((( lib.aln_metrics.UNPAIRED.strand_balance|nice_flt ))) \\
+        \% Mapped to reference & ((( lib.aln_metrics.UNPAIRED.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        \% Mapped to reference (MAPQ >= 20) & ((( lib.aln_metrics.UNPAIRED.pct_pf_reads_aligned|float2nice_pct )))\% \\
+        Mismatch rate & ((( lib.aln_metrics.UNPAIRED.pf_mismatch_rate|float2nice_pct )))\% \\
+        Indel rate & ((( lib.aln_metrics.UNPAIRED.pf_indel_rate|float2nice_pct )))\% \\
+        \hline
+    ((* endif *))
+    \end{tabular}
+\end{center}
+
+((* if lib.is_paired_end *))
+% inferred insert size distribution
+\subsubsection{Insert size distribution}
+
+\IfFileExists{((( lib.inserts_metrics_files.output_histogram.path )))}
+{
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.7\textwidth]{((( lib.inserts_metrics_files.output_histogram.path )))}
+        \caption{Distribution of insert size length of paired-end reads mapped to opposite strands.}
+    \end{figure}
+}
+((= TODO: strand-specific stats
+%{
+%    \IfFileExists{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).f.insertsizes.png}
+%    {
+%        \begin{figure}[h!]
+%            \centering
+%            \includegraphics[width=0.7\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).f.insertsizes.png}
+%            \caption{Distribution of insert size length of paired-end reads whose first read maps to the minus strand.}
+%        \end{figure}
+%    }{}
+%    \IfFileExists{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).r.insertsizes.png}
+%    {
+%        \begin{figure}[h!]
+%            \centering
+%            \includegraphics[width=0.7\textwidth]{((( vars['OUT_DIR'] )))/((( vars['SAMPLE'] ))).r.insertsizes.png}
+%            \caption{Distribution of insert size length of paired-end reads whose first read maps to the plus strand.}
+%        \end{figure}
+%    }{}
+%}
+=))
+((* endif *))
+
+\subsubsection{RNA-specific metrics}
+
+\IfFileExists{((( lib.rna_metrics_files.output_chart.path )))}
+{
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.7\textwidth]{((( lib.rna_metrics_files.output_chart.path )))}
+        \caption{Normalized coverage bias plot.}
+    \end{figure}
+}
+
+\begin{center}
+    \captionof{table}{Functional annotation metrics}
+    \label{tab:fannot-((( lib.sample.name )))-((( lib.name ))))}
+    \setlength{\tabcolsep}{11pt}
+    \begin{tabular}{ l r r r }
+        \hline
+        \multirow{2}{*}{Parameter} & \multicolumn{3}{c}{Value} \\
+                                   & Count & \% of all & \% of aligned \\
+        \hline \hline
+        Total bases & ((( lib.rna_metrics.pf_bases|nice_int ))) & 100\% & - \\
+        Aligned bases & ((( lib.rna_metrics.pf_aligned_bases|nice_int ))) & ((( lib.rna_metrics.pct_aligned_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_aligned_bases|float2nice_pct )))\% \\
+        Exonic bases & ((( lib.rna_metrics.exonic_bases|nice_int ))) & ((( lib.rna_metrics.pct_exonic_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_exonic_bases|float2nice_pct )))\% \\
+            \hspace*{4mm}Coding bases & ((( lib.rna_metrics.coding_bases|nice_int ))) & ((( lib.rna_metrics.pct_coding_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_coding_bases|float2nice_pct )))\% \\
+            \hspace*{4mm}UTR bases & ((( lib.rna_metrics.utr_bases|nice_int ))) & ((( lib.rna_metrics.pct_utr_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_utr_bases|float2nice_pct )))\% \\
+        Intronic bases & ((( lib.rna_metrics.intronic_bases|nice_int ))) & ((( lib.rna_metrics.pct_intronic_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_intronic_bases|float2nice_pct )))\% \\
+        Intergenic bases & ((( lib.rna_metrics.intergenic_bases|nice_int ))) & ((( lib.rna_metrics.pct_intergenic_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_intergenic_bases|float2nice_pct )))\% \\
+        ((* if lib.rna_metrics.ribosomal_bases != "" *))
+        Ribosomal bases & ((( lib.rna_metrics.ribosomal_bases|nice_int ))) & ((( lib.rna_metrics.pct_ribosomal_bases_all|float2nice_pct )))\% & ((( lib.rna_metrics.pct_ribosomal_bases|float2nice_pct )))\% \\
+        ((* endif *))
+        \hline
+        Median 5' bias & ((( lib.rna_metrics.median_5prime_bias ))) & - & - \\
+        Median 3' bias & ((( lib.rna_metrics.median_3prime_bias ))) & - & - \\
+        Median 5' to 3' bias & ((( lib.rna_metrics.median_5prime_to_3prime_bias ))) & - & - \\
+        \hline
+        ((* if lib.run.settings.strand_protocol != "non_specific" *))
+        Correct strand reads & ((( lib.rna_metrics.correct_strand_reads|nice_int ))) & - & - \\
+        Incorrect strand reads & ((( lib.rna_metrics.incorrect_strand_reads|nice_int ))) & - & - \\
+        ((* endif *))
+        \hline
+    \end{tabular}
+\end{center}

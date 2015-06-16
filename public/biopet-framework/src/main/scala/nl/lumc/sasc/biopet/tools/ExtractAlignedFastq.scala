@@ -146,9 +146,8 @@ object ExtractAlignedFastq extends ToolCommand {
   def extractReads(memFunc: FastqInput => Boolean,
                    inputFastq1: FastqReader, outputFastq1: BasicFastqWriter): Unit =
     inputFastq1.iterator.asScala
-      .zip(Iterator.continually(None))
-      .filter(rec => memFunc(rec._1, rec._2))
-      .foreach(rec => outputFastq1.write(rec._1))
+      .filter(rec => memFunc((rec, None)))
+      .foreach(rec => outputFastq1.write(rec))
 
   /**
    * Extracts reads from the given input Fastq pairs and writes to new output Fastq pair files
@@ -261,17 +260,25 @@ object ExtractAlignedFastq extends ToolCommand {
     logger.info("Writing to output file(s) ...")
     (commandArgs.inputFastq2, commandArgs.outputFastq2) match {
 
-      case (None, None) => extractReads(memFunc,
-        new FastqReader(commandArgs.inputFastq1),
-        new BasicFastqWriter(commandArgs.inputFastq1))
+      case (None, None) =>
+        val in = new FastqReader(commandArgs.inputFastq1)
+        val out = new BasicFastqWriter(commandArgs.outputFastq1)
+        extractReads(memFunc, in, out)
+        in.close()
+        out.close()
 
-      case (Some(i2), Some(o2)) => extractReads(memFunc,
-        new FastqReader(commandArgs.inputFastq1),
-        new BasicFastqWriter(commandArgs.outputFastq1),
-        new FastqReader(i2),
-        new BasicFastqWriter(o2))
+      case (Some(i2), Some(o2)) =>
+        val in1 = new FastqReader(commandArgs.inputFastq1)
+        val in2 = new FastqReader(i2)
+        val out1 = new BasicFastqWriter(commandArgs.outputFastq1)
+        val out2 = new BasicFastqWriter(o2)
+        extractReads(memFunc, in1, out1, in2, out2)
+        in1.close()
+        in2.close()
+        out1.close()
+        out2.close()
 
-      case _ => // handled by the command line config check above
+      case _ => ; // handled by the command line config check above
     }
   }
 }

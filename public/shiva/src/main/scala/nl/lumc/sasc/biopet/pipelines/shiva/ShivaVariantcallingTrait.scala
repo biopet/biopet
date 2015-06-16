@@ -1,8 +1,23 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip, Gzip }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
@@ -18,7 +33,7 @@ import scala.collection.generic.Sorted
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
+trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with Reference {
   qscript =>
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
@@ -53,7 +68,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag {
     val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
 
     require(!inputBams.isEmpty, "No input bams found")
-    require(!callers.isEmpty, "must select atleast 1 variantcaller, possible to use: " + callersList.map(_.name).mkString(", "))
+    require(!callers.isEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile

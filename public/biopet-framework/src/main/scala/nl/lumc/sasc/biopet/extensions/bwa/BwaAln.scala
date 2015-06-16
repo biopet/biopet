@@ -1,7 +1,23 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.bwa
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -12,12 +28,12 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  *
  * Created by pjvan_thof on 1/16/15.
  */
-class BwaAln(val root: Configurable) extends Bwa {
+class BwaAln(val root: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file", required = true)
   var fastq: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _
@@ -45,12 +61,18 @@ class BwaAln(val root: Configurable) extends Bwa {
   var n2: Boolean = config("2", default = false)
   var Y: Boolean = config("Y", default = false)
 
-  override val defaultVmem = "5G"
+  override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
     required("aln") +
+    optional("-t", threads) +
     optional("-n", n) +
     optional("-o", o) +
     optional("-e", e) +

@@ -9,6 +9,6 @@ git.properties
 # IntelliJ
 .idea/*
 *.iml
-/target/
-/public/target/
-/protected/target/
+target/
+public/target/
+protected/target/

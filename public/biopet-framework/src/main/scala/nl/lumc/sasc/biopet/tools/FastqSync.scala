@@ -1,10 +1,17 @@
 /**
- * Copyright (c) 2014 Leiden University Medical Center - Sequencing Analysis Support Core <sasc@lumc.nl>
- * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
  *
- * This tool is a port of a Python implementation written by Martijn Vermaat[1]
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
  *
- * [1] https://github.com/martijnvermaat/bio-playground/blob/master/sync-paired-end-reads/sync_paired_end_reads.py
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
  */
 package nl.lumc.sasc.biopet.tools
 
@@ -50,8 +57,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
   @Output(doc = "Sync statistics", required = true)
   var outputStats: File = null
 
-  override val defaultVmem = "4G"
-  memoryLimit = Some(1.7)
+  override val defaultCoreMemory = 4.0
 
   // executed command line
   override def commandLine =

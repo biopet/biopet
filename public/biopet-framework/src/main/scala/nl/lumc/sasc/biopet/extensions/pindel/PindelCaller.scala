@@ -23,7 +23,7 @@ import java.io.File
 class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "pindel", freeVar = false)
 
-  override val defaultVmem = "8G"
+  override val defaultCoreMemory = 5.0
   override val defaultThreads = 8
 
   override val versionRegex = """Pindel version:? (.*)""".r

@@ -36,14 +36,12 @@ class FastqSplitter(val root: Configurable) extends BiopetJavaCommandLineFunctio
   @Output(doc = "Output fastq files", shortName = "output", required = true)
   var output: List[File] = Nil
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override val defaultCoreMemory = 4.0
 
-  /**
-   * Generate command to execute
-   * @return
-   */
-  override def commandLine = super.commandLine + required("-I", input) + repeat("-o", output)
+  /** * Generate command to execute */
+  override def commandLine = super.commandLine +
+    required("-I", input) +
+    repeat("-o", output)
 }
 
 object FastqSplitter extends ToolCommand {

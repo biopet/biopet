@@ -9,10 +9,6 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class PrintReads(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.PrintReads with GatkGeneral {
-  memoryLimit = Option(4)
-
-  override val defaultVmem = "8G"
-
   if (config.contains("scattercount")) scatterCount = config("scattercount")
 }
 

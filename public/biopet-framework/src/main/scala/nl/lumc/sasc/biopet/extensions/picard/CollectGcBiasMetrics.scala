@@ -16,12 +16,14 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CollectGcBiasMetrics */
-class CollectGcBiasMetrics(val root: Configurable) extends Picard {
-  javaMainClass = "picard.analysis.CollectGcBiasMetrics"
+class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
+  javaMainClass = new picard.analysis.CollectGcBiasMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: Seq[File] = Nil
@@ -35,8 +37,8 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   @Output(doc = "Output summary", required = false)
   var outputSummary: File = _
 
-  @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  @Input(doc = "Reference file", required = false)
+  var reference: File = null
 
   @Argument(doc = "Window size", required = false)
   var windowSize: Option[Int] = config("windowsize")
@@ -51,7 +53,9 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
   override def beforeGraph {
+    super.beforeGraph
     if (outputChart == null) outputChart = new File(output + ".pdf")
+    if (reference == null) reference = referenceFasta()
   }
 
   /** Returns command to execute */
@@ -65,6 +69,12 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard {
     optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
     conditional(isBisulfiteSequinced.getOrElse(false), "IS_BISULFITE_SEQUENCED=TRUE")
+
+  /** Returns files for summary */
+  def summaryFiles: Map[String, File] = Map()
+
+  /** Returns stats for summary */
+  def summaryStats = Picard.getHistogram(output, tag = "METRICS CLASS")
 }
 
 object CollectGcBiasMetrics {

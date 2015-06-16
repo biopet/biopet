@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.macs2
 
 import java.io.File
@@ -46,6 +61,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var fixbimodel: Boolean = config("fixbimodel", default = false)
   var nomodel: Boolean = config("nomodel", default = false)
   var shift: Option[Int] = config("shift")
+  var extsize: Option[Int] = config("extsize")
   var qvalue: Option[Float] = config("qvalue")
   var pvalue: Option[Float] = config("pvalue")
   var tolarge: Boolean = config("tolarge", default = false)
@@ -88,7 +104,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
       conditional(fixbimodel, "--fix-bimodal") + /* Whether turn on the auto paired-peak model process. If it's set, when MACS failed to build paired model, it will use the nomodel settings, the '--extsize' parameter to extend each tags. If set, MACS will be terminated if paried-peak model is failed. */
       conditional(nomodel, "--nomodel") + /* While on, MACS will bypass building the shifting model */
       optional("--shift", shift) + /* You can set an arbitrary shift in basepairs here */
-      optional("--extsize", shift) + /* While '--nomodel' is set, MACS uses this parameter to extend reads in 5'->3' direction to fix-sized fragments. For example, if the size of binding region for your transcription factor is 200 bp, and you want to bypass the model building by MACS, this parameter can be set as 200. This option is only valid when --nomodel is set or when MACS fails to build model and --fix-bimodal is on. */
+      optional("--extsize", extsize) + /* While '--nomodel' is set, MACS uses this parameter to extend reads in 5'->3' direction to fix-sized fragments. For example, if the size of binding region for your transcription factor is 200 bp, and you want to bypass the model building by MACS, this parameter can be set as 200. This option is only valid when --nomodel is set or when MACS fails to build model and --fix-bimodal is on. */
       optional("--qvalue", qvalue) + /* the Q-value(FDR) cutoff */
       optional("--pvalue", pvalue) + /* The P-value cutoff, if --pvalue is set no Qvalue is calculated */
       conditional(tolarge, "--to-large") + /* Whether to scale up the smallest input file to the larger one */
