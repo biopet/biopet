@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for stampy */
-class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
+class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
 
@@ -30,7 +30,7 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "ref")
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Input(doc = "The genome prefix.")
   var genome: File = config("genome")
@@ -73,6 +73,7 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   override def beforeGraph: Unit = {
     super.beforeGraph
     require(readgroup != null)
+    if (reference == null) reference = referenceFasta()
   }
 
   /** Returns command to execute */

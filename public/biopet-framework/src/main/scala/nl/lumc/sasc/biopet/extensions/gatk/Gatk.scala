@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
  * Created by pjvan_thof on 2/26/15.
  */
-abstract class Gatk extends BiopetJavaCommandLineFunction {
+abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   override def subPath = "gatk" :: super.subPath
 
   jarFile = config("gatk_jar")
@@ -34,7 +34,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
   override val defaultCoreMemory = 3.0
 
   @Input(required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Input(required = false)
   var gatkKey: Option[File] = config("gatk_key")
@@ -47,6 +47,13 @@ abstract class Gatk extends BiopetJavaCommandLineFunction {
 
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
+
+  override def dictRequired = true
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     required("-T", analysisType) +

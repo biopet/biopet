@@ -115,7 +115,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
 
     val writer = new PrintWriter(out)
-    writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)
+    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
     writer.close()
   }
 
@@ -139,7 +139,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (if (stats.isEmpty) Map[String, Any]() else Map("stats" -> Map(name -> stats))) ++
+    (Map("stats" -> Map(name -> stats))) ++
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 

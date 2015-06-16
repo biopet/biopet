@@ -24,7 +24,7 @@ import scala.collection.immutable.Nil
 
 /** Extension for picard CollectInsertSizeMetrics */
 class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
-  javaMainClass = "picard.analysis.CollectInsertSizeMetrics"
+  javaMainClass = new picard.analysis.CollectInsertSizeMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: File = null
@@ -75,13 +75,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   /** Returns files for summary */
   def summaryFiles: Map[String, File] = Map("output_histogram" -> outputHistogram)
 
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
-    case None => Map()
-    case Some((header, content)) =>
-      (for (i <- 0 to header.size if i < content.head.size)
-        yield header(i).toLowerCase -> content.head(i)).toMap
-  }
-
+  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
 }
 
 object CollectInsertSizeMetrics {
@@ -90,6 +84,6 @@ object CollectInsertSizeMetrics {
     val collectInsertSizeMetrics = new CollectInsertSizeMetrics(root)
     collectInsertSizeMetrics.input = input
     collectInsertSizeMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".insertsizemetrics")
-    return collectInsertSizeMetrics
+    collectInsertSizeMetrics
   }
 }

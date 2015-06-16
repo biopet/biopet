@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.svcallers.pindel
+package nl.lumc.sasc.biopet.extensions.pindel
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.core.PipelineCommand

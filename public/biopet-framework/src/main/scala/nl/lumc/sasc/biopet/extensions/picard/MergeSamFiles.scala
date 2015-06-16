@@ -21,7 +21,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard MergeSamFiles */
 class MergeSamFiles(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.MergeSamFiles"
+  javaMainClass = new picard.sam.MergeSamFiles().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: List[File] = Nil

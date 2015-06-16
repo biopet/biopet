@@ -109,7 +109,6 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
 
       val sum = new Summarizable {
         override def summaryFiles: Map[String, File] = Map()
-
         override def summaryStats: Map[String, Any] = stats
       }
 
