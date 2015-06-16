@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions.bwa
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -27,12 +28,12 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  *
  * Created by pjvan_thof on 1/16/15.
  */
-class BwaAln(val root: Configurable) extends Bwa {
+class BwaAln(val root: Configurable) extends Bwa with Reference {
   @Input(doc = "Fastq file", required = true)
   var fastq: File = _
 
   @Input(doc = "The reference file for the bam files.", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Output(doc = "Output file SAM", required = false)
   var output: File = _
@@ -62,6 +63,11 @@ class BwaAln(val root: Configurable) extends Bwa {
 
   override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** Returns command to execute */
   def cmdLine = required(executable) +

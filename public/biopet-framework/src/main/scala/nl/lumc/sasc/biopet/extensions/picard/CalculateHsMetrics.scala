@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 /** Extension for picard CalculateHsMetrics */
-class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizable {
+class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.directed.CalculateHsMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -40,13 +41,18 @@ class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizabl
   var perTargetCoverage: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Argument(doc = "METRIC_ACCUMULATION_LEVEL", required = false)
   var metricAccumulationLevel: List[String] = config("metricaccumulationlevel", default = Nil)
 
   @Argument(doc = "BAIT_SET_NAME", required = false)
   var baitSetName: String = _
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** Returns command to execute */
   override def commandLine = super.commandLine +

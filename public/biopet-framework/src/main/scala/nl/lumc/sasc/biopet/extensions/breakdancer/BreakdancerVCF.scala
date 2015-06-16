@@ -13,17 +13,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.svcallers
+package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("breakdancer2vcf.py")

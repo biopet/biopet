@@ -19,7 +19,7 @@ import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.MultiSampleQScript
+import nl.lumc.sasc.biopet.core.{ Reference, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
@@ -31,7 +31,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
+trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
   qscript =>
 
   /** Executed before running the script */
@@ -298,11 +298,12 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript {
     val ampliconBedFile: Option[File] = config("amplicon_bed")
 
     Map(
+      "reference" -> referenceSummary,
       "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
       "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
     )
   }
 
   /** Files for the summary */
-  def summaryFiles = Map()
+  def summaryFiles = Map("referenceFasta" -> referenceFasta())
 }

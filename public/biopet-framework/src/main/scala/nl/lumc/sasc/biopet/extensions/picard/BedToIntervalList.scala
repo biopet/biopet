@@ -2,20 +2,21 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 4/15/15.
  */
-class BedToIntervalList(val root: Configurable) extends Picard {
+class BedToIntervalList(val root: Configurable) extends Picard with Reference {
   javaMainClass = new picard.util.BedToIntervalList().getClass.getName
 
   @Input(doc = "Input bed file", required = true)
   var input: File = null
 
   @Input(doc = "Reference dict file", required = true)
-  var dict: File = new File(config("reference").asString.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
+  var dict: File = new File(referenceFasta().toString.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
 
   @Output(doc = "Output interval list", required = true)
   var output: File = null

@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -81,9 +81,20 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 object BamMetricsTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
     "refFlat" -> "bla.refFlat",
-    "reference" -> "reference.fa",
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "samtools" -> Map("exe" -> "test"),
     "bedtools" -> Map("exe" -> "test")
   )

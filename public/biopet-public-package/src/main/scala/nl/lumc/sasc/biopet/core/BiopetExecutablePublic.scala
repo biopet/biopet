@@ -30,7 +30,8 @@ object BiopetExecutablePublic extends BiopetExecutable {
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.basty.Basty
+    nl.lumc.sasc.biopet.pipelines.basty.Basty,
+    nl.lumc.sasc.biopet.pipelines.gears.Gears
   ) ::: protectedPipelines
 
   def tools: List[MainCommand] = List(

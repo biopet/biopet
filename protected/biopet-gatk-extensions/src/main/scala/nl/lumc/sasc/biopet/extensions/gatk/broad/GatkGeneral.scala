@@ -5,10 +5,10 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
-trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
+trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction with Reference {
   memoryLimit = Option(3)
 
   override def subPath = "gatk" :: super.subPath
@@ -19,7 +19,6 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
 
   if (config.contains("intervals")) intervals = config("intervals").asFileList
   if (config.contains("exclude_intervals")) excludeIntervals = config("exclude_intervals").asFileList
-  reference_sequence = config("reference")
   if (config.contains("gatk_key")) gatk_key = config("gatk_key")
   if (config.contains("pedigree")) pedigree = config("pedigree")
 
@@ -28,4 +27,9 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction {
   override def versionCommand = executable + " -jar " + jarFile + " -version"
 
   override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    if (reference_sequence == null) reference_sequence = referenceFasta()
+  }
 }

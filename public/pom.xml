@@ -34,6 +34,7 @@
         <module>sage</module>
         <module>kopisu</module>
         <module>yamsvp</module>
+        <module>gears</module>
         <module>bam2wig</module>
         <module>carp</module>
 	    <module>toucan</module>
@@ -219,6 +220,7 @@
                       <exclude>**/*.bed</exclude>
                       <exclude>**/*.refFlat</exclude>
                       <exclude>**/*.R</exclude>
+                      <exclude>**/*.rscript</exclude>
                   </excludes>
               </configuration>
           </plugin>
