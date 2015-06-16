@@ -159,7 +159,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       covStats.title = Some("Coverage for " + targetName)
       covStats.subTitle = Some(".")
       add(covStats)
-      addSummarizable(covStats, "cov_stats")
+      addSummarizable(covStats, targetName + "_cov_stats")
     }
 
     addSummaryJobs
