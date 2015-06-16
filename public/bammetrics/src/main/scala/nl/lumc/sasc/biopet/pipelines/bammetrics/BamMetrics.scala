@@ -156,6 +156,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       //FIXME:should use piping
       add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), true)
       val covStats = CoverageStats(this, coverageFile, targetDir)
+      covStats.title = Some("Coverage for " + targetName)
+      covStats.subTitle = Some(" ")
       add(covStats)
       addSummarizable(covStats, "cov_stats")
     }

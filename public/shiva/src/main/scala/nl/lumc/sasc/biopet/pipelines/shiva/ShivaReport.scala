@@ -24,12 +24,12 @@ object ShivaReport extends MultisampleReportBuilder {
     val regions = regionsPage
     ReportPage(
       Map("Samples" -> generateSamplesPage(pageArgs)) ++
-      (if (regions.isDefined) Map(regions.get) else Map()) ++
-      Map("Files" -> filesPage,
-      "Versions" -> ReportPage(Map(), List((
-        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-        ))), Map())
-      ),
+        (if (regions.isDefined) Map(regions.get) else Map()) ++
+        Map("Files" -> filesPage,
+          "Versions" -> ReportPage(Map(), List((
+            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+            ))), Map())
+        ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
         "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
