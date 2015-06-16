@@ -31,7 +31,7 @@ import nl.lumc.sasc.biopet.tools.FastqSync
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import scala.collection.JavaConversions._
-//import scala.language.reflectiveCalls
+
 /**
  * This is a trait for the Gears pipeline
  * The ShivaTrait is used as template for this pipeline
@@ -246,23 +246,23 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
     private def makeCombineJob(inFiles: List[File], outFile: File,
                                mergeSortOrder: String = "coordinate"): Ln = {
       require(inFiles.nonEmpty, "At least one input files for combine job")
-      var input: File = new File("")
+      val input: File = {
 
-      if (inFiles.size == 1) {
-        input = inFiles.head
-      } else {
-        val mergedBam = createFile(".merged.bam")
-        val job = new MergeSamFiles(qscript)
-        job.input = inFiles
-        job.output = mergedBam
-        job.sortOrder = mergeSortOrder
-        input = job.output
+        if (inFiles.size == 1) inFiles.head
+        else {
+          val mergedBam = createFile(".merged.bam")
+          val job = new MergeSamFiles(qscript)
+          job.input = inFiles
+          job.output = mergedBam
+          job.sortOrder = mergeSortOrder
+          job.output
+        }
       }
 
-      val job = new Ln(qscript)
-      job.input = input
-      job.output = outFile
-      job
+      val linkJob = new Ln(qscript)
+      linkJob.input = input
+      linkJob.output = outFile
+      linkJob
 
     }
 
