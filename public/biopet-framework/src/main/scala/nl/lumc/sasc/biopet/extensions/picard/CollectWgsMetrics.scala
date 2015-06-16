@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
@@ -9,7 +10,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 /**
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
 
   javaMainClass = new picard.analysis.CollectWgsMetrics().getClass.getName
 
@@ -20,7 +21,7 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   var output: File = null
 
   @Input(doc = "Reference", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Argument(doc = "MINIMUM_MAPPING_QUALITY", required = false)
   var minMapQ: Option[Int] = config("minimum_mapping_quality")
@@ -36,6 +37,11 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
 
   @Argument(doc = "INCLUDE_BQ_HISTOGRAM", required = false)
   var includeBqHistogram: Boolean = config("include_bq_histogram", default = false)
+
+  override def beforeGraph {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +

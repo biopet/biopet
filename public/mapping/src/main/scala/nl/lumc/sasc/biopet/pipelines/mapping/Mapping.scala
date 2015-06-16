@@ -21,10 +21,9 @@ import scala.math._
 
 import org.broadinstitute.gatk.queue.QScript
 
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
 import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
@@ -35,7 +34,7 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 
 // TODO: documentation
-class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
 
   def this() = this(null)
 
@@ -59,9 +58,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   /** Aligner */
   protected var aligner: String = config("aligner", default = "bwa")
-
-  /** Reference */
-  protected var reference: File = config("reference")
 
   /** Number of chunks, when not defined pipeline will automatic calculate number of chunks */
   protected var numberChunks: Option[Int] = config("number_chunks")
@@ -101,7 +97,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1) ++
+  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+    "reference" -> referenceFasta()) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
   /** Settings to add to summary */
@@ -112,7 +109,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "aligner" -> aligner,
     "chunking" -> chunking,
     "numberChunks" -> numberChunks.getOrElse(1)
-  )
+  ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
   /** Will be executed before script */
   def init() {
@@ -344,17 +341,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     gsnapCommand.isIntermediate = true
     add(gsnapCommand)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = gsnapCommand.output
-    sortSam.output = swapExt(output.getParent, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
-    add(sortSam)
-
     val reorderSam = new ReorderSam(this)
-    reorderSam.input = sortSam.output
+    reorderSam.input = gsnapCommand.output
     reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
-    reorderSam.reference = reference
     add(reorderSam)
 
     addAddOrReplaceReadGroups(reorderSam.output, output)
@@ -373,14 +362,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.keep_fasta_order = true
     add(tophat)
 
-    val sortSam = new SortSam(this)
-    sortSam.input = tophat.outputAcceptedHits
-    sortSam.output = swapExt(output.getParentFile, output, ".bam", ".sorted.bam")
-    sortSam.sortOrder = "coordinate"
-    sortSam.isIntermediate = chunking || !skipMarkduplicates
-    add(sortSam)
-
-    addAddOrReplaceReadGroups(sortSam.output, output)
+    addAddOrReplaceReadGroups(tophat.outputAcceptedHits, output)
   }
   /**
    * Adds stampy jobs

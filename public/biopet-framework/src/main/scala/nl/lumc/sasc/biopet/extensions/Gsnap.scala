@@ -19,14 +19,14 @@ import java.io.File
 
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * Wrapper for the gsnap command line tool
  * Written based on gsnap version 2014-05-15
  */
-class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
+class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   /** default executable */
   executable = config("exe", default = "gsnap", freeVar = false)
