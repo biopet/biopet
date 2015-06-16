@@ -79,7 +79,7 @@
                             <goal>list</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${build.outputDirectory}/dependency_list.txt</outputFile>
+                            <outputFile>${project.build.outputDirectory}/dependency_list.txt</outputFile>
                         </configuration>
                     </execution>
                 </executions>
