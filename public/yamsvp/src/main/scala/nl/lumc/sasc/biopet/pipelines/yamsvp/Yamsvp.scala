@@ -85,7 +85,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
           alignmentDir + sampleId + ".merged.bam", true)
         alignmentlink.isIntermediate = true
         add(alignmentlink)
-        alignmentlink.out
+        alignmentlink.output
       } else if (libraryBamfiles.size > 1) {
         val mergeSamFiles = new SambambaMerge(qscript)
         mergeSamFiles.input = libraryBamfiles

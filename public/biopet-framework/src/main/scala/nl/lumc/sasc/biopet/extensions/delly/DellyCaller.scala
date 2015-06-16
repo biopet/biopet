@@ -12,7 +12,6 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   private lazy val versionexecutable: File = new File(executable)
 
-  override val defaultVmem = "8G"
   override val defaultThreads = 1
 
   override def versionCommand = versionexecutable.getAbsolutePath

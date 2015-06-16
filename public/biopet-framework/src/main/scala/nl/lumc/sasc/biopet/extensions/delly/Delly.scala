@@ -89,11 +89,12 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript {
       variants.outputFile = this.outputvcf
       // add the job
       add(variants)
+      this.outputvcf
     } else {
       // TODO: pretify this
       val ln = Ln(this, vcfFiles.head._2, this.outputvcf, relative = true)
       add(ln)
-      ln.out
+      ln.output
     }
 
     outputFiles += ("vcf" -> this.outputvcf)

@@ -11,7 +11,6 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   private lazy val versionexecutable: File = config("version_exe", default = (new File(executable).getParent + "/ctk-version"))
 
-  override val defaultVmem = "4G"
   override val defaultThreads = 8
 
   override def versionCommand = versionexecutable.getAbsolutePath
