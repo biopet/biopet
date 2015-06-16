@@ -21,13 +21,14 @@ object ShivaReport extends MultisampleReportBuilder {
   // FIXME: Not yet finished
 
   def indexPage = {
+    val regions = regionsPage
     ReportPage(
-      Map(
-        "Samples" -> generateSamplesPage(pageArgs),
-        "Files" -> filesPage,
-        "Versions" -> ReportPage(Map(), List((
-          "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-          ))), Map())
+      Map("Samples" -> generateSamplesPage(pageArgs)) ++
+      (if (regions.isDefined) Map(regions.get) else Map()) ++
+      Map("Files" -> filesPage,
+      "Versions" -> ReportPage(Map(), List((
+        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+        ))), Map())
       ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
@@ -45,6 +46,32 @@ object ShivaReport extends MultisampleReportBuilder {
       ),
       pageArgs
     )
+  }
+
+  def regionsPage = {
+    val roi = summary.getValue("shiva", "settings", "regions_of_interest")
+    val amplicon = summary.getValue("shiva", "settings", "amplicon_bed")
+
+    var regionPages: Map[String, ReportPage] = Map()
+
+    def createPage(name: String, amplicon: Boolean = false): ReportPage = {
+      //TODO: get target content
+      ReportPage(Map(), List(), Map())
+    }
+
+    amplicon match {
+      case Some(x: String) => regionPages += (x + " (Amplicon)") -> createPage(x, true)
+      case _               =>
+    }
+
+    roi match {
+      case Some(x: String)  => regionPages += x -> createPage(x, false)
+      case Some(x: List[_]) => x.foreach(x => regionPages += x.toString -> createPage(x.toString, false))
+      case _                =>
+    }
+
+    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(regionPages, List(), Map()))
+    else None
   }
 
   def filesPage = ReportPage(Map(), List(
