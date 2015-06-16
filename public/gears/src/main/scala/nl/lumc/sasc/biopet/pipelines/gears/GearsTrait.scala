@@ -251,11 +251,12 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
         if (inFiles.size == 1) inFiles.head
         else {
           val mergedBam = createFile(".merged.bam")
-          val job = new MergeSamFiles(qscript)
-          job.input = inFiles
-          job.output = mergedBam
-          job.sortOrder = mergeSortOrder
-          job.output
+          val mergejob = new MergeSamFiles(qscript)
+          mergejob.input = inFiles
+          mergejob.output = mergedBam
+          mergejob.sortOrder = mergeSortOrder
+          add(mergejob)
+          mergejob.output
         }
       }
 
