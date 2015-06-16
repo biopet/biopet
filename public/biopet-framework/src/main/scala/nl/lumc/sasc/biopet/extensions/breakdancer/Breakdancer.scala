@@ -19,7 +19,6 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.breakdancer.BreakdancerVCF
 import org.broadinstitute.gatk.queue.QScript
 
 /// Breakdancer is actually a mini pipeline executing binaries from the breakdancer package
