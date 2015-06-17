@@ -14,6 +14,8 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  */
 class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = ShivaReport
+
+  override val defaultCoreMemory = 3.0
 }
 
 object ShivaReport extends MultisampleReportBuilder {
@@ -98,7 +100,7 @@ object ShivaReport extends MultisampleReportBuilder {
     ), args)
   }
 
-  def libraryPage(sampleId:String, libId: String, args: Map[String, Any]) = {
+  def libraryPage(sampleId: String, libId: String, args: Map[String, Any]) = {
     ReportPage(Map(
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
       "QC" -> FlexiprepReport.flexiprepPage
