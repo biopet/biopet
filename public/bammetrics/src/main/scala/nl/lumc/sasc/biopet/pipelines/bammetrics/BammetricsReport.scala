@@ -16,15 +16,15 @@ object BammetricsReport extends ReportBuilder {
 
   def indexPage = ReportPage(Map(), List(), Map())
 
-  def bamMetricsPage(summary:Summary, sampleId: Option[String], libId: Option[String]) = {
+  def bamMetricsPage(summary: Summary, sampleId: Option[String], libId: Option[String]) = {
     val targets = (
       summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
       summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "roi_name")
-      ) match {
-      case (Some(amplicon:String), Some(roi:List[_])) => amplicon :: roi.map(_.toString)
-      case (_, Some(roi:List[_])) => roi.map(_.toString)
-      case _ => Nil
-    }
+    ) match {
+        case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
+        case (_, Some(roi: List[_])) => roi.map(_.toString)
+        case _ => Nil
+      }
 
     ReportPage(
       (if (targets.isEmpty) Map() else Map("Targets" -> ReportPage(
@@ -39,7 +39,6 @@ object BammetricsReport extends ReportBuilder {
       Map()
     )
   }
-
 
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,

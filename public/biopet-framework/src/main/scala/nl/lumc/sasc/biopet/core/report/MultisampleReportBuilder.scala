@@ -12,7 +12,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
     )
   }
 
-  def libraryPage(sampleId:String, libraryId: String, args: Map[String, Any]): ReportPage
+  def libraryPage(sampleId: String, libraryId: String, args: Map[String, Any]): ReportPage
 
   def libririesSections: List[(String, ReportSection)] = {
     List(
