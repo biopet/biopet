@@ -86,7 +86,7 @@ object ShivaReport extends MultisampleReportBuilder {
   def samplePage(sampleId: String, args: Map[String, Any]) = {
     ReportPage(Map(
       "Libraries" -> generateLibraryPage(args),
-      "Alignment" -> BammetricsReport.bamMetricsPage,
+      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
       "Files" -> filesPage
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
@@ -98,9 +98,9 @@ object ShivaReport extends MultisampleReportBuilder {
     ), args)
   }
 
-  def libraryPage(libId: String, args: Map[String, Any]) = {
+  def libraryPage(sampleId:String, libId: String, args: Map[String, Any]) = {
     ReportPage(Map(
-      "Alignment" -> BammetricsReport.bamMetricsPage,
+      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
       "QC" -> FlexiprepReport.flexiprepPage
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),

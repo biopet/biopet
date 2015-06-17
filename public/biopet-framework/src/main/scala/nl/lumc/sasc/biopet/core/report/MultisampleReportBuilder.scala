@@ -12,7 +12,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
     )
   }
 
-  def libraryPage(libraryId: String, args: Map[String, Any]): ReportPage
+  def libraryPage(sampleId:String, libraryId: String, args: Map[String, Any]): ReportPage
 
   def libririesSections: List[(String, ReportSection)] = {
     List(
@@ -28,11 +28,13 @@ trait MultisampleReportBuilder extends ReportBuilder {
   }
 
   def generateLibraryPage(args: Map[String, Any]): ReportPage = {
-    val libPages = summary.libraries(args("sampleId") match {
+    val sampleId = args("sampleId") match {
       case Some(x) => x.toString
       case None    => throw new IllegalStateException("Sample not found")
-    })
-      .map(libId => (libId -> libraryPage(libId, args ++ Map("libId" -> Some(libId)))))
+    }
+
+    val libPages = summary.libraries(sampleId)
+      .map(libId => (libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId)))))
       .toMap
     ReportPage(libPages, libririesSections, args)
   }

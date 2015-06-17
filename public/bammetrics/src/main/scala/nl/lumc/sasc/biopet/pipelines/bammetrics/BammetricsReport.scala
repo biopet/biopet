@@ -14,26 +14,32 @@ object BammetricsReport extends ReportBuilder {
 
   val reportName = "Bam Metrics"
 
-  def indexPage = ReportPage(Map(
-    "Bam Metrics" -> bamMetricsPage
-  ), List(
-    "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
-  ),
-    Map()
-  )
+  def indexPage = ReportPage(Map(), List(), Map())
 
-  def bamMetricsPage = ReportPage(
-    Map(),
-    List(
-      "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-      "Bam Stats" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamStats.ssp"),
-      "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
-      "RNA (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rna.ssp"),
-      "Target (optional)" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/target.ssp"),
-      "GC Bias" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/gcBias.ssp")
-    ),
-    Map()
-  )
+  def bamMetricsPage(summary:Summary, sampleId: Option[String], libId: Option[String]) = {
+    val targets = (
+      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
+      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "roi_name")
+      ) match {
+      case (Some(amplicon:String), Some(roi:List[_])) => amplicon :: roi.map(_.toString)
+      case (_, Some(roi:List[_])) => roi.map(_.toString)
+      case _ => Nil
+    }
+
+    ReportPage(
+      (if (targets.isEmpty) Map() else Map("Targets" -> ReportPage(
+        Map(),
+        targets.map(t => (t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t)))),
+        Map()))),
+      List(
+        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
+        "Bam Stats" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamStats.ssp"),
+        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+      ),
+      Map()
+    )
+  }
+
 
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,
@@ -168,6 +174,5 @@ object BammetricsReport extends ReportBuilder {
     plot.removeZero = true
     plot.title = Some("Insert size")
     plot.runLocal()
-
   }
 }

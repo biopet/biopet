@@ -1,0 +1,20 @@
+#import(nl.lumc.sasc.biopet.utils.IoUtils)
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(org.apache.commons.io.FileUtils)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] %>
+<%@ var libId: Option[String] = None %>
+<%@ var outputDir: File %>
+<%@ var target: String %>
+#{
+    val originalPlot = new File(summary.getLibraryValue(sampleId, libId, "bammetrics", "files", target + "_cov_stats", "plot", "path")
+        .getOrElse(throw new IllegalArgumentException("No plot found in summary")).toString)
+
+    val plot = new File(outputDir, target + "_cov_stats.png")
+
+    IoUtils.copyFile(originalPlot, plot)
+}#
+
+<img src="${plot}">
