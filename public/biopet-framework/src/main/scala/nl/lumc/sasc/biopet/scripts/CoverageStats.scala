@@ -46,7 +46,7 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction wi
     optional("--subtitle", subTitle) +
     " > " + required(output)
 
-  def summaryFiles: Map[String, File] = Map("output" -> output, "plot" -> plot)
+  def summaryFiles: Map[String, File] = Map("plot" -> plot)
 
   def summaryStats: Map[String, Any] = {
     ConfigUtils.fileToConfigMap(output)
