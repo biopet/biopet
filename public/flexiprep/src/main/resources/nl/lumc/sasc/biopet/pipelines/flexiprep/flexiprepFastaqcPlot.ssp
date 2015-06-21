@@ -17,7 +17,7 @@
             case value => {
                 val file = new File(value.toString)
                 val newFile = new File(outputDir, read + "_" + file.getName)
-                FileUtils.copyFile(file, newFile)
+                if (file.exists()) FileUtils.copyFile(file, newFile)
                 newFile.getName
             }
         }

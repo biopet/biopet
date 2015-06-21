@@ -14,7 +14,7 @@
 
     val plot = new File(outputDir, target + "_cov_stats.png")
 
-    IoUtils.copyFile(originalPlot, plot)
+    if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
 }#
 
 <img src="${plot}">
