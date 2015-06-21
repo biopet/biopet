@@ -101,6 +101,7 @@ object FlexiprepTest {
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
-    "cutadapt" -> Map("exe" -> "test")
+    "cutadapt" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 }

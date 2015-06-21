@@ -117,7 +117,10 @@ object ShivaTest {
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
-    "wigtobigwig" -> Map("exe" -> "test")
+    "wigtobigwig" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

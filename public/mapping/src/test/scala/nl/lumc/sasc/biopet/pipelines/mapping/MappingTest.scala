@@ -155,6 +155,7 @@ object MappingTest {
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
-    "samtools" -> Map("exe" -> "test")
+    "samtools" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 }

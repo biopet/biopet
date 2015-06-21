@@ -210,7 +210,7 @@ object GentrapTest {
       // mapping executables
       "star", "bowtie", "samtools", "gsnap", "tophat",
       // gentrap executables
-      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage",
+      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage", "md5sum",
       // bam2wig executables
       "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap
