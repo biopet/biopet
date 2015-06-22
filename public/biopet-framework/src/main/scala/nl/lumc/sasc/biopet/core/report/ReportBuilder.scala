@@ -131,6 +131,11 @@ trait ReportBuilder extends ToolCommand {
         "rootPath" -> rootPath
       )
 
+    // Generating subpages
+    val jobs = for ((name, subPage) <- page.subPages.par) yield {
+      generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
+    }
+
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
       pageArgs ++ Map("args" -> pageArgs))
 
@@ -139,10 +144,6 @@ trait ReportBuilder extends ToolCommand {
     writer.println(output)
     writer.close()
 
-    // Generating subpages
-    val jobs = for ((name, subPage) <- page.subPages.par) yield {
-      generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
-    }
     done += 1
     if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
     jobs.fold(0)(_ + _) + 1
