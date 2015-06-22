@@ -96,6 +96,7 @@ object BamMetricsTest {
     "refFlat" -> "bla.refFlat",
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "samtools" -> Map("exe" -> "test"),
-    "bedtools" -> Map("exe" -> "test")
+    "bedtools" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 }

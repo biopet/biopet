@@ -106,6 +106,9 @@ object ShivaVariantcallingTest {
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
-    "freebayes" -> Map("exe" -> "test")
+    "freebayes" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test")
   )
 }

@@ -236,39 +236,42 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
         case _               => None
       }
     }).flatten.toList)
-    lazy val alnFileDirty: File = sampleAlnJob.output
-    lazy val alnFile: File = sampleAlnJob.output
+    def alnFile: File = sampleBamLinkJob.output
 
     /** Job for combining all library BAMs */
-    private def sampleAlnJob: CombineFileFunction =
+    private def sampleBamLinkJob: Ln =
       makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
-
-    /** Super type of Ln and MergeSamFiles */
-    private type CombineFileFunction = QFunction { def output: File }
 
     /** Ln or MergeSamFile job, depending on how many inputs are supplied */
     private def makeCombineJob(inFiles: List[File], outFile: File,
-                               mergeSortOrder: String = "coordinate"): CombineFileFunction = {
+                               mergeSortOrder: String = "coordinate"): Ln = {
       require(inFiles.nonEmpty, "At least one input files for combine job")
-      if (inFiles.size == 1) {
-        val job = new Ln(qscript)
-        job.input = inFiles.head
-        job.output = outFile
-        job
-      } else {
-        val job = new MergeSamFiles(qscript)
-        job.input = inFiles
-        job.output = outFile
-        job.sortOrder = mergeSortOrder
-        job
+      val input: File = {
+
+        if (inFiles.size == 1) inFiles.head
+        else {
+          val mergedBam = createFile(".merged.bam")
+          val mergejob = new MergeSamFiles(qscript)
+          mergejob.input = inFiles
+          mergejob.output = mergedBam
+          mergejob.sortOrder = mergeSortOrder
+          add(mergejob)
+          mergejob.output
+        }
       }
+
+      val linkJob = new Ln(qscript)
+      linkJob.input = input
+      linkJob.output = outFile
+      linkJob
+
     }
 
     /** This will add sample jobs */
     def addJobs(): Unit = {
       addPerLibJobs()
       // merge or symlink per-library alignments
-      add(sampleAlnJob)
+      add(sampleBamLinkJob)
 
       if (preProcessBam.isDefined) {
         val bamMetrics = new BamMetrics(qscript)
