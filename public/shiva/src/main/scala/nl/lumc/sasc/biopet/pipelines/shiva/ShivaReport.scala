@@ -72,7 +72,7 @@ object ShivaReport extends MultisampleReportBuilder {
       case _                =>
     }
 
-    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(regionPages, List(), Map()))
+    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(regionPages.keys.toList.sorted.map(x => x -> regionPages(x)).toMap, List(), Map()))
     else None
   }
 
