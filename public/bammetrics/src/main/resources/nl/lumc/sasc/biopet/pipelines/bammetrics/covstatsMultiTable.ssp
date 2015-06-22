@@ -21,6 +21,7 @@
 
 <table class="table">
 <thead><tr>
+    <th>sample</th>
     <th>mean</th>
     <th>median</th>
     <th>max</th>
