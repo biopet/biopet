@@ -9,12 +9,24 @@
 <%@ var outputDir: File %>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true %>
 #{
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
         case _ => summary.samples.toList
     }
 }#
+#if (showIntro)
+    <br/>
+    <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-6">
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+        </p>
+    </div>
+    </div>
+#end
 
 #if (showPlot)
     #{
