@@ -47,7 +47,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
+    val aligners = Array("bwa-mem", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
@@ -99,7 +99,7 @@ class MappingTest extends TestNGSuite with Matchers {
     mapping.functions.count(_.isInstanceOf[Gzip]) shouldBe (if (skipFlexiprep) 0 else if (paired) 2 else 1)
 
     //aligners
-    mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa") 1 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa-mem") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 2 else 1) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 1 else 0) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 0 else 1) else 0) * chunks)
@@ -109,7 +109,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
     // Sort sam or replace readgroup
     val sort = aligner match {
-      case "bwa" | "bwa-aln" | "stampy" => "sortsam"
+      case "bwa-mem" | "bwa-aln" | "stampy" => "sortsam"
       case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
       case _ => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
     }

@@ -57,7 +57,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   protected var skipMetrics: Boolean = config("skip_metrics", default = false)
 
   /** Aligner */
-  protected var aligner: String = config("aligner", default = "bwa")
+  protected var aligner: String = config("aligner", default = "bwa-mem")
 
   /** Number of chunks, when not defined pipeline will automatic calculate number of chunks */
   protected var numberChunks: Option[Int] = config("number_chunks")
@@ -209,7 +209,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
+        case "bwa-mem"    => addBwaMem(R1, R2, outputBam, deps)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
         case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
