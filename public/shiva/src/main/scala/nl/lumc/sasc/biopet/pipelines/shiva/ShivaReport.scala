@@ -57,8 +57,11 @@ object ShivaReport extends MultisampleReportBuilder {
     var regionPages: Map[String, ReportPage] = Map()
 
     def createPage(name: String, amplicon: Boolean = false): ReportPage = {
-      //TODO: get target content
-      ReportPage(Map(), List("Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")), Map("target" -> name))
+      ReportPage(
+        Map(),
+        List("Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")),
+        Map("target" -> name)
+      )
     }
 
     amplicon match {
@@ -72,8 +75,14 @@ object ShivaReport extends MultisampleReportBuilder {
       case _                =>
     }
 
-    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(regionPages.keys.toList.sorted.map(x => x -> regionPages(x)).toMap, List(), Map()))
-    else None
+    if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
+      Map(),
+      regionPages.map(p => (p._1 -> ReportSection(
+        "/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp",
+        Map("target" -> p._1.stripSuffix(" (Amplicon)"))
+      ))).toList.sortBy(_._1),
+      Map())
+    ) else None
   }
 
   def filesPage = ReportPage(Map(), List(
