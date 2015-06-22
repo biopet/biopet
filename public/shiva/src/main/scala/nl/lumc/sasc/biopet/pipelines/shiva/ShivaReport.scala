@@ -58,7 +58,7 @@ object ShivaReport extends MultisampleReportBuilder {
 
     def createPage(name: String, amplicon: Boolean = false): ReportPage = {
       //TODO: get target content
-      ReportPage(Map(), List(), Map())
+      ReportPage(Map(), List("Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")), Map("target" -> name))
     }
 
     amplicon match {
