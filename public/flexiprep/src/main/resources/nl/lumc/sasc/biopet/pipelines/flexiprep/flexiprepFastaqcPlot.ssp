@@ -24,21 +24,28 @@
     }
 }#
 
-<table>
-<tbody>
-<tr><td></td>
-    <th>Before QC</th>
-    #if (!skipTrim || !skipClip) <th>After QC</th> #end
-</tr>
-<tr><th>R1</th>
-<td><img src="${getPlot("fastqc_R1")}" width="75%"></td>
-#if (!skipTrim || !skipClip) <td><img src="${getPlot("fastqc_R1_qc")}" width="75%"></td> #end
-</tr>
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-5"><b>Before QC</b></div>
+    #if (!skipTrim || !skipClip) <div class="col-md-5"><b>After QC</b></div> #end
+</div>
+<div class="row">
+    <div class="col-md-1"><b>R1</b></div>
+    <div class="col-md-5"><img class="img-responsive" src="${getPlot("fastqc_R1")}" /></div>
+    #if (!skipTrim || !skipClip)
+    <div class="col-md-5">
+    <img class="img-responsive" src="${getPlot("fastqc_R1_qc")}" />
+    </div>
+     #end
+</div>
 #if (paired)
-    <tr><th>R2</th>
-        <td><img src="${getPlot("fastqc_R2")}" width="75%"></td>
-        #if (!skipTrim || !skipClip) <td><img src="${getPlot("fastqc_R2_qc")}" width="75%"></td> #end
-    </tr>
+    <div class="row">
+        <div class="col-md-1"><b>R2</b></div>
+        <div class="col-md-5"><img class="img-responsive" src="${getPlot("fastqc_R2")}" /></div>
+        #if (!skipTrim || !skipClip)
+        <div class="col-md-5">
+        <img class="img-responsive" src="${getPlot("fastqc_R2_qc")}" />
+        </div>
+         #end
+    </div>
 #end
-</tbody>
-</table>
