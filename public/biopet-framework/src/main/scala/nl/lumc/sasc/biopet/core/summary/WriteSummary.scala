@@ -129,12 +129,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }
   }
 
-  /**
-   * Convert summarizable to a summary map
-   * @param summarizable
-   * @param name
-   * @return
-   */
+  /** Convert summarizable to a summary map */
   def parseSummarizable(summarizable: Summarizable, name: String) = {
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
@@ -143,20 +138,12 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 
-  /**
-   * Parse files map to summary map
-   * @param files
-   * @return
-   */
+  /** Parse files map to summary map */
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
     for ((key, file) <- files) yield key -> parseFile(file)
   }
 
-  /**
-   * parse single file summary map
-   * @param file
-   * @return
-   */
+  /** parse single file summary map */
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
@@ -164,11 +151,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     map.toMap
   }
 
-  /**
-   * Retrive checksum from file
-   * @param checksumFile
-   * @return
-   */
+  /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }
