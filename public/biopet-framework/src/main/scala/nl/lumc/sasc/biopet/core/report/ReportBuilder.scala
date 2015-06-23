@@ -72,8 +72,7 @@ trait ReportBuilder extends ToolCommand {
 
     logger.info("Copy Base files")
 
-    // Copying out the static files from this
-
+    // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
     val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
     val resourceDir: String = "/nl/lumc/sasc/biopet/core/report/ext/"
     val extFiles = List(
@@ -156,7 +155,13 @@ object ReportBuilder {
 
   private var templateCache: Map[String, File] = Map()
 
-  def renderTemplate(location: String, args: Map[String, Any]): String = {
+  /**
+   * This method will render a template that is located in the classpath / jar
+   * @param location location in the classpath / jar
+   * @param args Additional arguments, not required
+   * @return Rendered result of template
+   */
+  def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
     val templateFile: File = templateCache.get(location) match {
       case Some(template) => template
       case _ => {
