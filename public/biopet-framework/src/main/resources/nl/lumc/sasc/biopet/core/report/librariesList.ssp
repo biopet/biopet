@@ -1,0 +1,13 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+<%@ var sampleId: Option[String] = None %>
+<table class="table">
+<thead><tr></tr><th>Libraries</th></thead></tr>
+<tbody>
+#for (lib <- summary.libraries(sampleId.get))
+    <tr><td><a href="${rootPath}Samples/${sampleId.get}/Libraries/${lib}/index.html">${lib}</a></td></tr>
+#end
+</tbody>
+</table>

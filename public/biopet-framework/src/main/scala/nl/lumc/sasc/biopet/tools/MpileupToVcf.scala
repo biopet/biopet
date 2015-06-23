@@ -18,8 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.io.PrintWriter
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -30,7 +29,7 @@ import scala.math.round
 import scala.math.floor
 import scala.collection.JavaConversions._
 
-class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
@@ -47,7 +46,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var homoFraction: Option[Double] = config("homoFraction")
   var ploidy: Option[Int] = config("ploidy")
   var sample: String = _
-  var reference: String = config("reference")
+  var reference: String = _
 
   override val defaultCoreMemory = 3.0
 
@@ -56,6 +55,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   override def beforeGraph {
     super.beforeGraph
+    reference = referenceFasta().getAbsolutePath
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
@@ -72,6 +72,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override def commandLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
+      samtoolsMpileup.reference = referenceFasta()
       samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +

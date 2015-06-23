@@ -21,11 +21,17 @@ import scalaz._, Scalaz._
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, Ln }
 
 /** General trait for containing cufflinks results */
-trait CufflinksProducer { this: Gentrap#Sample =>
+trait CufflinksProducer {
 
   import Gentrap._
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
+
+  //TODO: move vars that are used in gentrep
+  protected def sampleDir: File
+  protected def sampleId: String
+  protected def pipeline: Gentrap
+  protected def alnFile: File
 
   /** Valid cufflink measure types */
   protected val cufflinksMeasures = Set(CufflinksStrict, CufflinksGuided, CufflinksBlind)

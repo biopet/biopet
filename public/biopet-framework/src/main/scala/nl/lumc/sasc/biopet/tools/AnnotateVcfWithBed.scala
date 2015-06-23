@@ -22,7 +22,7 @@ import htsjdk.tribble.bed.BEDCodec
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.variantcontext.writer.{ VariantContextWriterBuilder, AsyncVariantContextWriter }
 import htsjdk.variant.vcf.{ VCFHeaderLineType, VCFHeaderLineCount, VCFInfoHeaderLine, VCFFileReader }
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConversions._
 import scala.collection.mutable

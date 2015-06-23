@@ -17,15 +17,14 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.io.Source
 import scala.collection.mutable.Map
 import scala.collection.SortedMap
 
-class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Raw count file", shortName = "input", required = true)

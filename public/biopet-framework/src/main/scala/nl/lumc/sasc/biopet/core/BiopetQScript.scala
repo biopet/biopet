@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 import java.io.PrintWriter
 import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder }
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -57,6 +58,9 @@ trait BiopetQScript extends Configurable with GatkLogging {
   /** Pipeline itself */
   def biopetScript
 
+  /** Returns the extension to make the report */
+  def reportClass: Option[ReportBuilderExtension] = None
+
   /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
     outputDir = config("output_dir")
@@ -80,6 +84,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
+
+    reportClass.foreach(add(_))
 
     BiopetQScript.checkErrors
   }

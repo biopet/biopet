@@ -318,14 +318,4 @@ if __name__ == '__main__':
                 title=title, out_img=args.plot)
 
     stats = {'coverage': {k: v.get_quick_stats() for k, v in coverages.items()}}
-    if args.plot is not None:
-        files = {'plot_coverage': {
-            'path': os.path.abspath(args.plot),
-            'checksum_sha1': None,
-            }
-        }
-    else:
-        files = {}
-
-    json.dump({'stats': stats, 'files': files}, sys.stdout, sort_keys=True, indent=4,
-            separators=(',', ': '))
+    json.dump(stats, sys.stdout, sort_keys=True, indent=4, separators=(',', ': '))

@@ -64,7 +64,14 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
   def runLocal(logger: ProcessLogger): Unit = {
     checkScript(local = true)
 
-    Process(cmdLine).run(logger)
+    this.logger.info(cmdLine)
+
+    val cmd = cmdLine.stripPrefix(" '").stripSuffix("' ").split("' *'")
+
+    this.logger.info(cmd.mkString(" "))
+
+    val process = Process(cmd.toSeq).run(logger)
+    this.logger.info(process.exitValue())
   }
 
   /**

@@ -24,15 +24,14 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
 import htsjdk.variant.vcf.VCFFileReader
 import htsjdk.variant.vcf.VCFHeader
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import scala.collection.SortedMap
 import scala.collection.mutable.{ Map, Set }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import scala.collection.JavaConversions._
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf files", shortName = "input", required = true)

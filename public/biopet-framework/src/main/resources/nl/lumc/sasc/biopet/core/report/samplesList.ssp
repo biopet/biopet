@@ -1,0 +1,12 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr></tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th></thead></tr>
+    <tbody>
+        #for (sample <- summary.samples)
+            <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
+        #end
+    </tbody>
+</table>

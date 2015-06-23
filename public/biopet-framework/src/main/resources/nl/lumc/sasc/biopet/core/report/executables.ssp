@@ -1,0 +1,33 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
+#{
+    val pipeline = summary.getValue("meta", "pipeline_name").getOrElse("").toString
+    val executables = summary.getLibraryValue(sampleId, libId, pipeline, "executables").getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
+}#
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Version</th>
+        </tr>
+    </thead>
+    <tbody>
+        #for (name <- executables.keySet.toList.sorted)
+            <tr>
+                <td>${name}</td>
+                #{
+                val version = executables(name).get("version") match {
+                case Some(x) if x != None => x.toString
+                case _ => "N/A"
+                }
+                }#
+                <td>${version}</td>
+            </tr>
+        #end
+    </tbody>
+</table>

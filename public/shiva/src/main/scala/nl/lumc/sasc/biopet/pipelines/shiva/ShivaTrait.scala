@@ -45,6 +45,13 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     addSummaryJobs
   }
 
+  override def reportClass = {
+    val shiva = new ShivaReport(this)
+    shiva.outputDir = new File(outputDir, "report")
+    shiva.summaryFile = summaryFile
+    Some(shiva)
+  }
+
   /** Method to make the variantcalling submodule of shiva */
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
     if (multisample) new ShivaVariantcalling(qscript) {
@@ -65,7 +72,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     /** Sample specific files to add to summary */
     def summaryFiles: Map[String, File] = {
       preProcessBam match {
-        case Some(preProcessBam) => Map("bamFile" -> preProcessBam)
+        case Some(preProcessBam) => Map("preProcessBam" -> preProcessBam)
         case _                   => Map()
       }
     }
@@ -286,7 +293,16 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
   def summaryFile = new File(outputDir, "Shiva.summary.json")
 
   /** Settings of pipeline for summary */
-  def summarySettings = Map("reference" -> referenceSummary)
+  def summarySettings = {
+    val roiBedFiles: List[File] = config("regions_of_interest", Nil)
+    val ampliconBedFile: Option[File] = config("amplicon_bed")
+
+    Map(
+      "reference" -> referenceSummary,
+      "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
+      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+    )
+  }
 
   /** Files for the summary */
   def summaryFiles = Map("referenceFasta" -> referenceFasta())
