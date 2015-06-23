@@ -15,9 +15,20 @@ This pipeline uses the following modules and tools:
 * [SageCreateTagCounts](../tools/sagetools.md)
 
 
-## Configuration
+## Configuration and flags
 
 Note that one should first create the appropriate [configs](../general/config.md).
+
+Please see the documentation for wrapped pipelines (`Mapping` and `Flexiprep`) for their configuration options and flags.
+
+Specific configuration values for the Sage pipeline are:
+
+| Name | Type | Function |
+| ---- | ---- | -------- |
+| countbed | Path (required) | Path to count bed file |
+| squishedcountbed | Path (optional) | By supplying this file the auto squish job will be skipped |
+| transcriptome | Path (required) | Fasta file for transcriptome. Note: Must come from Ensembl! |
+| tags_library | Path (optional) | Five-column tab-delimited file (<tag> <firstTag> <AllTags> <FirstAntiTag> <AllAntiTags>). Unsupported option |
 
 ## Running Sage
 
@@ -27,13 +38,12 @@ As with other pipelines, you can run the Sage pipeline by invoking the `pipeline
 $ java -jar /path/to/biopet.jar pipeline sage -h
 
 Arguments for Sage:
- -outDir,--output_directory <output_directory>   Output directory
- --countbed <countbed>                           countBed
- --squishedcountbed <squishedcountbed>           squishedCountBed, by suppling this file the auto squish job will be 
-                                                 skipped
- --transcriptome <transcriptome>                 Transcriptome, used for generation of tag library
- -config,--config_file <config_file>             JSON config file(s)
- -DSC,--disablescatterdefault                    Disable all scatters
+ -s,--sample <sample>                  Only Sample
+ -config,--config_file <config_file>   JSON / YAML config file(s)
+ -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or
+                                       'path:path:key=value'
+ -DSC,--disablescatter                 Disable all scatters
+
 ~~~
 
 If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:

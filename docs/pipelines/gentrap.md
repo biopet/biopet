@@ -78,7 +78,7 @@ For the pipeline settings, there are some values that you need to specify while 
 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
 2. `aligner`: which aligner to use (`gsnap` or `tophat`)
-3. `reference`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
+3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
 4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `bases_per_gene`, `bases_per_exon`, `cufflinks_strict`, `cufflinks_guided`, and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.
 6. `annotation_refflat`: contains the path to an annotation refFlat file of the entire genome
@@ -100,7 +100,7 @@ Thus, an example settings configuration is as follows:
   "output_dir": "/path/to/output/dir",
   "expression_measures": ["fragments_per_gene", "bases_per_gene"],
   "strand_protocol": "dutp",
-  "reference": "/path/to/reference",
+  "reference_fasta": "/path/to/reference",
   "annotation_gtf": "/path/to/gtf",
   "annotation_refflat": "/path/to/refflat",
   "gsnap": {
