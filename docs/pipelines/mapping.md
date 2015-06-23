@@ -42,7 +42,7 @@ All other values should be provided in the config. Specific config values toward
 | skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
 | skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |
-| reference | Path (**required**) | Path to indexed fasta file to be used as reference |
+| reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
 | platform | String (optional) | Read group Platform (defaults to `illumina`)|
 | platform_unit | String (**required**) | Read group platform unit |
 | readgroup_sequencing_center | String (**required**) | Read group sequencing center |
@@ -60,7 +60,7 @@ Any supplied sample config will be ignored.
 ### Example config
 ```json
 {
-"reference": "<path/to/reference">,
+"reference_fasta": "<path/to/reference">,
 "aligner": "bwa",
 "skip_metrics": true,
 "platform": "our_platform",
