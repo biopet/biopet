@@ -175,10 +175,10 @@ object BammetricsReport extends ReportBuilder {
   }
 
   def wgsHistogramPlot(outputDir: File,
-                     prefix: String,
-                     summary: Summary,
-                     libraryLevel: Boolean = false,
-                     sampleId: Option[String] = None): Unit = {
+                       prefix: String,
+                       summary: Summary,
+                       libraryLevel: Boolean = false,
+                       sampleId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
