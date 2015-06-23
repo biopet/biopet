@@ -347,7 +347,7 @@ object VcfStats extends ToolCommand {
     }
 
     // Triple for loop to not keep all bins in memory
-    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / 4).toList.par) yield {
+    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList.par) yield {
       val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
           val reader = new VCFFileReader(commandArgs.inputFile, true)
