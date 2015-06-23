@@ -58,7 +58,7 @@
 <div class="panel-body collapse #if (showTable)in#end" id="QC_ReadsTable">
 
 <!-- Table -->
-<table class="table sortable-theme-bootstrap" data-sortable>
+<table class="table sortable-theme-bootstrap">
     <thead><tr>
         <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
         <th colspan="2">Library</th>
