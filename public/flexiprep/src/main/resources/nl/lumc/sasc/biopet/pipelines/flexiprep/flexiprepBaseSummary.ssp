@@ -60,7 +60,7 @@
 <table class="table sortable-theme-bootstrap">
 
     <thead><tr>
-        <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        <th>Sample</th>
         <th colspan="2">Library</th>
         <th>Before QC</th>
         <th>Discarded</th>
