@@ -23,7 +23,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
   def generateSamplesPage(args: Map[String, Any]): ReportPage = {
     val samplePages = summary.samples
       .map(sampleId => (sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId)))))
-      .toMap
+      .toList
     ReportPage(samplePages, samplesSections, args)
   }
 
@@ -35,7 +35,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
 
     val libPages = summary.libraries(sampleId)
       .map(libId => (libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId)))))
-      .toMap
+      .toList
     ReportPage(libPages, libririesSections, args)
   }
 }

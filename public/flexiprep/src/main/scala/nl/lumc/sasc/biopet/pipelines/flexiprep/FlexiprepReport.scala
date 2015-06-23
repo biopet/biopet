@@ -12,7 +12,7 @@ import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 object FlexiprepReport extends ReportBuilder {
   val reportName = "Flexiprep"
 
-  def indexPage = ReportPage(Map(
+  def indexPage = ReportPage(List(
     "QC" -> flexiprepPage
   ), List(
     "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
@@ -21,7 +21,7 @@ object FlexiprepReport extends ReportBuilder {
   )
 
   def flexiprepPage = ReportPage(
-    Map(),
+    List(),
     List(
       "Read Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "Base Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"),

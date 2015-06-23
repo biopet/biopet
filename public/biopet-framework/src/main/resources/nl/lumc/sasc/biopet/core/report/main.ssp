@@ -36,7 +36,11 @@
     }
 
     def getSubPage(path:List[String]): ReportPage = {
-        path.foldLeft(indexPage)(_.subPages(_))
+        path.foldLeft(indexPage)((c, p) => {
+            val foundPages = c.subPages.filter(_._1 == p)
+            require(foundPages.size == 1, "Name of page not found or duplicate is found, page:: " + p + " in path: " + path)
+            foundPages.head._2
+        })
     }
 }#
 <!DOCTYPE html>

@@ -14,7 +14,7 @@ object BammetricsReport extends ReportBuilder {
 
   val reportName = "Bam Metrics"
 
-  def indexPage = ReportPage(Map(), List(), Map())
+  def indexPage = ReportPage(List(), List(), Map())
 
   def bamMetricsPage(summary: Summary, sampleId: Option[String], libId: Option[String]) = {
     val targets = (
@@ -27,8 +27,8 @@ object BammetricsReport extends ReportBuilder {
       }
 
     ReportPage(
-      (if (targets.isEmpty) Map() else Map("Targets" -> ReportPage(
-        Map(),
+      (if (targets.isEmpty) List() else List("Targets" -> ReportPage(
+        List(),
         targets.map(t => (t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t)))),
         Map()))),
       List(

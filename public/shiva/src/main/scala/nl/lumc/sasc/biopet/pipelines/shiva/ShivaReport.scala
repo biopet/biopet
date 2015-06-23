@@ -25,10 +25,10 @@ object ShivaReport extends MultisampleReportBuilder {
   def indexPage = {
     val regions = regionsPage
     ReportPage(
-      Map("Samples" -> generateSamplesPage(pageArgs)) ++
+      List("Samples" -> generateSamplesPage(pageArgs)) ++
         (if (regions.isDefined) Map(regions.get) else Map()) ++
         Map("Files" -> filesPage,
-          "Versions" -> ReportPage(Map(), List((
+          "Versions" -> ReportPage(List(), List((
             "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
             ))), Map())
         ),
@@ -58,7 +58,7 @@ object ShivaReport extends MultisampleReportBuilder {
 
     def createPage(name: String, amplicon: Boolean = false): ReportPage = {
       ReportPage(
-        Map(),
+        List(),
         List("Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")),
         Map("target" -> name)
       )
@@ -76,16 +76,17 @@ object ShivaReport extends MultisampleReportBuilder {
     }
 
     if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
-      Map(),
+      List(),
       regionPages.map(p => (p._1 -> ReportSection(
         "/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp",
         Map("target" -> p._1.stripSuffix(" (Amplicon)"))
       ))).toList.sortBy(_._1),
       Map())
-    ) else None
+    )
+    else None
   }
 
-  def filesPage = ReportPage(Map(), List(
+  def filesPage = ReportPage(List(), List(
     "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
@@ -95,7 +96,7 @@ object ShivaReport extends MultisampleReportBuilder {
   ), Map())
 
   def samplePage(sampleId: String, args: Map[String, Any]) = {
-    ReportPage(Map(
+    ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
       "Files" -> filesPage
@@ -110,7 +111,7 @@ object ShivaReport extends MultisampleReportBuilder {
   }
 
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]) = {
-    ReportPage(Map(
+    ReportPage(List(
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
       "QC" -> FlexiprepReport.flexiprepPage
     ), List(
