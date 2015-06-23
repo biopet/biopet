@@ -30,7 +30,7 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   var minBaseQ: Option[Int] = config("minimum_base_quality")
 
   @Argument(doc = "COVERAGE_CAP", required = false)
-  var covCap: Option[Int] = config("coverage_cap")
+  var covCap: Option[Int] = config("coverage_cap", default = 401)
 
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stop_after")
@@ -57,5 +57,8 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats = Map(
+    "metrics" -> Picard.getMetrics(output),
+    "histogram" -> Picard.getHistogram(output)
+  )
 }
