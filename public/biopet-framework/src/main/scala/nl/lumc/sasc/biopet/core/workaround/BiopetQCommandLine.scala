@@ -94,6 +94,8 @@ object BiopetQCommandLine extends GatkLogging {
     if (CommandLineProgram.result != 0)
       System.exit(CommandLineProgram.result)
   }
+
+  val timestamp = System.currentTimeMillis
 }
 
 /**
@@ -124,7 +126,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       org.apache.commons.io.IOUtils.copy(is, os)
       os.close()
       val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
-      pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + System.currentTimeMillis
+      pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + BiopetQCommandLine.timestamp
     }
 
     // override createByType to pass the correct exceptions
