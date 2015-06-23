@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.picard
 
-import java.io.File
+import java.io.{ FileReader, File }
 import scala.io.Source
 
 import org.broadinstitute.gatk.utils.commandline.Argument
@@ -63,6 +63,11 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 
   override val defaultCoreMemory = 3.0
 
+  override def getVersion = {
+    if (jarFile == null) Picard.getBiopetPicardVersion
+    else super.getVersion
+  }
+
   override def commandLine = super.commandLine +
     required("TMP_DIR=" + jobTempDir) +
     optional("VERBOSITY=", verbosity, spaceSeparated = false) +
@@ -75,6 +80,29 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 }
 
 object Picard extends Logging {
+
+  lazy val getBiopetPicardVersion: Option[String] = {
+    val reader = Source.fromInputStream(getClass.getResourceAsStream("/dependency_list.txt"))
+    val dependencies = reader.getLines().map(_.trim.split(":")).filter(_.size == 5).map(line => Map(
+      "groupId" -> line(0),
+      "artifactId" -> line(1),
+      "type" -> line(2),
+      "version" -> line(3),
+      "scope" -> line(4)
+    )).toList
+
+    logger.debug("dependencies: " + dependencies)
+
+    val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
+      case dep =>
+        "samtools htsjdk " + dep("version")
+    }
+
+    dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
+      case dep =>
+        "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
+    }
+  }
 
   def getMetrics(file: File, tag: String = "METRICS CLASS",
                  groupBy: Option[String] = None): Option[Any] = {

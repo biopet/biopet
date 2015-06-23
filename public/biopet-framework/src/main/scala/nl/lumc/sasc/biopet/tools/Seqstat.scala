@@ -29,8 +29,7 @@ import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
 import scalaz._, Scalaz._
 import argonaut._, Argonaut._
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
@@ -39,7 +38,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * @param root Configuration object for the pipeline
  */
-class Seqstat(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+class Seqstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
