@@ -21,7 +21,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ Allele, VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
@@ -35,7 +35,7 @@ import scala.util.Random
 /**
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summarizable with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
@@ -59,9 +59,10 @@ class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summariza
   var genotypeTags: List[String] = Nil
   var allInfoTags = false
   var allGenotypeTags = false
-  var reference: File = config("reference")
+  var reference: File = _
 
   override def beforeGraph: Unit = {
+    reference = referenceFasta()
     index = new File(input.getAbsolutePath + ".tbi")
   }
 
