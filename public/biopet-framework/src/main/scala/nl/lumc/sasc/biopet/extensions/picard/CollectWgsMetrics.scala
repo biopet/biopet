@@ -30,7 +30,7 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   var minBaseQ: Option[Int] = config("minimum_base_quality")
 
   @Argument(doc = "COVERAGE_CAP", required = false)
-  var covCap: Option[Int] = config("coverage_cap", default = 401)
+  var covCap: Option[Int] = config("coverage_cap")
 
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stop_after")

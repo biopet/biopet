@@ -173,4 +173,84 @@ object BammetricsReport extends ReportBuilder {
     plot.title = Some("Insert size")
     plot.runLocal()
   }
+
+  def wgsHistogramPlot(outputDir: File,
+                     prefix: String,
+                     summary: Summary,
+                     libraryLevel: Boolean = false,
+                     sampleId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    if (libraryLevel) {
+      tsvWriter.println((for (
+        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        lib <- summary.libraries(sample)
+      ) yield s"$sample-$lib")
+        .mkString("library\t", "\t", ""))
+    } else {
+      sampleId match {
+        case Some(sample) => tsvWriter.println("\t" + sample)
+        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
+      }
+    }
+
+    var map: Map[Int, Map[String, Int]] = Map()
+
+    def fill(sample: String, lib: Option[String]): Unit = {
+
+      val insertSize = new SummaryValue(List("bammetrics", "stats", "wgs", "histogram", "coverage"),
+        summary, Some(sample), lib).value.getOrElse(List())
+      val counts = new SummaryValue(List("bammetrics", "stats", "wgs", "histogram", "count"),
+        summary, Some(sample), lib).value.getOrElse(List())
+
+      (insertSize, counts) match {
+        case (l: List[_], l2: List[_]) => {
+          l.zip(l2).foreach(i => {
+            val insertSize = i._1.toString.toInt
+            val count = i._2.toString.toInt
+            val old = map.getOrElse(insertSize, Map())
+            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
+            else map += insertSize -> (old + (sample -> count))
+          })
+        }
+        case _ => throw new IllegalStateException("Must be a list")
+      }
+    }
+
+    if (libraryLevel) {
+      for (
+        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        lib <- summary.libraries(sample)
+      ) fill(sample, Some(lib))
+    } else if (sampleId.isDefined) fill(sampleId.get, None)
+    else summary.samples.foreach(fill(_, None))
+
+    for ((insertSize, counts) <- map) {
+      tsvWriter.print(insertSize)
+      if (libraryLevel) {
+        for (
+          sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+          lib <- summary.libraries(sample)
+        ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
+      } else {
+        for (sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample)) {
+          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
+        }
+      }
+      tsvWriter.println()
+    }
+
+    tsvWriter.close()
+
+    val plot = new XYPlot(null)
+    plot.input = tsvFile
+    plot.output = pngFile
+    plot.ylabel = Some("Bases")
+    plot.xlabel = Some("Coverage")
+    plot.width = Some(1200)
+    plot.removeZero = true
+    plot.title = Some("Whole genome coverage")
+    plot.runLocal()
+  }
 }
