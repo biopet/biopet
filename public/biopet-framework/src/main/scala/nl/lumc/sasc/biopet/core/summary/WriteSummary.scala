@@ -113,7 +113,9 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         "last_commit_hash" -> LastCommitHash,
         "pipeline_version" -> Version,
         "pipeline_name" -> qscript.summaryName,
-        "output_dir" -> qscript.outputDir
+        "output_dir" -> qscript.outputDir,
+        "run_name" -> config("run_name", default = qSettings.runName).asString,
+        "summary_creation" -> System.currentTimeMillis()
       ))
 
     val writer = new PrintWriter(out)
