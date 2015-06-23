@@ -25,7 +25,7 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+            The following plot shows basic alignment statistics for this run. Every sample is represented by a multi-color bar. Red represents the total number of properly mapped reads for this sample. Green represents the total number of duplicates reads, which is usually caused by PCR duplicates. Blue denotes the number of unmapped reads, and purple denotes reads flagged <em>secondary</em> (this is dependent on the aligner used). A table showing similar statistics, including values represented as percent of total, can be downloaded as a tab-delimited file.
         </p>
     </div>
     </div>
