@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
@@ -13,13 +13,16 @@ import nl.lumc.sasc.biopet.utils.IoUtils
  */
 trait ReportBuilderExtension extends ToolCommandFuntion {
 
+  /** Report builder object */
   val builder: ReportBuilder
 
   @Input(required = true)
   var summaryFile: File = _
 
+  /** OutputDir for the report  */
   var outputDir: File = _
 
+  /** Arguments that are passed on the commandline */
   var args: Map[String, String] = Map()
 
   override def beforeGraph: Unit = {
@@ -28,6 +31,7 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
     javaMainClass = builder.getClass.getName.takeWhile(_ != '$')
   }
 
+  /** Command to generate the report */
   override def commandLine: String = {
     super.commandLine +
       required("--summary", summaryFile) +
@@ -52,15 +56,19 @@ trait ReportBuilder extends ToolCommand {
     }
   }
 
+  /** summary object internaly */
   private var setSummary: Summary = _
 
+  /** Retrival of summary, read only */
   final def summary = setSummary
 
+  /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
 
   private var done = 0
   private var total = 0
 
+  /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
 
@@ -95,7 +103,7 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
 
-    total = countPages(indexPage)
+    total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
 
     logger.info("Generate pages")
@@ -106,14 +114,21 @@ trait ReportBuilder extends ToolCommand {
     logger.info(jobs + " Done")
   }
 
+  /** This must be implemented, this will be the root page of the report */
   def indexPage: ReportPage
 
+  /** This must be implemented, this will because the title of the report */
   def reportName: String
 
-  def countPages(page: ReportPage): Int = {
-    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
-  }
-
+  /**
+   * This method will render the page and the subpages recursivly
+   * @param summary The summary object
+   * @param page Page to render
+   * @param outputDir Root output dir of the report
+   * @param path Path from root to current page
+   * @param args Args to add to this sub page, are args from current page are passed automaticly
+   * @return Number of pages including all subpages that are rendered
+   */
   def generatePage(summary: Summary,
                    page: ReportPage,
                    outputDir: File,
@@ -151,9 +166,16 @@ trait ReportBuilder extends ToolCommand {
 
 object ReportBuilder {
 
+  /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
 
+  /** Cache of temp file for templates from the classpath / jar */
   private var templateCache: Map[String, File] = Map()
+
+  /** This will give the total number of pages including all nested pages */
+  def countPages(page: ReportPage): Int = {
+    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
+  }
 
   /**
    * This method will render a template that is located in the classpath / jar

@@ -6,17 +6,24 @@ import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSectio
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
 
+//TODO: Add basic report to BamMetrics as single pipeline
+
 /**
  * Created by pjvan_thof on 3/30/15.
  */
 object BammetricsReport extends ReportBuilder {
-  // FIXME: Not yet finished
 
+  /** Name of report */
   val reportName = "Bam Metrics"
 
+  /** Root page for single BamMetrcis report */
   def indexPage = ReportPage(List(), List(), Map())
 
-  def bamMetricsPage(summary: Summary, sampleId: Option[String], libId: Option[String]) = {
+  /** Generates a page with alignment stats */
+  def bamMetricsPage(summary: Summary,
+                     sampleId: Option[String],
+                     libId: Option[String],
+                     metricsTag: String = "bammetrics") = {
     val targets = (
       summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
       summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "roi_name")
@@ -35,10 +42,18 @@ object BammetricsReport extends ReportBuilder {
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
       ),
-      Map()
+      Map("metricsTag" -> metricsTag)
     )
   }
 
+  /**
+   * Generate a stackbar plot for alignment stats
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,
                            summary: Summary,
@@ -94,6 +109,14 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+   * Generate a line plot for insertsize
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def insertSizePlot(outputDir: File,
                      prefix: String,
                      summary: Summary,
@@ -174,6 +197,14 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+   * Generate a line plot for wgs coverage
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def wgsHistogramPlot(outputDir: File,
                        prefix: String,
                        summary: Summary,
