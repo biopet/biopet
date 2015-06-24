@@ -20,7 +20,7 @@
     if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
 }#
 
-<img src="${plot}">
+<img src="${plot.getName}">
 
 <table class="table">
 <thead><tr>
