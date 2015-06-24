@@ -25,6 +25,8 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
   /** Arguments that are passed on the commandline */
   var args: Map[String, String] = Map()
 
+  override val defaultCoreMemory = 3.0
+
   override def beforeGraph: Unit = {
     super.beforeGraph
     jobOutputFile = new File(outputDir, ".report.log.out")

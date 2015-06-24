@@ -14,8 +14,6 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  */
 class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = ShivaReport
-
-  override val defaultCoreMemory = 3.0
 }
 
 /** Object for report generation for Shiva pipeline */
