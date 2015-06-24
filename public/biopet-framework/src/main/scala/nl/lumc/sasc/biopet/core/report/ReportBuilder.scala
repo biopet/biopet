@@ -71,6 +71,11 @@ trait ReportBuilder extends ToolCommand {
   private var done = 0
   private var total = 0
 
+  private var _sampleId: Option[String] = None
+  protected def sampleId = _sampleId
+  private var _libId: Option[String] = None
+  protected def libId = _libId
+
   /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
@@ -82,12 +87,18 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
     cmdArgs.pageArgs.get("sampleId") match {
-      case Some(s: String) => cmdArgs.pageArgs += "sampleId" -> Some(s)
+      case Some(s: String) => {
+        cmdArgs.pageArgs += "sampleId" -> Some(s)
+        _sampleId = Some(s)
+      }
       case _               =>
     }
 
     cmdArgs.pageArgs.get("libId") match {
-      case Some(s: String) => cmdArgs.pageArgs += "libId" -> Some(s)
+      case Some(l: String) => {
+        cmdArgs.pageArgs += "libId" -> Some(l)
+        _libId = Some(l)
+      }
       case _               =>
     }
 

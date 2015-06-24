@@ -17,7 +17,21 @@ object BammetricsReport extends ReportBuilder {
   val reportName = "Bam Metrics"
 
   /** Root page for single BamMetrcis report */
-  def indexPage = ReportPage(List(), List(), Map())
+  def indexPage = {
+    val bamMetricsPage = this.bamMetricsPage(summary, sampleId, libId)
+    ReportPage(bamMetricsPage.subPages ::: List(
+      "Versions" -> ReportPage(List(), List((
+        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+      ))), Map()),
+      "Files" -> ReportPage(List(), List(
+        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bammetricsInputFile.ssp")
+      ), Map())
+    ), List(
+      "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
+    ) ::: bamMetricsPage.sections,
+      Map()
+    )
+  }
 
   /** Generates a page with alignment stats */
   def bamMetricsPage(summary: Summary,
