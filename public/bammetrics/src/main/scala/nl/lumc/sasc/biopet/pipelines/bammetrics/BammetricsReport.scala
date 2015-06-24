@@ -2,11 +2,14 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection}
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
 
-//TODO: Add basic report to BamMetrics as single pipeline
+class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = BammetricsReport
+}
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -54,7 +57,8 @@ object BammetricsReport extends ReportBuilder {
         Map()))),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
+        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp", Map("showPlot" -> true))
       ),
       Map("metricsTag" -> metricsTag)
     )
