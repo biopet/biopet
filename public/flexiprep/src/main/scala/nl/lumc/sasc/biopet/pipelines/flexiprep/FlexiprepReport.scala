@@ -11,7 +11,6 @@ class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = FlexiprepReport
 }
 
-//TODO: add basic report to flexiprep as single pipeline
 /**
  * Created by pjvan_thof on 3/30/15.
  */
