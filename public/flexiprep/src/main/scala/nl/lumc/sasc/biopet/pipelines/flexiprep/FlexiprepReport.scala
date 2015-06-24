@@ -2,9 +2,14 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, ReportBuilder }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, ReportBuilder }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
+
+class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = FlexiprepReport
+}
 
 //TODO: add basic report to flexiprep as single pipeline
 /**
@@ -13,11 +18,18 @@ import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 object FlexiprepReport extends ReportBuilder {
   val reportName = "Flexiprep"
 
+  override def pageArgs = Map("multisample" -> false)
+
   /** Index page for a flexiprep report */
   def indexPage = {
     val flexiprepPage = this.flexiprepPage
-    ReportPage(List(
-      "QC" -> flexiprepPage
+    ReportPage(List("Versions" -> ReportPage(List(), List((
+      "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+      ))), Map()),
+      "Files" -> ReportPage(List(), List(
+        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
+        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
+      ), Map())
     ), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
     ) ::: flexiprepPage.sections,

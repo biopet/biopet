@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.tools.Seqstat
@@ -62,6 +62,16 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqc_R2: Fastqc = _
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
+
+  override def reportClass = {
+    val flexiprepReport = new FlexiprepReport(this)
+    flexiprepReport.outputDir = new File(outputDir, "report")
+    flexiprepReport.summaryFile = summaryFile
+    flexiprepReport.args = Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    Some(flexiprepReport)
+  }
 
   /** Function that's need to be executed before the script is accessed */
   def init() {

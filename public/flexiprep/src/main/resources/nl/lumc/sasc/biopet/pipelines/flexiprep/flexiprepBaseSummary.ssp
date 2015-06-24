@@ -10,6 +10,7 @@
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
+<%@ var multisample: Boolean = true %>
 #{
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
@@ -80,11 +81,23 @@
                 libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
                 }
             }#
-            <tr><td rowspan="${sampleRowspan}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+            <tr><td rowspan="${sampleRowspan}">
+            #if (multisample)
+                <a href="${rootPath}Samples/${sample}/index.html">${sample}</a>
+            #else
+                ${sample}
+            #end
+            </td>
             #for (libId <- libs)
                 #if (libs.head != libId) <tr> #end
                     #{ val paired = summary.getLibraryValue(sample, libId, "flexiprep", "settings", "paired").getOrElse(false) }#
-                    <td #if (paired == true) rowspan="2" #end><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td>
+                    <td #if (paired == true) rowspan="2" #end>
+                    #if (multisample)
+                        <a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a>
+                    #else
+                        ${libId}
+                    #end
+                    </td>
                     #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
                     #for (read <- reads)
                         #if (read == "R2") </tr><tr> #end

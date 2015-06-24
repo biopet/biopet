@@ -7,6 +7,7 @@ import nl.lumc.sasc.biopet.core.summary.Summary
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 import nl.lumc.sasc.biopet.utils.IoUtils
+import scala.collection.mutable
 
 /**
  * Created by pjvan_thof on 3/27/15.
@@ -38,22 +39,22 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
     super.commandLine +
       required("--summary", summaryFile) +
       required("--outputDir", outputDir) +
-      args.map(x => required(x._1, x._2)).mkString
+      args.map(x => required("-a", x._1 + "=" + x._2)).mkString
   }
 }
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null, outputDir: File = null, pageArgs: Map[String, String] = Map()) extends AbstractArgs
+  case class Args(summary: File = null, outputDir: File = null, pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('s', "summary") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
     }
-    opt[File]('o', "outputDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     }
-    opt[Map[String, String]]('a', "args") action { (x, c) =>
+    opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
@@ -79,6 +80,16 @@ trait ReportBuilder extends ToolCommand {
 
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
+
+    cmdArgs.pageArgs.get("sampleId") match {
+      case Some(s: String) => cmdArgs.pageArgs += "sampleId" -> Some(s)
+      case _               =>
+    }
+
+    cmdArgs.pageArgs.get("libId") match {
+      case Some(s: String) => cmdArgs.pageArgs += "libId" -> Some(s)
+      case _               =>
+    }
 
     logger.info("Copy Base files")
 
@@ -110,7 +121,7 @@ trait ReportBuilder extends ToolCommand {
 
     logger.info("Generate pages")
     val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
-      args = pageArgs ++ cmdArgs.pageArgs ++
+      args = pageArgs ++ cmdArgs.pageArgs.toMap ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
     logger.info(jobs + " Done")
