@@ -102,7 +102,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                                outBaseName: String = "all_samples", fallback: String = "-"): Option[MergeTables] = {
+                                numHeaderLines: Int = 1, outBaseName: String = "all_samples",
+                                fallback: String = "-"): Option[MergeTables] = {
     val tables = samples.values.map { inFunc }.toList.flatten
     tables.nonEmpty
       .option {
@@ -113,6 +114,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.valueColumnIndex = valCol
         job.fileExtension = Option(ext)
         job.fallbackString = Option(fallback)
+        job.numHeaderLines = Option(numHeaderLines)
         // TODO: separate the addition into another function?
         job
       }
@@ -140,14 +142,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene fragment count table */
   private lazy val geneFragmentsCountJob =
-    makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, numHeaderLines = 0,
+      fallback = "0")
 
   private lazy val geneFragmentsCountHeatmapJob =
     makeHeatmapJob(geneFragmentsCountJob, "fragments_per_gene", FragmentsPerGene)
 
   /** Merged exon fragment count table */
   private lazy val exonFragmentsCountJob =
-    makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2, numHeaderLines = 0,
+      fallback = "0")
 
   private lazy val exonFragmentsCountHeatmapJob =
     makeHeatmapJob(exonFragmentsCountJob, "fragments_per_exon", FragmentsPerExon)
