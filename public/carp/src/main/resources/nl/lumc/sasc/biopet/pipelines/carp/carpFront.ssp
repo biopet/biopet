@@ -5,7 +5,7 @@ println("blabla")
 }#
 <table class="table">
 <tbody>
-    <tr><th>Pipeline</th><td>Mapping</td></tr>
+    <tr><th>Pipeline</th><td>Carp</td></tr>
     <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
     <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
     <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
