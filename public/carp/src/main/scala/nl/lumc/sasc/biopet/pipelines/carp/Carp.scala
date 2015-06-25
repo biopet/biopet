@@ -40,7 +40,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa-mem")
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "aligner" -> "bwa-mem"
+    )
   ), super.defaults)
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
@@ -115,6 +118,13 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
 
       addSummaryJobs
     }
+  }
+
+  override def reportClass = {
+    val carp = new CarpReport(this)
+    carp.outputDir = new File(outputDir, "report")
+    carp.summaryFile = summaryFile
+    Some(carp)
   }
 
   def init() = {

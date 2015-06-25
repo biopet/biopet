@@ -1,16 +1,15 @@
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, MultisampleReportBuilder }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
-
-import scala.io.Source
 
 /**
  * Created by pjvanthof on 25/06/15.
  */
-class CarpReport {
-
+class CarpReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = CarpReport
 }
 
 object CarpReport extends MultisampleReportBuilder {
