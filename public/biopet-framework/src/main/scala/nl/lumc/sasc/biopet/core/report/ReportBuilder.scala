@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ Logging, ToolCommandFuntion, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
@@ -208,6 +208,12 @@ object ReportBuilder {
    * @return Rendered result of template
    */
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
+    Logging.logger.info("Rendering: " + location)
+
+    if (location == "/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp") {
+      println("hier dus")
+    }
+
     val templateFile: File = templateCache.get(location) match {
       case Some(template) => template
       case _ => {
