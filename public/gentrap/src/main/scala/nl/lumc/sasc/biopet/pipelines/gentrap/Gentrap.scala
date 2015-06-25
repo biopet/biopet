@@ -131,7 +131,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                                numHeaderLines: Int = 1, outBaseName: String = "all_samples",
+                                numHeaderLines: Int = 0, outBaseName: String = "all_samples",
                                 fallback: String = "-"): Option[MergeTables] = {
     val tables = samples.values.map { inFunc }.toList.flatten
     tables.nonEmpty
@@ -191,7 +191,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene base count table */
   private lazy val geneBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, numHeaderLines = 1,
+      fallback = "0")
 
   /** Heatmap job for gene base count */
   private lazy val geneBasesCountHeatmapJob =
@@ -199,7 +200,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged exon base count table */
   private lazy val exonBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, numHeaderLines = 1,
+      fallback = "0")
 
   /** Heatmap job for exon base count */
   private lazy val exonBasesCountHeatmapJob =
@@ -207,7 +209,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene FPKM table for Cufflinks, strict mode */
   private lazy val geneFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for gene FPKM Cufflinks, strict mode */
   private lazy val geneFpkmCufflinksStrictHeatmapJob =
@@ -215,7 +218,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged exon FPKM table for Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for isoform FPKM Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictHeatmapJob =
@@ -223,7 +227,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene FPKM table for Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for gene FPKM Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedHeatmapJob =
@@ -231,7 +236,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged isoforms FPKM table for Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for isoform FPKM Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedHeatmapJob =
@@ -239,7 +245,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged gene FPKM table for Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for gene FPKM Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindHeatmapJob =
@@ -247,7 +254,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
   /** Merged isoforms FPKM table for Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
   /** Heatmap job for isoform FPKM Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindHeatmapJob =
