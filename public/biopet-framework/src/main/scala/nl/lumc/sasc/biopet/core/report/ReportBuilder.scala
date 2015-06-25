@@ -91,7 +91,7 @@ trait ReportBuilder extends ToolCommand {
         cmdArgs.pageArgs += "sampleId" -> Some(s)
         _sampleId = Some(s)
       }
-      case _               =>
+      case _ =>
     }
 
     cmdArgs.pageArgs.get("libId") match {
@@ -99,7 +99,7 @@ trait ReportBuilder extends ToolCommand {
         cmdArgs.pageArgs += "libId" -> Some(l)
         _libId = Some(l)
       }
-      case _               =>
+      case _ =>
     }
 
     logger.info("Copy Base files")
