@@ -46,6 +46,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
   }
 
   override def beforeGraph: Unit = {
+    super.beforeGraph
     genotypeMergeOptions match {
       case Some("UNIQUIFY") | Some("PRIORITIZE") | Some("UNSORTED") | Some("REQUIRE_UNIQUE") | None =>
       case _ => throw new IllegalArgumentException("Wrong option for genotypeMergeOptions")

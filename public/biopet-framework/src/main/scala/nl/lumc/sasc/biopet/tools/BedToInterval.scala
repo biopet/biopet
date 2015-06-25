@@ -17,14 +17,16 @@ package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.PrintWriter
 import scala.io.Source
 
-class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunction {
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
+class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input Bed file", required = true)
@@ -41,6 +43,9 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
   override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
 object BedToInterval extends ToolCommand {
   def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
     val bedToInterval = new BedToInterval(root)

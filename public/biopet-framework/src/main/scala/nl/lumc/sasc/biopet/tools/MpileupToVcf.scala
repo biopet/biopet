@@ -18,8 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.io.PrintWriter
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -30,7 +29,7 @@ import scala.math.round
 import scala.math.floor
 import scala.collection.JavaConversions._
 
-class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
@@ -47,7 +46,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var homoFraction: Option[Double] = config("homoFraction")
   var ploidy: Option[Int] = config("ploidy")
   var sample: String = _
-  var reference: String = config("reference")
+  var reference: String = _
 
   override val defaultCoreMemory = 3.0
 
@@ -56,6 +55,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   override def beforeGraph {
     super.beforeGraph
+    reference = referenceFasta().getAbsolutePath
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
@@ -72,6 +72,7 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   override def commandLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
+      samtoolsMpileup.reference = referenceFasta()
       samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +
@@ -137,7 +138,12 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
-    val inputStream = if (commandArgs.input != null) Source.fromFile(commandArgs.input).getLines else Source.stdin.getLines
+    val inputStream = if (commandArgs.input != null) {
+      Source.fromFile(commandArgs.input).getLines
+    } else {
+      logger.info("No input file as argument, waiting on stdin")
+      Source.stdin.getLines
+    }
     class Counts(var forward: Int, var reverse: Int)
     for (
       line <- inputStream;
@@ -146,7 +152,12 @@ object MpileupToVcf extends ToolCommand {
     ) {
       val chr = values(0)
       val pos = values(1)
-      val ref = values(2)
+      val ref = values(2) match {
+        case "A" | "T" | "G" | "C" => values(2)
+        case "a" | "t" | "g" | "c" => values(2).toUpperCase
+        case "U" | "u"             => "T"
+        case _                     => "N"
+      }
       val reads = values(3).toInt
       val mpileup = values(4)
       val qual = values(5)

@@ -35,21 +35,21 @@ import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
+class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript with Reference {
   qscript =>
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa")
+    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa-mem")
   ), super.defaults)
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
   //TODO: Add summary
-  def summaryFiles = Map()
+  def summaryFiles = Map("reference" -> referenceFasta())
 
   //TODO: Add summary
-  def summarySettings = Map()
+  def summarySettings = Map("reference" -> referenceSummary)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {

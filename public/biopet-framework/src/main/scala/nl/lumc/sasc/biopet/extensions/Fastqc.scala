@@ -37,7 +37,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fastq file", shortName = "FQ")
   var fastqfile: File = null
 
-  @Output(doc = "Output", shortName = "out")
+  @Output(doc = "Output", shortName = "out", required = true)
   var output: File = null
 
   executable = config("exe", default = "fastqc")
@@ -54,6 +54,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** Sets contaminants and adapters when not yet set */
   override def beforeGraph {
+    this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
     this.preProcesExecutable
 
     val fastqcDir = new File(executable).getParent

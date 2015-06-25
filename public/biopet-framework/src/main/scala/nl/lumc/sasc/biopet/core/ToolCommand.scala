@@ -55,3 +55,7 @@ trait ToolCommand extends MainCommand with Logging {
   protected type Args <: AbstractArgs
   protected type OptParser <: AbstractOptParser
 }
+
+trait ToolCommandFuntion extends BiopetJavaCommandLineFunction {
+  override def getVersion = Some("Biopet " + FullVersion)
+}

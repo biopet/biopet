@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions._
@@ -47,7 +47,7 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val aligners = Array("bwa", "bwa-aln", "star", "star-2pass", "bowtie", "stampy")
+    val aligners = Array("bwa-mem", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)
     val chunks = Array(1, 5, 10, 100)
     val skipMarkDuplicates = Array(true, false)
@@ -99,7 +99,7 @@ class MappingTest extends TestNGSuite with Matchers {
     mapping.functions.count(_.isInstanceOf[Gzip]) shouldBe (if (skipFlexiprep) 0 else if (paired) 2 else 1)
 
     //aligners
-    mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa") 1 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa-mem") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 2 else 1) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 1 else 0) else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 0 else 1) else 0) * chunks)
@@ -109,9 +109,9 @@ class MappingTest extends TestNGSuite with Matchers {
 
     // Sort sam or replace readgroup
     val sort = aligner match {
-      case "bwa" | "bwa-aln" | "stampy"     => "sortsam"
-      case "star" | "star-2pass" | "bowtie" => "replacereadgroups"
-      case _                                => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
+      case "bwa-mem" | "bwa-aln" | "stampy" => "sortsam"
+      case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
+      case _ => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
     }
 
     mapping.functions.count(_.isInstanceOf[SortSam]) shouldBe ((if (sort == "sortsam") 1 else 0) * chunks)
@@ -130,16 +130,32 @@ class MappingTest extends TestNGSuite with Matchers {
 object MappingTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "db" -> "test",
+    "bowtie_index" -> "test",
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
+    "gsnap" -> Map("exe" -> "test"),
+    "tophat" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
-    "samtools" -> Map("exe" -> "test")
+    "samtools" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 }

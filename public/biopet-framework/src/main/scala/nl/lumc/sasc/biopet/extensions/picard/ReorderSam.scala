@@ -17,13 +17,14 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 
-class ReorderSam(val root: Configurable) extends Picard {
+class ReorderSam(val root: Configurable) extends Picard with Reference {
 
-  javaMainClass = "picard.sam.ReorderSam"
+  javaMainClass = new picard.sam.ReorderSam().getClass.getName
 
   @Input(doc = "Input SAM or BAM file", required = true)
   var input: File = null
@@ -39,6 +40,11 @@ class ReorderSam(val root: Configurable) extends Picard {
 
   @Argument(doc = "Allow contig length discordance", required = false)
   var allowContigLengthDiscordance: Boolean = config("allow_contig_length_discordance", default = false)
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +

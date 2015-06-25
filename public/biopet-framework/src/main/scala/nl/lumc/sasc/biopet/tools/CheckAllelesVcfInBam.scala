@@ -81,13 +81,14 @@ object CheckAllelesVcfInBam extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     if (commandArgs.bamFiles.size != commandArgs.samples.size)
-      logger.warn("Number of samples is diffrent then number of bam files, left over will be removed")
+      logger.warn("Number of samples is different from number of bam files: additional samples or bam files will not be used")
     val samReaderFactory = SamReaderFactory.makeDefault
     val bamReaders: Map[String, SamReader] = Map(commandArgs.samples zip commandArgs.bamFiles.map(x => samReaderFactory.open(x)): _*)
     val bamHeaders = bamReaders.map(x => (x._1, x._2.getFileHeader))
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(reader.getFileHeader.getSequenceDictionary).build)
 
     val header = reader.getFileHeader
     for ((sample, _) <- bamReaders) {

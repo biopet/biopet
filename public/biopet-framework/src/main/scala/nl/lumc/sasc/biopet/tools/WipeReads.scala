@@ -34,8 +34,7 @@ import htsjdk.tribble.bed.BEDCodec
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 // TODO: finish implementation for usage in pipelines
@@ -44,7 +43,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  *
  * @param root Configuration object for the pipeline
  */
-class WipeReads(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class WipeReads(val root: Configurable) extends ToolCommandFuntion {
 
   javaMainClass = getClass.getName
 

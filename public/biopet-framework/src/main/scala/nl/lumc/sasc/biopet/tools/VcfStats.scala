@@ -21,7 +21,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ Allele, VariantContext, Genotype }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import scala.collection.JavaConversions._
@@ -35,7 +35,7 @@ import scala.util.Random
 /**
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summarizable with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
@@ -59,9 +59,10 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
   var genotypeTags: List[String] = Nil
   var allInfoTags = false
   var allGenotypeTags = false
-  var reference: File = config("reference")
+  var reference: File = _
 
   override def beforeGraph: Unit = {
+    reference = referenceFasta()
     index = new File(input.getAbsolutePath + ".tbi")
   }
 
@@ -109,7 +110,6 @@ class VcfStats(val root: Configurable) extends BiopetJavaCommandLineFunction wit
 
       val sum = new Summarizable {
         override def summaryFiles: Map[String, File] = Map()
-
         override def summaryStats: Map[String, Any] = stats
       }
 
@@ -347,7 +347,7 @@ object VcfStats extends ToolCommand {
     }
 
     // Triple for loop to not keep all bins in memory
-    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / 4).toList.par) yield {
+    val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList.par) yield {
       val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
           val reader = new VCFFileReader(commandArgs.inputFile, true)

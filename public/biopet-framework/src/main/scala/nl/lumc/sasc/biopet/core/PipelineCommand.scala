@@ -15,14 +15,14 @@
  */
 package nl.lumc.sasc.biopet.core
 
+import org.apache.log4j.{ PatternLayout, Appender, WriterAppender, FileAppender }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import java.io.File
+import java.io.{ PrintWriter, File }
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
+import scala.collection.JavaConversions._
 
-/**
- * Wrapper around executable from Queue
- */
+/** Wrapper around executable from Queue */
 trait PipelineCommand extends MainCommand with GatkLogging {
 
   /**
@@ -31,10 +31,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
    */
   def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
 
-  /**
-   * Class can be used directly from java with -cp option
-   * @param args
-   */
+  /** Class can be used directly from java with -cp option */
   def main(args: Array[String]): Unit = {
     val argsSize = args.size
     for (t <- 0 until argsSize) {
@@ -42,6 +39,17 @@ trait PipelineCommand extends MainCommand with GatkLogging {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")
         Config.global.loadConfigFile(new File(args(t + 1)))
       }
+
+      if (args(t) == "-cv" || args(t) == "--config_value") {
+        val v = args(t + 1).split("=")
+        require(v.size == 2, "Value should be formatted like 'key=value' or 'path:path:key=value'")
+        val value = v(1)
+        val p = v(0).split(":")
+        val key = p.last
+        val path = p.dropRight(1).toList
+        Config.global.addValue(key, value, path)
+      }
+
       if (args(t) == "--logging_level" || args(t) == "-l") {
         args(t + 1).toLowerCase match {
           case "debug" => Logging.logger.setLevel(org.apache.log4j.Level.DEBUG)
@@ -58,9 +66,18 @@ trait PipelineCommand extends MainCommand with GatkLogging {
       }
     }
 
+    val logDir: File = new File(Config.global.map.getOrElse("output_dir", "./").toString + File.separator + ".log")
+    logDir.mkdirs()
+    val logFile = new File(logDir, "biopet." + BiopetQCommandLine.timestamp + ".log")
+    val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
+    logger.addAppender(a)
+
     var argv: Array[String] = Array()
     argv ++= Array("-S", pipeline)
     argv ++= args
+    if (!args.contains("--log_to_file") && !args.contains("-log")) {
+      argv ++= List("--log_to_file", logFile.getAbsolutePath.replace("biopet", "queue"))
+    }
     BiopetQCommandLine.main(argv)
   }
 }

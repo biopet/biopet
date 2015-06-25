@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ FileInputStream, PrintWriter, File }
-import java.security.MessageDigest
+import java.io.{ File, PrintWriter }
+import scala.collection.mutable
+import scala.io.Source
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
-import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
-import scala.collection.mutable
-import scala.io.Source
+import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * Created by pjvan_thof on 2/14/15.
@@ -108,10 +108,18 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
     val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
       ConfigUtils.fileToConfigMap(qscript.summaryFile)
-    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
+    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
+      Map("meta" -> Map(
+        "last_commit_hash" -> LastCommitHash,
+        "pipeline_version" -> Version,
+        "pipeline_name" -> qscript.summaryName,
+        "output_dir" -> qscript.outputDir,
+        "run_name" -> config("run_name", default = qSettings.runName).asString,
+        "summary_creation" -> System.currentTimeMillis()
+      ))
 
     val writer = new PrintWriter(out)
-    writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)
+    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
     writer.close()
   }
 
@@ -135,7 +143,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (if (stats.isEmpty) Map[String, Any]() else Map("stats" -> Map(name -> stats))) ++
+    (Map("stats" -> Map(name -> stats))) ++
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 

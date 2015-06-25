@@ -5,6 +5,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
+import java.io.{ FileOutputStream, File }
+
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
@@ -90,10 +92,22 @@ class ShivaTest extends TestNGSuite with Matchers {
 object ShivaTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
@@ -108,7 +122,10 @@ object ShivaTest {
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
-    "wigtobigwig" -> Map("exe" -> "test")
+    "wigtobigwig" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

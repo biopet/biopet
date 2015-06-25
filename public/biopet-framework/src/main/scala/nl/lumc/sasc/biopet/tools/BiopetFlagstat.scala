@@ -17,15 +17,14 @@ package nl.lumc.sasc.biopet.tools
 
 import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
 import java.io.{ PrintWriter, File }
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 
-class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input bam", shortName = "input", required = true)

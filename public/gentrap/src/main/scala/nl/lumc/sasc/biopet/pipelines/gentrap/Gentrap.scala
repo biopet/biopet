@@ -46,7 +46,10 @@ import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
  *
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript { qscript =>
+class Gentrap(val root: Configurable) extends QScript
+  with MultiSampleQScript
+  with SummaryQScript
+  with Reference { qscript =>
 
   import Gentrap._
   import Gentrap.ExpMeasures._
@@ -356,18 +359,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     job
   }
 
-  // used to ensure that the required .dict file is present before the run starts
-  // can not store it in config since the tools that use it (Picard) have this value based on the reference file name
-  protected def checkDictFile(): Unit =
-    require(referenceDict.exists, s"Dict file '$referenceDict' must exist")
-
   /** Steps to run before biopetScript */
   def init(): Unit = {
-    checkDictFile()
-
-    // initialize reference info ~ checking if all MD5 checksums are present
-    refInfo
-
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(FragmentsPerGene))

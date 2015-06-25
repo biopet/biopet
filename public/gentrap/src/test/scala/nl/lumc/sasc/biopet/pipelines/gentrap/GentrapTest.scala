@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
@@ -41,7 +41,6 @@ class GentrapTest extends TestNGSuite with Matchers {
       override def globalConfig = new Config(map)
       // disable dict file check since it is based on the reference file name (which we can't modify here since
       // we use the mock /usr/bin/test file
-      override def checkDictFile: Unit = {}
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -186,9 +185,21 @@ class GentrapTest extends TestNGSuite with Matchers {
 object GentrapTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "dict" -> "test",
+    "refFlat" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
@@ -199,7 +210,7 @@ object GentrapTest {
       // mapping executables
       "star", "bowtie", "samtools", "gsnap", "tophat",
       // gentrap executables
-      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage",
+      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage", "md5sum",
       // bam2wig executables
       "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -87,13 +87,28 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
-    "freebayes" -> Map("exe" -> "test")
+    "freebayes" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test")
   )
 }

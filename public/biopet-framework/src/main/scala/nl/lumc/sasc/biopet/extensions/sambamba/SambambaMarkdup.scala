@@ -49,3 +49,18 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
     required(input) +
     required(output)
 }
+
+object SambambaMarkdup {
+  def apply(root: Configurable, input: File, output: File): SambambaMarkdup = {
+    val markdup = new SambambaMarkdup(root)
+    markdup.input = input
+    markdup.output = output
+    return markdup
+  }
+
+  def apply(root: Configurable, input: File): SambambaMarkdup = {
+    return apply(root, input, new File(swapExtension(input.getCanonicalPath)))
+  }
+
+  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".dedup.bam"
+}

@@ -17,20 +17,20 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 3/3/15.
  */
-class Freebayes(val root: Configurable) extends BiopetCommandLineFunction {
+class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   @Input(required = true)
   var bamfiles: List[File] = Nil
 
   @Input(required = true)
-  var reference: File = config("reference")
+  var reference: File = _
 
   @Output(required = true)
   var outputVcf: File = null
@@ -41,6 +41,11 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "freebayes")
   override val versionRegex = """version:  (.*)""".r
   override def versionCommand = executable + " --version"
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    reference = referenceFasta()
+  }
 
   def cmdLine = executable +
     required("--fasta-reference", reference) +

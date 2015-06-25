@@ -19,8 +19,7 @@ import java.io.{ File, BufferedWriter, FileWriter, OutputStreamWriter }
 import scala.io.{ BufferedSource, Source }
 import scala.collection.mutable.{ Set => MutSet }
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -29,7 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * @param root [[Configurable]] object
  */
-class MergeTables(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MergeTables(val root: Configurable) extends ToolCommandFuntion {
 
   javaMainClass = getClass.getName
 

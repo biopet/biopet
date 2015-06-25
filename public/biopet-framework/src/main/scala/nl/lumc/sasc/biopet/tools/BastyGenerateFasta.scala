@@ -21,15 +21,14 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 import scala.collection.mutable.ListBuffer
 
-class BastyGenerateFasta(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf file", required = false)

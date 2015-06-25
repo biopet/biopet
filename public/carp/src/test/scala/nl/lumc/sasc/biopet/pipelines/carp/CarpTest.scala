@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import java.io.File
+import java.io.{ FileOutputStream, File }
 
 import com.google.common.io.Files
 import org.apache.commons.io.FileUtils
@@ -97,8 +97,20 @@ class CarpTest extends TestNGSuite with Matchers {
 object CarpTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
@@ -107,7 +119,8 @@ object CarpTest {
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
-    "wigtobigwig" -> Map("exe" -> "test")
+    "wigtobigwig" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

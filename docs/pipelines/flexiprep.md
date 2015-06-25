@@ -1,32 +1,29 @@
 # Flexiprep
 
 ## Introduction
-Flexiprep is out quality control pipeline. This pipeline checks for possible barcode contamination, clips reads, trims reads and runs
-the tool <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">Fastqc</a>.
-The adapter clipping is performed by <a href="https://github.com/marcelm/cutadapt" target="_blank">Cutadapt</a>.
-For the quality trimming we use: <a href="https://github.com/najoshi/sickle" target="_blank">Sickle</a>. Flexiprep works on `.fastq` files.
+Flexiprep is our quality control pipeline. This pipeline checks for possible barcode contamination, clips reads, trims reads and runs
+the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">Fastqc</a> tool.
+Adapter clipping is performed by <a href="https://github.com/marcelm/cutadapt" target="_blank">Cutadapt</a>.
+For quality trimming we use <a href="https://github.com/najoshi/sickle" target="_blank">Sickle</a>.
+Flexiprep works on `.fastq` files.
 
 
 ## Example
 
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0-DEV.jar pipeline Flexiprep -h
+java -jar </path/to/biopet.jar> pipeline Flexiprep -h
+
 Arguments for Flexiprep:
- -R1,--input_r1 <input_r1>                       R1 fastq file (gzipped allowed)
- -sample,--samplename <samplename>               Sample name
- -library,--libraryname <libraryname>            Library name
- -outDir,--output_directory <output_directory>   Output directory
- -R2,--input_r2 <input_r2>                       R2 fastq file (gzipped allowed)
- -skiptrim,--skiptrim                            Skip Trim fastq files
- -skipclip,--skipclip                            Skip Clip fastq files
- -config,--config_file <config_file>             JSON config file(s)
- -DSC,--disablescatterdefault                    Disable all scatters
+ -R1,--input_r1 <input_r1>             R1 fastq file (gzipped allowed)
+ -R2,--input_r2 <input_r2>             R2 fastq file (gzipped allowed)
+ -sample,--sampleid <sampleid>         Sample ID
+ -library,--libid <libid>              Library ID
+ -config,--config_file <config_file>   JSON config file(s)
+ -DSC,--disablescatter                 Disable all scatters
 ~~~
 
-As we can see in the above example we provide the options to skip trimming or clipping 
-since sometimes you want to have the possibility to not perform these tasks e.g.
-if there are no adapters present in your .fastq. Note that the pipeline also works on unpaired reads where one should only provide R1.
+Note that the pipeline also works on unpaired reads where one should only provide R1.
 
 
 To start the pipeline (remove `-run` for a dry run):
@@ -36,9 +33,34 @@ java -jar Biopet-0.2.0.jar pipeline Flexiprep -run -outDir myDir \
 -library myLibname -config mySettings.json
 ~~~
 
+
+## Configuration and flags
+For technical reasons, single sample pipelines, such as this pipeline do **not** take a sample config.
+Input files are in stead given on the command line as a flag.
+
+Command line flags for Flexiprep are:
+
+| Flag  (short)| Flag (long) | Type | Function |
+| ------------ | ----------- | ---- | -------- |
+| -R1 | --input_r1 | Path (**required**) | Path to input fastq file |
+| -R2 | --input_r2 | Path (optional) | Path to second read pair fastq file. |
+| -sample | --sampleid | String (**required**) | Name of sample |
+| -library | --libid | String (**required**) | Name of library |
+
+If `-R2` is given, the pipeline will assume a paired-end setup.
+
+### Config
+
+All other values should be provided in the config. Specific config values towards the mapping pipeline are:
+
+| Name | Type | Function |
+| ---- | ---- | -------- |
+| skiptrim | Boolean | Skip the trimming step |
+| skipclip | Boolean | Skip the clipping step |
+
 ## Result files
-The results from this pipeline will be a fastq file which is depending on the options either clipped and trimmed, only clipped,
- only trimmed or no quality control at all. The pipeline also outputs 2 Fastqc runs one before and one after quality control.
+The results from this pipeline will be a fastq file.
+The pipeline also outputs 2 Fastqc runs one before and one after quality control.
 
 ### Example output
 
