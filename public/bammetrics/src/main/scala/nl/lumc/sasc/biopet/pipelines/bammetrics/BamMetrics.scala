@@ -63,7 +63,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     bammetricsReport.args = if (libId.isDefined) Map(
       "sampleId" -> sampleId.getOrElse("."),
       "libId" -> libId.getOrElse("."))
-      else Map("sampleId" -> sampleId.getOrElse("."))
+    else Map("sampleId" -> sampleId.getOrElse("."))
     Some(bammetricsReport)
   }
 

@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection}
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
 
@@ -25,7 +25,7 @@ object BammetricsReport extends ReportBuilder {
     ReportPage(bamMetricsPage.subPages ::: List(
       "Versions" -> ReportPage(List(), List((
         "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-      ))), Map()),
+        ))), Map()),
       "Files" -> ReportPage(List(), List(
         "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bammetricsInputFile.ssp")
       ), Map())
