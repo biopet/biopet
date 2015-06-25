@@ -1,8 +1,5 @@
 #import(nl.lumc.sasc.biopet.core.summary.Summary)
 <%@ var summary: Summary %>
-#{
-    println("blabla")
-}#
 <table class="table">
 <tbody>
     <tr><th>Pipeline</th><td>Gentrap</td></tr>
