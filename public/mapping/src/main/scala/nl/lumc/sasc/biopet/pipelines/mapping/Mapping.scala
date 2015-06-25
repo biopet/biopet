@@ -111,6 +111,16 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "numberChunks" -> numberChunks.getOrElse(1)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
+  override def reportClass = {
+    val mappingReport = new MappingReport(this)
+    mappingReport.outputDir = new File(outputDir, "report")
+    mappingReport.summaryFile = summaryFile
+    mappingReport.args = Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    Some(mappingReport)
+  }
+
   /** Will be executed before script */
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
