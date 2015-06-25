@@ -106,31 +106,6 @@ class Gentrap(val root: Configurable) extends QScript
       "mapping" -> Map("skip_markduplicates" -> true)
     ), super.defaults)
 
-  /** Reference FASTA file */
-  private val reference: File = config("reference")
-
-  /** Reference DICT file */
-  private def referenceDict: File = {
-    val refName: String = reference.getName
-    require(refName.contains('.'), "Reference file must have an extension")
-    val dictFile = new File(Option(reference.getParentFile).getOrElse(new File(".")),
-      refName.take(refName.lastIndexOf('.')) + ".dict")
-    require(dictFile.exists, s"Dict file '$dictFile' must exist")
-    dictFile
-  }
-
-  /** Information about reference file */
-  private lazy val refInfo: Map[String, String] =
-    new FastaSequenceFile(reference, false)
-      .getSequenceDictionary.getSequences.asScala
-      .map {
-        case samrec =>
-          val md5 = samrec.getAttribute("M5")
-          val name = samrec.getSequenceName
-          if (md5 == null) throw new IllegalArgumentException(s"Reference sequence '$name' does not have an MD5 checksum")
-          md5 -> name
-      }.toMap
-
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
@@ -297,10 +272,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Files that will be listed in the summary file */
   def summaryFiles: Map[String, File] = Map(
-    // NOTE: technically we can use different references in each of the sample, but for simplicity's sake we store the
-    //       reference information in the pipeline level now.
-    "reference_fasta" -> reference,
-    "reference_dict" -> referenceDict,
+    "reference_fasta" -> referenceFasta(),
     "annotation_refflat" -> annotationRefFlat
   ) ++ Map(
       "annotation_gtf" -> annotationGtf,
@@ -320,7 +292,7 @@ class Gentrap(val root: Configurable) extends QScript
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> callVariants,
     "remove_ribosomal_reads" -> removeRibosomalReads,
-    "reference" -> refInfo,
+    "reference" -> referenceSummary,
     "version" -> FullVersion
   )
 
