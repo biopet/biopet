@@ -30,6 +30,8 @@ import nl.lumc.sasc.biopet.extensions.varscan.Mpileup2cns
 // Better to do everything quick and dirty here rather than something half-implemented with the objects
 class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { wrapper =>
 
+  override def configName = "customvarscan"
+
   @Input(doc = "Input BAM file", required = true)
   var input: File = null
 
@@ -45,6 +47,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   // mpileup, varscan, fix_mpileup.py, binom_test.py, bgzip, tabix
   private def mpileup = new SamtoolsMpileup(wrapper.root) {
     this.input = List(wrapper.input)
+    override def configName = wrapper.configName
     disableBaq = true
     reference = config("reference")
     depth = Option(1000000)
@@ -54,16 +57,19 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   private def fixMpileup = new PythonCommandLineFunction {
     setPythonScript("fix_mpileup.py", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
     override val root: Configurable = wrapper.root
+    override def configName = wrapper.configName
     def cmdLine = getPythonCommand
   }
 
   private def removeEmptyPile = new BiopetCommandLineFunction {
     override val root: Configurable = wrapper.root
+    override def configName = wrapper.configName
     executable = config("exe", default = "grep", freeVar = false)
     override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
   }
 
   private val varscan = new Mpileup2cns(wrapper.root) {
+    override def configName = wrapper.configName
     strandFilter = Option(0)
     outputVcf = Option(1)
   }
@@ -71,6 +77,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   private val compress = new Bgzip(wrapper.root)
 
   private val index = new Tabix(wrapper.root) {
+    override def configName = wrapper.configName
     p = Option("vcf")
   }
 

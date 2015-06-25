@@ -29,6 +29,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 // Better to do everything quick and dirty here rather than something half-implemented with the objects
 class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction { wrapper =>
 
+  override def configName = "rawbasecounter"
+
   @Input(doc = "Reference BED file", required = true)
   var annotationBed: File = null
 
@@ -53,6 +55,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   private def grepForStrand = new BiopetCommandLineFunction {
     var strand: String = null
     override val root: Configurable = wrapper.root
+    override def configName = wrapper.configName
     executable = config("exe", default = "grep", freeVar = false)
     override def cmdLine: String = required(executable) +
       required("-P", """\""" + strand + """$""") +
@@ -61,7 +64,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
 
   private def bedtoolsCovHist = new BiopetCommandLineFunction {
     var bam: File = null
-    override val configName = "bedtoolscoverage"
+    override def configName = "bedtoolscoverage"
     override val root: Configurable = wrapper.root
     executable = config("exe", default = "coverageBed", freeVar = false)
     override def cmdLine: String = required(executable) +
@@ -73,6 +76,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
 
   private def hist2Count = new PythonCommandLineFunction {
     setPythonScript("hist2count.py", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
+    override def configName = wrapper.configName
     override val root: Configurable = wrapper.root
     def cmdLine = getPythonCommand + optional("-c", "3")
   }
