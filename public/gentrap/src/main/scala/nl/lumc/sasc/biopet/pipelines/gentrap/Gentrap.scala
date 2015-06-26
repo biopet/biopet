@@ -16,10 +16,8 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
-import scala.collection.JavaConverters._
 import scala.language.reflectiveCalls
 
-import htsjdk.samtools.reference._
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
@@ -89,6 +87,17 @@ class Gentrap(val root: Configurable) extends QScript
   /** Whether to do simple variant calling on RNA or not */
   var callVariants: Boolean = config("call_variants", default = false)
 
+  /** Settings for all Picard CollectRnaSeqMetrics runs */
+  private def collectRnaSeqMetricsSettings: Map[String, String] = Map(
+    "strand_specificity" -> (strandProtocol match {
+      case NonSpecific => StrandSpecificity.NONE.toString
+      case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
+      case otherwise   => throw new IllegalStateException(otherwise.toString)
+    })) ++ (ribosomalRefFlat match {
+      case Some(rbs) => Map("ribosomal_intervals" -> rbs.toString)
+      case None => Map()
+    })
+
   /** Default pipeline config */
   override def defaults = ConfigUtils.mergeMaps(
     Map(
@@ -103,7 +112,10 @@ class Gentrap(val root: Configurable) extends QScript
         "programrecordid" -> "null"
       ),
       // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map("skip_markduplicates" -> true)
+      "mapping" -> Map(
+        "skip_markduplicates" -> true,
+        "skip_metrics" -> true
+      )
     ), super.defaults)
 
   /** Adds output merge jobs for the given expression mode */
@@ -310,24 +322,6 @@ class Gentrap(val root: Configurable) extends QScript
     job.input = pdfTemplateJob.output
     job.outputDir = new File(outputDir, "report")
     job.name = "gentrap_report"
-    job
-  }
-
-  /** General function to create CollectRnaSeqMetrics job, for per-sample and per-library runs */
-  protected def makeCollectRnaSeqMetricsJob(alnFile: File, outMetrics: File,
-                                            outChart: Option[File] = None): CollectRnaSeqMetrics = {
-    val job = new CollectRnaSeqMetrics(qscript)
-    job.input = alnFile
-    job.output = outMetrics
-    job.refFlat = annotationRefFlat
-    job.chartOutput = outChart
-    job.assumeSorted = true
-    job.strandSpecificity = strandProtocol match {
-      case NonSpecific => Option(StrandSpecificity.NONE.toString)
-      case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
-      case _           => throw new IllegalStateException
-    }
-    job.ribosomalIntervals = ribosomalRefFlat
     job
   }
 
@@ -695,13 +689,9 @@ class Gentrap(val root: Configurable) extends QScript
         mod.inputBam = alnFile
         mod.outputDir = new File(sampleDir, "metrics")
         mod.sampleId = Option(sampleId)
+        mod.transcriptRefFlatFile = Option(annotationRefFlat)
+        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
         mod
-      }
-
-    /** Picard CollectRnaSeqMetrics job, only when library > 1 */
-    private lazy val collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (libraries.size > 1)
-      .option {
-        makeCollectRnaSeqMetricsJob(alnFileDirty, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
       }
 
     /** Job for removing ribosomal reads */
@@ -725,7 +715,7 @@ class Gentrap(val root: Configurable) extends QScript
     /** Ln or MergeSamFile job, depending on how many inputs are supplied */
     private def makeCombineJob(inFiles: List[File], outFile: File,
                                mergeSortOrder: String = "coordinate"): CombineFileJobSet = {
-      require(inFiles.nonEmpty, "At least one input files for combine job")
+      require(inFiles.nonEmpty, "At least one input files required for combine job")
       if (inFiles.size == 1) {
 
         val jobBam = new Ln(qscript)
@@ -765,12 +755,6 @@ class Gentrap(val root: Configurable) extends QScript
       addPerLibJobs()
       // merge or symlink per-library alignments
       sampleAlnJobSet.addAll()
-      // general RNA-seq metrics, if there are > 1 library
-      collectRnaSeqMetricsJob match {
-        case Some(j) =>
-          add(j); addSummarizable(j, "rna_metrics")
-        case None => ;
-      }
       bamMetricsModule match {
         case Some(m) =>
           m.init()
@@ -827,10 +811,6 @@ class Gentrap(val root: Configurable) extends QScript
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
 
-      /** Library-level RNA-seq metrics job, only when we have more than 1 library in the sample */
-      def collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
-        makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
-
       /** Wiggle track job */
       private lazy val bam2wigModule: Bam2Wig = Bam2Wig(qscript, alnFile)
 
@@ -847,16 +827,29 @@ class Gentrap(val root: Configurable) extends QScript
         job
       }
 
+      /** Library metrics job, since we don't have access to the underlying metrics */
+      private lazy val bamMetricsJob: BamMetrics = {
+        val mod = new BamMetrics(qscript)
+        mod.inputBam = alnFile
+        mod.outputDir = new File(libDir, "metrics")
+        mod.sampleId = Option(sampleId)
+        mod.libId = Option(libId)
+        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
+        mod.transcriptRefFlatFile = Option(annotationRefFlat)
+        mod
+      }
+
       /** Adds all jobs for the library */
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
         // add bigwig track
         addAll(bam2wigModule.functions)
-        // create RNA metrics job
-        add(collectRnaSeqMetricsJob)
-        addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
         qscript.addSummaryQScript(mappingJob)
+        bamMetricsJob.init()
+        bamMetricsJob.biopetScript()
+        addAll(bamMetricsJob.functions)
+        qscript.addSummaryQScript(bamMetricsJob)
       }
 
     }

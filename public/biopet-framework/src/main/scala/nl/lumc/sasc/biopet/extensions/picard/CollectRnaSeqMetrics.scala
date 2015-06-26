@@ -32,7 +32,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   var input: File = null
 
   @Input(doc = "Gene annotations in refFlat form", required = true)
-  var refFlat: File = config("refFlat")
+  var refFlat: File = null
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
   var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
@@ -68,6 +68,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   var stopAfter: Option[Long] = config("stop_after")
 
   override def beforeGraph: Unit = {
+    require(refFlat != null, "RefFlat file must be supplied.")
     val validFlags = StrandSpecificity.values.map(_.toString).toSet
     strandSpecificity match {
       case Some(s) => require(validFlags.contains(s),

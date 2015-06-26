@@ -71,7 +71,7 @@ class MergeTables(val root: Configurable) extends ToolCommandFuntion {
       required("-a", valueColumnIndex) +
       optional("-n", idColumnName) +
       optional("-e", fileExtension) +
-      optional("-h", numHeaderLines) +
+      optional("-m", numHeaderLines) +
       optional("-f", fallbackString) +
       optional("-d", delimiter) +
       required("-o", output) +
@@ -206,7 +206,7 @@ object MergeTables extends ToolCommand {
       c.copy(fileExtension = x)
     } text "Common extension of all input tables to strip (default: empty string)"
 
-    opt[Int]('h', "num_header_lines") optional () action { (x, c) =>
+    opt[Int]('m', "num_header_lines") optional () action { (x, c) =>
       c.copy(numHeaderLines = x)
     } text "The number of header lines present in all input files (default: 0; no header)"
 

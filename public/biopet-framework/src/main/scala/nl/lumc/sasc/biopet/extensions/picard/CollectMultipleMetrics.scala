@@ -41,7 +41,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
       }
       case _ if p == Programs.CollectInsertSizeMetrics.toString => {
         outputFiles :+= new File(outputName + ".insert_size_metrics")
-        outputFiles :+= new File(outputName + ".insert_size_Histogram.pdf")
+        outputFiles :+= new File(outputName + ".insert_size_histogram.pdf")
       }
       case _ if p == Programs.QualityScoreDistribution.toString => {
         outputFiles :+= new File(outputName + ".quality_distribution_metrics")
@@ -85,17 +85,25 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
         case _ => None
       }
       val sum = new Summarizable {
-        override def summaryFiles: Map[String, File] = Map()
         override def summaryStats = stats
+        override def summaryFiles: Map[String, File] = Map()
       }
       qscript.addSummarizable(sum, p)
     })
 
   }
 
-  def summaryFiles = Map()
-
   def summaryStats = Map()
+
+  def summaryFiles = {
+    program.map {
+      case p if p == Programs.CollectInsertSizeMetrics.toString =>
+        Map(
+          "insert_size_histogram" -> new File(outputName + ".insert_size_histogram.pdf"),
+          "insert_size_metrics" -> new File(outputName + ".insert_size_metrics"))
+      case otherwise => Map()
+    }.foldLeft(Map.empty[String, File]) { case (acc, m) => (acc ++ m) }
+  }
 }
 
 object CollectMultipleMetrics {
