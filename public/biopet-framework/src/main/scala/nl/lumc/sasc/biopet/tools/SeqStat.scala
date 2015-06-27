@@ -296,11 +296,8 @@ object SeqStat extends ToolCommand {
     val commandArgs: Args = parseArgs(args)
 
     logger.info("Start seqstat")
-
-    val reader = new FastqReader(commandArgs.fastq)
+    seqStat(new FastqReader(commandArgs.fastq))
     summarize()
-
-    logger.debug(nucs)
     logger.info("Seqstat done")
 
     val report: Map[String, Any] = Map(
@@ -313,7 +310,6 @@ object SeqStat extends ToolCommand {
       ),
       ("stats", Map(
         ("bases", Map(
-          ("num_n", nucleotideHistoMap.getOrElse('N', 0)),
           ("num_total", nucleotideHistoMap.values.sum),
           ("num_qual_gte", baseQualHistoMap.toMap),
           ("nucleotides", nucleotideHistoMap.toMap)
