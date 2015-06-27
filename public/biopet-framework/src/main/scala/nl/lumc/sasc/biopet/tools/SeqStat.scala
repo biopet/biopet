@@ -263,16 +263,9 @@ object SeqStat extends ToolCommand {
 
     for (pos <- 0 until quals.length) {
       val key: Int = pos - phredEncoding.id
-      if (key > 0) {
-        // count till the max of baseHistogram.length
-        for (histokey <- 0 until key + 1) {
-          baseHistogram(histokey) += quals(pos)
-        }
+      if (key >= 0) {
+        baseHistogram(key) += quals(pos)
       }
-    }
-
-    for (pos <- 0 until baseHistogram.length) {
-      baseQualHistoMap += (pos -> baseHistogram(pos))
     }
 
     for (pos <- 0 until readStats.qual.length) {
@@ -311,7 +304,7 @@ object SeqStat extends ToolCommand {
       ("stats", Map(
         ("bases", Map(
           ("num_total", nucleotideHistoMap.values.sum),
-          ("num_qual_gte", baseQualHistoMap.toMap),
+          ("num_qual", baseHistogram.toList),
           ("nucleotides", nucleotideHistoMap.toMap)
         )),
         ("reads", Map(
@@ -325,6 +318,6 @@ object SeqStat extends ToolCommand {
       ))
     )
 
-    println(ConfigUtils.mapToJson(report).spaces2)
+    println(ConfigUtils.mapToJson(report))
   }
 }
