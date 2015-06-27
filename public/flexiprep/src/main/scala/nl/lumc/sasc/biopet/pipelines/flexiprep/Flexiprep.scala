@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.tools.Seqstat
+import nl.lumc.sasc.biopet.tools.SeqStat
 import nl.lumc.sasc.biopet.tools.FastqSync
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -186,14 +186,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       deps_R2 ::= R2.get
     }
 
-    val seqstat_R1 = Seqstat(this, R1, outDir)
+    val seqstat_R1 = SeqStat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
     seqstat_R1.deps = deps_R1
     add(seqstat_R1)
     addSummarizable(seqstat_R1, "seqstat_R1")
 
     if (paired) {
-      val seqstat_R2 = Seqstat(this, R2.get, outDir)
+      val seqstat_R2 = SeqStat(this, R2.get, outDir)
       seqstat_R2.isIntermediate = true
       seqstat_R2.deps = deps_R2
       add(seqstat_R2)
@@ -259,13 +259,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       if (paired) R2 = Some(sickle.output_R2)
     }
 
-    val seqstat_R1_after = Seqstat(this, R1, outDir)
+    val seqstat_R1_after = SeqStat(this, R1, outDir)
     seqstat_R1_after.deps = deps_R1
     add(seqstat_R1_after)
     addSummarizable(seqstat_R1_after, "seqstat_R1_after")
 
     if (paired) {
-      val seqstat_R2_after = Seqstat(this, R2.get, outDir)
+      val seqstat_R2_after = SeqStat(this, R2.get, outDir)
       seqstat_R2_after.deps = deps_R2
       add(seqstat_R2_after)
       addSummarizable(seqstat_R2_after, "seqstat_R2_after")

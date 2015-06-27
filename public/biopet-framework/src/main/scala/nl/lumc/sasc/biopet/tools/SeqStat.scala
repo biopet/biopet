@@ -38,7 +38,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * @param root Configuration object for the pipeline
  */
-class Seqstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
@@ -76,16 +76,16 @@ object FqEncoding extends Enumeration {
   val Unknown = Value(0, "Unknown")
 }
 
-object Seqstat extends ToolCommand {
-  def apply(root: Configurable, input: File, output: File): Seqstat = {
-    val seqstat = new Seqstat(root)
+object SeqStat extends ToolCommand {
+  def apply(root: Configurable, input: File, output: File): SeqStat = {
+    val seqstat = new SeqStat(root)
     seqstat.input = input
     seqstat.output = new File(output, input.getName.substring(0, input.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
   }
 
-  def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
-    val seqstat = new Seqstat(root)
+  def apply(root: Configurable, fastqfile: File, outDir: String): SeqStat = {
+    val seqstat = new SeqStat(root)
     seqstat.input = fastqfile
     seqstat.output = new File(outDir, fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
