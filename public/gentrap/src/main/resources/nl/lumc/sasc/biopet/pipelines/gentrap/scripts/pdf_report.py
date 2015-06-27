@@ -418,6 +418,8 @@ class GentrapLib(object):
             self.fastqc_r2_qc = FastQC(self.fastqc_r2_qc_files["fastqc_data"]["path"])
         # mapping metrics settings
         self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("CollectAlignmentSummaryMetrics", {})
+        for k, v in self.aln_metrics.items():
+            self.aln_metrics[k] = {a.lower(): b for a, b in v.items()}
         # insert size metrics files
         self.inserts_metrics_files = \
             summary.get("bammetrics", {}).get("files", {}).get("multi_metrics", {})
@@ -428,25 +430,26 @@ class GentrapLib(object):
             if "metrics" in _rmetrics:
                 _rmetrics = _rmetrics["metrics"]
         if _rmetrics:
-            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
-            pf_bases = float(_rmetrics["PF_BASES"])
-            exonic_bases = int(_rmetrics.get("CODING_BASES", 0)) + int(_rmetrics.get("UTR_BASES", 0))
+            _rmetrics = {k.lower(): v for k, v in _rmetrics.items() }
+            self.rna_metrics = _rmetrics
+            pf_bases = float(_rmetrics["pf_bases"])
+            exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
             # picard uses pct_ but it's actually ratio ~ we follow their convention
-            pct_exonic_bases_all = exonic_bases / float(_rmetrics["PF_BASES"])
-            pct_exonic_bases = exonic_bases / float(_rmetrics.get("PF_ALIGNED_BASES", 0))
+            pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
+            pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
             self.rna_metrics.update({
-                "EXONIC_BASES": exonic_bases,
-                "PCT_EXONIC_BASES_ALL": pct_exonic_bases_all,
-                "PCT_EXONIC_BASES": pct_exonic_bases,
-                "PCT_ALIGNED_BASES": 1.0,
-                "PCT_ALIGNED_BASES_ALL": float(_rmetrics.get("PF_ALIGNED_BASES", 0.0)) / pf_bases,
-                "PCT_CODING_BASES_ALL": float(_rmetrics.get("CODING_BASES", 0.0)) / pf_bases,
-                "PCT_UTR_BASES_ALL": float(_rmetrics.get("UTR_BASES", 0.0)) / pf_bases,
-                "PCT_INTRONIC_BASES_ALL": float(_rmetrics.get("INTRONIC_BASES", 0.0)) / pf_bases,
-                "PCT_INTERGENIC_BASES_ALL": float(_rmetrics.get("INTERGENIC_BASES", 0.0)) / pf_bases,
+                "exonic_bases": exonic_bases,
+                "pct_exonic_bases_all": pct_exonic_bases_all,
+                "pct_exonic_bases": pct_exonic_bases,
+                "pct_aligned_bases": 1.0,
+                "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
                 })
-            if _rmetrics.get("RIBOSOMAL_BASES", "") != "":
-                self.rna_metrics["PCT_RIBOSOMAL_BASES_ALL"] = float(_rmetrics.get("PF_RIBOSOMAL_BASES", 0.0)) / pf_bases
+            if _rmetrics.get("ribosomal_bases", "") != "":
+                self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
 
     def __repr__(self):
         return "{0}(sample=\"{1}\", lib=\"{2}\")".format(
@@ -463,9 +466,11 @@ class GentrapSample(object):
         self.is_paired_end = summary.get("gentrap", {}).get("stats", {}).get("pipeline", {})["all_paired"]
         # mapping metrics settings
         self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("CollectAlignmentSummaryMetrics", {})
+        for k, v in self.aln_metrics.items():
+            self.aln_metrics[k] = {a.lower(): b for a, b in v.items()}
         # insert size metrics files
         self.inserts_metrics_files = \
-            summary.get("bammetrics", {}).get("files", {}).get("CollectInsertSizeMetrics", {}).get("metrics", {})
+            summary.get("bammetrics", {}).get("files", {}).get("multi_metrics", {})
         # rna metrics files and stats
         self.rna_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("rna", {})
         _rmetrics = summary.get("bammetrics", {}).get("stats", {}).get("rna", {})
@@ -473,25 +478,26 @@ class GentrapSample(object):
             if "metrics" in _rmetrics:
                 _rmetrics = _rmetrics["metrics"]
         if _rmetrics:
-            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
-            pf_bases = float(_rmetrics["PF_BASES"])
-            exonic_bases = int(_rmetrics.get("CODING_BASES", 0)) + int(_rmetrics.get("UTR_BASES", 0))
+            _rmetrics = {k.lower(): v for k, v in _rmetrics.items() }
+            self.rna_metrics = _rmetrics
+            pf_bases = float(_rmetrics["pf_bases"])
+            exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
             # picard uses pct_ but it's actually ratio ~ we follow their convention
-            pct_exonic_bases_all = exonic_bases / float(_rmetrics["PF_BASES"])
-            pct_exonic_bases = exonic_bases / float(_rmetrics.get("PF_ALIGNED_BASES", 0))
+            pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
+            pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
             self.rna_metrics.update({
-                "EXONIC_BASES": exonic_bases,
-                "PCT_EXONIC_BASES_ALL": pct_exonic_bases_all,
-                "PCT_EXONIC_BASES": pct_exonic_bases,
-                "PCT_ALIGNED_BASES": 1.0,
-                "PCT_ALIGNED_BASES_ALL": float(_rmetrics.get("PF_ALIGNED_BASES", 0.0)) / pf_bases,
-                "PCT_CODING_BASES_ALL": float(_rmetrics.get("CODING_BASES", 0.0)) / pf_bases,
-                "PCT_UTR_BASES_ALL": float(_rmetrics.get("UTR_BASES", 0.0)) / pf_bases,
-                "PCT_INTRONIC_BASES_ALL": float(_rmetrics.get("INTRONIC_BASES", 0.0)) / pf_bases,
-                "PCT_INTERGENIC_BASES_ALL": float(_rmetrics.get("INTERGENIC_BASES", 0.0)) / pf_bases,
+                "exonic_bases": exonic_bases,
+                "pct_exonic_bases_all": pct_exonic_bases_all,
+                "pct_exonic_bases": pct_exonic_bases,
+                "pct_aligned_bases": 1.0,
+                "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
                 })
-            if _rmetrics.get("RIBOSOMAL_BASES", "") != "":
-                self.rna_metrics["PCT_RIBOSOMAL_BASES_ALL"] = float(_rmetrics.get("PF_RIBOSOMAL_BASES", 0.0)) / pf_bases
+            if _rmetrics.get("ribosomal_bases", "") != "":
+                self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
 
         self.lib_names = sorted(summary["libraries"].keys())
         self.libs = \
