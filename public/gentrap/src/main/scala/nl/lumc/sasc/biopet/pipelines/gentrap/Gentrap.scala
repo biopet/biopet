@@ -95,7 +95,7 @@ class Gentrap(val root: Configurable) extends QScript
       case otherwise   => throw new IllegalStateException(otherwise.toString)
     })) ++ (ribosomalRefFlat match {
       case Some(rbs) => Map("ribosomal_intervals" -> rbs.toString)
-      case None => Map()
+      case None      => Map()
     })
 
   /** Default pipeline config */

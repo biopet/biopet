@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the tophat-recondition.py script.
- * 
+ *
  * NOTE: we are modifying the input and output to be the BAM files directly so the wrapper works nice with Queue.
  */
 class TophatRecondition(val root: Configurable) extends PythonCommandLineFunction {
@@ -45,6 +45,6 @@ class TophatRecondition(val root: Configurable) extends PythonCommandLineFunctio
     require(inputBam != null, "Input must be defined.")
     require(outputSam != null, "Output must be defined.")
   }
-  
+
   def cmdLine = getPythonCommand + required(inputDir) + required(outputDir)
 }
