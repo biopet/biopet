@@ -80,11 +80,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(gcBiasMetrics)
     addSummarizable(gcBiasMetrics, "gc_bias")
 
-    val wgsMetrics = new CollectWgsMetrics(this)
-    wgsMetrics.input = inputBam
-    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
-    add(wgsMetrics)
-    addSummarizable(wgsMetrics, "wgs")
+    if (transcriptRefFlatFile.isEmpty) {
+      val wgsMetrics = new CollectWgsMetrics(this)
+      wgsMetrics.input = inputBam
+      wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
+      add(wgsMetrics)
+      addSummarizable(wgsMetrics, "wgs")
+    }
 
     if (transcriptRefFlatFile.isDefined) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
