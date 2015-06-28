@@ -368,12 +368,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val fixedUnmapped = new File(tophat.output_dir, "unmapped_fixup.sam")
     val fixer = new TophatRecondition(this)
     fixer.inputBam = tophat.outputAcceptedHits
-    fixer.outputSam = fixedUnmapped
+    fixer.outputSam = fixedUnmapped.getAbsoluteFile
     fixer.isIntermediate = true
     add(fixer)
 
     // sort fixed SAM file
-    val sorter = SortSam(this, fixer.outputSam, swapExt(fixer.outputSam, ".sam", ".sorted.bam"))
+    val sorter = SortSam(this, fixer.outputSam, new File(tophat.output_dir, "unmapped_fixup.sorted.bam"))
     sorter.sortOrder = "coordinate"
     sorter.isIntermediate = true
     add(sorter)
