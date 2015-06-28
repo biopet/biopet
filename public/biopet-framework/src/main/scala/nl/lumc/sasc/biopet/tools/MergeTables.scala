@@ -32,7 +32,7 @@ class MergeTables(val root: Configurable) extends ToolCommandFuntion {
 
   javaMainClass = getClass.getName
 
-  override val defaultCoreMemory = 2.0
+  override val defaultCoreMemory = 6.0
 
   /** List of input tabular files */
   @Input(doc = "Input table files", required = true)
