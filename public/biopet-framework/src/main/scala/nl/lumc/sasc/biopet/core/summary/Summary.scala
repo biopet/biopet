@@ -53,7 +53,6 @@ class Summary(file: File) {
     ConfigUtils.getValueFromPath(map, "samples" :: sampleId :: "libraries" :: libId :: path.toList)
   }
 
-  //TODO: rename method
   /** Get value on nested path with prefix depending is sampleId and/or libId is None or not */
   def getValue(sampleId: Option[String], libId: Option[String], path: String*): Option[Any] = {
     (sampleId, libId) match {
