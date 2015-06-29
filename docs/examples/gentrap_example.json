@@ -48,7 +48,7 @@
       }
     },
     "rawbasecounter": {
-      "vmem": "20G"
+      "core_memory": "20G"
     }
   }
 }
