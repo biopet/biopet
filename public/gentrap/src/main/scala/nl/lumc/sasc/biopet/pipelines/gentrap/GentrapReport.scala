@@ -45,8 +45,8 @@ object GentrapReport extends MultisampleReportBuilder {
     "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)) //,
-    //"Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-    //  Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))
+  //"Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
+  //  Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))
   ), Map())
 
   /** Single sample page */
