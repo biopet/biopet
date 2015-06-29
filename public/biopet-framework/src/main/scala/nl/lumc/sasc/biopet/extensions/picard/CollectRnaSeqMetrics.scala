@@ -68,7 +68,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   var stopAfter: Option[Long] = config("stop_after")
 
   override def beforeGraph: Unit = {
-    require(refFlat != null, "RefFlat file must be supplied.")
+    if (refFlat == null) refFlat = config("refFlat")
     val validFlags = StrandSpecificity.values.map(_.toString).toSet
     strandSpecificity match {
       case Some(s) => require(validFlags.contains(s),
