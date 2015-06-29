@@ -312,7 +312,7 @@ object SeqStat extends ToolCommand {
           ("num_total", readStats.qual.sum),
           ("len_min", readStats.lengths.takeWhile(_ == 0).length),
           ("len_max", readStats.lengths.length - 1),
-          ("num_qual_gte", readQualHistoMap.toMap),
+          ("num_avg_qual_gte", readQualHistoMap.toMap),
           ("qual_encoding", phredEncoding.toString.toLowerCase)
         ))
       ))
