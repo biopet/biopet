@@ -13,8 +13,8 @@
 </tr></thead>
 <tbody>
 <tr>
-<td>${summary.getLibraryValue(sampleId, libId, metricsTag, "files", "pipeline", "bamfile", "path")}</td>
-<td>${summary.getLibraryValue(sampleId, libId, metricsTag, "files", "pipeline", "bamfile", "md5")}</td>
+<td>${summary.getValue(sampleId, libId, metricsTag, "files", "pipeline", "bamfile", "path")}</td>
+<td>${summary.getValue(sampleId, libId, metricsTag, "files", "pipeline", "bamfile", "md5")}</td>
 </tr>
 </tbody>
 </table>

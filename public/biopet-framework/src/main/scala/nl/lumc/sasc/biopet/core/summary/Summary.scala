@@ -55,7 +55,7 @@ class Summary(file: File) {
 
   //TODO: rename method
   /** Get value on nested path with prefix depending is sampleId and/or libId is None or not */
-  def getLibraryValue(sampleId: Option[String], libId: Option[String], path: String*): Option[Any] = {
+  def getValue(sampleId: Option[String], libId: Option[String], path: String*): Option[Any] = {
     (sampleId, libId) match {
       case (Some(sample), Some(lib)) => getLibraryValue(sample, lib, path: _*)
       case (Some(sample), _)         => getSampleValue(sample, path: _*)

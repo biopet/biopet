@@ -10,11 +10,11 @@
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var target: String %>
 #{
-    val originalPlot = new File(summary.getLibraryValue(sampleId, libId, metricsTag, "files", target + "_cov_stats", "plot", "path")
+    val originalPlot = new File(summary.getValue(sampleId, libId, metricsTag, "files", target + "_cov_stats", "plot", "path")
         .getOrElse(throw new IllegalArgumentException("No plot found in summary")).toString)
     val plot = new File(outputDir, target + "_cov_stats.png")
 
-    val values = summary.getLibraryValue(sampleId, libId, metricsTag, "stats", target + "_cov_stats", "coverage", "_all")
+    val values = summary.getValue(sampleId, libId, metricsTag, "stats", target + "_cov_stats", "coverage", "_all")
         .getOrElse(throw new IllegalArgumentException("No plot found in summary")).asInstanceOf[Map[String, Any]]
 
     if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)

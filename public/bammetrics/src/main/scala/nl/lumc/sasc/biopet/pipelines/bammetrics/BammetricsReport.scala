@@ -42,8 +42,8 @@ object BammetricsReport extends ReportBuilder {
                      libId: Option[String],
                      metricsTag: String = "bammetrics") = {
     val targets = (
-      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
-      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "roi_name")
+      summary.getValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
+      summary.getValue(sampleId, libId, "bammetrics", "settings", "roi_name")
     ) match {
         case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
         case (_, Some(roi: List[_])) => roi.map(_.toString)

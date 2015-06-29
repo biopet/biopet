@@ -48,8 +48,8 @@
             #for (libId <- libs)
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
-                    <td>${removeDir(summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "path"))}</td>
-                    <td>${summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "md5")}</td>
+                    <td>${removeDir(summary.getValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "path"))}</td>
+                    <td>${summary.getValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "md5")}</td>
                 </tr>
             #end
         #end
