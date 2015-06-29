@@ -100,6 +100,50 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     else ""
   }
 
+  protected case class BasePositionStats(mean: Double, median: Double,
+                                         lowerQuartile: Double, upperQuartile: Double,
+                                         percentile10th: Double, percentile90th: Double) {
+
+    def toMap = Map(
+      "mean" -> mean,
+      "median" -> median,
+      "lower_quartile" -> lowerQuartile,
+      "upper_quartile" -> upperQuartile,
+      "percentile_10th" -> percentile10th,
+      "percentile_90th" -> percentile90th)
+  }
+
+  /**
+   * Retrieves the base quality per position values as computed by FastQc.
+   */
+  def perBaseSequenceQuality: Map[String, Map[String, Double]] =
+    if (dataFile.exists) {
+      qcModules.get("Per base sequence quality") match {
+        case None => Map()
+        case Some(qcModule) =>
+          val tableContents = for {
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            values = line.split("\t") if values.size == 7
+          } yield (values(0), BasePositionStats(values(1).toDouble, values(2).toDouble, values(3).toDouble,
+                                    values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
+          tableContents.toMap
+      }
+    } else Map()
+
+  def perBaseSequenceContent: Map[String, Map[String, Double]] =
+    if (dataFile.exists) {
+      qcModules.get("Per base sequence content") match {
+        case None => Map()
+        case Some(qcModule) =>
+          val bases = qcModule.lines.head.split("\t").tail
+          val tableContents = for {
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            values = line.split("\t") if values.size == 5
+          } yield (values(0), bases.zip(values.tail.map(_.toDouble)).toMap)
+          tableContents.toMap
+      }
+    } else Map()
+
   /** Case class representing a known adapter sequence */
   protected case class AdapterSequence(name: String, seq: String)
 
@@ -159,7 +203,9 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     outputFiles ++ Map("fastq_file" -> this.fastqfile)
   }
 
-  def summaryStats: Map[String, Any] = Map()
+  def summaryStats: Map[String, Any] = Map(
+    "per_base_sequence_quality" -> perBaseSequenceQuality,
+    "per_base_sequence_content" -> perBaseSequenceContent)
 }
 
 object Fastqc {
