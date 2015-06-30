@@ -37,6 +37,19 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     return cmd
   }
 
+  def javaVersionCommand: String = executable + " -version"
+
+  def getJavaVersion: Option[String] = {
+    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+      preProcesExecutable
+    if (!BiopetCommandLineFunctionTrait.versionCache.contains(javaVersionCommand))
+      getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
+        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += javaVersionCommand -> version
+        case _             =>
+      }
+    BiopetCommandLineFunctionTrait.versionCache.get(javaVersionCommand)
+  }
+
   override def setupRetry(): Unit = {
     super.setupRetry()
     javaMemoryLimit = memoryLimit

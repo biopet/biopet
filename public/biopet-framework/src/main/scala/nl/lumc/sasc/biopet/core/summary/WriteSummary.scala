@@ -74,11 +74,13 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
             case f: BiopetJavaCommandLineFunction => {
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
-                "jar_md5" -> SummaryQScript.md5sumCache.getOrElse(f.jarFile, None))
+                "java_version" -> f.getJavaVersion,
+                "jar_path" -> f.jarFile)
             }
             case f: BiopetCommandLineFunction => {
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None))
+                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
+                "path" -> f.executable)
             }
             case _ => throw new IllegalStateException("This should not be possible")
           }
