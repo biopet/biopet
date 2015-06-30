@@ -25,6 +25,8 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
   javaGCTimeLimit = config("java_gc_timelimit")
 
+  override protected val defaultVmemFactor: Double = 2.0
+
   /** Constructs java opts, this adds scala threads */
   override def javaOpts = super.javaOpts +
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)

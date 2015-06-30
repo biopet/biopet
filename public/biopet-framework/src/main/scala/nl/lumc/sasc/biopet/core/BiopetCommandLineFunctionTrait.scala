@@ -37,7 +37,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
   var vmem: Option[String] = config("vmem")
   protected val defaultCoreMemory: Double = 1.0
-  var vmemFactor: Double = config("vmem_factor", default = 1.5)
+  protected val defaultVmemFactor: Double = 1.4
+  var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
   var residentFactor: Double = config("resident_factor", default = 1.2)
 
