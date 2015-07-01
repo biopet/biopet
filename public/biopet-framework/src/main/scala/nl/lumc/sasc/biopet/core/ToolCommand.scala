@@ -38,7 +38,7 @@ trait ToolCommand extends MainCommand with Logging {
       }
     } text "Log level" validate {
       case "debug" | "info" | "warn" | "error" => success
-      case _ => failure("Log level must be <debug/info/warn/error>")
+      case _                                   => failure("Log level must be <debug/info/warn/error>")
     }
     opt[Unit]('h', "help") foreach { _ =>
       System.err.println(this.usage)

@@ -15,7 +15,7 @@ class Summary(file: File) {
   lazy val samples: Set[String] = {
     ConfigUtils.getValueFromPath(map, List("samples")) match {
       case Some(s) => ConfigUtils.any2map(s).keySet
-      case _             => Set()
+      case _       => Set()
     }
   }
 

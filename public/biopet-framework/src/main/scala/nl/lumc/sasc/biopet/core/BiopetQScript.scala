@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
-import org.broadinstitute.gatk.queue.util.{Logging => GatkLogging}
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 import scala.collection.mutable.ListBuffer

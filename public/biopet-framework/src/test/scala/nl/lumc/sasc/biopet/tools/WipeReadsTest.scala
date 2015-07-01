@@ -17,24 +17,17 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
-import scala.collection.JavaConverters._
 
-import htsjdk.samtools.SAMFileHeader
-import htsjdk.samtools.SAMFileWriter
-import htsjdk.samtools.SAMLineParser
-import htsjdk.samtools.SAMReadGroupRecord
-import htsjdk.samtools.SAMRecord
-import htsjdk.samtools.SAMSequenceRecord
-import htsjdk.samtools.SamReader
-import htsjdk.samtools.SamReaderFactory
-import htsjdk.samtools.ValidationStringency
+import htsjdk.samtools.{ SAMFileHeader, SAMFileWriter, SAMLineParser, SAMReadGroupRecord, SAMRecord, SAMSequenceRecord, SamReader, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.util.Interval
-import org.scalatest.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
+import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
+import scala.collection.JavaConverters._
 
 class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
 

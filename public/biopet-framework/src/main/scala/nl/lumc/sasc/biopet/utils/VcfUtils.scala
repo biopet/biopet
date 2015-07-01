@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.utils
 
 import htsjdk.variant.variantcontext.VariantContext
+
 import scala.collection.JavaConversions._
 
 /** Utility object for general vcf file/records functions. */

@@ -17,18 +17,16 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip, Gzip }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.tools.{ VcfStats, VcfFilter, MpileupToVcf }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import scala.collection.generic.Sorted
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 2/26/15.

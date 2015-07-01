@@ -2,10 +2,9 @@ package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "delly")

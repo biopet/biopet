@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import scala.util.Random
-import org.scalatest.testng.TestNGSuite
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.Matchers
 import java.io.File
 import java.nio.file.Paths
-import org.testng.annotations.Test
-import htsjdk.variant.vcf.VCFFileReader
+
 import htsjdk.tribble.TribbleException
-import scala.collection.JavaConversions._
-import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.vcf.VCFFileReader
+import org.scalatest.Matchers
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.Test
+
+import scala.util.Random
 
 /**
  * This class tests the VEPNormalizer

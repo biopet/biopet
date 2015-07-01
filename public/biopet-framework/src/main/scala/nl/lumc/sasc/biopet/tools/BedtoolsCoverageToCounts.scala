@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import java.io.{ File, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
+
 import scala.collection.SortedMap
 import scala.collection.mutable.Map
 import scala.io.Source

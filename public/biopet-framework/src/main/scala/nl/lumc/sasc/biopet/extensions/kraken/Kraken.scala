@@ -22,8 +22,6 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import scala.util.matching.Regex
-
 /** Extension for Kraken */
 class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
 

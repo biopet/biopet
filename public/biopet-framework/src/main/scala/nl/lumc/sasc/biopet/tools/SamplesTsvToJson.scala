@@ -16,10 +16,11 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.ToolCommand
-import scala.io.Source
-import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+
+import scala.io.Source
 
 /**
  * This tool can convert a tsv to a json file

@@ -15,15 +15,14 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintStream }
 import java.text.DecimalFormat
-import java.util
 
 import htsjdk.variant.vcf.VCFFileReader
-import java.io.File
-import java.io.PrintStream
 import nl.lumc.sasc.biopet.core.ToolCommand
+
 import scala.collection.JavaConversions._
-import scala.collection.mutable.{ Map, ListBuffer }
+import scala.collection.mutable.{ ListBuffer, Map }
 
 class VcfToTsv {
   // TODO: Queue wrapper

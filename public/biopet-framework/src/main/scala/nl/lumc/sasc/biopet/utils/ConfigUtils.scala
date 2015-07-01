@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.Logging
+
+import argonaut.Argonaut._
+import argonaut._
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, Logging }
 import nl.lumc.sasc.biopet.core.config.ConfigValue
-import argonaut._, Argonaut._
 import org.yaml.snakeyaml.Yaml
-import scalaz._, Scalaz._
+
 import scala.collection.JavaConversions._
 
 /**

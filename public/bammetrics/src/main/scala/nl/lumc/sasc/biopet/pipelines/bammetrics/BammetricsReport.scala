@@ -1,10 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
-import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
-import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
+import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
+import nl.lumc.sasc.biopet.extensions.rscript.{ StackedBarPlot, XYPlot }
 
 /**
  * Created by pjvan_thof on 3/30/15.

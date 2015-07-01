@@ -15,17 +15,18 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.VcfUtils._
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 
 class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion {

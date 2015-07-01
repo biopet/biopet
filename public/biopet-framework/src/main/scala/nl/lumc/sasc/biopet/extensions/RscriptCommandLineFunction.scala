@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+
 import scala.sys.process._
 
 /**

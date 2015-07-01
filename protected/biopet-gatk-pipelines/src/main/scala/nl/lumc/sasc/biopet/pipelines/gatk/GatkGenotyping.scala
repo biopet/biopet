@@ -5,11 +5,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ SelectVariants, GenotypeGVCFs }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ GenotypeGVCFs, SelectVariants }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)

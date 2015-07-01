@@ -15,21 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import java.io.File
-
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.PrefixFastq
-import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
-import nl.lumc.sasc.biopet.tools.SageCountFastq
-import nl.lumc.sasc.biopet.tools.SageCreateLibrary
-import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
+import nl.lumc.sasc.biopet.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 

@@ -21,10 +21,10 @@
 package nl.lumc.sasc.biopet.pipelines.basty
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
-import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaTrait, Shiva }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
+import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 

@@ -22,7 +22,6 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.WigToBigWig
 import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvan_thof on 1/29/15.

@@ -17,13 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, PythonCommandLineFunction, Tabix }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.varscan.Mpileup2cns
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, PythonCommandLineFunction, Tabix }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Ad-hoc extension for VarScan variant calling that involves 6-command pipe */
 // FIXME: generalize piping instead of building something by hand like this!

@@ -16,10 +16,12 @@
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
-import scala.sys.process.{ Process, ProcessLogger }
+
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import nl.lumc.sasc.biopet.core.config.Configurable
+
+import scala.sys.process.{ Process, ProcessLogger }
 
 /**
  * This class can execute ln as InProcessFunction or used to only generate the ln command

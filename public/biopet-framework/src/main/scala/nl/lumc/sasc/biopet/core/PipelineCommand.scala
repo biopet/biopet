@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
-import org.apache.log4j.{PatternLayout, WriterAppender}
-import org.broadinstitute.gatk.queue.util.{Logging => GatkLogging}
+import org.apache.log4j.{ PatternLayout, WriterAppender }
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
 /** Wrapper around executable from Queue */
 trait PipelineCommand extends MainCommand with GatkLogging {

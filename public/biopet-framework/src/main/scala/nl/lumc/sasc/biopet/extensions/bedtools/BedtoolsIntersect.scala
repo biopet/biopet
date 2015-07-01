@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for bedtools intersect */
 class BedtoolsIntersect(val root: Configurable) extends Bedtools {

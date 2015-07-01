@@ -15,12 +15,13 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
-import java.io.File
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.PrintWriter
+
 import scala.io.Source
 
 /**

@@ -2,11 +2,12 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import scala.collection.JavaConversions._
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.core.ToolCommand
+
+import scala.collection.JavaConversions._
 
 /**
  * Created by ahbbollen on 11-2-15.

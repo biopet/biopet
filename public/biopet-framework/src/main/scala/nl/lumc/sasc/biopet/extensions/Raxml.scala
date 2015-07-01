@@ -15,10 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.File
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+
 import scalaz.std.boolean.option
 
 /**

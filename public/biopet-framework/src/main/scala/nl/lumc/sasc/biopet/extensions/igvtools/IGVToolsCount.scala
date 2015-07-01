@@ -16,9 +16,10 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
+import java.io.{ File, FileNotFoundException }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.{ FileNotFoundException, File }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * IGVTools `count` wrapper

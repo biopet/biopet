@@ -15,15 +15,16 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
+import java.io.{ File, FileInputStream }
+import java.security.MessageDigest
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.Input
+
 import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
-import java.io.FileInputStream
-import java.security.MessageDigest
 
 /** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurable {

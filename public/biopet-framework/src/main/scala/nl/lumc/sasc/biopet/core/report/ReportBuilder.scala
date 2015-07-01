@@ -2,11 +2,11 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
-import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.IoUtils
+import org.broadinstitute.gatk.utils.commandline.Input
+import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 /**
  * Created by pjvan_thof on 3/27/15.

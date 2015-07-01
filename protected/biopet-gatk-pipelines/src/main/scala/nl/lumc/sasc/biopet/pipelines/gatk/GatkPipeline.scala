@@ -5,20 +5,18 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.MultiSampleQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CombineVariants, CombineGVCFs }
-import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import scala.collection.JavaConversions._
-import nl.lumc.sasc.biopet.extensions.picard.AddOrReplaceReadGroups
-import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CombineGVCFs, CombineVariants }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
+
+import scala.collection.JavaConversions._
 
 class GatkPipeline(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
   qscript =>

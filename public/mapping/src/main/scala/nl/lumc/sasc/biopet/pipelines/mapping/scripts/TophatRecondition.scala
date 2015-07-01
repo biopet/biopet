@@ -19,7 +19,6 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
-
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**

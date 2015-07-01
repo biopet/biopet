@@ -15,25 +15,23 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.util.Date
 import java.io.File
-import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-
-import scala.math._
-
-import org.broadinstitute.gatk.queue.QScript
+import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
-import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups, ReorderSam }
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
+import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
+import nl.lumc.sasc.biopet.tools.FastqSplitter
+import org.broadinstitute.gatk.queue.QScript
+
+import scala.math._
 
 // TODO: documentation
 class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {

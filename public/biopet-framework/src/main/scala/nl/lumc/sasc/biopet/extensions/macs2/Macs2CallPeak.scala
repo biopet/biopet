@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.macs2
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for macs2*/
 class Macs2CallPeak(val root: Configurable) extends Macs2 {

@@ -5,10 +5,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
+
 import scala.util.Random
 
 class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with BiopetQScript {

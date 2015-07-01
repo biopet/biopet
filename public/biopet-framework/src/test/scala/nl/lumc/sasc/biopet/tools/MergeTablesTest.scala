@@ -17,13 +17,14 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ BufferedWriter, File }
 import java.nio.file.Paths
-import scala.io.BufferedSource
 
 import org.mockito.Mockito.{ inOrder => inOrd, when }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
+import scala.io.BufferedSource
 
 class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
 

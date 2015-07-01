@@ -17,16 +17,13 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import scala.collection.mutable.{ Set => MSet }
-import scala.collection.JavaConverters._
-
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SamReaderFactory
-import htsjdk.samtools.ValidationStringency
+import htsjdk.samtools.{ QueryInterval, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.samtools.util.Interval
-
 import nl.lumc.sasc.biopet.core.ToolCommand
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable.{ Set => MSet }
 
 object ExtractAlignedFastq extends ToolCommand {
 

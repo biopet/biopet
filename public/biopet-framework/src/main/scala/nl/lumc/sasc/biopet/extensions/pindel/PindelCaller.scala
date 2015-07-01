@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.File
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "pindel", freeVar = false)

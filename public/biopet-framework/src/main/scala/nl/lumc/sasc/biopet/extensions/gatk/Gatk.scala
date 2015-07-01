@@ -17,8 +17,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**

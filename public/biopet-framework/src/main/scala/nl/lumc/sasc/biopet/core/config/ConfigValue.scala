@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.core.config
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValueIndex, val value: Any, val default: Boolean) {

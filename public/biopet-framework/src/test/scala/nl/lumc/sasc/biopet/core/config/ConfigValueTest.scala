@@ -18,7 +18,6 @@ package nl.lumc.sasc.biopet.core.config
 import java.io.File
 
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ FileWriter, BufferedWriter, File, PrintWriter }
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import argonaut._
 import nl.lumc.sasc.biopet.core.config.Configurable

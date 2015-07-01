@@ -16,16 +16,16 @@
 package nl.lumc.sasc.biopet.core.summary
 
 import java.io.{ File, PrintWriter }
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
+import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.mutable
 import scala.io.Source
-
-import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
-import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * Created by pjvan_thof on 2/14/15.

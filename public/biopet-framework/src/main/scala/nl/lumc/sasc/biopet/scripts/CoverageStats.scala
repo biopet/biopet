@@ -15,12 +15,13 @@
  */
 package nl.lumc.sasc.biopet.scripts
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class CoverageStats(val root: Configurable) extends PythonCommandLineFunction with Summarizable {
   setPythonScript("bedtools_cov_stats.py")

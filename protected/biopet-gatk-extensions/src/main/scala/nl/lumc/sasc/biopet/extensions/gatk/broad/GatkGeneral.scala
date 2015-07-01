@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
 trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction with Reference {

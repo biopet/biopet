@@ -15,22 +15,21 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{ Cutadapt, Fastqc, SeqtkSeq }
+import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
-
-import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
-import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{ SeqtkSeq, Cutadapt, Fastqc }
-import nl.lumc.sasc.biopet.tools.{ SeqStat, FastqSync }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
  * Created by pjvan_thof on 2/12/15.

@@ -15,16 +15,15 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import java.io.{ File, FileReader, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.biojava3.sequencing.io.fastq.{ Fastq, SangerFastqReader, StreamListener }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import org.biojava3.sequencing.io.fastq.{ SangerFastqReader, StreamListener, Fastq }
-import scala.collection.JavaConversions._
+
 import scala.collection.SortedMap
 import scala.collection.mutable.Map
-import java.io.FileReader
 
 class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName

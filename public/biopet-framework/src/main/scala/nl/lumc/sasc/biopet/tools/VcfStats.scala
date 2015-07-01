@@ -15,21 +15,21 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ FileOutputStream, PrintWriter, File }
+import java.io.{ File, FileOutputStream, PrintWriter }
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ Allele, VariantContext, Genotype }
+import htsjdk.samtools.util.Interval
+import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
-import htsjdk.samtools.util.Interval
-
 import scala.util.Random
 
 /**

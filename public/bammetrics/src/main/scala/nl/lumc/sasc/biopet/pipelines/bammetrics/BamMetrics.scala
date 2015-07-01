@@ -15,16 +15,17 @@
  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
+import nl.lumc.sasc.biopet.scripts.CoverageStats
+import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import org.broadinstitute.gatk.queue.QScript
 
 class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)

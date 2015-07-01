@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Wrapper for the gsnap command line tool

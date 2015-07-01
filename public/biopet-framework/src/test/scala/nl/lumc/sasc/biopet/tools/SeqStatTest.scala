@@ -29,8 +29,8 @@ import scala.collection.JavaConverters._
 
 class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
 
-  import nl.lumc.sasc.biopet.tools.SeqStat._
   import nl.lumc.sasc.biopet.tools.FqEncoding._
+  import nl.lumc.sasc.biopet.tools.SeqStat._
 
   private def resourceFile(p: String): File =
     new File(resourcePath(p))

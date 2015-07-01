@@ -16,22 +16,18 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.collection.immutable.Map
-import scala.io.Source
-import scala.language.postfixOps
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import scalaz._, Scalaz._
-import argonaut._, Argonaut._
-
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConverters._
+import scala.collection.immutable.Map
+import scala.collection.mutable
+import scala.language.postfixOps
 
 /**
  * Seqstat function class for usage in Biopet pipelines

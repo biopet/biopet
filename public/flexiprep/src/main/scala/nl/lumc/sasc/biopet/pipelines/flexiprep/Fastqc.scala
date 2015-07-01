@@ -18,12 +18,11 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, FileNotFoundException }
 
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.io.Source
-
-import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
@@ -125,7 +124,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
             line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
             values = line.split("\t") if values.size == 7
           } yield (values(0), BasePositionStats(values(1).toDouble, values(2).toDouble, values(3).toDouble,
-                                    values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
+            values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
           tableContents.toMap
       }
     } else Map()

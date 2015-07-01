@@ -16,19 +16,17 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.summary.Summarizable
 
-import scala.io.Source
-import scala.util.matching.Regex
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import scala.io.Source
+import scala.util.matching.Regex
 
 /**
  * FastqSync function class for usage in Biopet pipelines

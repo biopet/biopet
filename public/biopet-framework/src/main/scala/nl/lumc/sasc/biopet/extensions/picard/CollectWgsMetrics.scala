@@ -5,7 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Created by pjvan_thof on 4/16/15.

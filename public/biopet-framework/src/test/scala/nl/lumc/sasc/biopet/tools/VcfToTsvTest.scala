@@ -1,8 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.nio.file.Paths
-import java.util
-import scala.collection.JavaConversions._
 
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar

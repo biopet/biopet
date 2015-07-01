@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -17,7 +17,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, DataProvider }
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvan_thof on 3/2/15.

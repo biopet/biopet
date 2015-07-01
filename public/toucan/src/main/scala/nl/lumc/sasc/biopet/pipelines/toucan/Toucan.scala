@@ -15,13 +15,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import nl.lumc.sasc.biopet.core.{ Reference, PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.tools.VepNormalizer
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 /**
  * Created by ahbbollen on 15-1-15.

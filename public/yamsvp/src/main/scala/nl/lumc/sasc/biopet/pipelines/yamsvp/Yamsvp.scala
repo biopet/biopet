@@ -22,22 +22,19 @@ package nl.lumc.sasc.biopet.pipelines.yamsvp
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
-
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
-import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMerge, SambambaMarkdup }
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMarkdup, SambambaMerge }
 //import nl.lumc.sasc.biopet.extensions.pindel.Pindel
 import nl.lumc.sasc.biopet.extensions.delly.Delly
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
-
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.queue.engine.JobRunInfo
+import org.broadinstitute.gatk.queue.function._
 
 class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
   qscript =>

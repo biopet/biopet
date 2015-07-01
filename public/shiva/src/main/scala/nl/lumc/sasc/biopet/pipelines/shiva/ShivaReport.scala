@@ -1,10 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
-import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
+import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
@@ -32,7 +32,7 @@ object ShivaReport extends MultisampleReportBuilder {
         Map("Files" -> filesPage,
           "Versions" -> ReportPage(List(), List(
             "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-          )), Map())
+            )), Map())
         ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),

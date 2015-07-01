@@ -16,12 +16,12 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.{ PrintWriter, StringWriter }
-import scala.io.Source
 
+import nl.lumc.sasc.biopet.core.BiopetExecutable._
+import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
 import org.apache.log4j.Logger
 
-import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
-import nl.lumc.sasc.biopet.core.BiopetExecutable._
+import scala.io.Source
 
 /**
  * This is the main trait for the biopet executable

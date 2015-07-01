@@ -15,11 +15,13 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import java.io.File
+
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import nl.lumc.sasc.biopet.core.ToolCommand
-import scala.io.Source
+
 import scala.collection.JavaConversions._
+import scala.io.Source
 
 object FindRepeatsPacBio extends ToolCommand {
   case class Args(inputBam: File = null, inputBed: File = null) extends AbstractArgs

@@ -15,11 +15,11 @@
  */
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import argonaut.Argonaut._
 import argonaut.Json
-import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, ConfigValue }
+import nl.lumc.sasc.biopet.core.config.{ ConfigValue, ConfigValueIndex }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test

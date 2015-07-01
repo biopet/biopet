@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.Ln
+
 import scala.collection.mutable
 import scala.io.Source
-
-import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.core.config.Configurable
 
 class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
   var fastqc: Fastqc = _

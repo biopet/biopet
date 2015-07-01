@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.variant.variantcontext.Allele
+import nl.lumc.sasc.biopet.tools.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
 import scala.collection.mutable
-import VcfStats._
 
 /**
  * Created by pjvan_thof on 2/5/15.

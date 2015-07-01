@@ -15,13 +15,15 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
-import java.io.{ PrintWriter, File }
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.JavaConversions._
 
 class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {

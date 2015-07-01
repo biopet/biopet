@@ -16,11 +16,11 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, BasicFastqWriter }
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
 
 /**
  * Queue extension for the FastqSplitter

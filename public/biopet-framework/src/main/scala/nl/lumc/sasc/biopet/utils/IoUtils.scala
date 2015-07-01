@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ FileOutputStream, InputStream, FileInputStream, File }
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 
 /**
  * Created by pjvan_thof on 6/4/15.

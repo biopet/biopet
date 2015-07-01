@@ -15,23 +15,16 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.{ QueryInterval, SamReaderFactory, SAMRecord, SamReader }
-import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.variantcontext.VariantContextBuilder
-import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.VCFFileReader
-import htsjdk.variant.vcf.VCFInfoHeaderLine
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReader, SamReaderFactory }
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
 import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import htsjdk.variant.vcf.VCFHeaderLineType
-import htsjdk.variant.vcf.VCFHeaderLineCount
-import scala.math._
 
 //class CheckAllelesVcfInBam(val root: Configurable) extends BiopetJavaCommandLineFunction {
 //  javaMainClass = getClass.getName

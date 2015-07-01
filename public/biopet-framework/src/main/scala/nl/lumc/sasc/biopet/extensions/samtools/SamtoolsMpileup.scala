@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.samtools
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /** Extension for samtools mpileup */
 class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {

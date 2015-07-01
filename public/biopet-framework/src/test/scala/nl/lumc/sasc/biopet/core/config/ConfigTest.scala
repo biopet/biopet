@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ConfigUtilsTest }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }

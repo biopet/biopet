@@ -15,8 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 class Gears(val root: Configurable) extends QScript with GearsTrait {

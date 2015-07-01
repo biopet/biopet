@@ -15,14 +15,13 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
-import scala.sys.process.{ Process, ProcessLogger }
-
+import nl.lumc.sasc.biopet.core.config.Config
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.SkipException
 import org.testng.annotations.{ BeforeClass, Test }
 
-import nl.lumc.sasc.biopet.core.config.Config
+import scala.sys.process.{ Process, ProcessLogger }
 
 class GsnapTest extends TestNGSuite with Matchers {
 
