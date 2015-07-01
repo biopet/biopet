@@ -244,7 +244,7 @@ object BammetricsReport extends ReportBuilder {
       }
     }
 
-    var map: Map[Int, Map[String, Int]] = Map()
+    var map: Map[Int, Map[String, Long]] = Map()
 
     def fill(sample: String, lib: Option[String]): Unit = {
 
@@ -257,7 +257,7 @@ object BammetricsReport extends ReportBuilder {
         case (l: List[_], l2: List[_]) => {
           l.zip(l2).foreach(i => {
             val insertSize = i._1.toString.toInt
-            val count = i._2.toString.toInt
+            val count = i._2.toString.toLong
             val old = map.getOrElse(insertSize, Map())
             if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
             else map += insertSize -> (old + (sample -> count))

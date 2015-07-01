@@ -25,7 +25,15 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+        #if (sampleId.isDefined && libId.isDefined)
+            Here we show basic <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Alignment">alignment</a> statistics for this run for sample ${sampleId} with library ${libId}. Total number of reads, number of alignments reads and number of duplicate reads are given, and the percentages thereof as a percentage of total.
+        #elseif(sampleId.isDefined && showPlot)
+            The following plot shows basic <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Alignment">alignment</a> statistics for this run for sample ${sampleId}. Every library is represented by a multi-color bar. Red represents the total number of properly mapped reads for this sample. Green represents the total number of duplicates reads, which is usually caused by <a href="http://www.cureffi.org/2012/12/11/how-pcr-duplicates-arise-in-next-generation-sequencing/">PCR duplicates</a>. Blue denotes the number of unmapped reads, and purple denotes reads flagged <em>secondary</em> (this is dependent on the aligner used). A table showing similar statistics, including values represented as percent of total, can be downloaded as a tab-delimited file.
+        #elseif(sampleId.isDefined && !showPlot)
+            Here we show basic <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Alignment">alignment</a> statistics for this run for every library of sample ${sampleId}. Total number of reads, number of alignments reads and number of duplicate reads are given, and the percentages thereof as a percentage of total.
+        #else
+            The following plot shows basic <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Alignment">alignment</a> statistics for this run. Every sample is represented by a multi-color bar. Red represents the total number of properly mapped reads for this sample. Green represents the total number of duplicates reads, which is usually caused by <a href="http://www.cureffi.org/2012/12/11/how-pcr-duplicates-arise-in-next-generation-sequencing/">PCR duplicates</a>. Blue denotes the number of unmapped reads, and purple denotes reads flagged <em>secondary</em> (this is dependent on the aligner used). A table showing similar statistics, including values represented as percent of total, can be downloaded as a tab-delimited file.
+        #end
         </p>
     </div>
     </div>

@@ -1,0 +1,54 @@
+{
+  "samples" : {
+    "sampleA" : {
+      "libraries" : {
+        "lib_1" : {
+          "R1" : "/path/to/inputA_R1.fq.gz",
+          "R2" : "/path/to/inputA_R2.fq.gz"
+        }
+      }
+    },
+    "sampleB" : {
+      "libraries" : {
+        "lib_1" : {
+          "R1" : "/path/to/inputB_1_R1.fq.gz",
+          "R2" : "/path/to/inputB_1_R2.fq.gz"
+        },
+        "lib_2": {
+          "R1" : "/path/to/inputB_2_R1.fq.gz",
+          "R2" : "/path/to/inputB_2_R2.fq.gz"
+        }
+      }
+    }
+  },
+  "gentrap": {
+    "output_dir": "/path/to/output_dir",
+    "expression_measures": ["fragments_per_gene", "bases_per_gene", "bases_per_exon"],
+    "strand_protocol": "non_specific",
+    "aligner": "gsnap",
+    "reference": "/share/isilon/system/local/Genomes-new-27-10-2011/H.Sapiens/hg19_nohap/gsnap/reference.fa",
+    "annotation_gtf": "/path/to/data/annotation/ucsc_refseq.gtf",
+    "annotation_bed": "/path/to/data/annotation/ucsc_refseq.bed",
+    "annotation_refflat": "/path/to/data/annotation/ucsc_refseq.refFlat",
+    "gsnap": {
+      "dir": "/share/isilon/system/local/Genomes-new-27-10-2011/H.Sapiens/hg19_nohap/gsnap",
+      "db": "hg19_nohap",
+      "quiet_if_excessive": true,
+      "npaths": 1
+    },
+    "cutadapt": {
+      "minimum_length": 20
+    },
+    "mapping": {
+      "flexiprep": {
+        "fastqc": {
+          "threads": 6,
+          "nogroup": true
+        }
+      }
+    },
+    "rawbasecounter": {
+      "core_memory": "20G"
+    }
+  }
+}

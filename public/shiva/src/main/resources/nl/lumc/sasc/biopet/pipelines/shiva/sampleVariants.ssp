@@ -23,7 +23,22 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+        #if(sampleId.isDefined)
+        This table shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for sample ${sampleId}.
+        <ul>
+            <li><em>Hom</em>: Denotes amount of homozygous positions in the resultant VCF file</li>
+            <li><em>HomVar</em>: Denotes amount of homozygous variant positions in the resultant VCF file</li>
+            <li><em>Het</em>: Denotes amount of heterozygous positions (and therefore variants) in the resultant VCF file</li>
+            <li><em>HomRef</em>: Denotes amount of homozygous reference positions in the resultant VCF file</li>
+            <li><em>NoCall</em>: Denotes amount of positions not found in this sample, but present in other samples</li>
+            <li><em>Variant</em>: Denotes amount of positions that were variant in the resultant VCF file</li>
+            <li><em>Total</em>: Denotes total amount of positions in the resultant VCF file</li>
+        </ul>
+        This can be also downloaded as a tab-delimited file.
+
+        #else
+        This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for all of the ${samples.size} samples. Every sample is represent as a multi-colored bar. Red denotes the fraction of variants that are homozygous, whereas green denotes the fraction of variants that are heterozygous. Blue represents the number of variants that were called homozygous reference by the variant caller. #if(samples.size > 1) Purple denotes those <em>positions</em> at which no call was made for the given sample, but these positions <em>do</em> occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
+        #end
         </p>
     </div>
     </div>

@@ -38,7 +38,9 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   /** Bed of amplicon that is used */
   var ampliconBedFile: Option[File] = config("amplicon_bed")
 
-  var rnaMetrics: Boolean = config("rna_metrcis", default = false)
+  /** Settings for CollectRnaSeqMetrics */
+  var rnaMetricsSettings: Map[String, String] = Map()
+  var transcriptRefFlatFile: Option[File] = config("transcript_refflat")
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
@@ -89,17 +91,22 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(gcBiasMetrics)
     addSummarizable(gcBiasMetrics, "gc_bias")
 
-    val wgsMetrics = new CollectWgsMetrics(this)
-    wgsMetrics.input = inputBam
-    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
-    add(wgsMetrics)
-    addSummarizable(wgsMetrics, "wgs")
+    if (transcriptRefFlatFile.isEmpty) {
+      val wgsMetrics = new CollectWgsMetrics(this)
+      wgsMetrics.input = inputBam
+      wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
+      add(wgsMetrics)
+      addSummarizable(wgsMetrics, "wgs")
+    }
 
-    if (rnaMetrics) {
+    if (transcriptRefFlatFile.isDefined) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
       rnaMetrics.input = inputBam
       rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
       rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
+      rnaMetrics.refFlat = transcriptRefFlatFile.get
+      rnaMetrics.ribosomalIntervals = rnaMetricsSettings.get("ribosomal_intervals").collect { case n => new File(n) }
+      rnaMetrics.strandSpecificity = rnaMetricsSettings.get("strand_specificity")
       add(rnaMetrics)
       addSummarizable(rnaMetrics, "rna")
     }

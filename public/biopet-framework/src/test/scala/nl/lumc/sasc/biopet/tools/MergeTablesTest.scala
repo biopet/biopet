@@ -143,7 +143,7 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
     // default arguments
     parsed.fallbackString shouldBe "-"
     parsed.fileExtension shouldBe ""
-    parsed.numHeaderLines shouldBe 1
+    parsed.numHeaderLines shouldBe 0
     parsed.delimiter shouldBe '\t'
   }
 }

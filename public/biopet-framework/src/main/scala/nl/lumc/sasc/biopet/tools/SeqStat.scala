@@ -38,7 +38,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
  *
  * @param root Configuration object for the pipeline
  */
-class Seqstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
@@ -76,16 +76,16 @@ object FqEncoding extends Enumeration {
   val Unknown = Value(0, "Unknown")
 }
 
-object Seqstat extends ToolCommand {
-  def apply(root: Configurable, input: File, output: File): Seqstat = {
-    val seqstat = new Seqstat(root)
+object SeqStat extends ToolCommand {
+  def apply(root: Configurable, input: File, output: File): SeqStat = {
+    val seqstat = new SeqStat(root)
     seqstat.input = input
     seqstat.output = new File(output, input.getName.substring(0, input.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
   }
 
-  def apply(root: Configurable, fastqfile: File, outDir: String): Seqstat = {
-    val seqstat = new Seqstat(root)
+  def apply(root: Configurable, fastqfile: File, outDir: String): SeqStat = {
+    val seqstat = new SeqStat(root)
     seqstat.input = fastqfile
     seqstat.output = new File(outDir, fastqfile.getName.substring(0, fastqfile.getName.lastIndexOf(".")) + ".seqstats.json")
     seqstat
@@ -145,22 +145,14 @@ object Seqstat extends ToolCommand {
     val h_qual = quals.length - 1
 
     (l_qual < 59, h_qual > 74) match {
-      case (false, true) => {
-        phredEncoding = Solexa
-      }
-      case (true, true) => {
-        // TODO: check this later on
-        // complex case, we cannot tell wheter this is a sanger or solexa
-        // but since the h_qual exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
-        phredEncoding = Solexa
-      }
-      case (true, false) => {
-        // this is definite a sanger sequence, the lower end is sanger only
-        phredEncoding = Sanger
-      }
-      case (_, _) => {
-        phredEncoding = Unknown
-      }
+      case (false, true) => phredEncoding = Solexa
+      // TODO: check this later on
+      // complex case, we cannot tell wheter this is a sanger or solexa
+      // but since the h_qual exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
+      case (true, true)  => phredEncoding = Solexa
+      // this is definite a sanger sequence, the lower end is sanger only
+      case (true, false) => phredEncoding = Sanger
+      case (_, _)        => phredEncoding = Unknown
     }
   }
 
@@ -214,7 +206,7 @@ object Seqstat extends ToolCommand {
     }
 
     // implicit conversion to Int using foldLeft(0)
-    val avgQual: Int = (readQual.sum / readQual.length)
+    val avgQual: Int = readQual.sum / readQual.length
     if (readStats.qual.length <= avgQual) {
       readStats.qual ++= mutable.ArrayBuffer.fill(avgQual - readStats.qual.length + 1)(0)
     }
@@ -254,6 +246,7 @@ object Seqstat extends ToolCommand {
       baseStats(pos).nuc.zipWithIndex foreach { case (value, index) => nucs(index) += value }
     }
     detectPhredEncoding(quals)
+    logger.debug("Detected '" + phredEncoding.toString.toLowerCase + "' encoding in fastq file ...")
 
     for (pos <- 0 until nucs.length) {
       // always export the N-nucleotide
@@ -269,17 +262,10 @@ object Seqstat extends ToolCommand {
     }
 
     for (pos <- 0 until quals.length) {
-      var key: Int = pos - phredEncoding.id
-      if (key > 0) {
-        // count till the max of baseHistogram.length
-        for (histokey <- 0 until key + 1) {
-          baseHistogram(histokey) += quals(pos)
-        }
+      val key: Int = pos - phredEncoding.id
+      if (key >= 0) {
+        baseHistogram(key) += quals(pos)
       }
-    }
-
-    for (pos <- 0 until baseHistogram.length) {
-      baseQualHistoMap += (pos -> baseHistogram(pos))
     }
 
     for (pos <- 0 until readStats.qual.length) {
@@ -303,30 +289,22 @@ object Seqstat extends ToolCommand {
     val commandArgs: Args = parseArgs(args)
 
     logger.info("Start seqstat")
-
-    val reader = new FastqReader(commandArgs.fastq)
-    val numReads = seqStat(reader)
+    seqStat(new FastqReader(commandArgs.fastq))
     summarize()
-
-    logger.debug(nucs)
-    //    logger.debug(baseStats)
     logger.info("Seqstat done")
 
     val report: Map[String, Any] = Map(
       ("files",
         Map(
           ("fastq", Map(
-            ("path", commandArgs.fastq),
-            ("checksum_sha1", "")
-          )
+            ("path", commandArgs.fastq))
           )
         )
       ),
       ("stats", Map(
         ("bases", Map(
-          ("num_n", nucleotideHistoMap.getOrElse('N', 0)),
           ("num_total", nucleotideHistoMap.values.sum),
-          ("num_qual_gte", baseQualHistoMap.toMap),
+          ("num_qual", baseHistogram.toList),
           ("nucleotides", nucleotideHistoMap.toMap)
         )),
         ("reads", Map(
@@ -334,12 +312,12 @@ object Seqstat extends ToolCommand {
           ("num_total", readStats.qual.sum),
           ("len_min", readStats.lengths.takeWhile(_ == 0).length),
           ("len_max", readStats.lengths.length - 1),
-          ("num_qual_gte", readQualHistoMap.toMap),
+          ("num_avg_qual_gte", readQualHistoMap.toMap),
           ("qual_encoding", phredEncoding.toString.toLowerCase)
         ))
       ))
     )
 
-    println(ConfigUtils.mapToJson(report).spaces2)
+    println(ConfigUtils.mapToJson(report))
   }
 }
