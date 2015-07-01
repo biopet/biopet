@@ -29,7 +29,7 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+            Here we show the total number of positions in the reference that are covered with a given coverage. This plot is whole-genome based, and will therefore be highly skewed in the case of an exome or targeted approach.
         </p>
     </div>
     </div>

@@ -15,6 +15,9 @@
         case Some(sample) => List(sample.toString)
         case _ => summary.samples.toList
     }
+    val trimCount = summary.getLibraryValues("flexiprep", "settings", "skip_trim").count(_._2 == Some(false))
+    val clipCount = summary.getLibraryValues("flexiprep", "settings", "skip_clip").count(_._2 == Some(false))
+    val librariesCount = summary.samples.foldLeft(0)(_ + summary.libraries(_).size)
 }#
 #if (showIntro)
     <br/>
@@ -22,7 +25,30 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
         <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+            #if (trimCount == librariesCount && clipCount == librariesCount)
+                You have selected both <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> and <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> as pre-processing steps
+            #elseif (trimCount == librariesCount && clipCount == 0)
+                You have selected only <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> as pre-processing step
+            #elseif (trimCount == 0 && clipCount == librariesCount)
+                You have selected only <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> as pre-processing step
+            #elseif (trimCount == 0 && clipCount == 0)
+                You have selected no pre-processing step to be performed
+            #elseif (trimCount > 0 && clipCount == 0)
+                You have selected <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> as pre-processing steps
+            #elseif (trimCount == 0 && clipCount > 0)
+                You have chosen to turn <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> for some libraries, but not all.
+            #else
+                You have chosen to turn <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> and <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> off for some libraries, but not all.
+            #end
+        </p>
+        <p>
+        #if (sampleId.isDefined && libId.isDefined)
+            Here we show aggregated quality statistics sequencing library ${libId} for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #elseif (sampleId.isDefined)
+            Here we show aggregated quality statistics for every sequencing library for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #else
+            Here we show aggregated quality statistics for every sequencing library. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #end
         </p>
     </div>
     </div>
