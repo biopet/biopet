@@ -37,7 +37,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 
   var vmem: Option[String] = config("vmem")
   protected val defaultCoreMemory: Double = 1.0
-  var vmemFactor: Double = config("vmem_factor", default = 1.5)
+  protected val defaultVmemFactor: Double = 1.4
+  var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
   var residentFactor: Double = config("resident_factor", default = 1.2)
 
@@ -156,7 +157,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0)
 
   /** Executes the version command */
-  private def getVersionInternal: Option[String] = {
+  private[core] def getVersionInternal(): Option[String] = {
+    if (versionCommand == null || versionRegex == null) None
+    else getVersionInternal(versionCommand, versionRegex)
+  }
+
+  /** Executes the version command */
+  private[core] def getVersionInternal(versionCommand: String, versionRegex: Regex): Option[String] = {
     if (versionCommand == null || versionRegex == null) return None
     val exe = new File(versionCommand.trim.split(" ")(0))
     if (!exe.exists()) return None
@@ -221,7 +228,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
 /** stores global caches */
 object BiopetCommandLineFunctionTrait {
   import scala.collection.mutable.Map
-  private val versionCache: Map[String, String] = Map()
+  private[core] val versionCache: Map[String, String] = Map()
   private[core] val executableMd5Cache: Map[String, String] = Map()
-  private val executableCache: Map[String, String] = Map()
+  private[core] val executableCache: Map[String, String] = Map()
 }
