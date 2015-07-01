@@ -113,6 +113,8 @@ To view all possible config options please navigate to our Gitlab wiki page
 | shiva | use_analyze_covariates | Boolean | false | Analyze covariates during base recalibration step |
 | shiva | bam_to_fastq | Boolean | false | Convert bam files to fastq files |
 | shiva | correct_readgroups | Boolean | false | Attempt to correct read groups |
+| shiva | amplicon_bed | Path | Path to target bed file |
+| shiva | regions_of_interest | Array of paths | Array of paths to region of interest (e.g. gene panels) bed files |
 | vcffilter | min_sample_depth | Integer | 8 | Filter variants with at least x coverage |
 | vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele |
 | vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) |
