@@ -1,11 +1,11 @@
 package nl.lumc.sasc.biopet.core.summary
 
-import java.math.BigDecimal
-
 /**
+ * This case class is used for easy access and calculations on those values
+ *
  * Created by pjvan_thof on 4/23/15.
  */
-case class SummaryValue(val value: Option[Any]) {
+case class SummaryValue(value: Option[Any]) {
 
   def this(path: List[String],
            summary: Summary,
@@ -18,6 +18,7 @@ case class SummaryValue(val value: Option[Any]) {
     })
   }
 
+  //TODO: Calculations are not yet used somewhere, needs more testing
   def +(that: SummaryValue): SummaryValue = {
     (this.value, that.value) match {
       case (Some(a: Double), Some(b)) => SummaryValue(Some(a + b.toString.toDouble))

@@ -53,9 +53,9 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultThreads = 4
 
   /** Sets contaminants and adapters when not yet set */
-  override def beforeGraph {
+  override def beforeGraph() {
     this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
-    this.preProcesExecutable
+    this.preProcessExecutable()
 
     val fastqcDir = new File(executable).getParent
 

@@ -7,10 +7,14 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import scala.collection.JavaConversions._
 
 /**
+ * This trait is used for pipelines and extension that use a reference based on one fasta file.
+ * The fasta file can contain multiple contigs.
+ *
  * Created by pjvan_thof on 4/6/15.
  */
 trait Reference extends Configurable {
 
+  /** Returns species, default to unknown_species */
   def referenceSpecies: String = {
     root match {
       case r: Reference if r.referenceSpecies != "unknown_species" => r.referenceSpecies
@@ -18,16 +22,17 @@ trait Reference extends Configurable {
     }
   }
 
+  /** Return referencename, default to unknown_ref */
   def referenceName: String = {
     root match {
       case r: Reference if r.referenceName != "unknown_ref" => r.referenceName
-      case _ => {
+      case _ =>
         val default: String = config("default", default = "unknown_ref", path = List("references", referenceSpecies))
         config("reference_name", default = default, path = super.configPath)
-      }
     }
   }
 
+  /** All config values will get a prefix */
   override def subPath = {
     referenceConfigPath ::: super.subPath
   }
@@ -37,8 +42,10 @@ trait Reference extends Configurable {
     List("references", referenceSpecies, referenceName)
   }
 
+  /** When set override this on true the pipeline with raise an exception when fai index is not found */
   protected def faiRequired = false
 
+  /** When set override this on true the pipeline with raise an exception when dict index is not found */
   protected def dictRequired = false
 
   /** Returns the fasta file */

@@ -16,14 +16,15 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder }
-import org.broadinstitute.gatk.utils.commandline.Argument
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import org.broadinstitute.gatk.queue.util.{Logging => GatkLogging}
+import org.broadinstitute.gatk.utils.commandline.Argument
+
 import scala.collection.mutable.ListBuffer
 
 /** Base for biopet pipeline */
@@ -53,10 +54,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   /** Init for pipeline */
-  def init
+  def init()
 
   /** Pipeline itself */
-  def biopetScript
+  def biopetScript()
 
   /** Returns the extension to make the report */
   def reportClass: Option[ReportBuilderExtension] = None
@@ -65,19 +66,18 @@ trait BiopetQScript extends Configurable with GatkLogging {
   final def script() {
     outputDir = config("output_dir")
     outputDir = outputDir.getAbsoluteFile
-    init
-    biopetScript
+    init()
+    biopetScript()
 
     if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => {
-        f.preProcesExecutable
-        f.beforeGraph
+      case f: BiopetCommandLineFunctionTrait =>
+        f.preProcessExecutable()
+        f.beforeGraph()
         f.commandLine
-      }
       case _ =>
     }
 
@@ -87,7 +87,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
     reportClass.foreach(add(_))
 
-    BiopetQScript.checkErrors
+    BiopetQScript.checkErrors()
   }
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
@@ -96,11 +96,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   def addAll(functions: scala.Traversable[org.broadinstitute.gatk.queue.function.QFunction])
 
-  /**
-   * Function to set isIntermediate and add in 1 line
-   * @param function
-   * @param isIntermediate
-   */
+  /** Function to set isIntermediate and add in 1 line */
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
@@ -115,8 +111,8 @@ object BiopetQScript extends Logging {
     errors.append(new Exception(msg))
   }
 
-  protected def checkErrors: Unit = {
-    if (!errors.isEmpty) {
+  protected def checkErrors(): Unit = {
+    if (errors.nonEmpty) {
       logger.error("*************************")
       logger.error("Biopet found some errors:")
       if (logger.isDebugEnabled) {

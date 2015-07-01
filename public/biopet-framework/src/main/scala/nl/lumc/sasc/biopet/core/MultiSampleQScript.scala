@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.{ Config }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
+import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript {
@@ -107,11 +106,7 @@ trait MultiSampleQScript extends SummaryQScript {
       }
     }
 
-    /**
-     * Creates a sample file with given suffix
-     * @param suffix
-     * @return
-     */
+    /** Creates a sample file with given suffix */
     def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
 
     /** Returns sample directory */
@@ -158,14 +153,14 @@ trait MultiSampleQScript extends SummaryQScript {
 
   /** Prefix full path with sample and library for jobs that's are created in current state */
   override protected[core] def configFullPath: List[String] = {
-    val s = currentSample match {
+    val sample = currentSample match {
       case Some(s) => "samples" :: s :: Nil
       case _       => Nil
     }
-    val l = currentLib match {
+    val lib = currentLib match {
       case Some(l) => "libraries" :: l :: Nil
       case _       => Nil
     }
-    s ::: l ::: super.configFullPath
+    sample ::: lib ::: super.configFullPath
   }
 }

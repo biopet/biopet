@@ -10,6 +10,8 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 /**
+ * With this extension the report is executed within a pipeline
+ *
  * Created by pjvan_thof on 3/30/15.
  */
 class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
@@ -28,9 +30,9 @@ object ShivaReport extends MultisampleReportBuilder {
       List("Samples" -> generateSamplesPage(pageArgs)) ++
         (if (regions.isDefined) Map(regions.get) else Map()) ++
         Map("Files" -> filesPage,
-          "Versions" -> ReportPage(List(), List((
+          "Versions" -> ReportPage(List(), List(
             "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-            ))), Map())
+          )), Map())
         ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
@@ -67,22 +69,22 @@ object ShivaReport extends MultisampleReportBuilder {
     }
 
     amplicon match {
-      case Some(x: String) => regionPages += (x + " (Amplicon)") -> createPage(x, true)
+      case Some(x: String) => regionPages += (x + " (Amplicon)") -> createPage(x, amplicon = true)
       case _               =>
     }
 
     roi match {
-      case Some(x: String)  => regionPages += x -> createPage(x, false)
-      case Some(x: List[_]) => x.foreach(x => regionPages += x.toString -> createPage(x.toString, false))
+      case Some(x: String)  => regionPages += x -> createPage(x, amplicon = false)
+      case Some(x: List[_]) => x.foreach(x => regionPages += x.toString -> createPage(x.toString, amplicon = false))
       case _                =>
     }
 
     if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
       List(),
-      regionPages.map(p => (p._1 -> ReportSection(
+      regionPages.map(p => p._1 -> ReportSection(
         "/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp",
         Map("target" -> p._1.stripSuffix(" (Amplicon)"))
-      ))).toList.sortBy(_._1),
+      )).toList.sortBy(_._1),
       Map())
     )
     else None
@@ -156,13 +158,13 @@ object ShivaReport extends MultisampleReportBuilder {
 
     if (libraryLevel) {
       for (
-        sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+        sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
         lib <- summary.libraries(sample)
       ) {
         tsvWriter.println(getLine(summary, sample, Some(lib)))
       }
     } else {
-      for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get)) {
+      for (sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get) {
         tsvWriter.println(getLine(summary, sample))
       }
     }
@@ -175,7 +177,7 @@ object ShivaReport extends MultisampleReportBuilder {
     plot.ylabel = Some("VCF records")
     if (libraryLevel) {
       plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
-    } else plot.width = Some(200 + (summary.samples.filter(s => sampleId.getOrElse(s) == s).size * 10))
+    } else plot.width = Some(200 + (summary.samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.runLocal()
   }
 }

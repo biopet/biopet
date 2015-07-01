@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.queue.QException
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
+import org.broadinstitute.gatk.utils.commandline.Input
+import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 import java.io.FileInputStream
@@ -50,15 +50,15 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * Can override this method. This is executed just before the job is ready to run.
    * Can check on run time files from pipeline here
    */
-  protected[core] def beforeCmd {}
+  protected[core] def beforeCmd() {}
 
   /** Can override this method. This is executed after the script is done en queue starts to generate the graph */
-  protected[core] def beforeGraph {}
+  protected[core] def beforeGraph() {}
 
   /** Set default output file, threads and vmem for current job */
   override def freezeFieldValues() {
-    preProcesExecutable
-    beforeGraph
+    preProcessExecutable()
+    beforeGraph()
     if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
@@ -95,7 +95,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
-  protected[core] def preProcesExecutable {
+  protected[core] def preProcessExecutable() {
     if (!BiopetCommandLineFunctionTrait.executableMd5Cache.contains(executable)) {
       try if (executable != null) {
         if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable)) {
@@ -135,10 +135,9 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   }
 
   /** executes checkExecutable method and fill job report */
-  final protected def preCmdInternal {
-    preProcesExecutable
-
-    beforeCmd
+  final protected def preCmdInternal() {
+    preProcessExecutable()
+    beforeCmd()
 
     addJobReportBinding("cores", nCoresRequest match {
       case Some(n) if n > 0 => n
@@ -157,7 +156,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected val versionExitcode = List(0)
 
   /** Executes the version command */
-  private[core] def getVersionInternal(): Option[String] = {
+  private[core] def getVersionInternal: Option[String] = {
     if (versionCommand == null || versionRegex == null) None
     else getVersionInternal(versionCommand, versionRegex)
   }
@@ -173,7 +172,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
       "\n output log: \n stdout: \n" + stdout.toString +
       "\n stderr: \n" + stderr.toString
     val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
-    if (!versionExitcode.contains(process.exitValue)) {
+    if (!versionExitcode.contains(process.exitValue())) {
       logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
       return None
     }
@@ -184,13 +183,13 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
       }
     }
     logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
-    return None
+    None
   }
 
   /** Get version from cache otherwise execute the version command  */
   def getVersion: Option[String] = {
     if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
-      preProcesExecutable
+      preProcessExecutable()
     if (!BiopetCommandLineFunctionTrait.versionCache.contains(versionCommand))
       getVersionInternal match {
         case Some(version) => BiopetCommandLineFunctionTrait.versionCache += versionCommand -> version
@@ -207,8 +206,8 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   def getThreads(default: Int): Int = {
     val maxThreads: Int = config("maxthreads", default = 8)
     val threads: Int = config("threads", default = default)
-    if (maxThreads > threads) return threads
-    else return maxThreads
+    if (maxThreads > threads) threads
+    else maxThreads
   }
 
   /**
@@ -220,15 +219,14 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   def getThreads(default: Int, module: String): Int = {
     val maxThreads: Int = config("maxthreads", default = 8, submodule = module)
     val threads: Int = config("threads", default = default, submodule = module)
-    if (maxThreads > threads) return threads
-    else return maxThreads
+    if (maxThreads > threads) threads
+    else maxThreads
   }
 }
 
 /** stores global caches */
 object BiopetCommandLineFunctionTrait {
-  import scala.collection.mutable.Map
-  private[core] val versionCache: Map[String, String] = Map()
-  private[core] val executableMd5Cache: Map[String, String] = Map()
-  private[core] val executableCache: Map[String, String] = Map()
+  private[core] val versionCache: mutable.Map[String, String] = mutable.Map()
+  private[core] val executableMd5Cache: mutable.Map[String, String] = mutable.Map()
+  private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
 }
