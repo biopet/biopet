@@ -22,11 +22,11 @@
     <div class="col-md-1"></div>
     <div class="col-md-6">
     <p>
-    In this web document you can find your Shiva pipeline report.
+    In this web document you can find your <em>Shiva</em> pipeline report.
     Different categories of data can be found in the left-side menu.
     Statistics per sample and library can be accessed through the top-level menu.
     Some statistics for target regions can be found in the regions tab.
-    Futhermore, you can view all versions of software tools used by selecting "Versions" from the top menu.
+    Futhermore, you can view all versions of software tools used by selecting <em>Versions</em> from the top menu.
     </p>
 
     <p>

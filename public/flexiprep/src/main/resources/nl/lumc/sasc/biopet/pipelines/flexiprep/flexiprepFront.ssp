@@ -20,7 +20,14 @@
 <div class="col-md-1"></div>
 <div class="col-md-6">
     <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc risus est, volutpat quis enim sit amet, lacinia posuere ante. Mauris eget massa efficitur, luctus nisl ut, placerat nibh. Pellentesque id nulla maximus, rutrum dui nec, lobortis odio. Fusce eu enim ac sem auctor congue. Ut ac ullamcorper quam, eget sollicitudin felis. Maecenas posuere sagittis blandit. Proin mollis magna lectus, id gravida est consectetur vitae. Nulla id risus at tellus laoreet finibus in id lacus. Duis lobortis commodo nisl viverra tempor. Curabitur sit amet pretium dui, sit amet tincidunt mauris. Duis volutpat eu purus ut molestie.
+        In this web document you can find your <em>Flexiprep</em> pipeline report.
+        Different categories of data can be found in the left-side menu.
+        Statistics per sample and library can be accessed through the top-level menu.
+        Futhermore, you can view all versions of software tools used by selecting <em>Versions</em> from the top menu.
+    </p>
+
+    <p>
+        <small>Brought to you by <a href="https://sasc.lumc.nl">SASC</a> and <a href="https://www.lumc.nl/org/klinische-genetica/">KG</a>, LUMC. </small>
     </p>
 </div>
 </div>
