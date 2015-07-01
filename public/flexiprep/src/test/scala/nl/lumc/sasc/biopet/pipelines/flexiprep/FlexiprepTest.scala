@@ -26,7 +26,7 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.{ Sickle, Gzip, Zcat }
-import nl.lumc.sasc.biopet.tools.Seqstat
+import nl.lumc.sasc.biopet.tools.SeqStat
 import nl.lumc.sasc.biopet.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
@@ -78,7 +78,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
       else if (!paired && (skipClip && skipTrim)) 1
       else if (paired && !(skipClip && skipTrim)) 4
       else if (!paired && !(skipClip && skipTrim)) 2)
-    flexiprep.functions.count(_.isInstanceOf[Seqstat]) shouldBe (if (paired) 4 else 2)
+    flexiprep.functions.count(_.isInstanceOf[SeqStat]) shouldBe (if (paired) 4 else 2)
     flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (zipped) (if (paired) 2 else 1) else 0)
     flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe (if (paired) 2 else 1)
     flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe (if (skipClip) 0 else (if (paired) 2 else 1))
