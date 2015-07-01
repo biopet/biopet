@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 
 import java.util.Date
 import java.io.File
+import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
+
 import scala.math._
 
 import org.broadinstitute.gatk.queue.QScript
@@ -362,7 +364,34 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.keep_fasta_order = true
     add(tophat)
 
-    addAddOrReplaceReadGroups(tophat.outputAcceptedHits, output)
+    // fix unmapped file coordinates
+    val fixedUnmapped = new File(tophat.output_dir, "unmapped_fixup.sam")
+    val fixer = new TophatRecondition(this)
+    fixer.inputBam = tophat.outputAcceptedHits
+    fixer.outputSam = fixedUnmapped.getAbsoluteFile
+    fixer.isIntermediate = true
+    add(fixer)
+
+    // sort fixed SAM file
+    val sorter = SortSam(this, fixer.outputSam, new File(tophat.output_dir, "unmapped_fixup.sorted.bam"))
+    sorter.sortOrder = "coordinate"
+    sorter.isIntermediate = true
+    add(sorter)
+
+    // merge with mapped file
+    val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
+      tophat.output_dir, "coordinate")
+    mergeSamFile.createIndex = true
+    mergeSamFile.isIntermediate = true
+    add(mergeSamFile)
+
+    // make sure header coordinates are correct
+    val reorderSam = new ReorderSam(this)
+    reorderSam.input = mergeSamFile.output
+    reorderSam.output = swapExt(output.getParent, output, ".merge.bam", ".reordered.bam")
+    add(reorderSam)
+
+    addAddOrReplaceReadGroups(reorderSam.output, output)
   }
   /**
    * Adds stampy jobs

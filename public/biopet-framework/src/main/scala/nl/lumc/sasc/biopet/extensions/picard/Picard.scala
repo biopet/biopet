@@ -82,25 +82,29 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
 object Picard extends Logging {
 
   lazy val getBiopetPicardVersion: Option[String] = {
-    val reader = Source.fromInputStream(getClass.getResourceAsStream("/dependency_list.txt"))
-    val dependencies = reader.getLines().map(_.trim.split(":")).filter(_.size == 5).map(line => Map(
-      "groupId" -> line(0),
-      "artifactId" -> line(1),
-      "type" -> line(2),
-      "version" -> line(3),
-      "scope" -> line(4)
-    )).toList
+    Option(getClass.getResourceAsStream("/dependency_list.txt")) match {
+      case Some(src) =>
+        val dependencies = Source.fromInputStream(src)
+          .getLines().map(_.trim.split(":")).filter(_.size == 5).map(line => Map(
+            "groupId" -> line(0),
+            "artifactId" -> line(1),
+            "type" -> line(2),
+            "version" -> line(3),
+            "scope" -> line(4)
+          )).toList
 
-    logger.debug("dependencies: " + dependencies)
+        logger.debug("dependencies: " + dependencies)
 
-    val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
-      case dep =>
-        "samtools htsjdk " + dep("version")
-    }
+        val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
+          case dep =>
+            "samtools htsjdk " + dep("version")
+        }
 
-    dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
-      case dep =>
-        "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
+        dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
+          case dep =>
+            "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
+        }
+      case otherwise => None
     }
   }
 

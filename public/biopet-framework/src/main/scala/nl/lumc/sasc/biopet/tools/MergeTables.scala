@@ -32,7 +32,7 @@ class MergeTables(val root: Configurable) extends ToolCommandFuntion {
 
   javaMainClass = getClass.getName
 
-  override val defaultCoreMemory = 2.0
+  override val defaultCoreMemory = 6.0
 
   /** List of input tabular files */
   @Input(doc = "Input table files", required = true)
@@ -71,7 +71,7 @@ class MergeTables(val root: Configurable) extends ToolCommandFuntion {
       required("-a", valueColumnIndex) +
       optional("-n", idColumnName) +
       optional("-e", fileExtension) +
-      optional("-h", numHeaderLines) +
+      optional("-m", numHeaderLines) +
       optional("-f", fallbackString) +
       optional("-d", delimiter) +
       required("-o", output) +
@@ -164,7 +164,7 @@ object MergeTables extends ToolCommand {
                   idColumnIndices: Seq[Int] = Seq.empty[Int],
                   valueColumnIndex: Int = -1,
                   fileExtension: String = "",
-                  numHeaderLines: Int = 1,
+                  numHeaderLines: Int = 0,
                   fallbackString: String = "-",
                   delimiter: Char = '\t',
                   out: File = new File("-")) extends AbstractArgs
@@ -206,9 +206,9 @@ object MergeTables extends ToolCommand {
       c.copy(fileExtension = x)
     } text "Common extension of all input tables to strip (default: empty string)"
 
-    opt[Int]('h', "num_header_lines") optional () action { (x, c) =>
+    opt[Int]('m', "num_header_lines") optional () action { (x, c) =>
       c.copy(numHeaderLines = x)
-    } text "The number of header lines present in all input files (default: 1; 1-line header)"
+    } text "The number of header lines present in all input files (default: 0; no header)"
 
     opt[String]('f', "fallback") optional () action { (x, c) =>
       c.copy(fallbackString = x)
