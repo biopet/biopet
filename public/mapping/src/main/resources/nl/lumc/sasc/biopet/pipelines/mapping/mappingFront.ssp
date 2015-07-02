@@ -3,16 +3,16 @@
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
 <%@ var sampleId: Option[String] %>
-<%@ var libId: Option[String] = None %>
+<%@ var libId: Option[String] %>
 
 <table class="table">
 <tbody>
-    <tr><th>Pipeline</th><td>BamMetrics</td></tr>
+    <tr><th>Pipeline</th><td>Mapping</td></tr>
     <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
     <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
     <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
     <tr><th>Sample ID</th><td>${sampleId}</td></tr>
-    #if (libId.isDefined) <tr><th>Library ID</th><td>${libId}</td></tr> #end
+    <tr><th>Library ID</th><td>${libId}</td></tr>
 </tbody>
 </table>
 <br/>
@@ -20,7 +20,7 @@
 <div class="col-md-1"></div>
 <div class="col-md-6">
     <p>
-        In this web document you can find your <em>BamMetrics</em> pipeline report.
+        In this web document you can find your <em>Mapping</em> pipeline report.
         Different categories of data can be found in the left-side menu.
         Statistics per sample and library can be accessed through the top-level menu.
         Futhermore, you can view all versions of software tools used by selecting <em>Versions</em> from the top menu.

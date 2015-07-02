@@ -14,20 +14,21 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  */
 class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = ShivaReport
-
-  override val defaultCoreMemory = 3.0
 }
 
+/** Object for report generation for Shiva pipeline */
 object ShivaReport extends MultisampleReportBuilder {
 
-  // FIXME: Not yet finished
-
+  /** Root page for the shiva report */
   def indexPage = {
     val regions = regionsPage
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
         (if (regions.isDefined) Map(regions.get) else Map()) ++
-        Map("Files" -> filesPage,
+        Map("Reference" -> ReportPage(List(), List(
+          "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> "shiva"))
+        ), Map()),
+          "Files" -> filesPage,
           "Versions" -> ReportPage(List(), List((
             "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
             ))), Map())
@@ -52,7 +53,9 @@ object ShivaReport extends MultisampleReportBuilder {
     )
   }
 
-  def regionsPage = {
+  //TODO: Add variants per target
+  /** Generate a page with all target coverage stats */
+  def regionsPage: Option[(String, ReportPage)] = {
     val roi = summary.getValue("shiva", "settings", "regions_of_interest")
     val amplicon = summary.getValue("shiva", "settings", "amplicon_bed")
 
@@ -88,7 +91,8 @@ object ShivaReport extends MultisampleReportBuilder {
     else None
   }
 
-  def filesPage = ReportPage(List(), List(
+  /** Files page, can be used general or at sample level */
+  def filesPage: ReportPage = ReportPage(List(), List(
     "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
@@ -97,7 +101,8 @@ object ShivaReport extends MultisampleReportBuilder {
     "VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp", Map("sampleId" -> None))
   ), Map())
 
-  def samplePage(sampleId: String, args: Map[String, Any]) = {
+  /** Single sample page */
+  def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
@@ -112,7 +117,8 @@ object ShivaReport extends MultisampleReportBuilder {
     ), args)
   }
 
-  def libraryPage(sampleId: String, libId: String, args: Map[String, Any]) = {
+  /** Library page */
+  def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     ReportPage(List(
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
       "QC" -> FlexiprepReport.flexiprepPage
@@ -123,8 +129,17 @@ object ShivaReport extends MultisampleReportBuilder {
     ), args)
   }
 
+  /** Name of the report */
   def reportName = "Shiva Report"
 
+  /**
+   * Generate a stackbar plot for found variants
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def variantSummaryPlot(outputDir: File,
                          prefix: String,
                          summary: Summary,

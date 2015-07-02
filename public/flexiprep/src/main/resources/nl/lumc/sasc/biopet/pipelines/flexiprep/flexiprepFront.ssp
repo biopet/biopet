@@ -1,3 +1,33 @@
-#{ //TODO: Need content }#
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+<%@ var sampleId: Option[String] %>
+<%@ var libId: Option[String] %>
 
-Todo
+<table class="table">
+<tbody>
+    <tr><th>Pipeline</th><td>Flexiprep</td></tr>
+    <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
+    <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
+    <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
+    <tr><th>Sample ID</th><td>${sampleId}</td></tr>
+    <tr><th>Library ID</th><td>${libId}</td></tr>
+</tbody>
+</table>
+<br/>
+<div class="row">
+<div class="col-md-1"></div>
+<div class="col-md-6">
+    <p>
+        In this web document you can find your <em>Flexiprep</em> pipeline report.
+        Different categories of data can be found in the left-side menu.
+        Statistics per sample and library can be accessed through the top-level menu.
+        Futhermore, you can view all versions of software tools used by selecting <em>Versions</em> from the top menu.
+    </p>
+
+    <p>
+        <small>Brought to you by <a href="https://sasc.lumc.nl">SASC</a> and <a href="https://www.lumc.nl/org/klinische-genetica/">KG</a>, LUMC. </small>
+    </p>
+</div>
+</div>

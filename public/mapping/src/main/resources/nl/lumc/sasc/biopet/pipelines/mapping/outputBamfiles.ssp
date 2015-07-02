@@ -20,7 +20,7 @@
     val pipelineOutputDir = summary.getValue("meta", "output_dir").getOrElse("").toString
     def removeDir(value: Option[Any]): Option[Any] = {
         value.collect { case a =>
-            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir)
+            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir + File.separator)
             else a
         }
     }
@@ -28,9 +28,9 @@
 
 <div class="panel-body">
 <!-- Table -->
-<table class="table sortable-theme-bootstrap" data-sortable>
+<table class="table">
     <thead><tr>
-        <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        <th>Sample</th>
         #if (!sampleLevel) <th>Library</th> #end
         <th>Path</th>
         <th>MD5</th>
@@ -48,8 +48,8 @@
             #for (libId <- libs)
                 #if (libs.head != libId) <tr> #end
                     #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
-                    <td>${removeDir(summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "path"))}</td>
-                    <td>${summary.getLibraryValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "md5")}</td>
+                    <td>${removeDir(summary.getValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "path"))}</td>
+                    <td>${summary.getValue(Some(sample), (if (sampleLevel) None else Some(libId)), pipelineName, "files", "pipeline", fileTag, "md5")}</td>
                 </tr>
             #end
         #end

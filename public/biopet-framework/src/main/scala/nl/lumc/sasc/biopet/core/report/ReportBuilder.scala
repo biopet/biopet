@@ -2,25 +2,31 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ Logging, ToolCommandFuntion, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
 import nl.lumc.sasc.biopet.utils.IoUtils
+import scala.collection.mutable
 
 /**
  * Created by pjvan_thof on 3/27/15.
  */
 trait ReportBuilderExtension extends ToolCommandFuntion {
 
+  /** Report builder object */
   val builder: ReportBuilder
 
   @Input(required = true)
   var summaryFile: File = _
 
+  /** OutputDir for the report  */
   var outputDir: File = _
 
+  /** Arguments that are passed on the commandline */
   var args: Map[String, String] = Map()
+
+  override val defaultCoreMemory = 3.0
 
   override def beforeGraph: Unit = {
     super.beforeGraph
@@ -28,39 +34,49 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
     javaMainClass = builder.getClass.getName.takeWhile(_ != '$')
   }
 
+  /** Command to generate the report */
   override def commandLine: String = {
     super.commandLine +
       required("--summary", summaryFile) +
       required("--outputDir", outputDir) +
-      args.map(x => required(x._1, x._2)).mkString
+      args.map(x => required("-a", x._1 + "=" + x._2)).mkString
   }
 }
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null, outputDir: File = null, pageArgs: Map[String, String] = Map()) extends AbstractArgs
+  case class Args(summary: File = null, outputDir: File = null, pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('s', "summary") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
     }
-    opt[File]('o', "outputDir") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     }
-    opt[Map[String, String]]('a', "args") action { (x, c) =>
+    opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
   }
 
+  /** summary object internaly */
   private var setSummary: Summary = _
 
+  /** Retrival of summary, read only */
   final def summary = setSummary
 
+  /** default args that are passed to all page withing the report */
   def pageArgs: Map[String, Any] = Map()
 
   private var done = 0
   private var total = 0
 
+  private var _sampleId: Option[String] = None
+  protected def sampleId = _sampleId
+  private var _libId: Option[String] = None
+  protected def libId = _libId
+
+  /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
 
@@ -69,6 +85,22 @@ trait ReportBuilder extends ToolCommand {
 
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
+
+    cmdArgs.pageArgs.get("sampleId") match {
+      case Some(s: String) => {
+        cmdArgs.pageArgs += "sampleId" -> Some(s)
+        _sampleId = Some(s)
+      }
+      case _ =>
+    }
+
+    cmdArgs.pageArgs.get("libId") match {
+      case Some(l: String) => {
+        cmdArgs.pageArgs += "libId" -> Some(l)
+        _libId = Some(l)
+      }
+      case _ =>
+    }
 
     logger.info("Copy Base files")
 
@@ -95,25 +127,32 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
 
-    total = countPages(indexPage)
+    total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
 
     logger.info("Generate pages")
     val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
-      args = pageArgs ++ cmdArgs.pageArgs ++
+      args = pageArgs ++ cmdArgs.pageArgs.toMap ++
         Map("summary" -> summary, "reportName" -> reportName, "indexPage" -> indexPage))
 
     logger.info(jobs + " Done")
   }
 
+  /** This must be implemented, this will be the root page of the report */
   def indexPage: ReportPage
 
+  /** This must be implemented, this will because the title of the report */
   def reportName: String
 
-  def countPages(page: ReportPage): Int = {
-    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
-  }
-
+  /**
+   * This method will render the page and the subpages recursivly
+   * @param summary The summary object
+   * @param page Page to render
+   * @param outputDir Root output dir of the report
+   * @param path Path from root to current page
+   * @param args Args to add to this sub page, are args from current page are passed automaticly
+   * @return Number of pages including all subpages that are rendered
+   */
   def generatePage(summary: Summary,
                    page: ReportPage,
                    outputDir: File,
@@ -151,9 +190,16 @@ trait ReportBuilder extends ToolCommand {
 
 object ReportBuilder {
 
+  /** Single template render engine, this will have a cache for all compile templates */
   protected val engine = new TemplateEngine()
 
+  /** Cache of temp file for templates from the classpath / jar */
   private var templateCache: Map[String, File] = Map()
+
+  /** This will give the total number of pages including all nested pages */
+  def countPages(page: ReportPage): Int = {
+    page.subPages.map(x => countPages(x._2)).fold(1)(_ + _)
+  }
 
   /**
    * This method will render a template that is located in the classpath / jar
@@ -162,6 +208,12 @@ object ReportBuilder {
    * @return Rendered result of template
    */
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
+    Logging.logger.info("Rendering: " + location)
+
+    if (location == "/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp") {
+      println("hier dus")
+    }
+
     val templateFile: File = templateCache.get(location) match {
       case Some(template) => template
       case _ => {

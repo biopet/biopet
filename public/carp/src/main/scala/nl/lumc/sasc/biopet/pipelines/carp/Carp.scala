@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -40,7 +41,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa-mem")
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "aligner" -> "bwa-mem"
+    )
   ), super.defaults)
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
@@ -105,6 +109,9 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         add(merge)
       }
 
+      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"))
+      addAll(bamMetrics.functions)
+      addSummaryQScript(bamMetrics)
       addAll(Bam2Wig(qscript, bamFile).functions)
 
       val macs2 = new Macs2CallPeak(qscript)
@@ -115,6 +122,13 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
 
       addSummaryJobs
     }
+  }
+
+  override def reportClass = {
+    val carp = new CarpReport(this)
+    carp.outputDir = new File(outputDir, "report")
+    carp.summaryFile = summaryFile
+    Some(carp)
   }
 
   def init() = {

@@ -2,24 +2,48 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
 import nl.lumc.sasc.biopet.extensions.rscript.{ XYPlot, StackedBarPlot }
+
+class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = BammetricsReport
+}
 
 /**
  * Created by pjvan_thof on 3/30/15.
  */
 object BammetricsReport extends ReportBuilder {
-  // FIXME: Not yet finished
 
+  /** Name of report */
   val reportName = "Bam Metrics"
 
-  def indexPage = ReportPage(List(), List(), Map())
+  /** Root page for single BamMetrcis report */
+  def indexPage = {
+    val bamMetricsPage = this.bamMetricsPage(summary, sampleId, libId)
+    ReportPage(bamMetricsPage.subPages ::: List(
+      "Versions" -> ReportPage(List(), List((
+        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+        ))), Map()),
+      "Files" -> ReportPage(List(), List(
+        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bammetricsInputFile.ssp")
+      ), Map())
+    ), List(
+      "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bamMetricsFront.ssp")
+    ) ::: bamMetricsPage.sections,
+      Map()
+    )
+  }
 
-  def bamMetricsPage(summary: Summary, sampleId: Option[String], libId: Option[String]) = {
+  /** Generates a page with alignment stats */
+  def bamMetricsPage(summary: Summary,
+                     sampleId: Option[String],
+                     libId: Option[String],
+                     metricsTag: String = "bammetrics") = {
     val targets = (
-      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
-      summary.getLibraryValue(sampleId, libId, "bammetrics", "settings", "roi_name")
+      summary.getValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
+      summary.getValue(sampleId, libId, "bammetrics", "settings", "roi_name")
     ) match {
         case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
         case (_, Some(roi: List[_])) => roi.map(_.toString)
@@ -33,12 +57,21 @@ object BammetricsReport extends ReportBuilder {
         Map()))),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
+        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp", Map("showPlot" -> true))
       ),
-      Map()
+      Map("metricsTag" -> metricsTag)
     )
   }
 
+  /**
+   * Generate a stackbar plot for alignment stats
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def alignmentSummaryPlot(outputDir: File,
                            prefix: String,
                            summary: Summary,
@@ -94,6 +127,14 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+   * Generate a line plot for insertsize
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def insertSizePlot(outputDir: File,
                      prefix: String,
                      summary: Summary,
@@ -174,6 +215,14 @@ object BammetricsReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+   * Generate a line plot for wgs coverage
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def wgsHistogramPlot(outputDir: File,
                        prefix: String,
                        summary: Summary,

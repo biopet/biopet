@@ -4,9 +4,9 @@
 <%@ var rootPath: String %>
 <%@ var sampleId: Option[String] = None %>
 <%@ var libId: Option[String] = None %>
+<%@ var pipeline: String = summary.getValue("meta", "pipeline_name").getOrElse("").toString %>
 #{
-    val pipeline = summary.getValue("meta", "pipeline_name").getOrElse("").toString
-    val executables = summary.getLibraryValue(sampleId, libId, pipeline, "executables").getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
+    val executables = summary.getValue(sampleId, libId, pipeline, "executables").getOrElse(Map()).asInstanceOf[Map[String, Map[String, Any]]]
 }#
 
 <table class="table">

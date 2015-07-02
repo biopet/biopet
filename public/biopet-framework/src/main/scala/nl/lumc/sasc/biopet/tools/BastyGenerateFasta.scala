@@ -21,14 +21,14 @@ import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
 import java.io.File
 import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 import scala.collection.mutable.ListBuffer
 
-class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion {
+class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf file", required = false)
@@ -38,7 +38,7 @@ class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion {
   var bamFile: File = _
 
   @Input(doc = "reference", required = false)
-  var reference: File = config("reference")
+  var reference: File = _
 
   @Output(doc = "Output fasta, variants only", required = false)
   var outputVariants: File = _
@@ -56,6 +56,11 @@ class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion {
   var outputName: String = _
 
   override val defaultCoreMemory = 4.0
+
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    reference = referenceFasta()
+  }
 
   override def commandLine = super.commandLine +
     optional("--inputVcf", inputVcf) +
