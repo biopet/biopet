@@ -125,7 +125,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
             line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
             values = line.split("\t") if values.size == 7
           } yield (values(0), BasePositionStats(values(1).toDouble, values(2).toDouble, values(3).toDouble,
-                                    values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
+            values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
           tableContents.toMap
       }
     } else Map()

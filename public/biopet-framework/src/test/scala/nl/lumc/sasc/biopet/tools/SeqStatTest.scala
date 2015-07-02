@@ -89,10 +89,10 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val seqstat = SeqStat
     baseHistogram(40) shouldEqual 5
-    baseHistogram(39) shouldEqual 10
-    baseHistogram(34) shouldEqual 15
-    baseHistogram(33) shouldEqual 20
-    baseHistogram(0) shouldEqual 20
+    baseHistogram(39) shouldEqual 5
+    baseHistogram(34) shouldEqual 5
+    baseHistogram(33) shouldEqual 5
+    baseHistogram(0) shouldEqual 5
   }
 
   @Test def testArgsMinimum() = {
