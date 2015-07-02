@@ -3,7 +3,7 @@
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
 <table class="table sortable-theme-bootstrap" data-sortable>
-    <thead><tr></tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th></thead></tr>
+    <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th></tr></thead>
     <tbody>
         #for (sample <- summary.samples)
             <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
