@@ -54,7 +54,7 @@ class ShivaTest extends TestNGSuite with Matchers {
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
       if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m)
-      ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
+      ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library,
         "use_analyze_covariates" -> covariates,
