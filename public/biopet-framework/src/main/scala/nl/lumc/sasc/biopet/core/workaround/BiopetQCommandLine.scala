@@ -46,7 +46,8 @@
 package nl.lumc.sasc.biopet.core.workaround
 
 import java.io.{ File, FileOutputStream }
-import java.util.{ Arrays, ResourceBundle }
+import java.util
+import java.util.ResourceBundle
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core.Logging
@@ -176,8 +177,8 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
 
       // TODO: Default command plugin argument?
       val remoteFileConverter = (
-        for (commandPlugin <- allCommandPlugins if (commandPlugin.remoteFileConverter != null))
-          yield commandPlugin.remoteFileConverter).headOption.getOrElse(null)
+        for (commandPlugin <- allCommandPlugins if commandPlugin.remoteFileConverter != null)
+          yield commandPlugin.remoteFileConverter).headOption.orNull
 
       if (remoteFileConverter != null)
         loadArgumentsIntoObject(remoteFileConverter)
@@ -198,7 +199,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
             script.mkRemoteOutputs(remoteFileConverter)
         }
 
-        script.functions.foreach(qGraph.add(_))
+        script.functions.foreach(qGraph.add)
         logger.info("Added " + script.functions.size + " functions")
       }
       // Execute the job graph
@@ -281,7 +282,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
    * @return a ScalaCompoundArgumentTypeDescriptor
    */
   override def getArgumentTypeDescriptors =
-    Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
+    util.Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
 
   override def getApplicationDetails: ApplicationDetails = {
     new ApplicationDetails(createQueueHeader(),

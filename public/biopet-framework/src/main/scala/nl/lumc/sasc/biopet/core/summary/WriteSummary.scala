@@ -28,6 +28,8 @@ import scala.collection.mutable
 import scala.io.Source
 
 /**
+ * This will collect and write the summary
+ *
  * Created by pjvan_thof on 2/14/15.
  */
 class WriteSummary(val root: Configurable) extends InProcessFunction with Configurable {
@@ -71,17 +73,15 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val executables: Map[String, Any] = {
         (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
           f match {
-            case f: BiopetJavaCommandLineFunction => {
+            case f: BiopetJavaCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
                 "jar_path" -> f.jarFile)
-            }
-            case f: BiopetCommandLineFunction => {
+            case f: BiopetCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
                 "path" -> f.executable)
-            }
             case _ => throw new IllegalStateException("This should not be possible")
           }
 
@@ -127,42 +127,29 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
   def prefixSampleLibrary(map: Map[String, Any], sampleId: Option[String], libraryId: Option[String]): Map[String, Any] = {
     sampleId match {
-      case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
-        case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
-        case _               => map
+      case Some(s) => Map("samples" -> Map(s -> (libraryId match {
+        case Some(l) => Map("libraries" -> Map(l -> map))
+        case _       => map
       })))
       case _ => map
     }
   }
 
-  /**
-   * Convert summarizable to a summary map
-   * @param summarizable
-   * @param name
-   * @return
-   */
+  /** Convert summarizable to a summary map */
   def parseSummarizable(summarizable: Summarizable, name: String) = {
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (Map("stats" -> Map(name -> stats))) ++
+    Map("stats" -> Map(name -> stats)) ++
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 
-  /**
-   * Parse files map to summary map
-   * @param files
-   * @return
-   */
+  /** Parse files map to summary map */
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
     for ((key, file) <- files) yield key -> parseFile(file)
   }
 
-  /**
-   * parse single file summary map
-   * @param file
-   * @return
-   */
+  /** arse single file summary map */
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
@@ -170,11 +157,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     map.toMap
   }
 
-  /**
-   * Retrive checksum from file
-   * @param checksumFile
-   * @return
-   */
+  /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }

@@ -43,7 +43,7 @@ class Config(var map: Map[String, Any],
    */
   def loadConfigEnv(valueName: String, default: Boolean) {
     sys.env.get(valueName) match {
-      case Some(globalFiles) => {
+      case Some(globalFiles) =>
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
           if (file.exists) {
@@ -51,14 +51,13 @@ class Config(var map: Map[String, Any],
             loadConfigFile(file, default)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
         }
-      }
       case _ => logger.info(valueName + " value not found, no global config is loaded")
     }
   }
 
   /** Loading default value for biopet */
   def loadDefaultConfig() {
-    loadConfigEnv("BIOPET_CONFIG", true)
+    loadConfigEnv("BIOPET_CONFIG", default = true)
   }
 
   /**
@@ -94,7 +93,7 @@ class Config(var map: Map[String, Any],
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
-  protected[config] def clearCache: Unit = {
+  protected[config] def clearCache(): Unit = {
     notFoundCache = List()
     foundCache = Map()
     defaultCache = Map()
@@ -114,16 +113,16 @@ class Config(var map: Map[String, Any],
    * @return True if exist
    */
   def contains(requestedIndex: ConfigValueIndex): Boolean =
-    if (notFoundCache.contains(requestedIndex)) return false
-    else if (foundCache.contains(requestedIndex)) return true
+    if (notFoundCache.contains(requestedIndex)) false
+    else if (foundCache.contains(requestedIndex)) true
     else {
       val value = Config.getValueFromMap(map, requestedIndex)
       if (value.isDefined && value.get.value != None) {
         foundCache += (requestedIndex -> value.get)
-        return true
+        true
       } else {
         notFoundCache +:= requestedIndex
-        return false
+        false
       }
     }
 
@@ -201,7 +200,7 @@ class Config(var map: Map[String, Any],
     writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
-  override def toString(): String = map.toString
+  override def toString: String = map.toString()
 }
 
 object Config extends Logging {
@@ -210,7 +209,7 @@ object Config extends Logging {
   /**
    * Merge 2 config objects
    * @param config1 prio over config 2
-   * @param config2
+   * @param config2 Low prio map
    * @return Merged config
    */
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
@@ -234,7 +233,7 @@ object Config extends Logging {
 
     def tailSearch(path: List[String]): Option[ConfigValue] = {
       val p = getFromPath(path)
-      if (p != None) p
+      if (p.isDefined) p
       else if (path == Nil) None
       else {
         val p = initSearch(path)
@@ -261,6 +260,6 @@ object Config extends Logging {
       else skipNested(path, tail.tail)
     }
 
-    return tailSearch(startIndex.path)
+    tailSearch(startIndex.path)
   }
 }

@@ -56,7 +56,7 @@ class ConfigValue(val requestIndex: ConfigValueIndex, val foundIndex: ConfigValu
     else if (!default) output += ", foundIndex = (" + foundIndex + ")"
     else output += ", default value is used"
 
-    return output
+    output
   }
 }
 
