@@ -20,7 +20,11 @@
     </p>
 
     <p>
-        <small>Brought to you by <a href="https://sasc.lumc.nl">SASC</a> and <a href="https://www.lumc.nl/org/klinische-genetica/">KG</a>, LUMC. </small>
+        <small>Brought to you by <a href="https://sasc.lumc.nl" target="_blank"><abbr
+            title="Sequence Analysis Support Core">SASC</abbr></a> and <a
+        href="https://www.lumc.nl/org/klinische-genetica/" target="_blank"><abbr title="Clinical Genetics LUMC">KG</abbr></a>,
+        LUMC.
+        </small>
     </p>
 </div>
 </div>
