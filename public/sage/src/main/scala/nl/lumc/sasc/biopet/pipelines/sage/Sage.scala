@@ -90,8 +90,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       protected def addJobs(): Unit = {
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq
-        flexiprep.init
-        flexiprep.biopetScript
+        flexiprep.init()
+        flexiprep.biopetScript()
         qscript.addAll(flexiprep.functions)
 
         val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
@@ -104,8 +104,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
         mapping.input_R1 = pf.outputFastq
         mapping.outputDir = libDir
-        mapping.init
-        mapping.biopetScript
+        mapping.init()
+        mapping.biopetScript()
         qscript.addAll(mapping.functions)
 
         if (config("library_counts", default = false).asBoolean) {

@@ -39,6 +39,6 @@ object VariantRecalibrator {
     vr.input :+= input
     vr.recal_file = recal_file
     vr.tranches_file = tranches_file
-    return vr
+    vr
   }
 }

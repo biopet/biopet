@@ -25,6 +25,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[ConfigUtils]]
+ *
  * Created by pjvan_thof on 1/5/15.
  */
 class ConfigUtilsTest extends TestNGSuite with Matchers {

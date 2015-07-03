@@ -69,8 +69,8 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
         mapping.input_R2 = config("R2")
         mapping.outputDir = libDir
 
-        mapping.init
-        mapping.biopetScript
+        mapping.init()
+        mapping.biopetScript()
         qscript.addAll(mapping.functions)
       }
     }
@@ -79,7 +79,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val bamFile: File = if (libraryBamfiles.size == 1) {
         val alignmentlink = Ln(qscript, libraryBamfiles.head,
-          alignmentDir + sampleId + ".merged.bam", true)
+          alignmentDir + sampleId + ".merged.bam", relative = true)
         alignmentlink.isIntermediate = true
         add(alignmentlink)
         alignmentlink.output
@@ -144,7 +144,7 @@ class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
 
   def biopetScript() {
     logger.info("Starting YAM SV Pipeline")
-    addSamplesJobs
+    addSamplesJobs()
   }
 
   override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {

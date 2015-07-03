@@ -7,6 +7,8 @@ import org.testng.annotations.Test
 import scala.util.Try
 
 /**
+ * Test class for utils package object
+ *
  * Created by pjvan_thof on 4/14/15.
  */
 class PackageTest extends TestNGSuite with Matchers {

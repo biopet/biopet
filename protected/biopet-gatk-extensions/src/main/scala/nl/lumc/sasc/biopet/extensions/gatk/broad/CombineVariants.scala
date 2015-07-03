@@ -18,6 +18,6 @@ object CombineVariants {
     val cv = new CombineVariants(root)
     cv.variant = input
     cv.out = output
-    return cv
+    cv
   }
 }

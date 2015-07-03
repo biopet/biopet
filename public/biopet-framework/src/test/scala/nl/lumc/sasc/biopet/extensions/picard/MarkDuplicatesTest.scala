@@ -23,6 +23,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[MarkDuplicates]]
+ *
  * Created by pjvan_thof on 2/19/15.
  */
 class MarkDuplicatesTest extends TestNGSuite with Matchers {

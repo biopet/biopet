@@ -22,6 +22,8 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 import scala.collection.mutable.ListBuffer
 
 /**
+ * Class for testing ShivaVariantcalling
+ *
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaVariantcallingTest extends TestNGSuite with Matchers {

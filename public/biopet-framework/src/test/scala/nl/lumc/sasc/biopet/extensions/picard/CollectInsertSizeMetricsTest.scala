@@ -23,6 +23,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[CollectInsertSizeMetrics]]
+ *
  * Created by pjvan_thof on 2/18/15.
  */
 class CollectInsertSizeMetricsTest extends TestNGSuite with Matchers {

@@ -8,6 +8,8 @@ import org.testng.annotations.Test
 
 import scala.util.Random
 /**
+ * Test class for AnnotateVcfWithBed
+ *
  * Created by ahbbollen on 9-4-15.
  */
 class AnnotateVcfWithBedTest extends TestNGSuite with MockitoSugar with Matchers {

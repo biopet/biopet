@@ -18,6 +18,6 @@ object SelectVariants {
     val sv = new SelectVariants(root)
     sv.variant = input
     sv.out = output
-    return sv
+    sv
   }
 }

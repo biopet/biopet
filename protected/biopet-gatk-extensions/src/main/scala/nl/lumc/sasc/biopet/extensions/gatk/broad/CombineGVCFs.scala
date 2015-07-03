@@ -18,6 +18,6 @@ object CombineGVCFs {
     val cg = new CombineGVCFs(root)
     cg.variant = input
     cg.o = output
-    return cg
+    cg
   }
 }

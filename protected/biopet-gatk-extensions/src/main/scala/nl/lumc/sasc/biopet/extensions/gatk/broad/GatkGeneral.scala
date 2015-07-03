@@ -26,10 +26,10 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction wit
   override val versionExitcode = List(0, 1)
   override def versionCommand = executable + " -jar " + jarFile + " -version"
 
-  override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
+  override def getVersion = super.getVersion.collect { case v => "Gatk " + v }
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (reference_sequence == null) reference_sequence = referenceFasta()
   }
 }

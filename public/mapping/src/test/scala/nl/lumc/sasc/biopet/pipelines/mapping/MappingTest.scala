@@ -32,6 +32,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[Mapping]]
+ *
  * Created by pjvan_thof on 2/12/15.
  */
 class MappingTest extends TestNGSuite with Matchers {
@@ -99,9 +101,9 @@ class MappingTest extends TestNGSuite with Matchers {
 
     //aligners
     mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa-mem") 1 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 2 else 1) else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 1 else 0) else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 0 else 1) else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") if (paired) 2 else 1 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") if (paired) 1 else 0 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") if (paired) 0 else 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Star]) shouldBe ((if (aligner == "star") 1 else if (aligner == "star-2pass") 3 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Bowtie]) shouldBe ((if (aligner == "bowtie") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Stampy]) shouldBe ((if (aligner == "stampy") 1 else 0) * chunks)

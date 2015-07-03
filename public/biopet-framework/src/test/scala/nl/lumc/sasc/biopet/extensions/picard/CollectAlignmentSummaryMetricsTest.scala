@@ -23,6 +23,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[CollectAlignmentSummaryMetrics]]
+ *
  * Created by pjvan_thof on 2/18/15.
  */
 class CollectAlignmentSummaryMetricsTest extends TestNGSuite with Matchers {

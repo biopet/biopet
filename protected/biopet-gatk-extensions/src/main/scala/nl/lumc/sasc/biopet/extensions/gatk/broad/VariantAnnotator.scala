@@ -20,6 +20,6 @@ object VariantAnnotator {
     va.variant = input
     va.input_file = bamFiles
     va.out = output
-    return va
+    va
   }
 }

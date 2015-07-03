@@ -19,6 +19,6 @@ object IndelRealigner {
     ir.input_file :+= input
     ir.targetIntervals = targetIntervals
     ir.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bam")
-    return ir
+    ir
   }
 }

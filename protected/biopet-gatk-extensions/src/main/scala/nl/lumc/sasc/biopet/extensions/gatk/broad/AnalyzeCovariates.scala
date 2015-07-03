@@ -18,6 +18,6 @@ object AnalyzeCovariates {
     ac.before = before
     ac.after = after
     ac.plots = plots
-    return ac
+    ac
   }
 }

@@ -78,8 +78,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
-          mapping.init
-          mapping.biopetScript
+          mapping.init()
+          mapping.biopetScript()
           addAll(mapping.functions)
 
         } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libId)
@@ -118,7 +118,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
 
-      addSummaryJobs
+      addSummaryJobs()
     }
   }
 

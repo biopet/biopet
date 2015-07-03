@@ -29,6 +29,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
 /**
+ * Test class for [[Shiva]]
+ *
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaTest extends TestNGSuite with Matchers {
@@ -54,12 +56,12 @@ class ShivaTest extends TestNGSuite with Matchers {
                 multi: Boolean, single: Boolean, library: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = ShivaTest.config
-      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m.toMap)
+      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
+      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
+      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m)
       ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
-        "library_variantcalling" -> library), m.toMap)
+        "library_variantcalling" -> library), m)
 
     }
 

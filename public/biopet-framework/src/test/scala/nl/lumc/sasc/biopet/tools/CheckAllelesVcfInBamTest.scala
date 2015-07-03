@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 import scala.util.Random
 
 /**
+ * Test class for [[CheckAllelesVcfInBam]]
+ *
  * Created by ahbbollen on 10-4-15.
  */
 class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matchers {

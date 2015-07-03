@@ -81,7 +81,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
     def cmdLine = getPythonCommand + optional("-c", "3")
   }
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(annotationBed != null, "Annotation BED must be supplied")
     require(output != null, "Output must be defined")
     require((mixedStrand && !distinctStrand) || (!mixedStrand && distinctStrand),

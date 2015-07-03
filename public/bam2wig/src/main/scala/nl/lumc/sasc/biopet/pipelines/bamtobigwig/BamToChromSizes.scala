@@ -25,6 +25,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 
 /**
+ * Class to extract chrom.sizes files from a bam file
+ *
  * Created by pjvan_thof on 1/29/15.
  */
 class BamToChromSizes(val root: Configurable) extends InProcessFunction with Configurable {
@@ -41,6 +43,6 @@ class BamToChromSizes(val root: Configurable) extends InProcessFunction with Con
       writer.println(ref.getSequenceName + "\t" + ref.getSequenceLength)
     }
     bamReader.close()
-    writer.close
+    writer.close()
   }
 }

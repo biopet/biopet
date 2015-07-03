@@ -29,6 +29,6 @@ object GenotypeGVCFs {
     val gg = new GenotypeGVCFs(root)
     gg.variant = gvcfFiles
     gg.out = output
-    return gg
+    gg
   }
 }

@@ -27,7 +27,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
   var fastqc: Fastqc = _
 
   override def beforeCmd() {
-    super.beforeCmd
+    super.beforeCmd()
 
     val foundAdapters = fastqc.foundAdapters.map(_.seq)
     if (default_clip_mode == "3") opt_adapter ++= foundAdapters
@@ -44,7 +44,7 @@ class Cutadapt(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Cutada
     val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
     val adapter_stats: mutable.Map[String, List[Any]] = mutable.Map()
 
-    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
+    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines()) {
       line match {
         case trimR(m)     => stats += ("trimmed" -> m.toInt)
         case tooShortR(m) => stats += ("tooshort" -> m.toInt)
@@ -82,6 +82,6 @@ object Cutadapt {
     cutadapt.fastq_input = input
     cutadapt.fastq_output = output
     cutadapt.stats_output = new File(output.getAbsolutePath.substring(0, output.getAbsolutePath.lastIndexOf(".")) + ".stats")
-    return cutadapt
+    cutadapt
   }
 }

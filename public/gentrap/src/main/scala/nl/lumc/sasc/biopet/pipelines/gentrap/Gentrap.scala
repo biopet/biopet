@@ -214,7 +214,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, true)
+    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedJob =
@@ -232,7 +232,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, true)
+    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindJob =
@@ -250,7 +250,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, true)
+    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, isCuffIsoform = true)
 
   /** Container for merge table jobs */
   private lazy val mergeTableJobs: Map[String, Option[MergeTables]] = Map(
@@ -366,7 +366,7 @@ class Gentrap(val root: Configurable) extends QScript
       geneFragmentsCountJob
     }
     // TODO: use proper notation
-    addSummaryJobs
+    addSummaryJobs()
     add(pdfTemplateJob)
     add(pdfReportJob)
   }

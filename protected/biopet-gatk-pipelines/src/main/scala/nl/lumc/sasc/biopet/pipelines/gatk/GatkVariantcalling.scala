@@ -111,7 +111,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
       if (sampleID != null && (useHaplotypecaller || config("joint_genotyping", default = false).asBoolean)) {
         val hcGvcf = new HaplotypeCaller(this)
-        hcGvcf.useGvcf
+        hcGvcf.useGvcf()
         hcGvcf.input_file = scriptOutput.bamFiles
         hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.gvcf.vcf.gz")
         add(hcGvcf)
@@ -228,7 +228,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
-    return indelRealigner.o
+    indelRealigner.o
   }
 
   def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean = false): File = {
@@ -253,7 +253,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     printReads.isIntermediate = isIntermediate
     add(printReads)
 
-    return printReads.o
+    printReads.o
   }
 }
 

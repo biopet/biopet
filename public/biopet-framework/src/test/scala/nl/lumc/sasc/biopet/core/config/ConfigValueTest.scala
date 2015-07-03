@@ -22,6 +22,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[ConfigValue]]
+ *
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigValueTest extends TestNGSuite with Matchers {

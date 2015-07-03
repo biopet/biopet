@@ -17,6 +17,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[BamMetrics]]
+ *
  * Created by pjvan_thof on 4/30/15.
  */
 class BamMetricsTest extends TestNGSuite with Matchers {

@@ -20,6 +20,6 @@ object RealignerTargetCreator {
     val re = new RealignerTargetCreator(root)
     re.input_file :+= input
     re.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.intervals")
-    return re
+    re
   }
 }

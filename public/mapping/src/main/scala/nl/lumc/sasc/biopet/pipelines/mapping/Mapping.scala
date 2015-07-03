@@ -157,8 +157,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
       flexiprep.libId = this.libId
-      flexiprep.init
-      flexiprep.runInitialJobs
+      flexiprep.init()
+      flexiprep.runInitialJobs()
     }
     var bamFiles: List[File] = Nil
     var fastq_R1_output: List[File] = Nil
@@ -175,8 +175,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       if (chunking) {
         (for (t <- 1 to numberChunks.getOrElse(1)) yield {
           val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-          (chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
-            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None))
+          chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
+            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None)
         }).toMap
       } else if (skipFlexiprep) {
         Map(outputDir -> (
@@ -264,17 +264,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 
-  /**
-   * Add bwa aln jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Add bwa aln jobs */
   def addBwaAln(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
@@ -317,17 +310,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sortSam = SortSam(this, samFile, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
-    return sortSam.output
+    sortSam.output
   }
 
-  /**
-   * Adds bwa mem jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds bwa mem jobs */
   def addBwaMem(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
@@ -401,14 +387,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     addAddOrReplaceReadGroups(reorderSam.output, output)
   }
-  /**
-   * Adds stampy jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
@@ -436,14 +415,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.output
   }
 
-  /**
-   * Adds bowtie jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds bowtie jobs */
   def addBowtie(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
@@ -452,43 +424,24 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
     add(bowtie)
-    return addAddOrReplaceReadGroups(bowtie.output, output)
+    addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
-  /**
-   * Adds Star jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds Star jobs */
   def addStar(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
     addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
 
-  /**
-   * Adds Start 2 pass jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds Start 2 pass jobs */
   def addStar2pass(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
     addAddOrReplaceReadGroups(starCommand._1, output)
   }
 
-  /**
-   * Adds AddOrReplaceReadGroups
-   * @param input
-   * @param output
-   * @return
-   */
+  /** Adds AddOrReplaceReadGroups */
   def addAddOrReplaceReadGroups(input: File, output: File): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
@@ -507,7 +460,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Returns readgroup for bwa */
-  def getReadGroupBwa(): String = {
+  def getReadGroupBwa: String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
     RG += "LB:" + libId.get + "\\t"
     RG += "PL:" + platform + "\\t"
@@ -524,26 +477,26 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   //FIXME: This is code duplication from flexiprep, need general class to pass jobs inside a util function
   /**
    * Extracts file if file is compressed
-   * @param file
-   * @param runDir
+   * @param file input file
+   * @param runDir directory to extract when needed
    * @return returns extracted file
    */
   def extractIfNeeded(file: File, runDir: File): File = {
-    if (file == null) return file
-    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+    if (file == null) file
+    else if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")
-      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
+      if (file.getName.endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
       val zcatCommand = Zcat(this, file, newFile)
       zcatCommand.isIntermediate = true
       add(zcatCommand)
-      return newFile
-    } else if (file.getName().endsWith(".bz2")) {
+      newFile
+    } else if (file.getName.endsWith(".bz2")) {
       val newFile = swapExt(runDir, file, ".bz2", "")
       val pbzip2 = Pbzip2(this, file, newFile)
       pbzip2.isIntermediate = true
       add(pbzip2)
-      return newFile
-    } else return file
+      newFile
+    } else file
   }
 
 }

@@ -38,7 +38,7 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     var gvcfPool: List[File] = Nil
     addGenotypingPipeline(gvcfPool)
 
-    while (todoGvcfs.size > 0) {
+    while (todoGvcfs.nonEmpty) {
       val index = Random.nextInt(todoGvcfs.size)
       gvcfPool ::= todoGvcfs(index)
       addGenotypingPipeline(gvcfPool)
@@ -51,8 +51,8 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     gatkGenotyping.inputGvcfs = sampleGvcf :: gvcfPool
     gatkGenotyping.samples :+= sampleName
     gatkGenotyping.outputDir = new File(outputDir, "samples_" + gvcfPool.size)
-    gatkGenotyping.init
-    gatkGenotyping.biopetScript
+    gatkGenotyping.init()
+    gatkGenotyping.biopetScript()
     addAll(gatkGenotyping.functions)
   }
 }

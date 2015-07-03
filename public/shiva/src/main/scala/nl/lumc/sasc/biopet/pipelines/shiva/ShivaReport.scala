@@ -31,9 +31,9 @@ object ShivaReport extends MultisampleReportBuilder {
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> "shiva"))
         ), Map()),
           "Files" -> filesPage,
-          "Versions" -> ReportPage(List(), List((
-            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-            )), Map())
+          "Versions" -> ReportPage(List(), List(
+            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")
+          ), Map())
         ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),

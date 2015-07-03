@@ -20,6 +20,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[Configurable]]
+ *
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigurableTest extends TestNGSuite with Matchers {

@@ -18,6 +18,6 @@ object PrintReads {
     val br = new PrintReads(root)
     br.input_file :+= input
     br.out = output
-    return br
+    br
   }
 }

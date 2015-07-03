@@ -81,11 +81,11 @@ trait BastyTrait extends MultiSampleQScript {
 
   def init() {
     shiva.outputDir = outputDir
-    shiva.init
+    shiva.init()
   }
 
   def biopetScript() {
-    shiva.biopetScript
+    shiva.biopetScript()
     addAll(shiva.functions)
     addSummaryQScript(shiva)
 
@@ -139,7 +139,7 @@ trait BastyTrait extends MultiSampleQScript {
         raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = Some(seed)
-        raxmlBoot.b = Some(math.abs(r.nextInt))
+        raxmlBoot.b = Some(math.abs(r.nextInt()))
         raxmlBoot.w = dirSufixRaxml
         raxmlBoot.N = Some(1)
         raxmlBoot.n = outputName + "_boot_" + t
@@ -189,6 +189,6 @@ trait BastyTrait extends MultiSampleQScript {
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
     qscript.add(bastyGenerateFasta)
-    return FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
+    FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
   }
 }

@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 import scala.util.Random
 
 /**
+ * Test class for [[VcfToTsv]]
+ *
  * Created by ahbbollen on 13-4-15.
  */
 class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {

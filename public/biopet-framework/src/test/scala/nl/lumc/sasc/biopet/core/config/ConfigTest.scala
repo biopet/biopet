@@ -21,6 +21,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
 /**
+ * Test class for [[Config]]
+ *
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConversions {

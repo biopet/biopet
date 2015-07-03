@@ -12,6 +12,8 @@ class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
 }
 
 /**
+ * Object to create a report for [[BamMetrics]]
+ *
  * Created by pjvan_thof on 3/30/15.
  */
 object BammetricsReport extends ReportBuilder {
@@ -23,9 +25,8 @@ object BammetricsReport extends ReportBuilder {
   def indexPage = {
     val bamMetricsPage = this.bamMetricsPage(summary, sampleId, libId)
     ReportPage(bamMetricsPage.subPages ::: List(
-      "Versions" -> ReportPage(List(), List((
-        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-        ))), Map()),
+      "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+      )), Map()),
       "Files" -> ReportPage(List(), List(
         "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/bammetricsInputFile.ssp")
       ), Map())
@@ -51,10 +52,11 @@ object BammetricsReport extends ReportBuilder {
       }
 
     ReportPage(
-      (if (targets.isEmpty) List() else List("Targets" -> ReportPage(
+      if (targets.isEmpty) List()
+      else List("Targets" -> ReportPage(
         List(),
-        targets.map(t => (t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t)))),
-        Map()))),
+        targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t))),
+        Map())),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
@@ -103,13 +105,13 @@ object BammetricsReport extends ReportBuilder {
 
     if (libraryLevel) {
       for (
-        sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+        sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
         lib <- summary.libraries(sample)
       ) {
         tsvWriter.println(getLine(summary, sample, Some(lib)))
       }
     } else {
-      for (sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get)) {
+      for (sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get) {
         tsvWriter.println(getLine(summary, sample))
       }
     }
@@ -122,7 +124,7 @@ object BammetricsReport extends ReportBuilder {
     plot.ylabel = Some("Reads")
     if (libraryLevel) {
       plot.width = Some(200 + (summary.libraries.filter(s => sampleId.getOrElse(s._1) == s._1).foldLeft(0)(_ + _._2.size) * 10))
-    } else plot.width = Some(200 + (summary.samples.filter(s => sampleId.getOrElse(s) == s).size * 10))
+    } else plot.width = Some(200 + (summary.samples.count(s => sampleId.getOrElse(s) == s) * 10))
     plot.title = Some("Aligned reads")
     plot.runLocal()
   }
@@ -145,7 +147,7 @@ object BammetricsReport extends ReportBuilder {
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) {
       tsvWriter.println((for (
-        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
         lib <- summary.libraries(sample)
       ) yield s"$sample-$lib")
         .mkString("library\t", "\t", ""))
@@ -166,7 +168,7 @@ object BammetricsReport extends ReportBuilder {
         summary, Some(sample), lib).value.getOrElse(List())
 
       (insertSize, counts) match {
-        case (l: List[_], l2: List[_]) => {
+        case (l: List[_], l2: List[_]) =>
           l.zip(l2).foreach(i => {
             val insertSize = i._1.toString.toInt
             val count = i._2.toString.toInt
@@ -174,14 +176,13 @@ object BammetricsReport extends ReportBuilder {
             if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
             else map += insertSize -> (old + (sample -> count))
           })
-        }
         case _ => throw new IllegalStateException("Must be a list")
       }
     }
 
     if (libraryLevel) {
       for (
-        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
         lib <- summary.libraries(sample)
       ) fill(sample, Some(lib))
     } else if (sampleId.isDefined) fill(sampleId.get, None)
@@ -191,11 +192,11 @@ object BammetricsReport extends ReportBuilder {
       tsvWriter.print(insertSize)
       if (libraryLevel) {
         for (
-          sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
           lib <- summary.libraries(sample)
         ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
       } else {
-        for (sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample)) {
+        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
           tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
         }
       }
@@ -233,7 +234,7 @@ object BammetricsReport extends ReportBuilder {
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) {
       tsvWriter.println((for (
-        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
         lib <- summary.libraries(sample)
       ) yield s"$sample-$lib")
         .mkString("library\t", "\t", ""))
@@ -254,7 +255,7 @@ object BammetricsReport extends ReportBuilder {
         summary, Some(sample), lib).value.getOrElse(List())
 
       (insertSize, counts) match {
-        case (l: List[_], l2: List[_]) => {
+        case (l: List[_], l2: List[_]) =>
           l.zip(l2).foreach(i => {
             val insertSize = i._1.toString.toInt
             val count = i._2.toString.toLong
@@ -262,14 +263,13 @@ object BammetricsReport extends ReportBuilder {
             if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
             else map += insertSize -> (old + (sample -> count))
           })
-        }
         case _ => throw new IllegalStateException("Must be a list")
       }
     }
 
     if (libraryLevel) {
       for (
-        sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
         lib <- summary.libraries(sample)
       ) fill(sample, Some(lib))
     } else if (sampleId.isDefined) fill(sampleId.get, None)
@@ -279,11 +279,11 @@ object BammetricsReport extends ReportBuilder {
       tsvWriter.print(insertSize)
       if (libraryLevel) {
         for (
-          sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample);
+          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
           lib <- summary.libraries(sample)
         ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
       } else {
-        for (sample <- summary.samples if (sampleId.isEmpty || sampleId.get == sample)) {
+        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
           tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
         }
       }

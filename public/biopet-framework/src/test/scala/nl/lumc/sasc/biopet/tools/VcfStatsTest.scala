@@ -24,6 +24,8 @@ import org.testng.annotations.Test
 import scala.collection.mutable
 
 /**
+ * Test class for [[VcfStats]]
+ *
  * Created by pjvan_thof on 2/5/15.
  */
 class VcfStatsTest extends TestNGSuite with Matchers {

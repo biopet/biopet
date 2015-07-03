@@ -24,6 +24,8 @@ import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * Pipeline to create BigWigle files from a bam file
+ *
  * Created by pjvan_thof on 1/29/15.
  */
 class Bam2Wig(val root: Configurable) extends QScript with BiopetQScript {

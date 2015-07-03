@@ -60,7 +60,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     def cmdLine = getPythonCommand
   }
 
-  private def removeEmptyPile = new BiopetCommandLineFunction {
+  private def removeEmptyPile() = new BiopetCommandLineFunction {
     override val root: Configurable = wrapper.root
     override def configName = wrapper.configName
     executable = config("exe", default = "grep", freeVar = false)
@@ -90,14 +90,14 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     varscan.freezeFieldValues()
   }
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
   }
 
   def cmdLine: String = {
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
-    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
+    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile().commandLine + " | " +
       varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }

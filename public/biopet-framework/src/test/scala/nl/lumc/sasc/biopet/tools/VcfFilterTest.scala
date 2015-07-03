@@ -10,6 +10,8 @@ import org.testng.annotations.Test
 import scala.util.Random
 
 /**
+ * Test class for [[VcfFilter]]
+ *
  * Created by ahbbollen on 9-4-15.
  */
 class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {

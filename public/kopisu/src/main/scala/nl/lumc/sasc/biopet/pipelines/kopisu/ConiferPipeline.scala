@@ -90,11 +90,11 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
         val source = new File(controlsDir, controlRPKMfile)
 
         if (!target.exists) {
-          add(Ln(this, source, target, false))
+          add(Ln(this, source, target, relative = false))
           refRPKMlist :+= target
         } else if (!target.equals(source)) {
           target.delete()
-          add(Ln(this, source, target, false))
+          add(Ln(this, source, target, relative = false))
           refRPKMlist :+= target
         }
       }

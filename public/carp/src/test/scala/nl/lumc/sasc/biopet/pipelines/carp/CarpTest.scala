@@ -30,6 +30,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[Carp]]
+ *
  * Created by pjvan_thof on 2/13/15.
  */
 class CarpTest extends TestNGSuite with Matchers {
@@ -55,11 +57,11 @@ class CarpTest extends TestNGSuite with Matchers {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> CarpTest.outputDir
       ), CarpTest.executables)
 
-      if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(CarpTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(CarpTest.sample3, m.toMap)
-      if (threatment) m = ConfigUtils.mergeMaps(CarpTest.threatment1, m.toMap)
-      if (control) m = ConfigUtils.mergeMaps(CarpTest.control1, m.toMap)
+      if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m)
+      if (sample2) m = ConfigUtils.mergeMaps(CarpTest.sample2, m)
+      if (sample3) m = ConfigUtils.mergeMaps(CarpTest.sample3, m)
+      if (threatment) m = ConfigUtils.mergeMaps(CarpTest.threatment1, m)
+      if (control) m = ConfigUtils.mergeMaps(CarpTest.control1, m)
       m
     }
 

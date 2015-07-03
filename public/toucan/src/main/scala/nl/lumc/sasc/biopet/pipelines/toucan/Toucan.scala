@@ -23,6 +23,8 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * Pipeline to annotate a vcf file with VEP
+ *
  * Created by ahbbollen on 15-1-15.
  */
 class Toucan(val root: Configurable) extends QScript with BiopetQScript with Reference {
