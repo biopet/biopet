@@ -6,6 +6,8 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.summary.Summary
 
 /**
+ * This is a tools to extract values from a summary to a tsv file
+ *
  * Created by pjvan_thof on 4/23/15.
  */
 object SummaryToTsv extends ToolCommand {
@@ -15,16 +17,16 @@ object SummaryToTsv extends ToolCommand {
                   mode: String = "root") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('s', "summary") required () unbounded () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('s', "summary") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
     }
-    opt[File]('o', "output") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
     }
-    opt[String]('p', "path") required () unbounded () valueName ("<value>") action { (x, c) =>
+    opt[String]('p', "path") required () unbounded () valueName "<value>" action { (x, c) =>
       c.copy(values = c.values ::: x :: Nil)
     }
-    opt[String]('m', "mode") maxOccurs (1) unbounded () valueName ("<root|sample|lib>") action { (x, c) =>
+    opt[String]('m', "mode") maxOccurs 1 unbounded () valueName "<root|sample|lib>" action { (x, c) =>
       c.copy(mode = x)
     }
 

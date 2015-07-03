@@ -29,22 +29,19 @@ object SamplesTsvToJson extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('i', "inputFiles") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('i', "inputFiles") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputFiles = x :: c.inputFiles)
-    } text ("Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed")
+    } text "Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed"
   }
 
-  /**
-   * Executes SamplesTsvToJson
-   * @param args
-   */
+  /** Executes SamplesTsvToJson */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val fileMaps = for (inputFile <- commandArgs.inputFiles) yield {
       val reader = Source.fromFile(inputFile)
-      val lines = reader.getLines.toList.filter(!_.isEmpty)
+      val lines = reader.getLines().toList.filter(!_.isEmpty)
       val header = lines.head.split("\t")
       val sampleColumn = header.indexOf("sample")
       val libraryColumn = header.indexOf("library")
@@ -55,9 +52,8 @@ object SamplesTsvToJson extends ToolCommand {
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) values(libraryColumn) else null
         val valuesMap = (for (
-          t <- 0 until values.size;
-          if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
-        ) yield (header(t) -> values(t))).toMap
+          t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
+        ) yield header(t) -> values(t)).toMap
         val map: Map[String, Any] = if (library != null) {
           Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
         } else {

@@ -24,7 +24,7 @@ import org.biojava3.core.sequence.io.FastaReaderHelper
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
-import scala.collection.SortedMap
+import scala.collection.{ mutable, SortedMap }
 import scala.collection.mutable.{ Map, Set }
 import scala.util.matching.Regex
 
@@ -65,10 +65,10 @@ object SageCreateLibrary extends ToolCommand {
                   noAntiTagsOutput: File = null, allGenesOutput: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
-    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
     }
     opt[String]("tag") required () unbounded () action { (x, c) =>
@@ -77,13 +77,13 @@ object SageCreateLibrary extends ToolCommand {
     opt[Int]("length") required () unbounded () action { (x, c) =>
       c.copy(length = x)
     }
-    opt[File]("noTagsOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("noTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noTagsOutput = x)
     }
-    opt[File]("noAntiTagsOutput") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("noAntiTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noAntiTagsOutput = x)
     }
-    opt[File]("allGenesOutput") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("allGenesOutput") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(allGenesOutput = x)
     }
   }
@@ -91,17 +91,17 @@ object SageCreateLibrary extends ToolCommand {
   var tagRegex: Regex = null
   var geneRegex = """ENSG[0-9]{11}""".r
 
-  val tagGenesMap: Map[String, TagGenes] = Map()
+  val tagGenesMap: mutable.Map[String, TagGenes] = mutable.Map()
 
-  val allGenes: Set[String] = Set()
-  val tagGenes: Set[String] = Set()
-  val antiTagGenes: Set[String] = Set()
+  val allGenes: mutable.Set[String] = mutable.Set()
+  val tagGenes: mutable.Set[String] = mutable.Set()
+  val antiTagGenes: mutable.Set[String] = mutable.Set()
 
   class TagGenes {
-    val firstTag: Set[String] = Set()
-    val allTags: Set[String] = Set()
-    val firstAntiTag: Set[String] = Set()
-    val allAntiTags: Set[String] = Set()
+    val firstTag: mutable.Set[String] = mutable.Set()
+    val allTags: mutable.Set[String] = mutable.Set()
+    val firstAntiTag: mutable.Set[String] = mutable.Set()
+    val allAntiTags: mutable.Set[String] = mutable.Set()
   }
   class TagResult(val firstTag: String, val allTags: List[String], val firstAntiTag: String, val allAntiTags: List[String])
 
@@ -147,7 +147,7 @@ object SageCreateLibrary extends ToolCommand {
       for (gene <- allGenes if !tagGenes.contains(gene)) {
         writer.println(gene)
       }
-      writer.close
+      writer.close()
     }
 
     if (commandArgs.noAntiTagsOutput != null) {
@@ -155,7 +155,7 @@ object SageCreateLibrary extends ToolCommand {
       for (gene <- allGenes if !antiTagGenes.contains(gene)) {
         writer.println(gene)
       }
-      writer.close
+      writer.close()
     }
 
     if (commandArgs.allGenesOutput != null) {
@@ -163,7 +163,7 @@ object SageCreateLibrary extends ToolCommand {
       for (gene <- allGenes) {
         writer.println(gene)
       }
-      writer.close
+      writer.close()
     }
   }
 
@@ -196,14 +196,14 @@ object SageCreateLibrary extends ToolCommand {
   }
 
   def getTags(name: String, seq: DNASequence): TagResult = {
-    val allTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString
+    val allTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString()
     val firstTag = if (allTags.isEmpty) null else allTags.last
-    val allAntiTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList) yield tag.toString
+    val allAntiTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList) yield tag.toString()
     val firstAntiTag = if (allAntiTags.isEmpty) null else allAntiTags.head
     val result = new TagResult(firstTag, allTags, firstAntiTag, allAntiTags)
 
     addTagresultToTaglib(name, result)
 
-    return result
+    result
   }
 }

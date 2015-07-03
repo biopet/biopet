@@ -53,12 +53,12 @@ object FastqSplitter extends ToolCommand {
   case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
-    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+    } text "out is a required file property"
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x :: c.outputFile)
-    } text ("out is a required file property")
+    } text "out is a required file property"
   }
 
   /**
@@ -87,7 +87,7 @@ object FastqSplitter extends ToolCommand {
         }
       }
     }
-    for (writer <- output) writer.close
+    for (writer <- output) writer.close()
     logger.info("Done, " + counter + " reads processed")
   }
 }

@@ -58,8 +58,8 @@ class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with
 
   override val defaultCoreMemory = 4.0
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     reference = referenceFasta()
   }
 
@@ -91,43 +91,43 @@ object BastyGenerateFasta extends ToolCommand {
                   reference: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('V', "inputVcf") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('V', "inputVcf") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputVcf = x)
-    } text ("vcf file, needed for outputVariants and outputConsensusVariants") validate { x =>
+    } text "vcf file, needed for outputVariants and outputConsensusVariants" validate { x =>
       if (x.exists) success else failure("File does not exist: " + x)
     }
-    opt[File]("bamFile") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("bamFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
-    } text ("bam file, needed for outputConsensus and outputConsensusVariants") validate { x =>
+    } text "bam file, needed for outputConsensus and outputConsensusVariants" validate { x =>
       if (x.exists) success else failure("File does not exist: " + x)
     }
-    opt[File]("outputVariants") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("outputVariants") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputVariants = x)
-    } text ("fasta with only variants from vcf file")
-    opt[File]("outputConsensus") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
+    } text "fasta with only variants from vcf file"
+    opt[File]("outputConsensus") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputConsensus = x)
-    } text ("Consensus fasta from bam, always reference bases else 'N'")
-    opt[File]("outputConsensusVariants") maxOccurs (1) unbounded () valueName ("<file>") action { (x, c) =>
+    } text "Consensus fasta from bam, always reference bases else 'N'"
+    opt[File]("outputConsensusVariants") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputConsensusVariants = x)
-    } text ("Consensus fasta from bam with variants from vcf file, always reference bases else 'N'")
+    } text "Consensus fasta from bam with variants from vcf file, always reference bases else 'N'"
     opt[Unit]("snpsOnly") unbounded () action { (x, c) =>
       c.copy(snpsOnly = true)
-    } text ("Only use snps from vcf file")
+    } text "Only use snps from vcf file"
     opt[String]("sampleName") unbounded () action { (x, c) =>
       c.copy(sampleName = x)
-    } text ("Sample name in vcf file")
+    } text "Sample name in vcf file"
     opt[String]("outputName") required () unbounded () action { (x, c) =>
       c.copy(outputName = x)
-    } text ("Output name in fasta file header")
+    } text "Output name in fasta file header"
     opt[Int]("minAD") unbounded () action { (x, c) =>
       c.copy(minAD = x)
-    } text ("min AD value in vcf file for sample. Defaults to: 8")
+    } text "min AD value in vcf file for sample. Defaults to: 8"
     opt[Int]("minDepth") unbounded () action { (x, c) =>
       c.copy(minDepth = x)
-    } text ("min depth in bam file. Defaults to: 8")
+    } text "min depth in bam file. Defaults to: 8"
     opt[File]("reference") unbounded () action { (x, c) =>
       c.copy(reference = x)
-    } text ("Indexed reference fasta file") validate { x =>
+    } text "Indexed reference fasta file" validate { x =>
       if (x.exists) success else failure("File does not exist: " + x)
     }
 
@@ -188,7 +188,7 @@ object BastyGenerateFasta extends ToolCommand {
 
         val variants: Map[(Int, Int), VariantContext] = if (cmdArgs.inputVcf != null) {
           val reader = new VCFFileReader(cmdArgs.inputVcf, true)
-          (for (variant <- reader.query(chrName, begin, end) if (!cmdArgs.snpsOnly || variant.isSNP)) yield {
+          (for (variant <- reader.query(chrName, begin, end) if !cmdArgs.snpsOnly || variant.isSNP) yield {
             (variant.getStart, variant.getEnd) -> variant
           }).toMap
         } else Map()
@@ -202,10 +202,10 @@ object BastyGenerateFasta extends ToolCommand {
             for (t <- s to e) coverage(t - begin) += 1
           }
         } else {
-          for (t <- 0 until coverage.length) coverage(t) = cmdArgs.minDepth
+          for (t <- coverage.indices) coverage(t) = cmdArgs.minDepth
         }
 
-        val consensus = for (t <- 0 until coverage.length) yield {
+        val consensus = for (t <- coverage.indices) yield {
           if (coverage(t) >= cmdArgs.minDepth) referenceSequence.getBases()(t).toChar
           else 'N'
         }
@@ -222,7 +222,7 @@ object BastyGenerateFasta extends ToolCommand {
               val stripSufix = if (variant.get._1._2 > end) variant.get._1._2 - end else 0
               val allele = getMaxAllele(variant.get._2)
               consensusPos += variant.get._2.getReference.getBases.length
-              buffer.append(allele.substring(stripPrefix, allele.size - stripSufix))
+              buffer.append(allele.substring(stripPrefix, allele.length - stripSufix))
             } else {
               buffer.append(consensus(consensusPos))
               consensusPos += 1
@@ -230,7 +230,7 @@ object BastyGenerateFasta extends ToolCommand {
           }
         }
 
-        (chunk -> (consensus.mkString.toUpperCase, buffer.toString.toUpperCase))
+        chunk -> (consensus.mkString.toUpperCase, buffer.toString().toUpperCase)
       }).toMap
       if (cmdArgs.outputConsensus != null) {
         val writer = new PrintWriter(cmdArgs.outputConsensus)
@@ -239,7 +239,7 @@ object BastyGenerateFasta extends ToolCommand {
           writer.print(chunks(c)._1)
         }
         writer.println()
-        writer.close
+        writer.close()
       }
       if (cmdArgs.outputConsensusVariants != null) {
         val writer = new PrintWriter(cmdArgs.outputConsensusVariants)
@@ -248,7 +248,7 @@ object BastyGenerateFasta extends ToolCommand {
           writer.print(chunks(c)._2)
         }
         writer.println()
-        writer.close
+        writer.close()
       }
     }
   }
@@ -257,12 +257,12 @@ object BastyGenerateFasta extends ToolCommand {
     val writer = new PrintWriter(cmdArgs.outputVariants)
     writer.println(">" + cmdArgs.outputName)
     val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
-    for (vcfRecord <- vcfReader if (!cmdArgs.snpsOnly || vcfRecord.isSNP)) yield {
+    for (vcfRecord <- vcfReader if !cmdArgs.snpsOnly || vcfRecord.isSNP) yield {
       writer.print(getMaxAllele(vcfRecord))
     }
     writer.println()
-    writer.close
-    vcfReader.close
+    writer.close()
+    vcfReader.close()
   }
 
   protected def getMaxAllele(vcfRecord: VariantContext): String = {
@@ -276,6 +276,6 @@ object BastyGenerateFasta extends ToolCommand {
     if (AD == null) return fillAllele("", maxSize)
     val maxADid = AD.zipWithIndex.maxBy(_._1)._2
     if (AD(maxADid) < cmdArgs.minAD) return fillAllele("", maxSize)
-    return fillAllele(vcfRecord.getAlleles()(maxADid).getBaseString, maxSize)
+    fillAllele(vcfRecord.getAlleles()(maxADid).getBaseString, maxSize)
   }
 }

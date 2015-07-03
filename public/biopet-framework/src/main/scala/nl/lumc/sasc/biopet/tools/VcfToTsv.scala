@@ -22,6 +22,7 @@ import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.ToolCommand
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.collection.mutable.{ ListBuffer, Map }
 
 class VcfToTsv {
@@ -35,12 +36,12 @@ object VcfToTsv extends ToolCommand {
                   separator: String = "\t", listSeparator: String = ",", maxDecimals: Int = 2) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('o', "outputFile") maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "outputFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
-    } text ("output file, default to stdout")
+    } text "output file, default to stdout"
     opt[String]('f', "field") unbounded () action { (x, c) =>
       c.copy(fields = x :: c.fields)
     }
@@ -59,15 +60,15 @@ object VcfToTsv extends ToolCommand {
     opt[Unit]('d', "disable_defaults") unbounded () action { (x, c) =>
       c.copy(disableDefaults = true)
     }
-    opt[String]("separator") maxOccurs (1) action { (x, c) =>
+    opt[String]("separator") maxOccurs 1 action { (x, c) =>
       c.copy(separator = x)
-    } text ("Optional separator. Default is tab-delimited")
-    opt[String]("list_separator") maxOccurs (1) action { (x, c) =>
+    } text "Optional separator. Default is tab-delimited"
+    opt[String]("list_separator") maxOccurs 1 action { (x, c) =>
       c.copy(listSeparator = x)
-    } text ("Optional list separator. By default, lists are separated by a comma")
-    opt[Int]("max_decimals") maxOccurs (1) action { (x, c) =>
+    } text "Optional list separator. By default, lists are separated by a comma"
+    opt[Int]("max_decimals") maxOccurs 1 action { (x, c) =>
       c.copy(maxDecimals = x)
-    } text ("Number of decimal places for numbers. Default is 2")
+    } text "Number of decimal places for numbers. Default is 2"
   }
 
   val defaultFields = List("CHROM", "POS", "ID", "REF", "ALT", "QUAL")
@@ -94,7 +95,7 @@ object VcfToTsv extends ToolCommand {
       commandArgs.fields.toSet[String] ++
       (if (commandArgs.allInfo) allInfoFields else commandArgs.infoFields).map("INFO-" + _) ++ {
         val buffer: ListBuffer[String] = ListBuffer()
-        for (f <- (if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFields); sample <- samples) {
+        for (f <- if (commandArgs.allFormat) allFormatFields else commandArgs.sampleFields; sample <- samples) {
           buffer += sample + "-" + f
         }
         buffer.toSet[String]
@@ -107,7 +108,7 @@ object VcfToTsv extends ToolCommand {
 
     writer.println(sortedFields.mkString("#", commandArgs.separator, ""))
     for (vcfRecord <- reader) {
-      val values: Map[String, Any] = Map()
+      val values: mutable.Map[String, Any] = mutable.Map()
       values += "CHROM" -> vcfRecord.getChr
       values += "POS" -> vcfRecord.getStart
       values += "ID" -> vcfRecord.getID
@@ -158,7 +159,7 @@ object VcfToTsv extends ToolCommand {
    * @return DecimalFormat formatter
    */
   def createFormatter(len: Int): DecimalFormat = {
-    val patternString = "###." + (for (x <- (1 to len)) yield "#").mkString("")
+    val patternString = "###." + (for (x <- 1 to len) yield "#").mkString("")
     new DecimalFormat(patternString)
   }
 
@@ -173,31 +174,29 @@ object VcfToTsv extends ToolCommand {
   def sortFields(fields: Set[String], samples: List[String]): List[String] = {
     def fieldType(x: String) = x match {
       case _ if x.startsWith("INFO-") => 'i'
-      case _ if (samples.exists(y => x.startsWith(y + "-"))) => 'f'
+      case _ if samples.exists(y => x.startsWith(y + "-")) => 'f'
       case _ => 'g'
     }
 
     fields.toList.sortWith((a, b) => {
       (fieldType(a), fieldType(b)) match {
-        case ('g', 'g') => {
+        case ('g', 'g') =>
           val ai = defaultFields.indexOf(a)
           val bi = defaultFields.indexOf(b)
           if (bi < 0) true else ai <= bi
-        }
-        case ('f', 'f') => {
+        case ('f', 'f') =>
           val sampleA = a.split("-").head
           val sampleB = b.split("-").head
           sampleA.compareTo(sampleB) match {
-            case 0            => !(a.compareTo(b) > 0)
-            case i if (i > 0) => false
-            case _            => true
+            case 0          => !(a.compareTo(b) > 0)
+            case i if i > 0 => false
+            case _          => true
           }
-        }
-        case ('g', _)         => true
-        case (_, 'g')         => false
-        case (a, b) if a == b => !(a.compareTo(b) > 0)
-        case ('i', _)         => true
-        case _                => false
+        case ('g', _)             => true
+        case (_, 'g')             => false
+        case (a2, b2) if a2 == b2 => !(a2.compareTo(b2) > 0)
+        case ('i', _)             => true
+        case _                    => false
       }
     })
   }

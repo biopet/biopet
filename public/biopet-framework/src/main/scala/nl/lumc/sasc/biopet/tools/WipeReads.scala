@@ -257,7 +257,7 @@ object WipeReads extends ToolCommand {
 
     /** filter function for read IDs */
     val rgFilter =
-      if (readGroupIds.size == 0)
+      if (readGroupIds.isEmpty)
         (r: SAMRecord) => true
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)

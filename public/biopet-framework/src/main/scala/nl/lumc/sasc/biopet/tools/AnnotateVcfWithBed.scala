@@ -26,13 +26,15 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 
-/**
- * Created by pjvan_thof on 1/10/15.
- */
 class AnnotateVcfWithBed {
   // TODO: Queue wrapper
 }
 
+/**
+ * This a tools to annotate a vcf file with values from a bed file
+ *
+ * Created by pjvan_thof on 1/10/15.
+ */
 object AnnotateVcfWithBed extends ToolCommand {
 
   /**
@@ -52,30 +54,29 @@ object AnnotateVcfWithBed extends ToolCommand {
                   fieldType: String = "String") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("Input is a required file property")
-    opt[File]('B', "bedFile") required () unbounded () valueName ("<bed file>") action { (x, c) =>
+    } text "Input is a required file property"
+    opt[File]('B', "bedFile") required () unbounded () valueName "<bed file>" action { (x, c) =>
       c.copy(bedFile = x)
-    } text ("Bedfile is a required file property")
-    opt[File]('o', "output") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
+    } text "Bedfile is a required file property"
+    opt[File]('o', "output") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(outputFile = x)
-    } text ("out is a required file property")
-    opt[String]('f', "fieldName") required () unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "out is a required file property"
+    opt[String]('f', "fieldName") required () unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldName = x)
-    } text ("Name of info field in new vcf file")
-    opt[String]('d', "fieldDescription") unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "Name of info field in new vcf file"
+    opt[String]('d', "fieldDescription") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldDescription = x)
-    } text ("Description of field in new vcf file")
-    opt[String]('t', "fieldType") unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "Description of field in new vcf file"
+    opt[String]('t', "fieldType") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldType = x)
-    } text ("Description of field in new vcf file")
+    } text "Description of field in new vcf file"
   }
 
   /**
-   * Program will Annotate a vcf file with the overlapping regions of a bed file, 4e column of the bed file we in a info tag in the vcf file
-   *
-   * @param args
+   * Program will Annotate a vcf file with the overlapping regions of a bed file,
+   * 4e column of the bed file we in a info tag in the vcf file
    */
   def main(args: Array[String]): Unit = {
 
@@ -108,7 +109,7 @@ object AnnotateVcfWithBed extends ToolCommand {
       val values = line.split("\t")
       if (values.size >= 4)
         bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
-      else (values.size >= 3 && fieldType == VCFHeaderLineType.Flag)
+      else values.size >= 3 && fieldType == VCFHeaderLineType.Flag
       bedRecords(values(0)) = (values(1).toInt, values(2).toInt, "") :: bedRecords.getOrElse(values(0), Nil)
     }
 
@@ -148,8 +149,8 @@ object AnnotateVcfWithBed extends ToolCommand {
         writer.add(builder.make)
       }
     }
-    reader.close
-    writer.close
+    reader.close()
+    writer.close()
 
     logger.info("Done")
   }

@@ -229,9 +229,9 @@ object ExtractAlignedFastq extends ToolCommand {
       """.stripMargin)
 
     checkConfig { c =>
-      if (c.inputFastq2 != None && c.outputFastq2 == None)
+      if (c.inputFastq2.isDefined && c.outputFastq2.isEmpty)
         failure("Missing output FASTQ file 2")
-      else if (c.inputFastq2 == None && c.outputFastq2 != None)
+      else if (c.inputFastq2.isEmpty && c.outputFastq2.isDefined)
         failure("Missing input FASTQ file 2")
       else
         success

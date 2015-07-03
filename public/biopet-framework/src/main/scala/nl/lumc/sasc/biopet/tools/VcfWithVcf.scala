@@ -10,6 +10,8 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.collection.JavaConversions._
 
 /**
+ * This is a tool to annotate a vcf file with info value from a other vcf file
+ *
  * Created by ahbbollen on 11-2-15.
  */
 object VcfWithVcf extends ToolCommand {
@@ -26,30 +28,29 @@ object VcfWithVcf extends ToolCommand {
   }
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('O', "outputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('O', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('S', "secondaryVcf") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('S', "secondaryVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(secondaryVcf = x)
     }
-    opt[String]('f', "field") unbounded () valueName ("<field> or <input_field:output_field> or <input_field:output_field:method>") action { (x, c) =>
+    opt[String]('f', "field") unbounded () valueName "<field> or <input_field:output_field> or <input_field:output_field:method>" action { (x, c) =>
       val values = x.split(":")
       if (values.size > 2) c.copy(fields = Fields(values(0), values(1), FieldMethod.withName(values(2))) :: c.fields)
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
-    } text ("""| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
-               | By default we will return all values found for a given field.
-               | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
-               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
-               |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
-               |   - unique: takes only unique values """.stripMargin
-    )
-    opt[Boolean]("match") valueName ("<Boolean>") maxOccurs (1) action { (x, c) =>
+    } text """| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
+                                                                                                                                                      | By default we will return all values found for a given field.
+                                                                                                                                                      | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
+                                                                                                                                                      |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
+                                                                                                                                                      |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
+                                                                                                                                                      |   - unique: takes only unique values """.stripMargin
+    opt[Boolean]("match") valueName "<Boolean>" maxOccurs 1 action { (x, c) =>
       c.copy(matchAllele = x)
-    } text ("Match alternative alleles; default true")
+    } text "Match alternative alleles; default true"
   }
 
   def main(args: Array[String]): Unit = {
@@ -88,18 +89,16 @@ object VcfWithVcf extends ToolCommand {
     for (record <- reader) {
       val secondaryRecords = if (commandArgs.matchAllele) {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
-          filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele(_)))
+          filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele))
       } else {
         secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList
       }
 
       val fieldMap = (for (
-        f <- commandArgs.fields;
-        if secondaryRecords.exists(_.hasAttribute(f.inputField))
+        f <- commandArgs.fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
       ) yield {
         f.outputField -> (for (
-          secondRecord <- secondaryRecords;
-          if (secondRecord.hasAttribute(f.inputField))
+          secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
         ) yield {
           secondRecord.getAttribute(f.inputField) match {
             case l: List[_] => l
@@ -110,20 +109,18 @@ object VcfWithVcf extends ToolCommand {
 
       writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
         builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.fieldMethod match {
-          case FieldMethod.max => {
+          case FieldMethod.max =>
             header.getInfoHeaderLine(attribute._1).getType match {
               case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
               case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).max)
               case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
             }
-          }
-          case FieldMethod.min => {
+          case FieldMethod.min =>
             header.getInfoHeaderLine(attribute._1).getType match {
               case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).min)
               case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).min)
               case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
             }
-          }
           case FieldMethod.unique => attribute._2.distinct.toArray
           case _                  => attribute._2.toArray
         })

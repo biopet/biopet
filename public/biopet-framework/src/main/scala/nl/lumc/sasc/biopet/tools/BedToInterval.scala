@@ -53,19 +53,19 @@ object BedToInterval extends ToolCommand {
     bedToInterval.input = inputBed
     bedToInterval.bamFile = inputBam
     bedToInterval.output = output
-    return bedToInterval
+    bedToInterval
   }
 
   case class Args(inputFile: File = null, outputFile: File = null, bamFile: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('o', "output") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('b', "bam") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('b', "bam") required () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
     }
   }
@@ -85,12 +85,12 @@ object BedToInterval extends ToolCommand {
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
       record.getSequenceName -> record.getSequenceLength
     }
-    inputSam.close
+    inputSam.close()
     val refsMap = Map(refs: _*)
 
     val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
-      line <- bedFile.getLines;
+      line <- bedFile.getLines();
       split = line.split("\t") if split.size >= 3;
       chr = split(0);
       start = split(1);
@@ -102,7 +102,7 @@ object BedToInterval extends ToolCommand {
       else {
         var strand = "+"
         for (t <- 3 until split.length) {
-          if ((split(t) == "+" || split(t) == "-")) strand = split(t)
+          if (split(t) == "+" || split(t) == "-") strand = split(t)
         }
         writer.write(strand)
       }

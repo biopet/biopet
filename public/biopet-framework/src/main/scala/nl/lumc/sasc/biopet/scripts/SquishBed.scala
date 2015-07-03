@@ -40,6 +40,6 @@ object SquishBed {
     val squishBed = new SquishBed(root)
     squishBed.input = input
     squishBed.output = new File(outputDir, input.getName.stripSuffix(".bed") + ".squish.bed")
-    return squishBed
+    squishBed
   }
 }

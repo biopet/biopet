@@ -101,7 +101,7 @@ object MergeTables extends ToolCommand {
     val split = line
       .split(delimiter)
       .filter(_.nonEmpty)
-    val colSize = split.size
+    val colSize = split.length
     require(idIdces.forall(_ < colSize), "All feature ID indices must be smaller than number of columns")
     require(valIdx < colSize, "Value index must be smaller than number of columns")
 

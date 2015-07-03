@@ -269,7 +269,7 @@ object VcfFilter extends ToolCommand {
   def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int = 1): Boolean = {
     record.getGenotypes.count(genotype => {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
-      if (!AD.isEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
+      if (AD.nonEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
     }) >= minSamplesPass
   }
 

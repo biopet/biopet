@@ -41,6 +41,6 @@ object VcfUtils {
    * @return
    */
   def fillAllele(bases: String, newSize: Int, fillWith: Char = '-'): String = {
-    bases + (Array.fill[Char](newSize - bases.size)(fillWith)).mkString
+    bases + Array.fill[Char](newSize - bases.length)(fillWith).mkString
   }
 }
