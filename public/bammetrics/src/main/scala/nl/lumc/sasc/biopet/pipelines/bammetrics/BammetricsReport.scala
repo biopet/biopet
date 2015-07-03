@@ -5,7 +5,7 @@ import java.io.{ File, PrintWriter }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
-import nl.lumc.sasc.biopet.extensions.rscript.{ StackedBarPlot, XYPlot }
+import nl.lumc.sasc.biopet.extensions.rscript.{ StackedBarPlot, LinePlot }
 
 class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = BammetricsReport
@@ -204,7 +204,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    val plot = new XYPlot(null)
+    val plot = new LinePlot(null)
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Reads")
@@ -292,7 +292,7 @@ object BammetricsReport extends ReportBuilder {
 
     tsvWriter.close()
 
-    val plot = new XYPlot(null)
+    val plot = new LinePlot(null)
     plot.input = tsvFile
     plot.output = pngFile
     plot.ylabel = Some("Bases")

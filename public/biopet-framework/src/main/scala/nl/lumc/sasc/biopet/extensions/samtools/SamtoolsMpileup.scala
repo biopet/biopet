@@ -42,8 +42,8 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
   var depth: Option[Int] = config("depth")
   var outputMappingQuality: Boolean = config("output_mapping_quality", default = false)
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     reference = referenceFasta()
   }
 
@@ -69,17 +69,17 @@ object SamtoolsMpileup {
     val mpileup = new SamtoolsMpileup(root)
     mpileup.input = List(input)
     mpileup.output = output
-    return mpileup
+    mpileup
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SamtoolsMpileup = {
     val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
+    apply(root, input, outputFile)
   }
 
   def apply(root: Configurable, input: File): SamtoolsMpileup = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".mpileup"

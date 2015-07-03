@@ -59,8 +59,8 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var maqerr: Option[Int] = config("maqerr")
   var maxins: Option[Int] = config("maxins")
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 
@@ -81,10 +81,9 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
       optional("--maxins", maxins) +
       required(reference) +
       (R2 match {
-        case Some(r2) => {
+        case Some(r2) =>
           required("-1", R1) +
             optional("-2", r2)
-        }
         case _ => required(R1)
       }) +
       " > " + required(output)

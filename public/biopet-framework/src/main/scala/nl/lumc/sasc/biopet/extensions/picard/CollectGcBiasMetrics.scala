@@ -53,8 +53,8 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (outputChart == null) outputChart = new File(output + ".pdf")
     if (reference == null) reference = referenceFasta()
   }
@@ -84,6 +84,6 @@ object CollectGcBiasMetrics {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
     collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")
-    return collectGcBiasMetrics
+    collectGcBiasMetrics
   }
 }

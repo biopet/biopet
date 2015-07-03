@@ -37,8 +37,8 @@ class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
   override val defaultCoreMemory = memory.getOrElse(1000).toDouble / 1000
   override val defaultThreads = 2
 
-  override def beforeCmd {
-    if (!memory.isEmpty) memory = Option(memory.get * threads)
+  override def beforeCmd() {
+    if (memory.isDefined) memory = Option(memory.get * threads)
   }
 
   /** return commandline to execute */
@@ -58,6 +58,6 @@ object Pbzip2 {
     val pbzip2 = new Pbzip2(root)
     pbzip2.input = input
     pbzip2.output = output
-    return pbzip2
+    pbzip2
   }
 }

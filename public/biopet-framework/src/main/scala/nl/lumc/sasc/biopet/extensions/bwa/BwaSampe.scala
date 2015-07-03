@@ -57,8 +57,8 @@ class BwaSampe(val root: Configurable) extends Bwa with Reference {
 
   var r: String = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

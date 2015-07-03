@@ -36,8 +36,8 @@ class SortSam(val root: Configurable) extends Picard {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
@@ -56,6 +56,6 @@ object SortSam {
     sortSam.output = output
     if (sortOrder == null) sortSam.sortOrder = "coordinate"
     else sortSam.sortOrder = sortOrder
-    return sortSam
+    sortSam
   }
 }

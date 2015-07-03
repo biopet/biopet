@@ -107,9 +107,9 @@ object Delly extends PipelineCommand {
     val dellypipeline = new Delly(root)
     dellypipeline.input = input
     dellypipeline.workdir = runDir
-    dellypipeline.init
-    dellypipeline.biopetScript
-    return dellypipeline
+    dellypipeline.init()
+    dellypipeline.biopetScript()
+    dellypipeline
   }
 
 }

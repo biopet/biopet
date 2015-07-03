@@ -76,7 +76,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
     val adapter_stats: mutable.Map[String, Int] = mutable.Map()
 
-    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
+    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines()) {
       line match {
         case trimR(m)                 => stats += ("trimmed" -> m.toInt)
         case tooShortR(m)             => stats += ("tooshort" -> m.toInt)

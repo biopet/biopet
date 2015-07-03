@@ -70,8 +70,8 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Refe
   override def versionCommand = executable + " --help"
 
   /** Sets readgroup when not set yet */
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(readgroup != null)
     if (reference == null) reference = referenceFasta()
   }

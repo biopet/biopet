@@ -41,6 +41,6 @@ object Sha1sum {
     val sha1sum = new Sha1sum(root)
     sha1sum.input = input
     sha1sum.output = new File(outDir, input.getName + ".sha1")
-    return sha1sum
+    sha1sum
   }
 }

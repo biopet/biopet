@@ -21,6 +21,8 @@ import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
+ * General extension for GATK module
+ *
  * Created by pjvan_thof on 2/26/15.
  */
 abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
@@ -54,8 +56,8 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
   override def dictRequired = true
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

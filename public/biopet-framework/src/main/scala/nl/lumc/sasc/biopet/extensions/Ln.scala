@@ -51,11 +51,11 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   lazy val cmd: String = {
     lazy val inCanonical: String = {
       // need to remove "/~" to correctly expand path with tilde
-      input.getCanonicalPath().replace("/~", "")
+      input.getCanonicalPath.replace("/~", "")
     }
 
     lazy val outCanonical: String = {
-      output.getCanonicalPath().replace("/~", "")
+      output.getCanonicalPath.replace("/~", "")
     }
 
     lazy val inToks: Array[String] = {
@@ -68,8 +68,8 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
     lazy val commonPrefixLength: Int = {
       val maxLength = scala.math.min(inToks.length, outToks.length)
-      var i: Int = 0;
-      while (i < maxLength && inToks(i) == outToks(i)) i += 1;
+      var i: Int = 0
+      while (i < maxLength && inToks(i) == outToks(i)) i += 1
       i
     }
 
@@ -108,11 +108,11 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
     }
   }
 
-  override def run {
+  override def run() {
     val stdout = new StringBuffer()
     val stderr = new StringBuffer()
     val process = Process(cmd).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
-    val exitcode = process.exitValue
+    val exitcode = process.exitValue()
     if (exitcode != 0) {
       throw new Exception("Error creating symbolic link, this was the original message: \n" + stderr)
     }
@@ -136,6 +136,6 @@ object Ln {
     ln.input = input
     ln.output = output
     ln.relative = relative
-    return ln
+    ln
   }
 }

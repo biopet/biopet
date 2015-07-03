@@ -45,7 +45,7 @@ object Md5sum {
     val md5sum = new Md5sum(root)
     md5sum.input = fastqfile
     md5sum.output = new File(outDir, fastqfile.getName + ".md5")
-    return md5sum
+    md5sum
   }
 
   /** Makes md5sum with md5 file in same dir as input file */
@@ -53,6 +53,6 @@ object Md5sum {
     val md5sum = new Md5sum(root)
     md5sum.input = file
     md5sum.output = new File(file.getParentFile, file.getName + ".md5")
-    return md5sum
+    md5sum
   }
 }

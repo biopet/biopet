@@ -51,7 +51,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   var window_size: Option[Int] = config("window_size", default = 5)
 
-  override def beforeCmd {
+  override def beforeCmd() {
   }
 
   def cmdLine = required(executable) +
@@ -67,6 +67,6 @@ object PindelCaller {
     val caller = new PindelCaller(root)
     caller.input = input
     caller.output = output
-    return caller
+    caller
   }
 }

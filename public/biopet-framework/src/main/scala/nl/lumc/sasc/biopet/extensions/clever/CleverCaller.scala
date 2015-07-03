@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "clever")
 
-  private lazy val versionexecutable: File = config("version_exe", default = (new File(executable).getParent + "/ctk-version"))
+  private lazy val versionexecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
 
   override val defaultThreads = 8
 
@@ -45,7 +45,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   var k: Boolean = config("k", default = false) // keep working directory
   var r: Boolean = config("r", default = false) // take read groups into account
 
-  override def beforeCmd {
+  override def beforeCmd() {
     if (workdir == null) throw new Exception("Clever :: Workdirectory is not defined")
     //    if (input.getName.endsWith(".sort.bam")) sorted = true
   }
@@ -70,6 +70,6 @@ object CleverCaller {
     clever.reference = reference
     clever.cwd = svDir
     clever.workdir = runDir
-    return clever
+    clever
   }
 }

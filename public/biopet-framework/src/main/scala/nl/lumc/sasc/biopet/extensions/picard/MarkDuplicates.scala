@@ -74,8 +74,8 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 

@@ -7,6 +7,8 @@ import nl.lumc.sasc.biopet.extensions.RscriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
+ * Extension for en general stackedbar plot with R
+ *
  * Created by pjvan_thof on 4/29/15.
  */
 class StackedBarPlot(val root: Configurable) extends RscriptCommandLineFunction {

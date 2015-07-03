@@ -111,20 +111,18 @@ object Picard extends Logging {
   def getMetrics(file: File, tag: String = "METRICS CLASS",
                  groupBy: Option[String] = None): Option[Any] = {
     getMetricsContent(file, tag) match {
-      case Some((header, content)) => {
+      case Some((header, content)) =>
         (content.size, groupBy) match {
-          case (_, Some(group)) => {
+          case (_, Some(group)) =>
             val groupId = header.indexOf(group)
             if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
             if (header.count(_ == group) > 1) logger.warn(group + " multiple times seen in header of: " + file)
-            Some((for (c <- content) yield c(groupId).toString() -> {
+            Some((for (c <- content) yield c(groupId).toString -> {
               header.filter(_ != group).zip(c.take(groupId) ::: c.takeRight(c.size - groupId - 1)).toMap
             }).toMap)
-          }
           case (1, _) => Some(header.zip(content.head).toMap)
           case _      => Some(header :: content)
         }
-      }
       case _ => None
     }
   }
@@ -137,10 +135,9 @@ object Picard extends Logging {
    */
   def getHistogram(file: File, tag: String = "HISTOGRAM") = {
     getMetricsContent(file, tag) match {
-      case Some((header, content)) => {
+      case Some((header, content)) =>
         val colums = header.zipWithIndex.map(x => x._1 -> content.map(_.lift(x._2))).toMap
         Some(colums)
-      }
       case _ => None
     }
   }
@@ -160,7 +157,7 @@ object Picard extends Logging {
 
       val header = lines(start).split("\t").toList
       val content = (for (i <- (start + 1) until end) yield {
-        lines(i).split("\t").map(v => tryToParseNumber(v, true).getOrElse(v)).toList
+        lines(i).split("\t").map(v => tryToParseNumber(v, fallBack = true).getOrElse(v)).toList
       }).toList
 
       Some(header, content)

@@ -53,17 +53,17 @@ object SamtoolsView {
     val view = new SamtoolsView(root)
     view.input = input
     view.output = output
-    return view
+    view
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SamtoolsView = {
     val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
+    apply(root, input, outputFile)
   }
 
   def apply(root: Configurable, input: File): SamtoolsView = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".mpileup"

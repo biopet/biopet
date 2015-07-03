@@ -57,7 +57,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")
 
-  override def beforeGraph {
+  override def beforeGraph() {
     outputHistogram = new File(output + ".pdf")
   }
 

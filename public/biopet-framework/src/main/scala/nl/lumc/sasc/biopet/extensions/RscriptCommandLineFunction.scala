@@ -22,6 +22,8 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import scala.sys.process._
 
 /**
+ * General rscript extension
+ *
  * Created by wyleung on 17-2-15.
  */
 trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
@@ -30,7 +32,7 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "Rscript", submodule = "Rscript")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     checkScript()
   }
 

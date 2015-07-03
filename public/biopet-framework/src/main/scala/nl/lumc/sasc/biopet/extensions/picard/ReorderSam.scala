@@ -40,8 +40,8 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
   @Argument(doc = "Allow contig length discordance", required = false)
   var allowContigLengthDiscordance: Boolean = config("allow_contig_length_discordance", default = false)
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

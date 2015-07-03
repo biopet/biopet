@@ -79,8 +79,8 @@ object Pindel extends PipelineCommand {
     pindel.reference = reference
     pindel.workdir = runDir
     // run the following for activating the pipeline steps
-    pindel.init
-    pindel.biopetScript
-    return pindel
+    pindel.init()
+    pindel.biopetScript()
+    pindel
   }
 }

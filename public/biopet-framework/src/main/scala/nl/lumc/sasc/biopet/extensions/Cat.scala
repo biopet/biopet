@@ -52,6 +52,6 @@ object Cat {
     val cat = new Cat(root)
     cat.input = input
     cat.output = output
-    return cat
+    cat
   }
 }

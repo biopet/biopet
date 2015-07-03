@@ -56,11 +56,11 @@ object SambambaMarkdup {
     val markdup = new SambambaMarkdup(root)
     markdup.input = input
     markdup.output = output
-    return markdup
+    markdup
   }
 
   def apply(root: Configurable, input: File): SambambaMarkdup = {
-    return apply(root, input, new File(swapExtension(input.getCanonicalPath)))
+    apply(root, input, new File(swapExtension(input.getCanonicalPath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".dedup.bam"

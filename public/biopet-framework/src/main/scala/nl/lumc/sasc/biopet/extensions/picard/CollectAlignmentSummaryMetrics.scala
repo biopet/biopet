@@ -76,6 +76,6 @@ object CollectAlignmentSummaryMetrics {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input
     collectAlignmentSummaryMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")
-    return collectAlignmentSummaryMetrics
+    collectAlignmentSummaryMetrics
   }
 }

@@ -87,6 +87,6 @@ object AddOrReplaceReadGroups {
     addOrReplaceReadGroups.output = output
     if (sortOrder == null) addOrReplaceReadGroups.sortOrder = "coordinate"
     else addOrReplaceReadGroups.sortOrder = sortOrder
-    return addOrReplaceReadGroups
+    addOrReplaceReadGroups
   }
 }

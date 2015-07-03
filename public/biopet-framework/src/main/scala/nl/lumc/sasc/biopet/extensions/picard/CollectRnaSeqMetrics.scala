@@ -68,7 +68,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     if (refFlat == null) refFlat = config("refFlat")
     val validFlags = StrandSpecificity.values.map(_.toString).toSet
     strandSpecificity match {

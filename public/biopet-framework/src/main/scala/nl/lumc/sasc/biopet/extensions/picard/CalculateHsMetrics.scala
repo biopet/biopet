@@ -50,8 +50,8 @@ class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizabl
   @Argument(doc = "BAIT_SET_NAME", required = false)
   var baitSetName: String = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

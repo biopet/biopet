@@ -64,8 +64,8 @@ class BwaAln(val root: Configurable) extends Bwa with Reference {
   override val defaultCoreMemory = 4.0
   override val defaultThreads = 8
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

@@ -62,7 +62,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   override def versionCommand = executable + " --version"
 
   /** Sets qualityType is still empty */
-  override def beforeGraph {
+  override def beforeGraph() {
     if (qualityType.isEmpty) qualityType = Some(defaultQualityType)
   }
 
@@ -100,22 +100,20 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
 
     var stats: mutable.Map[String, Int] = mutable.Map()
 
-    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines) {
+    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines()) {
       line match {
         // single run
         case sKept(num)              => stats += ("num_reads_kept" -> num.toInt)
         case sDiscarded(num)         => stats += ("num_reads_discarded_total" -> num.toInt)
         // paired run
         case pPairKept(reads, pairs) => stats += ("num_reads_kept" -> reads.toInt)
-        case pSingleKept(total, r1, r2) => {
+        case pSingleKept(total, r1, r2) =>
           stats += ("num_reads_kept_R1" -> r1.toInt)
           stats += ("num_reads_kept_R2" -> r2.toInt)
-        }
         case pPairDiscarded(reads, pairs) => stats += ("num_reads_discarded_both" -> reads.toInt)
-        case pSingleDiscarded(total, r1, r2) => {
+        case pSingleDiscarded(total, r1, r2) =>
           stats += ("num_reads_discarded_R1" -> r1.toInt)
           stats += ("num_reads_discarded_R2" -> r2.toInt)
-        }
         case _ =>
       }
     }

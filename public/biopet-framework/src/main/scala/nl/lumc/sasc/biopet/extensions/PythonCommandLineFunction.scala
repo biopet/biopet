@@ -57,7 +57,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   }
 
   /** return basic command to prefix the complete command with */
-  def getPythonCommand(): String = {
+  def getPythonCommand: String = {
     required(executable) + required(python_script)
   }
 }

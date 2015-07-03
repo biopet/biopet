@@ -41,6 +41,6 @@ object Gzip {
     val gzip = new Gzip(root)
     gzip.input = input
     gzip.output = output
-    return gzip
+    gzip
   }
 }

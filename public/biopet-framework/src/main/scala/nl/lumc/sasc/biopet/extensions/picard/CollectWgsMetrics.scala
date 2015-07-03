@@ -8,6 +8,8 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
+ * Extension for piacrda's CollectWgsMetrics
+ *
  * Created by pjvan_thof on 4/16/15.
  */
 class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
@@ -38,8 +40,8 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   @Argument(doc = "INCLUDE_BQ_HISTOGRAM", required = false)
   var includeBqHistogram: Boolean = config("include_bq_histogram", default = false)
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

@@ -43,17 +43,17 @@ object SambambaIndex {
     val indexer = new SambambaIndex(root)
     indexer.input = input
     indexer.output = output
-    return indexer
+    indexer
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SambambaIndex = {
     val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
+    apply(root, input, outputFile)
   }
 
   def apply(root: Configurable, input: File): SambambaIndex = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".bam.bai"

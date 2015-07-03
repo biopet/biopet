@@ -43,8 +43,8 @@ class BwaSamse(val root: Configurable) extends Bwa with Reference {
   var n: Option[Int] = config("n")
   var r: String = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

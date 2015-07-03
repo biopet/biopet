@@ -7,6 +7,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
+ * Extension for piacrd's BedToIntervalList tool
+ *
  * Created by pjvan_thof on 4/15/15.
  */
 class BedToIntervalList(val root: Configurable) extends Picard with Reference {

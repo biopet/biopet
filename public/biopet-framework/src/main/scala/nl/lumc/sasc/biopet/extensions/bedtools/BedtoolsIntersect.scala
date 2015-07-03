@@ -40,7 +40,7 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
 
   var inputTag = "-a"
 
-  override def beforeCmd {
+  override def beforeCmd() {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
@@ -63,6 +63,6 @@ object BedtoolsIntersect {
     bedtoolsIntersect.output = output
     bedtoolsIntersect.minOverlap = minOverlap
     bedtoolsIntersect.count = count
-    return bedtoolsIntersect
+    bedtoolsIntersect
   }
 }

@@ -44,6 +44,6 @@ object Zcat {
     val zcat = new Zcat(root)
     zcat.input = input
     zcat.output = output
-    return zcat
+    zcat
   }
 }

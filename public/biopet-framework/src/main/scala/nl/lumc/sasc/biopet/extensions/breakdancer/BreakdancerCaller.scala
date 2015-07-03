@@ -58,7 +58,7 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   var h: Boolean = config("h", default = false)
   var y: Option[Int] = config("y", default = 30)
 
-  override def beforeCmd {
+  override def beforeCmd() {
   }
 
   def cmdLine = required(executable) +
@@ -86,6 +86,6 @@ object BreakdancerCaller {
     val bdcaller = new BreakdancerCaller(root)
     bdcaller.input = input
     bdcaller.output = output
-    return bdcaller
+    bdcaller
   }
 }

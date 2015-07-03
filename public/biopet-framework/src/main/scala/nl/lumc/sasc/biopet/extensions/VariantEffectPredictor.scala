@@ -141,8 +141,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var db_version: Option[Int] = config("db_version")
   var buffer_size: Option[Int] = config("buffer_size")
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (!cache && !database) {
       throw new IllegalArgumentException("Must supply either cache or database")
     } else if (cache && dir.isEmpty) {

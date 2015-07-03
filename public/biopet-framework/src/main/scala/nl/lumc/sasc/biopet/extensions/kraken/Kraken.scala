@@ -58,8 +58,8 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
 
   /** Sets readgroup when not set yet */
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
   }
 
   /** Returns command to execute */
@@ -68,7 +68,7 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
       "--db" + required(db) +
       optional("--threads", nCoresRequest) +
       conditional(inputFastQ, "--fastq-input") +
-      conditional(inputFastQ == false, "--fasta-input") +
+      conditional(!inputFastQ, "--fasta-input") +
       conditional(quick, "--quick")
 
     min_hits match {

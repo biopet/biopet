@@ -41,7 +41,7 @@ class SeqtkSeq(val root: Configurable) extends Seqtk with Summarizable {
   /** masked bases converted to CHAR; 0 for lowercase [0] */
   var n: Option[String] = config("n")
 
-  /** number of residues per line; 0 for 2^32-1 [0] */
+  /** number of residues per line; 0 for 2&#94;32-1 [0] */
   var l: Option[Int] = config("l")
 
   /** quality shift: ASCII-INT gives base quality [33] */
