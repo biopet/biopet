@@ -168,9 +168,9 @@ object CheckAllelesVcfInBam extends ToolCommand {
     }
 
     for (allele <- allelesInRead if allele.length >= refAllele.length) {
-      if (allelesInRead.exists((_.length) > allele.length)) allelesInRead -= allele
+      if (allelesInRead.exists(_.length > allele.length)) allelesInRead -= allele
     }
-    if (allelesInRead.contains(refAllele) && allelesInRead.exists((_.length) < refAllele.length)) allelesInRead -= refAllele
+    if (allelesInRead.contains(refAllele) && allelesInRead.exists(_.length < refAllele.length)) allelesInRead -= refAllele
     if (allelesInRead.isEmpty) None
     else if (allelesInRead.size == 1) Some(allelesInRead.head)
     else {
