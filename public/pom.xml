@@ -201,7 +201,6 @@
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <abbrevLength>8</abbrevLength>
                     <skip>false</skip>
-                    <excludeProperties></excludeProperties>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>
@@ -248,9 +247,6 @@
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
-                <configuration>
-                    <outputDirectory>${basedir}/target/site/scoverage</outputDirectory>
-                </configuration>
             </plugin>
         </plugins>
     </reporting>
