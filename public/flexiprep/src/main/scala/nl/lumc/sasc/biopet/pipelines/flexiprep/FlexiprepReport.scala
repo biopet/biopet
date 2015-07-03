@@ -2,9 +2,14 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilder, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
 import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
+
+class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
+  val builder = FlexiprepReport
+}
 
 /**
  * Created by pjvan_thof on 3/30/15.
@@ -12,15 +17,27 @@ import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 object FlexiprepReport extends ReportBuilder {
   val reportName = "Flexiprep"
 
-  def indexPage = ReportPage(List(
-    "QC" -> flexiprepPage
-  ), List(
-    "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
-  ),
-    Map()
-  )
+  override def pageArgs = Map("multisample" -> false)
 
-  def flexiprepPage = ReportPage(
+  /** Index page for a flexiprep report */
+  def indexPage = {
+    val flexiprepPage = this.flexiprepPage
+    ReportPage(List("Versions" -> ReportPage(List(), List((
+      "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+      ))), Map()),
+      "Files" -> ReportPage(List(), List(
+        "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
+        "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
+      ), Map())
+    ), List(
+      "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFront.ssp")
+    ) ::: flexiprepPage.sections,
+      Map()
+    )
+  }
+
+  /** Generate a QC report page for 1 single library, sampleId and libId must be defined in the arguments */
+  def flexiprepPage: ReportPage = ReportPage(
     List(),
     List(
       "Read Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -41,8 +58,14 @@ object FlexiprepReport extends ReportBuilder {
     name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastaqcPlot.ssp", Map("plot" -> tag))
   }
 
-  // FIXME: Not yet finished
-
+  /**
+   * Generated a stacked bar plot for reads QC
+   * @param outputDir OutputDir for plot
+   * @param prefix prefix for tsv and png file
+   * @param read Must give "R1" or "R2"
+   * @param summary Summary class
+   * @param sampleId Default selects all samples, when given plot is limits on given sample
+   */
   def readSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,
@@ -92,6 +115,14 @@ object FlexiprepReport extends ReportBuilder {
     plot.runLocal()
   }
 
+  /**
+   * Generated a stacked bar plot for bases QC
+   * @param outputDir OutputDir for plot
+   * @param prefix prefix for tsv and png file
+   * @param read Must give "R1" or "R2"
+   * @param summary Summary class
+   * @param sampleId Default selects all samples, when given plot is limits on given sample
+   */
   def baseSummaryPlot(outputDir: File,
                       prefix: String,
                       read: String,

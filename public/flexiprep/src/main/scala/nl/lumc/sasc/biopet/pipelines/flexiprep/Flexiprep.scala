@@ -60,6 +60,16 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
 
+  override def reportClass = {
+    val flexiprepReport = new FlexiprepReport(this)
+    flexiprepReport.outputDir = new File(outputDir, "report")
+    flexiprepReport.summaryFile = summaryFile
+    flexiprepReport.args = Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    Some(flexiprepReport)
+  }
+
   /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")

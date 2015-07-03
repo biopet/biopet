@@ -251,7 +251,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = preProcessBam.get
-        bamMetrics.outputDir = sampleDir
+        bamMetrics.outputDir = new File(sampleDir, "metrics")
         bamMetrics.init()
         bamMetrics.biopetScript()
         addAll(bamMetrics.functions)
@@ -270,7 +270,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     }
   }
 
-  lazy val variantcalling = if (config("multisample_sample_variantcalling", default = true).asBoolean) {
+  lazy val variantcalling = if (config("multisample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
   } else None
 

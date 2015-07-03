@@ -17,16 +17,16 @@
     val pipelineOutputDir = summary.getValue("meta", "output_dir").getOrElse("").toString
     def removeDir(value: Option[Any]): Option[Any] = {
         value.collect { case a =>
-            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir)
+            if (a.toString.startsWith(pipelineOutputDir) && pipelineOutputDir.nonEmpty) "./" + a.toString.stripPrefix(pipelineOutputDir + File.separator)
             else a
         }
     }
 }#
 
-<table class="table sortable-theme-bootstrap" data-sortable>
+<table class="table">
 
 <thead><tr>
-    <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+    <th>Sample</th>
     <th colspan="2">Library</th>
     <th>Path</th>
     <th>MD5</th>

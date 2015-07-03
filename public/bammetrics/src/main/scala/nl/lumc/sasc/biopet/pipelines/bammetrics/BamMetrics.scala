@@ -59,6 +59,17 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   def summarySettings = Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
     "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
 
+  override def reportClass = {
+    val bammetricsReport = new BammetricsReport(this)
+    bammetricsReport.outputDir = new File(outputDir, "report")
+    bammetricsReport.summaryFile = summaryFile
+    bammetricsReport.args = if (libId.isDefined) Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    else Map("sampleId" -> sampleId.getOrElse("."))
+    Some(bammetricsReport)
+  }
+
   /** executed before script */
   def init() {
   }

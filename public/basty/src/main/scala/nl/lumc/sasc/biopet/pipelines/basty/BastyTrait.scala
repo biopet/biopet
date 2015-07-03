@@ -42,7 +42,7 @@ trait BastyTrait extends MultiSampleQScript {
 
   lazy val shiva: ShivaTrait = new Shiva(qscript)
 
-  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+  def summaryFile: File = new File(outputDir, "Basty.summary.json")
 
   //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()
