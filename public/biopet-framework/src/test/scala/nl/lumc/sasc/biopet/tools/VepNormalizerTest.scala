@@ -92,21 +92,21 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    explodeTranscripts(reader.iterator().next(), new_infos, true).length should be(11)
+    explodeTranscripts(reader.iterator().next(), new_infos, removeCsq = true).length should be(11)
   }
 
   @Test def testStandardVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    Array(standardTranscripts(reader.iterator().next(), new_infos, true)).length should be(1)
+    Array(standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)).length should be(1)
   }
 
   @Test def testStandardVEPAttributeLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    val record = standardTranscripts(reader.iterator().next(), new_infos, true)
+    val record = standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)
     def checkItems(items: Array[String]) = {
       items.foreach { check }
     }

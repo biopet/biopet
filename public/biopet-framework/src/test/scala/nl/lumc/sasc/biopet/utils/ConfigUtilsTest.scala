@@ -31,7 +31,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   import ConfigUtils._
   import ConfigUtilsTest._
 
-  @Test def testGetValueFromPath: Unit = {
+  @Test def testGetValueFromPath(): Unit = {
     getValueFromPath(map1, List("dummy")) shouldBe Some(Map("dummy" -> 1))
     getValueFromPath(map1, List("dummy", "dummy")) shouldBe Some(1)
     getValueFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
@@ -39,7 +39,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     getValueFromPath(map1, List("dummy", "notexist")) shouldBe None
   }
 
-  @Test def testGetMapFromPath: Unit = {
+  @Test def testGetMapFromPath(): Unit = {
     getMapFromPath(map1, List("dummy")) shouldBe Some(Map("dummy" -> 1))
     getMapFromPath(map1, List("nested3", "nested2", "nested1")) shouldBe Some(Map("dummy" -> 1))
     intercept[IllegalStateException] {
@@ -48,7 +48,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 
   // Merge maps
-  @Test def testMergeMaps: Unit = {
+  @Test def testMergeMaps(): Unit = {
     val mergedMap = mergeMaps(map1, map2)
     getValueFromPath(mergedMap, List("nested", "1")) shouldBe Some(1)
     getValueFromPath(mergedMap, List("nested", "2")) shouldBe Some(1)
@@ -56,7 +56,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 
   // Json to scala values
-  @Test def testFileToJson: Unit = {
+  @Test def testFileToJson(): Unit = {
     fileToJson(file1) shouldBe json1
     fileToJson(file2) shouldBe json2
     intercept[IllegalStateException] {
@@ -64,7 +64,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testJsonToMap: Unit = {
+  @Test def testJsonToMap(): Unit = {
     jsonToMap(json1) shouldBe map1
     jsonToMap(json2) shouldBe map2
     intercept[IllegalStateException] {
@@ -72,13 +72,13 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testFileToConfigMap: Unit = {
+  @Test def testFileToConfigMap(): Unit = {
     fileToConfigMap(file1) shouldBe map1
     fileToConfigMap(file2) shouldBe map2
   }
 
   // Any/scala values to Json objects
-  @Test def testAnyToJson: Unit = {
+  @Test def testAnyToJson(): Unit = {
     anyToJson("bla") shouldBe jString("bla")
     anyToJson(1337) shouldBe Json.jNumberOrString(1337)
     anyToJson(13.37) shouldBe Json.jNumberOrString(13.37)
@@ -90,7 +90,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     anyToJson(Map("bla" -> 1337)) shouldBe ("bla" := 1337) ->: jEmptyObject
   }
 
-  @Test def testMapToJson: Unit = {
+  @Test def testMapToJson(): Unit = {
     mapToJson(Map()) shouldBe jEmptyObject
     mapToJson(Map("bla" -> 1337)) shouldBe ("bla" := 1337) ->: jEmptyObject
     mapToJson(Map("bla" -> Map())) shouldBe ("bla" := jEmptyObject) ->: jEmptyObject
@@ -98,14 +98,14 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 
   // Any to scala values
-  @Test def testAny2string: Unit = {
+  @Test def testAny2string(): Unit = {
     any2string("bla") shouldBe "bla"
     any2string(1337) shouldBe "1337"
     any2string(true) shouldBe "true"
     any2string(13.37) shouldBe "13.37"
   }
 
-  @Test def testAny2int: Unit = {
+  @Test def testAny2int(): Unit = {
     any2int(1337) shouldBe 1337
     any2int("1337") shouldBe 1337
     any2int(13.37) shouldBe 13
@@ -114,7 +114,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testAny2long: Unit = {
+  @Test def testAny2long(): Unit = {
     any2long(1337L) shouldBe 1337L
     any2long(1337) shouldBe 1337L
     any2long("1337") shouldBe 1337L
@@ -124,7 +124,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testAny2double: Unit = {
+  @Test def testAny2double(): Unit = {
     any2double(13.37) shouldBe 13.37d
     any2double("1337") shouldBe 1337d
     any2double(1337) shouldBe 1337d
@@ -135,7 +135,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testAny2float: Unit = {
+  @Test def testAny2float(): Unit = {
     any2float(1337d) shouldBe 1337f
     any2float("1337") shouldBe 1337f
     any2float(1337) shouldBe 1337f
@@ -146,7 +146,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testAny2boolean: Unit = {
+  @Test def testAny2boolean(): Unit = {
     any2boolean(true) shouldBe true
     any2boolean("false") shouldBe false
     any2boolean("true") shouldBe true
@@ -157,21 +157,21 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testAny2list: Unit = {
+  @Test def testAny2list(): Unit = {
     any2list(Nil) shouldBe Nil
     any2list(List(1, 2, 3, 4)) shouldBe List(1, 2, 3, 4)
     any2list(List(1337)) shouldBe List(1337)
     any2list(1337) shouldBe List(1337)
   }
 
-  @Test def testAny2stringList: Unit = {
+  @Test def testAny2stringList(): Unit = {
     any2stringList(Nil) shouldBe Nil
     any2stringList(List("1337")) shouldBe List("1337")
     any2stringList(List(1337)) shouldBe List("1337")
     any2stringList(1337) shouldBe List("1337")
   }
 
-  @Test def testAny2map: Unit = {
+  @Test def testAny2map(): Unit = {
     any2map(Map()) shouldBe Map()
     any2map(Map("bla" -> 1337)) shouldBe Map("bla" -> 1337)
     any2map(null) shouldBe null
@@ -180,7 +180,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     }
   }
 
-  @Test def testImplicits: Unit = {
+  @Test def testImplicits(): Unit = {
     val index = ConfigValueIndex("test", Nil, "test")
     new ImplicitConversions {
       configValue2list(ConfigValue(index, index, List(""))) shouldBe List("")
@@ -210,7 +210,7 @@ object ConfigUtilsTest {
     val w = new PrintWriter(file)
     w.write(text)
     w.close()
-    return file
+    file
   }
 
   val jsonText1 =

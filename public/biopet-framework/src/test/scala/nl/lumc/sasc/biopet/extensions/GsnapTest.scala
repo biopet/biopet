@@ -26,7 +26,7 @@ import scala.sys.process.{ Process, ProcessLogger }
 class GsnapTest extends TestNGSuite with Matchers {
 
   private def setConfig(key: String, value: String): Map[String, Any] = {
-    val oldMap: Map[String, Any] = Config.global.map.toMap
+    val oldMap: Map[String, Any] = Config.global.map
     Config.global.map += (key -> value)
     oldMap
   }

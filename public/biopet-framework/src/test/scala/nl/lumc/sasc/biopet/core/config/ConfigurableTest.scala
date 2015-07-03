@@ -23,7 +23,7 @@ import org.testng.annotations.Test
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigurableTest extends TestNGSuite with Matchers {
-  @Test def testConfigurable: Unit = {
+  @Test def testConfigurable(): Unit = {
     val classC = new ClassC {
       override def configName = "classc"
       override val globalConfig = new Config(ConfigurableTest.map)

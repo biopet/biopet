@@ -28,7 +28,7 @@ import org.testng.annotations.Test
 class CollectInsertSizeMetricsTest extends TestNGSuite with Matchers {
 
   @Test
-  def summaryData: Unit = {
+  def summaryData(): Unit = {
     val file = new File(Paths.get(getClass.getResource("/picard.insertsizemetrics").toURI).toString)
     val job = new CollectInsertSizeMetrics(null)
     job.output = file

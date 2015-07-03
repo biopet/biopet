@@ -92,7 +92,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     baseHistogram(39) shouldEqual 5
     baseHistogram(34) shouldEqual 5
     baseHistogram(33) shouldEqual 5
-    baseHistogram(0) shouldEqual 5
+    baseHistogram.head shouldEqual 5
   }
 
   @Test def testArgsMinimum() = {

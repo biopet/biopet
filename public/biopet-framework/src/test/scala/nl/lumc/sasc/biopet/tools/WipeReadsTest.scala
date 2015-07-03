@@ -195,7 +195,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     //       and only filling the filter with a few items
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
     // by default, set elements are SAM record read names
-    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1.head) shouldBe false
     filterNotFunc(sBamRecs1(1)) shouldBe true
     filterNotFunc(sBamRecs1(2)) shouldBe true
     filterNotFunc(sBamRecs1(3)) shouldBe true
@@ -211,7 +211,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("P", 191, 480)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1.head) shouldBe false
     filterNotFunc(sBamRecs1(1)) shouldBe true
     filterNotFunc(sBamRecs1(2)) shouldBe true
     filterNotFunc(sBamRecs1(3)) shouldBe true
@@ -225,7 +225,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("chrQ", 881, 1000) // overlaps first exon of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1.head) shouldBe false
     filterNotFunc(sBamRecs1(1)) shouldBe false
     filterNotFunc(sBamRecs1(2)) shouldBe false
     filterNotFunc(sBamRecs1(3)) shouldBe false
@@ -240,7 +240,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("chrQ", 900, 920)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1.head) shouldBe false
     filterNotFunc(sBamRecs1(1)) shouldBe false
     filterNotFunc(sBamRecs1(2)) shouldBe false
     filterNotFunc(sBamRecs1(3)) shouldBe false
@@ -256,7 +256,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("chrR", 500, 505)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile5, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(sBamRecs5(0)) shouldBe true
+    filterNotFunc(sBamRecs5.head) shouldBe true
     filterNotFunc(sBamRecs5(1)) shouldBe false
     filterNotFunc(sBamRecs5(2)) shouldBe false
     filterNotFunc(sBamRecs5(3)) shouldBe true
@@ -271,7 +271,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    filterNotFunc(sBamRecs1(0)) shouldBe false
+    filterNotFunc(sBamRecs1.head) shouldBe false
     filterNotFunc(sBamRecs1(1)) shouldBe false
     filterNotFunc(sBamRecs1(2)) shouldBe true
     filterNotFunc(sBamRecs1(3)) shouldBe true
@@ -287,7 +287,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
-    filterNotFunc(sBamRecs2(0)) shouldBe false
+    filterNotFunc(sBamRecs2.head) shouldBe false
     // r01 is not in since it is below the MAPQ threshold
     filterNotFunc(sBamRecs2(1)) shouldBe false
     filterNotFunc(sBamRecs2(2)) shouldBe false
@@ -305,7 +305,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60, filterOutMulti = false)
-    filterNotFunc(sBamRecs2(0)) shouldBe false
+    filterNotFunc(sBamRecs2.head) shouldBe false
     filterNotFunc(sBamRecs2(1)) shouldBe false
     // this r01 is not in since it is below the MAPQ threshold
     filterNotFunc(sBamRecs2(2)) shouldBe false
@@ -324,7 +324,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     )
     val filterNotFunc = makeFilterNotFunction(intervals, sBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
-    filterNotFunc(sBamRecs2(0)) shouldBe false
+    filterNotFunc(sBamRecs2.head) shouldBe false
     // only r01 is in the set since it is RG 002
     filterNotFunc(sBamRecs2(1)) shouldBe true
     filterNotFunc(sBamRecs2(2)) shouldBe true
@@ -342,7 +342,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("chrQ", 991, 1000) // overlaps nothing; lies in the spliced region of r05
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1.head) shouldBe false
     filterNotFunc(pBamRecs1(1)) shouldBe false
     filterNotFunc(pBamRecs1(2)) shouldBe true
     filterNotFunc(pBamRecs1(3)) shouldBe true
@@ -363,7 +363,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
       new Interval("chrQ", 891, 1000)
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp)
-    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1.head) shouldBe false
     filterNotFunc(pBamRecs1(1)) shouldBe false
     filterNotFunc(pBamRecs1(2)) shouldBe false
     filterNotFunc(pBamRecs1(3)) shouldBe false
@@ -387,7 +387,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     )
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile1, bloomSize = bloomSize, bloomFp = bloomFp,
       filterOutMulti = false)
-    filterNotFunc(pBamRecs1(0)) shouldBe false
+    filterNotFunc(pBamRecs1.head) shouldBe false
     filterNotFunc(pBamRecs1(1)) shouldBe false
     filterNotFunc(pBamRecs1(2)) shouldBe false
     filterNotFunc(pBamRecs1(3)) shouldBe false
@@ -411,7 +411,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       minMapQ = 60)
     // r01 is not in since it is below the MAPQ threshold
-    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2.head) shouldBe false
     filterNotFunc(pBamRecs2(1)) shouldBe false
     filterNotFunc(pBamRecs2(2)) shouldBe false
     filterNotFunc(pBamRecs2(3)) shouldBe false
@@ -431,7 +431,7 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
     val filterNotFunc = makeFilterNotFunction(intervals, pBamFile2, bloomSize = bloomSize, bloomFp = bloomFp,
       readGroupIds = Set("002", "003"))
     // only r01 is in the set since it is RG 002
-    filterNotFunc(pBamRecs2(0)) shouldBe false
+    filterNotFunc(pBamRecs2.head) shouldBe false
     filterNotFunc(pBamRecs2(1)) shouldBe false
     filterNotFunc(pBamRecs2(2)) shouldBe true
     filterNotFunc(pBamRecs2(3)) shouldBe true
