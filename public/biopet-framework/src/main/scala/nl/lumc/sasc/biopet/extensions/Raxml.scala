@@ -27,9 +27,9 @@ import scalaz.std.boolean.option
  */
 class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
 
-  override val defaultThreads = 1
+  override def defaultThreads = 1
   override def versionCommand = executable + " -v"
-  override val versionRegex = """.*version ([\w\.]*) .*""".r
+  override def versionRegex = """.*version ([\w\.]*) .*""".r
 
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _

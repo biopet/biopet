@@ -21,7 +21,7 @@ import java.io.File
 
 /** Extension for sambamba flagstat  */
 class SambambaView(val root: Configurable) extends Sambamba {
-  override val defaultThreads = 2
+  override def defaultThreads = 2
 
   @Input(doc = "Bam File")
   var input: File = _

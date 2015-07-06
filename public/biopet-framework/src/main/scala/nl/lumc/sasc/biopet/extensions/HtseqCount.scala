@@ -69,7 +69,7 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
   /** suppress progress report */
   var quiet: Boolean = config("quiet", default = false)
 
-  override val versionRegex = """.*, version (.*)\.""".r
+  override def versionRegex = """.*, version (.*)\.""".r
   override def versionCommand = executable + " --help"
 
   def cmdLine = {

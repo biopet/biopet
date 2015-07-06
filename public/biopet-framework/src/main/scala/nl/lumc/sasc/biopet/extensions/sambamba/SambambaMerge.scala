@@ -21,7 +21,7 @@ import java.io.File
 
 /** Extension for sambemba merge  */
 class SambambaMerge(val root: Configurable) extends Sambamba {
-  override val defaultThreads = 4
+  override def defaultThreads = 4
 
   @Input(doc = "Bam File[s]")
   var input: List[File] = Nil

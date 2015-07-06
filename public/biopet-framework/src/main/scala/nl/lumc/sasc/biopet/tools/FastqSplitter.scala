@@ -35,7 +35,7 @@ class FastqSplitter(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Output fastq files", shortName = "output", required = true)
   var output: List[File] = Nil
 
-  override val defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 4.0
 
   /** * Generate command to execute */
   override def commandLine = super.commandLine +

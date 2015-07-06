@@ -57,7 +57,7 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
   @Output(doc = "Sync statistics", required = true)
   var outputStats: File = null
 
-  override val defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 4.0
 
   // executed command line
   override def commandLine =

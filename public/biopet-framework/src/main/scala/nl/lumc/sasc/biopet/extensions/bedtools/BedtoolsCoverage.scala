@@ -46,7 +46,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
-  override val defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +

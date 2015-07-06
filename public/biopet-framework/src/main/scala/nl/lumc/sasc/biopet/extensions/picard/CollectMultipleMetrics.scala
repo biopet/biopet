@@ -15,7 +15,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
 
-  override val defaultCoreMemory = 6.0
+  override def defaultCoreMemory = 6.0
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null

@@ -48,7 +48,7 @@ class SageCreateLibrary(val root: Configurable) extends ToolCommandFuntion {
   var tag: String = config("tag", default = "CATG")
   var length: Option[Int] = config("length", default = 17)
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +

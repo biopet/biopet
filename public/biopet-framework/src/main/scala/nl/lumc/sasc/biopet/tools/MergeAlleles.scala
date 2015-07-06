@@ -45,7 +45,7 @@ class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
 
   var reference: File = config("reference")
 
-  override val defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 1.0
 
   override def beforeGraph {
     super.beforeGraph
