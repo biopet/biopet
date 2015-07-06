@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.util.Date
 import java.io.File
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 import scala.math._
 
@@ -97,6 +98,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
+
+  override def defaults = ConfigUtils.mergeMaps(
+    Map(
+      "gsnap" -> Map(
+        "batch" -> 4,
+        "format" -> "sam"
+      )
+    ), super.defaults)
 
   /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
