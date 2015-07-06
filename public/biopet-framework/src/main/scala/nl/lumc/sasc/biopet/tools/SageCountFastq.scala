@@ -35,7 +35,7 @@ class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +

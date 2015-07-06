@@ -33,11 +33,11 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   var deps: List[File] = Nil
 
   var threads = 0
-  val defaultThreads = 1
+  def defaultThreads = 1
 
   var vmem: Option[String] = config("vmem")
-  protected val defaultCoreMemory: Double = 1.0
-  protected val defaultVmemFactor: Double = 1.4
+  protected def defaultCoreMemory: Double = 1.0
+  protected def defaultVmemFactor: Double = 1.4
   var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
   var residentFactor: Double = config("resident_factor", default = 1.2)
@@ -151,10 +151,10 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
   protected def versionCommand: String = null
 
   /** Regex to get version from version command output */
-  protected val versionRegex: Regex = null
+  protected def versionRegex: Regex = null
 
   /** Allowed exit codes for the version command */
-  protected val versionExitcode = List(0)
+  protected def versionExitcode = List(0)
 
   /** Executes the version command */
   private[core] def getVersionInternal(): Option[String] = {
