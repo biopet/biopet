@@ -170,6 +170,7 @@ object ConfigUtils extends Logging {
       case n: Short     => Json.jNumberOrString(n)
       case n: Float     => Json.jNumberOrString(n)
       case n: Byte      => Json.jNumberOrString(n)
+      case null         => Json.jNull
       case _            => jString(any.toString)
     }
   }
