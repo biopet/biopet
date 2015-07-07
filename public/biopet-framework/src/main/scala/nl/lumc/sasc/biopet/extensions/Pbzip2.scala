@@ -33,8 +33,8 @@ class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
   var decomrpess = true
   var memory: Option[Int] = config("memory")
 
-  override val defaultCoreMemory = memory.getOrElse(1000).toDouble / 1000
-  override val defaultThreads = 2
+  override def defaultCoreMemory = memory.getOrElse(1000).toDouble / 1000
+  override def defaultThreads = 2
 
   override def beforeCmd {
     if (!memory.isEmpty) memory = Option(memory.get * threads)

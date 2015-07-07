@@ -30,10 +30,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cufflinks")
 
   /** default threads */
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultCoreMemory = 6.0
+  override def defaultCoreMemory = 6.0
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
@@ -184,9 +184,9 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   /** do not contact server to check for update availability [FALSE] */
   var no_update_check: Boolean = config("no_update_check", default = false)
 
-  override val versionRegex = """cufflinks v(.*)""".r
+  override def versionRegex = """cufflinks v(.*)""".r
   override def versionCommand = executable
-  override val versionExitcode = List(0, 1)
+  override def versionExitcode = List(0, 1)
 
   def cmdLine =
     required(executable) +

@@ -25,6 +25,6 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 abstract class Macs2 extends BiopetCommandLineFunction {
   executable = config("exe", default = "macs2", submodule = "macs2", freeVar = false)
   override def versionCommand = executable + " --version"
-  override val versionRegex = """macs2 (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """macs2 (.*)""".r
+  override def versionExitcode = List(0, 1)
 }

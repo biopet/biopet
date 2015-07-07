@@ -32,10 +32,10 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   executable = config("exe", default = "gsnap", freeVar = false)
 
   /** default threads */
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultCoreMemory = 10.0
+  override def defaultCoreMemory = 10.0
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
@@ -329,7 +329,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   /** value to put into read-group library (rg-pl) field */
   var read_group_platform: Option[String] = config("read_group_platform")
 
-  override val versionRegex = """.* version (.*)""".r
+  override def versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
 
   def cmdLine = {
