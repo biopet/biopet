@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba index  */
 class SambambaIndex(val root: Configurable) extends Sambamba {
-  override val defaultThreads = 2
+  override def defaultThreads = 2
 
   @Input(doc = "Bam File")
   var input: File = _

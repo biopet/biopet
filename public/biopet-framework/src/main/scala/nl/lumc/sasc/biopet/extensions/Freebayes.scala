@@ -41,7 +41,7 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var haplotypeLength: Option[Int] = config("haplotype_length")
 
   executable = config("exe", default = "freebayes")
-  override val versionRegex = """version:  (.*)""".r
+  override def versionRegex = """version:  (.*)""".r
   override def versionCommand = executable + " --version"
 
   override def beforeGraph(): Unit = {

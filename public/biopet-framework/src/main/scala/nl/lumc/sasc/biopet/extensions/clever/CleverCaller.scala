@@ -11,11 +11,11 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   private lazy val versionexecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
 
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   override def versionCommand = versionexecutable.getAbsolutePath
-  override val versionRegex = """(.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """(.*)""".r
+  override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")
   var input: File = _

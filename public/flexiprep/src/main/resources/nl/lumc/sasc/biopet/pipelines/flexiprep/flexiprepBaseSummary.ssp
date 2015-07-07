@@ -128,8 +128,8 @@
                     #for (read <- reads)
                         #if (read == "R2") </tr><tr> #end
                         #{
-                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "bases", "num_total").getOrElse(0).asInstanceOf[Long]
-                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total").getOrElse(0).asInstanceOf[Long]
+                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "bases", "num_total").getOrElse(0).toString.toLong
+                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total").getOrElse(0).toString.toLong
                         }#
                         <td>${read}</td>
                         <td>${beforeTotal}</td>

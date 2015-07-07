@@ -30,7 +30,7 @@ class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "gzip")
 
-  override val versionRegex = """gzip (.*)""".r
+  override def versionRegex = """gzip (.*)""".r
   override def versionCommand = executable + " --version"
 
   def cmdLine = required(executable) + " -c " + repeat(input) + " > " + required(output)

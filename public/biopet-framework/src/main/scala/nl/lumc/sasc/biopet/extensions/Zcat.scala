@@ -31,7 +31,7 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "zcat")
 
-  override val versionRegex = """zcat \(gzip\) (.*)""".r
+  override def versionRegex = """zcat \(gzip\) (.*)""".r
   override def versionCommand = executable + " --version"
 
   /** Returns command to execute */

@@ -22,7 +22,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for sambemba markdup  */
 class SambambaMarkdup(val root: Configurable) extends Sambamba {
-  override val defaultThreads = 4
+  override def defaultThreads = 4
 
   @Input(doc = "Bam File")
   var input: File = _

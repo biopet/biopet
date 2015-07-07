@@ -67,6 +67,7 @@ trait Reference extends Configurable {
 
   /** Create summary part for reference */
   def referenceSummary: Map[String, Any] = {
+    Reference.requireDict(referenceFasta())
     val file = new IndexedFastaSequenceFile(referenceFasta())
     Map("contigs" ->
       (for (seq <- file.getSequenceDictionary.getSequences) yield seq.getSequenceName -> {
@@ -85,16 +86,8 @@ trait Reference extends Configurable {
     if (!Reference.checked.contains(file)) {
       require(file.exists(), "Reference not found: " + file)
 
-      if (dictRequired) {
-        val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
-        require(dict.exists(), "Reference is missing a dict file")
-      }
-
-      if (faiRequired) {
-        val fai = new File(file.getAbsolutePath + ".fai")
-        require(fai.exists(), "Reference is missing a fai file")
-        require(IndexedFastaSequenceFile.canCreateIndexedFastaReader(file), "Index of reference cannot be loaded, reference: " + file)
-      }
+      if (dictRequired) Reference.requireDict(file)
+      if (faiRequired) Reference.requireFai(file)
 
       Reference.checked += file
     }
@@ -105,4 +98,26 @@ object Reference {
 
   /** Used as cache to avoid double checking */
   private var checked: Set[File] = Set()
+
+  /**
+   * Raise an exception when given fasta file has no fai file
+   * @param fastaFile Fasta file
+   * @throws IllegalArgumentException
+   */
+  def requireFai(fastaFile: File): Unit = {
+    val fai = new File(fastaFile.getAbsolutePath + ".fai")
+    require(fai.exists(), "Reference is missing a fai file")
+    require(IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile),
+      "Index of reference cannot be loaded, reference: " + fastaFile)
+  }
+
+  /**
+   * Raise an exception when given fasta file has no dict file
+   * @param fastaFile Fasta file
+   * @throws IllegalArgumentException
+   */
+  def requireDict(fastaFile: File): Unit = {
+    val dict = new File(fastaFile.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
+    require(dict.exists(), "Reference is missing a dict file")
+  }
 }

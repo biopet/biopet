@@ -41,7 +41,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
 
   executable = config("exe", default = "cutadapt")
   override def versionCommand = executable + " --version"
-  override val versionRegex = """(.*)""".r
+  override def versionRegex = """(.*)""".r
 
   var default_clip_mode: String = config("default_clip_mode", default = "3")
   var opt_adapter: Set[String] = config("adapter", default = Nil)

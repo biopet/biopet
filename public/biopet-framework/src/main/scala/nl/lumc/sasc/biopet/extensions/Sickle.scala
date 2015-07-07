@@ -58,7 +58,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   var discardN: Boolean = config("discardN", default = false)
   var quiet: Boolean = config("quiet", default = false)
   var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
-  override val versionRegex = """sickle version (.*)""".r
+  override def versionRegex = """sickle version (.*)""".r
   override def versionCommand = executable + " --version"
 
   /** Sets qualityType is still empty */

@@ -31,7 +31,7 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "md5sum")
 
-  override val versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
+  override def versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
   override def versionCommand = executable + " --version"
 
   /** return commandline to execute */

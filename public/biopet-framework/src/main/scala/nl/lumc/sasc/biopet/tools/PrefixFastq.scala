@@ -30,7 +30,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class PrefixFastq(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  override val defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 1.0
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var inputFastq: File = _

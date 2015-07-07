@@ -46,7 +46,7 @@ class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "AntiSense all count file", shortName = "allantisense", required = true)
   var countAllAntiSense: File = _
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +

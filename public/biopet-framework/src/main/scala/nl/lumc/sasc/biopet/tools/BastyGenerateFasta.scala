@@ -56,7 +56,7 @@ class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with
   var minDepth: Int = config("min_depth", default = 8)
   var outputName: String = _
 
-  override val defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

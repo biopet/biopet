@@ -40,12 +40,12 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var output: File = null
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  override val versionRegex = """.*[Vv]ersion:? (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultCoreMemory = 4.0
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
   var sam_RG: Option[String] = config("sam-RG")

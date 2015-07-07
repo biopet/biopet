@@ -39,7 +39,7 @@ class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Output interval list", required = true)
   var output: File = _
 
-  override val defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }

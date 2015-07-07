@@ -39,7 +39,7 @@ class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Sum
   @Output(doc = "summary output file", shortName = "output", required = false)
   var summaryFile: File = _
 
-  override val defaultCoreMemory = 6.0
+  override def defaultCoreMemory = 6.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
 

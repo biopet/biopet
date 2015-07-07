@@ -68,8 +68,8 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
   var Y: Boolean = config("Y", default = false)
   var I: Option[String] = config("I")
 
-  override val defaultCoreMemory = 4.0
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   override def beforeGraph() {
     super.beforeGraph()

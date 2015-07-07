@@ -38,7 +38,7 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction wi
   var title: Option[String] = None
   var subTitle: Option[String] = None
 
-  override val defaultCoreMemory = 9.0
+  override def defaultCoreMemory = 9.0
 
   def cmdLine = getPythonCommand +
     required(input) +

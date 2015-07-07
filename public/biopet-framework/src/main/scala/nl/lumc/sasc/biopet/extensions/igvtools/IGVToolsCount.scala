@@ -60,7 +60,7 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   var pairs: Boolean = config("pairs", default = false)
 
-  override val defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph() {
     super.beforeGraph()

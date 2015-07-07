@@ -52,8 +52,8 @@ class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summariza
   @Output
   protected var genotypeStats: File = null
 
-  override val defaultCoreMemory = 3.0
-  override val defaultThreads = 3
+  override def defaultCoreMemory = 3.0
+  override def defaultThreads = 3
 
   protected var outputDir: File = _
 

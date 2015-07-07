@@ -60,12 +60,12 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
-  override val versionRegex = """stampy v(.*) \(.*\), .*""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """stampy v(.*) \(.*\), .*""".r
+  override def versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.
-  override val defaultCoreMemory = 4.0
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   override def versionCommand = executable + " --help"
 

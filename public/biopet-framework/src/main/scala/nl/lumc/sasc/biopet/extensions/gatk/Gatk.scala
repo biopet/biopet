@@ -32,7 +32,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
 
   val analysisType: String
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   @Input(required = true)
   var reference: File = null
@@ -49,8 +49,8 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
 
-  override val versionRegex = """(.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """(.*)""".r
+  override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " -jar " + jarFile + " -version"
 
   override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
