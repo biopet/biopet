@@ -29,8 +29,8 @@ import scala.collection.JavaConverters._
 
 class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
 
-  import nl.lumc.sasc.biopet.tools.SeqStat._
   import nl.lumc.sasc.biopet.tools.FqEncoding._
+  import nl.lumc.sasc.biopet.tools.SeqStat._
 
   private def resourceFile(p: String): File =
     new File(resourcePath(p))
@@ -92,7 +92,7 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     baseHistogram(39) shouldEqual 5
     baseHistogram(34) shouldEqual 5
     baseHistogram(33) shouldEqual 5
-    baseHistogram(0) shouldEqual 5
+    baseHistogram.head shouldEqual 5
   }
 
   @Test def testArgsMinimum() = {

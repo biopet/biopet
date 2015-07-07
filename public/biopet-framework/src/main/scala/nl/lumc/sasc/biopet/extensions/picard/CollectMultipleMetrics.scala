@@ -5,9 +5,11 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import org.broadinstitute.gatk.utils.commandline.{ Output, Argument, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
+ * Extension for piacrd's CollectMultipleMetrics tool
+ *
  * Created by pjvan_thof on 4/16/15.
  */
 class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable {
@@ -36,29 +38,24 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
   @Output
   protected var outputFiles: List[File] = Nil
 
-  override def beforeGraph: Unit = {
-    program.foreach(p => p match {
-      case _ if p == Programs.CollectAlignmentSummaryMetrics.toString => {
+  override def beforeGraph(): Unit = {
+    program.foreach {
+      case p if p == Programs.CollectAlignmentSummaryMetrics.toString =>
         outputFiles :+= new File(outputName + ".alignment_summary_metrics")
-      }
-      case _ if p == Programs.CollectInsertSizeMetrics.toString => {
+      case p if p == Programs.CollectInsertSizeMetrics.toString =>
         outputFiles :+= new File(outputName + ".insert_size_metrics")
         outputFiles :+= new File(outputName + ".insert_size_histogram.pdf")
-      }
-      case _ if p == Programs.QualityScoreDistribution.toString => {
+      case p if p == Programs.QualityScoreDistribution.toString =>
         outputFiles :+= new File(outputName + ".quality_distribution_metrics")
         outputFiles :+= new File(outputName + ".test.quality_distribution.pdf")
-      }
-      case _ if p == Programs.MeanQualityByCycle.toString => {
+      case p if p == Programs.MeanQualityByCycle.toString =>
         outputFiles :+= new File(outputName + ".quality_by_cycle_metrics")
         outputFiles :+= new File(outputName + ".quality_by_cycle.pdf")
-      }
-      case _ if p == Programs.CollectBaseDistributionByCycle.toString => {
+      case p if p == Programs.CollectBaseDistributionByCycle.toString =>
         outputFiles :+= new File(outputName + ".base_distribution_by_cycle_metrics")
         outputFiles :+= new File(outputName + ".base_distribution_by_cycle.pdf")
-      }
-      case _ => BiopetQScript.addError("Program '" + p + "' does not exist for 'CollectMultipleMetrics'")
-    })
+      case p => BiopetQScript.addError("Program '" + p + "' does not exist for 'CollectMultipleMetrics'")
+    }
   }
 
   override def commandLine = super.commandLine +
@@ -104,7 +101,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
           "insert_size_histogram" -> new File(outputName + ".insert_size_histogram.pdf"),
           "insert_size_metrics" -> new File(outputName + ".insert_size_metrics"))
       case otherwise => Map()
-    }.foldLeft(Map.empty[String, File]) { case (acc, m) => (acc ++ m) }
+    }.foldLeft(Map.empty[String, File]) { case (acc, m) => acc ++ m }
   }
 }
 

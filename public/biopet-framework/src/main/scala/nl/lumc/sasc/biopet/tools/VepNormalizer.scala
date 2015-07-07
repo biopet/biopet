@@ -15,18 +15,18 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, IOException }
-import scala.collection.JavaConversions._
-import scala.collection.mutable.{ Map => MMap }
+import java.io.File
 
 import htsjdk.tribble.TribbleException
-import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf._
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable.{ Map => MMap }
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
@@ -191,7 +191,7 @@ object VepNormalizer extends ToolCommand {
   def explodeTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): Array[VariantContext] = {
     for (transcript <- parseCsq(record)) yield {
       (for (
-        fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId);
+        fieldId <- csqInfos.indices if transcript.isDefinedAt(fieldId);
         value = transcript(fieldId) if value.nonEmpty
       ) yield csqInfos(fieldId) -> value)
         .filterNot(_._2.isEmpty)
@@ -203,7 +203,7 @@ object VepNormalizer extends ToolCommand {
   def standardTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): VariantContext = {
     val attribs = parseCsq(record)
 
-    (for (fieldId <- 0 until csqInfos.size) yield csqInfos(fieldId) -> {
+    (for (fieldId <- csqInfos.indices) yield csqInfos(fieldId) -> {
       for (
         transcript <- attribs if transcript.isDefinedAt(fieldId);
         value = transcript(fieldId) if value.nonEmpty

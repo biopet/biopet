@@ -16,11 +16,11 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, BasicFastqWriter }
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
+
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
 
 /**
  * Queue extension for the FastqSplitter
@@ -53,12 +53,12 @@ object FastqSplitter extends ToolCommand {
   case class Args(inputFile: File = null, outputFile: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
-    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+    } text "out is a required file property"
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x :: c.outputFile)
-    } text ("out is a required file property")
+    } text "out is a required file property"
   }
 
   /**
@@ -87,7 +87,7 @@ object FastqSplitter extends ToolCommand {
         }
       }
     }
-    for (writer <- output) writer.close
+    for (writer <- output) writer.close()
     logger.info("Done, " + counter + " reads processed")
   }
 }

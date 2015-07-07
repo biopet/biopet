@@ -18,12 +18,11 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, FileNotFoundException }
 
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.io.Source
-
-import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
@@ -122,7 +121,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         case None => Map()
         case Some(qcModule) =>
           val tableContents = for {
-            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"))
             values = line.split("\t") if values.size == 7
           } yield (values(0), BasePositionStats(values(1).toDouble, values(2).toDouble, values(3).toDouble,
             values(4).toDouble, values(5).toDouble, values(6).toDouble).toMap)
@@ -137,7 +136,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         case Some(qcModule) =>
           val bases = qcModule.lines.head.split("\t").tail
           val tableContents = for {
-            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"))
             values = line.split("\t") if values.size == 5
           } yield (values(0), bases.zip(values.tail.map(_.toDouble)).toMap)
           tableContents.toMap
@@ -195,8 +194,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       "plot_per_sequence_gc_content" -> ("Images" + File.separator + "per_sequence_gc_content.png"),
       "plot_per_sequence_quality" -> ("Images" + File.separator + "per_sequence_quality.png"),
       "plot_sequence_length_distribution" -> ("Images" + File.separator + "sequence_length_distribution.png"),
-      "fastqc_data" -> ("fastqc_data.txt"))
-      .map(x => (x._1 -> new File(outputDir, x._2)))
+      "fastqc_data" -> "fastqc_data.txt")
+      .map(x => x._1 -> new File(outputDir, x._2))
 
     outputFiles.foreach(this.outputFiles :+= _._2)
 
@@ -213,13 +212,13 @@ object Fastqc {
   def apply(root: Configurable, fastqfile: File, outDir: File): Fastqc = {
     val fastqcCommand = new Fastqc(root)
     fastqcCommand.fastqfile = fastqfile
-    var filename: String = fastqfile.getName()
-    if (filename.endsWith(".gz")) filename = filename.substring(0, filename.size - 3)
-    if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.size - 5)
-    if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.size - 6)
+    var filename: String = fastqfile.getName
+    if (filename.endsWith(".gz")) filename = filename.substring(0, filename.length - 3)
+    if (filename.endsWith(".gzip")) filename = filename.substring(0, filename.length - 5)
+    if (filename.endsWith(".fastq")) filename = filename.substring(0, filename.length - 6)
     //if (filename.endsWith(".fq")) filename = filename.substring(0,filename.size - 3)
     fastqcCommand.output = new File(outDir, filename + "_fastqc.zip")
-    fastqcCommand.beforeGraph
+    fastqcCommand.beforeGraph()
     fastqcCommand
   }
 }

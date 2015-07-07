@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -14,9 +14,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, DataProvider, AfterClass }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[BamMetrics]]
+ *
  * Created by pjvan_thof on 4/30/15.
  */
 class BamMetricsTest extends TestNGSuite with Matchers {

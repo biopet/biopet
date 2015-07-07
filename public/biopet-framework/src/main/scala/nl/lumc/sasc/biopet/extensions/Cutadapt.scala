@@ -15,11 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
-import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
 import scala.io.Source
@@ -75,7 +76,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
     val adapter_stats: mutable.Map[String, Int] = mutable.Map()
 
-    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines) {
+    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines()) {
       line match {
         case trimR(m)                 => stats += ("trimmed" -> m.toInt)
         case tooShortR(m)             => stats += ("tooshort" -> m.toInt)

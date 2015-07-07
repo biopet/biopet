@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ FileWriter, BufferedWriter, File, PrintWriter }
+import java.io.{ BufferedWriter, File, FileWriter }
 
 import argonaut._
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -51,13 +51,15 @@ class ConiferSummary(val root: Configurable) extends InProcessFunction with Conf
 
   var label: String = _
 
-  var coniferPipeline: ConiferPipeline = if (root.isInstanceOf[ConiferPipeline]) root.asInstanceOf[ConiferPipeline] else {
-    throw new IllegalStateException("Root is no instance of ConiferPipeline")
+  var coniferPipeline: ConiferPipeline = root match {
+    case pipeline: ConiferPipeline => pipeline
+    case _ =>
+      throw new IllegalStateException("Root is no instance of ConiferPipeline")
   }
 
   var resources: Map[String, Json] = Map()
 
-  override def run {
+  override def run() {
     logger.debug("Start")
     filterCalls(calls, out, label)
     logger.debug("Stop")

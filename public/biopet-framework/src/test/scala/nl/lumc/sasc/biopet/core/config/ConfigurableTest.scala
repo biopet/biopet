@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ConfigUtilsTest }
 import org.scalatest.Matchers
-import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
+ * Test class for [[Configurable]]
+ *
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigurableTest extends TestNGSuite with Matchers {
-  @Test def testConfigurable: Unit = {
+  @Test def testConfigurable(): Unit = {
     val classC = new ClassC {
       override def configName = "classc"
       override val globalConfig = new Config(ConfigurableTest.map)

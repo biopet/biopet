@@ -15,24 +15,25 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{ Cutadapt, Fastqc, SeqtkSeq }
+import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
-import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
-import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{ SeqtkSeq, Cutadapt, Fastqc }
-import nl.lumc.sasc.biopet.tools.{ SeqStat, FastqSync }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
-
 /**
+ * Test class for [[Mapping]]
+ *
  * Created by pjvan_thof on 2/12/15.
  */
 class MappingTest extends TestNGSuite with Matchers {
@@ -100,9 +101,9 @@ class MappingTest extends TestNGSuite with Matchers {
 
     //aligners
     mapping.functions.count(_.isInstanceOf[BwaMem]) shouldBe ((if (aligner == "bwa-mem") 1 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 2 else 1) else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 1 else 0) else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") (if (paired) 0 else 1) else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") if (paired) 2 else 1 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") if (paired) 1 else 0 else 0) * chunks)
+    mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") if (paired) 0 else 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Star]) shouldBe ((if (aligner == "star") 1 else if (aligner == "star-2pass") 3 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Bowtie]) shouldBe ((if (aligner == "bowtie") 1 else 0) * chunks)
     mapping.functions.count(_.isInstanceOf[Stampy]) shouldBe ((if (aligner == "stampy") 1 else 0) * chunks)

@@ -15,13 +15,14 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, BufferedWriter, FileWriter, OutputStreamWriter }
-import scala.io.{ BufferedSource, Source }
-import scala.collection.mutable.{ Set => MutSet }
+import java.io.{ BufferedWriter, File, FileWriter, OutputStreamWriter }
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.mutable.{ Set => MutSet }
+import scala.io.{ BufferedSource, Source }
 
 /**
  * Biopet wrapper for the [[MergeTables]] command line tool.
@@ -100,7 +101,7 @@ object MergeTables extends ToolCommand {
     val split = line
       .split(delimiter)
       .filter(_.nonEmpty)
-    val colSize = split.size
+    val colSize = split.length
     require(idIdces.forall(_ < colSize), "All feature ID indices must be smaller than number of columns")
     require(valIdx < colSize, "Value index must be smaller than number of columns")
 

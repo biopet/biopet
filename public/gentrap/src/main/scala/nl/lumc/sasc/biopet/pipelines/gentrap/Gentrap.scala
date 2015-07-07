@@ -16,27 +16,28 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
-import scala.language.reflectiveCalls
-
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function.QFunction
-import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
-import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
-import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, SortSam, MergeSamFiles }
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
+import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
+
+import scala.language.reflectiveCalls
+import scalaz.Scalaz._
+import scalaz._
 
 /**
  * Gentrap pipeline
@@ -49,9 +50,9 @@ class Gentrap(val root: Configurable) extends QScript
   with SummaryQScript
   with Reference { qscript =>
 
-  import Gentrap._
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
+  import Gentrap._
 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
@@ -213,7 +214,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, true)
+    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedJob =
@@ -231,7 +232,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, true)
+    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindJob =
@@ -249,7 +250,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Heatmap job for isoform FPKM Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, true)
+    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, isCuffIsoform = true)
 
   /** Container for merge table jobs */
   private lazy val mergeTableJobs: Map[String, Option[MergeTables]] = Map(
@@ -365,7 +366,7 @@ class Gentrap(val root: Configurable) extends QScript
       geneFragmentsCountJob
     }
     // TODO: use proper notation
-    addSummaryJobs
+    addSummaryJobs()
     add(pdfTemplateJob)
     add(pdfReportJob)
   }

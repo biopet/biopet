@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class IndelRealigner(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.IndelRealigner with GatkGeneral {
@@ -18,6 +19,6 @@ object IndelRealigner {
     ir.input_file :+= input
     ir.targetIntervals = targetIntervals
     ir.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bam")
-    return ir
+    ir
   }
 }

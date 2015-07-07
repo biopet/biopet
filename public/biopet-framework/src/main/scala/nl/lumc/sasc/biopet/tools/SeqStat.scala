@@ -16,22 +16,18 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.collection.immutable.Map
-import scala.io.Source
-import scala.language.postfixOps
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import scalaz._, Scalaz._
-import argonaut._, Argonaut._
-
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConverters._
+import scala.collection.immutable.Map
+import scala.collection.mutable
+import scala.language.postfixOps
 
 /**
  * Seqstat function class for usage in Biopet pipelines
@@ -231,7 +227,7 @@ object SeqStat extends ToolCommand {
 
   def summarize(): Unit = {
     // for every position to the max length of any read
-    for (pos <- 0 until baseStats.length) {
+    for (pos <- baseStats.indices) {
       // list all qualities at this particular position `pos`
       // fix the length of `quals`
       if (quals.length <= baseStats(pos).qual.length) {
@@ -248,7 +244,7 @@ object SeqStat extends ToolCommand {
     detectPhredEncoding(quals)
     logger.debug("Detected '" + phredEncoding.toString.toLowerCase + "' encoding in fastq file ...")
 
-    for (pos <- 0 until nucs.length) {
+    for (pos <- nucs.indices) {
       // always export the N-nucleotide
       if (nucs(pos) > 0 || pos.toChar == 'N') {
         nucleotideHistoMap += (pos.toChar -> nucs(pos))
@@ -261,14 +257,14 @@ object SeqStat extends ToolCommand {
       readHistogram.append(0)
     }
 
-    for (pos <- 0 until quals.length) {
+    for (pos <- quals.indices) {
       val key: Int = pos - phredEncoding.id
       if (key >= 0) {
         baseHistogram(key) += quals(pos)
       }
     }
 
-    for (pos <- 0 until readStats.qual.length) {
+    for (pos <- readStats.qual.indices) {
       val key: Int = pos - phredEncoding.id
       if (key > 0) {
         // count till the max of baseHistogram.length
@@ -278,7 +274,7 @@ object SeqStat extends ToolCommand {
       }
     }
 
-    for (pos <- 0 until readHistogram.length) {
+    for (pos <- readHistogram.indices) {
       readQualHistoMap += (pos -> readHistogram(pos))
     }
 

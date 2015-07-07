@@ -1,10 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, ReportBuilder }
-import nl.lumc.sasc.biopet.core.summary.{ SummaryValue, Summary }
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
+import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
 
 class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
@@ -12,6 +12,8 @@ class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
 }
 
 /**
+ * Class to generate a report for [[Flexiprep]]
+ *
  * Created by pjvan_thof on 3/30/15.
  */
 object FlexiprepReport extends ReportBuilder {
@@ -22,9 +24,8 @@ object FlexiprepReport extends ReportBuilder {
   /** Index page for a flexiprep report */
   def indexPage = {
     val flexiprepPage = this.flexiprepPage
-    ReportPage(List("Versions" -> ReportPage(List(), List((
-      "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-      ))), Map()),
+    ReportPage(List("Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+    )), Map()),
       "Files" -> ReportPage(List(), List(
         "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
         "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp")
@@ -98,7 +99,7 @@ object FlexiprepReport extends ReportBuilder {
     }
 
     for (
-      sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+      sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
       lib <- summary.libraries(sample)
     ) {
       tsvWriter.println(getLine(summary, sample, lib))
@@ -147,7 +148,7 @@ object FlexiprepReport extends ReportBuilder {
     }
 
     for (
-      sample <- summary.samples if (sampleId.isEmpty || sample == sampleId.get);
+      sample <- summary.samples if sampleId.isEmpty || sample == sampleId.get;
       lib <- summary.libraries(sample)
     ) {
       tsvWriter.println(getLine(summary, sample, lib))

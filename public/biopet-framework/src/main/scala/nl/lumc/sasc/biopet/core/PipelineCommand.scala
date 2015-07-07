@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import org.apache.log4j.{ PatternLayout, Appender, WriterAppender, FileAppender }
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
-import scala.collection.JavaConversions._
+import org.apache.log4j.{ PatternLayout, WriterAppender }
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
 /** Wrapper around executable from Queue */
 trait PipelineCommand extends MainCommand with GatkLogging {
@@ -33,7 +33,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
 
   /** Class can be used directly from java with -cp option */
   def main(args: Array[String]): Unit = {
-    val argsSize = args.size
+    val argsSize = args.length
     for (t <- 0 until argsSize) {
       if (args(t) == "-config" || args(t) == "--config_file") {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")

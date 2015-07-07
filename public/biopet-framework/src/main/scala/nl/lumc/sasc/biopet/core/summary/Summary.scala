@@ -5,6 +5,8 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 /**
+ * This class can read in a summary and extract values from it
+ *
  * Created by pjvan_thof on 3/26/15.
  */
 class Summary(file: File) {
@@ -13,8 +15,8 @@ class Summary(file: File) {
   /** List of all samples in the summary */
   lazy val samples: Set[String] = {
     ConfigUtils.getValueFromPath(map, List("samples")) match {
-      case Some(samples) => ConfigUtils.any2map(samples).keySet
-      case _             => Set()
+      case Some(s) => ConfigUtils.any2map(s).keySet
+      case _       => Set()
     }
   }
 

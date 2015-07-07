@@ -28,8 +28,8 @@ class ConiferExport(val root: Configurable) extends Conifer {
   @Output(doc = "Output <sample>.svdzrpkm.bed", shortName = "out", required = true)
   var output: File = _
 
-  override def beforeGraph {
-    this.preProcesExecutable
+  override def beforeGraph() {
+    this.preProcessExecutable()
   }
 
   override def cmdLine = super.cmdLine +

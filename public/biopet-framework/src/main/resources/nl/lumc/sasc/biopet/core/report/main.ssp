@@ -11,7 +11,7 @@
     def createMenu(page: ReportPage, path: List[String] = Nil, first: Boolean = true): String = {
         val buffer: StringBuffer = new StringBuffer()
 
-        if (page.subPages.size > 0){
+        if (page.subPages.nonEmpty){
             buffer.append("<ul class=\"dropdown-menu\">")
         }
 
@@ -22,14 +22,14 @@
             }
 
             buffer.append("<li")
-            if(subPage._2.subPages.size > 0) buffer.append(" class=\"dropdown-submenu\"")
+            if(subPage._2.subPages.nonEmpty) buffer.append(" class=\"dropdown-submenu\"")
             buffer.append("><a href=\"" + href + "\"")
             if (first) buffer.append(" tabindex=\"-1\"")
             buffer.append(">" + subPage._1 + "</a>")
-            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, false))
+            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false))
             buffer.append("</li>")
         }
-        if(page.subPages.size > 0) {
+        if(page.subPages.nonEmpty) {
             buffer.append("</ul>\n")
         }
         buffer.toString
@@ -89,9 +89,9 @@
         </button>
 
         <ul class="nav navbar-nav">
-            <li class="root #if (path.size == 0) active #end">
+            <li class="root #if (path.isEmpty) active #end">
                 <a class="navbar-brand" href="${rootPath}index.html">${reportName}
-                    #if (indexPage.subPages.size > 0) <b class="caret"></b> #end
+                    #if (indexPage.subPages.nonEmpty) <b class="caret"></b> #end
                 </a>
                 ${unescape(createMenu(indexPage))}
             </li>
@@ -106,14 +106,14 @@
                 #if(t == 0)
                     <li class="root">
                         <a href="${rootPath}index.html">Home
-                            #if (indexPage.subPages.size > 0) <b class="caret"></b> #end
+                            #if (indexPage.subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
                         ${unescape(createMenu(indexPage))}
                     </li>
                 #else
                     <li class="root #if (t == path.size) active #end">
                         <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}
-                            #if (getSubPage(path.slice(0, t)).subPages.size > 0) <b class="caret"></b> #end
+                            #if (getSubPage(path.slice(0, t)).subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
                         ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
                     </li>

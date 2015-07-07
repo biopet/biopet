@@ -1,8 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.nio.file.Paths
-import java.util
-import scala.collection.JavaConversions._
 
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -12,6 +10,8 @@ import org.testng.annotations.Test
 import scala.util.Random
 
 /**
+ * Test class for [[VcfToTsv]]
+ *
  * Created by ahbbollen on 13-4-15.
  */
 class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {

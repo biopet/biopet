@@ -33,17 +33,17 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
 
   /** Creates command to execute extension */
   override def commandLine: String = {
-    preCmdInternal
+    preCmdInternal()
     val cmd = super.commandLine
     val finalCmd = executable + cmd.substring(cmd.indexOf(" "))
-    return cmd
+    cmd
   }
 
   def javaVersionCommand: String = executable + " -version"
 
   def getJavaVersion: Option[String] = {
     if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
-      preProcesExecutable
+      preProcessExecutable()
     if (!BiopetCommandLineFunctionTrait.versionCache.contains(javaVersionCommand))
       getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
         case Some(version) => BiopetCommandLineFunctionTrait.versionCache += javaVersionCommand -> version

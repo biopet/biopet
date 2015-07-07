@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.File
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "pindel", freeVar = false)
@@ -50,7 +51,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   var window_size: Option[Int] = config("window_size", default = 5)
 
-  override def beforeCmd {
+  override def beforeCmd() {
   }
 
   def cmdLine = required(executable) +
@@ -66,6 +67,6 @@ object PindelCaller {
     val caller = new PindelCaller(root)
     caller.input = input
     caller.output = output
-    return caller
+    caller
   }
 }

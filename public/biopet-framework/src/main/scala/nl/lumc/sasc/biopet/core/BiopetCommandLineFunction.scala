@@ -31,9 +31,9 @@ abstract class BiopetCommandLineFunction extends BiopetCommandLineFunctionTrait 
    * @return Command to run
    */
   final def commandLine: String = {
-    preCmdInternal
+    preCmdInternal()
     val cmd = cmdLine
     addJobReportBinding("command", cmd)
-    return cmd
+    cmd
   }
 }

@@ -17,13 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, PythonCommandLineFunction, Tabix }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.varscan.Mpileup2cns
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, PythonCommandLineFunction, Tabix }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Ad-hoc extension for VarScan variant calling that involves 6-command pipe */
 // FIXME: generalize piping instead of building something by hand like this!
@@ -61,7 +60,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     def cmdLine = getPythonCommand
   }
 
-  private def removeEmptyPile = new BiopetCommandLineFunction {
+  private def removeEmptyPile() = new BiopetCommandLineFunction {
     override val root: Configurable = wrapper.root
     override def configName = wrapper.configName
     executable = config("exe", default = "grep", freeVar = false)
@@ -91,14 +90,14 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     varscan.freezeFieldValues()
   }
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
   }
 
   def cmdLine: String = {
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
-    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile.commandLine + " | " +
+    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile().commandLine + " | " +
       varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }

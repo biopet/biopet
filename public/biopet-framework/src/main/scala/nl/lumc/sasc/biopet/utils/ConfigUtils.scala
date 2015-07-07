@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.Logging
+
+import argonaut.Argonaut._
+import argonaut._
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, Logging }
 import nl.lumc.sasc.biopet.core.config.ConfigValue
-import argonaut._, Argonaut._
 import org.yaml.snakeyaml.Yaml
-import scalaz._, Scalaz._
+
 import scala.collection.JavaConversions._
 
 /**
@@ -43,17 +44,16 @@ object ConfigUtils extends Logging {
       else if (!map1.contains(key)) newMap += (key -> map2(key))
       else {
         map1(key) match {
-          case m1: Map[_, _] => {
+          case m1: Map[_, _] =>
             map2(key) match {
               case m2: Map[_, _] => newMap += (key -> mergeMaps(any2map(m1), any2map(m2)))
               case _             => newMap += (key -> map1(key))
             }
-          }
           case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
         }
       }
     }
-    return newMap
+    newMap
   }
 
   /**
@@ -78,7 +78,7 @@ object ConfigUtils extends Logging {
    */
   def getValueFromPath(map: Map[String, Any], path: List[String]): Option[Any] = {
     val value = map.get(path.head)
-    if (path.tail == Nil || value == None) value
+    if (path.tail.isEmpty || value.isEmpty) value
     else value.get match {
       case map: Map[_, _]                     => getValueFromPath(map.asInstanceOf[Map[String, Any]], path.tail)
       case map: java.util.LinkedHashMap[_, _] => getValueFromPath(map.toMap.asInstanceOf[Map[String, Any]], path.tail)
@@ -106,7 +106,7 @@ object ConfigUtils extends Logging {
       else jsonToMap(fileToJson(configFile))
     }
     logger.debug("Contain: " + configMap)
-    return configMap
+    configMap
   }
 
   /** Convert a yaml file to map[String, Any] */
@@ -125,23 +125,23 @@ object ConfigUtils extends Logging {
         output += (key -> value)
       }
     } else throw new IllegalStateException("Given value is no json object: " + json)
-    return output
+    output
   }
 
   /** Convert json value to native scala value */
   def jsonToAny(json: Json): Any = {
-    if (json.isObject) return jsonToMap(json)
+    if (json.isObject) jsonToMap(json)
     else if (json.isArray) {
       var list: List[Any] = List()
       for (value <- json.array.get) list ::= jsonToAny(value)
-      return list.reverse
-    } else if (json.isBool) return json.bool.get
-    else if (json.isString) return json.string.get.toString
+      list.reverse
+    } else if (json.isBool) json.bool.get
+    else if (json.isString) json.string.get.toString
     else if (json.isNumber) {
       val num = json.number.get
-      if (num % 1 > 0) return num.toDouble
-      else return num.toLong
-    } else if (json.isNull) return None
+      if (num % 1 > 0) num.toDouble
+      else num.toLong
+    } else if (json.isNull) None
     else throw new IllegalStateException("Config value type not supported, value: " + json)
   }
 
@@ -162,7 +162,7 @@ object ConfigUtils extends Logging {
       case None         => Json.jNull
       case Some(x)      => anyToJson(x)
       case m: Map[_, _] => mapToJson(m.map(m => m._1.toString -> anyToJson(m._2)))
-      case l: List[_]   => Json.array(l.map(anyToJson(_)): _*)
+      case l: List[_]   => Json.array(l.map(anyToJson): _*)
       case b: Boolean   => Json.jBool(b)
       case n: Int       => Json.jNumberOrString(n)
       case n: Double    => Json.jNumberOrString(n)
@@ -190,10 +190,9 @@ object ConfigUtils extends Logging {
       case i: Int    => i
       case i: Double => i.toInt
       case i: Long   => i.toInt
-      case i: String => {
+      case i: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         i.toInt
-      }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
@@ -204,10 +203,9 @@ object ConfigUtils extends Logging {
       case l: Double => l.toLong
       case l: Int    => l.toLong
       case l: Long   => l
-      case l: String => {
+      case l: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         l.toLong
-      }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an int")
     }
   }
@@ -219,10 +217,9 @@ object ConfigUtils extends Logging {
       case d: Float  => d.toDouble
       case d: Int    => d.toDouble
       case f: Long   => f.toDouble
-      case d: String => {
+      case d: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
-        return d.toDouble
-      }
+        d.toDouble
       case _ => throw new IllegalStateException("Value '" + any + "' is not an number")
     }
   }
@@ -234,10 +231,9 @@ object ConfigUtils extends Logging {
       case f: Int    => f.toFloat
       case f: Long   => f.toFloat
       case f: Float  => f
-      case f: String => {
+      case f: String =>
         logger.warn("Value '" + any + "' is a string insteadof int in json file, trying auto convert")
         f.toFloat
-      }
       case _ => throw new IllegalStateException("Value '" + any + "' is not an number")
     }
   }
@@ -246,14 +242,12 @@ object ConfigUtils extends Logging {
   def any2boolean(any: Any): Boolean = {
     any match {
       case b: Boolean => b
-      case b: String => {
+      case b: String =>
         logger.warn("Value '" + any + "' is a string insteadof boolean in json file, trying auto convert")
         b.contains("true")
-      }
-      case b: Int => {
+      case b: Int =>
         logger.warn("Value '" + any + "' is a int insteadof boolean in json file, trying auto convert")
-        (b > 0)
-      }
+        b > 0
       case _ => throw new IllegalStateException("Value '" + any + "' is not an boolean")
     }
   }
@@ -308,7 +302,7 @@ object ConfigUtils extends Logging {
       if (!exist)
         BiopetQScript.addError("Value does not exist but is required, key: " + value.requestIndex.key +
           "  module: " + value.requestIndex.module,
-          (if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null))
+          if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null)
       exist
     }
 

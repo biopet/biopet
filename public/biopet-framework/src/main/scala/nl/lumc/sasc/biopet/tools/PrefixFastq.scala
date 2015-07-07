@@ -17,11 +17,10 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
-import htsjdk.samtools.fastq.{ FastqRecord, AsyncFastqWriter, FastqReader, BasicFastqWriter }
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
-import scala.collection.JavaConversions._
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Queue class for PrefixFastq tool
@@ -65,7 +64,7 @@ object PrefixFastq extends ToolCommand {
     val prefixFastq = new PrefixFastq(root)
     prefixFastq.inputFastq = input
     prefixFastq.outputFastq = new File(outputDir, input.getName + ".prefix.fastq")
-    return prefixFastq
+    prefixFastq
   }
 
   /**
@@ -77,13 +76,13 @@ object PrefixFastq extends ToolCommand {
   case class Args(input: File = null, output: File = null, seq: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('i', "input") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('i', "input") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
-    opt[File]('o', "output") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(output = x)
     }
-    opt[String]('s', "seq") required () maxOccurs (1) valueName ("<prefix seq>") action { (x, c) =>
+    opt[String]('s', "seq") required () maxOccurs 1 valueName "<prefix seq>" action { (x, c) =>
       c.copy(seq = x)
     }
   }
@@ -111,7 +110,7 @@ object PrefixFastq extends ToolCommand {
       val readHeader = read.getReadHeader
       val readSeq = cmdArgs.seq + read.getReadString
       val baseQualityHeader = read.getBaseQualityHeader
-      val baseQuality = Array.fill(cmdArgs.seq.size)(maxQuality).mkString + read.getBaseQualityString
+      val baseQuality = Array.fill(cmdArgs.seq.length)(maxQuality).mkString + read.getBaseQualityString
 
       writer.write(new FastqRecord(readHeader, readSeq, baseQualityHeader, baseQuality))
 

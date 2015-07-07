@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.conifer
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 
 abstract class Conifer extends PythonCommandLineFunction {

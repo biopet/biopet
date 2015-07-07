@@ -16,16 +16,15 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
-import scalaz._, Scalaz._
 
 import nl.lumc.sasc.biopet.extensions.{ Cufflinks, Ln }
 
 /** General trait for containing cufflinks results */
 trait CufflinksProducer {
 
-  import Gentrap._
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
+  import Gentrap._
 
   //TODO: move vars that are used in gentrep
   protected def sampleDir: File

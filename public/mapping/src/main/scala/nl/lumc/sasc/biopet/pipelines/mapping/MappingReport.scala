@@ -10,6 +10,8 @@ class MappingReport(val root: Configurable) extends ReportBuilderExtension {
 }
 
 /**
+ * Object ot generate report for [[Mapping]]
+ *
  * Created by pjvanthof on 24/06/15.
  */
 object MappingReport extends ReportBuilder {
@@ -20,9 +22,8 @@ object MappingReport extends ReportBuilder {
   def indexPage = {
     val bamMetricsPage = BammetricsReport.bamMetricsPage(summary, sampleId, libId)
     ReportPage(List("QC" -> FlexiprepReport.flexiprepPage) ::: bamMetricsPage.subPages ::: List(
-      "Versions" -> ReportPage(List(), List((
-        "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-        ))), Map()),
+      "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+      )), Map()),
       "Files" -> ReportPage(List(), List(
         "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
         "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),

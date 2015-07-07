@@ -16,26 +16,20 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import scala.collection.JavaConverters._
-import scala.io.Source
-import scala.math.{ max, min }
 
-import com.google.common.hash.{ Funnel, BloomFilter, PrimitiveSink }
-import htsjdk.samtools.SamReader
-import htsjdk.samtools.SamReaderFactory
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.ValidationStringency
-import htsjdk.samtools.SAMFileWriter
-import htsjdk.samtools.SAMFileWriterFactory
-import htsjdk.samtools.SAMRecord
+import com.google.common.hash.{ BloomFilter, Funnel, PrimitiveSink }
+import htsjdk.samtools.{ QueryInterval, SAMFileWriter, SAMFileWriterFactory, SAMRecord, SamReader, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
 import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
 import htsjdk.tribble.bed.BEDCodec
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, BiopetJavaCommandLineFunction, ToolCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import scala.collection.JavaConverters._
+import scala.io.Source
+import scala.math.{ max, min }
 
 // TODO: finish implementation for usage in pipelines
 /**
@@ -263,7 +257,7 @@ object WipeReads extends ToolCommand {
 
     /** filter function for read IDs */
     val rgFilter =
-      if (readGroupIds.size == 0)
+      if (readGroupIds.isEmpty)
         (r: SAMRecord) => true
       else
         (r: SAMRecord) => readGroupIds.contains(r.getReadGroup.getReadGroupId)

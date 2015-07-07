@@ -1,7 +1,9 @@
 package nl.lumc.sasc.biopet.core.report
 
 /**
- * Created by pjvan_thof on 3/30/15.
+ * This trait will generate a report with added function to generate sample and library pages for those existing in the summary.
+ *
+ * @author pjvan_thof
  */
 trait MultisampleReportBuilder extends ReportBuilder {
 
@@ -28,7 +30,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
   /** Generate the samples page including a single sample page for each sample in the summary */
   def generateSamplesPage(args: Map[String, Any]): ReportPage = {
     val samplePages = summary.samples
-      .map(sampleId => (sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId)))))
+      .map(sampleId => sampleId -> samplePage(sampleId, args ++ Map("sampleId" -> Some(sampleId))))
       .toList
     ReportPage(samplePages, samplesSections, args)
   }
@@ -41,7 +43,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
     }
 
     val libPages = summary.libraries(sampleId)
-      .map(libId => (libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId)))))
+      .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId))))
       .toList
     ReportPage(libPages, libririesSections, args)
   }

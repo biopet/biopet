@@ -15,23 +15,25 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.Freebayes
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.tools.{ VcfFilter, MpileupToVcf }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, Test, DataProvider }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
 /**
+ * Test class for [[ShivaVariantcalling]]
+ *
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaVariantcallingTest extends TestNGSuite with Matchers {

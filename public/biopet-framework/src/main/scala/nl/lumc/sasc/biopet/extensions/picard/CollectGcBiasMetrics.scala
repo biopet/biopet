@@ -16,10 +16,11 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CollectGcBiasMetrics */
 class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
@@ -52,8 +53,8 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (outputChart == null) outputChart = new File(output + ".pdf")
     if (reference == null) reference = referenceFasta()
   }
@@ -83,6 +84,6 @@ object CollectGcBiasMetrics {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
     collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")
-    return collectGcBiasMetrics
+    collectGcBiasMetrics
   }
 }

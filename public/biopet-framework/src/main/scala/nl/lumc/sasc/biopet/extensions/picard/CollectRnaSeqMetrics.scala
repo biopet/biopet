@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
@@ -67,7 +68,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     if (refFlat == null) refFlat = config("refFlat")
     val validFlags = StrandSpecificity.values.map(_.toString).toSet
     strandSpecificity match {

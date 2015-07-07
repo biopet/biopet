@@ -1,8 +1,10 @@
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{ FileOutputStream, InputStream, FileInputStream, File }
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 
 /**
+ * This object contains generic io methods
+ *
  * Created by pjvan_thof on 6/4/15.
  */
 object IoUtils {

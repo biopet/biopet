@@ -2,15 +2,17 @@ package nl.lumc.sasc.biopet.core.report
 
 import java.io._
 
-import nl.lumc.sasc.biopet.core.{ Logging, ToolCommandFuntion, ToolCommand }
 import nl.lumc.sasc.biopet.core.summary.Summary
-import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{ TemplateSource, TemplateEngine }
+import nl.lumc.sasc.biopet.core.{ Logging, ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.IoUtils
+import org.broadinstitute.gatk.utils.commandline.Input
+import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 import scala.collection.mutable
 
 /**
- * Created by pjvan_thof on 3/27/15.
+ * This trait is meant to make an extension for a report object
+ *
+ * @author pjvan_thof
  */
 trait ReportBuilderExtension extends ToolCommandFuntion {
 
@@ -28,8 +30,8 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 3.0
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     jobOutputFile = new File(outputDir, ".report.log.out")
     javaMainClass = builder.getClass.getName.takeWhile(_ != '$')
   }
@@ -87,18 +89,16 @@ trait ReportBuilder extends ToolCommand {
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")
 
     cmdArgs.pageArgs.get("sampleId") match {
-      case Some(s: String) => {
+      case Some(s: String) =>
         cmdArgs.pageArgs += "sampleId" -> Some(s)
         _sampleId = Some(s)
-      }
       case _ =>
     }
 
     cmdArgs.pageArgs.get("libId") match {
-      case Some(l: String) => {
+      case Some(l: String) =>
         cmdArgs.pageArgs += "libId" -> Some(l)
         _libId = Some(l)
-      }
       case _ =>
     }
 
@@ -121,7 +121,7 @@ trait ReportBuilder extends ToolCommand {
     )
 
     for (resource <- extFiles.par) {
-      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), true)
+      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), createDirs = true)
     }
 
     logger.info("Parsing summary")
@@ -184,7 +184,7 @@ trait ReportBuilder extends ToolCommand {
 
     done += 1
     if (done % 100 == 0) logger.info(done + " Done, " + (done.toDouble / total * 100) + "%")
-    jobs.fold(0)(_ + _) + 1
+    jobs.sum + 1
   }
 }
 
@@ -210,18 +210,13 @@ object ReportBuilder {
   def renderTemplate(location: String, args: Map[String, Any] = Map()): String = {
     Logging.logger.info("Rendering: " + location)
 
-    if (location == "/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp") {
-      println("hier dus")
-    }
-
     val templateFile: File = templateCache.get(location) match {
       case Some(template) => template
-      case _ => {
+      case _ =>
         val tempFile = File.createTempFile("ssp-template", new File(location).getName)
         IoUtils.copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
         templateCache += location -> tempFile
         tempFile
-      }
     }
     engine.layout(TemplateSource.fromFile(templateFile), args)
   }

@@ -16,13 +16,13 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
-import scala.language.reflectiveCalls
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.language.reflectiveCalls
 
 /** Ad-hoc extension for counting bases that involves 3-command pipe */
 // FIXME: generalize piping instead of building something by hand like this!
@@ -81,7 +81,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
     def cmdLine = getPythonCommand + optional("-c", "3")
   }
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(annotationBed != null, "Annotation BED must be supplied")
     require(output != null, "Output must be defined")
     require((mixedStrand && !distinctStrand) || (!mixedStrand && distinctStrand),

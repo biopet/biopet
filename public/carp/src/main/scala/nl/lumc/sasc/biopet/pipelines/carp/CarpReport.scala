@@ -6,6 +6,8 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 /**
+ * Class for report for CArp
+ *
  * Created by pjvanthof on 25/06/15.
  */
 class CarpReport(val root: Configurable) extends ReportBuilderExtension {
@@ -20,9 +22,8 @@ object CarpReport extends MultisampleReportBuilder {
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map("Files" -> filesPage,
-          "Versions" -> ReportPage(List(), List((
-            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
-            ))), Map())
+          "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
+          )), Map())
         ),
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp"),

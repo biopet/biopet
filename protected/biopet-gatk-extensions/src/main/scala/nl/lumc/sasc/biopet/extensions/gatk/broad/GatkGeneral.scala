@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
 trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction with Reference {
@@ -27,10 +27,10 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction wit
   override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " -jar " + jarFile + " -version"
 
-  override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
+  override def getVersion = super.getVersion.collect { case v => "Gatk " + v }
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (reference_sequence == null) reference_sequence = referenceFasta()
   }
 }

@@ -15,11 +15,10 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
-import java.io.FileOutputStream
-import java.io.File
-import org.broadinstitute.gatk.utils.commandline.{ Input }
+import java.io.{ File, FileOutputStream }
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import scala.collection.JavaConversions._
+import org.broadinstitute.gatk.utils.commandline.Input
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc = "Python script", required = false)
@@ -58,7 +57,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   }
 
   /** return basic command to prefix the complete command with */
-  def getPythonCommand(): String = {
+  def getPythonCommand: String = {
     required(executable) + required(python_script)
   }
 }

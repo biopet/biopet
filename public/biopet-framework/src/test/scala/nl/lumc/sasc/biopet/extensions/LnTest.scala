@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
+
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test

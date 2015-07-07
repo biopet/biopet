@@ -2,14 +2,16 @@ package nl.lumc.sasc.biopet.tools
 
 import java.nio.file.Paths
 
-import org.testng.annotations.Test
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.Test
 
 import scala.util.Random
 
 /**
+ * Test class for [[VcfFilter]]
+ *
  * Created by ahbbollen on 9-4-15.
  */
 class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {

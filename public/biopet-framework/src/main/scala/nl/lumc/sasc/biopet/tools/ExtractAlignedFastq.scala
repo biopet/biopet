@@ -17,16 +17,13 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import scala.collection.mutable.{ Set => MSet }
-import scala.collection.JavaConverters._
-
-import htsjdk.samtools.QueryInterval
-import htsjdk.samtools.SamReaderFactory
-import htsjdk.samtools.ValidationStringency
+import htsjdk.samtools.{ QueryInterval, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.samtools.util.Interval
-
 import nl.lumc.sasc.biopet.core.ToolCommand
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable.{ Set => MSet }
 
 object ExtractAlignedFastq extends ToolCommand {
 
@@ -232,9 +229,9 @@ object ExtractAlignedFastq extends ToolCommand {
       """.stripMargin)
 
     checkConfig { c =>
-      if (c.inputFastq2 != None && c.outputFastq2 == None)
+      if (c.inputFastq2.isDefined && c.outputFastq2.isEmpty)
         failure("Missing output FASTQ file 2")
-      else if (c.inputFastq2 == None && c.outputFastq2 != None)
+      else if (c.inputFastq2.isEmpty && c.outputFastq2.isDefined)
         failure("Missing input FASTQ file 2")
       else
         success

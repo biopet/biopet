@@ -16,9 +16,10 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
+import java.io.{ File, FileNotFoundException }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.{ FileNotFoundException, File }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * IGVTools `count` wrapper
@@ -61,13 +62,13 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
 
   override def defaultCoreMemory = 4.0
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
 
     (tdf, wig) match {
-      case (Some(tdf), _) => jobLocalDir = tdf.getParentFile
-      case (_, Some(wig)) => jobLocalDir = wig.getParentFile
-      case _              => throw new IllegalArgumentException("Must have a wig or tdf file")
+      case (Some(t), _) => jobLocalDir = t.getParentFile
+      case (_, Some(w)) => jobLocalDir = w.getParentFile
+      case _            => throw new IllegalArgumentException("Must have a wig or tdf file")
     }
 
     wig.foreach(x => if (!x.getAbsolutePath.endsWith(".wig"))
@@ -122,6 +123,6 @@ object IGVToolsCount {
     val counting = new IGVToolsCount(root)
     counting.input = input
     counting.genomeChromSizes = genomeChromSizes
-    return counting
+    counting
   }
 }

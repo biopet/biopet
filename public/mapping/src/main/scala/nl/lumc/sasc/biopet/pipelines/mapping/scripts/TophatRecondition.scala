@@ -19,7 +19,6 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
-
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
@@ -41,7 +40,7 @@ class TophatRecondition(val root: Configurable) extends PythonCommandLineFunctio
 
   private def outputDir: File = outputSam.getAbsoluteFile.getParentFile
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(inputBam != null, "Input must be defined.")
     require(outputSam != null, "Output must be defined.")
   }

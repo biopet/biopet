@@ -19,11 +19,12 @@ import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ Reference, MultiSampleQScript }
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+
 import scala.collection.JavaConversions._
 
 /**
@@ -35,14 +36,14 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
   qscript =>
 
   /** Executed before running the script */
-  def init: Unit = {
+  def init(): Unit = {
   }
 
   /** Method to add jobs */
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     addSamplesJobs()
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 
   override def reportClass = {
@@ -196,8 +197,8 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
           vc.outputDir = new File(libDir, "variantcalling")
           if (preProcessBam.isDefined) vc.inputBams = preProcessBam.get :: Nil
           else vc.inputBams = bamFile.get :: Nil
-          vc.init
-          vc.biopetScript
+          vc.init()
+          vc.biopetScript()
           addAll(vc.functions)
           addSummaryQScript(vc)
         })
@@ -260,8 +261,8 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
           vc.inputBams = preProcessBam.get :: Nil
-          vc.init
-          vc.biopetScript
+          vc.init()
+          vc.biopetScript()
           addAll(vc.functions)
           addSummaryQScript(vc)
         })
@@ -278,8 +279,8 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     variantcalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap(_._2.preProcessBam).toList
-      vc.init
-      vc.biopetScript
+      vc.init()
+      vc.biopetScript()
       addAll(vc.functions)
       addSummaryQScript(vc)
     })

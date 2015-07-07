@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /** Extension for pbzip2 */
 class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
@@ -36,8 +37,8 @@ class Pbzip2(val root: Configurable) extends BiopetCommandLineFunction {
   override def defaultCoreMemory = memory.getOrElse(1000).toDouble / 1000
   override def defaultThreads = 2
 
-  override def beforeCmd {
-    if (!memory.isEmpty) memory = Option(memory.get * threads)
+  override def beforeCmd() {
+    if (memory.isDefined) memory = Option(memory.get * threads)
   }
 
   /** return commandline to execute */
@@ -57,6 +58,6 @@ object Pbzip2 {
     val pbzip2 = new Pbzip2(root)
     pbzip2.input = input
     pbzip2.output = output
-    return pbzip2
+    pbzip2
   }
 }

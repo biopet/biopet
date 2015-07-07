@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.extensions.sambamba
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /** Extension for sambamba flagstat  */
 class SambambaView(val root: Configurable) extends Sambamba {
