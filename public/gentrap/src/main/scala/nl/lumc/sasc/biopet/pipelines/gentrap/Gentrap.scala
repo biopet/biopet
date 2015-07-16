@@ -720,12 +720,12 @@ class Gentrap(val root: Configurable) extends QScript
       if (inFiles.size == 1) {
 
         val jobBam = new Ln(qscript)
-        jobBam.input = inFiles.head
+        jobBam.input = inFiles.head.getAbsoluteFile
         jobBam.output = outFile
 
         val jobIdx = new Ln(qscript)
-        jobIdx.input = swapExt(jobBam.input, ".bam", ".bai")
-        jobIdx.output = swapExt(jobBam.output, ".bam", ".bai")
+        jobIdx.input = swapExt(libraries.values.head.libDir, jobBam.input, ".bam", ".bai")
+        jobIdx.output = swapExt(sampleDir, jobBam.output, ".bam", ".bai")
 
         CombineFileJobSet(jobBam, Some(jobIdx))
       } else {
