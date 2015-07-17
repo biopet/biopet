@@ -47,6 +47,12 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
     addSummaryJobs()
   }
 
+  override def reportClass = {
+    val report = new GearsReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
   /** Multisample meta-genome comparison */
   def addMultiSampleJobs(): Unit = {
     // generate report from multiple samples, this is:

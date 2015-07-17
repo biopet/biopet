@@ -115,6 +115,7 @@ trait ReportBuilder extends ToolCommand {
       "js/jquery.min.js",
       "js/sortable.min.js",
       "js/bootstrap.min.js",
+      "js/gears.js",
       "fonts/glyphicons-halflings-regular.woff",
       "fonts/glyphicons-halflings-regular.ttf",
       "fonts/glyphicons-halflings-regular.woff2"

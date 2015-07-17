@@ -1,0 +1,81 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
+<%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = true %>
+<%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true %>
+<%@ var multisample: Boolean = false %>
+#{
+    val samples = sampleId match {
+        case Some(sample) => List(sample.toString)
+        case _ => summary.samples.toList
+    }
+    val librariesCount = summary.samples.foldLeft(0)(_ + summary.libraries(_).size)
+}#
+
+<!--
+Javascript required for showing the sunburst plot
+//-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+<!-- Gears specific javascript -->
+<script src="${rootPath}ext/js/gears.js"></script>
+
+<h2 id='currentlevel'>Root</h2>
+<div>
+    <span id="selection_name"></span> -
+    <span id="selection_size"></span> -
+    <span id="selection_value"></span>
+</div>
+
+<form>
+  <label><input type="radio" name="mode" value="size"> Size</label>
+  <label><input type="radio" name="mode" value="count" checked> Count</label>
+</form>
+<div id="sequence"></div>
+
+<div id="datatable"></div>
+
+
+#if (showIntro)
+
+    <div class="row">
+    <div class="col-md-1"></div>
+    <%--<div class="col-md-6">--%>
+        <p>
+            #if (sampleId.isDefined && libId.isDefined)
+                Here we show aggregated quality statistics sequencing library ${libId} for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+            #elseif (sampleId.isDefined)
+                Here we show aggregated quality statistics for every sequencing library for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+            #else
+                Here we show aggregated quality statistics for every sequencing library. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+            #end
+        </p>
+    </div>
+    </div>
+#end
+
+
+
+#if (showPlot)
+    #{
+
+//        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summary, sampleId = sampleId)
+//        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
+
+    }#
+    <div class="panel-body">
+
+    </div>
+
+    </div>
+    <div class="panel-footer">
+
+    </div>
+#end
