@@ -268,7 +268,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
-    outputFiles += ("finalBamFile" -> bamFile)
+    outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
 
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
