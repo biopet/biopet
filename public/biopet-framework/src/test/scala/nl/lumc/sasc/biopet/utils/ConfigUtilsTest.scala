@@ -214,6 +214,15 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "21")
     mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "22")
   }
+
+  @Test def testNestedMergeConflict: Unit = {
+    val map1 = Map("c" -> Map("x" -> "1"))
+    val map2 = Map("c" -> Map("x" -> "1"))
+    mergeMaps(map1, map2) shouldBe Map("c" -> Map("x" -> "1"))
+    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "12"))
+    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "21"))
+    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "22"))
+  }
 }
 
 object ConfigUtilsTest {
