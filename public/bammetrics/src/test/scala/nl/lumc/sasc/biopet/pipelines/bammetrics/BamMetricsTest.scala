@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -14,9 +14,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, DataProvider, AfterClass }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[BamMetrics]]
+ *
  * Created by pjvan_thof on 4/30/15.
  */
 class BamMetricsTest extends TestNGSuite with Matchers {
@@ -45,9 +47,10 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 
   @Test(dataProvider = "bammetricsOptions")
   def testFlexiprep(rois: Int, amplicon: Boolean, rna: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir, "rna_metrcis" -> rna
-    ), Map(BamMetricsTest.executables.toSeq: _*)) ++
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir),
+      Map(BamMetricsTest.executables.toSeq: _*)) ++
       (if (amplicon) Map("amplicon_bed" -> "amplicon.bed") else Map()) ++
+      (if (rna) Map("transcript_refflat" -> "transcripts.refFlat") else Map()) ++
       Map("regions_of_interest" -> (1 to rois).map("roi_" + _ + ".bed").toList)
     val bammetrics: BamMetrics = initPipeline(map)
 
@@ -59,7 +62,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     var regions: Int = rois + (if (amplicon) 1 else 0)
 
     bammetrics.functions.count(_.isInstanceOf[CollectRnaSeqMetrics]) shouldBe (if (rna) 1 else 0)
-    bammetrics.functions.count(_.isInstanceOf[CollectWgsMetrics]) shouldBe 1
+    bammetrics.functions.count(_.isInstanceOf[CollectWgsMetrics]) shouldBe (if (rna) 0 else 1)
     bammetrics.functions.count(_.isInstanceOf[CollectMultipleMetrics]) shouldBe 1
     bammetrics.functions.count(_.isInstanceOf[CalculateHsMetrics]) shouldBe (if (amplicon) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectTargetedPcrMetrics]) shouldBe (if (amplicon) 1 else 0)

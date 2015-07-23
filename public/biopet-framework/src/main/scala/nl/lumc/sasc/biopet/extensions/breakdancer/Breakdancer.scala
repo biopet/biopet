@@ -77,8 +77,8 @@ object Breakdancer extends PipelineCommand {
     breakdancer.input = input
     breakdancer.reference = reference
     breakdancer.workdir = runDir
-    breakdancer.init
-    breakdancer.biopetScript
-    return breakdancer
+    breakdancer.init()
+    breakdancer.biopetScript()
+    breakdancer
   }
 }

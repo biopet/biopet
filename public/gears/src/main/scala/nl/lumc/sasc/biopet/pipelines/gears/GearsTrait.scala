@@ -17,19 +17,18 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.FullVersion
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
-import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, AddOrReplaceReadGroups, SamToFastq, MarkDuplicates }
+import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SamToFastq }
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.tools.FastqSync
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function.QFunction
+
 import scala.collection.JavaConversions._
 
 /**
@@ -39,17 +38,17 @@ import scala.collection.JavaConversions._
 trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
 
   /** Executed before running the script */
-  def init: Unit = {
+  def init(): Unit = {
   }
 
   /** Method to add jobs */
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     addSamplesJobs()
-    addSummaryJobs
+    addSummaryJobs()
   }
 
   /** Multisample meta-genome comparison */
-  def addMultiSampleJobs: Unit = {
+  def addMultiSampleJobs(): Unit = {
     // generate report from multiple samples, this is:
     // - the TSV
     // - the Spearman correlation plot + table
@@ -74,8 +73,8 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
     /** Sample specific files to add to summary */
     def summaryFiles: Map[String, File] = {
       preProcessBam match {
-        case Some(preProcessBam) => Map("bamFile" -> preProcessBam)
-        case _                   => Map()
+        case Some(pb) => Map("bamFile" -> pb)
+        case _        => Map()
       }
     } ++ Map(
       "alignment" -> alnFile
@@ -92,9 +91,9 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
       /** Library specific files to add to the summary */
       def summaryFiles: Map[String, File] = {
         (bamFile, preProcessBam) match {
-          case (Some(bamFile), Some(preProcessBam)) => Map("bamFile" -> bamFile, "preProcessBam" -> preProcessBam)
-          case (Some(bamFile), _)                   => Map("bamFile" -> bamFile)
-          case _                                    => Map()
+          case (Some(b), Some(pb)) => Map("bamFile" -> b, "preProcessBam" -> pb)
+          case (Some(b), _)        => Map("bamFile" -> b)
+          case _                   => Map()
         }
       }
 
@@ -129,10 +128,9 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
           case (false, true) => // Starting from bam file
             config("bam_to_fastq", default = false).asBoolean match {
               case true => makeMapping // bam file will be converted to fastq
-              case false => {
+              case false =>
                 val file = new File(libDir, sampleId + "-" + libId + ".final.bam")
                 (None, Some(file), preProcess(file))
-              }
             }
           case _ => (None, None, None)
         }
@@ -144,7 +142,7 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
             mapping.input_R1 = config("R1")
           })
           case (false, true) => config("bam_to_fastq", default = false).asBoolean match {
-            case true => {
+            case true =>
               val samToFastq = SamToFastq(qscript, config("bam"),
                 new File(libDir, sampleId + "-" + libId + ".R1.fastq"),
                 new File(libDir, sampleId + "-" + libId + ".R2.fastq"))
@@ -154,8 +152,7 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
                 mapping.input_R1 = samToFastq.fastqR1
                 mapping.input_R2 = Some(samToFastq.fastqR2)
               })
-            }
-            case false => {
+            case false =>
               val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
               val readGroups = inputSam.getFileHeader.getReadGroups
 
@@ -164,7 +161,7 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
                 if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
                 readGroup.getSample == sampleId && readGroup.getLibrary == libId
               })
-              inputSam.close
+              inputSam.close()
 
               if (!readGroupOke) {
                 if (config("correct_readgroups", default = false).asBoolean) {
@@ -188,14 +185,12 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
                 bamLn.deps :+= baiLn.output
                 add(bamLn)
               }
-
-            }
           }
           case _ => logger.warn("Sample: " + sampleId + "  Library: " + libId + ", no reads found")
         }
         mapping.foreach(mapping => {
-          mapping.init
-          mapping.biopetScript
+          mapping.init()
+          mapping.biopetScript()
           addAll(mapping.functions) // Add functions of mapping to current function pool
           addSummaryQScript(mapping)
         })
@@ -229,13 +224,13 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
       }
     }
 
-    lazy val preProcessBam: Option[File] = addDoublePreProcess(libraries.map(lib => {
+    lazy val preProcessBam: Option[File] = addDoublePreProcess(libraries.flatMap(lib => {
       (lib._2.bamFile, lib._2.preProcessBam) match {
         case (_, Some(file)) => Some(file)
         case (Some(file), _) => Some(file)
         case _               => None
       }
-    }).flatten.toList)
+    }).toList)
     def alnFile: File = sampleBamLinkJob.output
 
     /** Job for combining all library BAMs */
@@ -278,8 +273,8 @@ trait GearsTrait extends MultiSampleQScript with SummaryQScript { qscript =>
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = preProcessBam.get
         bamMetrics.outputDir = sampleDir
-        bamMetrics.init
-        bamMetrics.biopetScript
+        bamMetrics.init()
+        bamMetrics.biopetScript()
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
       }

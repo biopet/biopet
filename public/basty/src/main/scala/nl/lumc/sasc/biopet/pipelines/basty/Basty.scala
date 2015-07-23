@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * Basty implementation without GATK parts
+ *
  * Created by pjvan_thof on 3/4/15.
  */
 class Basty(val root: Configurable) extends QScript with BastyTrait {

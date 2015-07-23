@@ -1,0 +1,79 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.shiva.ShivaReport)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true%>
+#{
+    val fields = List("Hom", "HomVar", "Het", "HomRef", "NoCall", "Variant", "Total")
+    val samples = sampleId match {
+        case Some(sample) => List(sample.toString)
+        case _ => summary.samples.toList
+    }
+}#
+
+#if (showIntro)
+    <br/>
+    <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-6">
+        <p>
+        #if(sampleId.isDefined)
+        This table shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for sample ${sampleId}.
+        <ul>
+            <li><em>Hom</em>: Denotes amount of homozygous positions in the resultant VCF file</li>
+            <li><em>HomVar</em>: Denotes amount of homozygous variant positions in the resultant VCF file</li>
+            <li><em>Het</em>: Denotes amount of heterozygous positions (and therefore variants) in the resultant VCF file</li>
+            <li><em>HomRef</em>: Denotes amount of homozygous reference positions in the resultant VCF file</li>
+            <li><em>NoCall</em>: Denotes amount of positions not found in this sample, but present in other samples</li>
+            <li><em>Variant</em>: Denotes amount of positions that were variant in the resultant VCF file</li>
+            <li><em>Total</em>: Denotes total amount of positions in the resultant VCF file</li>
+        </ul>
+        This can be also downloaded as a tab-delimited file.
+
+        #else
+        This plot shows aggregated <a href="http://gatkforums.broadinstitute.org/discussion/1268/how-should-i-interpret-vcf-files-produced-by-the-gatk">variant</a> statistics for all of the ${samples.size} samples. Every sample is represent as a multi-colored bar. Red denotes the fraction of variants that are homozygous, whereas green denotes the fraction of variants that are heterozygous. Blue represents the number of variants that were called homozygous reference by the variant caller. #if(samples.size > 1) Purple denotes those <em>positions</em> at which no call was made for the given sample, but these positions <em>do</em> occur in (one of) the other sample(s). #end The values that were used for plot creation can also be seen in the table, and can be downloaded as a tab-delimited file.
+        #end
+        </p>
+    </div>
+    </div>
+#end
+
+#if (showPlot)
+    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId) }#
+    <div class="panel-body">
+        <img src="variantSummary.png" class="img-responsive" />
+    </div>
+    <div class="panel-footer">
+        #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Hide table</button>
+        #else
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#variantSummaryTable">Show table</button>
+        #end
+        <i class="glyphicon glyphicon-file"></i> <a href="variantSummary.tsv">tsv file</a>
+    </div>
+#end
+
+<div class="panel-body collapse #if (showTable)in#end" id="variantSummaryTable">
+
+<!-- Table -->
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th>
+        #for (field <- fields) <th>${field}</th> #end
+    </tr></thead>
+    <tbody>
+    #for (sample <- samples.toList.sorted)
+    <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
+        #for (field <- fields)
+        <td>${summary.getSampleValue(sample, "shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", field)}</td>
+        #end
+    </tr>
+    #end
+    </tbody>
+</table>
+</div>

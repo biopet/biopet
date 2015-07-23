@@ -9,13 +9,13 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "clever")
 
-  private lazy val versionexecutable: File = config("version_exe", default = (new File(executable).getParent + "/ctk-version"))
+  private lazy val versionexecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
 
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   override def versionCommand = versionexecutable.getAbsolutePath
-  override val versionRegex = """(.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """(.*)""".r
+  override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")
   var input: File = _
@@ -45,7 +45,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   var k: Boolean = config("k", default = false) // keep working directory
   var r: Boolean = config("r", default = false) // take read groups into account
 
-  override def beforeCmd {
+  override def beforeCmd() {
     if (workdir == null) throw new Exception("Clever :: Workdirectory is not defined")
     //    if (input.getName.endsWith(".sort.bam")) sorted = true
   }
@@ -70,6 +70,6 @@ object CleverCaller {
     clever.reference = reference
     clever.cwd = svDir
     clever.workdir = runDir
-    return clever
+    clever
   }
 }

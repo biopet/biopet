@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /**
  * Extension for GNU cat
@@ -51,6 +52,6 @@ object Cat {
     val cat = new Cat(root)
     cat.input = input
     cat.output = output
-    return cat
+    cat
   }
 }

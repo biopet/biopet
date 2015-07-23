@@ -20,10 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-/**
- * This extension is based on bcftools 1.1-134
- * @param root
- */
+/** This extension is based on bcftools 1.1-134 */
 class BcftoolsCall(val root: Configurable) extends Bcftools {
   @Input(doc = "Input File")
   var input: File = _
@@ -36,7 +33,7 @@ class BcftoolsCall(val root: Configurable) extends Bcftools {
   var c: Boolean = config("c", default = false)
   var m: Boolean = config("m", default = false)
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(c != m)
   }
 

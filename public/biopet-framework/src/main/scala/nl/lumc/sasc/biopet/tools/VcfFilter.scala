@@ -15,19 +15,19 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.VCFFileReader
-import htsjdk.variant.variantcontext.VariantContext
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+
+import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.JavaConversions._
 import scala.io.Source
 
-class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf", shortName = "I", required = true)
@@ -42,7 +42,7 @@ class VcfFilter(val root: Configurable) extends BiopetJavaCommandLineFunction {
   var minSamplesPass: Option[Int] = config("min_samples_pass")
   var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
-  override val defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVcf) +
@@ -269,7 +269,7 @@ object VcfFilter extends ToolCommand {
   def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int = 1): Boolean = {
     record.getGenotypes.count(genotype => {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
-      if (!AD.isEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
+      if (AD.nonEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
     }) >= minSamplesPass
   }
 

@@ -5,11 +5,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ SelectVariants, GenotypeGVCFs }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ GenotypeGVCFs, SelectVariants }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 
 class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -39,7 +38,7 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
 
   def biopetScript() {
     addGenotypeGVCFs(inputGvcfs, outputFile)
-    if (!samples.isEmpty) {
+    if (samples.nonEmpty) {
       if (samples.size > 1) addSelectVariants(outputFile, samples, new File(outputDir, "samples/"), "all")
       for (sample <- samples) addSelectVariants(outputFile, List(sample), new File(outputDir, "samples/"), sample)
     }
@@ -48,7 +47,7 @@ class GatkGenotyping(val root: Configurable) extends QScript with BiopetQScript 
   def addGenotypeGVCFs(gvcfFiles: List[File], outputFile: File): File = {
     val genotypeGVCFs = GenotypeGVCFs(this, gvcfFiles, outputFile)
     add(genotypeGVCFs)
-    return genotypeGVCFs.out
+    genotypeGVCFs.out
   }
 
   def addSelectVariants(inputFile: File, samples: List[String], outputDir: File, name: String) {

@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
-import scala.sys.process.{ Process, ProcessLogger }
-
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.SkipException
 import org.testng.annotations.{ BeforeClass, Test }
+
+import scala.sys.process.{ Process, ProcessLogger }
 
 class HtseqCountTest extends TestNGSuite with Matchers {
 

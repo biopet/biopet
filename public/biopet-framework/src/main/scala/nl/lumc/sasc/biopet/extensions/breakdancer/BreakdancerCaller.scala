@@ -9,10 +9,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
-  override val defaultThreads = 1 // breakdancer can only work on 1 single thread
+  override def defaultThreads = 1 // breakdancer can only work on 1 single thread
 
-  override val versionRegex = """.*[Vv]ersion:? (.*)""".r
-  override val versionExitcode = List(1)
+  override def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  override def versionExitcode = List(1)
   override def versionCommand = executable
 
   @Input(doc = "The breakdancer configuration file")
@@ -58,7 +58,7 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
   var h: Boolean = config("h", default = false)
   var y: Option[Int] = config("y", default = 30)
 
-  override def beforeCmd {
+  override def beforeCmd() {
   }
 
   def cmdLine = required(executable) +
@@ -86,6 +86,6 @@ object BreakdancerCaller {
     val bdcaller = new BreakdancerCaller(root)
     bdcaller.input = input
     bdcaller.output = output
-    return bdcaller
+    bdcaller
   }
 }

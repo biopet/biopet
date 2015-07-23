@@ -69,10 +69,17 @@ Global setting examples are:
 
 ----
 
+#### References
+Pipelines and tools that use references should now use the reference module. This gives some more fine-grained control over references.
+E.g. pipelines and tools that use a fasta references file should now set value `reference_fasta`.
+Additionally, we can set `reference_name` for the name to be used (e.g. `hg19`). If unset, Biopet will default to `unknown`.
+It is also possible to set the `species` flag. Again, we will default to `unknown` if unset.
 #### Example settings config
 ~~~
 {
-        "reference": "/data/LGTC/projects/vandoorn-melanoma/data/references/hg19_nohap/ucsc.hg19_nohap.fasta",
+        "reference_fasta": "/references/hg19_nohap/ucsc.hg19_nohap.fasta",
+        "reference_name": "hg19_nohap",
+        "species": "homo_sapiens",
         "dbsnp": "/data/LGTC/projects/vandoorn-melanoma/data/references/hg19_nohap/dbsnp_137.hg19_nohap.vcf",
         "joint_variantcalling": false,
         "haplotypecaller": { "scattercount": 100 },

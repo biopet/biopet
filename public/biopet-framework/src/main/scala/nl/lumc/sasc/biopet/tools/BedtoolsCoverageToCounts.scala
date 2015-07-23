@@ -15,18 +15,16 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
+import java.io.{ File, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
-import scala.collection.SortedMap
-import scala.collection.mutable.Map
+
+import scala.collection.{ mutable, SortedMap }
 import scala.io.Source
 
-class BedtoolsCoverageToCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
@@ -35,7 +33,7 @@ class BedtoolsCoverageToCounts(val root: Configurable) extends BiopetJavaCommand
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +
@@ -46,10 +44,10 @@ object BedtoolsCoverageToCounts extends ToolCommand {
   case class Args(input: File = null, output: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
-    opt[File]('o', "output") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
     }
   }
@@ -63,8 +61,8 @@ object BedtoolsCoverageToCounts extends ToolCommand {
 
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
-    val counts: Map[String, Long] = Map()
-    for (line <- Source.fromFile(commandArgs.input).getLines) {
+    val counts: mutable.Map[String, Long] = mutable.Map()
+    for (line <- Source.fromFile(commandArgs.input).getLines()) {
       val values = line.split("\t")
       val gene = values(3)
       val count = values(6).toLong
@@ -78,6 +76,6 @@ object BedtoolsCoverageToCounts extends ToolCommand {
     for ((seq, count) <- sortedCounts) {
       if (count > 0) writer.println(seq + "\t" + count)
     }
-    writer.close
+    writer.close()
   }
 }

@@ -15,25 +15,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
-import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.utils.ConfigUtils
-
 class GentrapTest extends TestNGSuite with Matchers {
-
-  import Gentrap._
-  import Gentrap.ExpMeasures._
-  import Gentrap.StrandProtocol._
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
@@ -197,8 +192,8 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
+    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
-    "dict" -> "test",
     "refFlat" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",

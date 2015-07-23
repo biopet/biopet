@@ -15,8 +15,7 @@ need.
 
 ## Contributors
 
-As of the 0.3.0 release, the following people (sorted by last name) have
-contributed to Biopet:
+As of the 0.4.0 release, the following people (sorted by last name) have contributed to Biopet:
 
 - Wibowo Arindrarto
 - Sander Bollen
@@ -30,4 +29,4 @@ contributed to Biopet:
 
 Check our website at: [SASC](https://sasc.lumc.nl/)
 
-We are also reachable through email: [SASC mail](mailto:SASC@lumc.nl)
+We are also reachable through email: [SASC mail](mailto:sasc@lumc.nl)

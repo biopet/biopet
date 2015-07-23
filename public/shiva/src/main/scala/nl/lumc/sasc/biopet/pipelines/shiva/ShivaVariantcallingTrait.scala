@@ -17,20 +17,20 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.{ Tabix, Bgzip, Gzip }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.tools.{ VcfStats, VcfFilter, MpileupToVcf }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import scala.collection.generic.Sorted
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
+ * Common trait for ShivaVariantcalling
+ *
  * Created by pjvan_thof on 2/26/15.
  */
 trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with Reference {
@@ -42,14 +42,14 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   /** Name prefix, can override this methods if neeeded */
   def namePrefix: String = {
     (sampleId, libId) match {
-      case (Some(sampleId), Some(libId)) => sampleId + "-" + libId
-      case (Some(sampleId), _)           => sampleId
-      case _                             => config("name_prefix")
+      case (Some(s), Some(l)) => s + "-" + l
+      case (Some(s), _)       => s
+      case _                  => config("name_prefix")
     }
   }
 
   /** Executed before script */
-  def init: Unit = {
+  def init(): Unit = {
   }
 
   /** Final merged output files of all variantcaller modes */
@@ -59,7 +59,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   protected val configCallers: Set[String] = config("variantcallers")
 
   /** This will add jobs for this pipeline */
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     for (cal <- configCallers) {
       if (!callersList.exists(_.name == cal))
         BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
@@ -67,8 +67,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
     val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
 
-    require(!inputBams.isEmpty, "No input bams found")
-    require(!callers.isEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
+    require(inputBams.nonEmpty, "No input bams found")
+    require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
     cv.outputFile = finalFile
@@ -94,7 +94,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
     add(vcfStats)
     addSummarizable(vcfStats, namePrefix + "-vcfstats-final")
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 
   /** Will generate all available variantcallers */
@@ -229,6 +229,6 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = config("variantcallers")
-    callersList.filter(x => callers.contains(x.name)).map(x => (x.name -> x.outputFile)).toMap + ("final" -> finalFile)
+    callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
   }
 }

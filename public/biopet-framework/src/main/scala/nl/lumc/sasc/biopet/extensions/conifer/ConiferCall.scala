@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.conifer
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class ConiferCall(val root: Configurable) extends Conifer {
 

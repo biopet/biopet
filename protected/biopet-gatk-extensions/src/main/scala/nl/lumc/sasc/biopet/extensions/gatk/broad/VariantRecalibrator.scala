@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
@@ -38,6 +39,6 @@ object VariantRecalibrator {
     vr.input :+= input
     vr.recal_file = recal_file
     vr.tranches_file = tranches_file
-    return vr
+    vr
   }
 }

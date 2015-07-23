@@ -5,9 +5,11 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
+ * Extension for piacrda's CollectWgsMetrics
+ *
  * Created by pjvan_thof on 4/16/15.
  */
 class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
@@ -38,8 +40,8 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   @Argument(doc = "INCLUDE_BQ_HISTOGRAM", required = false)
   var includeBqHistogram: Boolean = config("include_bq_histogram", default = false)
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 
@@ -57,5 +59,8 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats = Picard.getMetrics(output).getOrElse(Map())
+  def summaryStats = Map(
+    "metrics" -> Picard.getMetrics(output),
+    "histogram" -> Picard.getHistogram(output)
+  )
 }

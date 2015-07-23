@@ -1,0 +1,50 @@
+#import(nl.lumc.sasc.biopet.utils.IoUtils)
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(org.apache.commons.io.FileUtils)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] %>
+<%@ var libId: Option[String] = None %>
+<%@ var outputDir: File %>
+<%@ var metricsTag: String = "bammetrics" %>
+<%@ var target: String %>
+#{
+    val originalPlot = new File(summary.getValue(sampleId, libId, metricsTag, "files", target + "_cov_stats", "plot", "path")
+        .getOrElse(throw new IllegalArgumentException("No plot found in summary")).toString)
+    val plot = new File(outputDir, target + "_cov_stats.png")
+
+    val values = summary.getValue(sampleId, libId, metricsTag, "stats", target + "_cov_stats", "coverage", "_all")
+        .getOrElse(throw new IllegalArgumentException("No plot found in summary")).asInstanceOf[Map[String, Any]]
+
+    if (originalPlot.exists()) IoUtils.copyFile(originalPlot, plot)
+}#
+
+<img src="${plot.getName}">
+
+<table class="table">
+<thead><tr>
+    <th>mean</th>
+    <th>median</th>
+    <th>max</th>
+    <th>horizontal</th>
+    <th>frac min 10x</th>
+    <th>frac min 20x</th>
+    <th>frac min 30x</th>
+    <th>frac min 40x</th>
+    <th>frac min 50x</th>
+</tr></thead>
+<tbody>
+<tr>
+    <td>${values.get("mean")}</td>
+    <td>${values.get("median")}</td>
+    <td>${values.get("max")}</td>
+    <td>${values.get("horizontal")}</td>
+    <td>${values.get("frac_min_10x")}</td>
+    <td>${values.get("frac_min_20x")}</td>
+    <td>${values.get("frac_min_30x")}</td>
+    <td>${values.get("frac_min_40x")}</td>
+    <td>${values.get("frac_min_50x")}</td>
+</tr>
+</tbody>
+</table>

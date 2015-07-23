@@ -21,10 +21,10 @@
 package nl.lumc.sasc.biopet.pipelines.basty
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.extensions.{ RunGubbins, Cat, Raxml }
-import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaTrait, Shiva }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
+import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
 import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
@@ -42,7 +42,7 @@ trait BastyTrait extends MultiSampleQScript {
 
   lazy val shiva: ShivaTrait = new Shiva(qscript)
 
-  def summaryFile: File = new File(outputDir, "Sage.summary.json")
+  def summaryFile: File = new File(outputDir, "Basty.summary.json")
 
   //TODO: Add summary
   def summaryFiles: Map[String, File] = Map()
@@ -81,11 +81,11 @@ trait BastyTrait extends MultiSampleQScript {
 
   def init() {
     shiva.outputDir = outputDir
-    shiva.init
+    shiva.init()
   }
 
   def biopetScript() {
-    shiva.biopetScript
+    shiva.biopetScript()
     addAll(shiva.functions)
     addSummaryQScript(shiva)
 
@@ -139,7 +139,7 @@ trait BastyTrait extends MultiSampleQScript {
         raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = Some(seed)
-        raxmlBoot.b = Some(math.abs(r.nextInt))
+        raxmlBoot.b = Some(math.abs(r.nextInt()))
         raxmlBoot.w = dirSufixRaxml
         raxmlBoot.N = Some(1)
         raxmlBoot.n = outputName + "_boot_" + t
@@ -189,6 +189,6 @@ trait BastyTrait extends MultiSampleQScript {
     bastyGenerateFasta.sampleName = sampleName
     bastyGenerateFasta.snpsOnly = snpsOnly
     qscript.add(bastyGenerateFasta)
-    return FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
+    FastaOutput(bastyGenerateFasta.outputVariants, bastyGenerateFasta.outputConsensus, bastyGenerateFasta.outputConsensusVariants)
   }
 }

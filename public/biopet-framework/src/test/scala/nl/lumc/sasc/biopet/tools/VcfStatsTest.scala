@@ -16,19 +16,22 @@
 package nl.lumc.sasc.biopet.tools
 
 import htsjdk.variant.variantcontext.Allele
+import nl.lumc.sasc.biopet.tools.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
 import scala.collection.mutable
-import VcfStats._
 
 /**
+ * Test class for [[VcfStats]]
+ *
  * Created by pjvan_thof on 2/5/15.
  */
 class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
-  def testSampleToSampleStats: Unit = {
+  def testSampleToSampleStats(): Unit = {
     val s1 = SampleToSampleStats()
     val s2 = SampleToSampleStats()
     s1.alleleOverlap shouldBe 0
@@ -59,7 +62,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSampleStats: Unit = {
+  def testSampleStats(): Unit = {
     val s1 = SampleStats()
     val s2 = SampleStats()
 
@@ -93,7 +96,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testAlleleOverlap: Unit = {
+  def testAlleleOverlap(): Unit = {
 
     val a1 = Allele.create("G")
     val a2 = Allele.create("A")

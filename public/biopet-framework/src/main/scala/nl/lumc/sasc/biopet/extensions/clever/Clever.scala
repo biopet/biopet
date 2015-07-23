@@ -57,9 +57,9 @@ object Clever extends PipelineCommand {
     val cleverpipeline = new Clever(root)
     cleverpipeline.input = input
     cleverpipeline.workdir = runDir
-    cleverpipeline.init
-    cleverpipeline.biopetScript
-    return cleverpipeline
+    cleverpipeline.init()
+    cleverpipeline.biopetScript()
+    cleverpipeline
   }
 
 }

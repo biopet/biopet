@@ -17,7 +17,6 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
-import scala.collection.JavaConverters._
 
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, FastqReader, FastqRecord }
 import org.mockito.Mockito.{ inOrder => inOrd, when }
@@ -25,6 +24,8 @@ import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
+
+import scala.collection.JavaConverters._
 
 class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
 
@@ -60,8 +61,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val (numDiscard1, numDiscard2, numKept) = syncFastq(refMock, aMock, bMock, aOutMock, bOutMock)
 
-    obs.verify(aOutMock).write(exp(0))
-    obs.verify(bOutMock).write(exp(0))
+    obs.verify(aOutMock).write(exp.head)
+    obs.verify(bOutMock).write(exp.head)
 
     obs.verify(aOutMock).write(exp(1))
     obs.verify(bOutMock).write(exp(1))
@@ -155,8 +156,8 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
     val (numDiscard1, numDiscard2, numKept) = syncFastq(refMock, aMock, bMock, aOutMock, bOutMock)
 
     // exp(1) is discarded by syncFastq
-    obs.verify(aOutMock).write(exp(0))
-    obs.verify(bOutMock).write(exp(0))
+    obs.verify(aOutMock).write(exp.head)
+    obs.verify(bOutMock).write(exp.head)
 
     obs.verify(aOutMock).write(exp(2))
     obs.verify(bOutMock).write(exp(2))

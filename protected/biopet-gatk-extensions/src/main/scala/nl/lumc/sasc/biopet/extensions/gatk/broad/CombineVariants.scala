@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class CombineVariants(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.CombineVariants with GatkGeneral {
@@ -17,6 +18,6 @@ object CombineVariants {
     val cv = new CombineVariants(root)
     cv.variant = input
     cv.out = output
-    return cv
+    cv
   }
 }

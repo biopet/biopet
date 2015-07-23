@@ -37,7 +37,7 @@ class AggrBaseCount(val root: Configurable) extends RScriptCommandLineFunction {
   var inputLabel: String = null
   var mode: String = null
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(mode == "exon" || mode == "gene", "Mode must be either exon or gene")
     require(input != null, "Input raw base count table must be defined")
   }

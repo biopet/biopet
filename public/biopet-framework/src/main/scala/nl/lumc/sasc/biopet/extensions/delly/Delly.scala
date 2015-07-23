@@ -2,14 +2,11 @@ package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
 
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.CatVariants
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.CatVariants
 
 class Delly(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -110,9 +107,9 @@ object Delly extends PipelineCommand {
     val dellypipeline = new Delly(root)
     dellypipeline.input = input
     dellypipeline.workdir = runDir
-    dellypipeline.init
-    dellypipeline.biopetScript
-    return dellypipeline
+    dellypipeline.init()
+    dellypipeline.biopetScript()
+    dellypipeline
   }
 
 }

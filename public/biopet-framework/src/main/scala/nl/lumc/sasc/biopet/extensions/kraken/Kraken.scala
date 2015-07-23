@@ -22,8 +22,6 @@ import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import scala.util.matching.Regex
-
 /** Extension for Kraken */
 class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
 
@@ -51,17 +49,17 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
-  override val versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
+  override def versionExitcode = List(0, 1)
 
-  override val defaultCoreMemory = 8.0
-  override val defaultThreads = 4
+  override def defaultCoreMemory = 8.0
+  override def defaultThreads = 4
 
   override def versionCommand = executable + " --version"
 
   /** Sets readgroup when not set yet */
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
   }
 
   /** Returns command to execute */
@@ -70,7 +68,7 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
       "--db" + required(db) +
       optional("--threads", nCoresRequest) +
       conditional(inputFastQ, "--fastq-input") +
-      conditional(inputFastQ == false, "--fasta-input") +
+      conditional(!inputFastQ, "--fasta-input") +
       conditional(quick, "--quick")
 
     min_hits match {

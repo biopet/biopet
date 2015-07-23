@@ -45,10 +45,6 @@ trait Configurable extends ImplicitConversions {
   /**
    * Creates path with a prefix for sample and library
    * "samples" -> "sampleID" -> "libraries" -> "libraryID" -> rest of path
-   * @param sample
-   * @param library
-   * @param submodule
-   * @return
    */
   def getConfigPath(sample: String = null, library: String = null, submodule: String = null) = {
     (if (sample != null) "samples" :: sample :: Nil else Nil) :::
@@ -92,9 +88,9 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = (if (path == null) getConfigPath(s, l, submodule) ::: subPath else path)
+      val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
       val d = {
-        val value = Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar))
+        val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
       if (d == null) globalConfig(m, p, key, freeVar = freeVar)
@@ -119,9 +115,9 @@ trait Configurable extends ImplicitConversions {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
       val m = if (submodule != null) submodule else configName
-      val p = (if (path == null) getConfigPath(s, l, submodule) ::: subPath else path)
+      val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
 
-      globalConfig.contains(m, p, key, freeVar) || !(Config.getValueFromMap(defaults.toMap, ConfigValueIndex(m, p, key, freeVar)) == None)
+      globalConfig.contains(m, p, key, freeVar) || Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }
   }
 }

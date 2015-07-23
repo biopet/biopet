@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /** Extension for zcat */
 class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
@@ -30,6 +31,9 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "zcat")
 
+  override def versionRegex = """zcat \(gzip\) (.*)""".r
+  override def versionCommand = executable + " --version"
+
   /** Returns command to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
 }
@@ -40,6 +44,6 @@ object Zcat {
     val zcat = new Zcat(root)
     zcat.input = input
     zcat.output = output
-    return zcat
+    zcat
   }
 }

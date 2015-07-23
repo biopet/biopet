@@ -15,10 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-import java.io.File
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+
 import scalaz.std.boolean.option
 
 /**
@@ -27,9 +29,9 @@ import scalaz.std.boolean.option
  */
 class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
 
-  override val defaultThreads = 1
+  override def defaultThreads = 1
   override def versionCommand = executable + " -v"
-  override val versionRegex = """.*version ([\w\.]*) .*""".r
+  override def versionRegex = """.*version ([\w\.]*) .*""".r
 
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _
@@ -70,11 +72,11 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   var executableThreads: Option[String] = config("exe_pthreads")
 
   /** Sets correct output files to job */
-  override def beforeGraph {
+  override def beforeGraph() {
     require(w != null)
     if (threads == 0) threads = getThreads(defaultThreads)
     executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
-    super.beforeGraph
+    super.beforeGraph()
     out :::= List(Some(getInfoFile), getBestTreeFile, getBootstrapFile, getBipartitionsFile).flatten
     f match {
       case "d" if b.isEmpty => for (t <- 0 until N.getOrElse(1)) {

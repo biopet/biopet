@@ -15,10 +15,12 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import java.io.File
+import java.io.{ File, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
+import org.apache.log4j.{ PatternLayout, WriterAppender }
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
 /** Wrapper around executable from Queue */
 trait PipelineCommand extends MainCommand with GatkLogging {
@@ -31,7 +33,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
 
   /** Class can be used directly from java with -cp option */
   def main(args: Array[String]): Unit = {
-    val argsSize = args.size
+    val argsSize = args.length
     for (t <- 0 until argsSize) {
       if (args(t) == "-config" || args(t) == "--config_file") {
         if (t >= argsSize) throw new IllegalStateException("-config needs a value")
@@ -64,9 +66,18 @@ trait PipelineCommand extends MainCommand with GatkLogging {
       }
     }
 
+    val logDir: File = new File(Config.global.map.getOrElse("output_dir", "./").toString + File.separator + ".log")
+    logDir.mkdirs()
+    val logFile = new File(logDir, "biopet." + BiopetQCommandLine.timestamp + ".log")
+    val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
+    logger.addAppender(a)
+
     var argv: Array[String] = Array()
     argv ++= Array("-S", pipeline)
     argv ++= args
+    if (!args.contains("--log_to_file") && !args.contains("-log")) {
+      argv ++= List("--log_to_file", logFile.getAbsolutePath.replace("biopet", "queue"))
+    }
     BiopetQCommandLine.main(argv)
   }
 }

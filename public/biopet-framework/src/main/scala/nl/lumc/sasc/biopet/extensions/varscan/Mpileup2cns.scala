@@ -17,9 +17,8 @@ package nl.lumc.sasc.biopet.extensions.varscan
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class Mpileup2cns(val root: Configurable) extends Varscan {
 
@@ -40,7 +39,7 @@ class Mpileup2cns(val root: Configurable) extends Varscan {
   var vcfSampleList: Option[File] = config("vcf_sample_list")
   var variants: Option[Int] = config("variants")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     val validValues: Set[Int] = Set(0, 1)
     // check for boolean vars that are passed as ints
     strandFilter.foreach { case v => require(validValues.contains(v), "strand_filter value must be either 0 or 1") }
