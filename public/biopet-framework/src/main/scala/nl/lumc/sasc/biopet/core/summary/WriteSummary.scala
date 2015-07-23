@@ -149,7 +149,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     for ((key, file) <- files) yield key -> parseFile(file)
   }
 
-  /** arse single file summary map */
+  /** parse single file summary map */
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
