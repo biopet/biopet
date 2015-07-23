@@ -57,9 +57,12 @@ class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizab
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
+      case (v1: Array[_], v2: Array[_])           => v1.zip(v2).map(v => resolveSummaryConflict(v._1, v._2, key))
+      case (v1: List[_], v2: List[_])             => v1.zip(v2).map(v => resolveSummaryConflict(v._1, v._2, key))
       case (v1: Int, v2: Int) if key == "len_min" => if (v1 < v2) v1 else v2
       case (v1: Int, v2: Int) if key == "len_max" => if (v1 > v2) v1 else v2
       case (v1: Int, v2: Int)                     => v1 + v2
+      case (v1: Long, v2: Long)                   => v1 + v2
       case _                                      => v1
     }
   }

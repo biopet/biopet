@@ -205,7 +205,26 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
       //TODO: test BiopetQScript error message
     }
   }
+
+  @Test def testMergeConflict: Unit = {
+    val map1 = Map("c" -> "1")
+    val map2 = Map("c" -> "2")
+    mergeMaps(map1, map2) shouldBe Map("c" -> "1")
+    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "12")
+    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "21")
+    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> "22")
+  }
+
+  @Test def testNestedMergeConflict: Unit = {
+    val map1 = Map("c" -> Map("x" -> "1"))
+    val map2 = Map("c" -> Map("x" -> "2"))
+    mergeMaps(map1, map2) shouldBe Map("c" -> Map("x" -> "1"))
+    mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "12"))
+    mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "21"))
+    mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "22"))
+  }
 }
+
 object ConfigUtilsTest {
   def writeTemp(text: String, extension: String): File = {
     val file = File.createTempFile("TestConfigUtils.", extension)
