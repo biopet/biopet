@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetQScript
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
@@ -12,7 +12,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  *
  * Created by pjvan_thof on 4/16/15.
  */
-class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectMultipleMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
   import CollectMultipleMetrics._
 
   javaMainClass = new picard.analysis.CollectMultipleMetrics().getClass.getName
@@ -21,6 +21,9 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null
+
+  @Input(doc = "The reference file for the bam files.", shortName = "R")
+  var reference: File = null
 
   @Output(doc = "Base name of output files", required = true)
   var outputName: File = null
@@ -39,6 +42,8 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
   protected var outputFiles: List[File] = Nil
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
     program.foreach {
       case p if p == Programs.CollectAlignmentSummaryMetrics.toString =>
         outputFiles :+= new File(outputName + ".alignment_summary_metrics")
@@ -63,6 +68,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
     required("OUTPUT=", outputName, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=true") +
     optional("STOP_AFTER=", stopAfter, spaceSeparated = false) +
+    optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
     repeat("PROGRAM=", program, spaceSeparated = false)
 
   override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
