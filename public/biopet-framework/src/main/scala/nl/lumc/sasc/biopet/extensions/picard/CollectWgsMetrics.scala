@@ -40,6 +40,8 @@ class CollectWgsMetrics(val root: Configurable) extends Picard with Summarizable
   @Argument(doc = "INCLUDE_BQ_HISTOGRAM", required = false)
   var includeBqHistogram: Boolean = config("include_bq_histogram", default = false)
 
+  override def defaultCoreMemory = 6.0
+
   override def beforeGraph() {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
