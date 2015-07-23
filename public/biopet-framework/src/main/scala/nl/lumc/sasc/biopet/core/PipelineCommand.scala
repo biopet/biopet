@@ -36,11 +36,12 @@ trait PipelineCommand extends MainCommand with GatkLogging {
     val argsSize = args.length
     for (t <- 0 until argsSize) {
       if (args(t) == "-config" || args(t) == "--config_file") {
-        if (t >= argsSize) throw new IllegalStateException("-config needs a value")
+        if (args.length <= (t + 1)) throw new IllegalStateException("-config needs a value: <file>")
         Config.global.loadConfigFile(new File(args(t + 1)))
       }
 
       if (args(t) == "-cv" || args(t) == "--config_value") {
+        if (args.length <= (t + 1)) throw new IllegalStateException("-cv needs a value: <'key=value' or 'path:path:key=value'>")
         val v = args(t + 1).split("=")
         require(v.size == 2, "Value should be formatted like 'key=value' or 'path:path:key=value'")
         val value = v(1)
@@ -51,12 +52,13 @@ trait PipelineCommand extends MainCommand with GatkLogging {
       }
 
       if (args(t) == "--logging_level" || args(t) == "-l") {
+        if (args.length <= (t + 1)) throw new IllegalStateException("--logging_level/-l needs a value: <debug/info/warn/error>")
         args(t + 1).toLowerCase match {
           case "debug" => Logging.logger.setLevel(org.apache.log4j.Level.DEBUG)
           case "info"  => Logging.logger.setLevel(org.apache.log4j.Level.INFO)
           case "warn"  => Logging.logger.setLevel(org.apache.log4j.Level.WARN)
           case "error" => Logging.logger.setLevel(org.apache.log4j.Level.ERROR)
-          case _       =>
+          case _       => throw new IllegalStateException("--logging_level/-l needs a value: <debug/info/warn/error>")
         }
       }
     }
