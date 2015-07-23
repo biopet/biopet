@@ -46,7 +46,7 @@ object ConfigUtils extends Logging {
         map1(key) match {
           case m1: Map[_, _] =>
             map2(key) match {
-              case m2: Map[_, _] => newMap += (key -> mergeMaps(any2map(m1), any2map(m2)))
+              case m2: Map[_, _] => newMap += (key -> mergeMaps(any2map(m1), any2map(m2), resolveConflict))
               case _             => newMap += (key -> map1(key))
             }
           case _ => newMap += (key -> resolveConflict(map1(key), map2(key), key))
