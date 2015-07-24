@@ -19,7 +19,7 @@ import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.Delly
@@ -41,7 +41,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
 
   protected def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
     sampleId match {
-      case Some(sample) => inputBams += sample -> file
+      case Some(sample)        => inputBams += sample -> file
       case _ if !file.exists() => throw new IllegalArgumentException("Bam file does not exits: " + file)
       case _ => {
         val inputSam = SamReaderFactory.makeDefault.open(file)
@@ -68,7 +68,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
         BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
     }
 
-    val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
+    val callers = callersList.filter(x => configCallers.contains(x.name))
 
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
@@ -99,7 +99,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
       //TODO: move minipipeline of breakdancer to here
       for ((sample, bamFile) <- inputBams) {
         val breakdancerDir = new File(outputDir, sample)
-        val breakdancer = Breakdancer(qscript, bamFile, qscript.reference, breakdancerDir)
+        val breakdancer = Breakdancer(qscript, bamFile, breakdancerDir)
         addAll(breakdancer.functions)
       }
     }
@@ -112,7 +112,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
     def addJobs() {
       //TODO: check double directories
       for ((sample, bamFile) <- inputBams) {
-        val cleverDir = new File(outputDir, sampleId)
+        val cleverDir = new File(outputDir, sample)
         val clever = CleverCaller(qscript, bamFile, qscript.reference, cleverDir, cleverDir)
         add(clever)
       }
@@ -126,7 +126,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
     def addJobs() {
       //TODO: Move mini delly pipeline to here
       for ((sample, bamFile) <- inputBams) {
-        val dellyDir = new File(outputDir, sampleId)
+        val dellyDir = new File(outputDir, sample)
         val delly = Delly(qscript, bamFile, dellyDir)
         addAll(delly.functions)
       }
@@ -142,7 +142,8 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = config("sv_callers")
-    callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
+    //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
+    Map()
   }
 }
 

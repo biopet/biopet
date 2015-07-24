@@ -24,7 +24,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   var reference: File = _
 
   @Argument(doc = "Work directory")
-  var workdir: String = _
+  var workDir: String = _
 
   var cwd: String = _
 
@@ -35,7 +35,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Output(doc = "Clever raw output")
   lazy val outputraw: File = {
-    new File(workdir + "predictions.raw.txt")
+    new File(workDir + "predictions.raw.txt")
   }
 
   //  var T: Option[Int] = config("T", default = defaultThreads)
@@ -46,7 +46,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   var r: Boolean = config("r", default = false) // take read groups into account
 
   override def beforeCmd() {
-    if (workdir == null) throw new Exception("Clever :: Workdirectory is not defined")
+    if (workDir == null) throw new Exception("Clever :: Workdirectory is not defined")
     //    if (input.getName.endsWith(".sort.bam")) sorted = true
   }
 
@@ -58,9 +58,9 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
     conditional(a, "-a") +
     conditional(k, "-k") +
     conditional(r, "-r") +
-    required(this.input) +
-    required(this.reference) +
-    required(this.workdir)
+    required(input) +
+    required(reference) +
+    required(workDir)
 }
 
 object CleverCaller {
@@ -69,7 +69,7 @@ object CleverCaller {
     clever.input = input
     clever.reference = reference
     clever.cwd = svDir
-    clever.workdir = runDir
+    clever.workDir = runDir
     clever
   }
 }
