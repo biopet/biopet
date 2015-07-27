@@ -42,7 +42,7 @@ class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
   var minSamplesPass: Option[Int] = config("min_samples_pass")
   var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
-  override def defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVcf) +
