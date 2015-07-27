@@ -2,11 +2,11 @@ package nl.lumc.sasc.biopet.extensions.clever
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
+class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   executable = config("exe", default = "clever")
 
   private lazy val versionexecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
@@ -23,10 +23,8 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Reference")
   var reference: File = _
 
-  @Argument(doc = "Work directory")
-  var workDir: String = _
-
-  var cwd: String = _
+  var workDir: File = _
+  var cwd: File = _
 
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
@@ -45,9 +43,10 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
   var k: Boolean = config("k", default = false) // keep working directory
   var r: Boolean = config("r", default = false) // take read groups into account
 
-  override def beforeCmd() {
+  override def beforeGraph() {
+    super.beforeGraph()
     if (workDir == null) throw new Exception("Clever :: Workdirectory is not defined")
-    //    if (input.getName.endsWith(".sort.bam")) sorted = true
+    if (reference == null) reference = referenceFasta()
   }
 
   def cmdLine = required(executable) +
@@ -64,10 +63,9 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction {
 }
 
 object CleverCaller {
-  def apply(root: Configurable, input: File, reference: File, svDir: String, runDir: String): CleverCaller = {
+  def apply(root: Configurable, input: File, svDir: File, runDir: File): CleverCaller = {
     val clever = new CleverCaller(root)
     clever.input = input
-    clever.reference = reference
     clever.cwd = svDir
     clever.workDir = runDir
     clever
