@@ -44,7 +44,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   protected var inputBams: Map[String, File] = Map()
 
-  protected def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
+  def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
     sampleId match {
       case Some(sample)        => inputBams += sample -> file
       case _ if !file.exists() => throw new IllegalArgumentException("Bam file does not exits: " + file)
