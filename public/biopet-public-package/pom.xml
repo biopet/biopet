@@ -69,11 +69,13 @@
             <artifactId>Sage</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Yamsvp</artifactId>
             <version>${project.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Kopisu</artifactId>
