@@ -120,7 +120,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
       //TODO: check double directories
       for ((sample, bamFile) <- inputBams) {
         val cleverDir = new File(outputDir, sample)
-        val clever = CleverCaller(qscript, bamFile, cleverDir, cleverDir)
+        val clever = CleverCaller(qscript, bamFile, cleverDir)
         add(clever)
       }
     }

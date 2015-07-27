@@ -9,11 +9,12 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   executable = config("exe", default = "clever")
 
-  private lazy val versionexecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
+  private lazy val versionExecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
 
   override def defaultThreads = 8
+  override def defaultCoreMemory = 3.0
 
-  override def versionCommand = versionexecutable.getAbsolutePath
+  override def versionCommand = versionExecutable.getAbsolutePath
   override def versionRegex = """(.*)""".r
   override def versionExitcode = List(0, 1)
 
@@ -23,17 +24,17 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Input(doc = "Reference")
   var reference: File = _
 
-  var workDir: File = _
+  protected def workDir: File = new File(cwd, "work")
   var cwd: File = _
 
   @Output(doc = "Clever VCF output")
   lazy val outputvcf: File = {
-    new File(cwd + "predictions.vcf")
+    new File(cwd, "predictions.vcf")
   }
 
   @Output(doc = "Clever raw output")
   lazy val outputraw: File = {
-    new File(workDir + "predictions.raw.txt")
+    new File(workDir, "predictions.raw.txt")
   }
 
   //  var T: Option[Int] = config("T", default = defaultThreads)
@@ -52,7 +53,7 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   def cmdLine = required(executable) +
     " --sorted " +
     " --use_xa " +
-    optional("-T", nCoresRequest) +
+    optional("-T", threads) +
     conditional(f, "-f") +
     conditional(a, "-a") +
     conditional(k, "-k") +
@@ -63,11 +64,10 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 }
 
 object CleverCaller {
-  def apply(root: Configurable, input: File, svDir: File, runDir: File): CleverCaller = {
+  def apply(root: Configurable, input: File, svDir: File): CleverCaller = {
     val clever = new CleverCaller(root)
     clever.input = input
     clever.cwd = svDir
-    clever.workDir = runDir
     clever
   }
 }
