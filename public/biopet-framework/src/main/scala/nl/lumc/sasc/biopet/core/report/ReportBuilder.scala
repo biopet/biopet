@@ -43,7 +43,8 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
   /** Arguments that are passed on the commandline */
   var args: Map[String, String] = Map()
 
-  override def defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 3
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
