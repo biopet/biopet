@@ -12,6 +12,7 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {
   private lazy val versionexecutable: File = new File(executable)
 
   override def defaultThreads = 1
+  override def defaultCoreMemory = 4.0
 
   override def versionCommand = versionexecutable.getAbsolutePath
   override def versionRegex = """DELLY \(Version: (.*)\)""".r
