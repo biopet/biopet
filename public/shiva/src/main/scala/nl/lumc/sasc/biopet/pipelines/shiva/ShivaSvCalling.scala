@@ -18,11 +18,14 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.Delly
+import nl.lumc.sasc.biopet.tools.VcfStats
+import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.Input
 import scala.collection.JavaConversions._
 
@@ -31,8 +34,10 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 2/26/15.
  */
-class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference {
+class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
   qscript =>
+
+  def this() = this(null)
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   protected var inputBamsArg: List[File] = Nil
@@ -72,6 +77,8 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
 
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
+
+    callers.foreach(_.addJobs())
 
     addSummaryJobs()
   }
@@ -113,7 +120,7 @@ class ShivaSvCalling extends SummaryQScript with SampleLibraryTag with Reference
       //TODO: check double directories
       for ((sample, bamFile) <- inputBams) {
         val cleverDir = new File(outputDir, sample)
-        val clever = CleverCaller(qscript, bamFile, qscript.reference, cleverDir, cleverDir)
+        val clever = CleverCaller(qscript, bamFile, cleverDir, cleverDir)
         add(clever)
       }
     }
