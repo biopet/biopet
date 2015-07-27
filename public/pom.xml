@@ -33,7 +33,7 @@
         <module>mapping</module>
         <module>sage</module>
         <module>kopisu</module>
-        <module>yamsvp</module>
+        <!-- <module>yamsvp</module> -->
         <module>gears</module>
         <module>bam2wig</module>
         <module>carp</module>
