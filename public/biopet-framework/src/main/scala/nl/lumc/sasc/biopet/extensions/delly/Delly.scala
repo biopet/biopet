@@ -73,7 +73,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       add(delly)
     }
     // we need to merge the vcf's
-    var finalVCF = if (vcfFiles.size > 1) {
+    val finalVCF = if (vcfFiles.size > 1) {
       // do merging
       // CatVariants is a $org.broadinstitute.gatk.utils.commandline.CommandLineProgram$;
       //TODO: convert to biopet extension
@@ -83,30 +83,28 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       variants.reference = referenceFasta()
       // add the job
       add(variants)
-      this.outputvcf
-    } else {
+      Some(outputvcf)
+    } else if (vcfFiles.size == 1) {
       // TODO: pretify this
       val ln = Ln(this, vcfFiles.head._2, this.outputvcf, relative = true)
       add(ln)
-      ln.output
-    }
+      Some(ln.output)
+    } else None
 
-    outputFiles += ("vcf" -> this.outputvcf)
+    finalVCF.foreach(file => outputFiles += ("vcf" -> file))
   }
-
-  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".delly.vcf"
 }
 
 object Delly extends PipelineCommand {
   override val pipeline = "/nl/lumc/sasc/biopet/extensions/svcallers/Delly/Delly.class"
 
   def apply(root: Configurable, input: File, runDir: File): Delly = {
-    val dellypipeline = new Delly(root)
-    dellypipeline.input = input
-    dellypipeline.workdir = runDir
-    dellypipeline.init()
-    dellypipeline.biopetScript()
-    dellypipeline
+    val dellyPipeline = new Delly(root)
+    dellyPipeline.input = input
+    dellyPipeline.workdir = runDir
+    dellyPipeline.init()
+    dellyPipeline.biopetScript()
+    dellyPipeline
   }
 
 }
