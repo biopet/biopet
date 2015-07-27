@@ -14,10 +14,10 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
   @Input(doc = "Input file (bam)")
   var input: File = _
 
-  var workdir: File = _
+  var workDir: File = _
 
   @Output(doc = "Delly result VCF")
-  var outputvcf: File = _
+  var outputVcf: File = _
 
   var outputBaseName: File = _
 
@@ -36,8 +36,8 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
     var outputFiles: Map[String, File] = Map()
     var vcfFiles: Map[String, File] = Map()
 
-    this.outputBaseName = workdir + input.getName.substring(0, input.getName.lastIndexOf(".bam"))
-    this.outputvcf = outputBaseName + ".delly.vcf"
+    this.outputBaseName = workDir + input.getName.substring(0, input.getName.lastIndexOf(".bam"))
+    this.outputVcf = outputBaseName + ".delly.vcf"
 
     /// start delly and then copy the vcf into the root directory "<sample>.delly/"
     if (del) {
@@ -79,14 +79,14 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       //TODO: convert to biopet extension
       val variants = new CatVariants()
       variants.variant = vcfFiles.values.toList
-      variants.outputFile = this.outputvcf
+      variants.outputFile = this.outputVcf
       variants.reference = referenceFasta()
       // add the job
       add(variants)
-      Some(outputvcf)
+      Some(outputVcf)
     } else if (vcfFiles.size == 1) {
       // TODO: pretify this
-      val ln = Ln(this, vcfFiles.head._2, this.outputvcf, relative = true)
+      val ln = Ln(this, vcfFiles.head._2, this.outputVcf, relative = true)
       add(ln)
       Some(ln.output)
     } else None
@@ -101,7 +101,7 @@ object Delly extends PipelineCommand {
   def apply(root: Configurable, input: File, runDir: File): Delly = {
     val dellyPipeline = new Delly(root)
     dellyPipeline.input = input
-    dellyPipeline.workdir = runDir
+    dellyPipeline.workDir = runDir
     dellyPipeline.init()
     dellyPipeline.biopetScript()
     dellyPipeline
