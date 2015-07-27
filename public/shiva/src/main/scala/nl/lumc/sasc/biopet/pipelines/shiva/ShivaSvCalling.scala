@@ -64,7 +64,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
   /** Variantcallers requested by the config */
-  protected val configCallers: Set[String] = config("sv_callers")
+  protected val configCallers: Set[String] = config("sv_callers", default = Set("breakdancer", "clever", "delly"))
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
@@ -148,7 +148,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
-    val callers: Set[String] = config("sv_callers")
+    val callers: Set[String] = configCallers
     //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
     Map()
   }
