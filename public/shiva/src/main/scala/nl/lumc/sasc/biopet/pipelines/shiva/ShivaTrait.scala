@@ -290,6 +290,14 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
       addAll(vc.functions)
       addSummaryQScript(vc)
     })
+
+    svCalling.foreach(sv => {
+      sv.outputDir = new File(outputDir, "sc_calling")
+      sv.init()
+      sv.biopetScript()
+      addAll(sv.functions)
+      addSummaryQScript(sv)
+    })
   }
 
   /** Location of summary file */
