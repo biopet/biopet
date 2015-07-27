@@ -81,12 +81,12 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       variants.outputFile = this.outputVcf
       variants.reference = referenceFasta()
       // add the job
-      add(variants)
+      //add(variants)
       Some(outputVcf)
     } else if (vcfFiles.size == 1) {
       // TODO: pretify this
       val ln = Ln(this, vcfFiles.head._2, this.outputVcf, relative = true)
-      add(ln)
+      //add(ln)
       Some(ln.output)
     } else None
 
