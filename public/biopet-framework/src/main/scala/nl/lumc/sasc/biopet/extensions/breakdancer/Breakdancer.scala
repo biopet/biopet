@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.breakdancer
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{Reference, BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
 
 /// Breakdancer is actually a mini pipeline executing binaries from the breakdancer package
@@ -47,7 +47,6 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript wit
   }
 
   override def init(): Unit = {
-    
   }
 
   def biopetScript() {
