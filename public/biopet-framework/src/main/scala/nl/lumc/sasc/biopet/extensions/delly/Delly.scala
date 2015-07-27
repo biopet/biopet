@@ -19,7 +19,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
   @Output(doc = "Delly result VCF")
   var outputVcf: File = _
 
-  var outputBaseName: File = _
+  var outputName: String = _
 
   // select the analysis types DEL,DUP,INV,TRA
   var del: Boolean = config("DEL", default = true)
@@ -27,7 +27,9 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
   var inv: Boolean = config("INV", default = true)
   var tra: Boolean = config("TRA", default = true)
 
-  override def init() {
+  override def init(): Unit = {
+    if (outputName == null) outputName = input.getName.stripSuffix(".bam")
+    if (outputVcf == null) outputVcf = new File(workDir, outputName + ".delly.vcf")
   }
 
   def biopetScript() {
@@ -36,15 +38,12 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
     var outputFiles: Map[String, File] = Map()
     var vcfFiles: Map[String, File] = Map()
 
-    this.outputBaseName = workDir + input.getName.substring(0, input.getName.lastIndexOf(".bam"))
-    this.outputVcf = outputBaseName + ".delly.vcf"
-
     /// start delly and then copy the vcf into the root directory "<sample>.delly/"
     if (del) {
       val delly = new DellyCaller(this)
       delly.input = input
       delly.analysistype = "DEL"
-      delly.outputvcf = outputBaseName + ".delly.del.vcf"
+      delly.outputvcf = new File(workDir, outputName + ".delly.del.vcf")
       add(delly)
       vcfFiles += ("DEL" -> delly.outputvcf)
     }
@@ -52,7 +51,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       val delly = new DellyCaller(this)
       delly.input = input
       delly.analysistype = "DUP"
-      delly.outputvcf = outputBaseName + ".delly.dup.vcf"
+      delly.outputvcf = new File(workDir, outputName + ".delly.dup.vcf")
       add(delly)
       vcfFiles += ("DUP" -> delly.outputvcf)
     }
@@ -60,7 +59,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       val delly = new DellyCaller(this)
       delly.input = input
       delly.analysistype = "INV"
-      delly.outputvcf = outputBaseName + ".delly.inv.vcf"
+      delly.outputvcf = new File(workDir, outputName + ".delly.inv.vcf")
       add(delly)
       vcfFiles += ("INV" -> delly.outputvcf)
     }
@@ -68,7 +67,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
       val delly = new DellyCaller(this)
       delly.input = input
       delly.analysistype = "TRA"
-      delly.outputvcf = outputBaseName + ".delly.tra.vcf"
+      delly.outputvcf = new File(workDir, outputName + ".delly.tra.vcf")
       //      vcfFiles += ("TRA" -> delly.outputvcf)
       add(delly)
     }
@@ -98,10 +97,10 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
 object Delly extends PipelineCommand {
   override val pipeline = "/nl/lumc/sasc/biopet/extensions/svcallers/Delly/Delly.class"
 
-  def apply(root: Configurable, input: File, runDir: File): Delly = {
+  def apply(root: Configurable, input: File, workDir: File): Delly = {
     val dellyPipeline = new Delly(root)
     dellyPipeline.input = input
-    dellyPipeline.workDir = runDir
+    dellyPipeline.workDir = workDir
     dellyPipeline.init()
     dellyPipeline.biopetScript()
     dellyPipeline

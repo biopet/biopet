@@ -135,6 +135,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
       for ((sample, bamFile) <- inputBams) {
         val dellyDir = new File(outputDir, sample)
         val delly = Delly(qscript, bamFile, dellyDir)
+        delly.outputName = sample
         addAll(delly.functions)
       }
     }

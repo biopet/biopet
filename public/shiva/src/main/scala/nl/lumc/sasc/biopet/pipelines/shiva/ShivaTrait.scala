@@ -247,20 +247,25 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     def addJobs(): Unit = {
       addPerLibJobs()
 
-      if (preProcessBam.isDefined) {
+      preProcessBam.foreach { bam =>
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
-        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.inputBam = bam
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         bamMetrics.init()
         bamMetrics.biopetScript()
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
 
+        val oldIndex: File = new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex: File = new File(bam + ".bai")
+        val baiLn = Ln(qscript, oldIndex, newIndex)
+        add(baiLn)
+
         variantcalling.foreach(vc => {
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
-          vc.inputBams = preProcessBam.get :: Nil
+          vc.inputBams = bam :: Nil
           vc.init()
           vc.biopetScript()
           addAll(vc.functions)
