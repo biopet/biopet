@@ -2,31 +2,30 @@ package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.CatVariants
 
-class Delly(val root: Configurable) extends QScript with BiopetQScript {
+class Delly(val root: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input file (bam)")
   var input: File = _
 
-  @Argument(doc = "Work directory")
-  var workdir: String = _
+  var workdir: File = _
 
   @Output(doc = "Delly result VCF")
   var outputvcf: File = _
 
-  var outputBaseName: String = _
+  var outputBaseName: File = _
 
   // select the analysis types DEL,DUP,INV,TRA
-  var del: Boolean = config("DEL", default = false)
-  var dup: Boolean = config("DUP", default = false)
-  var inv: Boolean = config("INV", default = false)
-  var tra: Boolean = config("TRA", default = false)
+  var del: Boolean = config("DEL", default = true)
+  var dup: Boolean = config("DUP", default = true)
+  var inv: Boolean = config("INV", default = true)
+  var tra: Boolean = config("TRA", default = true)
 
   override def init() {
   }
@@ -77,13 +76,11 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript {
     var finalVCF = if (vcfFiles.size > 1) {
       // do merging
       // CatVariants is a $org.broadinstitute.gatk.utils.commandline.CommandLineProgram$;
+      //TODO: convert to biopet extension
       val variants = new CatVariants()
-      variants.jobResourceRequests :+= "h_vmem=4G"
-      variants.nCoresRequest = 1
-      variants.memoryLimit = Option(2.0)
       variants.variant = vcfFiles.values.toList
-      variants.reference = config("reference")
       variants.outputFile = this.outputvcf
+      variants.reference = referenceFasta()
       // add the job
       add(variants)
       this.outputvcf
@@ -103,7 +100,7 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript {
 object Delly extends PipelineCommand {
   override val pipeline = "/nl/lumc/sasc/biopet/extensions/svcallers/Delly/Delly.class"
 
-  def apply(root: Configurable, input: File, runDir: String): Delly = {
+  def apply(root: Configurable, input: File, runDir: File): Delly = {
     val dellypipeline = new Delly(root)
     dellypipeline.input = input
     dellypipeline.workdir = runDir
