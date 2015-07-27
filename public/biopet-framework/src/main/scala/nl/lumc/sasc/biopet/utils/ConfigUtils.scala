@@ -267,6 +267,22 @@ object ConfigUtils extends Logging {
     any2list(any).map(_.toString)
   }
 
+  /** Convert Any to List[Any], fallback on list with 1 value */
+  def any2set(any: Any): Set[Any] = {
+    if (any == null) return null
+    any match {
+      case s: Set[_]  => s.toSet
+      case l: List[_] => l.toSet
+      case _          => Set(any)
+    }
+  }
+
+  /** Convert Any to List[String] */
+  def any2stringSet(any: Any): Set[String] = {
+    if (any == null) return null
+    any2set(any).map(_.toString)
+  }
+
   /** Convert Any to List[File] */
   def any2fileList(any: Any): List[File] = {
     if (any == null) return null
@@ -414,7 +430,7 @@ object ConfigUtils extends Logging {
 
     /** Convert ConfigValue to Set[String] */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
-      if (requiredValue(value)) any2stringList(value.value).toSet
+      if (requiredValue(value)) any2stringSet(value.value)
       else Set()
     }
 

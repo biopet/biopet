@@ -247,20 +247,25 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     def addJobs(): Unit = {
       addPerLibJobs()
 
-      if (preProcessBam.isDefined) {
+      preProcessBam.foreach { bam =>
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
-        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.inputBam = bam
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         bamMetrics.init()
         bamMetrics.biopetScript()
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
 
+        val oldIndex: File = new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
+        val newIndex: File = new File(bam + ".bai")
+        val baiLn = Ln(qscript, oldIndex, newIndex)
+        add(baiLn)
+
         variantcalling.foreach(vc => {
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
-          vc.inputBams = preProcessBam.get :: Nil
+          vc.inputBams = bam :: Nil
           vc.init()
           vc.biopetScript()
           addAll(vc.functions)
@@ -270,19 +275,33 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     }
   }
 
-  lazy val variantcalling = if (config("multisample_variantcalling", default = true).asBoolean) {
+  lazy val variantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
+  } else None
+
+  lazy val svCalling = if (config("sv_calling", default = false).asBoolean) {
+    val svCalling = new ShivaSvCalling(this)
+    samples.foreach(x => x._2.preProcessBam.foreach(bam => svCalling.addBamFile(bam, Some(x._1))))
+    Some(svCalling)
   } else None
 
   /** This will add the mutisample variantcalling */
   def addMultiSampleJobs(): Unit = {
-    variantcalling.foreach(vc => {
+    variantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap(_._2.preProcessBam).toList
       vc.init()
       vc.biopetScript()
       addAll(vc.functions)
       addSummaryQScript(vc)
+    })
+
+    svCalling.foreach(sv => {
+      sv.outputDir = new File(outputDir, "sv_calling")
+      sv.init()
+      sv.biopetScript()
+      addAll(sv.functions)
+      addSummaryQScript(sv)
     })
   }
 
