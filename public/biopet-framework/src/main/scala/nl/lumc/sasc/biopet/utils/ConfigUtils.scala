@@ -102,7 +102,7 @@ object ConfigUtils extends Logging {
   def fileToConfigMap(configFile: File): Map[String, Any] = {
 
     val configMap = {
-      if (configFile.getName.endsWith(".yaml")) yamlToMap(configFile)
+      if (configFile.getName.endsWith(".yaml") || configFile.getName.endsWith(".yml")) yamlToMap(configFile)
       else jsonToMap(fileToJson(configFile))
     }
     logger.debug("Contain: " + configMap)
