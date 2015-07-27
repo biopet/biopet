@@ -26,6 +26,10 @@ pages:
 - ['tools/VepNormalizer.md', 'Tools', 'VepNormalizer']
 - ['tools/WipeReads.md', 'Tools', 'WipeReads']
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
+- ['release_notes_0.4.0.md', 'Release notes', '0.4.0']
+- ['release_notes_0.3.2.md', 'Release notes', '0.3.2']
+- ['release_notes_0.3.1.md', 'Release notes', '0.3.1']
+- ['release_notes_0.3.0.md', 'Release notes', '0.3.0']
 - ['about.md', 'About']
 - ['license.md', 'License']
 #theme: readthedocs
