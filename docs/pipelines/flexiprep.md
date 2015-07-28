@@ -55,8 +55,8 @@ All other values should be provided in the config. Specific config values toward
 
 | Name | Type | Function |
 | ---- | ---- | -------- |
-| skiptrim | Boolean | Skip the trimming step |
-| skipclip | Boolean | Skip the clipping step |
+| skiptrim | Boolean | Default false, if true the trimming step is skipped |
+| skipclip | Boolean | Default false, if true the clipping step is skipped |
 
 ## Result files
 The results from this pipeline will be a fastq file.
@@ -139,5 +139,7 @@ The pipeline also outputs 2 Fastqc runs one before and one after quality control
 │   │   └── summary.txt
 │   └── mySample_01.R2.qc_fastqc.zip
 ├── mySample_01.R2.qc.fastq.gz
-└── mySample_01.R2.qc.fastq.gz.md5
+├── mySample_01.R2.qc.fastq.gz.md5
+└── report
+
 ~~~
