@@ -121,7 +121,7 @@ To view all possible config options please navigate to our Gitlab wiki page
 | vcffilter | filter_ref_calls | Boolean | true | Remove reference calls |
 | vcfstats | reference | String | Path to reference to be used by `vcfstats` |
 
-Since Shiva uses the [Mapping](../mapping.md) pipeline internally, mapping config values can be specified as well.
+Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
 
 ### Modes
