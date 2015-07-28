@@ -1,36 +1,41 @@
 site_name: Biopet User Manual
 pages:
-- ['index.md', 'Home']
-- ['general/config.md', 'General', 'Config']
-- ['pipelines/basty.md', 'Pipelines', 'Basty']
-- ['pipelines/bam2wig.md', 'Pipelines', 'Bam2Wig']
-- ['pipelines/carp.md', 'Pipelines', 'Carp']
-- ['pipelines/gentrap.md', 'Pipelines', 'Gentrap']
-- ['pipelines/shiva.md', 'Pipelines', 'Shiva']
-- ['pipelines/flexiprep.md', 'Pipelines', 'Flexiprep']
-- ['pipelines/mapping.md', 'Pipelines', 'Mapping']
-- ['pipelines/sage.md', 'Pipelines', 'Sage']
-- ['pipelines/toucan.md', 'Pipelines', 'Toucan']
-- ['tools/SamplesTsvToJson.md','Tools','SamplesTsvToJson']
-- ['tools/BastyGenerateFasta.md','Tools','BastyGenerateFasta']
-- ['tools/bedtointerval.md','Tools','BedToInterval']
-- ['tools/bedtoolscoveragetocounts.md','Tools','BedtoolsCoverageToCounts']
-- ['tools/BiopetFlagstat.md','Tools','BiopetFlagstat']
-- ['tools/CheckAllelesVcfInBam.md','Tools','CheckAllelesVcfInBam']
-- ['tools/ExtractAlignedFastq.md','Tools','ExtractAlignedFastq']
-- ['tools/FastqSplitter.md', 'Tools','FastqSplitter']
-- ['tools/FindRepeatsPacBio.md','Tools','FindRepeatsPacBio']
-- ['tools/VcfFilter.md','Tools','VcfFilter']
-- ['tools/MpileupToVcf.md', 'Tools', 'MpileupToVcf']
-- ['tools/sagetools.md', 'Tools', 'Sagetools']
-- ['tools/VepNormalizer.md', 'Tools', 'VepNormalizer']
-- ['tools/WipeReads.md', 'Tools', 'WipeReads']
+- Home: 'index.md'
+- General:
+    - Config: 'general/config.md'
+- Pipelines:
+    - Basty: 'pipelines/basty.md'
+    - Bam2Wig: 'pipelines/bam2Wig.md'
+    - Carp: 'pipelines/carp.md'
+    - Gentrap: 'pipelines/gentrap.md'
+    - Shiva: 'pipelines/shiva.md'
+    - Flexiprep: 'pipelines/flexiprep.md'
+    - Mapping: 'pipelines/mapping.md'
+    - Toucan: 'pipelines/toucan.md'
+    - Sage: 'pipelines/sage.md'
+- Tools:
+    - SamplesTsvToJson: 'tools/SamplesTsvToJson.md'
+    - BastyGenerateFasta: 'tools/bedtointerval.md'
+    - BedToInterval: 'tools/bedtointerval.md'
+    - BedtoolsCoverageToCounts: 'tools/bedtoolscoveragetocounts.md'
+    - BiopetFlagstat: 'tools/BiopetFlagstat.md'
+    - CheckAllelesVcfInBam: 'tools/CheckAllelesVcfInBam.md'
+    - ExtractAlignedFastq: 'tools/ExtractAlignedFastq.md'
+    - FastqSplitter: 'tools/FastqSplitter.md'
+    - FindRepeatsPacBio: 'tools/FindRepeatsPacBio.md'
+    - VcfFilter: 'tools/VcfFilter.md'
+    - MpileupToVcf: 'tools/MpileupToVcf.md'
+    - Sagetools: 'tools/sagetools.md'
+    - VepNormalizer: 'tools/VepNormalizer.md'
+    - WipeReads: 'tools/WipeReads.md'
+    - BastyGenerateFasta: 'tools/BastyGenerateFasta.md'
+- Release notes:
+    - 0.4.0: 'release_notes_0.4.0.md'
+    - 0.3.2: 'release_notes_0.3.2.md'
+    - 0.3.1: 'release_notes_0.3.1.md'
+    - 0.3.0: 'release_notes_0.3.0.md'
+- About: 'about.md'
+- License: 'license.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
-- ['release_notes_0.4.0.md', 'Release notes', '0.4.0']
-- ['release_notes_0.3.2.md', 'Release notes', '0.3.2']
-- ['release_notes_0.3.1.md', 'Release notes', '0.3.1']
-- ['release_notes_0.3.0.md', 'Release notes', '0.3.0']
-- ['about.md', 'About']
-- ['license.md', 'License']
 #theme: readthedocs
 repo_url: https://git.lumc.nl/biopet/biopet
