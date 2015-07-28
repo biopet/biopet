@@ -78,16 +78,19 @@ A dry run can be performed by simply removing the `-run` flag from the command l
 ## Variant caller
 At this moment the following variant callers can be used
 
-`TODO: explain them briefly`
-
-* haplotypecaller
-* haplotypecaller_gvcf
-* haplotypecaller_allele
-* unifiedgenotyper
-* unifiedgenotyper_allele
-* bcftools
-* freebayes
-* raw
+* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller</a>
+    * Running default HaplotypeCaller
+* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_gvcf</a>
+    * Running HaplotypeCaller in gvcf mode
+* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php">haplotypecaller_allele</a>
+    * Only genotype a given list of alleles with HaplotypeCaller
+* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper</a>
+    * Running default UnifiedGenotyper
+* <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper_allele</a>
+    * Only genotype a given list of alleles with UnifiedGenotyper
+* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a>
+* <a href="https://github.com/ekg/freebayes">freebayes</a>
+* [raw](../tools/MpileupToVcf)
 
 ## Config options
 
