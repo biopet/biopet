@@ -32,14 +32,14 @@ class BreakdancerConfig(val root: Configurable) extends BiopetCommandLineFunctio
 
   var min_mq: Option[Int] = config("min_mq", default = 20) // minimum of MQ to consider for taking read into histogram
   var use_mq: Boolean = config("use_mq", default = false)
-  var min_insertsize: Option[Int] = config("min_insertsize", default = 450)
+  var min_insertsize: Option[Int] = config("min_insertsize")
   var solid_data: Boolean = config("solid", default = false)
-  var sd_cutoff: Option[Int] = config("sd_cutoff", default = 4) // Cutoff in unit of standard deviation [4]
+  var sd_cutoff: Option[Int] = config("sd_cutoff") // Cutoff in unit of standard deviation [4]
 
   // we set this to a higher number to avoid biases in small numbers in sorted bams
-  var min_observations: Option[Int] = config("min_observations", default = 10000) //  Number of observation required to estimate mean and s.d. insert size [10_000]
-  var coefvar_cutoff: Option[Int] = config("coef_cutoff", default = 1) // Cutoff on coefficients of variation [1]
-  var histogram_bins: Option[Int] = config("histogram_bins", default = 50) // Number of bins in the histogram [50]
+  var min_observations: Option[Int] = config("min_observations") //  Number of observation required to estimate mean and s.d. insert size [10_000]
+  var coefvar_cutoff: Option[Int] = config("coef_cutoff") // Cutoff on coefficients of variation [1]
+  var histogram_bins: Option[Int] = config("histogram_bins") // Number of bins in the histogram [50]
 
   def cmdLine = required(executable) +
     optional("-q", min_mq) +

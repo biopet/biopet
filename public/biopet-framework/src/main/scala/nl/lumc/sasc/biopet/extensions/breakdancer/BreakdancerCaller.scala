@@ -58,20 +58,20 @@ class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunctio
        -y INT          output score filter [30]
    */
 
-  var s: Option[Int] = config("s", default = 7)
-  var c: Option[Int] = config("c", default = 3)
-  var m: Option[Int] = config("m", default = 1000000000)
-  var q: Option[Int] = config("qs", default = 35)
-  var r: Option[Int] = config("r", default = 2)
-  var x: Option[Int] = config("x", default = 1000)
-  var b: Option[Int] = config("b", default = 100)
+  var s: Option[Int] = config("s")
+  var c: Option[Int] = config("c")
+  var m: Option[Int] = config("m")
+  var q: Option[Int] = config("qs")
+  var r: Option[Int] = config("r")
+  var x: Option[Int] = config("x")
+  var b: Option[Int] = config("b")
   var t: Boolean = config("t", default = false)
   var d: Option[String] = config("d")
   var g: Option[String] = config("g")
   var l: Boolean = config("l", default = false)
   var a: Boolean = config("a", default = false)
   var h: Boolean = config("h", default = false)
-  var y: Option[Int] = config("y", default = 30)
+  var y: Option[Int] = config("y")
 
   override def beforeCmd() {
   }
