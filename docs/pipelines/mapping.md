@@ -10,9 +10,12 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
 
 * [Flexiprep](flexiprep.md)
 * Alignment programs:
-    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">BWA</a>
+    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa mem</a>
+    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa aln</a>
     * <a href="http://bowtie-bio.sourceforge.net/index.shtml" target="_blank">Bowtie version 1.1.1</a>
     * <a href="http://www.well.ox.ac.uk/project-stampy" target="_blank">Stampy</a>
+    * <a href="http://research-pub.gene.com/gmap/" target="_blank">Gsnap</a>
+    * <a href="https://ccb.jhu.edu/software/tophat" target="_blank">TopHat</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star-2pass</a>
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
@@ -58,6 +61,16 @@ Note that one should first create the appropriate [settings config](../general/c
 Any supplied sample config will be ignored.
 
 ### Example config
+
+#### Minimal
+```json
+{
+"reference_fasta": "<path/to/reference">,
+"output_dir": "<path/to/output/dir">
+}
+```
+
+#### With options
 ```json
 {
 "reference_fasta": "<path/to/reference">,
@@ -109,5 +122,6 @@ To perform a dry run simply remove `-run` from the commandline call.
     ├── <samplename>-lib_1.dedup.bam
     ├── <samplename>-lib_1.dedup.metrics
     ├── flexiprep
-    └── metrics
+    ├── metrics
+    └── report
 ~~~
