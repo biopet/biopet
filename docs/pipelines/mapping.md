@@ -41,16 +41,17 @@ All other values should be provided in the config. Specific config values toward
 
 | Name | Type | Function |
 | ---- | ---- | -------- |
+| output_dir | Path (**required**) | directory for output files |
+| reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
 | aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`] |
 | skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
 | skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |
-| reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
 | platform | String (optional) | Read group Platform (defaults to `illumina`)|
-| platform_unit | String (**required**) | Read group platform unit |
-| readgroup_sequencing_center | String (**required**) | Read group sequencing center |
-| readgroup_description | String (**required**) | Read group description |
-| predicted_insertsize | Integer (**required**) | Read group predicted insert size |
+| platform_unit | String (optional) | Read group platform unit |
+| readgroup_sequencing_center | String (optional) | Read group sequencing center |
+| readgroup_description | String (optional) | Read group description |
+| predicted_insertsize | Integer (optional) | Read group predicted insert size |
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
