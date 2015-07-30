@@ -5,7 +5,7 @@ pages:
     - Config: 'general/config.md'
 - Pipelines:
     - Basty: 'pipelines/basty.md'
-    - Bam2Wig: 'pipelines/bam2Wig.md'
+    - Bam2Wig: 'pipelines/bam2wig.md'
     - Carp: 'pipelines/carp.md'
     - Gentrap: 'pipelines/gentrap.md'
     - Shiva: 'pipelines/shiva.md'
