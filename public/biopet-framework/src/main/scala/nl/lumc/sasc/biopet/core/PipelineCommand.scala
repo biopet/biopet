@@ -84,7 +84,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
     argv ++= Array("-S", pipeline)
     argv ++= args
     if (!args.contains("--log_to_file") && !args.contains("-log")) {
-      argv ++= List("--log_to_file", logFile.getAbsolutePath.replace("biopet", "queue"))
+      argv ++= List("--log_to_file", new File(logFile.getParentFile, "queue." + BiopetQCommandLine.timestamp + ".log").getAbsolutePath)
     }
     BiopetQCommandLine.main(argv)
   }
