@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 1.1.1
  */
-class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
+class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
 
@@ -34,18 +34,18 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: Option[File] = None
 
   @Input(doc = "The reference file for the bam files.", shortName = "R", required = true)
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
   var output: File = null
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  override val versionRegex = """.*[Vv]ersion:? (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultVmem = "6G"
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   var sam: Boolean = config("sam", default = true)
   var sam_RG: Option[String] = config("sam-RG")
@@ -57,6 +57,12 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
   var maxbts: Option[Int] = config("maxbts")
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
+  var maxins: Option[Int] = config("maxins")
+
+  override def beforeGraph() {
+    super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** return commandline to execute */
   def cmdLine = {
@@ -72,12 +78,12 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction {
       optional("-m", m) +
       optional("--maxbts", maxbts) +
       optional("--maqerr", maqerr) +
+      optional("--maxins", maxins) +
       required(reference) +
       (R2 match {
-        case Some(r2) => {
+        case Some(r2) =>
           required("-1", R1) +
             optional("-2", r2)
-        }
         case _ => required(R1)
       }) +
       " > " + required(output)

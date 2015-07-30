@@ -15,18 +15,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.tools.VepNormalizer
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
 
 /**
+ * Pipeline to annotate a vcf file with VEP
+ *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript {
+class Toucan(val root: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)

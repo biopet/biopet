@@ -45,23 +45,22 @@
 
 package nl.lumc.sasc.biopet.core.workaround
 
-import java.io.File
-import org.broadinstitute.gatk.utils.commandline._
-import org.broadinstitute.gatk.queue.util._
+import java.io.{ File, FileOutputStream }
+import java.util
+import java.util.ResourceBundle
+
+import nl.lumc.sasc.biopet.FullVersion
+import nl.lumc.sasc.biopet.core.Logging
+import org.broadinstitute.gatk.queue.engine.{ QGraph, QGraphSettings }
+import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging, ScalaCompoundArgumentTypeDescriptor, ClassFieldCache }
 import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager }
-import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import org.broadinstitute.gatk.queue.engine.{ QStatusMessenger, QGraphSettings, QGraph }
-import collection.JavaConversions._
 import org.broadinstitute.gatk.utils.classloader.PluginManager
-import org.broadinstitute.gatk.utils.exceptions.UserException
-import org.broadinstitute.gatk.utils.io.IOUtils
+import org.broadinstitute.gatk.utils.commandline._
 import org.broadinstitute.gatk.utils.help.ApplicationDetails
-import java.io.FileOutputStream
-import java.net.URL
-import java.util.{ ResourceBundle, Arrays }
+import org.broadinstitute.gatk.utils.io.IOUtils
 import org.broadinstitute.gatk.utils.text.TextFormattingUtils
-import org.apache.commons.io.FilenameUtils
-import nl.lumc.sasc.biopet.core.BiopetExecutable
+
+import scala.collection.JavaConversions._
 
 /**
  * Entry point of Queue.  Compiles and runs QScripts passed in to the command line.
@@ -93,6 +92,8 @@ object BiopetQCommandLine extends GatkLogging {
     if (CommandLineProgram.result != 0)
       System.exit(CommandLineProgram.result)
   }
+
+  val timestamp = System.currentTimeMillis
 }
 
 /**
@@ -123,7 +124,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
       org.apache.commons.io.IOUtils.copy(is, os)
       os.close()
       val s = if (t.getName.endsWith("/")) t.getName.substring(0, t.getName.length - 1) else t.getName
-      pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + System.currentTimeMillis
+      pipelineName = s.substring(0, s.lastIndexOf(".")) + "." + BiopetQCommandLine.timestamp
     }
 
     // override createByType to pass the correct exceptions
@@ -176,8 +177,8 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
 
       // TODO: Default command plugin argument?
       val remoteFileConverter = (
-        for (commandPlugin <- allCommandPlugins if (commandPlugin.remoteFileConverter != null))
-          yield commandPlugin.remoteFileConverter).headOption.getOrElse(null)
+        for (commandPlugin <- allCommandPlugins if commandPlugin.remoteFileConverter != null)
+          yield commandPlugin.remoteFileConverter).headOption.orNull
 
       if (remoteFileConverter != null)
         loadArgumentsIntoObject(remoteFileConverter)
@@ -198,7 +199,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
             script.mkRemoteOutputs(remoteFileConverter)
         }
 
-        script.functions.foreach(qGraph.add(_))
+        script.functions.foreach(qGraph.add)
         logger.info("Added " + script.functions.size + " functions")
       }
       // Execute the job graph
@@ -281,7 +282,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
    * @return a ScalaCompoundArgumentTypeDescriptor
    */
   override def getArgumentTypeDescriptors =
-    Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
+    util.Arrays.asList(new ScalaCompoundArgumentTypeDescriptor)
 
   override def getApplicationDetails: ApplicationDetails = {
     new ApplicationDetails(createQueueHeader(),
@@ -291,7 +292,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   }
 
   private def createQueueHeader(): Seq[String] = {
-    Seq("Biopet version: " + BiopetExecutable.getVersion, "",
+    Seq("Biopet version: " + FullVersion, "",
       "Based on GATK Queue",
       //                     String.format("Queue v%s, Compiled %s", getQueueVersion, getBuildTimestamp),
       "Copyright (c) 2012 The Broad Institute",

@@ -5,7 +5,7 @@ pipelines. It is mainly intended to support LUMC SHARK cluster which is running
 SGE. But other types of HPC that are supported by GATK Queue (such as PBS) 
 should also be able to execute Biopet tools and pipelines. 
 
-Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+Copyright 2014-2015 Sequencing Analysis Support Core - Leiden University Medical Center
 
 Contact us at: sasc@lumc.nl
 
@@ -22,4 +22,4 @@ LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructi
 on how to use this protected part of biopet or contact us at sasc@lumc.nl
 ~~~
 
-    Copyright [2013-2014] [Sequence Analysis Support Core](https://sasc.lumc.nl/)
+    Copyright [2013-2015] [Sequence Analysis Support Core](https://sasc.lumc.nl/)

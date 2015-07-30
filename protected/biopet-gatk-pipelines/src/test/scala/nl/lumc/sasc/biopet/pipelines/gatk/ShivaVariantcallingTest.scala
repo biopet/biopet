@@ -5,23 +5,25 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import java.io.File
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ UnifiedGenotyper, HaplotypeCaller }
-import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter }
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
+import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test, AfterClass }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
 /**
+ * Class for testing ShivaVariantcalling
+ *
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaVariantcallingTest extends TestNGSuite with Matchers {
@@ -106,13 +108,28 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
     "bcftools" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test"),
     "input_alleles" -> "test"
   )
 }

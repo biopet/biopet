@@ -16,13 +16,15 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard MarkDuplicates */
 class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
-  javaMainClass = "picard.sam.MarkDuplicates"
+
+  javaMainClass = new picard.sam.MarkDuplicates().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
   var input: List[File] = Nil
@@ -72,8 +74,8 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
@@ -99,19 +101,7 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   def summaryFiles: Map[String, File] = Map()
 
   /** Returns stats for summary */
-  def summaryStats: Map[String, Any] = Picard.getMetrics(outputMetrics) match {
-    case None => Map()
-    case Some((header, content)) =>
-      (for (category <- 0 until content.size) yield {
-        content(category)(0) -> (
-          for (
-            i <- 1 until header.size if i < content(category).size
-          ) yield {
-            header(i).toLowerCase -> content(category)(i)
-          }).toMap
-      }
-      ).toMap
-  }
+  def summaryStats = Picard.getMetrics(outputMetrics).getOrElse(Map())
 }
 object MarkDuplicates {
   /** Returns default MarkDuplicates */

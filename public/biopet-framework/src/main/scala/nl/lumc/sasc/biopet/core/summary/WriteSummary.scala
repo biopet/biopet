@@ -15,19 +15,21 @@
  */
 package nl.lumc.sasc.biopet.core.summary
 
-import java.io.{ FileInputStream, PrintWriter, File }
-import java.security.MessageDigest
+import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, BiopetJavaCommandLineFunction, SampleLibraryTag }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.broadinstitute.gatk.queue.function.{ QFunction, InProcessFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
+import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
 import scala.io.Source
 
 /**
+ * This will collect and write the summary
+ *
  * Created by pjvan_thof on 2/14/15.
  */
 class WriteSummary(val root: Configurable) extends InProcessFunction with Configurable {
@@ -71,15 +73,15 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val executables: Map[String, Any] = {
         (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
           f match {
-            case f: BiopetJavaCommandLineFunction => {
+            case f: BiopetJavaCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
-                "jar_md5" -> SummaryQScript.md5sumCache.getOrElse(f.jarFile, None))
-            }
-            case f: BiopetCommandLineFunction => {
+                "java_version" -> f.getJavaVersion,
+                "jar_path" -> f.jarFile)
+            case f: BiopetCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None))
-            }
+                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
+                "path" -> f.executable)
             case _ => throw new IllegalStateException("This should not be possible")
           }
 
@@ -108,51 +110,46 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
     val combinedMap = (for (qscript <- qscript.summaryQScripts) yield {
       ConfigUtils.fileToConfigMap(qscript.summaryFile)
-    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b))
+    }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
+      Map("meta" -> Map(
+        "last_commit_hash" -> LastCommitHash,
+        "pipeline_version" -> Version,
+        "pipeline_name" -> qscript.summaryName,
+        "output_dir" -> qscript.outputDir,
+        "run_name" -> config("run_name", default = qSettings.runName).asString,
+        "summary_creation" -> System.currentTimeMillis()
+      ))
 
     val writer = new PrintWriter(out)
-    writer.println(ConfigUtils.mapToJson(combinedMap).spaces4)
+    writer.println(ConfigUtils.mapToJson(combinedMap).nospaces)
     writer.close()
   }
 
   def prefixSampleLibrary(map: Map[String, Any], sampleId: Option[String], libraryId: Option[String]): Map[String, Any] = {
     sampleId match {
-      case Some(sampleId) => Map("samples" -> Map(sampleId -> (libraryId match {
-        case Some(libraryId) => Map("libraries" -> Map(libraryId -> map))
-        case _               => map
+      case Some(s) => Map("samples" -> Map(s -> (libraryId match {
+        case Some(l) => Map("libraries" -> Map(l -> map))
+        case _       => map
       })))
       case _ => map
     }
   }
 
-  /**
-   * Convert summarizable to a summary map
-   * @param summarizable
-   * @param name
-   * @return
-   */
+  /** Convert summarizable to a summary map */
   def parseSummarizable(summarizable: Summarizable, name: String) = {
     val stats = summarizable.summaryStats
     val files = parseFiles(summarizable.summaryFiles)
 
-    (if (stats.isEmpty) Map[String, Any]() else Map("stats" -> Map(name -> stats))) ++
+    Map("stats" -> Map(name -> stats)) ++
       (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map(name -> files)))
   }
 
-  /**
-   * Parse files map to summary map
-   * @param files
-   * @return
-   */
+  /** Parse files map to summary map */
   def parseFiles(files: Map[String, File]): Map[String, Map[String, Any]] = {
     for ((key, file) <- files) yield key -> parseFile(file)
   }
 
-  /**
-   * parse single file summary map
-   * @param file
-   * @return
-   */
+  /** parse single file summary map */
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
@@ -160,11 +157,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     map.toMap
   }
 
-  /**
-   * Retrive checksum from file
-   * @param checksumFile
-   * @return
-   */
+  /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
   }

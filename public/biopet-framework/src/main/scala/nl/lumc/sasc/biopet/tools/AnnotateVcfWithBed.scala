@@ -17,24 +17,24 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
-import htsjdk.tribble.bed.BEDCodec
 import htsjdk.variant.variantcontext.VariantContextBuilder
-import htsjdk.variant.variantcontext.writer.{ VariantContextWriterBuilder, AsyncVariantContextWriter }
-import htsjdk.variant.vcf.{ VCFHeaderLineType, VCFHeaderLineCount, VCFInfoHeaderLine, VCFFileReader }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
 import nl.lumc.sasc.biopet.core.ToolCommand
-import scala.collection.JavaConverters.asScalaIteratorConverter
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 
-/**
- * Created by pjvan_thof on 1/10/15.
- */
 class AnnotateVcfWithBed {
   // TODO: Queue wrapper
 }
 
+/**
+ * This a tools to annotate a vcf file with values from a bed file
+ *
+ * Created by pjvan_thof on 1/10/15.
+ */
 object AnnotateVcfWithBed extends ToolCommand {
 
   /**
@@ -54,32 +54,34 @@ object AnnotateVcfWithBed extends ToolCommand {
                   fieldType: String = "String") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("out is a required file property")
-    opt[File]('B', "bedFile") required () unbounded () valueName ("<bed file>") action { (x, c) =>
+    } text "Input is a required file property"
+    opt[File]('B', "bedFile") required () unbounded () valueName "<bed file>" action { (x, c) =>
       c.copy(bedFile = x)
-    } text ("out is a required file property")
-    opt[File]('o', "output") required () unbounded () valueName ("<vcf file>") action { (x, c) =>
+    } text "Bedfile is a required file property"
+    opt[File]('o', "output") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(outputFile = x)
-    } text ("out is a required file property")
-    opt[String]('f', "fieldName") required () unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "out is a required file property"
+    opt[String]('f', "fieldName") required () unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldName = x)
-    } text ("Name of info field in new vcf file")
-    opt[String]('d', "fieldDescription") unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "Name of info field in new vcf file"
+    opt[String]('d', "fieldDescription") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldDescription = x)
-    } text ("Description of field in new vcf file")
-    opt[String]('t', "fieldType") unbounded () valueName ("<name of field in vcf file>") action { (x, c) =>
+    } text "Description of field in new vcf file"
+    opt[String]('t', "fieldType") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldType = x)
-    } text ("Description of field in new vcf file")
+    } text "Description of field in new vcf file"
   }
 
   /**
-   * Program will Annotate a vcf file with the overlapping regions of a bed file, 4e column of the bed file we in a info tag in the vcf file
-   *
-   * @param args
+   * Program will Annotate a vcf file with the overlapping regions of a bed file,
+   * 4e column of the bed file we in a info tag in the vcf file
    */
   def main(args: Array[String]): Unit = {
+
+    logger.info("Start")
+
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
@@ -92,21 +94,7 @@ object AnnotateVcfWithBed extends ToolCommand {
       bedRecords(bedRecord.getChr) = (bedRecord.getStart, bedRecord.getEnd, bedRecord.getName) :: bedRecords.getOrElse(bedRecord.getChr, Nil)
     }
     */
-    for (line <- Source.fromFile(commandArgs.bedFile).getLines()) {
-      val values = line.split("\t")
-      if (values.size >= 4)
-        bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
-    }
 
-    // Sort records when needed
-    for ((chr, record) <- bedRecords) {
-      bedRecords(chr) = record.sortBy(x => (x._1, x._2))
-    }
-
-    val reader = new VCFFileReader(commandArgs.inputFile, false)
-    val header = reader.getFileHeader
-
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
     val fieldType = commandArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
       case "Flag"      => VCFHeaderLineType.Flag
@@ -114,9 +102,39 @@ object AnnotateVcfWithBed extends ToolCommand {
       case "Float"     => VCFHeaderLineType.Float
       case _           => VCFHeaderLineType.String
     }
+
+    logger.info("Reading bed file")
+
+    for (line <- Source.fromFile(commandArgs.bedFile).getLines()) {
+      val values = line.split("\t")
+      if (values.size >= 4)
+        bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
+      else values.size >= 3 && fieldType == VCFHeaderLineType.Flag
+      bedRecords(values(0)) = (values(1).toInt, values(2).toInt, "") :: bedRecords.getOrElse(values(0), Nil)
+    }
+
+    logger.info("Sorting bed records")
+
+    // Sort records when needed
+    for ((chr, record) <- bedRecords) {
+      bedRecords(chr) = record.sortBy(x => (x._1, x._2))
+    }
+
+    logger.info("Starting output file")
+
+    val reader = new VCFFileReader(commandArgs.inputFile, false)
+    val header = reader.getFileHeader
+
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(header.getSequenceDictionary).
+      build)
+
     header.addMetaDataLine(new VCFInfoHeaderLine(commandArgs.fieldName,
       VCFHeaderLineCount.UNBOUNDED, fieldType, commandArgs.fieldDescription))
     writer.writeHeader(header)
+
+    logger.info("Start reading vcf records")
 
     for (record <- reader) {
       val overlaps = bedRecords.getOrElse(record.getChr, Nil).filter(x => {
@@ -126,11 +144,14 @@ object AnnotateVcfWithBed extends ToolCommand {
         writer.add(record)
       } else {
         val builder = new VariantContextBuilder(record)
-        builder.attribute(commandArgs.fieldName, overlaps.map(_._3).mkString(","))
+        if (fieldType == VCFHeaderLineType.Flag) builder.attribute(commandArgs.fieldName, true)
+        else builder.attribute(commandArgs.fieldName, overlaps.map(_._3).mkString(","))
         writer.add(builder.make)
       }
     }
-    reader.close
-    writer.close
+    reader.close()
+    writer.close()
+
+    logger.info("Done")
   }
 }

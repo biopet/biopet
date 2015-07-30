@@ -16,34 +16,35 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
 
 class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq(root) {
   var fastqc: Fastqc = _
 
-  override def beforeCmd {
-    super.beforeCmd
-    if (fastqc != null && Q == None) {
+  override def beforeCmd() {
+    super.beforeCmd()
+    if (fastqc != null && Q.isEmpty) {
       val encoding = fastqc.encoding
       Q = encoding match {
         case null => None
-        case s if (s.contains("Sanger / Illumina 1.9")) => None
-        case s if (s.contains("Illumina <1.3")) => Option(64)
-        case s if (s.contains("Illumina 1.3")) => Option(64)
-        case s if (s.contains("Illumina 1.5")) => Option(64)
+        case enc if enc.contains("Sanger / Illumina 1.9") => None
+        case enc if enc.contains("Illumina <1.3") => Option(64)
+        case enc if enc.contains("Illumina 1.3") => Option(64)
+        case enc if enc.contains("Illumina 1.5") => Option(64)
         case _ => None
       }
-      if (Q != None) V = true
+      if (Q.isDefined) V = true
     }
   }
 
-  override def beforeGraph {
+  override def beforeGraph() {
     if (fastqc != null) deps ::= fastqc.output
   }
 
   override def cmdLine = {
-    if (Q != None) {
+    if (Q.isDefined) {
       analysisName = getClass.getSimpleName
       super.cmdLine
     } else {
@@ -59,6 +60,6 @@ object SeqtkSeq {
     seqtkSeq.input = input
     seqtkSeq.output = output
     seqtkSeq.fastqc = fastqc
-    return seqtkSeq
+    seqtkSeq
   }
 }

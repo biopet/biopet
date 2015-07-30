@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.core
 
+import nl.lumc.sasc.biopet.FullVersion
+
 /**
  * Trait for biopet tools, sets some default args
  */
@@ -34,22 +36,24 @@ trait ToolCommand extends MainCommand with Logging {
         case "error" => logger.setLevel(org.apache.log4j.Level.ERROR)
         case _       =>
       }
-    } text ("Log level") validate { x =>
-      x match {
-        case "debug" | "info" | "warn" | "error" => success
-        case _                                   => failure("Log level must be <debug/info/warn/error>")
-      }
+    } text "Log level" validate {
+      case "debug" | "info" | "warn" | "error" => success
+      case _                                   => failure("Log level must be <debug/info/warn/error>")
     }
     opt[Unit]('h', "help") foreach { _ =>
       System.err.println(this.usage)
       sys.exit(1)
-    } text ("Print usage")
+    } text "Print usage"
     opt[Unit]('v', "version") foreach { _ =>
-      System.err.println("Version: " + BiopetExecutable.getVersion)
+      System.err.println("Version: " + FullVersion)
       sys.exit(1)
-    } text ("Print version")
+    } text "Print version"
   }
 
   protected type Args <: AbstractArgs
   protected type OptParser <: AbstractOptParser
+}
+
+trait ToolCommandFuntion extends BiopetJavaCommandLineFunction {
+  override def getVersion = Some("Biopet " + FullVersion)
 }

@@ -15,17 +15,19 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
-import java.io.{ PrintWriter, File }
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.collection.JavaConversions._
 
-class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+
+class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input bam", shortName = "input", required = true)
@@ -37,8 +39,7 @@ class BiopetFlagstat(val root: Configurable) extends BiopetJavaCommandLineFuncti
   @Output(doc = "summary output file", shortName = "output", required = false)
   var summaryFile: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override def defaultCoreMemory = 6.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
 
@@ -63,13 +64,13 @@ object BiopetFlagstat extends ToolCommand {
   case class Args(inputFile: File = null, summaryFile: Option[File] = None, region: Option[String] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text ("input bam file")
-    opt[File]('s', "summaryFile") valueName ("<file>") action { (x, c) =>
+    } text "input bam file"
+    opt[File]('s', "summaryFile") valueName "<file>" action { (x, c) =>
       c.copy(summaryFile = Some(x))
-    } text ("summary output file")
-    opt[String]('r', "region") valueName ("<chr:start-stop>") action { (x, c) =>
+    } text "summary output file"
+    opt[String]('r', "region") valueName "<chr:start-stop>" action { (x, c) =>
       c.copy(region = Some(x))
     }
   }
@@ -82,7 +83,7 @@ object BiopetFlagstat extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val inputSam = SamReaderFactory.makeDefault.open(commandArgs.inputFile)
-    val iterSam = if (commandArgs.region == None) inputSam.iterator else {
+    val iterSam = if (commandArgs.region.isEmpty) inputSam.iterator else {
       val regionRegex = """(.*):(.*)-(.*)""".r
       commandArgs.region.get match {
         case regionRegex(chr, start, stop) => inputSam.query(chr, start.toInt, stop.toInt, false)
@@ -91,7 +92,7 @@ object BiopetFlagstat extends ToolCommand {
     }
 
     val flagstatCollector = new FlagstatCollector
-    flagstatCollector.loadDefaultFunctions
+    flagstatCollector.loadDefaultFunctions()
     val m = 10
     val max = 60
     for (t <- 0 to (max / m))
@@ -144,11 +145,10 @@ object BiopetFlagstat extends ToolCommand {
     }
 
     commandArgs.summaryFile.foreach {
-      case file => {
+      case file =>
         val writer = new PrintWriter(file)
         writer.println(flagstatCollector.summary)
         writer.close()
-      }
     }
 
     println(flagstatCollector.report)
@@ -157,12 +157,12 @@ object BiopetFlagstat extends ToolCommand {
   class FlagstatCollector {
     private var functionCount = 0
     var readsCount = 0
-    private val names: Map[Int, String] = Map()
+    private val names: mutable.Map[Int, String] = mutable.Map()
     private var functions: Array[SAMRecord => Boolean] = Array()
     private var totalCounts: Array[Long] = Array()
     private var crossCounts = Array.ofDim[Long](1, 1)
 
-    def loadDefaultFunctions {
+    def loadDefaultFunctions() {
       addFunction("All", record => true)
       addFunction("Mapped", record => !record.getReadUnmappedFlag)
       addFunction("Duplicates", record => record.getDuplicateReadFlag)
@@ -207,7 +207,7 @@ object BiopetFlagstat extends ToolCommand {
       crossCounts = Array.ofDim[Long](functionCount, functionCount)
       totalCounts = new Array[Long](functionCount)
       val temp = new Array[SAMRecord => Boolean](functionCount)
-      for (t <- 0 until (temp.size - 1)) temp(t) = functions(t)
+      for (t <- 0 until (temp.length - 1)) temp(t) = functions(t)
       functions = temp
 
       val index = functionCount - 1
@@ -228,7 +228,7 @@ object BiopetFlagstat extends ToolCommand {
       buffer.append(crossReport() + "\n")
       buffer.append(crossReport(fraction = true) + "\n")
 
-      return buffer.toString
+      buffer.toString()
     }
 
     def summary: String = {
@@ -236,7 +236,7 @@ object BiopetFlagstat extends ToolCommand {
         names(t) -> totalCounts(t)
       }).toMap
 
-      return ConfigUtils.mapToJson(map).spaces4
+      ConfigUtils.mapToJson(map).spaces4
     }
 
     def crossReport(fraction: Boolean = false): String = {
@@ -258,7 +258,7 @@ object BiopetFlagstat extends ToolCommand {
           else buffer.append("\t")
         }
       }
-      return buffer.toString
+      buffer.toString()
     }
   } // End of class
 

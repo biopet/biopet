@@ -11,6 +11,8 @@ import nl.lumc.sasc.biopet.pipelines.basty.BastyTrait
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * Basty pipeline including GATK steps
+ *
  * Created by pjvan_thof on 3/4/15.
  */
 class Basty(val root: Configurable) extends QScript with BastyTrait {

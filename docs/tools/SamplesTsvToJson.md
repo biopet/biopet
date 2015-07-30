@@ -4,16 +4,13 @@ This tool enables a user to create a full sample sheet in JSON format suitable f
 The tool can be started as follows:
 
 ~~~
-java -Xmx2G -jar Biopet-0.2.0.jar tool SamplesTsvToJson
+java -jar <Biopet.jar> tool SamplesTsvToJson
 ~~~
-
-
-__-Xmx2G__ defines the amount of memory used to run the tool. Usually one should not change this value since 2G is more than enough. 
 
 To open the help:
 
 ~~~
-java -Xmx2G -jar Biopet-0.2.0.jar tool SamplesTsvToJson -h
+java -jar Biopet-0.2.0.jar tool SamplesTsvToJson -h
 Usage: SamplesTsvToJson [options]
 
   -l <value> | --log_level <value>

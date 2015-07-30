@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for stampy */
-class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
+class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Reference {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
 
@@ -30,7 +30,7 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   var R2: File = _
 
   @Input(doc = "The reference file for the bam files.", shortName = "ref")
-  var reference: File = config("reference")
+  var reference: File = null
 
   @Input(doc = "The genome prefix.")
   var genome: File = config("genome")
@@ -60,19 +60,20 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction {
   var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
-  override val versionRegex = """stampy v(.*) \(.*\), .*""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """stampy v(.*) \(.*\), .*""".r
+  override def versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.
-  override val defaultVmem = "4G"
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   override def versionCommand = executable + " --help"
 
   /** Sets readgroup when not set yet */
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(readgroup != null)
+    if (reference == null) reference = referenceFasta()
   }
 
   /** Returns command to execute */

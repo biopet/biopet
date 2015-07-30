@@ -16,26 +16,24 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import nl.lumc.sasc.biopet.core.summary.Summarizable
 
-import scala.io.Source
-import scala.util.matching.Regex
+import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import nl.lumc.sasc.biopet.core.{ BiopetExecutable, BiopetJavaCommandLineFunction, ToolCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import scala.io.Source
+import scala.util.matching.Regex
 
 /**
  * FastqSync function class for usage in Biopet pipelines
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction with Summarizable {
+class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summarizable {
 
   javaMainClass = getClass.getName
 
@@ -57,8 +55,7 @@ class FastqSync(val root: Configurable) extends BiopetJavaCommandLineFunction wi
   @Output(doc = "Sync statistics", required = true)
   var outputStats: File = null
 
-  override val defaultVmem = "4G"
-  memoryLimit = Some(1.7)
+  override def defaultCoreMemory = 4.0
 
   // executed command line
   override def commandLine =

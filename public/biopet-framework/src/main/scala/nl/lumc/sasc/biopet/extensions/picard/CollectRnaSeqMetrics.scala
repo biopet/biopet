@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
@@ -26,7 +27,7 @@ import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
  */
 class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summarizable {
 
-  javaMainClass = "picard.analysis.CollectRnaSeqMetrics"
+  javaMainClass = new picard.analysis.CollectRnaSeqMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze", required = true)
   var input: File = null
@@ -67,7 +68,8 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
+    if (refFlat == null) refFlat = config("refFlat")
     val validFlags = StrandSpecificity.values.map(_.toString).toSet
     strandSpecificity match {
       case Some(s) => require(validFlags.contains(s),
@@ -84,12 +86,9 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
       "output_chart" -> chartOutput
     ).collect { case (key, Some(value)) => key -> value }
 
-  def summaryStats: Map[String, Any] = Picard.getMetrics(output) match {
-    case None => Map()
-    case Some((header, content)) =>
-      (for (i <- 0 to header.size if i < content.head.size)
-        yield header(i).toLowerCase -> content.head(i)).toMap
-  }
+  def summaryStats = Map(
+    "metrics" -> Picard.getMetrics(output).getOrElse(Map()),
+    "histogram" -> Picard.getHistogram(output).getOrElse(Map()))
 
   override def commandLine = super.commandLine +
     required("INPUT=", input, spaceSeparated = false) +
@@ -99,9 +98,9 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     required("STRAND_SPECIFICITY=", strandSpecificity, spaceSeparated = false) +
     required("MINIMUM_LENGTH=", minimumLength, spaceSeparated = false) +
     required("CHART_OUTPUT=", chartOutput, spaceSeparated = false) +
-    repeat("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
+    optional("IGNORE_SEQUENCE=", ignoreSequence, spaceSeparated = false) +
     required("RRNA_FRAGMENT_PERCENTAGE=", rRNAFragmentPercentage, spaceSeparated = false) +
-    repeat("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
+    optional("METRIC_ACCUMULATION_LEVEL=", metricAccumulationLevel, spaceSeparated = false) +
     required("REFERENCE_SEQUENCE=", referenceSequence, spaceSeparated = false) +
     required("ASSUME_SORTED=", assumeSorted, spaceSeparated = false) +
     required("STOP_AFTER=", stopAfter, spaceSeparated = false)

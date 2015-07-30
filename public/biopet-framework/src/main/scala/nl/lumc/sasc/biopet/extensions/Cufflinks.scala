@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the cufflinks command line tool.
@@ -30,10 +31,10 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "cufflinks")
 
   /** default threads */
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "8G"
+  override def defaultCoreMemory = 6.0
 
   /** input file */
   @Input(doc = "Input file (SAM or BAM)", required = true)
@@ -184,9 +185,9 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   /** do not contact server to check for update availability [FALSE] */
   var no_update_check: Boolean = config("no_update_check", default = false)
 
-  override val versionRegex = """cufflinks v(.*)""".r
+  override def versionRegex = """cufflinks v(.*)""".r
   override def versionCommand = executable
-  override val versionExitcode = List(0, 1)
+  override def versionExitcode = List(0, 1)
 
   def cmdLine =
     required(executable) +

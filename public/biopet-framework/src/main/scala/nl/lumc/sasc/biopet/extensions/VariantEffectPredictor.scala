@@ -17,15 +17,15 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction {
+class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   executable = config("exe", submodule = "perl", default = "perl")
   var vep_script: String = config("vep_script")
@@ -36,7 +36,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   @Output(doc = "output file", required = true)
   var output: File = null
 
-  override val versionRegex = """version (\d*)""".r
+  override def versionRegex = """version (\d*)""".r
   override def versionCommand = executable + " " + vep_script + " --help"
 
   //Boolean vars
@@ -134,15 +134,15 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var cache_region_size: Option[String] = config("cache_region_size")
 
   // Numeric args
-  override val defaultThreads: Int = config("fork", default = 2)
+  override def defaultThreads: Int = config("fork", default = 2)
   var cache_version: Option[Int] = config("cache_version")
   var freq_freq: Option[Float] = config("freq_freq")
   var port: Option[Int] = config("port")
   var db_version: Option[Int] = config("db_version")
   var buffer_size: Option[Int] = config("buffer_size")
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (!cache && !database) {
       throw new IllegalArgumentException("Must supply either cache or database")
     } else if (cache && dir.isEmpty) {

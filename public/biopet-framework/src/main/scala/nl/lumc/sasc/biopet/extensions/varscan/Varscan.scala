@@ -29,7 +29,6 @@ abstract class Varscan extends BiopetJavaCommandLineFunction {
    * override val versionRegex = """VarScan v(.*)""".r
    */
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(3.0)
+  override def defaultCoreMemory = 5.0
 }
 

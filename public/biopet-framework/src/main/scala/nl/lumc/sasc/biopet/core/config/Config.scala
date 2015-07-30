@@ -15,24 +15,22 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
+
 import nl.lumc.sasc.biopet.core.Logging
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
-
-import scala.reflect.io.Directory
 
 /**
  * This class can store nested config values
  * @param map Map with value for new config
  * @constructor Load config with existing map
  */
-class Config(var map: Map[String, Any]) extends Logging {
+class Config(var map: Map[String, Any],
+             protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
-  /**
-   * Default constructor
-   */
+  /** Default constructor */
   def this() = {
     this(Map())
     loadDefaultConfig()
@@ -41,45 +39,61 @@ class Config(var map: Map[String, Any]) extends Logging {
   /**
    * Loading a environmental variable as location of config files to merge into the config
    * @param valueName Name of value
+   * @param default if true files are added to default instead of normal map
    */
-  def loadConfigEnv(valueName: String) {
+  def loadConfigEnv(valueName: String, default: Boolean) {
     sys.env.get(valueName) match {
-      case Some(globalFiles) => {
+      case Some(globalFiles) =>
         for (globalFile <- globalFiles.split(":")) {
           val file: File = new File(globalFile)
           if (file.exists) {
             logger.info("Loading config file: " + file)
-            loadConfigFile(file)
+            loadConfigFile(file, default)
           } else logger.warn(valueName + " value found but file '" + file + "' does not exist, no global config is loaded")
         }
-      }
       case _ => logger.info(valueName + " value not found, no global config is loaded")
     }
   }
 
-  /**
-   * Loading default value for biopet
-   */
+  /** Loading default value for biopet */
   def loadDefaultConfig() {
-    loadConfigEnv("BIOPET_CONFIG")
+    loadConfigEnv("BIOPET_CONFIG", default = true)
   }
 
   /**
    * Merge a json file into the config
    * @param configFile Location of file
    */
-  def loadConfigFile(configFile: File) {
+  def loadConfigFile(configFile: File, default: Boolean = false) {
     val configMap = fileToConfigMap(configFile)
+    if (default) {
+      if (defaults.isEmpty) defaults = configMap
+      else defaults = mergeMaps(configMap, defaults)
+      logger.debug("New defaults: " + defaults)
+    } else {
+      if (map.isEmpty) map = configMap
+      else map = mergeMaps(configMap, map)
+      logger.debug("New config: " + map)
+    }
+  }
 
-    if (map.isEmpty) map = configMap
-    else map = mergeMaps(configMap, map)
-    logger.debug("New config: " + map)
+  /**
+   * Add a single vallue to the config
+   * @param key key of value
+   * @param value value itself
+   * @param path Path to value
+   * @param default if true value is put in default map
+   */
+  def addValue(key: String, value: Any, path: List[String] = Nil, default: Boolean = false): Unit = {
+    val valueMap = path.foldRight(Map(key -> value))((a, b) => Map(a -> b))
+    if (default) defaults = mergeMaps(valueMap, defaults)
+    else map = mergeMaps(valueMap, map)
   }
 
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
-  protected[config] def clearCache: Unit = {
+  protected[config] def clearCache(): Unit = {
     notFoundCache = List()
     foundCache = Map()
     defaultCache = Map()
@@ -99,16 +113,16 @@ class Config(var map: Map[String, Any]) extends Logging {
    * @return True if exist
    */
   def contains(requestedIndex: ConfigValueIndex): Boolean =
-    if (notFoundCache.contains(requestedIndex)) return false
-    else if (foundCache.contains(requestedIndex)) return true
+    if (notFoundCache.contains(requestedIndex)) false
+    else if (foundCache.contains(requestedIndex)) true
     else {
       val value = Config.getValueFromMap(map, requestedIndex)
       if (value.isDefined && value.get.value != None) {
         foundCache += (requestedIndex -> value.get)
-        return true
+        true
       } else {
         notFoundCache +:= requestedIndex
-        return false
+        false
       }
     }
 
@@ -186,7 +200,7 @@ class Config(var map: Map[String, Any]) extends Logging {
     writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
-  override def toString(): String = map.toString
+  override def toString: String = map.toString()
 }
 
 object Config extends Logging {
@@ -195,7 +209,7 @@ object Config extends Logging {
   /**
    * Merge 2 config objects
    * @param config1 prio over config 2
-   * @param config2
+   * @param config2 Low prio map
    * @return Merged config
    */
   def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
@@ -219,7 +233,7 @@ object Config extends Logging {
 
     def tailSearch(path: List[String]): Option[ConfigValue] = {
       val p = getFromPath(path)
-      if (p != None) p
+      if (p.isDefined) p
       else if (path == Nil) None
       else {
         val p = initSearch(path)
@@ -246,6 +260,6 @@ object Config extends Logging {
       else skipNested(path, tail.tail)
     }
 
-    return tailSearch(startIndex.path)
+    tailSearch(startIndex.path)
   }
 }

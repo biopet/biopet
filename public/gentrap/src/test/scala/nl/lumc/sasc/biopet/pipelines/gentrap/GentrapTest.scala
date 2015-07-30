@@ -15,25 +15,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.File
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
-import nl.lumc.sasc.biopet.core.config.Config
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.utils.ConfigUtils
-
 class GentrapTest extends TestNGSuite with Matchers {
-
-  import Gentrap._
-  import Gentrap.ExpMeasures._
-  import Gentrap.StrandProtocol._
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
@@ -41,7 +36,6 @@ class GentrapTest extends TestNGSuite with Matchers {
       override def globalConfig = new Config(map)
       // disable dict file check since it is based on the reference file name (which we can't modify here since
       // we use the mock /usr/bin/test file
-      override def checkDictFile: Unit = {}
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -186,9 +180,21 @@ class GentrapTest extends TestNGSuite with Matchers {
 object GentrapTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
-    "dict" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
+    "refFlat" -> "test",
     "annotation_gtf" -> "test",
     "annotation_bed" -> "test",
     "annotation_refflat" -> "test",
@@ -199,7 +205,7 @@ object GentrapTest {
       // mapping executables
       "star", "bowtie", "samtools", "gsnap", "tophat",
       // gentrap executables
-      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage",
+      "cufflinks", "htseqcount", "grep", "pdflatex", "rscript", "tabix", "bgzip", "bedtoolscoverage", "md5sum",
       // bam2wig executables
       "igvtools", "wigtobigwig"
     ).map { case exe => exe -> Map("exe" -> "test") }.toMap

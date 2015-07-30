@@ -19,147 +19,137 @@
 
 package nl.lumc.sasc.biopet.pipelines.yamsvp
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
-
-import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaIndex, SambambaMerge }
-import nl.lumc.sasc.biopet.extensions.svcallers.pindel.Pindel
-import nl.lumc.sasc.biopet.extensions.svcallers.{ Breakdancer, Clever }
-
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
+import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
+import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
+import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMarkdup, SambambaMerge }
+//import nl.lumc.sasc.biopet.extensions.pindel.Pindel
+import nl.lumc.sasc.biopet.extensions.delly.Delly
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function._
 import org.broadinstitute.gatk.queue.engine.JobRunInfo
+import org.broadinstitute.gatk.queue.function._
 
-class Yamsvp(val root: Configurable) extends QScript with BiopetQScript { //with MultiSampleQScript {
+class Yamsvp(val root: Configurable) extends QScript with MultiSampleQScript {
+  qscript =>
   def this() = this(null)
+  def summaryFile = null
+  def summaryFiles = Map()
+  def summarySettings = Map()
 
   var reference: File = config("reference")
-  var finalBamFiles: List[File] = Nil
-  /*
-  class LibraryOutput extends AbstractLibraryOutput {
-    var mappedBamFile: File = _
+
+  def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+
+    def summaryFiles = Map()
+    def summaryStats = Map()
+
+    val alignmentDir: String = sampleDir + "alignment/"
+    val svcallingDir: String = sampleDir + "svcalls/"
+
+    def makeLibrary(id: String) = new Library(id)
+    class Library(libraryId: String) extends AbstractLibrary(libraryId) {
+      //      val runDir: String = alignmentDir + "run_" + libraryId + "/"
+      def summaryFiles = Map()
+      def summaryStats = Map()
+
+      val mapping = new Mapping(qscript)
+      mapping.libId = Some(libraryId)
+      mapping.sampleId = Some(sampleId)
+
+      protected def addJobs(): Unit = {
+        mapping.input_R1 = config("R1")
+        mapping.input_R2 = config("R2")
+        mapping.outputDir = libDir
+
+        mapping.init()
+        mapping.biopetScript()
+        qscript.addAll(mapping.functions)
+      }
+    }
+    protected def addJobs(): Unit = {
+      val libraryBamfiles = libraries.map(_._2.mapping.finalBamFile).toList
+
+      val bamFile: File = if (libraryBamfiles.size == 1) {
+        val alignmentlink = Ln(qscript, libraryBamfiles.head,
+          alignmentDir + sampleId + ".merged.bam", relative = true)
+        alignmentlink.isIntermediate = true
+        add(alignmentlink)
+        alignmentlink.output
+      } else if (libraryBamfiles.size > 1) {
+        val mergeSamFiles = new SambambaMerge(qscript)
+        mergeSamFiles.input = libraryBamfiles
+        mergeSamFiles.output = sampleDir + sampleId + ".merged.bam"
+        mergeSamFiles.isIntermediate = true
+        add(mergeSamFiles)
+        mergeSamFiles.output
+      } else null
+
+      val bamMarkDup = SambambaMarkdup(qscript, bamFile)
+      add(bamMarkDup)
+
+      addAll(BamMetrics(qscript, bamMarkDup.output, alignmentDir + "metrics" + File.separator).functions)
+
+      // create an IGV TDF file
+      val tdfCount = IGVToolsCount(qscript, bamMarkDup.output, config("genome_name", default = "hg19"))
+      add(tdfCount)
+
+      /// bamfile will be used as input for the SV callers. First run Clever
+      //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
+
+      val cleverDir = svcallingDir + sampleId + ".clever/"
+      val clever = CleverCaller(qscript, bamMarkDup.output, qscript.reference, svcallingDir, cleverDir)
+      add(clever)
+
+      val clever_vcf = Ln(qscript, clever.outputvcf, svcallingDir + sampleId + ".clever.vcf", relative = true)
+      add(clever_vcf)
+
+      val breakdancerDir = svcallingDir + sampleId + ".breakdancer/"
+      val breakdancer = Breakdancer(qscript, bamMarkDup.output, qscript.reference, breakdancerDir)
+      addAll(breakdancer.functions)
+
+      val bd_vcf = Ln(qscript, breakdancer.outputvcf, svcallingDir + sampleId + ".breakdancer.vcf", relative = true)
+      add(bd_vcf)
+
+      val dellyDir = svcallingDir + sampleId + ".delly/"
+      val delly = Delly(qscript, bamMarkDup.output, dellyDir)
+      addAll(delly.functions)
+
+      val delly_vcf = Ln(qscript, delly.outputvcf, svcallingDir + sampleId + ".delly.vcf", relative = true)
+      add(delly_vcf)
+
+      // for pindel we should use per library config collected into one config file
+      //    val pindelDir = svcallingDir + sampleID + ".pindel/"
+      //    val pindel = Pindel(qscript, analysisBam, this.reference, pindelDir)
+      //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
+      //    addAll(pindel.functions)
+      //
+      //    val pindel_vcf = Ln(qscript, pindel.outputvcf, svcallingDir + sampleID + ".pindel.vcf", relative = true)
+      //    add(pindel_vcf)
+      //
+    }
   }
 
-  class SampleOutput extends AbstractSampleOutput {
-    var vcf: Map[String, List[File]] = Map()
-    var mappedBamFile: File = _
-  }
-*/
-  override def init() {
-    if (outputDir == null)
-      throw new IllegalStateException("Output directory is not specified in the config / argument")
-    else if (!outputDir.endsWith("/"))
-      outputDir += "/"
+  def addMultiSampleJobs() = {}
+
+  def init() {
   }
 
   def biopetScript() {
-    // write the pipeline here
-    // start with QC, alignment, call sambamba, call sv callers, reporting
-
-    // read config and set all parameters for the pipeline
     logger.info("Starting YAM SV Pipeline")
-    //runSamplesJobs
-    //
-
+    addSamplesJobs()
   }
 
   override def onExecutionDone(jobs: Map[QFunction, JobRunInfo], success: Boolean) {
     logger.info("YAM SV Pipeline has run .......................")
   }
-  /*
-  def runSingleSampleJobs(sampleID: String): SampleOutput = {
-    val sampleOutput = new SampleOutput
-    var libraryBamfiles: List[File] = List()
-    var outputFiles: Map[String, List[File]] = Map()
-    var libraryFastqFiles: List[File] = List()
-    val sampleDir: String = outputDir + sampleID + "/"
-    val alignmentDir: String = sampleDir + "alignment/"
-
-    val svcallingDir: String = sampleDir + "svcalls/"
-
-    sampleOutput.libraries = runLibraryJobs(sampleID)
-    for ((libraryID, libraryOutput) <- sampleOutput.libraries) {
-      // this is extending the libraryBamfiles list like '~=' in D or .append in Python or .push_back in C++
-      libraryBamfiles ++= List(libraryOutput.mappedBamFile)
-    }
-
-    val bamFile: File =
-      if (libraryBamfiles.size == 1) libraryBamfiles.head
-      else if (libraryBamfiles.size > 1) {
-        val mergeSamFiles = new SambambaMerge(root)
-        mergeSamFiles.input = libraryBamfiles
-        mergeSamFiles.output = alignmentDir + sampleID + ".merged.bam"
-        add(mergeSamFiles)
-        mergeSamFiles.output
-      } else null
-
-    val bamIndex = SambambaIndex(root, bamFile)
-    add(bamIndex)
-
-    /// bamfile will be used as input for the SV callers. First run Clever
-    //    val cleverVCF : File = sampleDir + "/" + sampleID + ".clever.vcf"
-
-    val cleverDir = svcallingDir + sampleID + ".clever/"
-    val clever = Clever(this, bamFile, this.reference, svcallingDir, cleverDir)
-    clever.deps = List(bamIndex.output)
-    sampleOutput.vcf += ("clever" -> List(clever.outputvcf))
-    add(clever)
-
-    val breakdancerDir = svcallingDir + sampleID + ".breakdancer/"
-    val breakdancer = Breakdancer(this, bamFile, this.reference, breakdancerDir)
-    sampleOutput.vcf += ("breakdancer" -> List(breakdancer.outputvcf))
-    addAll(breakdancer.functions)
-
-    // for pindel we should use per library config collected into one config file
-    //    val pindelDir = svcallingDir + sampleID + ".pindel/"
-    //    val pindel = Pindel(this, bamFile, this.reference, pindelDir)
-    //    sampleOutput.vcf += ("pindel" -> List(pindel.outputvcf))
-    //    addAll(pindel.functions)
-    //
-    //    
-    return sampleOutput
-  }
-
-  // Called for each run from a sample
-
-  def runSingleLibraryJobs(libId: String, sampleID: String): LibraryOutput = {
-    val libraryOutput = new LibraryOutput
-
-    val alignmentDir: String = outputDir + sampleID + "/alignment/"
-    val runDir: String = alignmentDir + "run_" + libId + "/"
-
-    if (config.contains("R1")) {
-      val mapping = new Mapping(this)
-
-      mapping.aligner = config("aligner", default = "stampy")
-      mapping.skipFlexiprep = false
-      mapping.skipMarkduplicates = true // we do the dedup marking using Sambamba
-
-      mapping.input_R1 = config("R1")
-      mapping.input_R2 = config("R2")
-      mapping.paired = (mapping.input_R2 != null)
-      mapping.RGLB = libId
-      mapping.RGSM = sampleID
-      mapping.RGPL = config("PL")
-      mapping.RGPU = config("PU")
-      mapping.RGCN = config("CN")
-      mapping.outputDir = runDir
-
-      mapping.init
-      mapping.biopetScript
-      addAll(mapping.functions)
-
-      // start sambamba dedup
-
-      libraryOutput.mappedBamFile = mapping.outputFiles("finalBamFile")
-    } else this.logger.error("Sample: " + sampleID + ": No R1 found for library: " + libId)
-    return libraryOutput
-    //    logger.debug(outputFiles)
-    //    return outputFiles
-  }
-  */
 }
 
 object Yamsvp extends PipelineCommand

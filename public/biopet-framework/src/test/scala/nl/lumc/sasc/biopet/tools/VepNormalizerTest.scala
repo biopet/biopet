@@ -15,16 +15,17 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import org.scalatest.testng.TestNGSuite
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.Matchers
 import java.io.File
 import java.nio.file.Paths
-import org.testng.annotations.Test
-import htsjdk.variant.vcf.VCFFileReader
+
 import htsjdk.tribble.TribbleException
-import scala.collection.JavaConversions._
-import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.vcf.VCFFileReader
+import org.scalatest.Matchers
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.Test
+
+import scala.util.Random
 
 /**
  * This class tests the VEPNormalizer
@@ -41,6 +42,46 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   val vepped = new File(resourcePath("/VEP_oneline.vcf"))
   val unvepped = new File(resourcePath("/unvepped.vcf"))
 
+  val vepped_path = resourcePath("/VEP_oneline.vcf")
+
+  val rand = new Random()
+
+  @Test def testGzOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testVcfOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testBcfOutputExplode(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    main(arguments)
+  }
+
+  @Test def testGzOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
+
+  @Test def testVcfOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
+
+  @Test def testBcfOutputStandard(): Unit = {
+    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
+    main(arguments)
+  }
+
   @Test def testVEPHeaderLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
@@ -51,21 +92,21 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    explodeTranscripts(reader.iterator().next(), new_infos, true).length should be(11)
+    explodeTranscripts(reader.iterator().next(), new_infos, removeCsq = true).length should be(11)
   }
 
   @Test def testStandardVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    Array(standardTranscripts(reader.iterator().next(), new_infos, true)).length should be(1)
+    Array(standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)).length should be(1)
   }
 
   @Test def testStandardVEPAttributeLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
     val new_infos = parseCsq(header)
-    val record = standardTranscripts(reader.iterator().next(), new_infos, true)
+    val record = standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)
     def checkItems(items: Array[String]) = {
       items.foreach { check }
     }

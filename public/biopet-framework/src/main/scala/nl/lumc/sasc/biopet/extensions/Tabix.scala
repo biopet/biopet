@@ -60,13 +60,13 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "tabix")
 
   override def versionCommand = executable
-  override val versionRegex = """Version: (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """Version: (.*)""".r
+  override def versionExitcode = List(0, 1)
 
   /** Formats that tabix can handle */
   private val validFormats: Set[String] = Set("gff", "bed", "sam", "vcf", "psltbl")
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     p match {
       case Some(fmt) =>
         require(validFormats.contains(fmt), "-p flag must be one of " + validFormats.mkString(", "))

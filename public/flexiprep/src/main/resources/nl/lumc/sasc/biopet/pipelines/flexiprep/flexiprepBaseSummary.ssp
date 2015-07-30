@@ -1,0 +1,146 @@
+#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+#import(nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
+<%@ var rootPath: String %>
+<%@ var outputDir: File %>
+<%@ var showPlot: Boolean = false %>
+<%@ var showTable: Boolean = true %>
+<%@ var showIntro: Boolean = true %>
+<%@ var multisample: Boolean = true %>
+#{
+    val samples = sampleId match {
+        case Some(sample) => List(sample.toString)
+        case _ => summary.samples.toList
+    }
+    val trimCount = summary.getLibraryValues("flexiprep", "settings", "skip_trim").count(_._2 == Some(false))
+    val clipCount = summary.getLibraryValues("flexiprep", "settings", "skip_clip").count(_._2 == Some(false))
+    val librariesCount = summary.samples.foldLeft(0)(_ + summary.libraries(_).size)
+}#
+#if (showIntro)
+    <br/>
+    <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-6">
+        <p>
+            #if (trimCount == librariesCount && clipCount == librariesCount)
+                You have selected both <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> and <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> as pre-processing steps
+            #elseif (trimCount == librariesCount && clipCount == 0)
+                You have selected only <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> as pre-processing step
+            #elseif (trimCount == 0 && clipCount == librariesCount)
+                You have selected only <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> as pre-processing step
+            #elseif (trimCount == 0 && clipCount == 0)
+                You have selected no pre-processing step to be performed
+            #elseif (trimCount > 0 && clipCount == 0)
+                You have selected <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> as pre-processing steps
+            #elseif (trimCount == 0 && clipCount > 0)
+                You have chosen to turn <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> for some libraries, but not all.
+            #else
+                You have chosen to turn <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Alternative_clipping_strategies_.28Adaptor_clipping.29">adaptor clipping</a> and <a href="https://en.wikibooks.org/wiki/Next_Generation_Sequencing_%28NGS%29/Pre-processing#Sequence_Quality_Trimming">read trimming</a> off for some libraries, but not all.
+            #end
+        </p>
+        <p>
+        #if (sampleId.isDefined && libId.isDefined)
+            Here we show aggregated quality statistics sequencing library ${libId} for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #elseif (sampleId.isDefined)
+            Here we show aggregated quality statistics for every sequencing library for sample ${sampleId}. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #else
+            Here we show aggregated quality statistics for every sequencing library. It shows the total number of bases used after quality control, and the total number of bases discarded during quality control. This is done for both forward and reverse reads.
+        #end
+        </p>
+    </div>
+    </div>
+#end
+#if (showPlot)
+    #{
+        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summary, sampleId = sampleId)
+        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
+    }#
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-sm-6 col-md-6">
+                <img src="QC_Bases_R1.png" class="img-responsive" />
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <img src="QC_Bases_R2.png" class="img-responsive" />
+            </div>
+        </div>
+
+    </div>
+    <div class="panel-footer">
+        #if (showTable)
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_BasesTable">Hide table</button>
+        #else
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_BasesTable">Show table</button>
+        #end
+        <i class="glyphicon glyphicon-file"></i> <a href="QC_Bases_R1.tsv">R1 reads stats</a> -
+        <i class="glyphicon glyphicon-file"></i> <a href="QC_Bases_R2.tsv">R2 reads stats</a>
+    </div>
+#end
+
+<div class="panel-body collapse #if (showTable)in#end" id="QC_BasesTable">
+
+<!-- Table -->
+<table class="table sortable-theme-bootstrap">
+
+    <thead><tr>
+        <th>Sample</th>
+        <th colspan="2">Library</th>
+        <th>Before QC</th>
+        <th>Discarded</th>
+        <th>(%)</th>
+        <th>After QC</th>
+    </tr></thead>
+    <tbody>
+        #for (sample <- samples.toList.sorted)
+            #{
+                val libs = libId match {
+                case Some(libId) => List(libId.toString)
+                case _ => summary.libraries(sample).toList
+                }
+
+                val sampleRowspan = {
+                libs.size +
+                libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
+                }
+            }#
+            <tr><td rowspan="${sampleRowspan}">
+            #if (multisample)
+                <a href="${rootPath}Samples/${sample}/index.html">${sample}</a>
+            #else
+                ${sample}
+            #end
+            </td>
+            #for (libId <- libs)
+                #if (libs.head != libId) <tr> #end
+                    #{ val paired = summary.getLibraryValue(sample, libId, "flexiprep", "settings", "paired").getOrElse(false) }#
+                    <td #if (paired == true) rowspan="2" #end>
+                    #if (multisample)
+                        <a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a>
+                    #else
+                        ${libId}
+                    #end
+                    </td>
+                    #{ val reads = if (paired == true) List("R1", "R2") else List("R1") }#
+                    #for (read <- reads)
+                        #if (read == "R2") </tr><tr> #end
+                        #{
+                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "bases", "num_total").getOrElse(0).toString.toLong
+                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total").getOrElse(0).toString.toLong
+                        }#
+                        <td>${read}</td>
+                        <td>${beforeTotal}</td>
+                        <td>${beforeTotal - afterTotal}</td>
+                        <td>${(beforeTotal - afterTotal).toDouble / beforeTotal * 100}%</td>
+                        <td>${afterTotal}</td>
+                    #end
+                </tr>
+            #end
+        #end
+    </tbody>
+</table>
+
+</div>

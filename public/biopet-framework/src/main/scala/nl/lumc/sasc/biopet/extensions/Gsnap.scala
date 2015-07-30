@@ -17,25 +17,24 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
-
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Wrapper for the gsnap command line tool
  * Written based on gsnap version 2014-05-15
  */
-class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
+class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   /** default executable */
   executable = config("exe", default = "gsnap", freeVar = false)
 
   /** default threads */
-  override val defaultThreads = 8
+  override def defaultThreads = 8
 
   /** default vmem for cluster jobs */
-  override val defaultVmem = "16G"
+  override def defaultCoreMemory = 10.0
 
   /** input file */
   @Input(doc = "Input FASTQ file(s)", required = true) //var input: List[File] = _
@@ -329,7 +328,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction {
   /** value to put into read-group library (rg-pl) field */
   var read_group_platform: Option[String] = config("read_group_platform")
 
-  override val versionRegex = """.* version (.*)""".r
+  override def versionRegex = """.* version (.*)""".r
   override def versionCommand = executable + " --version"
 
   def cmdLine = {

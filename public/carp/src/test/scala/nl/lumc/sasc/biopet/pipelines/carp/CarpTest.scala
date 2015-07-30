@@ -15,22 +15,23 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import java.io.File
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import org.apache.commons.io.FileUtils
-import org.broadinstitute.gatk.queue.QSettings
-import org.testng.annotations.{ AfterClass, Test, DataProvider }
-import org.scalatest.Matchers
-import org.scalatest.testng.TestNGSuite
-
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.apache.commons.io.FileUtils
+import org.broadinstitute.gatk.queue.QSettings
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
+ * Test class for [[Carp]]
+ *
  * Created by pjvan_thof on 2/13/15.
  */
 class CarpTest extends TestNGSuite with Matchers {
@@ -56,11 +57,11 @@ class CarpTest extends TestNGSuite with Matchers {
       var m = ConfigUtils.mergeMaps(Map("output_dir" -> CarpTest.outputDir
       ), CarpTest.executables)
 
-      if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(CarpTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(CarpTest.sample3, m.toMap)
-      if (threatment) m = ConfigUtils.mergeMaps(CarpTest.threatment1, m.toMap)
-      if (control) m = ConfigUtils.mergeMaps(CarpTest.control1, m.toMap)
+      if (sample1) m = ConfigUtils.mergeMaps(CarpTest.sample1, m)
+      if (sample2) m = ConfigUtils.mergeMaps(CarpTest.sample2, m)
+      if (sample3) m = ConfigUtils.mergeMaps(CarpTest.sample3, m)
+      if (threatment) m = ConfigUtils.mergeMaps(CarpTest.threatment1, m)
+      if (control) m = ConfigUtils.mergeMaps(CarpTest.control1, m)
       m
     }
 
@@ -97,8 +98,20 @@ class CarpTest extends TestNGSuite with Matchers {
 object CarpTest {
   val outputDir = Files.createTempDir()
 
+  private def copyFile(name: String): Unit = {
+    val is = getClass.getResourceAsStream("/" + name)
+    val os = new FileOutputStream(new File(outputDir, name))
+    org.apache.commons.io.IOUtils.copy(is, os)
+    os.close()
+  }
+
+  copyFile("ref.fa")
+  copyFile("ref.dict")
+  copyFile("ref.fa.fai")
+
   val executables = Map(
-    "reference" -> "test",
+    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "sickle" -> Map("exe" -> "test"),
@@ -107,7 +120,8 @@ object CarpTest {
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
-    "wigtobigwig" -> Map("exe" -> "test")
+    "wigtobigwig" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

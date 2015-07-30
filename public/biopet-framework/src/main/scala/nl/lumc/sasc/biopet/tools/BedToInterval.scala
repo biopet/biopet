@@ -15,16 +15,19 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
-import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.PrintWriter
+
 import scala.io.Source
 
-class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunction {
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
+class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input Bed file", required = true)
@@ -36,31 +39,33 @@ class BedToInterval(val root: Configurable) extends BiopetJavaCommandLineFunctio
   @Output(doc = "Output interval list", required = true)
   var output: File = _
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(4.0)
+  override def defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 
+/**
+ * @deprecated Use picard.util.BedToIntervalList instead
+ */
 object BedToInterval extends ToolCommand {
   def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
     val bedToInterval = new BedToInterval(root)
     bedToInterval.input = inputBed
     bedToInterval.bamFile = inputBam
     bedToInterval.output = output
-    return bedToInterval
+    bedToInterval
   }
 
   case class Args(inputFile: File = null, outputFile: File = null, bamFile: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('o', "output") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('b', "bam") required () valueName ("<file>") action { (x, c) =>
+    opt[File]('b', "bam") required () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
     }
   }
@@ -80,12 +85,12 @@ object BedToInterval extends ToolCommand {
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
       record.getSequenceName -> record.getSequenceLength
     }
-    inputSam.close
+    inputSam.close()
     val refsMap = Map(refs: _*)
 
     val bedFile = Source.fromFile(commandArgs.inputFile)
     for (
-      line <- bedFile.getLines;
+      line <- bedFile.getLines();
       split = line.split("\t") if split.size >= 3;
       chr = split(0);
       start = split(1);
@@ -97,7 +102,7 @@ object BedToInterval extends ToolCommand {
       else {
         var strand = "+"
         for (t <- 3 until split.length) {
-          if ((split(t) == "+" || split(t) == "-")) strand = split(t)
+          if (split(t) == "+" || split(t) == "-") strand = split(t)
         }
         writer.write(strand)
       }

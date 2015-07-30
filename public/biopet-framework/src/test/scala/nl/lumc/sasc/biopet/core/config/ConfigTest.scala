@@ -15,16 +15,18 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
-import nl.lumc.sasc.biopet.utils.{ ConfigUtilsTest, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ConfigUtilsTest }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
 /**
+ * Test class for [[Config]]
+ *
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConversions {
-  @Test def testLoadConfigFile: Unit = {
+  @Test def testLoadConfigFile(): Unit = {
     val config = new Config
     config.loadConfigFile(ConfigTest.file)
     config.map shouldBe ConfigTest.map
@@ -32,7 +34,7 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
     config.map shouldBe ConfigTest.map
   }
 
-  @Test def testContains: Unit = {
+  @Test def testContains(): Unit = {
     ConfigTest.config.contains("m1") shouldBe true
     ConfigTest.config.contains("notexist") shouldBe false
     ConfigTest.config.contains(new ConfigValueIndex("m1", Nil, "k1")) shouldBe true
@@ -40,23 +42,23 @@ class ConfigTest extends TestNGSuite with Matchers with ConfigUtils.ImplicitConv
     ConfigTest.config.contains(new ConfigValueIndex("notexist", Nil, "k1", false)) shouldBe false
   }
 
-  @Test def testApply: Unit = {
+  @Test def testApply(): Unit = {
     ConfigTest.config("m1", Nil, "k1").asString shouldBe "v2"
     ConfigTest.config("m1", Nil, "notexist", default = "default").asString shouldBe "default"
   }
 
-  @Test def testMergeConfigs: Unit = {
+  @Test def testMergeConfigs(): Unit = {
     val map1 = Map("1" -> 1)
     val map2 = Map("2" -> 2)
     Config.mergeConfigs(new Config(map1), new Config(map2)).map shouldBe ConfigUtils.mergeMaps(map1, map2)
   }
 
-  @Test def testToString: Unit = {
+  @Test def testToString(): Unit = {
     val map1 = Map("1" -> 1)
     new Config(map1).toString() shouldBe map1.toString()
   }
 
-  @Test def testSkipNested: Unit = {
+  @Test def testSkipNested(): Unit = {
     val map = Map("1" -> Map("2" -> Map("4" -> Map("5" -> Map("k1" -> "v1")))))
     Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "4", "5"), "k1")).get.asString shouldBe "v1"
     Config.getValueFromMap(map, new ConfigValueIndex("5", List("1", "2", "3", "4", "5"), "k1")).get.asString shouldBe "v1"
@@ -141,7 +143,7 @@ object ConfigTest {
     )
   )
 
-  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2)
+  val file = ConfigUtilsTest.writeTemp(ConfigUtils.mapToJson(map).spaces2, "json")
 
   val config = new Config
   config.loadConfigFile(file)

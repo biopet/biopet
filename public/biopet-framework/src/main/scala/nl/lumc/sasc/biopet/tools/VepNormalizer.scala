@@ -15,18 +15,18 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, IOException }
-import scala.collection.JavaConversions._
-import scala.collection.mutable.{ Map => MMap }
+import java.io.File
 
 import htsjdk.tribble.TribbleException
-import htsjdk.variant.variantcontext.{ VariantContextBuilder, VariantContext }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf._
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
-
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable.{ Map => MMap }
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
@@ -38,7 +38,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  * Created by ahbbollen on 10/27/14.
  */
 
-class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
@@ -50,8 +50,7 @@ class VepNormalizer(val root: Configurable) extends BiopetJavaCommandLineFunctio
   var mode: String = config("mode", default = "explode")
   var doNotRemove: Boolean = config("donotremove", default = false)
 
-  memoryLimit = Some(1.0)
-  override val defaultVmem = "4G"
+  override def defaultCoreMemory = 1.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +
@@ -91,6 +90,10 @@ object VepNormalizer extends ToolCommand {
     logger.debug("Parsing header")
     val new_infos = parseCsq(header)
     header.setWriteCommandLine(true)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
+      setOutputFile(output).setReferenceDictionary(header.getSequenceDictionary)
+      build ())
+
     for (info <- new_infos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
       header.addMetaDataLine(tmpheaderline)
@@ -98,9 +101,7 @@ object VepNormalizer extends ToolCommand {
     logger.debug("Header parsing done")
 
     logger.debug("Writing header to file")
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setOutputFile(output).
-      build())
+
     writer.writeHeader(header)
     logger.debug("Wrote header to file")
 
@@ -190,7 +191,7 @@ object VepNormalizer extends ToolCommand {
   def explodeTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): Array[VariantContext] = {
     for (transcript <- parseCsq(record)) yield {
       (for (
-        fieldId <- 0 until csqInfos.size if transcript.isDefinedAt(fieldId);
+        fieldId <- csqInfos.indices if transcript.isDefinedAt(fieldId);
         value = transcript(fieldId) if value.nonEmpty
       ) yield csqInfos(fieldId) -> value)
         .filterNot(_._2.isEmpty)
@@ -202,7 +203,7 @@ object VepNormalizer extends ToolCommand {
   def standardTranscripts(record: VariantContext, csqInfos: Array[String], removeCsq: Boolean): VariantContext = {
     val attribs = parseCsq(record)
 
-    (for (fieldId <- 0 until csqInfos.size) yield csqInfos(fieldId) -> {
+    (for (fieldId <- csqInfos.indices) yield csqInfos(fieldId) -> {
       for (
         transcript <- attribs if transcript.isDefinedAt(fieldId);
         value = transcript(fieldId) if value.nonEmpty
@@ -238,25 +239,24 @@ object VepNormalizer extends ToolCommand {
       c.copy(inputVCF = x)
     } validate {
       x => if (x.exists) success else failure("Input VCF not found")
-    } text "Input VCF file"
-
+    } text "Input VCF file. Required."
     opt[File]('O', "OutputFile") required () valueName "<vcf>" action { (x, c) =>
       c.copy(outputVCF = x)
     } validate {
       x =>
         if (!x.getName.endsWith(".vcf") && (!x.getName.endsWith(".vcf.gz")) && (!x.getName.endsWith(".bcf")))
           failure("Unsupported output file type") else success
-    } text "Output VCF file"
+    } text "Output VCF file. Required."
 
     opt[String]('m', "mode") required () valueName "<mode>" action { (x, c) =>
       c.copy(mode = x)
     } validate {
       x => if (x == "explode") success else if (x == "standard") success else failure("Unsupported mode")
-    } text "Mode"
+    } text "Mode. Can choose between <standard> (generates standard vcf) and <explode> (generates new record for each transcript). Required."
 
     opt[Unit]("do-not-remove") action { (x, c) =>
       c.copy(removeCSQ = false)
-    } text "Do not remove CSQ tag"
+    } text "Do not remove CSQ tag. Optional"
   }
 }
 

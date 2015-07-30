@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard SamToFastq */
 class SamToFastq(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.SamToFastq"
+  javaMainClass = new picard.sam.SamToFastq().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _

@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for bedtools coverage */
 class BedtoolsCoverage(val root: Configurable) extends Bedtools {
@@ -42,11 +43,11 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
   var inputTag = "-a"
 
-  override def beforeCmd {
+  override def beforeCmd() {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
 
-  override val defaultVmem = "6G"
+  override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +

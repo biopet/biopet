@@ -17,39 +17,41 @@ package nl.lumc.sasc.biopet.pipelines.carp
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
+import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 
 /**
  * Carp pipeline
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript {
+class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript with Reference {
   qscript =>
   def this() = this(null)
 
   override def defaults = ConfigUtils.mergeMaps(Map(
-    "mapping" -> Map("skip_markduplicates" -> true, "aligner" -> "bwa")
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "aligner" -> "bwa-mem"
+    )
   ), super.defaults)
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
   //TODO: Add summary
-  def summaryFiles = Map()
+  def summaryFiles = Map("reference" -> referenceFasta())
 
   //TODO: Add summary
-  def summarySettings = Map()
+  def summarySettings = Map("reference" -> referenceSummary)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
@@ -76,8 +78,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
-          mapping.init
-          mapping.biopetScript
+          mapping.init()
+          mapping.biopetScript()
           addAll(mapping.functions)
 
         } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libId)
@@ -105,6 +107,9 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         add(merge)
       }
 
+      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"))
+      addAll(bamMetrics.functions)
+      addSummaryQScript(bamMetrics)
       addAll(Bam2Wig(qscript, bamFile).functions)
 
       val macs2 = new Macs2CallPeak(qscript)
@@ -113,8 +118,15 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
 
-      addSummaryJobs
+      addSummaryJobs()
     }
+  }
+
+  override def reportClass = {
+    val carp = new CarpReport(this)
+    carp.outputDir = new File(outputDir, "report")
+    carp.summaryFile = summaryFile
+    Some(carp)
   }
 
   def init() = {

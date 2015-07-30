@@ -28,12 +28,12 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "tophat", freeVar = false)
 
-  override val versionRegex = """TopHat v(.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """TopHat v(.*)""".r
+  override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " --version"
 
-  override val defaultVmem = "6G"
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   @Input(doc = "FastQ file(s) R1", shortName = "R1")
   var R1: List[File] = List.empty[File]

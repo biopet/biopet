@@ -15,13 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-import scala.io.Source
 
 /** Extension for sha1sum */
 class Sha1sum(val root: Configurable) extends BiopetCommandLineFunction {
@@ -43,6 +41,6 @@ object Sha1sum {
     val sha1sum = new Sha1sum(root)
     sha1sum.input = input
     sha1sum.output = new File(outDir, input.getName + ".sha1")
-    return sha1sum
+    sha1sum
   }
 }

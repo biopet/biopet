@@ -16,37 +16,43 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import java.io.File
-import java.util.Properties
-import scala.language.reflectiveCalls
 
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function.QFunction
-import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
-import scalaz._, Scalaz._
-
+import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
-import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
-import nl.lumc.sasc.biopet.extensions.picard.{ CollectRnaSeqMetrics, SortSam, MergeSamFiles }
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.function.QFunction
+import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
+
+import scala.language.reflectiveCalls
+import scalaz.Scalaz._
+import scalaz._
 
 /**
  * Gentrap pipeline
  * Generic transcriptome analysis pipeline
+ *
+ * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
-class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript { qscript =>
+class Gentrap(val root: Configurable) extends QScript
+  with MultiSampleQScript
+  with SummaryQScript
+  with Reference { qscript =>
 
-  import Gentrap._
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
+  import Gentrap._
 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
@@ -82,6 +88,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
   /** Whether to do simple variant calling on RNA or not */
   var callVariants: Boolean = config("call_variants", default = false)
 
+  /** Settings for all Picard CollectRnaSeqMetrics runs */
+  private def collectRnaSeqMetricsSettings: Map[String, String] = Map(
+    "strand_specificity" -> (strandProtocol match {
+      case NonSpecific => StrandSpecificity.NONE.toString
+      case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
+      case otherwise   => throw new IllegalStateException(otherwise.toString)
+    })) ++ (ribosomalRefFlat match {
+      case Some(rbs) => Map("ribosomal_intervals" -> rbs.toString)
+      case None      => Map()
+    })
+
   /** Default pipeline config */
   override def defaults = ConfigUtils.mergeMaps(
     Map(
@@ -96,13 +113,16 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         "programrecordid" -> "null"
       ),
       // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map("skip_markduplicates" -> true)
+      "mapping" -> Map(
+        "skip_markduplicates" -> true,
+        "skip_metrics" -> true
+      )
     ), super.defaults)
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
   private def makeMergeTableJob(inFunc: (Sample => Option[File]), ext: String, idCols: List[Int], valCol: Int,
-                                numHeaderLines: Int = 1, outBaseName: String = "all_samples",
+                                numHeaderLines: Int = 0, outBaseName: String = "all_samples",
                                 fallback: String = "-"): Option[MergeTables] = {
     val tables = samples.values.map { inFunc }.toList.flatten
     tables.nonEmpty
@@ -120,9 +140,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
   }
 
+  /** Expression measures which are subject to TMM normalization during correlation calculation */
   protected lazy val forTmmNormalization: Set[ExpMeasures.Value] =
     Set(FragmentsPerGene, FragmentsPerExon, BasesPerGene, BasesPerExon)
 
+  /** Returns a QFunction to generate heatmaps */
   private def makeHeatmapJob(mergeJob: Option[MergeTables], outName: String,
                              expMeasure: ExpMeasures.Value, isCuffIsoform: Boolean = false): Option[PlotHeatmap] =
     (mergeJob.isDefined && samples.size > 2)
@@ -145,6 +167,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     makeMergeTableJob((s: Sample) => s.geneFragmentsCount, ".fragments_per_gene", List(1), 2, numHeaderLines = 0,
       fallback = "0")
 
+  /** Heatmap job for gene fragment count */
   private lazy val geneFragmentsCountHeatmapJob =
     makeHeatmapJob(geneFragmentsCountJob, "fragments_per_gene", FragmentsPerGene)
 
@@ -153,65 +176,83 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     makeMergeTableJob((s: Sample) => s.exonFragmentsCount, ".fragments_per_exon", List(1), 2, numHeaderLines = 0,
       fallback = "0")
 
+  /** Heatmap job for exon fragment count */
   private lazy val exonFragmentsCountHeatmapJob =
     makeHeatmapJob(exonFragmentsCountJob, "fragments_per_exon", FragmentsPerExon)
 
   /** Merged gene base count table */
   private lazy val geneBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.geneBasesCount, ".bases_per_gene", List(1), 2, numHeaderLines = 1,
+      fallback = "0")
 
+  /** Heatmap job for gene base count */
   private lazy val geneBasesCountHeatmapJob =
     makeHeatmapJob(geneBasesCountJob, "bases_per_gene", BasesPerGene)
 
   /** Merged exon base count table */
   private lazy val exonBasesCountJob =
-    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, fallback = "0")
+    makeMergeTableJob((s: Sample) => s.exonBasesCount, ".bases_per_exon", List(1), 2, numHeaderLines = 1,
+      fallback = "0")
 
+  /** Heatmap job for exon base count */
   private lazy val exonBasesCountHeatmapJob =
     makeHeatmapJob(exonBasesCountJob, "bases_per_exon", BasesPerExon)
 
   /** Merged gene FPKM table for Cufflinks, strict mode */
   private lazy val geneFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksStrict, ".genes_fpkm_cufflinks_strict", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for gene FPKM Cufflinks, strict mode */
   private lazy val geneFpkmCufflinksStrictHeatmapJob =
     makeHeatmapJob(geneFpkmCufflinksStrictJob, "genes_fpkm_cufflinks_strict", CufflinksStrict)
 
   /** Merged exon FPKM table for Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksStrict, ".isoforms_fpkm_cufflinks_strict", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for isoform FPKM Cufflinks, strict mode */
   private lazy val isoFpkmCufflinksStrictHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, true)
+    makeHeatmapJob(isoFpkmCufflinksStrictJob, "isoforms_fpkm_cufflinks_strict", CufflinksStrict, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksGuided, ".genes_fpkm_cufflinks_guided", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for gene FPKM Cufflinks, guided mode */
   private lazy val geneFpkmCufflinksGuidedHeatmapJob =
     makeHeatmapJob(geneFpkmCufflinksGuidedJob, "genes_fpkm_cufflinks_guided", CufflinksGuided)
 
   /** Merged isoforms FPKM table for Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksGuided, ".isoforms_fpkm_cufflinks_guided", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for isoform FPKM Cufflinks, guided mode */
   private lazy val isoFpkmCufflinksGuidedHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, true)
+    makeHeatmapJob(isoFpkmCufflinksGuidedJob, "isoforms_fpkm_cufflinks_guided", CufflinksGuided, isCuffIsoform = true)
 
   /** Merged gene FPKM table for Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.geneFpkmCufflinksBlind, ".genes_fpkm_cufflinks_blind", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for gene FPKM Cufflinks, blind mode */
   private lazy val geneFpkmCufflinksBlindHeatmapJob =
     makeHeatmapJob(geneFpkmCufflinksBlindJob, "genes_fpkm_cufflinks_blind", CufflinksBlind)
 
   /** Merged isoforms FPKM table for Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindJob =
-    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10, fallback = "0.0")
+    makeMergeTableJob((s: Sample) => s.isoformFpkmCufflinksBlind, ".isoforms_fpkm_cufflinks_blind", List(1, 7), 10,
+      numHeaderLines = 1, fallback = "0.0")
 
+  /** Heatmap job for isoform FPKM Cufflinks, blind mode */
   private lazy val isoFpkmCufflinksBlindHeatmapJob =
-    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, true)
+    makeHeatmapJob(isoFpkmCufflinksBlindJob, "isoforms_fpkm_cufflinks_blind", CufflinksBlind, isCuffIsoform = true)
 
+  /** Container for merge table jobs */
   private lazy val mergeTableJobs: Map[String, Option[MergeTables]] = Map(
     "gene_fragments_count" -> geneFragmentsCountJob,
     "exon_fragments_count" -> exonFragmentsCountJob,
@@ -225,6 +266,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "isoform_fpkm_cufflinks_blind" -> isoFpkmCufflinksBlindJob
   )
 
+  /** Container for heatmap jobs */
   private lazy val heatmapJobs: Map[String, Option[PlotHeatmap]] = Map(
     "gene_fragments_count_heatmap" -> geneFragmentsCountHeatmapJob,
     "exon_fragments_count_heatmap" -> exonFragmentsCountHeatmapJob,
@@ -238,21 +280,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "isoform_fpkm_cufflinks_blind_heatmap" -> isoFpkmCufflinksBlindHeatmapJob
   )
 
-  private def version: String = {
-    val baseVersion = getClass.getPackage.getImplementationVersion
-    val commitHash = {
-      val prop = new Properties()
-      prop.load(getClass.getClassLoader.getResourceAsStream("git.properties"))
-      prop.getProperty("git.commit.id.abbrev")
-    }
-    s"$baseVersion ($commitHash)"
-  }
-
   /** Output summary file */
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
   /** Files that will be listed in the summary file */
   def summaryFiles: Map[String, File] = Map(
+    "reference_fasta" -> referenceFasta(),
     "annotation_refflat" -> annotationRefFlat
   ) ++ Map(
       "annotation_gtf" -> annotationGtf,
@@ -272,7 +305,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> callVariants,
     "remove_ribosomal_reads" -> removeRibosomalReads,
-    "version" -> version
+    "reference" -> referenceSummary,
+    "version" -> FullVersion
   )
 
   /** Job for writing PDF report template */
@@ -292,39 +326,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     job
   }
 
-  /** General function to create CollectRnaSeqMetrics job, for per-sample and per-library runs */
-  protected def makeCollectRnaSeqMetricsJob(alnFile: File, outMetrics: File,
-                                            outChart: Option[File] = None): CollectRnaSeqMetrics = {
-    val job = new CollectRnaSeqMetrics(qscript)
-    job.input = alnFile
-    job.output = outMetrics
-    job.refFlat = annotationRefFlat
-    job.chartOutput = outChart
-    job.assumeSorted = true
-    job.strandSpecificity = strandProtocol match {
-      case NonSpecific => Option(StrandSpecificity.NONE.toString)
-      case Dutp        => Option(StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString)
-      case _           => throw new IllegalStateException
-    }
-    job.ribosomalIntervals = ribosomalRefFlat
-    job
-  }
-
-  // used to ensure that the required .dict file is present before the run starts
-  // can not store it in config since the tools that use it (Picard) have this value based on the reference file name
-  protected def checkDictFile(): Unit = {
-    val refFile: File = config("reference")
-    val refName: String = refFile.getName
-    require(refName.contains('.'), "Reference file must have an extension")
-    val dictFile = new File(Option(refFile.getParentFile).getOrElse(new File(".")),
-      refName.take(refName.lastIndexOf('.')) + ".dict")
-    require(dictFile.exists, s"Dict file '$dictFile' must exist")
-  }
-
   /** Steps to run before biopetScript */
   def init(): Unit = {
-    checkDictFile()
-
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(FragmentsPerGene))
@@ -347,10 +350,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       require(ribosomalRefFlat.isDefined, "rRNA intervals must be supplied if removeRibosomalReads is set")
   }
 
+  /** Pipeline run for each sample */
   def biopetScript(): Unit = {
     addSamplesJobs()
   }
 
+  /** Pipeline run for multiple samples */
   def addMultiSampleJobs(): Unit = {
     // merge expression tables
     mergeTableJobs.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
@@ -361,13 +366,19 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       geneFragmentsCountJob
     }
     // TODO: use proper notation
-    addSummaryJobs
+    addSummaryJobs()
     add(pdfTemplateJob)
     add(pdfReportJob)
   }
 
+  /** Returns a [[Sample]] object */
   def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
+  /**
+   * Gentrap sample
+   *
+   * @param sampleId Unique identifier of the sample
+   */
   class Sample(sampleId: String) extends AbstractSample(sampleId) with CufflinksProducer {
 
     /** Shortcut to qscript object */
@@ -400,7 +411,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       ).collect { case (key, Some(value)) => key -> value }
 
     /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
-    lazy val alnFileDirty: File = sampleAlnJob.output
+    lazy val alnFileDirty: File = sampleAlnJobSet.alnJob.output
 
     /** Per-sample alignment file, post rRNA cleanup (if chosen) */
     lazy val alnFile: File = wipeJob match {
@@ -474,6 +485,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.input = alnFile
         job.output = createFile(".idsorted.bam")
         job.sortOrder = "queryname"
+        job.isIntermediate = true
         job
       }
 
@@ -487,6 +499,8 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job.inputAlignment = idSortingJob.get.output
         job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
+        // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
+        // to its buffer not being large enough.
         job.order = Option("name")
         job.stranded = strandProtocol match {
           case NonSpecific => Option("no")
@@ -525,9 +539,11 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
     }
 
+    /** Alignment file of reads from the plus strand, only defined when run is strand-specific */
     def alnFilePlusStrand: Option[File] = alnPlusStrandJobs
       .collect { case jobSet => jobSet.combineJob.output }
 
+    /** Jobs for generating reads from the plus strand, only defined when run is strand-specific */
     private def alnPlusStrandJobs: Option[StrandSeparationJobSet] = strandProtocol match {
       case Dutp =>
         val r2Job = this.allPaired
@@ -559,15 +575,17 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".plus_strand.bam"))
 
-        Option(StrandSeparationJobSet(f1Job, r2Job, combineJob))
+        Option(StrandSeparationJobSet(f1Job, r2Job, combineJob.alnJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
     }
 
+    /** Alignment file of reads from the minus strand, only defined when run is strand-specific */
     def alnFileMinusStrand: Option[File] = alnMinusStrandJobs
       .collect { case jobSet => jobSet.combineJob.output }
 
+    /** Jobs for generating reads from the minus, only defined when run is strand-specific */
     private def alnMinusStrandJobs: Option[StrandSeparationJobSet] = strandProtocol match {
       case Dutp =>
         val r1Job = this.allPaired
@@ -600,7 +618,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         }
         val combineJob = makeCombineJob(perStrandFiles, createFile(".minus_strand.bam"))
 
-        Option(StrandSeparationJobSet(f2Job, r1Job, combineJob))
+        Option(StrandSeparationJobSet(f2Job, r1Job, combineJob.alnJob))
 
       case NonSpecific => None
       case _           => throw new IllegalStateException
@@ -616,7 +634,7 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.output = createFile(".raw_base_count")
             job
           }
-      case Dutp => {
+      case Dutp =>
         (expMeasures.contains(BasesPerExon) || expMeasures.contains(BasesPerGene))
           .option {
             require(alnFilePlusStrand.isDefined && alnFileMinusStrand.isDefined)
@@ -627,7 +645,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
             job.output = createFile(".raw_base_count")
             job
           }
-      }
       case _ => throw new IllegalStateException
     }
 
@@ -673,15 +690,12 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         mod.inputBam = alnFile
         mod.outputDir = new File(sampleDir, "metrics")
         mod.sampleId = Option(sampleId)
+        mod.transcriptRefFlatFile = Option(annotationRefFlat)
+        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
         mod
       }
 
-    /** Picard CollectRnaSeqMetrics job, only when library > 1 */
-    private lazy val collectRnaSeqMetricsJob: Option[CollectRnaSeqMetrics] = (libraries.size > 1)
-      .option {
-        makeCollectRnaSeqMetricsJob(alnFileDirty, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
-      }
-
+    /** Job for removing ribosomal reads */
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
         require(ribosomalRefFlat.isDefined)
@@ -694,28 +708,37 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       }
 
     /** Super type of Ln and MergeSamFiles */
-    private type CombineFileFunction = QFunction { def output: File }
+    case class CombineFileJobSet(alnJob: QFunction { def output: File }, idxJob: Option[Ln]) {
+      /** Adds all jobs in this jobset */
+      def addAll(): Unit = { add(alnJob); idxJob.foreach(add(_)) }
+    }
 
     /** Ln or MergeSamFile job, depending on how many inputs are supplied */
     private def makeCombineJob(inFiles: List[File], outFile: File,
-                               mergeSortOrder: String = "coordinate"): CombineFileFunction = {
-      require(inFiles.nonEmpty, "At least one input files for combine job")
+                               mergeSortOrder: String = "coordinate"): CombineFileJobSet = {
+      require(inFiles.nonEmpty, "At least one input files required for combine job")
       if (inFiles.size == 1) {
-        val job = new Ln(qscript)
-        job.input = inFiles.head
-        job.output = outFile
-        job
+
+        val jobBam = new Ln(qscript)
+        jobBam.input = inFiles.head.getAbsoluteFile
+        jobBam.output = outFile
+
+        val jobIdx = new Ln(qscript)
+        jobIdx.input = swapExt(libraries.values.head.libDir, jobBam.input, ".bam", ".bai")
+        jobIdx.output = swapExt(sampleDir, jobBam.output, ".bam", ".bai")
+
+        CombineFileJobSet(jobBam, Some(jobIdx))
       } else {
         val job = new MergeSamFiles(qscript)
         job.input = inFiles
         job.output = outFile
         job.sortOrder = mergeSortOrder
-        job
+        CombineFileJobSet(job, None)
       }
     }
 
     /** Job for combining all library BAMs */
-    private def sampleAlnJob: CombineFileFunction =
+    private def sampleAlnJobSet: CombineFileJobSet =
       makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
 
     /** Whether all libraries are paired or not */
@@ -725,19 +748,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
     def allSingle: Boolean = libraries.values.forall(!_.paired)
 
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
+    /** Adds all jobs for the sample */
     def addJobs(): Unit = {
       // TODO: this is our requirement since it's easier to calculate base counts when all libraries are either paired or single
       require(allPaired || allSingle, s"Sample $sampleId contains only single-end or paired-end libraries")
       // add per-library jobs
       addPerLibJobs()
       // merge or symlink per-library alignments
-      add(sampleAlnJob)
-      // general RNA-seq metrics, if there are > 1 library
-      collectRnaSeqMetricsJob match {
-        case Some(j) =>
-          add(j); addSummarizable(j, "rna_metrics")
-        case None => ;
-      }
+      sampleAlnJobSet.addAll()
       bamMetricsModule match {
         case Some(m) =>
           m.init()
@@ -770,12 +788,14 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
       varCallJob.foreach(add(_))
     }
 
-    /** Add jobs for fragments per gene counting using HTSeq */
-    // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
-    // to its buffer not being large enough.
-
+    /** Returns a [[Library]] object */
     def makeLibrary(libId: String): Library = new Library(libId)
 
+    /**
+     * Gentrap library
+     *
+     * @param libId Unique identifier of the library
+     */
     class Library(libId: String) extends AbstractLibrary(libId) {
 
       /** Summary stats of the library */
@@ -791,10 +811,6 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
 
       /** Alignment results of this library ~ can only be accessed after addJobs is run! */
       def alnFile: File = mappingJob.outputFiles("finalBamFile")
-
-      /** Library-level RNA-seq metrics job, only when we have more than 1 library in the sample */
-      def collectRnaSeqMetricsJob: CollectRnaSeqMetrics =
-        makeCollectRnaSeqMetricsJob(alnFile, createFile(".rna_metrics"), Option(createFile(".coverage_bias.pdf")))
 
       /** Wiggle track job */
       private lazy val bam2wigModule: Bam2Wig = Bam2Wig(qscript, alnFile)
@@ -812,15 +828,29 @@ class Gentrap(val root: Configurable) extends QScript with MultiSampleQScript wi
         job
       }
 
+      /** Library metrics job, since we don't have access to the underlying metrics */
+      private lazy val bamMetricsJob: BamMetrics = {
+        val mod = new BamMetrics(qscript)
+        mod.inputBam = alnFile
+        mod.outputDir = new File(libDir, "metrics")
+        mod.sampleId = Option(sampleId)
+        mod.libId = Option(libId)
+        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
+        mod.transcriptRefFlatFile = Option(annotationRefFlat)
+        mod
+      }
+
+      /** Adds all jobs for the library */
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
         // add bigwig track
         addAll(bam2wigModule.functions)
-        // create RNA metrics job
-        add(collectRnaSeqMetricsJob)
-        addSummarizable(collectRnaSeqMetricsJob, "rna_metrics")
         qscript.addSummaryQScript(mappingJob)
+        bamMetricsJob.init()
+        bamMetricsJob.biopetScript()
+        addAll(bamMetricsJob.functions)
+        qscript.addSummaryQScript(bamMetricsJob)
       }
 
     }

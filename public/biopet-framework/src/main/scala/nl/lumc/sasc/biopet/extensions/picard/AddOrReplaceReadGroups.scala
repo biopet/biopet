@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard AddOrReplaceReadGroups */
 class AddOrReplaceReadGroups(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.AddOrReplaceReadGroups"
+  javaMainClass = new picard.sam.AddOrReplaceReadGroups().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _
@@ -86,6 +87,6 @@ object AddOrReplaceReadGroups {
     addOrReplaceReadGroups.output = output
     if (sortOrder == null) addOrReplaceReadGroups.sortOrder = "coordinate"
     else addOrReplaceReadGroups.sortOrder = sortOrder
-    return addOrReplaceReadGroups
+    addOrReplaceReadGroups
   }
 }

@@ -16,28 +16,30 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.config.{ ConfigValueIndex, Config, Configurable }
-import org.broadinstitute.gatk.utils.commandline.Argument
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
+import org.broadinstitute.gatk.utils.commandline.Argument
+
 import scala.collection.mutable.ListBuffer
 
-/**
- * Base for biopet pipeline
- */
+/** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging {
 
-  @Argument(doc = "JSON config file(s)", fullName = "config_file", shortName = "config", required = false)
+  @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
+  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'path:path:key=value'", fullName = "config_value", shortName = "cv", required = false)
+  val configValues: List[String] = Nil
+
+  /** Output directory of pipeline */
   var outputDir: File = {
-    Config.getValueFromMap(globalConfig.map, ConfigValueIndex(this.configName, configPath, "output_dir")) match {
-      case Some(value) => new File(value.asString).getAbsoluteFile
-      case _           => new File(".")
-    }
+    if (config.contains("output_dir", path = Nil)) config("output_dir", path = Nil).asFile
+    else new File(".")
   }
 
   @Argument(doc = "Disable all scatters", shortName = "DSC", required = false)
@@ -52,29 +54,30 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var functions: Seq[QFunction]
 
   /** Init for pipeline */
-  def init
+  def init()
 
   /** Pipeline itself */
-  def biopetScript
+  def biopetScript()
 
-  /**
-   * Script from queue itself, final to force some checks for each pipeline and write report
-   */
+  /** Returns the extension to make the report */
+  def reportClass: Option[ReportBuilderExtension] = None
+
+  /** Script from queue itself, final to force some checks for each pipeline and write report */
   final def script() {
-    outputDir = config("output_dir").asFile.getAbsoluteFile
-    init
-    biopetScript
+    outputDir = config("output_dir")
+    outputDir = outputDir.getAbsoluteFile
+    init()
+    biopetScript()
 
     if (disableScatter) for (function <- functions) function match {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait => {
-        f.preProcesExecutable
-        f.beforeGraph
+      case f: BiopetCommandLineFunctionTrait =>
+        f.preProcessExecutable()
+        f.beforeGraph()
         f.commandLine
-      }
       case _ =>
     }
 
@@ -82,7 +85,9 @@ trait BiopetQScript extends Configurable with GatkLogging {
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
-    BiopetQScript.checkErrors
+    reportClass.foreach(add(_))
+
+    BiopetQScript.checkErrors()
   }
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
@@ -91,11 +96,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   def addAll(functions: scala.Traversable[org.broadinstitute.gatk.queue.function.QFunction])
 
-  /**
-   * Function to set isIntermediate and add in 1 line
-   * @param function
-   * @param isIntermediate
-   */
+  /** Function to set isIntermediate and add in 1 line */
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
@@ -110,8 +111,8 @@ object BiopetQScript extends Logging {
     errors.append(new Exception(msg))
   }
 
-  protected def checkErrors: Unit = {
-    if (!errors.isEmpty) {
+  protected def checkErrors(): Unit = {
+    if (errors.nonEmpty) {
       logger.error("*************************")
       logger.error("Biopet found some errors:")
       if (logger.isDebugEnabled) {

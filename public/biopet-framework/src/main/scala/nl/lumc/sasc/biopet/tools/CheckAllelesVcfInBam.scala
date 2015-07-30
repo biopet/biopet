@@ -15,23 +15,16 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.{ QueryInterval, SamReaderFactory, SAMRecord, SamReader }
-import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.variantcontext.VariantContextBuilder
-import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.VCFFileReader
-import htsjdk.variant.vcf.VCFInfoHeaderLine
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReader, SamReaderFactory }
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
 import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import htsjdk.variant.vcf.VCFHeaderLineType
-import htsjdk.variant.vcf.VCFHeaderLineCount
-import scala.math._
 
 //class CheckAllelesVcfInBam(val root: Configurable) extends BiopetJavaCommandLineFunction {
 //  javaMainClass = getClass.getName
@@ -53,19 +46,19 @@ object CheckAllelesVcfInBam extends ToolCommand {
                   bamFiles: List[File] = Nil, minMapQual: Int = 1) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('o', "outputFile") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[String]('s', "sample") unbounded () minOccurs (1) action { (x, c) =>
+    opt[String]('s', "sample") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(samples = x :: c.samples)
     }
-    opt[File]('b', "bam") unbounded () minOccurs (1) action { (x, c) =>
+    opt[File]('b', "bam") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
     }
-    opt[Int]('m', "min_mapping_quality") maxOccurs (1) action { (x, c) =>
+    opt[Int]('m', "min_mapping_quality") maxOccurs 1 action { (x, c) =>
       c.copy(minMapQual = c.minMapQual)
     }
   }
@@ -81,13 +74,14 @@ object CheckAllelesVcfInBam extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     if (commandArgs.bamFiles.size != commandArgs.samples.size)
-      logger.warn("Number of samples is diffrent then number of bam files, left over will be removed")
+      logger.warn("Number of samples is different from number of bam files: additional samples or bam files will not be used")
     val samReaderFactory = SamReaderFactory.makeDefault
     val bamReaders: Map[String, SamReader] = Map(commandArgs.samples zip commandArgs.bamFiles.map(x => samReaderFactory.open(x)): _*)
     val bamHeaders = bamReaders.map(x => (x._1, x._2.getFileHeader))
 
     val reader = new VCFFileReader(commandArgs.inputFile, false)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).build)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().setOutputFile(commandArgs.outputFile).
+      setReferenceDictionary(reader.getFileHeader.getSequenceDictionary).build)
 
     val header = reader.getFileHeader
     for ((sample, _) <- bamReaders) {
@@ -104,7 +98,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
       val refAllele = vcfRecord.getReference.getBaseString
       for ((sample, bamReader) <- bamReaders) {
         val queryInterval = new QueryInterval(bamHeaders(sample).getSequenceIndex(vcfRecord.getChr),
-          vcfRecord.getStart, vcfRecord.getStart + refAllele.size - 1)
+          vcfRecord.getStart, vcfRecord.getStart + refAllele.length - 1)
         val bamIter = bamReader.query(Array(queryInterval), false)
 
         def filterRead(samRecord: SAMRecord): Boolean = {
@@ -118,7 +112,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
             countReports(sample).lowMapQualReads += 1
             return true
           }
-          return false
+          false
         }
 
         val counts = for (samRecord <- bamIter if !filterRead(samRecord)) {
@@ -128,7 +122,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
             case _ => countReports(sample).notFound += 1
           }
         }
-        bamIter.close
+        bamIter.close()
       }
 
       val builder = new VariantContextBuilder(vcfRecord)
@@ -143,49 +137,49 @@ object CheckAllelesVcfInBam extends ToolCommand {
       }
       writer.add(builder.make)
     }
-    for ((_, r) <- bamReaders) r.close
-    reader.close
-    writer.close
+    for ((_, r) <- bamReaders) r.close()
+    reader.close()
+    writer.close()
   }
 
   def checkAlles(samRecord: SAMRecord, vcfRecord: VariantContext): Option[String] = {
     val readStartPos = List.range(0, samRecord.getReadBases.length)
       .find(x => samRecord.getReferencePositionAtReadPosition(x + 1) == vcfRecord.getStart) getOrElse { return None }
-    val readBases = samRecord.getReadBases()
+    val readBases = samRecord.getReadBases
     val alleles = vcfRecord.getAlleles.map(x => x.getBaseString)
     val refAllele = alleles.head
     var maxSize = 1
-    for (allele <- alleles if allele.size > maxSize) maxSize = allele.size
+    for (allele <- alleles if allele.length > maxSize) maxSize = allele.length
     val readC = for (t <- readStartPos until readStartPos + maxSize if t < readBases.length) yield readBases(t).toChar
-    val allelesInRead = mutable.Set(alleles.filter(readC.mkString.startsWith(_)): _*)
+    val allelesInRead = mutable.Set(alleles.filter(readC.mkString.startsWith): _*)
 
     // Removal of insertions that are not really in the cigarstring
-    for (allele <- allelesInRead if allele.size > refAllele.size) {
-      val refPos = for (t <- refAllele.size until allele.size) yield samRecord.getReferencePositionAtReadPosition(readStartPos + t + 1)
+    for (allele <- allelesInRead if allele.length > refAllele.length) {
+      val refPos = for (t <- refAllele.length until allele.length) yield samRecord.getReferencePositionAtReadPosition(readStartPos + t + 1)
       if (refPos.exists(_ > 0)) allelesInRead -= allele
     }
 
     // Removal of alleles that are not really in the cigarstring
     for (allele <- allelesInRead) {
-      val readPosAfterAllele = samRecord.getReferencePositionAtReadPosition(readStartPos + allele.size + 1)
-      val vcfPosAfterAllele = vcfRecord.getStart + refAllele.size
+      val readPosAfterAllele = samRecord.getReferencePositionAtReadPosition(readStartPos + allele.length + 1)
+      val vcfPosAfterAllele = vcfRecord.getStart + refAllele.length
       if (readPosAfterAllele != vcfPosAfterAllele &&
-        (refAllele.size != allele.size || (refAllele.size == allele.size && readPosAfterAllele < 0))) allelesInRead -= allele
+        (refAllele.length != allele.length || (refAllele.length == allele.length && readPosAfterAllele < 0))) allelesInRead -= allele
     }
 
-    for (allele <- allelesInRead if allele.size >= refAllele.size) {
-      if (allelesInRead.exists(_.size > allele.size)) allelesInRead -= allele
+    for (allele <- allelesInRead if allele.length >= refAllele.length) {
+      if (allelesInRead.exists(_.length > allele.length)) allelesInRead -= allele
     }
-    if (allelesInRead.contains(refAllele) && allelesInRead.exists(_.size < refAllele.size)) allelesInRead -= refAllele
-    if (allelesInRead.isEmpty) return None
-    else if (allelesInRead.size == 1) return Some(allelesInRead.head)
+    if (allelesInRead.contains(refAllele) && allelesInRead.exists(_.length < refAllele.length)) allelesInRead -= refAllele
+    if (allelesInRead.isEmpty) None
+    else if (allelesInRead.size == 1) Some(allelesInRead.head)
     else {
       logger.warn("vcfRecord: " + vcfRecord)
       logger.warn("samRecord: " + samRecord.getSAMString)
       logger.warn("Found multiple options: " + allelesInRead.toString)
       logger.warn("ReadStartPos: " + readStartPos + "  Read Length: " + samRecord.getReadLength)
       logger.warn("Read skipped, please report this")
-      return None
+      None
     }
   }
 }

@@ -22,7 +22,7 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.3.2</version>
+    <version>0.4.0</version>
     
     <modules>
         <module>biopet-framework</module>
@@ -33,7 +33,8 @@
         <module>mapping</module>
         <module>sage</module>
         <module>kopisu</module>
-        <module>yamsvp</module>
+        <!-- <module>yamsvp</module> -->
+        <module>gears</module>
         <module>bam2wig</module>
         <module>carp</module>
 	    <module>toucan</module>
@@ -66,6 +67,30 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <workingDirectory>${project.build.directory}</workingDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+                <executions>
+                    <execution>
+                        <id>copy-installed</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>list</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.outputDirectory}/dependency_list.txt</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
@@ -176,7 +201,6 @@
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <abbrevLength>8</abbrevLength>
                     <skip>false</skip>
-                    <excludeProperties></excludeProperties>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>
@@ -202,6 +226,7 @@
                       <exclude>**/*.bed</exclude>
                       <exclude>**/*.refFlat</exclude>
                       <exclude>**/*.R</exclude>
+                      <exclude>**/*.rscript</exclude>
                   </excludes>
               </configuration>
           </plugin>
@@ -210,7 +235,7 @@
               <artifactId>scoverage-maven-plugin</artifactId>
               <version>${scoverage.plugin.version}</version>
               <configuration>
-                  <scalaVersion>2.11.4</scalaVersion>
+                  <scalaVersion>2.10.2</scalaVersion>
                   <!-- other parameters -->
               </configuration>
             </plugin>
@@ -222,9 +247,6 @@
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
-                <configuration>
-                    <outputDirectory>${basedir}/target/site/scoverage</outputDirectory>
-                </configuration>
             </plugin>
         </plugins>
     </reporting>

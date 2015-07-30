@@ -16,12 +16,13 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard SortSam */
 class SortSam(val root: Configurable) extends Picard {
-  javaMainClass = "picard.sam.SortSam"
+  javaMainClass = new picard.sam.SortSam().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.", required = true)
   var input: File = _
@@ -35,8 +36,8 @@ class SortSam(val root: Configurable) extends Picard {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
@@ -55,6 +56,6 @@ object SortSam {
     sortSam.output = output
     if (sortOrder == null) sortSam.sortOrder = "coordinate"
     else sortSam.sortOrder = sortOrder
-    return sortSam
+    sortSam
   }
 }

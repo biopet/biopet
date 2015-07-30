@@ -15,13 +15,14 @@
  */
 package nl.lumc.sasc.biopet.extensions.sambamba
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 /** Extension for sambemba markdup  */
 class SambambaMarkdup(val root: Configurable) extends Sambamba {
-  override val defaultThreads = 4
+  override def defaultThreads = 4
 
   @Input(doc = "Bam File")
   var input: File = _
@@ -48,4 +49,19 @@ class SambambaMarkdup(val root: Configurable) extends Sambamba {
     optional("--io-buffer-size=", io_buffer_size, spaceSeparated = false) +
     required(input) +
     required(output)
+}
+
+object SambambaMarkdup {
+  def apply(root: Configurable, input: File, output: File): SambambaMarkdup = {
+    val markdup = new SambambaMarkdup(root)
+    markdup.input = input
+    markdup.output = output
+    markdup
+  }
+
+  def apply(root: Configurable, input: File): SambambaMarkdup = {
+    apply(root, input, new File(swapExtension(input.getCanonicalPath)))
+  }
+
+  private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".dedup.bam"
 }

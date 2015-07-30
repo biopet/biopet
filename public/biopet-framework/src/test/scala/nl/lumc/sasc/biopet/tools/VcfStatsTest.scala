@@ -15,19 +15,23 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import htsjdk.variant.variantcontext.Allele
+import nl.lumc.sasc.biopet.tools.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
+
 import scala.collection.mutable
-import VcfStats._
 
 /**
+ * Test class for [[VcfStats]]
+ *
  * Created by pjvan_thof on 2/5/15.
  */
 class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
-  def testSampleToSampleStats: Unit = {
+  def testSampleToSampleStats(): Unit = {
     val s1 = SampleToSampleStats()
     val s2 = SampleToSampleStats()
     s1.alleleOverlap shouldBe 0
@@ -58,7 +62,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testSampleStats: Unit = {
+  def testSampleStats(): Unit = {
     val s1 = SampleStats()
     val s2 = SampleStats()
 
@@ -89,5 +93,27 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
     s1 += s1
     s1.genotypeStats.getOrElse("chr", mutable.Map[String, mutable.Map[Any, Int]]()) shouldBe mutable.Map("1" -> mutable.Map(1 -> 2), "2" -> mutable.Map(2 -> 8))
+  }
+
+  @Test
+  def testAlleleOverlap(): Unit = {
+
+    val a1 = Allele.create("G")
+    val a2 = Allele.create("A")
+
+    alleleOverlap(List(a1, a1), List(a1, a1)) shouldBe 2
+    alleleOverlap(List(a2, a2), List(a2, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a1, a2), List(a2, a1)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a1, a2)) shouldBe 2
+    alleleOverlap(List(a2, a1), List(a2, a1)) shouldBe 2
+
+    alleleOverlap(List(a1, a2), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a2, a1), List(a1, a1)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a1, a2)) shouldBe 1
+    alleleOverlap(List(a1, a1), List(a2, a1)) shouldBe 1
+
+    alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
+    alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
   }
 }

@@ -53,8 +53,8 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
   /** Set correct output files */
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(outputDirectory != null)
     jobLocalDir = outputDirectory
     if (prefix.isEmpty) prefix = Some(fastafile.getName)

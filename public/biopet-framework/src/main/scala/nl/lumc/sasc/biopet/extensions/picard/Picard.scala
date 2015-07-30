@@ -17,8 +17,9 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument }
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Logging }
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
+import org.broadinstitute.gatk.utils.commandline.Argument
 
 import scala.io.Source
 
@@ -57,11 +58,15 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + " -h"
     else null
   }
-  override val versionRegex = """Version: (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """Version: (.*)""".r
+  override def versionExitcode = List(0, 1)
 
-  override val defaultVmem = "8G"
-  memoryLimit = Option(3.0)
+  override def defaultCoreMemory = 3.0
+
+  override def getVersion = {
+    if (jarFile == null) Picard.getBiopetPicardVersion
+    else super.getVersion
+  }
 
   override def commandLine = super.commandLine +
     required("TMP_DIR=" + jobTempDir) +
@@ -74,26 +79,88 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     conditional(createMd5, "CREATE_MD5_FILE=TRUE")
 }
 
-object Picard {
+object Picard extends Logging {
+
+  lazy val getBiopetPicardVersion: Option[String] = {
+    Option(getClass.getResourceAsStream("/dependency_list.txt")) match {
+      case Some(src) =>
+        val dependencies = Source.fromInputStream(src)
+          .getLines().map(_.trim.split(":")).filter(_.size == 5).map(line => Map(
+            "groupId" -> line(0),
+            "artifactId" -> line(1),
+            "type" -> line(2),
+            "version" -> line(3),
+            "scope" -> line(4)
+          )).toList
+
+        logger.debug("dependencies: " + dependencies)
+
+        val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
+          case dep =>
+            "samtools htsjdk " + dep("version")
+        }
+
+        dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
+          case dep =>
+            "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
+        }
+      case otherwise => None
+    }
+  }
+
+  def getMetrics(file: File, tag: String = "METRICS CLASS",
+                 groupBy: Option[String] = None): Option[Any] = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) =>
+        (content.size, groupBy) match {
+          case (_, Some(group)) =>
+            val groupId = header.indexOf(group)
+            if (groupId == -1) throw new IllegalArgumentException(group + " not existing in header of: " + file)
+            if (header.count(_ == group) > 1) logger.warn(group + " multiple times seen in header of: " + file)
+            Some((for (c <- content) yield c(groupId).toString -> {
+              header.filter(_ != group).zip(c.take(groupId) ::: c.takeRight(c.size - groupId - 1)).toMap
+            }).toMap)
+          case (1, _) => Some(header.zip(content.head).toMap)
+          case _      => Some(header :: content)
+        }
+      case _ => None
+    }
+  }
+
+  /**
+   * This function parse the metrics but transpose for table
+   * @param file metrics file
+   * @param tag default to "HISTOGRAM"
+   * @return
+   */
+  def getHistogram(file: File, tag: String = "HISTOGRAM") = {
+    getMetricsContent(file, tag) match {
+      case Some((header, content)) =>
+        val colums = header.zipWithIndex.map(x => x._1 -> content.map(_.lift(x._2))).toMap
+        Some(colums)
+      case _ => None
+    }
+  }
 
   /**
    * This function parse a metrics file in separated values
    * @param file input metrics file
    * @return (header, content)
    */
-  def getMetrics(file: File): Option[(Array[String], List[Array[String]])] =
-    if (file.exists) {
+  def getMetricsContent(file: File, tag: String) = {
+    if (!file.exists) None
+    else {
       val lines = Source.fromFile(file).getLines().toArray
 
-      val start = lines.indexWhere(_.startsWith("## METRICS CLASS")) + 1
+      val start = lines.indexWhere(_.startsWith("## " + tag)) + 1
       val end = lines.indexOf("", start)
 
-      val header = lines(start).split("\t")
-      val content = (for (i <- (start + 1) until end) yield lines(i).split("\t")).toList
+      val header = lines(start).split("\t").toList
+      val content = (for (i <- (start + 1) until end) yield {
+        lines(i).split("\t").map(v => tryToParseNumber(v, fallBack = true).getOrElse(v)).toList
+      }).toList
 
-      Option((header, content))
-    } else {
-      None
+      Some(header, content)
     }
-
+  }
 }
