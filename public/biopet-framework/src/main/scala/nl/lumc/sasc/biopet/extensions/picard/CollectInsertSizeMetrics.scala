@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 import scala.collection.immutable.Nil
 
@@ -56,7 +57,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   @Argument(doc = "HISTOGRAM_WIDTH", required = false)
   var histogramWidth: Option[Int] = config("histogramWidth")
 
-  override def beforeGraph {
+  override def beforeGraph() {
     outputHistogram = new File(output + ".pdf")
   }
 

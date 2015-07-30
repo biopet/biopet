@@ -17,11 +17,9 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.scripts
 
 import java.io.{ File, FileOutputStream }
 
-import org.apache.commons.io.IOUtils
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the pdf_report.py script, used internally in Gentrap

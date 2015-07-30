@@ -42,6 +42,6 @@ object BreakdancerVCF {
     val bd = new BreakdancerVCF(root)
     bd.input = input
     bd.output = output
-    return bd
+    bd
   }
 }

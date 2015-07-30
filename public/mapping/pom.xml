@@ -19,14 +19,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>nl.lumc.sasc</groupId>
     <artifactId>Mapping</artifactId>
     <packaging>jar</packaging>
     
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>Biopet</artifactId>
-        <version>0.4.0-DEV</version>
+        <version>0.5.0-DEV</version>
         <relativePath>../</relativePath>
     </parent>
     
@@ -57,7 +56,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
+            <artifactId>scalatest_2.10</artifactId>
             <version>2.2.1</version>
             <scope>test</scope>
 	    </dependency>

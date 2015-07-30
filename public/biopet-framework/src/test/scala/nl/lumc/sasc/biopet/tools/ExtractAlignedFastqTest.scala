@@ -18,15 +18,14 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
+import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
+import htsjdk.samtools.util.Interval
 import org.mockito.Matchers._
 import org.mockito.Mockito.{ inOrder => inOrd, times, verify }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
-
-import htsjdk.samtools.util.Interval
-import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 
 class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matchers {
 

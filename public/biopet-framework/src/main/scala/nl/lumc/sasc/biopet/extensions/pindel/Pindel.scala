@@ -15,14 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.queue.QScript
 
 /// Pindel is actually a mini pipeline executing binaries from the pindel package
 class Pindel(val root: Configurable) extends QScript with BiopetQScript {
@@ -82,8 +79,8 @@ object Pindel extends PipelineCommand {
     pindel.reference = reference
     pindel.workdir = runDir
     // run the following for activating the pipeline steps
-    pindel.init
-    pindel.biopetScript
-    return pindel
+    pindel.init()
+    pindel.biopetScript()
+    pindel
   }
 }

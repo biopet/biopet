@@ -18,38 +18,35 @@ package nl.lumc.sasc.biopet.extensions.breakdancer
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
 
 /// Breakdancer is actually a mini pipeline executing binaries from the breakdancer package
-class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
+class Breakdancer(val root: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input file (bam)")
   var input: File = _
 
-  @Input(doc = "Reference Fasta file")
-  var reference: File = _
-
   @Argument(doc = "Work directory")
-  var workdir: String = _
+  var workDir: File = _
 
   var deps: List[File] = Nil
 
   @Output(doc = "Breakdancer config")
   lazy val configfile: File = {
-    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.cfg")
+    new File(workDir, input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.cfg")
   }
   @Output(doc = "Breakdancer raw output")
   lazy val outputraw: File = {
-    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.tsv")
+    new File(workDir, input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.tsv")
   }
   @Output(doc = "Breakdancer VCF output")
   lazy val outputvcf: File = {
-    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
+    new File(workDir, input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".breakdancer.vcf")
   }
 
-  override def init() {
+  override def init(): Unit = {
   }
 
   def biopetScript() {
@@ -72,13 +69,12 @@ class Breakdancer(val root: Configurable) extends QScript with BiopetQScript {
 }
 
 object Breakdancer extends PipelineCommand {
-  def apply(root: Configurable, input: File, reference: File, runDir: String): Breakdancer = {
+  def apply(root: Configurable, input: File, runDir: File): Breakdancer = {
     val breakdancer = new Breakdancer(root)
     breakdancer.input = input
-    breakdancer.reference = reference
-    breakdancer.workdir = runDir
-    breakdancer.init
-    breakdancer.biopetScript
-    return breakdancer
+    breakdancer.workDir = runDir
+    breakdancer.init()
+    breakdancer.biopetScript()
+    breakdancer
   }
 }

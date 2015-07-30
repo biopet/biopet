@@ -26,8 +26,8 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
     }
   }
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
 
     genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
     nct = Some(getThreads(1))

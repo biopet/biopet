@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.io.PrintWriter
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import scala.io.Source
-import scala.collection.mutable.Map
-import scala.collection.SortedMap
+import java.io.{ File, PrintWriter }
 
-class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineFunction {
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.{ mutable, SortedMap }
+import scala.collection.mutable.Map
+import scala.io.Source
+
+class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Raw count file", shortName = "input", required = true)
@@ -46,7 +46,7 @@ class SageCreateTagCounts(val root: Configurable) extends BiopetJavaCommandLineF
   @Output(doc = "AntiSense all count file", shortName = "allantisense", required = true)
   var countAllAntiSense: File = _
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +
@@ -62,22 +62,22 @@ object SageCreateTagCounts extends ToolCommand {
                   countAntiSense: File = null, countAllAntiSense: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "input") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
     }
-    opt[File]('t', "tagLib") required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('t', "tagLib") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(tagLib = x)
     }
-    opt[File]("countSense") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("countSense") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(countSense = x)
     }
-    opt[File]("countAllSense") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("countAllSense") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(countAllSense = x)
     }
-    opt[File]("countAntiSense") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("countAntiSense") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(countAntiSense = x)
     }
-    opt[File]("countAllAntiSense") unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]("countAllAntiSense") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(countAllAntiSense = x)
     }
   }
@@ -91,8 +91,8 @@ object SageCreateTagCounts extends ToolCommand {
 
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
-    val rawCounts: Map[String, Long] = Map()
-    for (line <- Source.fromFile(commandArgs.input).getLines) {
+    val rawCounts: mutable.Map[String, Long] = mutable.Map()
+    for (line <- Source.fromFile(commandArgs.input).getLines()) {
       val values = line.split("\t")
       val gene = values(0)
       val count = values(1).toLong
@@ -100,12 +100,12 @@ object SageCreateTagCounts extends ToolCommand {
       else rawCounts += gene -> count
     }
 
-    val senseCounts: Map[String, Long] = Map()
-    val allSenseCounts: Map[String, Long] = Map()
-    val antiSenseCounts: Map[String, Long] = Map()
-    val allAntiSenseCounts: Map[String, Long] = Map()
+    val senseCounts: mutable.Map[String, Long] = mutable.Map()
+    val allSenseCounts: mutable.Map[String, Long] = mutable.Map()
+    val antiSenseCounts: mutable.Map[String, Long] = mutable.Map()
+    val allAntiSenseCounts: mutable.Map[String, Long] = mutable.Map()
 
-    for (line <- Source.fromFile(commandArgs.tagLib).getLines if !line.startsWith("#")) {
+    for (line <- Source.fromFile(commandArgs.tagLib).getLines() if !line.startsWith("#")) {
       val values = line.split("\t")
       val tag = values(0)
       val sense = values(1)
@@ -138,14 +138,14 @@ object SageCreateTagCounts extends ToolCommand {
       }
     }
 
-    def writeFile(file: File, counts: Map[String, Long]) {
+    def writeFile(file: File, counts: mutable.Map[String, Long]) {
       val sorted: SortedMap[String, Long] = SortedMap(counts.toArray: _*)
       if (file != null) {
         val writer = new PrintWriter(file)
         for ((gene, count) <- sorted) {
           if (count > 0) writer.println(gene + "\t" + count)
         }
-        writer.close
+        writer.close()
       }
     }
     writeFile(commandArgs.countSense, senseCounts)

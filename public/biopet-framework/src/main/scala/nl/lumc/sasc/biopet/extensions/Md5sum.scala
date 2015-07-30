@@ -15,13 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
-import argonaut._, Argonaut._
-import scalaz._, Scalaz._
-import scala.io.Source
 
 /** Extension for md5sum */
 class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
@@ -32,6 +30,9 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   executable = config("exe", default = "md5sum")
+
+  override def versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
+  override def versionCommand = executable + " --version"
 
   /** return commandline to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)
@@ -44,7 +45,7 @@ object Md5sum {
     val md5sum = new Md5sum(root)
     md5sum.input = fastqfile
     md5sum.output = new File(outDir, fastqfile.getName + ".md5")
-    return md5sum
+    md5sum
   }
 
   /** Makes md5sum with md5 file in same dir as input file */
@@ -52,6 +53,6 @@ object Md5sum {
     val md5sum = new Md5sum(root)
     md5sum.input = file
     md5sum.output = new File(file.getParentFile, file.getName + ".md5")
-    return md5sum
+    md5sum
   }
 }

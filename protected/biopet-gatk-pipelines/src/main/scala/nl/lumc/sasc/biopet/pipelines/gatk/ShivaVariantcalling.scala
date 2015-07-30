@@ -12,6 +12,8 @@ import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcallingTrait
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * ShivaVariantcalling with GATK variantcallers
+ *
  * Created by pjvan_thof on 2/26/15.
  */
 class ShivaVariantcalling(val root: Configurable) extends QScript with ShivaVariantcallingTrait {

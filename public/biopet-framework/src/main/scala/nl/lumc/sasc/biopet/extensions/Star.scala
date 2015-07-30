@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
@@ -63,12 +63,12 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runThreadN")
 
-  override val defaultCoreMemory = 4.0
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
   /** Sets output files for the graph */
   override def beforeGraph() {
-    super.beforeGraph
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
     genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
@@ -111,7 +111,7 @@ object Star {
    * @param R1 R1 fastq file
    * @param R2 R2 fastq file
    * @param outputDir Outputdir for Star
-   * @param isIntermediate
+   * @param isIntermediate When set true jobs are flaged as intermediate
    * @param deps Deps to add to wait on run
    * @return Return Star
    *
@@ -123,8 +123,8 @@ object Star {
     star.outputDir = outputDir
     star.isIntermediate = isIntermediate
     star.deps = deps
-    star.beforeGraph
-    return star
+    star.beforeGraph()
+    star
   }
 
   /**
@@ -133,7 +133,7 @@ object Star {
    * @param R1 R1 fastq file
    * @param R2 R2 fastq file
    * @param outputDir Outputdir for Star
-   * @param isIntermediate
+   * @param isIntermediate When set true jobs are flaged as intermediate
    * @param deps Deps to add to wait on run
    * @return Return Star
    */
@@ -146,21 +146,21 @@ object Star {
     val starCommand_pass1 = Star(configurable, R1, R2, new File(outputDir, "aln-pass1"))
     starCommand_pass1.isIntermediate = isIntermediate
     starCommand_pass1.deps = deps
-    starCommand_pass1.beforeGraph
+    starCommand_pass1.beforeGraph()
 
     val starCommand_reindex = new Star(configurable)
     starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
     starCommand_reindex.outputDir = new File(outputDir, "re-index")
     starCommand_reindex.runmode = "genomeGenerate"
     starCommand_reindex.isIntermediate = isIntermediate
-    starCommand_reindex.beforeGraph
+    starCommand_reindex.beforeGraph()
 
     val starCommand_pass2 = Star(configurable, R1, R2, new File(outputDir, "aln-pass2"))
     starCommand_pass2.genomeDir = starCommand_reindex.outputDir
     starCommand_pass2.isIntermediate = isIntermediate
     starCommand_pass2.deps = deps
-    starCommand_pass2.beforeGraph
+    starCommand_pass2.beforeGraph()
 
-    return (starCommand_pass2.outputSam, List(starCommand_pass1, starCommand_reindex, starCommand_pass2))
+    (starCommand_pass2.outputSam, List(starCommand_pass1, starCommand_reindex, starCommand_pass2))
   }
 }

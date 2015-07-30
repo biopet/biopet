@@ -15,12 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.ToolCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction {
   javaMainClass = getClass.getName
@@ -44,17 +43,17 @@ object PindelConfig extends ToolCommand {
     val conf = new PindelConfig(root)
     conf.input = input
     conf.output = output
-    return conf
+    conf
   }
 
   def apply(root: Configurable, input: File, outputDir: String): PindelConfig = {
     val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
+    apply(root, input, outputFile)
   }
 
   def apply(root: Configurable, input: File): PindelConfig = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".pindel.cfg"
@@ -62,15 +61,15 @@ object PindelConfig extends ToolCommand {
   case class Args(inputbam: File = null, samplelabel: Option[String] = None, insertsize: Option[Int] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('i', "inputbam") required () valueName ("<bamfile/path>") action { (x, c) =>
+    opt[File]('i', "inputbam") required () valueName "<bamfile/path>" action { (x, c) =>
       c.copy(inputbam = x)
-    } text ("Please specify the input bam file")
-    opt[String]('l', "samplelabel") valueName ("<sample label>") action { (x, c) =>
+    } text "Please specify the input bam file"
+    opt[String]('l', "samplelabel") valueName "<sample label>" action { (x, c) =>
       c.copy(samplelabel = Some(x))
-    } text ("Sample label is missing")
-    opt[Int]('s', "insertsize") valueName ("<insertsize>") action { (x, c) =>
+    } text "Sample label is missing"
+    opt[Int]('s', "insertsize") valueName "<insertsize>" action { (x, c) =>
       c.copy(insertsize = Some(x))
-    } text ("Insertsize is missing")
+    } text "Insertsize is missing"
   }
 
   /**

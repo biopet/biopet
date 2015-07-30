@@ -15,12 +15,14 @@
  */
 package nl.lumc.sasc.biopet.extensions.samtools
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
 /** Extension for samtools mpileup */
-class SamtoolsMpileup(val root: Configurable) extends Samtools {
+class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
   @Input(doc = "Bam File")
   var input: List[File] = Nil
 
@@ -28,7 +30,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   var output: File = _
 
   @Input(doc = "Reference fasta")
-  var reference: File = config("reference")
+  var reference: File = _
 
   @Input(doc = "Interval bed", required = false)
   var intervalBed: Option[File] = config("interval_bed")
@@ -39,6 +41,11 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools {
   var minBaseQuality: Option[Int] = config("min_base_quality")
   var depth: Option[Int] = config("depth")
   var outputMappingQuality: Boolean = config("output_mapping_quality", default = false)
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    reference = referenceFasta()
+  }
 
   def cmdBase = required(executable) +
     required("mpileup") +
@@ -62,17 +69,17 @@ object SamtoolsMpileup {
     val mpileup = new SamtoolsMpileup(root)
     mpileup.input = List(input)
     mpileup.output = output
-    return mpileup
+    mpileup
   }
 
   def apply(root: Configurable, input: File, outputDir: String): SamtoolsMpileup = {
     val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
     val outputFile = new File(dir + swapExtension(input.getName))
-    return apply(root, input, outputFile)
+    apply(root, input, outputFile)
   }
 
   def apply(root: Configurable, input: File): SamtoolsMpileup = {
-    return apply(root, input, new File(swapExtension(input.getAbsolutePath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".mpileup"

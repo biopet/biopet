@@ -15,23 +15,24 @@
  */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.util.Date
 import java.io.File
-import scala.math._
-
-import org.broadinstitute.gatk.queue.QScript
+import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaSamse, BwaSampe, BwaAln, BwaMem }
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat }
-import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam, MergeSamFiles, AddOrReplaceReadGroups, ReorderSam }
+import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
+import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
+import nl.lumc.sasc.biopet.tools.FastqSplitter
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.queue.QScript
+
+import scala.math._
 
 // TODO: documentation
 class Mapping(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag with Reference {
@@ -57,7 +58,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   protected var skipMetrics: Boolean = config("skip_metrics", default = false)
 
   /** Aligner */
-  protected var aligner: String = config("aligner", default = "bwa")
+  protected var aligner: String = config("aligner", default = "bwa-mem")
 
   /** Number of chunks, when not defined pipeline will automatic calculate number of chunks */
   protected var numberChunks: Option[Int] = config("number_chunks")
@@ -96,6 +97,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
+  override def defaults = ConfigUtils.mergeMaps(
+    Map(
+      "gsnap" -> Map(
+        "batch" -> 4,
+        "format" -> "sam"
+      )
+    ), super.defaults)
+
   /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
     "reference" -> referenceFasta()) ++
@@ -110,6 +119,16 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "chunking" -> chunking,
     "numberChunks" -> numberChunks.getOrElse(1)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
+
+  override def reportClass = {
+    val mappingReport = new MappingReport(this)
+    mappingReport.outputDir = new File(outputDir, "report")
+    mappingReport.summaryFile = summaryFile
+    mappingReport.args = Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    Some(mappingReport)
+  }
 
   /** Will be executed before script */
   def init() {
@@ -147,8 +166,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       flexiprep.input_R2 = input_R2
       flexiprep.sampleId = this.sampleId
       flexiprep.libId = this.libId
-      flexiprep.init
-      flexiprep.runInitialJobs
+      flexiprep.init()
+      flexiprep.runInitialJobs()
     }
     var bamFiles: List[File] = Nil
     var fastq_R1_output: List[File] = Nil
@@ -165,8 +184,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       if (chunking) {
         (for (t <- 1 to numberChunks.getOrElse(1)) yield {
           val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-          (chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
-            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None))
+          chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
+            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None)
         }).toMap
       } else if (skipFlexiprep) {
         Map(outputDir -> (
@@ -209,7 +228,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa"        => addBwaMem(R1, R2, outputBam, deps)
+        case "bwa-mem"    => addBwaMem(R1, R2, outputBam, deps)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
         case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
         case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
@@ -249,22 +268,15 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
-    outputFiles += ("finalBamFile" -> bamFile)
+    outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
 
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 
-  /**
-   * Add bwa aln jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Add bwa aln jobs */
   def addBwaAln(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
@@ -307,17 +319,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val sortSam = SortSam(this, samFile, output)
     if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
     add(sortSam)
-    return sortSam.output
+    sortSam.output
   }
 
-  /**
-   * Adds bwa mem jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds bwa mem jobs */
   def addBwaMem(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
@@ -362,16 +367,36 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     tophat.keep_fasta_order = true
     add(tophat)
 
-    addAddOrReplaceReadGroups(tophat.outputAcceptedHits, output)
+    // fix unmapped file coordinates
+    val fixedUnmapped = new File(tophat.output_dir, "unmapped_fixup.sam")
+    val fixer = new TophatRecondition(this)
+    fixer.inputBam = tophat.outputAcceptedHits
+    fixer.outputSam = fixedUnmapped.getAbsoluteFile
+    fixer.isIntermediate = true
+    add(fixer)
+
+    // sort fixed SAM file
+    val sorter = SortSam(this, fixer.outputSam, new File(tophat.output_dir, "unmapped_fixup.sorted.bam"))
+    sorter.sortOrder = "coordinate"
+    sorter.isIntermediate = true
+    add(sorter)
+
+    // merge with mapped file
+    val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
+      tophat.output_dir, "coordinate")
+    mergeSamFile.createIndex = true
+    mergeSamFile.isIntermediate = true
+    add(mergeSamFile)
+
+    // make sure header coordinates are correct
+    val reorderSam = new ReorderSam(this)
+    reorderSam.input = mergeSamFile.output
+    reorderSam.output = swapExt(output.getParent, output, ".merge.bam", ".reordered.bam")
+    add(reorderSam)
+
+    addAddOrReplaceReadGroups(reorderSam.output, output)
   }
-  /**
-   * Adds stampy jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
 
     var RG: String = "ID:" + readgroupId + ","
@@ -399,14 +424,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     sortSam.output
   }
 
-  /**
-   * Adds bowtie jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds bowtie jobs */
   def addBowtie(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
@@ -415,43 +433,24 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
     add(bowtie)
-    return addAddOrReplaceReadGroups(bowtie.output, output)
+    addAddOrReplaceReadGroups(bowtie.output, output)
   }
 
-  /**
-   * Adds Star jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds Star jobs */
   def addStar(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     add(starCommand)
     addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
 
-  /**
-   * Adds Start 2 pass jobs
-   * @param R1
-   * @param R2
-   * @param output
-   * @param deps
-   * @return
-   */
+  /** Adds Start 2 pass jobs */
   def addStar2pass(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
     val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
     addAll(starCommand._2)
     addAddOrReplaceReadGroups(starCommand._1, output)
   }
 
-  /**
-   * Adds AddOrReplaceReadGroups
-   * @param input
-   * @param output
-   * @return
-   */
+  /** Adds AddOrReplaceReadGroups */
   def addAddOrReplaceReadGroups(input: File, output: File): File = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
@@ -470,7 +469,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Returns readgroup for bwa */
-  def getReadGroupBwa(): String = {
+  def getReadGroupBwa: String = {
     var RG: String = "@RG\\t" + "ID:" + readgroupId + "\\t"
     RG += "LB:" + libId.get + "\\t"
     RG += "PL:" + platform + "\\t"
@@ -487,26 +486,26 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   //FIXME: This is code duplication from flexiprep, need general class to pass jobs inside a util function
   /**
    * Extracts file if file is compressed
-   * @param file
-   * @param runDir
+   * @param file input file
+   * @param runDir directory to extract when needed
    * @return returns extracted file
    */
   def extractIfNeeded(file: File, runDir: File): File = {
-    if (file == null) return file
-    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+    if (file == null) file
+    else if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")
-      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
+      if (file.getName.endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
       val zcatCommand = Zcat(this, file, newFile)
       zcatCommand.isIntermediate = true
       add(zcatCommand)
-      return newFile
-    } else if (file.getName().endsWith(".bz2")) {
+      newFile
+    } else if (file.getName.endsWith(".bz2")) {
       val newFile = swapExt(runDir, file, ".bz2", "")
       val pbzip2 = Pbzip2(this, file, newFile)
       pbzip2.isIntermediate = true
       add(pbzip2)
-      return newFile
-    } else return file
+      newFile
+    } else file
   }
 
 }

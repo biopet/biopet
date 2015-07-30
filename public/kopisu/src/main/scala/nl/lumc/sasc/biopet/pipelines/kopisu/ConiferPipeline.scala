@@ -15,15 +15,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{ FileFilter, BufferedWriter, FileWriter, File }
+import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, _ }
 import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, _ }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.conifer.{ ConiferAnalyze, ConiferCall, ConiferRPKM }
 import org.broadinstitute.gatk.queue.QScript
-
-import scala.io.Source
 
 class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript {
   //*
@@ -92,11 +90,11 @@ class ConiferPipeline(val root: Configurable) extends QScript with BiopetQScript
         val source = new File(controlsDir, controlRPKMfile)
 
         if (!target.exists) {
-          add(Ln(this, source, target, false))
+          add(Ln(this, source, target, relative = false))
           refRPKMlist :+= target
         } else if (!target.equals(source)) {
           target.delete()
-          add(Ln(this, source, target, false))
+          add(Ln(this, source, target, relative = false))
           refRPKMlist :+= target
         }
       }

@@ -17,8 +17,6 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-
 /**
  * Trait for class to let them accept into a Summary
  *
@@ -40,7 +38,7 @@ trait Summarizable {
    * @param v1 Value of new map
    * @param v2 Value of old map
    * @param key Key of value
-   * @return
+   * @return combined value
    */
   def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     throw new IllegalStateException("Merge can not have same key by default")

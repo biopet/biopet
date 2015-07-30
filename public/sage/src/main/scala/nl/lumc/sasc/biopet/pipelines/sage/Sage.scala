@@ -15,21 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import java.io.File
-
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.PrefixFastq
-import nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 import nl.lumc.sasc.biopet.scripts.SquishBed
-import nl.lumc.sasc.biopet.tools.SageCountFastq
-import nl.lumc.sasc.biopet.tools.SageCreateLibrary
-import nl.lumc.sasc.biopet.tools.SageCreateTagCounts
+import nl.lumc.sasc.biopet.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -96,8 +90,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       protected def addJobs(): Unit = {
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq
-        flexiprep.init
-        flexiprep.biopetScript
+        flexiprep.init()
+        flexiprep.biopetScript()
         qscript.addAll(flexiprep.functions)
 
         val flexiprepOutput = for ((key, file) <- flexiprep.outputFiles if key.endsWith("output_R1")) yield file
@@ -110,8 +104,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
         mapping.input_R1 = pf.outputFastq
         mapping.outputDir = libDir
-        mapping.init
-        mapping.biopetScript
+        mapping.init()
+        mapping.biopetScript()
         qscript.addAll(mapping.functions)
 
         if (config("library_counts", default = false).asBoolean) {

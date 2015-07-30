@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CollectAlignmentSummaryMetrics */
 class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
@@ -75,6 +76,6 @@ object CollectAlignmentSummaryMetrics {
     val collectAlignmentSummaryMetrics = new CollectAlignmentSummaryMetrics(root)
     collectAlignmentSummaryMetrics.input = input
     collectAlignmentSummaryMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".alignmentMetrics")
-    return collectAlignmentSummaryMetrics
+    collectAlignmentSummaryMetrics
   }
 }

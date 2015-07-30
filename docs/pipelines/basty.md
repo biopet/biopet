@@ -3,18 +3,18 @@
 ## Introduction
 
 
-A pipeline for aligning bacterial genomes and detect structural variations on the level of SNPs. Basty will output phylogenetic trees.
-Which makes it very easy to look at the variations between certain species or strains.
+Basty is a pipeline for aligning bacterial genomes and detecting structural variations on the level of SNPs.
+Basty will output phylogenetic trees, which makes it very easy to look at the variations between certain species or strains.
 
 ### Tools for this pipeline
-* [Shiva](../pipelines/shiva.md)
+* [Shiva](shiva.md)
 * [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 * <a href="http://sco.h-its.org/exelixis/software.html" target="_blank">RAxml</a>
 * <a href="https://github.com/sanger-pathogens/Gubbins" target="_blank">Gubbins</a>
 
 ### Requirements
 
-To run for a specific species, please do not forget to create the proper index files.
+To run with a specific species, please do not forget to create the proper index files.
 The index files are created from the supplied reference:
 
 * ```.dict``` (can be produced with <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>)
@@ -22,18 +22,59 @@ The index files are created from the supplied reference:
 * ```.idxSpecificForAligner``` (depending on which aligner is used one should create a suitable index specific for that aligner. 
 Each aligner has his own way of creating index files. Therefore the options for creating the index files can be found inside the aligner itself)
 
+### Configuration
+To run Basty, please create the proper [Config](../general/config.md) files.
+
+Batsy uses the [Shiva](shiva.md) pipeline internally. Please check the documentation for this pipeline for the options.
+
+#### Required configuration values
+
+| Submodule | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| shiva | variantcallers | List[String] |  | Which variant caller to use |
+| - | output_dir | Path | Path to output directory |
+
+
+#### Other options
+
+Specific configuration options additional to Basty are:
+
+| Submodule | Name | Type | Default | Function |
+| --------- | ---- | ---- | ------- | -------- |
+| raxml | seed | Integer | 12345 | RAxML Random seed|
+| raxml | raxml_ml_model | String | GTRGAMMAX | RAxML model |
+| raxml | ml_runs | Integer | 20 | Number of RaxML runs |
+| raxml | boot_runs | Integer | 100 | Number of RaxML boot runs |
+
+
+#### Example settings config
+
+```json
+
+{
+    output_dir: </path/to/out_directory>,
+    "shiva": {
+        "variantcallers": ["freeBayes"]
+    },
+    "raxml" : {
+        "ml_runs": 50
+    }
+}
+
+```
+
 ### Example
 
 ##### For the help screen:
 ~~~
-java -jar Biopet.0.2.0.jar pipeline basty -h
+java -jar </path/to/biopet.jar> pipeline basty -h
 ~~~
 
 ##### Run the pipeline:
 Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~
-java -jar Biopet.0.2.0.jar pipeline basty -run -config MySamples.json -config MySettings.json -outDir myOutDir
+java -jar </path/to/biopet/jar>  pipeline basty -run -config MySamples.json -config MySettings.json
 ~~~
 
 ### Result files

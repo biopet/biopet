@@ -16,13 +16,16 @@
 package nl.lumc.sasc.biopet.core
 
 import java.io.{ PrintWriter, StringWriter }
-import scala.io.Source
 
+import nl.lumc.sasc.biopet.core.BiopetExecutable._
+import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
 import org.apache.log4j.Logger
 
-import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
-import nl.lumc.sasc.biopet.core.BiopetExecutable._
+import scala.io.Source
 
+/**
+ * This is the main trait for the biopet executable
+ */
 trait BiopetExecutable extends Logging {
 
   def pipelines: List[MainCommand]
@@ -74,7 +77,7 @@ trait BiopetExecutable extends Logging {
     def getCommand(module: String, name: String): MainCommand = {
       checkModule(module)
       val command = modules(module).find(p => p.commandName.toLowerCase == name.toLowerCase)
-      if (command == None) {
+      if (command.isEmpty) {
         System.err.println(s"ERROR: command '$name' does not exist in module '$module'\n" + usage(module))
         System.exit(1)
       }
@@ -82,22 +85,20 @@ trait BiopetExecutable extends Logging {
     }
 
     args match {
-      case Array("version") => {
+      case Array("version") =>
         println("version: " + FullVersion)
-      }
-      case Array("license") => {
+      case Array("license") =>
         println(getLicense)
-      }
-      case Array(module, name, passArgs @ _*) => {
+      case Array(module, name, passArgs @ _*) =>
         try {
           getCommand(module, name).main(passArgs.toArray)
         } catch {
-          case e: Exception => {
+          case e: Exception =>
             val sWriter = new StringWriter()
             val pWriter = new PrintWriter(sWriter)
             e.printStackTrace(pWriter)
             pWriter.close()
-            val trace = (sWriter.toString.split("\n"))
+            val trace = sWriter.toString.split("\n")
 
             if (!logger.isDebugEnabled) {
               trace.filterNot(_.startsWith("\tat")).foreach(logger.error(_))
@@ -106,20 +107,17 @@ trait BiopetExecutable extends Logging {
               trace.foreach(logger.debug(_))
             }
             sys.exit(1)
-          }
         }
-      }
-      case Array(module) => {
+      case Array(module) =>
         System.err.println(usage(module))
         sys.exit(1)
-      }
-      case _ => {
+      case _ =>
         System.err.println(usage())
         sys.exit(1)
-      }
     }
   }
 
+  /** This function checks if current build is based on a dirty repository (uncommitted changes) */
   def checkDirtyBuild(logger: Logger): Unit =
     if (LastCommitHash.endsWith("-dirty")) {
       logger.warn("***********************************************************")

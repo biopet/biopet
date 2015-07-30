@@ -15,11 +15,13 @@
  */
 package nl.lumc.sasc.biopet.scripts
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class CoverageStats(val root: Configurable) extends PythonCommandLineFunction with Summarizable {
   setPythonScript("bedtools_cov_stats.py")
@@ -33,14 +35,23 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction wi
   @Output(doc = "plot File (png)")
   var plot: File = _
 
-  override val defaultCoreMemory = 9.0
+  var title: Option[String] = None
+  var subTitle: Option[String] = None
+
+  override def defaultCoreMemory = 9.0
 
   def cmdLine = getPythonCommand +
-    required(input) + required("--plot", plot) + " > " + required(output)
+    required(input) +
+    required("--plot", plot) +
+    optional("--title", title) +
+    optional("--subtitle", subTitle) +
+    " > " + required(output)
 
-  def summaryFiles: Map[String, File] = Map("output" -> output, "plot" -> plot)
+  def summaryFiles: Map[String, File] = Map("plot" -> plot)
 
-  def summaryStats: Map[String, Any] = Map()
+  def summaryStats: Map[String, Any] = {
+    ConfigUtils.fileToConfigMap(output)
+  }
 }
 
 object CoverageStats {
