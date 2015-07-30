@@ -22,7 +22,7 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.4.0</version>
+    <version>0.5.0-DEV</version>
     
     <modules>
         <module>biopet-framework</module>
