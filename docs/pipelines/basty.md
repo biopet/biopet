@@ -7,7 +7,7 @@ Basty is a pipeline for aligning bacterial genomes and detecting structural vari
 Basty will output phylogenetic trees, which makes it very easy to look at the variations between certain species or strains.
 
 ### Tools for this pipeline
-* [Shiva](../pipelines/shiva.md)
+* [Shiva](shiva.md)
 * [BastyGenerateFasta](../tools/BastyGenerateFasta.md)
 * <a href="http://sco.h-its.org/exelixis/software.html" target="_blank">RAxml</a>
 * <a href="https://github.com/sanger-pathogens/Gubbins" target="_blank">Gubbins</a>
@@ -25,7 +25,7 @@ Each aligner has his own way of creating index files. Therefore the options for 
 ### Configuration
 To run Basty, please create the proper [Config](../general/config.md) files.
 
-Batsy uses the [Shiva](../shiva.md) pipeline internally. Please check the documentation for this pipeline for the options.
+Batsy uses the [Shiva](shiva.md) pipeline internally. Please check the documentation for this pipeline for the options.
 
 #### Required configuration values
 

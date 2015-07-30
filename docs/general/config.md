@@ -2,7 +2,7 @@
 
 ### The sample config
 
-The sample config should be in [__JSON__](http://www.json.org/) format
+The sample config should be in [__JSON__](http://www.json.org/) or [__YAML__](http://yaml.org/) format. For yaml the file should be named *.yml or *.yaml.
 
 - First field should have the key __"samples"__
 - Second field should contain the __"libraries"__
@@ -10,7 +10,21 @@ The sample config should be in [__JSON__](http://www.json.org/) format
 - The fastq input files can be provided zipped and un zipped
 
 #### Example sample config
-~~~
+
+###### yaml:
+
+``` yaml
+samples:
+  Sample_ID1:
+    libraries:
+      MySeries_1:
+        R1: R1.fastq.gz
+        R2: R2.fastq.gz
+```
+
+###### json:
+
+``` json
     {  
        "samples":{  
           "Sample_ID1":{  
@@ -23,26 +37,19 @@ The sample config should be in [__JSON__](http://www.json.org/) format
           }
        }
     }
-~~~
+```
 
-- For BAM files as input one should use a config like this:
+For BAM files as input one should use a config like this:
   
-~~~
-    {
-       "samples":{  
-          "Sample_ID_1":{  
-             "libraries":{  
-                "Lib_ID_1":{  
-                   "bam":"MyFirst.bam"
-                },
-                "Lib_ID_2":{  
-                   "bam":"MySecond.bam"
-                }
-             }
-          }
-       }
-    }
-~~~
+``` yaml
+samples:
+  Sample_ID_1:
+    libraries:  
+      Lib_ID_1:
+        bam: MyFirst.bam
+      Lib_ID_2:
+        bam: MySecond.bam
+```
 
 
 Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.

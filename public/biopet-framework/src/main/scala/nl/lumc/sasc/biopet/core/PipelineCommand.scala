@@ -64,13 +64,19 @@ trait PipelineCommand extends MainCommand with GatkLogging {
     }
     for (t <- 0 until argsSize) {
       if (args(t) == "--outputDir" || args(t) == "-outDir") {
-        throw new IllegalArgumentException("Commandline argument is deprecated, should use config for this now")
+        throw new IllegalArgumentException("Commandline argument is deprecated, should use config for this now or use: -cv output_dir=<Path to output dir>")
       }
     }
 
-    val logDir: File = new File(Config.global.map.getOrElse("output_dir", "./").toString + File.separator + ".log")
-    logDir.mkdirs()
-    val logFile = new File(logDir, "biopet." + BiopetQCommandLine.timestamp + ".log")
+    val logFile = {
+      val pipelineName = this.getClass.getSimpleName.toLowerCase.split("""\$""").head
+      val pipelineConfig = Config.global.map.getOrElse(pipelineName, Map()).asInstanceOf[Map[String, Any]]
+      val pipelineOutputDir = new File(Config.global.map.getOrElse("output_dir", pipelineConfig.getOrElse("output_dir", "./")).toString)
+      val logDir: File = new File(pipelineOutputDir, ".log")
+      logDir.mkdirs()
+      new File(logDir, "biopet." + BiopetQCommandLine.timestamp + ".log")
+    }
+
     val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
     logger.addAppender(a)
 
@@ -78,7 +84,7 @@ trait PipelineCommand extends MainCommand with GatkLogging {
     argv ++= Array("-S", pipeline)
     argv ++= args
     if (!args.contains("--log_to_file") && !args.contains("-log")) {
-      argv ++= List("--log_to_file", logFile.getAbsolutePath.replace("biopet", "queue"))
+      argv ++= List("--log_to_file", new File(logFile.getParentFile, "queue." + BiopetQCommandLine.timestamp + ".log").getAbsolutePath)
     }
     BiopetQCommandLine.main(argv)
   }

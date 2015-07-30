@@ -10,9 +10,12 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
 
 * [Flexiprep](flexiprep.md)
 * Alignment programs:
-    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">BWA</a>
+    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa mem</a>
+    * <a href="http://bio-bwa.sourceforge.net/bwa.shtml" target="_blank">Bwa aln</a>
     * <a href="http://bowtie-bio.sourceforge.net/index.shtml" target="_blank">Bowtie version 1.1.1</a>
     * <a href="http://www.well.ox.ac.uk/project-stampy" target="_blank">Stampy</a>
+    * <a href="http://research-pub.gene.com/gmap/" target="_blank">Gsnap</a>
+    * <a href="https://ccb.jhu.edu/software/tophat" target="_blank">TopHat</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star-2pass</a>
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
@@ -38,16 +41,17 @@ All other values should be provided in the config. Specific config values toward
 
 | Name | Type | Function |
 | ---- | ---- | -------- |
+| output_dir | Path (**required**) | directory for output files |
+| reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
 | aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`] |
 | skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
 | skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |
-| reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
 | platform | String (optional) | Read group Platform (defaults to `illumina`)|
-| platform_unit | String (**required**) | Read group platform unit |
-| readgroup_sequencing_center | String (**required**) | Read group sequencing center |
-| readgroup_description | String (**required**) | Read group description |
-| predicted_insertsize | Integer (**required**) | Read group predicted insert size |
+| platform_unit | String (optional) | Read group platform unit |
+| readgroup_sequencing_center | String (optional) | Read group sequencing center |
+| readgroup_description | String (optional) | Read group description |
+| predicted_insertsize | Integer (optional) | Read group predicted insert size |
 
 It is possible to provide any config value as a command line argument as well, using the `-cv` flag.
 E.g. `-cv reference=<path/to/reference>` would set value `reference`.
@@ -58,6 +62,16 @@ Note that one should first create the appropriate [settings config](../general/c
 Any supplied sample config will be ignored.
 
 ### Example config
+
+#### Minimal
+```json
+{
+"reference_fasta": "<path/to/reference">,
+"output_dir": "<path/to/output/dir">
+}
+```
+
+#### With options
 ```json
 {
 "reference_fasta": "<path/to/reference">,
@@ -109,5 +123,6 @@ To perform a dry run simply remove `-run` from the commandline call.
     ├── <samplename>-lib_1.dedup.bam
     ├── <samplename>-lib_1.dedup.metrics
     ├── flexiprep
-    └── metrics
+    ├── metrics
+    └── report
 ~~~
