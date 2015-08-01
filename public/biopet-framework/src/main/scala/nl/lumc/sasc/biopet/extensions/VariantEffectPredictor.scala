@@ -44,7 +44,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var q: Boolean = config("q", default = false)
   var offline: Boolean = config("offline", default = false)
   var no_progress: Boolean = config("no_progress", default = false)
-  var everything: Boolean = config("everything", default = true)
+  var everything: Boolean = config("everything", default = false)
   var force: Boolean = config("force", default = false)
   var no_stats: Boolean = config("no_stats", default = false)
   var stats_text: Boolean = config("stats_text", default = false)
