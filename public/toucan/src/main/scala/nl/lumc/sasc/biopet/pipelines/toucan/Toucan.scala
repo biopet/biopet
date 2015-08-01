@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
-import nl.lumc.sasc.biopet.tools.VepNormalizer
+import nl.lumc.sasc.biopet.tools.{ VcfWithVcf, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -53,8 +53,21 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
     val normalizer = new VepNormalizer(this)
     normalizer.inputVCF = vep.output
-    normalizer.outputVCF = swapExt(vep.output, ".vcf", ".normalized.vcf.gz")
+    normalizer.outputVcf = swapExt(outputDir, vep.output, ".vcf", ".normalized.vcf.gz")
     add(normalizer)
+
+    val gonlVcfFile: Option[File] = config("gonl_vcf")
+    gonlVcfFile match {
+      case Some(gonlVcfFile) => {
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = normalizer.outputVcf
+        vcfWithVcf.secondaryVcf = gonlVcfFile
+        vcfWithVcf.output = swapExt(outputDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
+        vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
+        add(vcfWithVcf)
+      }
+      case _ => normalizer.outputVcf
+    }
   }
 
   def summaryFile = new File(outputDir, "Toucan.summary.json")
