@@ -33,10 +33,10 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf file", shortName = "input", required = true)
-  var input: List[File] = Nil
+  var input: File = _
 
   @Input(doc = "Secondary vcf file", shortName = "secondary", required = true)
-  var secondaryVcf: List[File] = Nil
+  var secondaryVcf: File = _
 
   @Output(doc = "Output vcf file", shortName = "output", required = true)
   var output: File = _
@@ -56,7 +56,7 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
   }
 
   override def commandLine = super.commandLine +
-    repeat("-I", input) +
+    required("-I", input) +
     required("-o", output) +
     required("-s", secondaryVcf) +
     repeat("-f", fields.map(x => x._1 + ":" + x._2 + ":" + x._3.getOrElse("none")))
