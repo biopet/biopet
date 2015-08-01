@@ -20,9 +20,47 @@ import java.io.File
 import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
+import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.JavaConversions._
+
+/**
+ * Biopet extension for tool VcfWithVcf
+ */
+class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
+  javaMainClass = getClass.getName
+
+  @Input(doc = "Input vcf file", shortName = "input", required = true)
+  var input: List[File] = Nil
+
+  @Input(doc = "Secondary vcf file", shortName = "secondary", required = true)
+  var secondaryVcf: List[File] = Nil
+
+  @Output(doc = "Output vcf file", shortName = "output", required = true)
+  var output: File = _
+
+  @Output(doc = "Output vcf file index", shortName = "output", required = true)
+  private var outputIndex: File = _
+
+  var fields: List[(String, String, Option[String])] = List()
+
+  override def defaultCoreMemory = 2.0
+
+  override def beforeGraph() {
+    super.beforeGraph()
+    if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
+    if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
+    if (fields.isEmpty) throw new IllegalArgumentException("No fields found for VcfWithVcf")
+  }
+
+  override def commandLine = super.commandLine +
+    repeat("-I", input) +
+    required("-o", output) +
+    required("-s", secondaryVcf) +
+    repeat("-f", fields.map(x => x._1 + ":" + x._2 + ":" + x._3.getOrElse("none")))
+}
 
 /**
  * This is a tool to annotate a vcf file with info value from a other vcf file
@@ -46,10 +84,10 @@ object VcfWithVcf extends ToolCommand {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     }
-    opt[File]('O', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('S', "secondaryVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('s', "secondaryVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(secondaryVcf = x)
     }
     opt[String]('f', "field") unbounded () valueName "<field> or <input_field:output_field> or <input_field:output_field:method>" action { (x, c) =>
@@ -58,11 +96,11 @@ object VcfWithVcf extends ToolCommand {
       else if (values.size > 1) c.copy(fields = Fields(values(0), values(1)) :: c.fields)
       else c.copy(fields = Fields(x, x) :: c.fields)
     } text """| If only <field> is given, the field's identifier in the output VCF will be identical to <field>.
-                                                                                                                                                      | By default we will return all values found for a given field.
-                                                                                                                                                      | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
-                                                                                                                                                      |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
-                                                                                                                                                      |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
-                                                                                                                                                      |   - unique: takes only unique values """.stripMargin
+              | By default we will return all values found for a given field.
+              | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
+              |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
+              |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
+              |   - unique: takes only unique values """.stripMargin
     opt[Boolean]("match") valueName "<Boolean>" maxOccurs 1 action { (x, c) =>
       c.copy(matchAllele = x)
     } text "Match alternative alleles; default true"
