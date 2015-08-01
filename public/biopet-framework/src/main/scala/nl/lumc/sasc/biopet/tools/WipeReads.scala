@@ -149,12 +149,12 @@ object WipeReads extends ToolCommand {
         throw new IllegalArgumentException("Unexpected interval file type: " + inFile.getPath)
 
     iterFunc(inFile).toList
-      .sortBy(x => (x.getSequence, x.getStart, x.getEnd))
+      .sortBy(x => (x.getContig, x.getStart, x.getEnd))
       .foldLeft(List.empty[Interval])(
         (acc, x) => {
           acc match {
             case head :: tail if x.intersects(head) =>
-              new Interval(x.getSequence, min(x.getStart, head.getStart), max(x.getEnd, head.getEnd)) :: tail
+              new Interval(x.getContig, min(x.getStart, head.getStart), max(x.getEnd, head.getEnd)) :: tail
             case _ => x :: acc
           }
         }
@@ -193,16 +193,16 @@ object WipeReads extends ToolCommand {
      */
     def makeQueryInterval(in: SamReader, iv: Interval): Option[QueryInterval] = {
       val getIndex = in.getFileHeader.getSequenceIndex _
-      if (getIndex(iv.getSequence) > -1)
-        Some(new QueryInterval(getIndex(iv.getSequence), iv.getStart, iv.getEnd))
-      else if (iv.getSequence.startsWith("chr") && getIndex(iv.getSequence.substring(3)) > -1) {
+      if (getIndex(iv.getContig) > -1)
+        Some(new QueryInterval(getIndex(iv.getContig), iv.getStart, iv.getEnd))
+      else if (iv.getContig.startsWith("chr") && getIndex(iv.getContig.substring(3)) > -1) {
         logger.warn("Removing 'chr' prefix from interval " + iv.toString)
-        Some(new QueryInterval(getIndex(iv.getSequence.substring(3)), iv.getStart, iv.getEnd))
-      } else if (!iv.getSequence.startsWith("chr") && getIndex("chr" + iv.getSequence) > -1) {
+        Some(new QueryInterval(getIndex(iv.getContig.substring(3)), iv.getStart, iv.getEnd))
+      } else if (!iv.getContig.startsWith("chr") && getIndex("chr" + iv.getContig) > -1) {
         logger.warn("Adding 'chr' prefix to interval " + iv.toString)
-        Some(new QueryInterval(getIndex("chr" + iv.getSequence), iv.getStart, iv.getEnd))
+        Some(new QueryInterval(getIndex("chr" + iv.getContig), iv.getStart, iv.getEnd))
       } else {
-        logger.warn("Sequence " + iv.getSequence + " does not exist in alignment")
+        logger.warn("Sequence " + iv.getContig + " does not exist in alignment")
         None
       }
     }

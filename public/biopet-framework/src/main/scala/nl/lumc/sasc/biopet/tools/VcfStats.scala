@@ -358,7 +358,7 @@ object VcfStats extends ToolCommand {
           logger.info("Starting on: " + interval)
 
           for (
-            record <- reader.query(interval.getSequence, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+            record <- reader.query(interval.getContig, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
           ) {
             mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
             for (sample1 <- samples) yield {
@@ -376,7 +376,7 @@ object VcfStats extends ToolCommand {
           reader.close()
 
           if (commandArgs.writeBinStats) {
-            val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getSequence)
+            val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getContig)
 
             writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
             writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
@@ -439,7 +439,7 @@ object VcfStats extends ToolCommand {
   }
 
   protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
-    val groupedIntervals = intervals.groupBy(_.getSequence).map { case (k, v) => k -> v.sortBy(_.getStart) }
+    val groupedIntervals = intervals.groupBy(_.getContig).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
     val writer = new PrintWriter(outputFile)
     writer.println("track type=wiggle_0")
