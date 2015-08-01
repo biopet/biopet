@@ -56,17 +56,36 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     normalizer.outputVcf = swapExt(outputDir, vep.output, ".vcf", ".normalized.vcf.gz")
     add(normalizer)
 
+    // Optional annotation steps, depend is some files existing in the config
     val gonlVcfFile: Option[File] = config("gonl_vcf")
+    val exacVcfFile: Option[File] = config("exac_vcf")
+
+    var outputFile = normalizer.outputVcf
+
     gonlVcfFile match {
       case Some(gonlVcfFile) => {
         val vcfWithVcf = new VcfWithVcf(this)
-        vcfWithVcf.input = normalizer.outputVcf
+        vcfWithVcf.input = outputFile
         vcfWithVcf.secondaryVcf = gonlVcfFile
         vcfWithVcf.output = swapExt(outputDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
         add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
       }
-      case _ => normalizer.outputVcf
+      case _ =>
+    }
+
+    exacVcfFile match {
+      case Some(exacVcfFile) => {
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = outputFile
+        vcfWithVcf.secondaryVcf = exacVcfFile
+        vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
+        vcfWithVcf.fields ::= ("MAF", "MAF_exac", None)
+        add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
+      }
+      case _ =>
     }
   }
 
