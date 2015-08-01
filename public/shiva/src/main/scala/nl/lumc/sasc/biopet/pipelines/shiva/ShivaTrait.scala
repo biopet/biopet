@@ -280,9 +280,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
   } else None
 
   lazy val svCalling = if (config("sv_calling", default = false).asBoolean) {
-    val svCalling = new ShivaSvCalling(this)
-    samples.foreach(x => x._2.preProcessBam.foreach(bam => svCalling.addBamFile(bam, Some(x._1))))
-    Some(svCalling)
+    Some(new ShivaSvCalling(this))
   } else None
 
   /** This will add the mutisample variantcalling */
@@ -298,6 +296,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
 
     svCalling.foreach(sv => {
       sv.outputDir = new File(outputDir, "sv_calling")
+      samples.foreach(x => x._2.preProcessBam.foreach(bam => sv.addBamFile(bam, Some(x._1))))
       sv.init()
       sv.biopetScript()
       addAll(sv.functions)
