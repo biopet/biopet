@@ -42,19 +42,19 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test def testOutputTypeVcf() = {
     val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val arguments = Array("-I", unvepped_path, "-s", vepped_path, "-o", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
     val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val arguments = Array("-I", unvepped_path, "-s", vepped_path, "-o", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
     val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".bcf"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val arguments = Array("-I", unvepped_path, "-s", vepped_path, "-o", tmp_path, "-f", "CSQ")
     main(arguments)
   }
 
