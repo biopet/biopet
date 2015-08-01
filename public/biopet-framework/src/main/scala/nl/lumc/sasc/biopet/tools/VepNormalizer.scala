@@ -45,7 +45,7 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
   var inputVCF: File = null
 
   @Output(doc = "Output VCF", shortName = "OutputFile", required = true)
-  var outputVCF: File = null
+  var outputVcf: File = null
 
   var mode: String = config("mode", default = "explode")
   var doNotRemove: Boolean = config("donotremove", default = false)
@@ -54,7 +54,7 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +
-    required("-O", outputVCF) +
+    required("-O", outputVcf) +
     required("-m", mode) +
     conditional(doNotRemove, "--do-not-remove")
 }
