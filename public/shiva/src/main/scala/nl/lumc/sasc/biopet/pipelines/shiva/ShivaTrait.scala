@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 
 import scala.collection.JavaConversions._
 
@@ -292,6 +293,16 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
       vc.biopetScript()
       addAll(vc.functions)
       addSummaryQScript(vc)
+
+      if (config("annotation", default = true).asBoolean) {
+        val toucan = new Toucan(this)
+        toucan.outputDir = new File(outputDir, "annotation")
+        toucan.inputVCF = vc.finalFile
+        toucan.init()
+        toucan.biopetScript()
+        addAll(toucan.functions)
+        addSummaryQScript(toucan)
+      }
     })
 
     svCalling.foreach(sv => {
