@@ -35,7 +35,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   var inputVCF: File = _
 
   def init(): Unit = {
-
   }
 
   override def defaults = ConfigUtils.mergeMaps(Map(
@@ -63,28 +62,26 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     var outputFile = normalizer.outputVcf
 
     gonlVcfFile match {
-      case Some(gonlVcfFile) => {
+      case Some(gonlFile) =>
         val vcfWithVcf = new VcfWithVcf(this)
         vcfWithVcf.input = outputFile
-        vcfWithVcf.secondaryVcf = gonlVcfFile
+        vcfWithVcf.secondaryVcf = gonlFile
         vcfWithVcf.output = swapExt(outputDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
-      }
       case _ =>
     }
 
     exacVcfFile match {
-      case Some(exacVcfFile) => {
+      case Some(exacFile) =>
         val vcfWithVcf = new VcfWithVcf(this)
         vcfWithVcf.input = outputFile
-        vcfWithVcf.secondaryVcf = exacVcfFile
+        vcfWithVcf.secondaryVcf = exacFile
         vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
         vcfWithVcf.fields ::= ("MAF", "MAF_exac", None)
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
-      }
       case _ =>
     }
   }
