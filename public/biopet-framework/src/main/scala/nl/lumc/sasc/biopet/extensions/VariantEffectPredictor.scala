@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   executable = config("exe", submodule = "perl", default = "perl")
-  var vep_script: String = config("vep_script")
+  var vepScript: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)
   var input: File = null
@@ -37,7 +37,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var output: File = null
 
   override def versionRegex = """version (\d*)""".r
-  override def versionCommand = executable + " " + vep_script + " --help"
+  override def versionCommand = executable + " " + vepScript + " --help"
 
   //Boolean vars
   var v: Boolean = config("v", default = true)
@@ -152,7 +152,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    required(vep_script) +
+    required(vepScript) +
     required("-i", input) +
     required("-o", output) +
     conditional(v, "-v") +
