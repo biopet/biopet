@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.macs2
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for macs2*/
 class Macs2CallPeak(val root: Configurable) extends Macs2 {
@@ -74,7 +74,7 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var callsummits: Boolean = config("callsummits", default = false)
 
   /** Sets output files */
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
     if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
     output_narrow = new File(outputdir + name.get + ".narrowPeak")

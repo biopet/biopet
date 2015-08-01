@@ -15,22 +15,24 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import java.io.File
+
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import nl.lumc.sasc.biopet.core.ToolCommand
-import scala.io.Source
+
 import scala.collection.JavaConversions._
+import scala.io.Source
 
 object FindRepeatsPacBio extends ToolCommand {
   case class Args(inputBam: File = null, inputBed: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputBam") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputBam") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBam = x)
     }
-    opt[File]('b', "inputBed") required () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('b', "inputBed") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBed = x)
-    } text ("output file, default to stdout")
+    } text "output file, default to stdout"
   }
 
   /**
@@ -51,7 +53,7 @@ object FindRepeatsPacBio extends ToolCommand {
     println(header.mkString("\t"))
 
     for (
-      bedLine <- Source.fromFile(commandArgs.inputBed).getLines;
+      bedLine <- Source.fromFile(commandArgs.inputBed).getLines();
       values = bedLine.split("\t"); if values.size >= 3
     ) {
       val interval = new QueryInterval(bamHeader.getSequenceIndex(values(0)), values(1).toInt, values(2).toInt)
@@ -76,7 +78,7 @@ object FindRepeatsPacBio extends ToolCommand {
           inserts ::= result.get.ins.map(_.insert).mkString(",")
           deletions ::= result.get.dels.map(_.length).mkString(",")
           val length = oriRepeatLength - result.get.beginDel - result.get.endDel -
-            ((0 /: result.get.dels.map(_.length))(_ + _)) + ((0 /: result.get.ins.map(_.insert.size))(_ + _))
+            (0 /: result.get.dels.map(_.length))(_ + _) + (0 /: result.get.ins.map(_.insert.length))(_ + _)
           calcRepeatLength ::= length
           if (length > maxLength) maxLength = length
           if (length < minLength || minLength == -1) minLength = length
@@ -84,7 +86,7 @@ object FindRepeatsPacBio extends ToolCommand {
       }
       println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength,
         maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
-      bamIter.close
+      bamIter.close()
     }
   }
 
@@ -133,6 +135,6 @@ object FindRepeatsPacBio extends ToolCommand {
       }
     }
 
-    return Some(result)
+    Some(result)
   }
 }

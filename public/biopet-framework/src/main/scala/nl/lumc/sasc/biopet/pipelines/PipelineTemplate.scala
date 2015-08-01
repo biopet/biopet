@@ -15,10 +15,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function._
 
 /** Template for a pipeline */
 class PipelineTemplate(val root: Configurable) extends QScript with BiopetQScript {

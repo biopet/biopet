@@ -23,6 +23,8 @@ import nl.lumc.sasc.biopet.extensions.Md5sum
 import scala.collection.mutable
 
 /**
+ * This trait is used for qscript / pipelines that will produce a summary
+ *
  * Created by pjvan_thof on 2/14/15.
  */
 trait SummaryQScript extends BiopetQScript {
@@ -65,7 +67,7 @@ trait SummaryQScript extends BiopetQScript {
    *
    * @param summarizable summarizable to add to summary for this pipeline
    * @param name Name of module
-   * @param sampleId
+   * @param sampleId Id of sample
    */
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String]): Unit = {
     addSummarizable(summarizable, name, sampleId, None)
@@ -76,24 +78,21 @@ trait SummaryQScript extends BiopetQScript {
    *
    * @param summarizable summarizable to add to summary for this pipeline
    * @param name Name of module
-   * @param sampleId
-   * @param libraryId
+   * @param sampleId Id of sample
+   * @param libraryId Id of libary
    */
   def addSummarizable(summarizable: Summarizable, name: String, sampleId: Option[String], libraryId: Option[String]): Unit = {
     if (libraryId.isDefined) require(sampleId.isDefined) // Library always require a sample
     summarizables += (name, sampleId, libraryId) -> (summarizable :: summarizables.getOrElse((name, sampleId, libraryId), Nil))
   }
 
-  /**
-   * Add an other qscript to merge in output summary
-   * @param summaryQScript
-   */
+  /** Add an other qscript to merge in output summary */
   def addSummaryQScript(summaryQScript: SummaryQScript): Unit = {
     summaryQScripts :+= summaryQScript
   }
 
   /** Add jobs to qscript to execute summary, also add checksum jobs */
-  def addSummaryJobs: Unit = {
+  def addSummaryJobs(): Unit = {
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
@@ -119,7 +118,7 @@ trait SummaryQScript extends BiopetQScript {
 
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {
       summarizable match {
-        case f: BiopetCommandLineFunctionTrait => f.beforeGraph
+        case f: BiopetCommandLineFunctionTrait => f.beforeGraph()
         case _                                 =>
       }
     }
@@ -141,8 +140,7 @@ trait SummaryQScript extends BiopetQScript {
 }
 
 object SummaryQScript {
-  import scala.collection.mutable.Map
 
   /** Cache to have no duplicate jobs */
-  protected[summary] val md5sumCache: Map[File, File] = Map()
+  protected[summary] val md5sumCache: mutable.Map[File, File] = mutable.Map()
 }

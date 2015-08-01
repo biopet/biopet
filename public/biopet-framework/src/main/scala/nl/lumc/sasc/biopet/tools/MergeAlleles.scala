@@ -15,24 +15,21 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.Allele
-import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.variantcontext.VariantContextBuilder
-import htsjdk.variant.variantcontext.writer.AsyncVariantContextWriter
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder
-import htsjdk.variant.vcf.VCFFileReader
-import htsjdk.variant.vcf.VCFHeader
 import java.io.File
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
-import scala.collection.SortedMap
-import scala.collection.mutable.{ Map, Set }
+
+import htsjdk.samtools.reference.FastaSequenceFile
+import htsjdk.variant.variantcontext.{ Allele, VariantContext, VariantContextBuilder }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import scala.collection.JavaConversions._
+import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction {
+import scala.collection.JavaConversions._
+import scala.collection.{ mutable, SortedMap }
+import scala.collection.mutable.{ Map, Set }
+
+class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input vcf files", shortName = "input", required = true)
@@ -46,10 +43,10 @@ class MergeAlleles(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   var reference: File = config("reference")
 
-  override val defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 1.0
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
   }
@@ -65,19 +62,19 @@ object MergeAlleles extends ToolCommand {
     val mergeAlleles = new MergeAlleles(root)
     mergeAlleles.input = input
     mergeAlleles.output = output
-    return mergeAlleles
+    mergeAlleles
   }
 
   case class Args(inputFiles: List[File] = Nil, outputFile: File = null, reference: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputVcf") minOccurs (2) required () unbounded () valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "inputVcf") minOccurs 2 required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputFiles = x :: c.inputFiles)
     }
-    opt[File]('o', "outputVcf") required () unbounded () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('o', "outputVcf") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('R', "reference") required () unbounded () maxOccurs (1) valueName ("<file>") action { (x, c) =>
+    opt[File]('R', "reference") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(reference = x)
     }
   }
@@ -102,8 +99,8 @@ object MergeAlleles extends ToolCommand {
     header.setSequenceDictionary(referenceDict)
     writer.writeHeader(header)
 
-    for (chr <- referenceDict.getSequences; chunk <- (0 to (chr.getSequenceLength / chunkSize))) {
-      val output: Map[Int, List[VariantContext]] = Map()
+    for (chr <- referenceDict.getSequences; chunk <- 0 to (chr.getSequenceLength / chunkSize)) {
+      val output: mutable.Map[Int, List[VariantContext]] = mutable.Map()
 
       val chrName = chr.getSequenceName
       val begin = chunk * chunkSize + 1
@@ -122,17 +119,17 @@ object MergeAlleles extends ToolCommand {
         writer.add(mergeAlleles(v))
       }
     }
-    writer.close
+    writer.close()
     readers.foreach(_.close)
   }
 
   def mergeAlleles(records: List[VariantContext]): VariantContext = {
     val longestRef = {
       var l: Array[Byte] = Array()
-      for (a <- records.map(_.getReference.getBases) if (a.length > l.size)) l = a
+      for (a <- records.map(_.getReference.getBases) if a.length > l.length) l = a
       Allele.create(l, true)
     }
-    val alleles: Set[Allele] = Set()
+    val alleles: mutable.Set[Allele] = mutable.Set()
     val builder = new VariantContextBuilder
     builder.chr(records.head.getChr)
     builder.start(records.head.getStart)

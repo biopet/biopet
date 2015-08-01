@@ -21,6 +21,6 @@ abstract class Bcftools extends BiopetCommandLineFunction {
   override def subPath = "bcftools" :: super.subPath
   executable = config("exe", default = "bcftools")
   override def versionCommand = executable
-  override val versionRegex = """Version: (.*)""".r
-  override val versionExitcode = List(0, 1)
+  override def versionRegex = """Version: (.*)""".r
+  override def versionExitcode = List(0, 1)
 }

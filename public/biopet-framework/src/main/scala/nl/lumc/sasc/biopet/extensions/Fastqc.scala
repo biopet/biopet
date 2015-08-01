@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for fastqc
@@ -48,14 +47,14 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   var nogroup: Boolean = config("nogroup", default = false)
   var extract: Boolean = config("extract", default = true)
 
-  override val versionRegex = """FastQC (.*)""".r
+  override def versionRegex = """FastQC (.*)""".r
   override def versionCommand = executable + " --version"
-  override val defaultThreads = 4
+  override def defaultThreads = 4
 
   /** Sets contaminants and adapters when not yet set */
-  override def beforeGraph {
+  override def beforeGraph() {
     this.jobOutputFile = new File(output.getParentFile, ".fastqc.out")
-    this.preProcesExecutable
+    this.preProcessExecutable()
 
     val fastqcDir = new File(executable).getParent
 

@@ -15,16 +15,17 @@
  */
 package nl.lumc.sasc.biopet.pipelines.bammetrics
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, PipelineCommand }
 import java.io.File
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
+import nl.lumc.sasc.biopet.scripts.CoverageStats
+import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import org.broadinstitute.gatk.queue.QScript
 
 class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
@@ -38,13 +39,15 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   /** Bed of amplicon that is used */
   var ampliconBedFile: Option[File] = config("amplicon_bed")
 
-  var rnaMetrics: Boolean = config("rna_metrcis", default = false)
+  /** Settings for CollectRnaSeqMetrics */
+  var rnaMetricsSettings: Map[String, String] = Map()
+  var transcriptRefFlatFile: Option[File] = config("transcript_refflat")
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
-    case (Some(sampleId), Some(libId)) => new File(outputDir, sampleId + "-" + libId + ".BamMetrics.summary.json")
-    case (Some(sampleId), _)           => new File(outputDir, sampleId + ".BamMetrics.summary.json")
-    case _                             => new File(outputDir, "BamMetrics.summary.json")
+    case (Some(s), Some(l)) => new File(outputDir, s + "-" + l + ".BamMetrics.summary.json")
+    case (Some(s), _)       => new File(outputDir, s + ".BamMetrics.summary.json")
+    case _                  => new File(outputDir, "BamMetrics.summary.json")
   }
 
   /** returns files to store in summary */
@@ -55,6 +58,17 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   /** return settings */
   def summarySettings = Map("amplicon_name" -> ampliconBedFile.collect { case x => x.getName.stripSuffix(".bed") },
     "roi_name" -> roiBedFiles.map(_.getName.stripSuffix(".bed")))
+
+  override def reportClass = {
+    val bammetricsReport = new BammetricsReport(this)
+    bammetricsReport.outputDir = new File(outputDir, "report")
+    bammetricsReport.summaryFile = summaryFile
+    bammetricsReport.args = if (libId.isDefined) Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    else Map("sampleId" -> sampleId.getOrElse("."))
+    Some(bammetricsReport)
+  }
 
   /** executed before script */
   def init() {
@@ -78,17 +92,22 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
     add(gcBiasMetrics)
     addSummarizable(gcBiasMetrics, "gc_bias")
 
-    val wgsMetrics = new CollectWgsMetrics(this)
-    wgsMetrics.input = inputBam
-    wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
-    add(wgsMetrics)
-    addSummarizable(wgsMetrics, "wgs")
+    if (transcriptRefFlatFile.isEmpty) {
+      val wgsMetrics = new CollectWgsMetrics(this)
+      wgsMetrics.input = inputBam
+      wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
+      add(wgsMetrics)
+      addSummarizable(wgsMetrics, "wgs")
+    }
 
-    if (rnaMetrics) {
+    if (transcriptRefFlatFile.isDefined) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
       rnaMetrics.input = inputBam
       rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
       rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
+      rnaMetrics.refFlat = transcriptRefFlatFile.get
+      rnaMetrics.ribosomalIntervals = rnaMetricsSettings.get("ribosomal_intervals").collect { case n => new File(n) }
+      rnaMetrics.strandSpecificity = rnaMetricsSettings.get("strand_specificity")
       add(rnaMetrics)
       addSummarizable(rnaMetrics, "rna")
     }
@@ -106,9 +125,9 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
     // Metrics that require a amplicon bed file
     val ampIntervals = ampliconBedFile.collect {
-      case ampliconBedFile => {
-        val ampIntervals = swapExt(outputDir, ampliconBedFile, ".bed", ".intervals")
-        val ampBedToInterval = BedToIntervalList(this, ampliconBedFile, ampIntervals)
+      case bedFile =>
+        val ampIntervals = swapExt(outputDir, bedFile, ".bed", ".intervals")
+        val ampBedToInterval = BedToIntervalList(this, bedFile, ampIntervals)
         ampBedToInterval.isIntermediate = true
         add(ampBedToInterval)
 
@@ -122,8 +141,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
         add(pcrMetrics)
         addSummarizable(chsMetrics, "targeted_pcr_metrics")
 
-        Intervals(ampliconBedFile, ampIntervals)
-      }
+        Intervals(bedFile, ampIntervals)
     }
 
     // Create stats and coverage plot for each bed/interval file
@@ -154,13 +172,15 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
 
       //FIXME:should use piping
-      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), true)
+      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), isIntermediate = true)
       val covStats = CoverageStats(this, coverageFile, targetDir)
+      covStats.title = Some("Coverage for " + targetName)
+      covStats.subTitle = Some(".")
       add(covStats)
-      addSummarizable(covStats, "cov_stats")
+      addSummarizable(covStats, targetName + "_cov_stats")
     }
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 }
 

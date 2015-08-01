@@ -5,17 +5,18 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
-import nl.lumc.sasc.biopet.tools.{ VcfStats, MpileupToVcf, VcfFilter, MergeAlleles }
-import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
+import nl.lumc.sasc.biopet.tools.{ MergeAlleles, MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
+
 import scala.collection.SortedMap
 import scala.language.reflectiveCalls
 
@@ -110,7 +111,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
 
       if (sampleID != null && (useHaplotypecaller || config("joint_genotyping", default = false).asBoolean)) {
         val hcGvcf = new HaplotypeCaller(this)
-        hcGvcf.useGvcf
+        hcGvcf.useGvcf()
         hcGvcf.input_file = scriptOutput.bamFiles
         hcGvcf.out = new File(outputDir, outputName + ".hc.discovery.gvcf.vcf.gz")
         add(hcGvcf)
@@ -227,7 +228,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
-    return indelRealigner.o
+    indelRealigner.o
   }
 
   def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean = false): File = {
@@ -252,7 +253,7 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
     printReads.isIntermediate = isIntermediate
     add(printReads)
 
-    return printReads.o
+    printReads.o
   }
 }
 

@@ -18,9 +18,8 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.Reference
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
-
 import nl.lumc.sasc.biopet.core.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class ReorderSam(val root: Configurable) extends Picard with Reference {
 
@@ -41,8 +40,8 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
   @Argument(doc = "Allow contig length discordance", required = false)
   var allowContigLengthDiscordance: Boolean = config("allow_contig_length_discordance", default = false)
 
-  override def beforeGraph: Unit = {
-    super.beforeGraph
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

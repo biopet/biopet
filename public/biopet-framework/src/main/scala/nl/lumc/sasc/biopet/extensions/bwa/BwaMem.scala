@@ -17,9 +17,8 @@ package nl.lumc.sasc.biopet.extensions.bwa
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
@@ -69,11 +68,11 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
   var Y: Boolean = config("Y", default = false)
   var I: Option[String] = config("I")
 
-  override val defaultCoreMemory = 4.0
-  override val defaultThreads = 8
+  override def defaultCoreMemory = 4.0
+  override def defaultThreads = 8
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (reference == null) reference = referenceFasta()
   }
 

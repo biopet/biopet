@@ -5,8 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ ApplyRecalibration, VariantAnnotator, VariantRecalibrator }
 import org.broadinstitute.gatk.queue.QScript
@@ -28,7 +27,7 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
   }
 
   def biopetScript() {
-    var vcfFile: File = if (!bamFiles.isEmpty) addVariantAnnotator(inputVcf, bamFiles, outputDir) else inputVcf
+    var vcfFile: File = if (bamFiles.nonEmpty) addVariantAnnotator(inputVcf, bamFiles, outputDir) else inputVcf
     vcfFile = addSnpVariantRecalibrator(vcfFile, outputDir)
     vcfFile = addIndelVariantRecalibrator(vcfFile, outputDir)
   }
@@ -36,41 +35,41 @@ class GatkVariantRecalibration(val root: Configurable) extends QScript with Biop
   def addSnpVariantRecalibrator(inputVcf: File, dir: File): File = {
     val snpRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"),
       swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = false)
-    if (!snpRecal.resource.isEmpty) {
+    if (snpRecal.resource.nonEmpty) {
       add(snpRecal)
 
       val snpApply = ApplyRecalibration(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal.vcf"),
         snpRecal.recal_file, snpRecal.tranches_file, indel = false)
       add(snpApply)
 
-      return snpApply.out
+      snpApply.out
     } else {
       logger.warn("Skipped snp Recalibration, resource is missing")
-      return inputVcf
+      inputVcf
     }
   }
 
   def addIndelVariantRecalibrator(inputVcf: File, dir: File): File = {
     val indelRecal = VariantRecalibrator(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal"),
       swapExt(dir, inputVcf, ".vcf", ".indel.tranches"), indel = true)
-    if (!indelRecal.resource.isEmpty) {
+    if (indelRecal.resource.nonEmpty) {
       add(indelRecal)
 
       val indelApply = ApplyRecalibration(this, inputVcf, swapExt(dir, inputVcf, ".vcf", ".indel.recal.vcf"),
         indelRecal.recal_file, indelRecal.tranches_file, indel = true)
       add(indelApply)
 
-      return indelApply.out
+      indelApply.out
     } else {
       logger.warn("Skipped indel Recalibration, resource is missing")
-      return inputVcf
+      inputVcf
     }
   }
 
   def addVariantAnnotator(inputvcf: File, bamfiles: List[File], dir: File): File = {
     val variantAnnotator = VariantAnnotator(this, inputvcf, bamfiles, swapExt(dir, inputvcf, ".vcf", ".anotated.vcf"))
     add(variantAnnotator)
-    return variantAnnotator.out
+    variantAnnotator.out
   }
 }
 

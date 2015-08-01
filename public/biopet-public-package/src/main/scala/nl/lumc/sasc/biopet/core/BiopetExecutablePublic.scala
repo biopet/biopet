@@ -26,13 +26,15 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu,
     nl.lumc.sasc.biopet.pipelines.kopisu.ConiferPipeline,
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
-    nl.lumc.sasc.biopet.pipelines.toucan.Toucan
+    nl.lumc.sasc.biopet.pipelines.toucan.Toucan,
+    nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling
   )
 
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.basty.Basty
+    nl.lumc.sasc.biopet.pipelines.basty.Basty,
+    nl.lumc.sasc.biopet.pipelines.gears.Gears
   ) ::: protectedPipelines
 
   def tools: List[MainCommand] = List(
@@ -55,7 +57,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.MergeAlleles,
     nl.lumc.sasc.biopet.tools.SamplesTsvToJson,
-    nl.lumc.sasc.biopet.tools.Seqstat,
+    nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
     nl.lumc.sasc.biopet.tools.VcfWithVcf)

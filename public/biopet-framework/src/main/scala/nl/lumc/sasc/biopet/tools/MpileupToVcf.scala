@@ -15,22 +15,22 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
-import java.io.PrintWriter
+import java.io.{ File, PrintWriter }
+
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import scala.math.round
-import scala.math.floor
-import scala.collection.JavaConversions._
+import scala.math.{ floor, round }
 
-class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
@@ -47,31 +47,33 @@ class MpileupToVcf(val root: Configurable) extends BiopetJavaCommandLineFunction
   var homoFraction: Option[Double] = config("homoFraction")
   var ploidy: Option[Int] = config("ploidy")
   var sample: String = _
-  var reference: String = config("reference")
+  var reference: String = _
 
-  override val defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 3.0
 
   override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
     super.defaults)
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
+    reference = referenceFasta().getAbsolutePath
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
-  override def beforeCmd: Unit = {
+  override def beforeCmd(): Unit = {
     if (sample == null && inputBam.exists()) {
       val inputSam = SamReaderFactory.makeDefault.open(inputBam)
       val readGroups = inputSam.getFileHeader.getReadGroups
       val samples = readGroups.map(readGroup => readGroup.getSample).distinct
       sample = samples.head
-      inputSam.close
+      inputSam.close()
     }
   }
 
   override def commandLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
+      samtoolsMpileup.reference = referenceFasta()
       samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +
@@ -91,12 +93,12 @@ object MpileupToVcf extends ToolCommand {
                   homoFraction: Double = 0.8, ploidy: Int = 2) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "input") valueName ("<file>") action { (x, c) =>
+    opt[File]('I', "input") valueName "<file>" action { (x, c) =>
       c.copy(input = x)
-    } text ("input, default is stdin")
-    opt[File]('o', "output") required () valueName ("<file>") action { (x, c) =>
+    } text "input, default is stdin"
+    opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
-    } text ("out is a required file property")
+    } text "out is a required file property"
     opt[String]('s', "sample") required () action { (x, c) =>
       c.copy(sample = x)
     }
@@ -138,16 +140,15 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
     val inputStream = if (commandArgs.input != null) {
-      Source.fromFile(commandArgs.input).getLines
+      Source.fromFile(commandArgs.input).getLines()
     } else {
       logger.info("No input file as argument, waiting on stdin")
-      Source.stdin.getLines
+      Source.stdin.getLines()
     }
     class Counts(var forward: Int, var reverse: Int)
     for (
       line <- inputStream;
-      values = line.split("\t");
-      if values.size > 5
+      values = line.split("\t") if values.size > 5
     ) {
       val chr = values(0)
       val pos = values(1)
@@ -161,7 +162,7 @@ object MpileupToVcf extends ToolCommand {
       val mpileup = values(4)
       val qual = values(5)
 
-      val counts: Map[String, Counts] = Map(ref.toUpperCase -> new Counts(0, 0))
+      val counts: mutable.Map[String, Counts] = mutable.Map(ref.toUpperCase -> new Counts(0, 0))
 
       def addCount(s: String) {
         val upper = s.toUpperCase
@@ -172,23 +173,20 @@ object MpileupToVcf extends ToolCommand {
 
       var t = 0
       var dels = 0
-      while (t < mpileup.size) {
+      while (t < mpileup.length) {
         mpileup(t) match {
-          case ',' => {
+          case ',' =>
             addCount(ref.toLowerCase)
             t += 1
-          }
-          case '.' => {
+          case '.' =>
             addCount(ref.toUpperCase)
             t += 1
-          }
           case '^' => t += 2
           case '$' => t += 1
-          case '*' => {
+          case '*' =>
             dels += 1
             t += 1
-          }
-          case '+' | '-' => {
+          case '+' | '-' =>
             t += 1
             var size = ""
             var insert = ""
@@ -198,17 +196,15 @@ object MpileupToVcf extends ToolCommand {
             }
             for (c <- t until t + size.toInt) insert = insert + mpileup(c)
             t += size.toInt
-          }
-          case 'a' | 'c' | 't' | 'g' | 'A' | 'C' | 'T' | 'G' => {
+          case 'a' | 'c' | 't' | 'g' | 'A' | 'C' | 'T' | 'G' =>
             addCount(mpileup(t).toString)
             t += 1
-          }
           case _ => t += 1
         }
       }
 
       val info: ArrayBuffer[String] = ArrayBuffer("DP=" + reads)
-      val format: Map[String, String] = Map("DP" -> reads.toString)
+      val format: mutable.Map[String, String] = mutable.Map("DP" -> reads.toString)
       val alt: ArrayBuffer[String] = new ArrayBuffer
       format += ("RFC" -> counts(ref.toUpperCase).forward.toString)
       format += ("RRC" -> counts(ref.toUpperCase).reverse.toString)
@@ -222,14 +218,14 @@ object MpileupToVcf extends ToolCommand {
           round((value.forward + value.reverse).toDouble / reads * 1E4).toDouble / 1E2))
       }
 
-      if (alt.size > 0) {
+      if (alt.nonEmpty) {
         val ad = for (ad <- format("AD").split(",")) yield ad.toInt
         var left = reads - dels
         val gt = ArrayBuffer[Int]()
 
         for (p <- 0 to alt.size if gt.size < commandArgs.ploidy) {
           var max = -1
-          for (a <- 0 until ad.length if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.exists(_ == a)) max = a
+          for (a <- ad.indices if ad(a) > (if (max >= 0) ad(max) else -1) && !gt.contains(a)) max = a
           val f = ad(max).toDouble / left
           for (a <- 0 to floor(f).toInt if gt.size < commandArgs.ploidy) gt.append(max)
           if (f - floor(f) >= commandArgs.homoFraction) {
@@ -242,6 +238,6 @@ object MpileupToVcf extends ToolCommand {
         ).mkString("\t"))
       }
     }
-    writer.close
+    writer.close()
   }
 }

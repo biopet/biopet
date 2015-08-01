@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class GenotypeGVCFs(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.GenotypeGVCFs with GatkGeneral {
@@ -28,6 +29,6 @@ object GenotypeGVCFs {
     val gg = new GenotypeGVCFs(root)
     gg.variant = gvcfFiles
     gg.out = output
-    return gg
+    gg
   }
 }

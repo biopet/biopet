@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class VariantAnnotator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantAnnotator with GatkGeneral {
@@ -19,6 +20,6 @@ object VariantAnnotator {
     va.variant = input
     va.input_file = bamFiles
     va.out = output
-    return va
+    va
   }
 }

@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
+
+import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import nl.lumc.sasc.biopet.core.config.Configurable
 
 /**
  * Wrapper for the seqtk seq subcommand.
@@ -40,7 +41,7 @@ class SeqtkSeq(val root: Configurable) extends Seqtk with Summarizable {
   /** masked bases converted to CHAR; 0 for lowercase [0] */
   var n: Option[String] = config("n")
 
-  /** number of residues per line; 0 for 2^32-1 [0] */
+  /** number of residues per line; 0 for 2&#94;32-1 [0] */
   var l: Option[Int] = config("l")
 
   /** quality shift: ASCII-INT gives base quality [33] */

@@ -22,8 +22,9 @@ Arguments for Toucan:
 Configuration
 -------------
 You can set all the usual [flags and options](http://www.ensembl.org/info/docs/tools/vep/script/vep_options.html) of the VEP in the configuration,
-with the same name used by native VEP.
-As some of these flags might conflict with other Biopet tools/pipelines, it is wise to put the VEP in its own JSON object.
+with the same name used by native VEP, except those added after version 75.
+The naming scheme for flags an options is indentical to the one used by the VEP
+As some of these flags might conflict with other Biopet tools/pipelines, it is wise to put the VEP in its own namespace.
 
 You **MUST** set the following fields:
 
@@ -46,7 +47,7 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
     "vepnormalizer": {
         "mode": "standard"
     },
-    "out_dir": <path_to_output_directory>
+    "output_dir": <path_to_output_directory>
 }
 ~~~~
 

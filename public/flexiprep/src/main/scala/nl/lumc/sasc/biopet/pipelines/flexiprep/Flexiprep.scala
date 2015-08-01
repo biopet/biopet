@@ -15,15 +15,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
-
-import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.tools.Seqstat
-import nl.lumc.sasc.biopet.tools.FastqSync
+import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
+import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
@@ -63,6 +60,16 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   var fastqc_R1_after: Fastqc = _
   var fastqc_R2_after: Fastqc = _
 
+  override def reportClass = {
+    val flexiprepReport = new FlexiprepReport(this)
+    flexiprepReport.outputDir = new File(outputDir, "report")
+    flexiprepReport.summaryFile = summaryFile
+    flexiprepReport.args = Map(
+      "sampleId" -> sampleId.getOrElse("."),
+      "libId" -> libId.getOrElse("."))
+    Some(flexiprepReport)
+  }
+
   /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
@@ -75,18 +82,17 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
     else R1_name = input_R1.getName
-    R1_ext = R1_name.substring(R1_name.lastIndexOf("."), R1_name.size)
+    R1_ext = R1_name.substring(R1_name.lastIndexOf("."), R1_name.length)
     R1_name = R1_name.substring(0, R1_name.lastIndexOf(R1_ext))
 
     input_R2 match {
-      case Some(fileR2) => {
+      case Some(fileR2) =>
         paired = true
         if (fileR2.endsWith(".gz")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gz"))
         else if (fileR2.endsWith(".gzip")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gzip"))
         else R2_name = fileR2.getName
-        R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.size)
+        R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.length)
         R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
-      }
       case _ =>
     }
   }
@@ -123,43 +129,19 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   //TODO: Refactor need to combine all this functions
 
-  /**
-   * Adds all chunkable jobs of flexiprep
-   * @param R1_in
-   * @param outDir
-   * @param chunk
-   * @return
-   */
+  /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File], List[File]) =
     runTrimClip(R1_in, None, outDir, chunk)
 
-  /**
-   * Adds all chunkable jobs of flexiprep
-   * @param R1_in
-   * @param outDir
-   * @return
-   */
+  /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, outDir: File): (File, Option[File], List[File]) =
     runTrimClip(R1_in, None, outDir, "")
 
-  /**
-   * Adds all chunkable jobs of flexiprep
-   * @param R1_in
-   * @param R2_in
-   * @param outDir
-   * @return
-   */
+  /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File): (File, Option[File], List[File]) =
     runTrimClip(R1_in, R2_in, outDir, "")
 
-  /**
-   * Adds all chunkable jobs of flexiprep
-   * @param R1_in
-   * @param R2_in
-   * @param outDir
-   * @param chunkarg
-   * @return
-   */
+  /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File, chunkarg: String): (File, Option[File], List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
     var results: Map[String, File] = Map()
@@ -186,14 +168,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       deps_R2 ::= R2.get
     }
 
-    val seqstat_R1 = Seqstat(this, R1, outDir)
+    val seqstat_R1 = SeqStat(this, R1, outDir)
     seqstat_R1.isIntermediate = true
     seqstat_R1.deps = deps_R1
     add(seqstat_R1)
     addSummarizable(seqstat_R1, "seqstat_R1")
 
     if (paired) {
-      val seqstat_R2 = Seqstat(this, R2.get, outDir)
+      val seqstat_R2 = SeqStat(this, R2.get, outDir)
       seqstat_R2.isIntermediate = true
       seqstat_R2.deps = deps_R2
       add(seqstat_R2)
@@ -259,28 +241,24 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       if (paired) R2 = Some(sickle.output_R2)
     }
 
-    val seqstat_R1_after = Seqstat(this, R1, outDir)
+    val seqstat_R1_after = SeqStat(this, R1, outDir)
     seqstat_R1_after.deps = deps_R1
     add(seqstat_R1_after)
-    addSummarizable(seqstat_R1_after, "seqstat_R1_after")
+    addSummarizable(seqstat_R1_after, "seqstat_R1_qc")
 
     if (paired) {
-      val seqstat_R2_after = Seqstat(this, R2.get, outDir)
+      val seqstat_R2_after = SeqStat(this, R2.get, outDir)
       seqstat_R2_after.deps = deps_R2
       add(seqstat_R2_after)
-      addSummarizable(seqstat_R2_after, "seqstat_R2_after")
+      addSummarizable(seqstat_R2_after, "seqstat_R2_qc")
     }
 
     outputFiles += (chunk + "output_R1" -> R1)
     if (paired) outputFiles += (chunk + "output_R2" -> R2.get)
-    return (R1, R2, deps)
+    (R1, R2, deps)
   }
 
-  /**
-   * Adds last non chunkable jobs
-   * @param fastq_R1
-   * @param fastq_R2
-   */
+  /** Adds last non chunkable jobs */
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
     if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
     val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
@@ -304,31 +282,26 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       }
     }
 
-    addSummaryJobs
+    addSummaryJobs()
   }
 
-  /**
-   * Extracts file if file is compressed
-   * @param file
-   * @param runDir
-   * @return returns extracted file
-   */
+  /** Extracts file if file is compressed */
   def extractIfNeeded(file: File, runDir: File): File = {
-    if (file == null) return file
-    else if (file.getName().endsWith(".gz") || file.getName().endsWith(".gzip")) {
+    if (file == null) file
+    else if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")
-      if (file.getName().endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
+      if (file.getName.endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
       val zcatCommand = Zcat(this, file, newFile)
       zcatCommand.isIntermediate = true
       add(zcatCommand)
-      return newFile
-    } else if (file.getName().endsWith(".bz2")) {
+      newFile
+    } else if (file.getName.endsWith(".bz2")) {
       val newFile = swapExt(runDir, file, ".bz2", "")
       val pbzip2 = Pbzip2(this, file, newFile)
       pbzip2.isIntermediate = true
       add(pbzip2)
-      return newFile
-    } else return file
+      newFile
+    } else file
   }
 }
 

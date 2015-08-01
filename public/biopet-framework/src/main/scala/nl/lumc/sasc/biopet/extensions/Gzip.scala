@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import java.io.File
 
 class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
@@ -29,6 +30,9 @@ class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "gzip")
 
+  override def versionRegex = """gzip (.*)""".r
+  override def versionCommand = executable + " --version"
+
   def cmdLine = required(executable) + " -c " + repeat(input) + " > " + required(output)
 }
 
@@ -37,6 +41,6 @@ object Gzip {
     val gzip = new Gzip(root)
     gzip.input = input
     gzip.output = output
-    return gzip
+    gzip
   }
 }

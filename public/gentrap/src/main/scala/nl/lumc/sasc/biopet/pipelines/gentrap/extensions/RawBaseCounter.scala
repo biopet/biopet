@@ -16,18 +16,20 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
-import scala.language.reflectiveCalls
 
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.language.reflectiveCalls
 
 /** Ad-hoc extension for counting bases that involves 3-command pipe */
 // FIXME: generalize piping instead of building something by hand like this!
 // Better to do everything quick and dirty here rather than something half-implemented with the objects
 class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction { wrapper =>
+
+  override def configName = "rawbasecounter"
 
   @Input(doc = "Reference BED file", required = true)
   var annotationBed: File = null
@@ -53,6 +55,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   private def grepForStrand = new BiopetCommandLineFunction {
     var strand: String = null
     override val root: Configurable = wrapper.root
+    override def configName = wrapper.configName
     executable = config("exe", default = "grep", freeVar = false)
     override def cmdLine: String = required(executable) +
       required("-P", """\""" + strand + """$""") +
@@ -61,7 +64,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
 
   private def bedtoolsCovHist = new BiopetCommandLineFunction {
     var bam: File = null
-    override val configName = "bedtoolscoverage"
+    override def configName = "bedtoolscoverage"
     override val root: Configurable = wrapper.root
     executable = config("exe", default = "coverageBed", freeVar = false)
     override def cmdLine: String = required(executable) +
@@ -73,11 +76,12 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
 
   private def hist2Count = new PythonCommandLineFunction {
     setPythonScript("hist2count.py", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
+    override def configName = wrapper.configName
     override val root: Configurable = wrapper.root
     def cmdLine = getPythonCommand + optional("-c", "3")
   }
 
-  override def beforeGraph: Unit = {
+  override def beforeGraph(): Unit = {
     require(annotationBed != null, "Annotation BED must be supplied")
     require(output != null, "Output must be defined")
     require((mixedStrand && !distinctStrand) || (!mixedStrand && distinctStrand),

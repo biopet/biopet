@@ -117,9 +117,9 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction {
   /** Disable SCV correction */
   var no_scv_correction: Boolean = config("no_scv_correction", default = false)
 
-  override val versionRegex = """cuffquant v(.*)""".r
+  override def versionRegex = """cuffquant v(.*)""".r
   override def versionCommand = executable
-  override val versionExitcode = List(0, 1)
+  override def versionExitcode = List(0, 1)
 
   def cmdLine =
     required(executable) +

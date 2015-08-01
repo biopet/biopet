@@ -8,10 +8,12 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
-import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaVariantcallingTrait, ShivaTrait }
+import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaTrait, ShivaVariantcallingTrait }
 import org.broadinstitute.gatk.queue.QScript
 
 /**
+ * Shiva inplementation with GATK steps
+ *
  * Created by pjvan_thof on 2/26/15.
  */
 class Shiva(val root: Configurable) extends QScript with ShivaTrait {
@@ -47,7 +49,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       /** Return true when baserecalibration is executed */
       protected def doneBaseRecalibrator: Boolean = {
         val br = new BaseRecalibrator(qscript)
-        useBaseRecalibration && !br.knownSites.isEmpty
+        useBaseRecalibration && br.knownSites.nonEmpty
       }
 
       /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
@@ -70,13 +72,12 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     /** This methods will add double preprocess steps, with GATK indel realignment */
     override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input.size <= 1) super.addDoublePreProcess(input)
-      else super.addDoublePreProcess(input, true).collect {
-        case file => {
+      else super.addDoublePreProcess(input, isIntermediate = true).collect {
+        case file =>
           config("use_indel_realigner", default = true).asBoolean match {
-            case true  => addIndelRealign(file, sampleDir, false)
+            case true  => addIndelRealign(file, sampleDir, isIntermediate = false)
             case false => file
           }
-        }
       }
     }
   }
@@ -91,7 +92,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
-    return indelRealigner.o
+    indelRealigner.o
   }
 
   /** Adds base recalibration jobs */
@@ -117,7 +118,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     printReads.isIntermediate = isIntermediate
     add(printReads)
 
-    return printReads.o
+    printReads.o
   }
 }
 

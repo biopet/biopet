@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import java.io.{ FileOutputStream, File }
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
@@ -17,9 +17,11 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, DataProvider }
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
+ * Class for testing shiva
+ *
  * Created by pjvan_thof on 3/2/15.
  */
 class ShivaTest extends TestNGSuite with Matchers {
@@ -48,16 +50,16 @@ class ShivaTest extends TestNGSuite with Matchers {
                 covariates: Boolean, realign: Boolean, baseRecalibration: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = ShivaTest.config
-      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m.toMap)
-      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m.toMap)
-      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m.toMap)
-      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m.toMap)
-      ConfigUtils.mergeMaps(Map("multisample_sample_variantcalling" -> multi,
+      if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
+      if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
+      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m)
+      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m)
+      ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library,
         "use_analyze_covariates" -> covariates,
         "use_indel_realigner" -> realign,
-        "use_base_recalibration" -> baseRecalibration), m.toMap)
+        "use_base_recalibration" -> baseRecalibration), m)
 
     }
 
@@ -122,7 +124,10 @@ object ShivaTest {
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
-    "wigtobigwig" -> Map("exe" -> "test")
+    "wigtobigwig" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test"),
+    "tabix" -> Map("exe" -> "test")
   )
 
   val sample1 = Map(

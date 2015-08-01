@@ -53,7 +53,7 @@ class FastQCModule(object):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__,
-                '[%r, ...]' % self.raw_lines[0])
+                           '[%r, ...]' % self.raw_lines[0])
 
     def __str__(self):
         return ''.join(self.raw_lines)
@@ -88,7 +88,7 @@ class FastQCModule(object):
         self._name = name
         status = tokens[-1]
         assert status in ('pass', 'fail', 'warn'), "Unknown module status: %r" \
-            % status
+                                                   % status
         self._status = status
         # and column names from second line
         columns = self.raw_lines[1][1:].strip().split('\t')
@@ -123,7 +123,7 @@ class FastQC(object):
         '>>Sequence Duplication Levels': 'sequence_duplication_levels',
         '>>Overrepresented sequences': 'overrepresented_sequences',
         '>>Kmer content': 'kmer_content',
-    }
+        }
 
     def __init__(self, fname):
         """
@@ -299,12 +299,12 @@ class LongTable(object):
             "\\hline \\hline",
             "\\endhead",
             "\\hline \\multicolumn{%i}{c}{\\textit{Continued on next page}}\\\\" % \
-                    colnum,
+            colnum,
             "\\hline",
             "\\endfoot",
             "\\hline",
             "\\endlastfoot",
-        ]
+            ]
 
     def __str__(self):
         return "\n".join(self.lines)
@@ -314,7 +314,7 @@ class LongTable(object):
 
     def end(self):
         self.lines.extend(["\\end{longtable}", "\\end{center}",
-            "\\addtocounter{table}{-1}"])
+                           "\\addtocounter{table}{-1}"])
 
 
 # filter functions for the jinja environment
@@ -348,7 +348,7 @@ def float2nice_pct(num, default="None"):
 # and some handy functions
 def natural_sort(inlist):
     key = lambda x: [int(a) if a.isdigit() else a.lower() for a in
-            re.split("([0-9]+)", x)]
+                     re.split("([0-9]+)", x)]
     inlist.sort(key=key)
     return inlist
 
@@ -383,7 +383,7 @@ def write_template(run, template_file, logo_file):
     run.logo = logo_file
     render_vars = {
         "run": run,
-    }
+        }
     rendered = jinja_template.render(**render_vars)
 
     print(rendered, file=sys.stdout)
@@ -417,36 +417,43 @@ class GentrapLib(object):
             self.fastqc_r2_qc_files = self.flexiprep["files"]["fastqc_R2_qc"]
             self.fastqc_r2_qc = FastQC(self.fastqc_r2_qc_files["fastqc_data"]["path"])
         # mapping metrics settings
-        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
+        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("CollectAlignmentSummaryMetrics", {})
+        for k, v in self.aln_metrics.items():
+            self.aln_metrics[k] = {a.lower(): b for a, b in v.items()}
         # insert size metrics files
-        self.inserts_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("insert_size_metrics", {})
+        self.inserts_metrics_files = \
+            summary.get("bammetrics", {}).get("files", {}).get("multi_metrics", {})
         # rna metrics files and stats
-        self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
-        _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
+        self.rna_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("rna", {})
+        _rmetrics = summary.get("bammetrics", {}).get("stats", {}).get("rna", {})
         if _rmetrics:
-            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
+            if "metrics" in _rmetrics:
+                _rmetrics = _rmetrics["metrics"]
+        if _rmetrics:
+            _rmetrics = {k.lower(): v for k, v in _rmetrics.items() }
+            self.rna_metrics = _rmetrics
             pf_bases = float(_rmetrics["pf_bases"])
             exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
             # picard uses pct_ but it's actually ratio ~ we follow their convention
             pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
             pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
             self.rna_metrics.update({
-                    "exonic_bases": exonic_bases,
-                    "pct_exonic_bases_all": pct_exonic_bases_all,
-                    "pct_exonic_bases": pct_exonic_bases,
-                    "pct_aligned_bases": 1.0,
-                    "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
-                    "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
-                    "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
-                    "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
-                    "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
-            })
+                "exonic_bases": exonic_bases,
+                "pct_exonic_bases_all": pct_exonic_bases_all,
+                "pct_exonic_bases": pct_exonic_bases,
+                "pct_aligned_bases": 1.0,
+                "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
+                })
             if _rmetrics.get("ribosomal_bases", "") != "":
                 self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
 
     def __repr__(self):
         return "{0}(sample=\"{1}\", lib=\"{2}\")".format(
-                self.__class__.__name__, self.sample.name, self.name)
+            self.__class__.__name__, self.sample.name, self.name)
 
 
 class GentrapSample(object):
@@ -458,32 +465,36 @@ class GentrapSample(object):
         self._raw = summary
         self.is_paired_end = summary.get("gentrap", {}).get("stats", {}).get("pipeline", {})["all_paired"]
         # mapping metrics settings
-        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("alignment_metrics", {})
+        self.aln_metrics = summary.get("bammetrics", {}).get("stats", {}).get("CollectAlignmentSummaryMetrics", {})
+        for k, v in self.aln_metrics.items():
+            self.aln_metrics[k] = {a.lower(): b for a, b in v.items()}
         # insert size metrics files
-        self.inserts_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("insert_size_metrics", {})
+        self.inserts_metrics_files = \
+            summary.get("bammetrics", {}).get("files", {}).get("multi_metrics", {})
         # rna metrics files and stats
-        self.rna_metrics_files = summary.get("gentrap", {}).get("files", {}).get("rna_metrics", {})
-        _rmetrics = summary.get("gentrap", {}).get("stats", {}).get("rna_metrics", {})
+        self.rna_metrics_files = summary.get("bammetrics", {}).get("files", {}).get("rna", {})
+        _rmetrics = summary.get("bammetrics", {}).get("stats", {}).get("rna", {})
         if _rmetrics:
-            self.rna_metrics = {k: v for k, v in _rmetrics.items() }
+            if "metrics" in _rmetrics:
+                _rmetrics = _rmetrics["metrics"]
+        if _rmetrics:
+            _rmetrics = {k.lower(): v for k, v in _rmetrics.items() }
+            self.rna_metrics = _rmetrics
             pf_bases = float(_rmetrics["pf_bases"])
             exonic_bases = int(_rmetrics.get("coding_bases", 0)) + int(_rmetrics.get("utr_bases", 0))
             # picard uses pct_ but it's actually ratio ~ we follow their convention
             pct_exonic_bases_all = exonic_bases / float(_rmetrics["pf_bases"])
             pct_exonic_bases = exonic_bases / float(_rmetrics.get("pf_aligned_bases", 0))
             self.rna_metrics.update({
-                    "exonic_bases": exonic_bases,
-                    "pct_exonic_bases_all": pct_exonic_bases_all,
-                    "pct_exonic_bases": pct_exonic_bases,
-                    "pct_aligned_bases": 1.0,
-                    "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
-                    "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
-                    "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
-                    "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
-                    "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
-            })
-            if self.run.settings["strand_protocol"] != "non_specific":
-                self.rna_metrics.update({
+                "exonic_bases": exonic_bases,
+                "pct_exonic_bases_all": pct_exonic_bases_all,
+                "pct_exonic_bases": pct_exonic_bases,
+                "pct_aligned_bases": 1.0,
+                "pct_aligned_bases_all": float(_rmetrics.get("pf_aligned_bases", 0.0)) / pf_bases,
+                "pct_coding_bases_all": float(_rmetrics.get("coding_bases", 0.0)) / pf_bases,
+                "pct_utr_bases_all": float(_rmetrics.get("utr_bases", 0.0)) / pf_bases,
+                "pct_intronic_bases_all": float(_rmetrics.get("intronic_bases", 0.0)) / pf_bases,
+                "pct_intergenic_bases_all": float(_rmetrics.get("intergenic_bases", 0.0)) / pf_bases,
                 })
             if _rmetrics.get("ribosomal_bases", "") != "":
                 self.rna_metrics["pct_ribosomal_bases_all"] = float(_rmetrics.get("pf_ribosomal_bases", 0.0)) / pf_bases
@@ -491,7 +502,7 @@ class GentrapSample(object):
         self.lib_names = sorted(summary["libraries"].keys())
         self.libs = \
             {l: GentrapLib(self.run, self, l, summary["libraries"][l]) \
-                for l in self.lib_names}
+             for l in self.lib_names}
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__, self.name)
@@ -521,7 +532,7 @@ class GentrapRun(object):
             ("tophat", "alignment"),
             ("star", "alignment"),
             ("htseqcount", "fragment counting"),
-        ]
+            ]
         self.executables = {}
         for k, desc in executables:
             in_summary = self.all_executables.get(k)
@@ -543,7 +554,7 @@ class GentrapRun(object):
         self.sample_names = sorted(summary["samples"].keys())
         self.samples = \
             {s: GentrapSample(self, s, summary["samples"][s]) \
-                for s in self.sample_names}
+             for s in self.sample_names}
         self.libs = []
         for sample in self.samples.values():
             self.libs.extend(sample.libs.values())
@@ -556,19 +567,20 @@ class GentrapRun(object):
 
     def __repr__(self):
         return "{0}(\"{1}\")".format(self.__class__.__name__,
-                                        self.summary_file)
+                                     self.summary_file)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("summary_file", type=str,
-            help="Path to Gentrap summary file")
+                        help="Path to Gentrap summary file")
     parser.add_argument("template_file", type=str,
-            help="Path to main template file")
+                        help="Path to main template file")
     parser.add_argument("logo_file", type=str,
-            help="Path to main logo file")
+                        help="Path to main logo file")
     args = parser.parse_args()
 
     run = GentrapRun(args.summary_file)
     write_template(run, args.template_file, args.logo_file)
+

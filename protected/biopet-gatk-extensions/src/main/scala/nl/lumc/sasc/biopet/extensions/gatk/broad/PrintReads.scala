@@ -6,6 +6,7 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 
 class PrintReads(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.PrintReads with GatkGeneral {
@@ -17,6 +18,6 @@ object PrintReads {
     val br = new PrintReads(root)
     br.input_file :+= input
     br.out = output
-    return br
+    br
   }
 }

@@ -25,16 +25,31 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
   javaGCTimeLimit = config("java_gc_timelimit")
 
+  override protected def defaultVmemFactor: Double = 2.0
+
   /** Constructs java opts, this adds scala threads */
   override def javaOpts = super.javaOpts +
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
 
   /** Creates command to execute extension */
   override def commandLine: String = {
-    preCmdInternal
+    preCmdInternal()
     val cmd = super.commandLine
     val finalCmd = executable + cmd.substring(cmd.indexOf(" "))
-    return cmd
+    cmd
+  }
+
+  def javaVersionCommand: String = executable + " -version"
+
+  def getJavaVersion: Option[String] = {
+    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+      preProcessExecutable()
+    if (!BiopetCommandLineFunctionTrait.versionCache.contains(javaVersionCommand))
+      getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
+        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += javaVersionCommand -> version
+        case _             =>
+      }
+    BiopetCommandLineFunctionTrait.versionCache.get(javaVersionCommand)
   }
 
   override def setupRetry(): Unit = {

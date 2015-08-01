@@ -27,10 +27,10 @@ import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.JavaConverters._
 
-class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
+class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
 
-  import nl.lumc.sasc.biopet.tools.Seqstat._
   import nl.lumc.sasc.biopet.tools.FqEncoding._
+  import nl.lumc.sasc.biopet.tools.SeqStat._
 
   private def resourceFile(p: String): File =
     new File(resourcePath(p))
@@ -59,7 +59,7 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
   def testSeqCountReads(fqMock: FastqReader) = {
     when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
 
-    val seqstat = Seqstat
+    val seqstat = SeqStat
     val numReads = seqstat.seqStat(fqMock)
     numReads shouldBe 5
   }
@@ -67,7 +67,7 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test(dataProvider = "mockReaderProvider", groups = Array("phredscore"), singleThreaded = true, dependsOnGroups = Array("read"))
   def testEncodingDetectionSanger(fqMock: FastqReader) = {
 
-    val seqstat = Seqstat
+    val seqstat = SeqStat
     seqstat.summarize()
 
     seqstat.phredEncoding shouldBe Sanger
@@ -76,7 +76,7 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test(dataProvider = "mockReaderProvider", groups = Array("nucleocount"), singleThreaded = true, dependsOnGroups = Array("phredscore"))
   def testEncodingNucleotideCount(fqMock: FastqReader) = {
 
-    val seqstat = Seqstat
+    val seqstat = SeqStat
     nucleotideHistoMap('N') shouldEqual 5
     nucleotideHistoMap('A') shouldEqual 5
     nucleotideHistoMap('C') shouldEqual 5
@@ -87,12 +87,12 @@ class SeqstatTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test(dataProvider = "mockReaderProvider", groups = Array("basehistogram"), singleThreaded = true, dependsOnGroups = Array("nucleocount"))
   def testEncodingBaseHistogram(fqMock: FastqReader) = {
 
-    val seqstat = Seqstat
+    val seqstat = SeqStat
     baseHistogram(40) shouldEqual 5
-    baseHistogram(39) shouldEqual 10
-    baseHistogram(34) shouldEqual 15
-    baseHistogram(33) shouldEqual 20
-    baseHistogram(0) shouldEqual 20
+    baseHistogram(39) shouldEqual 5
+    baseHistogram(34) shouldEqual 5
+    baseHistogram(33) shouldEqual 5
+    baseHistogram.head shouldEqual 5
   }
 
   @Test def testArgsMinimum() = {

@@ -5,10 +5,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.{ Input, Argument }
+
 import scala.util.Random
 
 class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with BiopetQScript {
@@ -38,7 +38,7 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     var gvcfPool: List[File] = Nil
     addGenotypingPipeline(gvcfPool)
 
-    while (todoGvcfs.size > 0) {
+    while (todoGvcfs.nonEmpty) {
       val index = Random.nextInt(todoGvcfs.size)
       gvcfPool ::= todoGvcfs(index)
       addGenotypingPipeline(gvcfPool)
@@ -51,8 +51,8 @@ class GatkBenchmarkGenotyping(val root: Configurable) extends QScript with Biope
     gatkGenotyping.inputGvcfs = sampleGvcf :: gvcfPool
     gatkGenotyping.samples :+= sampleName
     gatkGenotyping.outputDir = new File(outputDir, "samples_" + gvcfPool.size)
-    gatkGenotyping.init
-    gatkGenotyping.biopetScript
+    gatkGenotyping.init()
+    gatkGenotyping.biopetScript()
     addAll(gatkGenotyping.functions)
   }
 }

@@ -16,9 +16,10 @@
 package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
+
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard MarkDuplicates */
 class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
@@ -73,8 +74,8 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   @Output(doc = "Bam Index", required = true)
   private var outputIndex: File = _
 
-  override def beforeGraph {
-    super.beforeGraph
+  override def beforeGraph() {
+    super.beforeGraph()
     if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
   }
 
