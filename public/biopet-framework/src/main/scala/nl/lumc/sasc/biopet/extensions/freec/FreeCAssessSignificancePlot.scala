@@ -11,6 +11,7 @@ class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommand
 
   @Input(doc = "Output file from FreeC. *_CNV")
   var cnv: File = null
+
   @Input(doc = "Output file from FreeC. *_ratio.txt")
   var ratios: File = null
 

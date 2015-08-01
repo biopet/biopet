@@ -15,67 +15,58 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
 
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
-import nl.lumc.sasc.biopet.extensions.{Cnmops, RscriptCommandLineFunction}
-import nl.lumc.sasc.biopet.extensions.sambamba.SambambaMpileup
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
-class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
+class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Reference {
+  qscript =>
   def this() = this(null)
 
-  var bamFile: File = config("bam")
-  var outputDirectory: File = outputDir
+  @Input(doc = "Input bam file", required = true)
+  var bamFile: File = _
 
-  def init() {
+  var outputName: String = _
+
+  def init(): Unit = {
+    if (outputName == null) outputName = bamFile.getName.stripSuffix(".bam")
   }
 
-  /*
-  * This script is in fact FreeC only.
-  * */
-
+  // This script is in fact FreeC only.
   def biopetScript() {
-    // This script starts from a BAM alignment file and creates the pileup file using sambamba
-
-    //    val sambambapileup = new SambambaMpileup(this)
-    //    sambambapileup.input = List(bamFile)
-    //    sambambapileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
-    //    sambambapileup.isIntermediate = true
-    //    add(sambambapileup)
-
-//    val cnmops = new Cnmops(this)
-//    cnmops.input
+    // This script starts from a BAM alignment file and creates the pileup file
 
     // below is FreeC specific
 
     val sampileup = new SamtoolsMpileup(this)
     sampileup.input = List(bamFile)
-    sampileup.intervalBed = None
-    sampileup.reference = config("reference")
-    sampileup.output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
-    sampileup.isIntermediate = true
+    sampileup.output = new File(outputDir, outputName + ".pileup.gz")
 
-    add(new CommandLineFunction {
-      analysisName = "smilepig"
-      nCoresRequest = 2
+    //TODO: need piping support
+    val smilepig = new CommandLineFunction {
       @Input
       var input = List(bamFile)
+
       @Output
-      var output = new File(outputDirectory, bamFile.getName.stripSuffix(".bam") + ".pileup.gz")
+      var output = new File(outputDir, outputName + ".pileup.gz")
+
+      val sampileup = new SamtoolsMpileup(qscript)
+      sampileup.input ::= bamFile
+
+      analysisName = "smilepig"
+      nCoresRequest = 2
       isIntermediate = true
+      //TODO: pigz must be a extension
       def commandLine: String = sampileup.cmdPipe + " | pigz -9 -p 4 -c > " + output.getAbsolutePath
-    })
+    }
+    add(smilepig)
 
     val FreeC = new FreeC(this)
-    FreeC.input = sampileup.output
-    FreeC.outputPath = outputDirectory + File.separator + "CNV"
+    FreeC.input = smilepig.output
+    FreeC.outputPath = new File(outputDir, "CNV")
     add(FreeC)
 
     /*
@@ -84,24 +75,20 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript {
     * R-scripts to plot FreeC results
     * */
     val FCAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
-    FCAssessSignificancePlot.deps = List(FreeC.CNVoutput)
     FCAssessSignificancePlot.cnv = FreeC.CNVoutput
     FCAssessSignificancePlot.ratios = FreeC.RatioOutput
-    FCAssessSignificancePlot.output = new File(outputDirectory, "freec_significant_calls.txt")
+    FCAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
     add(FCAssessSignificancePlot)
 
     val FCCnvPlot = new FreeCCNVPlot(this)
-    FCCnvPlot.deps = List(FreeC.CNVoutput, FreeC.RatioOutput)
     FCCnvPlot.input = FreeC.RatioOutput
-    FCCnvPlot.output = new File(outputDirectory, "freec_cnv.png")
+    FCCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
     add(FCCnvPlot)
 
     val FCBAFPlot = new FreeCBAFPlot(this)
-    FCBAFPlot.deps = List(FreeC.CNVoutput, FreeC.BAFoutput)
     FCBAFPlot.input = FreeC.BAFoutput
-    FCBAFPlot.output = new File(outputDirectory, "freec_baf.png")
+    FCBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
     add(FCBAFPlot)
-
   }
 }
 
