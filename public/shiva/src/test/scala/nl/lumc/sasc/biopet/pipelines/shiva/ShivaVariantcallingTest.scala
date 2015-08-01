@@ -103,6 +103,9 @@ object ShivaVariantcallingTest {
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
