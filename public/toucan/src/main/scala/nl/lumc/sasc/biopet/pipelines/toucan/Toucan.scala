@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.tools.VepNormalizer
@@ -27,7 +28,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript with Reference {
+class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
@@ -56,6 +57,11 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Ref
     add(normalizer)
   }
 
+  def summaryFile = new File(outputDir, "Toucan.summary.json")
+
+  def summaryFiles = Map()
+
+  def summarySettings = Map()
 }
 
 object Toucan extends PipelineCommand
