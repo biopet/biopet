@@ -542,7 +542,7 @@ object VcfStats extends ToolCommand {
       else addToBuffer(tag, value, found = true)
     }
 
-    Map(record.getChr -> buffer.toMap, "total" -> buffer.toMap)
+    Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
   }
 
   /** Function to check sample/genotype specific stats */
@@ -593,7 +593,7 @@ object VcfStats extends ToolCommand {
       else addToBuffer(tag, value, found = true)
     }
 
-    Map(record.getChr -> buffer.toMap, "total" -> buffer.toMap)
+    Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
   }
 
   /** Function to write 1 specific genotype field */

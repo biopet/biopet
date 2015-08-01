@@ -87,7 +87,7 @@ object WipeReads extends ToolCommand {
     def makeIntervalFromBed(inFile: File): Iterator[Interval] =
       asScalaIteratorConverter(getFeatureReader(inFile.toPath.toString, new BEDCodec(), false).iterator)
         .asScala
-        .map(x => new Interval(x.getChr, x.getStart, x.getEnd))
+        .map(x => new Interval(x.getContig, x.getStart, x.getEnd))
 
     /**
      * Parses a refFlat file to yield Interval objects
