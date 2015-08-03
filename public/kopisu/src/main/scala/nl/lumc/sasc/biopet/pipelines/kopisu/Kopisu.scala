@@ -30,6 +30,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
   @Input(doc = "Input bam file", required = true)
   var bamFile: File = _
 
+  @Argument(doc = "Prefix name of output file", required = false)
   var outputName: String = _
 
   def init(): Unit = {
