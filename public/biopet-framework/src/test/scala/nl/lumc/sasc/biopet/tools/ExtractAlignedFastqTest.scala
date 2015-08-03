@@ -58,7 +58,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   @Test def testIntervalStartEnd() = {
     val obs = makeIntervalFromString(List("chr5:1000-1100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should ===(exp.getSequence)
+    obs.getContig should ===(exp.getContig)
     obs.getStart should ===(exp.getStart)
     obs.getEnd should ===(exp.getEnd)
   }
@@ -66,7 +66,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   @Test def testIntervalStartEndComma() = {
     val obs = makeIntervalFromString(List("chr5:1,000-1,100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should ===(exp.getSequence)
+    obs.getContig should ===(exp.getContig)
     obs.getStart should ===(exp.getStart)
     obs.getEnd should ===(exp.getEnd)
   }
@@ -74,7 +74,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   @Test def testIntervalStartEndDot() = {
     val obs = makeIntervalFromString(List("chr5:1.000-1.100")).next()
     val exp = new Interval("chr5", 1000, 1100)
-    obs.getSequence should ===(exp.getSequence)
+    obs.getContig should ===(exp.getContig)
     obs.getStart should ===(exp.getStart)
     obs.getEnd should ===(exp.getEnd)
   }
@@ -82,7 +82,7 @@ class ExtractAlignedFastqTest extends TestNGSuite with MockitoSugar with Matcher
   @Test def testIntervalStart() = {
     val obs = makeIntervalFromString(List("chr5:1000")).next()
     val exp = new Interval("chr5", 1000, 1000)
-    obs.getSequence should ===(exp.getSequence)
+    obs.getContig should ===(exp.getContig)
     obs.getStart should ===(exp.getStart)
     obs.getEnd should ===(exp.getEnd)
   }

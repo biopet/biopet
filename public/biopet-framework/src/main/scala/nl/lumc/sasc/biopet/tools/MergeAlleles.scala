@@ -131,7 +131,7 @@ object MergeAlleles extends ToolCommand {
     }
     val alleles: mutable.Set[Allele] = mutable.Set()
     val builder = new VariantContextBuilder
-    builder.chr(records.head.getChr)
+    builder.chr(records.head.getContig)
     builder.start(records.head.getStart)
 
     for (record <- records) {

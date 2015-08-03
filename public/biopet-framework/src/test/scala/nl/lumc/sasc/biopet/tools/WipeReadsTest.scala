@@ -140,10 +140,10 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testMakeIntervalFromBed() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile1)
     intervals.length shouldBe 3
-    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getContig should ===("chrQ")
     intervals.head.getStart shouldBe 991
     intervals.head.getEnd shouldBe 1000
-    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getContig should ===("chrQ")
     intervals.last.getStart shouldBe 291
     intervals.last.getEnd shouldBe 320
   }
@@ -151,13 +151,13 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testMakeIntervalFromRefFlat() = {
     val intervals: List[Interval] = makeIntervalFromFile(RefFlatFile1)
     intervals.length shouldBe 5
-    intervals.head.getSequence should ===("chrS")
+    intervals.head.getContig should ===("chrS")
     intervals.head.getStart shouldBe 101
     intervals.head.getEnd shouldBe 500
-    intervals(2).getSequence should ===("chrQ")
+    intervals(2).getContig should ===("chrQ")
     intervals(2).getStart shouldBe 801
     intervals(2).getEnd shouldBe 1000
-    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getContig should ===("chrQ")
     intervals.last.getStart shouldBe 101
     intervals.last.getEnd shouldBe 200
   }
@@ -165,10 +165,10 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testMakeIntervalFromGtf() = {
     val intervals: List[Interval] = makeIntervalFromFile(GtfFile1, "exon")
     intervals.length shouldBe 3
-    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getContig should ===("chrQ")
     intervals.head.getStart shouldBe 669
     intervals.head.getEnd shouldBe 778
-    intervals.last.getSequence should ===("chrP")
+    intervals.last.getContig should ===("chrP")
     intervals.last.getStart shouldBe 2949
     intervals.last.getEnd shouldBe 3063
   }
@@ -176,10 +176,10 @@ class WipeReadsTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testMakeIntervalFromBedOverlap() = {
     val intervals: List[Interval] = makeIntervalFromFile(BedFile2)
     intervals.length shouldBe 4
-    intervals.head.getSequence should ===("chrQ")
+    intervals.head.getContig should ===("chrQ")
     intervals.head.getStart shouldBe 451
     intervals.head.getEnd shouldBe 480
-    intervals.last.getSequence should ===("chrQ")
+    intervals.last.getContig should ===("chrQ")
     intervals.last.getStart shouldBe 2
     intervals.last.getEnd shouldBe 250
   }

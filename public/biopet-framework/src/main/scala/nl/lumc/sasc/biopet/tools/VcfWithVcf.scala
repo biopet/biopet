@@ -141,10 +141,10 @@ object VcfWithVcf extends ToolCommand {
     var counter = 0
     for (record <- reader) {
       val secondaryRecords = if (commandArgs.matchAllele) {
-        secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList.
+        secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList.
           filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele))
       } else {
-        secondaryReader.query(record.getChr, record.getStart, record.getEnd).toList
+        secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList
       }
 
       val fieldMap = (for (

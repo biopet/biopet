@@ -97,7 +97,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
       val countReports: Map[String, CountReport] = bamReaders.map(x => (x._1, new CountReport))
       val refAllele = vcfRecord.getReference.getBaseString
       for ((sample, bamReader) <- bamReaders) {
-        val queryInterval = new QueryInterval(bamHeaders(sample).getSequenceIndex(vcfRecord.getChr),
+        val queryInterval = new QueryInterval(bamHeaders(sample).getSequenceIndex(vcfRecord.getContig),
           vcfRecord.getStart, vcfRecord.getStart + refAllele.length - 1)
         val bamIter = bamReader.query(Array(queryInterval), false)
 
