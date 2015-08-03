@@ -16,7 +16,6 @@
 package nl.lumc.sasc.biopet.extensions.sambamba
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import java.io.File
 
@@ -30,6 +29,7 @@ class SambambaMpileup(val root: Configurable) extends Sambamba {
   var output: File = null
 
   val buffer: Option[Int] = config("buffer", default = 8 * 1024 * 1024)
+
   def cmdLine = {
     required(executable) +
       required("mpileup") +
@@ -40,8 +40,3 @@ class SambambaMpileup(val root: Configurable) extends Sambamba {
       output.getAbsolutePath
   }
 }
-
-/*
-*
-*
-* */ 
