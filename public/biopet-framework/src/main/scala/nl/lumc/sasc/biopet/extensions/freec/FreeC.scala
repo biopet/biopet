@@ -48,7 +48,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   @Output
   def ratioBedGraph: File = new File(outputPath, input.getName + "_ratio.BedGraph")
-  
+
   executable = config("exe", default = "freec")
 
   var chrFiles: String = config("chrFiles")
@@ -59,7 +59,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
   // Default of 10k bins
   var window: Option[Int] = config("window", default = 10000)
-  var snpFile: String = config("SNPfile")
+  var snpFile: String = config("snpFile")
 
   var samtoolsExe: String = config(key = "exe", submodule = "samtools")
 
@@ -70,11 +70,11 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   override def beforeGraph {
     super.beforeGraph
-    
+
     configFile = new File(outputPath, input.getName + ".freec_config.txt")
     output = cnvOutput
   }
-  
+
   override def beforeCmd: Unit = {
     super.beforeCmd
 
@@ -83,7 +83,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
     logger.info("Creating FREEC config file: " + configFile.getAbsolutePath)
     createConfigFile
   }
-  
+
   protected def createConfigFile = {
     new PrintWriter(configFile)
     val writer = new PrintWriter(configFile)
@@ -94,7 +94,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
     writer.println("chrFiles=" + this.chrFiles)
     writer.println("chrLenFile=" + this.chrLenFile)
     writer.println("gemMappabilityFile=" + this.gemMappabilityFile)
-    writer.println("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) )
+    writer.println("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads))
     writer.println("outputDir=" + this.outputPath.getAbsolutePath)
     writer.println("ploidy=" + this.ploidy.getOrElse(2))
     writer.println("samtools=" + this.samtoolsExe)

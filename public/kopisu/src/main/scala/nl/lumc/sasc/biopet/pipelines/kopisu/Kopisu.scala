@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
+import scala.language.reflectiveCalls
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Reference {
   qscript =>
@@ -64,31 +65,31 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
     }
     add(smilepig)
 
-    val FreeC = new FreeC(this)
-    FreeC.input = smilepig.output
-    FreeC.outputPath = new File(outputDir, "CNV")
-    add(FreeC)
+    val freec = new FreeC(this)
+    freec.input = smilepig.output
+    freec.outputPath = new File(outputDir, "cnv")
+    add(freec)
 
     /*
     * These scripts will wait for FreeC to Finish
     *
     * R-scripts to plot FreeC results
     * */
-    val FCAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
-    FCAssessSignificancePlot.cnv = FreeC.cnvOutput
-    FCAssessSignificancePlot.ratios = FreeC.ratioOutput
-    FCAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
-    add(FCAssessSignificancePlot)
+    val fcAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
+    fcAssessSignificancePlot.cnv = freec.cnvOutput
+    fcAssessSignificancePlot.ratios = freec.ratioOutput
+    fcAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
+    add(fcAssessSignificancePlot)
 
-    val FCCnvPlot = new FreeCCNVPlot(this)
-    FCCnvPlot.input = FreeC.ratioOutput
-    FCCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
-    add(FCCnvPlot)
+    val fcCnvPlot = new FreeCCNVPlot(this)
+    fcCnvPlot.input = freec.ratioOutput
+    fcCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
+    add(fcCnvPlot)
 
-    val FCBAFPlot = new FreeCBAFPlot(this)
-    FCBAFPlot.input = FreeC.bafOutput
-    FCBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
-    add(FCBAFPlot)
+    val fcBAFPlot = new FreeCBAFPlot(this)
+    fcBAFPlot.input = freec.bafOutput
+    fcBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
+    add(fcBAFPlot)
   }
 }
 
