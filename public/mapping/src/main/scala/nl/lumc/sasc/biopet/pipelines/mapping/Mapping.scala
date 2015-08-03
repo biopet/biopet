@@ -476,9 +476,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     RG += "PU:" + platformUnit + "\\t"
     RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
-    if (readgroupDescription.isDefined) RG += "DS" + readgroupDescription.get + "\\t"
-    if (readgroupDate != null) RG += "DT" + readgroupDate + "\\t"
-    if (predictedInsertsize.isDefined) RG += "PI" + predictedInsertsize.get + "\\t"
+    if (readgroupDescription.isDefined) RG += "DS:" + readgroupDescription.get + "\\t"
+    if (readgroupDate != null) RG += "DT:" + readgroupDate + "\\t"
+    if (predictedInsertsize.isDefined) RG += "PI:" + predictedInsertsize.get + "\\t"
 
     RG.substring(0, RG.lastIndexOf("\\t"))
   }
