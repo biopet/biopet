@@ -28,6 +28,15 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input: FastQ or FastA")
   var input: List[File] = _
 
+  @Output(doc = "Unidentified reads", required = false)
+  var unclassified_out: Option[File] = None
+
+  @Output(doc = "Identified reads", required = false)
+  var classified_out: Option[File] = None
+
+  @Output(doc = "Output with hits per sequence")
+  var output: File = _
+
   var db: File = config("db")
 
   var inputFastQ: Boolean = true
@@ -36,55 +45,37 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   var compressionBzip: Boolean = false
 
   var quick: Boolean = false
-  var min_hits: Option[Int] = config("min_hits")
+  var minHits: Option[Int] = config("min_hits")
 
-  @Output(doc = "Unidentified reads", required = false)
-  var unclassified_out: Option[File] = None
-  @Output(doc = "Identified reads", required = false)
-  var classified_out: Option[File] = None
-
-  @Output(doc = "Output with hits per sequence")
-  var output: File = _
-  var preload: Boolean = config("preload", default = true)
+  var preLoad: Boolean = config("preload", default = true)
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
   override def versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
   override def versionExitcode = List(0, 1)
+  override def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 8.0
   override def defaultThreads = 4
 
-  override def versionCommand = executable + " --version"
-
   /** Sets readgroup when not set yet */
   override def beforeGraph(): Unit = {
     super.beforeGraph()
+    //FIXME: This does not do anything
   }
 
   /** Returns command to execute */
-  def cmdLine = {
-    var cmd: String = required(executable) +
-      "--db" + required(db) +
-      optional("--threads", nCoresRequest) +
-      conditional(inputFastQ, "--fastq-input") +
-      conditional(!inputFastQ, "--fasta-input") +
-      conditional(quick, "--quick")
-
-    min_hits match {
-      case Some(v) => cmd += "--min_hits " + v
-      case _       => cmd += ""
-    }
-
-    cmd += optional("--unclassified-out ", unclassified_out.get) +
-      optional("--classified-out ", classified_out.get) +
-      "--output" + required(output) +
-      conditional(preload, "--preload") +
-      conditional(paired, "--paired")
-
-    // finally the input files (R1 [R2])
-    cmd += input.mkString(" ")
-
-    cmd
-  }
+  def cmdLine = required(executable) +
+    "--db" + required(db) +
+    optional("--threads", nCoresRequest) +
+    conditional(inputFastQ, "--fastq-input") +
+    conditional(!inputFastQ, "--fasta-input") +
+    conditional(quick, "--quick") +
+    optional("--min_hits", minHits) +
+    optional("--unclassified-out ", unclassified_out.get) +
+    optional("--classified-out ", classified_out.get) +
+    "--output" + required(output) +
+    conditional(preLoad, "--preload") +
+    conditional(paired, "--paired") +
+    repeat(input)
 }
