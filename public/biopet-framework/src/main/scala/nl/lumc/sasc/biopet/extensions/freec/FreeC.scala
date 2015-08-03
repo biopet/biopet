@@ -15,15 +15,13 @@
  */
 package nl.lumc.sasc.biopet.extensions.freec
 
-import java.io.{ BufferedWriter, File, FileWriter }
+import java.io.{ PrintWriter, File }
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import scala.reflect.io.Path
-
-class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
+class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   @Input(doc = "Pileup file", required = true)
   var input: File = null
@@ -34,15 +32,23 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   protected var output: File = _
 
   @Output(doc = "FreeC GC_profile")
-  def gcprofile: File = {
-    new File(outputPath, "GC_profile.cnp")
-  }
+  def gcProfile: File = new File(outputPath, "GC_profile.cnp")
 
   @Output(doc = "FreeC Read numbers per bin")
-  def samplebins: File = {
-    new File(outputPath, input.getName + "_sample.cpn")
-  }
+  def sampleBins: File = new File(outputPath, input.getName + "_sample.cpn")
 
+  @Output
+  def cnvOutput: File = new File(outputPath, input.getName + "_CNVs")
+
+  @Output
+  def bafOutput: File = new File(outputPath, input.getName + "_BAF.txt")
+
+  @Output
+  def ratioOutput: File = new File(outputPath, input.getName + "_ratio.txt")
+
+  @Output
+  def ratioBedGraph: File = new File(outputPath, input.getName + "_ratio.BedGraph")
+  
   executable = config("exe", default = "freec")
 
   var chrFiles: String = config("chrFiles")
@@ -53,97 +59,63 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction {
   var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
   // Default of 10k bins
   var window: Option[Int] = config("window", default = 10000)
-  var snpfile: String = config("SNPfile")
+  var snpFile: String = config("SNPfile")
 
-  var samtools_exe: String = config(key = "exe", submodule = "samtools")
+  var samtoolsExe: String = config(key = "exe", submodule = "samtools")
 
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
   override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
   override val defaultThreads = 4
-  private var config_file: File = _
-
-  /*
-  * Output file from FreeC
-  * */
-  @Output()
-  def CNVoutput: File = {
-    new File(outputPath, input.getName + "_CNVs")
-  }
-
-  /*
-  * Output file from FreeC
-  * */
-  @Output()
-  def BAFoutput: File = {
-    new File(outputPath, input.getName + "_BAF.txt")
-  }
-
-  /*
-  * Output file from FreeC
-  * */
-  @Output()
-  def RatioOutput: File = {
-    new File(outputPath, input.getName + "_ratio.txt")
-  }
-
-  /*
-  * Output file from FreeC
-  * */
-  @Output()
-  def RatioBedGraph: File = {
-    new File(outputPath, input.getName + "_ratio.BedGraph")
-  }
+  private var configFile: File = _
 
   override def beforeGraph {
     super.beforeGraph
-    config_file = new File(outputPath, input.getName + ".freec_config.txt")
-    output = CNVoutput
+    
+    configFile = new File(outputPath, input.getName + ".freec_config.txt")
+    output = cnvOutput
   }
+  
+  override def beforeCmd: Unit = {
+    super.beforeCmd
 
-  override def freezeFieldValues(): Unit = {
-    super.freezeFieldValues()
-    logger.info("Creating directory for FREEC: " + outputPath.getAbsolutePath)
     outputPath.mkdirs()
-    logger.info("Creating FREEC config file: " + config_file.getAbsolutePath)
+
+    logger.info("Creating FREEC config file: " + configFile.getAbsolutePath)
     createConfigFile
   }
-
-  /*
-   *
-   *
-   */
-
-  def createConfigFile = {
-    val writer = new BufferedWriter(new FileWriter(config_file))
+  
+  protected def createConfigFile = {
+    new PrintWriter(configFile)
+    val writer = new PrintWriter(configFile)
 
     // header
-    writer.write("[general]\n")
-    writer.write("BedGraphOutput=TRUE\n")
-    writer.write("chrFiles=" + this.chrFiles + "\n")
-    writer.write("chrLenFile=" + this.chrLenFile + "\n")
-    writer.write("gemMappabilityFile=" + this.gemMappabilityFile + "\n")
-    writer.write("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) + "\n")
-    writer.write("outputDir=" + this.outputPath.getAbsolutePath + "/\n")
-    writer.write("ploidy=" + this.ploidy.getOrElse(2) + "\n")
-    writer.write("samtools=" + this.samtools_exe + "\n")
-    writer.write("telocentromeric=" + this.telocentromeric.getOrElse(50000) + "\n")
-    writer.write("window=" + this.window.getOrElse(10000) + "\n")
+    writer.println("[general]")
+    writer.println("BedGraphOutput=TRUE")
+    writer.println("chrFiles=" + this.chrFiles)
+    writer.println("chrLenFile=" + this.chrLenFile)
+    writer.println("gemMappabilityFile=" + this.gemMappabilityFile)
+    writer.println("maxThreads=" + this.nCoresRequest.getOrElse(defaultThreads) )
+    writer.println("outputDir=" + this.outputPath.getAbsolutePath)
+    writer.println("ploidy=" + this.ploidy.getOrElse(2))
+    writer.println("samtools=" + this.samtoolsExe)
+    writer.println("telocentromeric=" + this.telocentromeric.getOrElse(50000))
+    writer.println("window=" + this.window.getOrElse(10000))
 
-    writer.write("[sample]\n")
-    writer.write("mateFile=" + this.input + "\n")
-    writer.write("inputFormat=pileup\n")
+    writer.println("[sample]")
+    writer.println("mateFile=" + this.input + "")
+    writer.println("inputFormat=pileup")
     // TODO: determine mateOrientation!
     // FR = Paired End Illumina
     // FF = SOLiD mate pairs
     // RF = Illumina mate-pairs
     // 0 = Single End
-    writer.write("mateOrientation=FR\n")
-    writer.write("[BAF]\n")
-    writer.write("SNPfile=" + this.snpfile + "\n")
+    writer.println("mateOrientation=FR")
+    writer.println("[BAF]")
+    writer.println("SNPfile=" + this.snpFile)
 
     writer.close()
   }
 
   def cmdLine = required(executable) +
-    required("--conf", config_file)
+    required("--conf", configFile)
 }
