@@ -26,41 +26,34 @@ import nl.lumc.sasc.biopet.core.config.Configurable
  */
 class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
-  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.rscript")
+  protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
 
-  /** input file */
   @Input(doc = "Input file BAM", required = true)
   var input: List[File] = List()
 
-  /** output files, computed automatically from output directory */
-
+  // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
-  lazy val output_cnv: File = {
-    if (output_dir == null)
+  private lazy val outputCnv: File = {
+    if (outputDir == null)
       throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNV output")
-    new File(output_dir, "cnv.txt")
+    new File(outputDir, "cnv.txt")
   }
   @Output(doc = "Output CNR file")
-  lazy val output_cnr: File = {
-    if (output_dir == null)
+  private lazy val outputCnr: File = {
+    if (outputDir == null)
       throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNR output")
-    new File(output_dir, "cnr.txt")
+    new File(outputDir, "cnr.txt")
   }
 
   /** write all output files to this directory [./] */
-  var output_dir: String = _
+  var outputDir: String = _
 
   override def beforeGraph = {
     super.beforeGraph
-    require(!output_dir.isEmpty, "Outputdir for cn.MOPS should not be empty")
-    require(input.length > 1, "Please supply at least 2 BAM files for cn.MOPS")
-
+    require(!outputDir.isEmpty, "Outputdir for cn.MOPS should not be empty")
+    require(input.length >= 2, "Please supply at least 2 BAM files for cn.MOPS")
   }
 
-  override def cmdLine = {
-
-    super.cmdLine +
-      required(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
-  }
-
+  override def cmdLine = super.cmdLine +
+    required(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
 }
