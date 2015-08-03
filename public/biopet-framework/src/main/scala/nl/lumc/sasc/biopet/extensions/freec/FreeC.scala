@@ -85,7 +85,6 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   }
 
   protected def createConfigFile = {
-    new PrintWriter(configFile)
     val writer = new PrintWriter(configFile)
 
     // header
