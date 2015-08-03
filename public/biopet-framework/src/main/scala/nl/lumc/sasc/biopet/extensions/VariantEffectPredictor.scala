@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   executable = config("exe", submodule = "perl", default = "perl")
-  var vep_script: String = config("vep_script")
+  var vepScript: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)
   var input: File = null
@@ -37,14 +37,14 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var output: File = null
 
   override def versionRegex = """version (\d*)""".r
-  override def versionCommand = executable + " " + vep_script + " --help"
+  override def versionCommand = executable + " " + vepScript + " --help"
 
   //Boolean vars
   var v: Boolean = config("v", default = true)
   var q: Boolean = config("q", default = false)
   var offline: Boolean = config("offline", default = false)
   var no_progress: Boolean = config("no_progress", default = false)
-  var everything: Boolean = config("everything", default = true)
+  var everything: Boolean = config("everything", default = false)
   var force: Boolean = config("force", default = false)
   var no_stats: Boolean = config("no_stats", default = false)
   var stats_text: Boolean = config("stats_text", default = false)
@@ -144,15 +144,15 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (!cache && !database) {
-      throw new IllegalArgumentException("Must supply either cache or database")
+      throw new IllegalArgumentException("Must supply either cache or database for VariantEffectPredictor")
     } else if (cache && dir.isEmpty) {
-      throw new IllegalArgumentException("Must supply dir to cache")
+      throw new IllegalArgumentException("Must supply dir to cache for VariantEffectPredictor")
     }
   }
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    required(vep_script) +
+    required(vepScript) +
     required("-i", input) +
     required("-o", output) +
     conditional(v, "-v") +
