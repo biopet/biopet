@@ -109,7 +109,7 @@ object VcfToTsv extends ToolCommand {
     writer.println(sortedFields.mkString("#", commandArgs.separator, ""))
     for (vcfRecord <- reader) {
       val values: mutable.Map[String, Any] = mutable.Map()
-      values += "CHROM" -> vcfRecord.getChr
+      values += "CHROM" -> vcfRecord.getContig
       values += "POS" -> vcfRecord.getStart
       values += "ID" -> vcfRecord.getID
       values += "REF" -> vcfRecord.getReference.getBaseString

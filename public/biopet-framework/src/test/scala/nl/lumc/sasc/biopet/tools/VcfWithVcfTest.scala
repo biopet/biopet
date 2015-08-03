@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
 
 import org.scalatest.Matchers
@@ -36,25 +37,25 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf.gz")
-  val unvepped_path = resourcePath("/unvepped.vcf.gz")
+  val veppedPath = resourcePath("/VEP_oneline.vcf.gz")
+  val unveppedPath = resourcePath("/unvepped.vcf.gz")
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val tmpPath = File.createTempFile("VcfWithVcf_", ".vcf").getAbsolutePath
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpPath, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".vcf.gz"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val tmpPath = File.createTempFile("VcfWithVcf_", ".vcf").getAbsolutePath
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpPath, "-f", "CSQ")
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/VcfWithVcf_" + rand.nextString(10) + ".bcf"
-    val arguments = Array("-I", unvepped_path, "-S", vepped_path, "-O", tmp_path, "-f", "CSQ")
+    val tmpPath = File.createTempFile("VcfWithVcf_", ".vcf").getAbsolutePath
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpPath, "-f", "CSQ")
     main(arguments)
   }
 

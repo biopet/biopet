@@ -300,7 +300,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   }
 
   private def getQueueVersion: String = {
-    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
+    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText", this.getClass)
 
     if (stingResources.containsKey("org.broadinstitute.sting.queue.QueueVersion.version")) {
       stingResources.getString("org.broadinstitute.sting.queue.QueueVersion.version")
@@ -310,7 +310,7 @@ class BiopetQCommandLine extends CommandLineProgram with Logging {
   }
 
   private def getBuildTimestamp: String = {
-    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText")
+    val stingResources: ResourceBundle = TextFormattingUtils.loadResourceBundle("StingText", this.getClass)
 
     if (stingResources.containsKey("build.timestamp")) {
       stingResources.getString("build.timestamp")

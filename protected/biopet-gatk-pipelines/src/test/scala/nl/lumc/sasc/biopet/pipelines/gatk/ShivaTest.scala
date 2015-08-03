@@ -107,6 +107,9 @@ object ShivaTest {
 
   val config = Map(
     "name_prefix" -> "test",
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "output_dir" -> outputDir,
     "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),

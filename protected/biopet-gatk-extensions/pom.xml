@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-distribution</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
         </dependency>
     </dependencies>
 </project>

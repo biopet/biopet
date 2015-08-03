@@ -66,17 +66,17 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
         </dependency>
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-distribution</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
         </dependency>
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-utils</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
             <exclusions>
                 <exclusion>
                   <groupId>org.broadinstitute.gatk</groupId>

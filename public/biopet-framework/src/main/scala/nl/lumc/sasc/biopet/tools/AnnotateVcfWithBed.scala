@@ -137,7 +137,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     logger.info("Start reading vcf records")
 
     for (record <- reader) {
-      val overlaps = bedRecords.getOrElse(record.getChr, Nil).filter(x => {
+      val overlaps = bedRecords.getOrElse(record.getContig, Nil).filter(x => {
         record.getStart <= x._2 && record.getEnd >= x._1
       })
       if (overlaps.isEmpty) {
