@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.FullVersion
-import nl.lumc.sasc.biopet.core.{PipelineCommand, MultiSampleQScript}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
@@ -58,9 +58,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   def summaryFile = new File(outputDir, "gears.summary.json")
 
   /** Settings of pipeline for summary */
-  def summarySettings = Map(
-    "version" -> FullVersion
-  )
+  def summarySettings = Map()
 
   /** Files for the summary */
   def summaryFiles = Map()
@@ -294,18 +292,18 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       qscript.add(samToFastq)
 
       // sync the fastq records
-      val fastqsync = new FastqSync(qscript)
-      fastqsync.refFastq = samToFastq.fastqR1
-      fastqsync.inputFastq1 = samToFastq.fastqR1
-      fastqsync.inputFastq2 = samToFastq.fastqR2
-      fastqsync.outputFastq1 = createFile(".unmapsynced.R1.fastq.gz")
-      fastqsync.outputFastq2 = createFile(".unmapsynced.R2.fastq.gz")
-      fastqsync.outputStats = createFile(".syncstats.json")
-      qscript.add(fastqsync)
+      val fastqSync = new FastqSync(qscript)
+      fastqSync.refFastq = samToFastq.fastqR1
+      fastqSync.inputFastq1 = samToFastq.fastqR1
+      fastqSync.inputFastq2 = samToFastq.fastqR2
+      fastqSync.outputFastq1 = createFile(".unmapsynced.R1.fastq.gz")
+      fastqSync.outputFastq2 = createFile(".unmapsynced.R2.fastq.gz")
+      fastqSync.outputStats = createFile(".syncstats.json")
+      qscript.add(fastqSync)
 
       // start kraken
       val krakenAnalysis = new Kraken(qscript)
-      krakenAnalysis.input = List(fastqsync.outputFastq1, fastqsync.outputFastq2)
+      krakenAnalysis.input = List(fastqSync.outputFastq1, fastqSync.outputFastq2)
       krakenAnalysis.output = createFile(".krkn.raw")
       krakenAnalysis.paired = true
       krakenAnalysis.classified_out = Option(createFile(".krkn.classified.fastq"))
@@ -319,7 +317,6 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       krakenReport.show_zeros = true
       krakenReport.output = createFile(".krkn.full")
       qscript.add(krakenReport)
-
     }
   }
 }
