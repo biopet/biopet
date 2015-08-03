@@ -32,22 +32,28 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   protected var output: File = _
 
   @Output(doc = "FreeC GC_profile")
-  def gcProfile: File = new File(outputPath, "GC_profile.cnp")
+  private var _gcProfile: File = _
+  def gcProfile = _gcProfile
 
   @Output(doc = "FreeC Read numbers per bin")
-  def sampleBins: File = new File(outputPath, input.getName + "_sample.cpn")
+  private var _sampleBins: File = _
+  def sampleBins = _sampleBins
 
   @Output
-  def cnvOutput: File = new File(outputPath, input.getName + "_CNVs")
+  private var _cnvOutput: File = _
+  def cnvOutput = _cnvOutput
 
   @Output
-  def bafOutput: File = new File(outputPath, input.getName + "_BAF.txt")
+  private var _bafOutput: File = _
+  def bafOutput = _bafOutput
 
   @Output
-  def ratioOutput: File = new File(outputPath, input.getName + "_ratio.txt")
+  private var _ratioOutput: File = _
+  def ratioOutput = _ratioOutput
 
   @Output
-  def ratioBedGraph: File = new File(outputPath, input.getName + "_ratio.BedGraph")
+  private var _ratioBedGraph: File = _
+  def ratioBedGraph = _ratioBedGraph
 
   executable = config("exe", default = "freec")
 
@@ -72,6 +78,13 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   override def beforeGraph {
     super.beforeGraph
+
+    _gcProfile = new File(outputPath, "GC_profile.cnp")
+    _sampleBins = new File(outputPath, input.getName + "_sample.cpn")
+    _cnvOutput = new File(outputPath, input.getName + "_CNVs")
+    _bafOutput = new File(outputPath, input.getName + "_BAF.txt")
+    _ratioOutput = new File(outputPath, input.getName + "_ratio.txt")
+    _ratioBedGraph = new File(outputPath, input.getName + "_ratio.BedGraph")
 
     configFile = new File(outputPath, input.getName + ".freec_config.txt")
     output = cnvOutput
