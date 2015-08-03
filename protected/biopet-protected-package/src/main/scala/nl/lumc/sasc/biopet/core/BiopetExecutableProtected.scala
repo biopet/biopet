@@ -6,7 +6,7 @@
 package nl.lumc.sasc.biopet.core
 
 object BiopetExecutableProtected extends BiopetExecutable {
-  def pipelines: List[MainCommand] = BiopetExecutablePublic.protectedPipelines ::: List(
+  def pipelines: List[MainCommand] = BiopetExecutablePublic.pipelines ::: List(
     nl.lumc.sasc.biopet.pipelines.gatk.Shiva,
     nl.lumc.sasc.biopet.pipelines.gatk.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.gatk.Basty)
