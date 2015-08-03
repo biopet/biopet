@@ -21,8 +21,8 @@ class FreeCBAFPlot(val root: Configurable) extends RscriptCommandLineFunction {
    * */
   override def cmdLine: String = {
     super.cmdLine +
-      required("-i", input.getAbsolutePath) +
-      required("-o", output.getAbsolutePath)
+      required("-i", input) +
+      required("-o", output)
   }
 
 }

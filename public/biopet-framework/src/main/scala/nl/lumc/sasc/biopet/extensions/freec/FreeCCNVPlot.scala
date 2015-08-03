@@ -9,10 +9,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_CNVPlot.R")
 
-  @Input(doc = "Output file from FreeC. *_CNV")
+  @Input(doc = "Output file from FreeC. *_CNV", required = true)
   var input: File = null
 
-  @Output(doc = "Destination for the PNG file")
+  @Output(doc = "Destination for the PNG file", required = true)
   var output: File = null
 
   /**
@@ -21,6 +21,6 @@ class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
    * Unless some R library is used for named arguments
    */
   override def cmdLine = super.cmdLine +
-    required("-i", input.getAbsolutePath) +
-    required("-o", output.getAbsolutePath)
+    required("-i", input) +
+    required("-o", output)
 }

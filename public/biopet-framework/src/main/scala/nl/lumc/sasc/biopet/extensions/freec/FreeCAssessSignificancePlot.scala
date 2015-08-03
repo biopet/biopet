@@ -9,13 +9,13 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommandLineFunction {
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_assess_significance.R")
 
-  @Input(doc = "Output file from FreeC. *_CNV")
+  @Input(doc = "Output file from FreeC. *_CNV", required = true)
   var cnv: File = null
 
-  @Input(doc = "Output file from FreeC. *_ratio.txt")
+  @Input(doc = "Output file from FreeC. *_ratio.txt", required = true)
   var ratios: File = null
 
-  @Output(doc = "Destination for the PNG file")
+  @Output(doc = "Destination for the PNG file", required = true)
   var output: File = null
 
   /* cmdLine to execute R-script and with arguments
@@ -24,9 +24,9 @@ class FreeCAssessSignificancePlot(val root: Configurable) extends RscriptCommand
    * */
   override def cmdLine: String = {
     super.cmdLine +
-      required("--cnv", cnv.getAbsolutePath) +
-      required("--ratios", ratios.getAbsolutePath) +
-      required("--output", output.getAbsolutePath)
+      required("--cnv", cnv) +
+      required("--ratios", ratios) +
+      required("--output", output)
 
   }
 }
