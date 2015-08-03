@@ -64,8 +64,10 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var samtoolsExe: String = config(key = "exe", submodule = "samtools")
 
   //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
-  override val versionRegex = """Control-FREEC v(.*) :[.*]+""".r
-  override val defaultThreads = 4
+  override def versionRegex = """Control-FREEC v(.*) :[.*]+""".r
+  override def defaultThreads = 4
+  override def defaultCoreMemory = 4.0
+
   private var configFile: File = _
 
   override def beforeGraph {
