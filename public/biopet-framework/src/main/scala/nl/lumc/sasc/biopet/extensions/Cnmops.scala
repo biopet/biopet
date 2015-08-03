@@ -34,14 +34,13 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
   // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
   private lazy val outputCnv: File = {
-    if (outputDir == null)
-      throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNV output")
+    require(outputDir == null, "Unexpected error when trying to set cn.MOPS CNV output")
     new File(outputDir, "cnv.txt")
   }
+
   @Output(doc = "Output CNR file")
   private lazy val outputCnr: File = {
-    if (outputDir == null)
-      throw new RuntimeException("Unexpected error when trying to set cn.MOPS CNR output")
+    require(outputDir == null, "Unexpected error when trying to set cn.MOPS CNR output")
     new File(outputDir, "cnr.txt")
   }
 
