@@ -34,7 +34,7 @@ class ShivaTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "shivaOptions", parallel = true)
+  @DataProvider(name = "shivaOptions")
   def shivaOptions = {
     val bool = Array(true, false)
 

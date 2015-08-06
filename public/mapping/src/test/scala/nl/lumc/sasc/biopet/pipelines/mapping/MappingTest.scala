@@ -46,7 +46,7 @@ class MappingTest extends TestNGSuite with Matchers {
     }
   }
 
-  @DataProvider(name = "mappingOptions", parallel = true)
+  @DataProvider(name = "mappingOptions")
   def mappingOptions = {
     val aligners = Array("bwa-mem", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)

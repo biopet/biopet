@@ -74,7 +74,7 @@ class GentrapTest extends TestNGSuite with Matchers {
     "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
     "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
-  @DataProvider(name = "expMeasuresstrandProtocol", parallel = true)
+  @DataProvider(name = "expMeasuresstrandProtocol")
   def expMeasuresStrandProtocolProvider = {
 
     //val sampleConfigs = Array(pairedOneSampleOneLib, pairedOneSampleTwoLib, pairedOneSampleThreeLib)
