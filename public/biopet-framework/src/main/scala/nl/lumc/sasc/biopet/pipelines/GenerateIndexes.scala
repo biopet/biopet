@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions.{Zcat, Curl}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -49,17 +50,20 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           throw new IllegalArgumentException(s"No fasta_url found for $speciesName - $genomeName")).toString
 
           val genomeDir = new File(speciesDir, genomeName)
+          val fastaFile = new File(genomeDir, "reference.fa")
 
           val curl = new Curl(this)
           curl.url = fastaUrl
           if (fastaUrl.endsWith(".gz")) {
             curl.output = new File(genomeDir, "reference.fa.gz")
             curl.isIntermediate = true
-            add(Zcat(this, curl.output, new File(genomeDir, "reference.fa")))
-          } else curl.output = new File(genomeDir, "reference.fa")
+            add(Zcat(this, curl.output, fastaFile))
+          } else curl.output = fastaFile
           add(curl)
 
-          //TODO: fai
+          val faidx = SamtoolsFaidx(this, fastaFile)
+          add(faidx)
+
           //TODO: dict
 
         //TODO: other indexes
