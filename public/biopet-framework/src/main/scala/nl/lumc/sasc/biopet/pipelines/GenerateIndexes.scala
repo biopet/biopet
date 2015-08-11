@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.{Zcat, Curl}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
@@ -41,12 +42,22 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
     for ((speciesName, c) <- referenceConfig) {
       val speciesConfig = ConfigUtils.any2map(c)
+      val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) {
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUrl = genomeConfig.getOrElse("fasta_url",
           throw new IllegalArgumentException(s"No fasta_url found for $speciesName - $genomeName")).toString
 
-          //TODO: wget fastaUrl
+          val genomeDir = new File(speciesDir, genomeName)
+
+          val curl = new Curl(this)
+          curl.url = fastaUrl
+          if (fastaUrl.endsWith(".gz")) {
+            curl.output = new File(genomeDir, "reference.fa.gz")
+            curl.isIntermediate = true
+            add(Zcat(this, curl.output, new File(genomeDir, "reference.fa")))
+          } else curl.output = new File(genomeDir, "reference.fa")
+          add(curl)
 
           //TODO: fai
           //TODO: dict
