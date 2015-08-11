@@ -20,6 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
+import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions.{ Ln, Md5sum, Zcat, Curl }
@@ -94,7 +95,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
         add(bwaIndex)
 
-        //TODO: Gsnap index
+        // Gmap index
+        val gmapDir = new File(genomeDir, "gmap")
+        val gmapBuild = new GmapBuild(this)
+        gmapBuild.dir = gmapDir
+        gmapBuild.db = genomeName
+        gmapBuild.fastaFiles ::= createLinks(gmapDir)
+        add(gmapBuild)
 
         //TODO: Star index
 

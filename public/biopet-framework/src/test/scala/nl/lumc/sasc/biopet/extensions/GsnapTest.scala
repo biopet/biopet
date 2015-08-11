@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.extensions
 
 import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.SkipException
