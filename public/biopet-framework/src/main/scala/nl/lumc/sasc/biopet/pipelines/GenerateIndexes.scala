@@ -19,9 +19,10 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
-import nl.lumc.sasc.biopet.extensions.{Md5sum, Zcat, Curl}
+import nl.lumc.sasc.biopet.extensions.{Ln, Md5sum, Zcat, Curl}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
@@ -47,15 +48,15 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
       val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) {
         val genomeConfig = ConfigUtils.any2map(c)
-        val fastaUrl = genomeConfig.getOrElse("fasta_url",
-          throw new IllegalArgumentException(s"No fasta_url found for $speciesName - $genomeName")).toString
+        val fastaUri = genomeConfig.getOrElse("fasta_uri",
+          throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")).toString
 
         val genomeDir = new File(speciesDir, genomeName)
         val fastaFile = new File(genomeDir, "reference.fa")
 
         val curl = new Curl(this)
-        curl.url = fastaUrl
-        if (fastaUrl.endsWith(".gz")) {
+        curl.url = fastaUri
+        if (fastaUri.endsWith(".gz")) {
           curl.output = new File(genomeDir, "reference.fa.gz")
           curl.isIntermediate = true
           add(Zcat(this, curl.output, fastaFile))
@@ -72,8 +73,27 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         createDict.output = new File(genomeDir, fastaFile.getName.stripSuffix(".fa") + ".dict")
         createDict.species = Some(speciesName)
         createDict.genomeAssembly = Some(genomeName)
-        createDict.uri = Some(fastaUrl)
+        createDict.uri = Some(fastaUri)
         add(createDict)
+
+        def createLinks(dir: File): File = {
+          val newFastaFile = new File(dir, fastaFile.getName)
+          val newFai = new File(dir, faidx.output.getName)
+          val newDict = new File(dir, createDict.output.getName)
+
+          add(Ln(this, faidx.output, newFai))
+          add(Ln(this, createDict.output, newDict))
+          val lnFasta = Ln(this, fastaFile, newFastaFile)
+          lnFasta.deps ++= List(newFai, newDict)
+          add(lnFasta)
+          newFastaFile
+        }
+
+        // Bwa index
+
+        val bwaIndex = new BwaIndex(this)
+        bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
+        add(bwaIndex)
 
         //TODO: other indexes
       }

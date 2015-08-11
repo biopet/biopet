@@ -31,6 +31,7 @@ class SamtoolsFaidx(val root: Configurable) extends Samtools {
   def output = _output
 
   override def beforeGraph: Unit = {
+    super.beforeGraph
     _output = new File(input.getParentFile, input.getName + ".fai")
   }
 
