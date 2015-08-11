@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions.{Zcat, Curl}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -49,22 +50,28 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val fastaUrl = genomeConfig.getOrElse("fasta_url",
           throw new IllegalArgumentException(s"No fasta_url found for $speciesName - $genomeName")).toString
 
-          val genomeDir = new File(speciesDir, genomeName)
-          val fastaFile = new File(genomeDir, "reference.fa")
+        val genomeDir = new File(speciesDir, genomeName)
+        val fastaFile = new File(genomeDir, "reference.fa")
 
-          val curl = new Curl(this)
-          curl.url = fastaUrl
-          if (fastaUrl.endsWith(".gz")) {
-            curl.output = new File(genomeDir, "reference.fa.gz")
-            curl.isIntermediate = true
-            add(Zcat(this, curl.output, fastaFile))
-          } else curl.output = fastaFile
-          add(curl)
+        val curl = new Curl(this)
+        curl.url = fastaUrl
+        if (fastaUrl.endsWith(".gz")) {
+          curl.output = new File(genomeDir, "reference.fa.gz")
+          curl.isIntermediate = true
+          add(Zcat(this, curl.output, fastaFile))
+        } else curl.output = fastaFile
+        add(curl)
 
-          val faidx = SamtoolsFaidx(this, fastaFile)
-          add(faidx)
+        val faidx = SamtoolsFaidx(this, fastaFile)
+        add(faidx)
 
-          //TODO: dict
+        val createDict = new CreateSequenceDictionary(this)
+        createDict.reference = fastaFile
+        createDict.output = new File(genomeDir, fastaFile.getName.stripSuffix(".fa") + ".dict")
+        createDict.species = Some(speciesName)
+        createDict.genomeAssembly = Some(genomeName)
+        createDict.uri = Some(fastaUrl)
+        add(createDict)
 
         //TODO: other indexes
       }
