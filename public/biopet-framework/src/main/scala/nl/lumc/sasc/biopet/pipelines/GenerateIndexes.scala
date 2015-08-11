@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.pipelines
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
-import nl.lumc.sasc.biopet.extensions.{Ln, Md5sum, Zcat, Curl}
+import nl.lumc.sasc.biopet.extensions.{ Ln, Md5sum, Zcat, Curl }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
@@ -90,12 +90,15 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         }
 
         // Bwa index
-
         val bwaIndex = new BwaIndex(this)
         bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
         add(bwaIndex)
 
-        //TODO: other indexes
+        //TODO: Gsnap index
+
+        //TODO: Star index
+
+        //TODO: bowtie index
       }
     }
   }

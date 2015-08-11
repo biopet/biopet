@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.samtools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for samtools flagstat */
 class SamtoolsFaidx(val root: Configurable) extends Samtools {

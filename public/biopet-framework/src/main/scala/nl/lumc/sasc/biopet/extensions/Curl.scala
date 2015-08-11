@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.utils.commandline.Output
 /**
  * Created by pjvan_thof on 8/11/15.
  */
-class Curl (val root: Configurable) extends BiopetCommandLineFunction {
+class Curl(val root: Configurable) extends BiopetCommandLineFunction {
   @Output
   var output: File = _
 
