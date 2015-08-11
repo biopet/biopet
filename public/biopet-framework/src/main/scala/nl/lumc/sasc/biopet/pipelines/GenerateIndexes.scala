@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.{PipelineCommand, BiopetQScript}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
-import nl.lumc.sasc.biopet.extensions.{Zcat, Curl}
+import nl.lumc.sasc.biopet.extensions.{Md5sum, Zcat, Curl}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
@@ -61,6 +61,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           add(Zcat(this, curl.output, fastaFile))
         } else curl.output = fastaFile
         add(curl)
+
+        add(Md5sum(this, curl.output, genomeDir))
 
         val faidx = SamtoolsFaidx(this, fastaFile)
         add(faidx)
