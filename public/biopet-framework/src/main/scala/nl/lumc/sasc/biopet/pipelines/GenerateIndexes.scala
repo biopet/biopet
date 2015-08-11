@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
-import nl.lumc.sasc.biopet.extensions.{ Ln, Md5sum, Zcat, Curl }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline
@@ -88,6 +88,24 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           lnFasta.deps ++= List(newFai, newDict)
           add(lnFasta)
           newFastaFile
+        }
+
+        val annotationDir = new File(genomeDir, "annotation")
+
+        genomeConfig.get("vep_cache_uri").foreach { vepCacheUri =>
+          //TODO: add VEP download and extraction
+        }
+
+        genomeConfig.get("dbsnp_uri").foreach { dbsnpUri =>
+          val curl = new Curl(this)
+          curl.url = dbsnpUri.toString
+          curl.output = new File(annotationDir, new File(dbsnpUri.toString).getName)
+          add(curl)
+
+          val tabix = new Tabix(this)
+          tabix.input = curl.output
+          tabix.p = Some("vcf")
+          add(tabix)
         }
 
         // Bwa index

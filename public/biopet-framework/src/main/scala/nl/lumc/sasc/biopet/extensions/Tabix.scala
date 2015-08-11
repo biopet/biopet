@@ -67,6 +67,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
   private val validFormats: Set[String] = Set("gff", "bed", "sam", "vcf", "psltbl")
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
     p match {
       case Some(fmt) =>
         require(validFormats.contains(fmt), "-p flag must be one of " + validFormats.mkString(", "))
