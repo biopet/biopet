@@ -16,16 +16,19 @@
 package nl.lumc.sasc.biopet.pipelines
 
 import java.io.PrintWriter
+import java.util
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
+import scala.collection.JavaConversions._
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -95,20 +98,52 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val annotationDir = new File(genomeDir, "annotation")
 
         genomeConfig.get("vep_cache_uri").foreach { vepCacheUri =>
-          //TODO: add VEP download and extraction
+          val vepDir = new File(annotationDir, "vep")
+          val curl = new Curl(this)
+          curl.url = vepCacheUri.toString
+          curl.output = new File(vepDir, new File(curl.url).getName)
+          add(curl)
+
+          val tar = new TarExtract(this)
+          tar.inputTar = curl.output
+          tar.outputDir = vepDir
+          add(tar)
+
+          val regex = """.*\/(.*)_vep_(\d*)_(.*)\.tar\.gz""".r
+          vepCacheUri.toString match {
+            case regex(species, version, assembly) if (version.forall(_.isDigit)) => {
+              outputConfig ++= Map("varianteffectpredictor" -> Map(
+                "species" -> species,
+                "assembly" -> assembly,
+                "cache_version" -> version.toInt,
+                "cache" -> vepDir,
+                "fasta" -> createLinks(vepDir)))
+            }
+            case _ => throw new IllegalArgumentException("Cache found but no version was found")
+          }
         }
 
-        genomeConfig.get("dbsnp_uri").foreach { dbsnpUri =>
-          val curl = new Curl(this)
-          curl.url = dbsnpUri.toString
-          curl.output = new File(annotationDir, new File(dbsnpUri.toString).getName)
-          add(curl)
-          outputConfig += "dbsnp" -> curl.output.getAbsolutePath
+        genomeConfig.get("dbsnp_vcf_uri").foreach { dbsnpUri =>
+          val cv = new CombineVariants(this)
+          cv.reference = fastaFile
+          cv.deps ::= createDict.output
+          def addDownload(uri: String): Unit = {
+            val curl = new Curl(this)
+            curl.url = uri
+            curl.output = new File(annotationDir, new File(curl.url).getName)
+            curl.isIntermediate = true
+            add(curl)
+            cv.inputFiles ::= curl.output
+          }
 
-          val tabix = new Tabix(this)
-          tabix.input = curl.output
-          tabix.p = Some("vcf")
-          add(tabix)
+          dbsnpUri match {
+            case l: Traversable[_]    => l.foreach(x => addDownload(x.toString))
+            case l: util.ArrayList[_] => l.foreach(x => addDownload(x.toString))
+            case _                    => addDownload(dbsnpUri.toString)
+          }
+
+          cv.outputFile = new File(annotationDir, "dbsnp.vcf.gz")
+          add(cv)
         }
 
         // Bwa index
