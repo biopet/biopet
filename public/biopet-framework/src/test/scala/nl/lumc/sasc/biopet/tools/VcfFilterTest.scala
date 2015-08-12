@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
+import htsjdk.variant.variantcontext.GenotypeType
 import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -64,20 +65,20 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    hasGenotype(record, List("Child_7006504:HET")) shouldBe true
-    hasGenotype(record, List("Child_7006504:HOM_VAR")) shouldBe false
-    hasGenotype(record, List("Child_7006504:HOM_REF")) shouldBe false
-    hasGenotype(record, List("Child_7006504:NO_CALL")) shouldBe false
-    hasGenotype(record, List("Child_7006504:MIXED")) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.MIXED))) shouldBe false
 
-    hasGenotype(record, List("Mother_7006508:HET")) shouldBe false
-    hasGenotype(record, List("Mother_7006508:HOM_VAR")) shouldBe false
-    hasGenotype(record, List("Mother_7006508:HOM_REF")) shouldBe true
-    hasGenotype(record, List("Mother_7006508:NO_CALL")) shouldBe false
-    hasGenotype(record, List("Mother_7006508:MIXED")) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF))) shouldBe true
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.MIXED))) shouldBe false
 
-    hasGenotype(record, List("Mother_7006508:HOM_REF", "Child_7006504:HET")) shouldBe true
-    hasGenotype(record, List("Mother_7006508:HET", "Child_7006504:HOM_HET")) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF), ("Child_7006504", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET), ("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
   }
 
 }

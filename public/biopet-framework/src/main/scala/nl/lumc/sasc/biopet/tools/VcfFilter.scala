@@ -72,7 +72,7 @@ object VcfFilter extends ToolCommand {
                   minSamplesPass: Int = 1,
                   mustHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
-                  mustHaveGenotype: List[String] = Nil,
+                  mustHaveGenotype: List[(String, GenotypeType)] = Nil,
                   deNovoInSample: String = null,
                   resToDom: List[Trio] = Nil,
                   trioCompound: List[Trio] = Nil,
@@ -128,9 +128,11 @@ object VcfFilter extends ToolCommand {
       c.copy(calledIn = x :: c.calledIn)
     } text "Must be called in this sample"
     opt[String]("mustHaveGenotype") unbounded () valueName "<sample:genotype>" action { (x, c) =>
-      c.copy(mustHaveGenotype = x :: c.mustHaveGenotype)
-    } validate { x => if (x.split(":").length == 2 && Set("HET", "HOM_REF", "HOM_VAR", "MIXED", "NO_CALL", "UNAVAILABLE").contains(x.split(":")(1))) success else failure("--mustHaveGenotype should be in this format: sample:genotype")
-    } text "Must have genotoype <genotype> for this sample. Genotype can be HET, HOM_REF, HOM_VAR, MIXED, NO_CALL and UNAVAILABLE"
+      c.copy(mustHaveGenotype = (x.split(":")(0), GenotypeType.valueOf(x.split(":")(1))) :: c.mustHaveGenotype)
+    } validate { x =>
+      if (x.split(":").length == 2 && GenotypeType.values().contains(x.split(":")(1))) success
+      else failure("--mustHaveGenotype should be in this format: sample:genotype")
+    } text "Must have genotoype <genotype> for this sample. Genotype can be " + GenotypeType.values().mkString(", ")
     opt[String]("diffGenotype") unbounded () valueName "<sample:sample>" action { (x, c) =>
       c.copy(diffGenotype = (x.split(":")(0), x.split(":")(1)) :: c.diffGenotype)
     } validate { x => if (x.split(":").length == 2) success else failure("--notSameGenotype should be in this format: sample:sample")
@@ -188,7 +190,8 @@ object VcfFilter extends ToolCommand {
         hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
         minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
         (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
-        calledIn(record, cmdArgs.calledIn) && hasGenotype(record, cmdArgs.mustHaveGenotype) &&
+        calledIn(record, cmdArgs.calledIn) &&
+        hasGenotype(record, cmdArgs.mustHaveGenotype) &&
         (cmdArgs.diffGenotype.isEmpty || cmdArgs.diffGenotype.forall(x => notSameGenotype(record, x._1, x._2))) &&
         (
           cmdArgs.filterHetVarToHomVar.isEmpty ||
@@ -231,9 +234,8 @@ object VcfFilter extends ToolCommand {
    * @param samplesGenotypes samples and their associated genotypes to be checked (of format sample:genotype)
    * @return false when filter fails
    */
-  def hasGenotype(record: VariantContext, samplesGenotypes: List[String]): Boolean = {
-    if (!samplesGenotypes.forall(x => record.getGenotype(x.split(":")(0)).getType == GenotypeType.valueOf(x.split(":")(1)))) false
-    else true
+  def hasGenotype(record: VariantContext, samplesGenotypes: List[(String, GenotypeType)]): Boolean = {
+    samplesGenotypes.forall(x => record.getGenotype(x._1).getType == x._2)
   }
 
   /**
