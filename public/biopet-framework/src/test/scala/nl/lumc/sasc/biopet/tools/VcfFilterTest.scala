@@ -15,8 +15,11 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
 
+import htsjdk.variant.variantcontext.GenotypeType
+import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -37,6 +40,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   val vepped_path = resourcePath("/VEP_oneline.vcf")
+  val vepped = new File(vepped_path)
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
@@ -55,6 +59,26 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
+  }
+
+  @Test def testHasGenotype() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Child_7006504", GenotypeType.MIXED))) shouldBe false
+
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF))) shouldBe true
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.MIXED))) shouldBe false
+
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF), ("Child_7006504", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET), ("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
   }
 
 }
