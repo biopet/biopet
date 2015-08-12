@@ -102,6 +102,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           val curl = new Curl(this)
           curl.url = vepCacheUri.toString
           curl.output = new File(vepDir, new File(curl.url).getName)
+          curl.isIntermediate = true
           add(curl)
 
           val tar = new TarExtract(this)
