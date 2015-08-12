@@ -28,5 +28,6 @@ class TarExtract(val root: Configurable) extends BiopetCommandLineFunction {
 
   def cmdLine: String = required(executable) +
     required("-x") +
-    required("-f", inputTar)
+    required("-f", inputTar) +
+    required("--directory", outputDir)
 }
