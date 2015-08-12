@@ -134,6 +134,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             curl.isIntermediate = true
             add(curl)
             cv.inputFiles ::= curl.output
+
+            val tabix = new Tabix(this)
+            tabix.input = curl.output
+            tabix.p = Some("vcf")
+            tabix.isIntermediate = true
+            add(tabix)
+            cv.deps ::= tabix.outputIndex
           }
 
           dbsnpUri match {
