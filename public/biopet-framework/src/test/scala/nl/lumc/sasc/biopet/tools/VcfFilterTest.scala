@@ -81,4 +81,70 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     hasGenotype(record, List(("Mother_7006508", GenotypeType.HET), ("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
   }
 
+  @Test def testMinQualScore() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    minQualscore(record, 2000) shouldBe false
+    minQualscore(record, 1000) shouldBe true
+
+  }
+
+  @Test def testHasNonRefCalls() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    hasNonRefCalls(record) shouldBe true
+  }
+
+  @Test def testHasCalls() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    hasCalls(record) shouldBe true
+  }
+
+  @Test def testHasMinDP() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    hasMinTotalDepth(record, 100) shouldBe true
+    hasMinTotalDepth(record, 200) shouldBe false
+  }
+
+  @Test def testHasMinSampleDP() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    hasMinSampleDepth(record, 30, 1) shouldBe true
+    hasMinSampleDepth(record, 30, 2) shouldBe true
+    hasMinSampleDepth(record, 30, 3) shouldBe true
+    hasMinSampleDepth(record, 40, 1) shouldBe true
+    hasMinSampleDepth(record, 40, 2) shouldBe true
+    hasMinSampleDepth(record, 40, 3) shouldBe false
+    hasMinSampleDepth(record, 50, 1) shouldBe false
+    hasMinSampleDepth(record, 50, 2) shouldBe false
+    hasMinSampleDepth(record, 50, 3) shouldBe false
+  }
+
+  @Test def testHasMinSampleAD() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    minAlternateDepth(record, 0, 3) shouldBe true
+    minAlternateDepth(record, 10, 2) shouldBe true
+    minAlternateDepth(record, 10, 3) shouldBe false
+    minAlternateDepth(record, 20, 1) shouldBe true
+    minAlternateDepth(record, 20, 2) shouldBe false
+  }
+
+  @Test def testMustHaveVariant() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    mustHaveVariant(record, List("Child_7006504")) shouldBe true
+    mustHaveVariant(record, List("Child_7006504", "Father_7006506")) shouldBe true
+    mustHaveVariant(record, List("Child_7006504", "Father_7006506", "Mother_7006508")) shouldBe false
+  }
+
 }

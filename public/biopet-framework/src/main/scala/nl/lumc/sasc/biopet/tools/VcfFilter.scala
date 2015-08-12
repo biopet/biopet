@@ -278,7 +278,7 @@ object VcfFilter extends ToolCommand {
   }
 
   /**
-   * Checks if AD genotype field have a minimal value
+   * Checks if non-ref AD genotype field have a minimal value
    * @param record VCF record
    * @param minAlternateDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
