@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines
 
-import java.io.File
+import java.io.PrintWriter
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -26,7 +26,6 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
@@ -36,6 +35,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   var referenceConfig: Map[String, Any] = Map()
 
+  def outputConfigFile = new File(outputDir, "reference.json")
+
   /** This is executed before the script starts */
   def init(): Unit = {
     referenceConfig = ConfigUtils.fileToConfigMap(referenceConfigFile)
@@ -44,16 +45,17 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
   /** Method where jobs must be added */
   def biopetScript(): Unit = {
 
-    for ((speciesName, c) <- referenceConfig) {
+    val outputConfig = for ((speciesName, c) <- referenceConfig) yield speciesName -> {
       val speciesConfig = ConfigUtils.any2map(c)
       val speciesDir = new File(outputDir, speciesName)
-      for ((genomeName, c) <- speciesConfig) {
+      for ((genomeName, c) <- speciesConfig) yield genomeName -> {
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUri = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")).toString
 
         val genomeDir = new File(speciesDir, genomeName)
         val fastaFile = new File(genomeDir, "reference.fa")
+        var outputConfig: Map[String, Any] = Map("reference_fasta" -> fastaFile)
 
         val curl = new Curl(this)
         curl.url = fastaUri
@@ -101,6 +103,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           curl.url = dbsnpUri.toString
           curl.output = new File(annotationDir, new File(dbsnpUri.toString).getName)
           add(curl)
+          outputConfig += "dbsnp" -> curl.output.getAbsolutePath
 
           val tabix = new Tabix(this)
           tabix.input = curl.output
@@ -112,6 +115,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val bwaIndex = new BwaIndex(this)
         bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
         add(bwaIndex)
+        outputConfig += "bwa" -> Map("reference_fasta" -> bwaIndex.reference.getAbsolutePath)
 
         // Gmap index
         val gmapDir = new File(genomeDir, "gmap")
@@ -120,12 +124,21 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         gmapBuild.db = genomeName
         gmapBuild.fastaFiles ::= createLinks(gmapDir)
         add(gmapBuild)
+        outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath)
+        outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath)
 
         //TODO: Star index
 
         //TODO: bowtie index
+
+        //TODO: Create config
+        outputConfig
       }
     }
+
+    val writer = new PrintWriter(outputConfigFile)
+    writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
+    writer.close()
   }
 }
 
