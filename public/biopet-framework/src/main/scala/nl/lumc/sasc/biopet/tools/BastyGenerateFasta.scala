@@ -155,7 +155,7 @@ object BastyGenerateFasta extends ToolCommand {
     }
   }
 
-  protected var cmdArgs: Args = _
+  protected implicit var cmdArgs: Args = _
   private val chunkSize = 100000
 
   /**
@@ -253,7 +253,7 @@ object BastyGenerateFasta extends ToolCommand {
     }
   }
 
-  protected def writeVariantsOnly() {
+  protected[tools] def writeVariantsOnly() {
     val writer = new PrintWriter(cmdArgs.outputVariants)
     writer.println(">" + cmdArgs.outputName)
     val vcfReader = new VCFFileReader(cmdArgs.inputVcf, false)
@@ -265,7 +265,10 @@ object BastyGenerateFasta extends ToolCommand {
     vcfReader.close()
   }
 
-  protected def getMaxAllele(vcfRecord: VariantContext): String = {
+  // TODO: what does this do?
+  // Seems to me it finds the allele in a sample with the highest AD value
+  // if this allele is shorter than the largest allele, it will append '-' to the string
+  protected[tools] def getMaxAllele(vcfRecord: VariantContext)(implicit cmdArgs: Args): String = {
     val maxSize = getLongestAllele(vcfRecord).getBases.length
 
     if (cmdArgs.sampleName == null) return fillAllele(vcfRecord.getReference.getBaseString, maxSize)
