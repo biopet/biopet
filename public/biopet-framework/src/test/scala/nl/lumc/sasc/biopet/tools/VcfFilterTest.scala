@@ -147,4 +147,63 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     mustHaveVariant(record, List("Child_7006504", "Father_7006506", "Mother_7006508")) shouldBe false
   }
 
+  @Test def testSameGenotype() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    notSameGenotype(record, "Child_7006504", "Father_7006506") shouldBe false
+    notSameGenotype(record, "Child_7006504", "Mother_7006508") shouldBe true
+    notSameGenotype(record, "Father_7006506", "Mother_7006508") shouldBe true
+  }
+
+  @Test def testfilterHetVarToHomVar() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    filterHetVarToHomVar(record, "Child_7006504", "Father_7006506") shouldBe true
+    filterHetVarToHomVar(record, "Child_7006504", "Mother_7006508") shouldBe true
+    filterHetVarToHomVar(record, "Father_7006506", "Mother_7006508") shouldBe true
+  }
+
+  @Test def testDeNovo() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    denovoInSample(record, "Child_7006504") shouldBe false
+    denovoInSample(record, "Father_7006506") shouldBe false
+    denovoInSample(record, "Mother_7006508") shouldBe false
+  }
+
+  @Test def testResToDom() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+
+    resToDom(record, List(trio)) shouldBe false
+  }
+
+  @Test def testTrioCompound = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+
+    trioCompound(record, List(trio))
+  }
+
+  @Test def testDeNovoTrio = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+
+    denovoTrio(record, List(trio))
+  }
+
+  @Test def testInIDSet() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    inIdSet(record, Set("rs199537431")) shouldBe true
+    inIdSet(record, Set("dummy")) shouldBe false
+  }
+
 }
