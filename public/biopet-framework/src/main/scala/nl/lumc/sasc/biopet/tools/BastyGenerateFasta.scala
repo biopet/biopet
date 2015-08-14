@@ -172,9 +172,12 @@ object BastyGenerateFasta extends ToolCommand {
     if (cmdArgs.outputConsensus != null || cmdArgs.outputConsensusVariants != null) {
       writeConsensus()
     }
+
+    //FIXME: what to do if outputcConsensus is set, but not outputConsensusVariants (and vice versa)?
   }
 
   protected def writeConsensus() {
+    //FIXME: preferably split this up in functions, so that they can be unit tested
     val referenceFile = new IndexedFastaSequenceFile(cmdArgs.reference)
     val referenceDict = referenceFile.getSequenceDictionary
 
