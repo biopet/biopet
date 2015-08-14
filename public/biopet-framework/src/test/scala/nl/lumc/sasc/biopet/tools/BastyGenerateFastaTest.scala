@@ -22,6 +22,30 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
 
   val vepped_path = resourcePath("/VEP_oneline.vcf")
   val vepped = new File(vepped_path)
+  val bam_path = resourcePath("/paired01.bam")
+  val chrQ_path = resourcePath("/chrQ.vcf.gz")
+  val chrQRef_path = resourcePath("/fake_chrQ.fa")
+  val bam = new File(resourcePath("/paired01.bam"))
+  val chrQ = new File(resourcePath("/chrQ.vcf.gz"))
+  val chrQRef = new File(resourcePath("/fake_chrQ.fa"))
+
+  @Test def testMainVcf = {
+    val tmp = File.createTempFile("basty_out", ".fa")
+    val tmppath = tmp.getAbsolutePath
+    tmp.deleteOnExit()
+
+    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--sampleName", "Child_7006504", "--reference", chrQRef_path, "--outputName", "test")
+    main(arguments)
+  }
+
+  @Test def testMainVcfAndBam = {
+    val tmp = File.createTempFile("basty_out", ".fa")
+    val tmppath = tmp.getAbsolutePath
+    tmp.deleteOnExit()
+
+    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Child_7006504", "--reference", chrQRef_path, "--outputName", "test")
+    main(arguments)
+  }
 
   @Test def testGetMaxAllele = {
     val reader = new VCFFileReader(vepped, false)
