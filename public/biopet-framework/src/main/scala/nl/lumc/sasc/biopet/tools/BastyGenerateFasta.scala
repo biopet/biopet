@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
 
-import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.{SAMSequenceRecord, SamReaderFactory}
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
@@ -28,6 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParMap
 
 class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName
@@ -165,8 +166,12 @@ object BastyGenerateFasta extends ToolCommand {
     val argsParser = new OptParser
     cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    if (cmdArgs.outputVariants != null) writeVariantsOnly()
-    if (cmdArgs.outputConsensus != null || cmdArgs.outputConsensusVariants != null) writeConsensus()
+    if (cmdArgs.outputVariants != null) {
+      writeVariantsOnly()
+    }
+    if (cmdArgs.outputConsensus != null || cmdArgs.outputConsensusVariants != null) {
+      writeConsensus()
+    }
   }
 
   protected def writeConsensus() {
@@ -271,14 +276,28 @@ object BastyGenerateFasta extends ToolCommand {
   protected[tools] def getMaxAllele(vcfRecord: VariantContext)(implicit cmdArgs: Args): String = {
     val maxSize = getLongestAllele(vcfRecord).getBases.length
 
-    if (cmdArgs.sampleName == null) return fillAllele(vcfRecord.getReference.getBaseString, maxSize)
+    if (cmdArgs.sampleName == null) {
+      return fillAllele(vcfRecord.getReference.getBaseString, maxSize)
+    }
 
     val genotype = vcfRecord.getGenotype(cmdArgs.sampleName)
-    if (genotype == null) return fillAllele("", maxSize)
+
+    if (genotype == null) {
+      return fillAllele("", maxSize)
+    }
+
     val AD = if (genotype.hasAD) genotype.getAD else Array.fill(vcfRecord.getAlleles.size())(cmdArgs.minAD)
-    if (AD == null) return fillAllele("", maxSize)
+
+    if (AD == null) {
+      return fillAllele("", maxSize)
+    }
+
     val maxADid = AD.zipWithIndex.maxBy(_._1)._2
-    if (AD(maxADid) < cmdArgs.minAD) return fillAllele("", maxSize)
+
+    if (AD(maxADid) < cmdArgs.minAD) {
+      return fillAllele("", maxSize)
+    }
+
     fillAllele(vcfRecord.getAlleles()(maxADid).getBaseString, maxSize)
   }
 }
