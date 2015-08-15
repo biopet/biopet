@@ -20,6 +20,7 @@ import java.io.{ File, FileOutputStream }
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.config.Config
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.bowtie.Bowtie
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.{ Cutadapt, Fastqc, SeqtkSeq }
