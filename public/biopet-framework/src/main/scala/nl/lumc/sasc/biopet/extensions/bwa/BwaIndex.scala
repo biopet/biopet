@@ -40,7 +40,7 @@ class BwaIndex(val root: Configurable) extends Bwa {
   var b: Option[Int] = config("e", freeVar = false)
   var _6: Boolean = config("6", default = false, freeVar = false)
 
-  override def defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 30.0
 
   override def beforeGraph() {
     super.beforeGraph()

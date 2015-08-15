@@ -40,7 +40,7 @@ class GmapBuild(val root: Configurable) extends BiopetCommandLineFunction with R
   /** genome database */
   var db: String = _
 
-  override def defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 15.0
 
   override def versionRegex = """.* version (.*)""".r
   override def versionCommand = executable
