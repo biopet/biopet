@@ -167,8 +167,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         gmapBuild.db = genomeName
         gmapBuild.fastaFiles ::= createLinks(gmapDir)
         add(gmapBuild)
-        outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath)
-        outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath)
+        outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
+        outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
 
         //TODO: Star index
 
