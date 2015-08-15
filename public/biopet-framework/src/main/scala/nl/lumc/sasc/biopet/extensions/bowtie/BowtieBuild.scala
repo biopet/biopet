@@ -22,7 +22,8 @@ class BowtieBuild(val root: Configurable) extends BiopetCommandLineFunction {
 
   override def defaultCoreMemory = 15.0
 
-  def cmdLine = required(executable) +
+  def cmdLine = required("cd", reference.getParentFile) + "; " +
+    required(executable) +
     required(reference) +
     required(baseName)
 }
