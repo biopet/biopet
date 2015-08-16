@@ -50,16 +50,14 @@ object SamplesTsvToJson extends ToolCommand {
       val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
         val values = tsvLine.split("\t")
         val sample = values(sampleColumn)
-        val library = if (libraryColumn != -1) values(libraryColumn) else null
+        val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
         val valuesMap = (for (
           t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
         ) yield header(t) -> values(t)).toMap
-        val map: Map[String, Any] = if (library != null) {
-          Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
-        } else {
-          Map("samples" -> Map(sample -> valuesMap))
+        library match {
+          case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
+          case _ => Map("samples" -> Map(sample -> valuesMap))
         }
-        map
       }
       librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     }
