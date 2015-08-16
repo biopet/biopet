@@ -55,6 +55,11 @@ object SamplesTsvToJson extends ToolCommand {
         require(header.length == values.length, "Number columns is not the same as the header")
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
+
+        //FIXME: this is a workaround, should be removed after fixing #180
+        if (sample.head.isDigit || library.forall(_.head.isDigit))
+          throw new IllegalStateException("Sample or library may not start with a number")
+
         if (sampleLibCache.contains((sample, library)))
           throw new IllegalStateException(s"Combination of $sample and $library is found multiple times")
         else sampleLibCache.add((sample, library))
@@ -63,7 +68,7 @@ object SamplesTsvToJson extends ToolCommand {
         ) yield header(t) -> values(t)).toMap
         library match {
           case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
-          case _ => Map("samples" -> Map(sample -> valuesMap))
+          case _         => Map("samples" -> Map(sample -> valuesMap))
         }
       }
       librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
