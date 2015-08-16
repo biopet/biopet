@@ -52,6 +52,7 @@ object SamplesTsvToJson extends ToolCommand {
 
       val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
         val values = tsvLine.split("\t")
+        require(header.length == values.length, "Number columns is not the same as the header")
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
         if (sampleLibCache.contains((sample, library)))
