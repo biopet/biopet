@@ -47,6 +47,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputFiles: Map[String, File] = Map()
 
+  protected case class InputFile(file: File, md5: Option[String] = None)
+
+  var inputFiles: List[InputFile] = Nil
+
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var qSettings: QSettings
 
@@ -84,6 +88,11 @@ trait BiopetQScript extends Configurable with GatkLogging {
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
+
+    inputFiles.foreach{ i =>
+      if (!i.file.exists()) BiopetQScript.addError(s"Input file does not exist: ${i.file}")
+      if (!i.file.canRead()) BiopetQScript.addError(s"Input file can not be read: ${i.file}")
+    }
 
     reportClass.foreach(add(_))
 
