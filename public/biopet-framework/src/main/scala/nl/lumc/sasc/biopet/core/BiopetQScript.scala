@@ -89,7 +89,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else BiopetQScript.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
-    inputFiles.foreach{ i =>
+    inputFiles.foreach { i =>
       if (!i.file.exists()) BiopetQScript.addError(s"Input file does not exist: ${i.file}")
       if (!i.file.canRead()) BiopetQScript.addError(s"Input file can not be read: ${i.file}")
     }
