@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import scala.collection.mutable
 
 import scala.io.Source
 
@@ -47,10 +48,15 @@ object SamplesTsvToJson extends ToolCommand {
       val libraryColumn = header.indexOf("library")
       if (sampleColumn == -1) throw new IllegalStateException("sample column does not exist in: " + inputFile)
 
+      val sampleLibCache: mutable.Set[(String, Option[String])] = mutable.Set()
+
       val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
         val values = tsvLine.split("\t")
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
+        if (sampleLibCache.contains((sample, library)))
+          throw new IllegalStateException(s"Combination of $sample and $library is found multiple times")
+        else sampleLibCache.add((sample, library))
         val valuesMap = (for (
           t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
         ) yield header(t) -> values(t)).toMap
