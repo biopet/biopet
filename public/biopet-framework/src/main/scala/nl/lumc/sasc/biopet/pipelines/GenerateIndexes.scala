@@ -171,7 +171,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
         outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
 
-        val starDir = new File(outputDir, "star")
+        val starDir = new File(genomeDir, "star")
         val starIndex = new Star(this)
         starIndex.outputDir = starDir
         starIndex.reference = createLinks(starDir)
