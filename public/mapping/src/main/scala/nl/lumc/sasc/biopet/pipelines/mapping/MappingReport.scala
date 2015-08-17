@@ -36,7 +36,7 @@ object MappingReport extends ReportBuilder {
   /** Root page for single BamMetrcis report */
   def indexPage = {
     val skipFlexiprep = summary.getValue(sampleId, libId, "mapping", "settings", "skip_flexiprep").getOrElse(false) == true
-    val bamMetricsPage = if (summary.getValue(sampleId, libId, "mapping", "settings", "skip_metrics").getOrElse(false) == true) {
+    val bamMetricsPage = if (summary.getValue(sampleId, libId, "mapping", "settings", "skip_metrics").getOrElse(false) != true) {
       Some(BammetricsReport.bamMetricsPage(summary, sampleId, libId))
     } else None
     ReportPage((if (skipFlexiprep) Nil else List("QC" -> FlexiprepReport.flexiprepPage)) :::
