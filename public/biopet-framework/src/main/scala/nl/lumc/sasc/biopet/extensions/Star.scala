@@ -72,7 +72,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     if (reference == null) reference = referenceFasta()
     genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
+    val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
