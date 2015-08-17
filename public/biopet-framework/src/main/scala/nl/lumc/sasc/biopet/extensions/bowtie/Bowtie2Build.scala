@@ -30,7 +30,7 @@ class Bowtie2Build(val root: Configurable) extends BiopetCommandLineFunction {
     outputFiles ::= new File(reference.getParentFile, baseName + ".2.bt2")
   }
 
-  def cmdLine = required("cd", reference.getParentFile) + "; " +
+  def cmdLine = required("cd", reference.getParentFile) + " && " +
     required(executable) +
     required(reference) +
     required(baseName)

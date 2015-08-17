@@ -87,7 +87,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   /** Returns command to execute */
   def cmdLine = {
-    var cmd: String = required("cd", outputDir) + "&&" + required(executable)
+    var cmd: String = required("cd", outputDir) + " && " + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
         required("--genomeFastaFiles", reference)
