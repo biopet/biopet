@@ -59,7 +59,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   var genomeDir: File = null
   var runmode: String = _
-  var sjdbOverhang: Int = _
+  var sjdbOverhang: Option[Int] = None
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runThreadN")
 
@@ -70,18 +70,18 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   override def beforeGraph() {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
-    genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
     val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
+      genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     } else if (runmode == "genomeGenerate") {
       genomeDir = outputDir
       outputGenome = new File(prefix + "Genome")
       outputSA = new File(prefix + "SA")
       outputSAindex = new File(prefix + "SAindex")
-      sjdbOverhang = config("sjdboverhang", 75)
+      sjdbOverhang = config("sjdboverhang")
     }
   }
 
@@ -97,8 +97,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     cmd += required("--genomeDir", genomeDir) +
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
       optional("--runThreadN", threads) +
-      optional("--outFileNamePrefix", outFileNamePrefix)
-    if (sjdbOverhang > 0) cmd += optional("--sjdbOverhang", sjdbOverhang)
+      optional("--outFileNamePrefix", outFileNamePrefix) +
+      optional("--sjdbOverhang", sjdbOverhang)
 
     cmd
   }

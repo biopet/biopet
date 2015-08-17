@@ -171,7 +171,16 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
         outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
 
-        //TODO: Star index
+        val starDir = new File(outputDir, "star")
+        val starIndex = new Star(this)
+        starIndex.outputDir = starDir
+        starIndex.reference = createLinks(starDir)
+        starIndex.runmode = "genomeGenerate"
+        add(starIndex)
+        outputConfig += "star" -> Map(
+          "reference_fasta" -> starIndex.reference.getAbsolutePath,
+          "genomeDir" -> starDir.getAbsolutePath
+        )
 
         val bowtieIndex = new BowtieBuild(this)
         bowtieIndex.reference = createLinks(new File(genomeDir, "bowtie"))
@@ -185,11 +194,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         add(bowtie2Index)
         outputConfig += "bowtie2" -> Map("reference_fasta" -> bowtie2Index.reference.getAbsolutePath)
 
-        //TODO: Create config
+        //TODO: tophat
+
         outputConfig
       }
     }
 
+    //TODO: make this a [InprocessFunction]
     val writer = new PrintWriter(outputConfigFile)
     writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
     writer.close()
