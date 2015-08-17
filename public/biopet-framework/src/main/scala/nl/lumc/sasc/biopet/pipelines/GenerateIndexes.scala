@@ -193,8 +193,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         bowtie2Index.baseName = "reference"
         add(bowtie2Index)
         outputConfig += "bowtie2" -> Map("reference_fasta" -> bowtie2Index.reference.getAbsolutePath)
-
-        //TODO: tophat
+        outputConfig += "tophat" -> Map("bowtie_index" -> bowtie2Index.reference.getAbsolutePath)
 
         outputConfig
       }
