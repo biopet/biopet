@@ -71,7 +71,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
+    val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
