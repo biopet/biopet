@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{Reference, BiopetCommandLineFunction}
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Extension for Tophat
  */
-class Tophat(val root: Configurable) extends BiopetCommandLineFunction {
+class Tophat(val root: Configurable) extends BiopetCommandLineFunction with Reference {
 
   executable = config("exe", default = "tophat", freeVar = false)
 
