@@ -20,7 +20,7 @@ import java.util
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.bowtie.BowtieBuild
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
@@ -179,7 +179,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         add(bowtieIndex)
         outputConfig += "bowtie" -> Map("reference_fasta" -> bowtieIndex.reference.getAbsolutePath)
 
-        val bowtie2Index = new BowtieBuild(this)
+        val bowtie2Index = new Bowtie2Build(this)
         bowtie2Index.reference = createLinks(new File(genomeDir, "bowtie2"))
         bowtie2Index.baseName = "reference"
         add(bowtie2Index)
