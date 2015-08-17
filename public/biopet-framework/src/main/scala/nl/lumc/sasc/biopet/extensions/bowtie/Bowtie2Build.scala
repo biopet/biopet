@@ -26,8 +26,8 @@ class Bowtie2Build(val root: Configurable) extends BiopetCommandLineFunction {
   override def defaultCoreMemory = 15.0
 
   override def beforeGraph: Unit = {
-    outputFiles ::= new File(reference.getParentFile, baseName + ".1.ebwt")
-    outputFiles ::= new File(reference.getParentFile, baseName + ".2.ebwt")
+    outputFiles ::= new File(reference.getParentFile, baseName + ".1.bt2")
+    outputFiles ::= new File(reference.getParentFile, baseName + ".2.bt2")
   }
 
   def cmdLine = required("cd", reference.getParentFile) + "; " +
