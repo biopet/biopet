@@ -15,13 +15,14 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{InputStream, File}
+import java.io.{PrintWriter, InputStream, File}
+import java.util
 
 import htsjdk.samtools.util.Interval
 import htsjdk.samtools.{QueryInterval, SAMRecord, SamReader, SamReaderFactory}
 import htsjdk.tribble.AbstractFeatureReader._
-import htsjdk.tribble.TabixFeatureReader
-import htsjdk.tribble.bed.{SimpleBEDFeature, BEDCodec, FullBEDFeature}
+import htsjdk.tribble.{AbstractFeatureReader, TabixFeatureReader}
+import htsjdk.tribble.bed.{BEDFeature, SimpleBEDFeature, BEDCodec, FullBEDFeature}
 import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
 import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
@@ -30,6 +31,8 @@ import nl.lumc.sasc.biopet.core.ToolCommand
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.io.Source
+import scala.math._
 
 object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
@@ -43,7 +46,7 @@ object RegionAfCount extends ToolCommand {
     opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
-    opt[File]('v', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
+    opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(vcfFiles = x :: c.vcfFiles)
     }
   }
@@ -52,11 +55,36 @@ object RegionAfCount extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    //val bedReader = new TabixFeatureReader[BEDCodec, File](cmdArgs.bedFile.getAbsolutePath, new BEDCodec)
+    val regions = (for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) yield {
+      val values = line.split("\t")
+      require(values.length >= 3, "to less columns in bed file")
+      val name = if (values.length >= 4) values(3)
+      else values(0) + ":" + values(1) + "-" + values(2)
+      new Interval(values(0), values(1).toInt, values(2).toInt, true, name)
+    }).toList
 
-    val bedIt = asScalaIteratorConverter(getFeatureReader(cmdArgs.bedFile.toPath.toString, new BEDCodec(), false).iterator).asScala
-    for ( bedRecord <- bedIt) {
-      bedRecord.getName()
+    val counts = (for (region <- regions) yield region.getName -> {
+      (for (vcfFile <- cmdArgs.vcfFiles) yield vcfFile -> {
+        val reader = new VCFFileReader(vcfFile, true)
+        val it = reader.query(region.getContig, region.getStart, region.getEnd)
+        val sum = (for (v <- it) yield {
+          val bla = v.getAttribute("AF", 0) match {
+            case a:util.ArrayList[_] => a.map(_.toString.toDouble).toArray
+            case s => Array(s.toString.toDouble)
+          }
+          bla.sum
+        }).sum
+        reader.close()
+        sum
+      }).toMap
+    }).toMap
+
+    val writer = new PrintWriter(cmdArgs.outputFile)
+    writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
+    for (c <- counts) {
+      writer.print(c._1 + "\t")
+      writer.println(cmdArgs.vcfFiles.map(c._2(_)).mkString("\t"))
     }
+    writer.close()
   }
 }
