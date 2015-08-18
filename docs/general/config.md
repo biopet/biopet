@@ -7,7 +7,7 @@ The sample config should be in [__JSON__](http://www.json.org/) or [__YAML__](ht
 - First field should have the key __"samples"__
 - Second field should contain the __"libraries"__
 - Third field contains __"R1" or "R2"__ or __"bam"__
-- The fastq input files can be provided zipped and un zipped
+- The fastq input files can be provided zipped and unzipped
 
 #### Example sample config
 
@@ -57,8 +57,8 @@ Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md
 
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
-This config file should be written in JSON format. It can contain setup settings like references for the tools used,
-if the pipeline should use chunking or setting memory limits for certain programs almost everything can be adjusted trough this config file.
+This config file should be written in JSON format.
+It can contain setup settings like references, cut offs, program modes, memory limits (program specific), if chunking should be used and many more, one can even set program executables here, if for some reason the user does not want to use the systems default tools.
 One could set global variables containing settings for all tools used in the pipeline or set tool specific options one layer deeper into the JSON file.
 E.g. in the example below the settings for Picard tools are altered only for Picard and not global. 
 
@@ -77,10 +77,11 @@ Global setting examples are:
 ----
 
 #### References
-Pipelines and tools that use references should now use the reference module. This gives some more fine-grained control over references.
-E.g. pipelines and tools that use a fasta references file should now set value `reference_fasta`.
-Additionally, we can set `reference_name` for the name to be used (e.g. `hg19`). If unset, Biopet will default to `unknown`.
-It is also possible to set the `species` flag. Again, we will default to `unknown` if unset.
+Pipelines and tools that use references should now use the reference module.
+This gives a more fine-grained control over references and enables a user to curate the references in a structural way.
+E.g. pipelines and tools which uses FASTA references should now set value `"reference_fasta"`.
+Additionally, we can set `"reference_name"` for the name to be used (e.g. `"hg19"`). If unset, Biopet will default to `unknown`.
+It is also possible to set the `"species"` flag. Again, we will default to `unknown` if unset.
 #### Example settings config
 ~~~
 {
@@ -108,5 +109,5 @@ It is also possible to set the `species` flag. Again, we will default to `unknow
 
 ### JSON validation
 
-To check if the JSON file created is correct we can use multiple options the simplest way is using [this](http://jsonformatter.curiousconcept.com/)
-website. It is also possible to use Python or Scala for validating but this requires some more knowledge.
+To check if the created JSON file is correct their are several possibilities: the simplest way is using [this](http://jsonformatter.curiousconcept.com/)
+website. It is also possible to use Python, Scala or any other programming languages for validating JSON files but this requires some more knowledge.
