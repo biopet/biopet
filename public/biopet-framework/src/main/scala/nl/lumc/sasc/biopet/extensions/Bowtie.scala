@@ -65,27 +65,26 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   }
 
   /** return commandline to execute */
-  def cmdLine = {
-    required(executable) +
-      optional("--threads", threads) +
-      conditional(sam, "--sam") +
-      conditional(best, "--best") +
-      conditional(strata, "--strata") +
-      optional("--sam-RG", sam_RG) +
-      optional("--seedlen", seedlen) +
-      optional("--seedmms", seedmms) +
-      optional("-k", k) +
-      optional("-m", m) +
-      optional("--maxbts", maxbts) +
-      optional("--maqerr", maqerr) +
-      optional("--maxins", maxins) +
-      required(reference) +
-      (R2 match {
-        case Some(r2) =>
-          required("-1", R1) +
-            optional("-2", r2)
-        case _ => required(R1)
-      }) +
-      " > " + required(output)
-  }
+  def cmdLine = "BOWTIE_INDEXES=" + reference.getParent + " &&"
+  required(executable) +
+    optional("--threads", threads) +
+    conditional(sam, "--sam") +
+    conditional(best, "--best") +
+    conditional(strata, "--strata") +
+    optional("--sam-RG", sam_RG) +
+    optional("--seedlen", seedlen) +
+    optional("--seedmms", seedmms) +
+    optional("-k", k) +
+    optional("-m", m) +
+    optional("--maxbts", maxbts) +
+    optional("--maqerr", maqerr) +
+    optional("--maxins", maxins) +
+    required(reference.getName.stripSuffix(".fa").stripSuffix(".fasta")) +
+    (R2 match {
+      case Some(r2) =>
+        required("-1", R1) +
+          optional("-2", r2)
+      case _ => required(R1)
+    }) +
+    " > " + required(output)
 }
