@@ -65,8 +65,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   }
 
   /** return commandline to execute */
-  def cmdLine = "BOWTIE_INDEXES=" + reference.getParent + " &&" +
-    required(executable) +
+  def cmdLine = required(executable) +
     optional("--threads", threads) +
     conditional(sam, "--sam") +
     conditional(best, "--best") +
@@ -79,7 +78,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
     optional("--maxbts", maxbts) +
     optional("--maqerr", maqerr) +
     optional("--maxins", maxins) +
-    required(reference.getName.stripSuffix(".fa").stripSuffix(".fasta")) +
+    required(reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")) +
     (R2 match {
       case Some(r2) =>
         required("-1", R1) +
