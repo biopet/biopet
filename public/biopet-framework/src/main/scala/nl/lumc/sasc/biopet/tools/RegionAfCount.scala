@@ -27,6 +27,7 @@ import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantC
 import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
 import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.extensions.rscript.ScatterPlot
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -67,7 +68,7 @@ object RegionAfCount extends ToolCommand {
 
     var c = 0
 
-    val afCounts = (for (region <- regions.par) yield region.getName -> {
+    val afCountsRaw = for (region <- regions.par) yield region.getName -> {
       val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
         val reader = new VCFFileReader(vcfFile, true)
         val it = reader.query(region.getContig, region.getStart, region.getEnd)
@@ -86,9 +87,22 @@ object RegionAfCount extends ToolCommand {
       if (c % 100 == 0) logger.info(s"$c regions done")
 
       sum
-    }).toMap
+    }
 
     logger.info(s"Done reading, $c regions")
+    logger.info("Combining duplicates bed records")
+
+    val afCounts: Map[String, Map[File, Double]] = {
+      val combinedAfCounts: mutable.Map[String, mutable.Map[File, Double]] = mutable.Map()
+      for (x <- afCountsRaw) {
+        if (combinedAfCounts.contains(x._1)) {
+          x._2.foreach(y => combinedAfCounts(x._1)(y._1) += y._2)
+        } else combinedAfCounts += x._1 -> mutable.Map(x._2.toList:_*)
+      }
+      combinedAfCounts.map(x => x._1 -> x._2.toMap).toMap
+    }
+
+    logger.info("Writing output file")
 
     val writer = new PrintWriter(cmdArgs.outputFile)
     writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
