@@ -46,13 +46,13 @@ object SamplesTsvToJson extends ToolCommand {
       val header = lines.head.split("\t")
       val sampleColumn = header.indexOf("sample")
       val libraryColumn = header.indexOf("library")
-      if (sampleColumn == -1) throw new IllegalStateException("sample column does not exist in: " + inputFile)
+      if (sampleColumn == -1) throw new IllegalStateException("Sample column does not exist in: " + inputFile)
 
       val sampleLibCache: mutable.Set[(String, Option[String])] = mutable.Set()
 
       val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
         val values = tsvLine.split("\t")
-        require(header.length == values.length, "Number columns is not the same as the header")
+        require(header.length == values.length, "Number of columns is not the same as the header")
         val sample = values(sampleColumn)
         val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
 
