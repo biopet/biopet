@@ -12,6 +12,6 @@ For developers:
  * [OpenJDK 7](http://openjdk.java.net/install/) 
  * Minimum of 4 GB RAM {todo: provide more accurate estimation on building}
  * Maven 3
- * Compiled and installed in maven repository version of [GATK + Queue](https://github.com/broadgsa/gatk-protected/)
+ * Compiled and installed version 3.4 of [GATK + Queue](https://github.com/broadgsa/gatk-protected/) in your maven repository.
  * IntelliJ or Netbeans 8.0 for development
 
