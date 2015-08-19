@@ -112,6 +112,16 @@ object RegionAfCount extends ToolCommand {
     }
     writer.close()
 
+    logger.info("Generate plot")
+
+    val scatterPlot = new ScatterPlot(null)
+    scatterPlot.input = cmdArgs.outputFile
+    scatterPlot.output = new File(cmdArgs.outputFile.getAbsolutePath + ".png")
+    scatterPlot.ylabel = Some("Sum of AFs")
+    scatterPlot.width = Some(1200)
+    scatterPlot.height = Some(1000)
+    scatterPlot.runLocal()
+
     logger.info("Done")
   }
 }
