@@ -55,6 +55,8 @@ object RegionAfCount extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
+    logger.info("Start")
+
     val regions = (for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) yield {
       val values = line.split("\t")
       require(values.length >= 3, "to less columns in bed file")
@@ -63,8 +65,10 @@ object RegionAfCount extends ToolCommand {
       new Interval(values(0), values(1).toInt, values(2).toInt, true, name)
     }).toList
 
-    val counts = (for (region <- regions) yield region.getName -> {
-      (for (vcfFile <- cmdArgs.vcfFiles) yield vcfFile -> {
+    var c = 0
+
+    val afCounts = (for (region <- regions.par) yield region.getName -> {
+      val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
         val reader = new VCFFileReader(vcfFile, true)
         val it = reader.query(region.getContig, region.getStart, region.getEnd)
         val sum = (for (v <- it) yield {
@@ -77,14 +81,23 @@ object RegionAfCount extends ToolCommand {
         reader.close()
         sum
       }).toMap
+
+      c += 1
+      if (c % 100 == 0) logger.info(s"$c regions done")
+
+      sum
     }).toMap
+
+    logger.info(s"Done reading, $c regions")
 
     val writer = new PrintWriter(cmdArgs.outputFile)
     writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
-    for (c <- counts) {
-      writer.print(c._1 + "\t")
-      writer.println(cmdArgs.vcfFiles.map(c._2(_)).mkString("\t"))
+    for (r <- regions) {
+      writer.print(r.getName + "\t")
+      writer.println(cmdArgs.vcfFiles.map(afCounts(r.getName)(_)).mkString("\t"))
     }
     writer.close()
+
+    logger.info("Done")
   }
 }
