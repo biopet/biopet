@@ -199,7 +199,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     BiopetCommandLineFunctionTrait.versionCache.get(versionCommand)
   }
 
-  def getThreads = getThreads(defaultThreads)
+  def getThreads: Int = getThreads(defaultThreads)
 
   /**
    * Get threads from config
