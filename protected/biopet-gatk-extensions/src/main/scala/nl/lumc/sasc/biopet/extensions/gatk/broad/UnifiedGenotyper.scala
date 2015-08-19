@@ -26,11 +26,13 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
     }
   }
 
+  override val defaultThreads = 1
+
   override def beforeGraph() {
     super.beforeGraph()
 
     genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
-    nct = Some(getThreads(1))
+    nct = Some(getThreads)
     memoryLimit = Option(nct.getOrElse(1) * memoryLimit.getOrElse(2.0))
   }
 }

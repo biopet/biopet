@@ -199,13 +199,15 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
     BiopetCommandLineFunctionTrait.versionCache.get(versionCommand)
   }
 
+  def getThreads = getThreads(defaultThreads)
+
   /**
    * Get threads from config
    * @param default default when not found in config
    * @return number of threads
    */
   def getThreads(default: Int): Int = {
-    val maxThreads: Int = config("maxthreads", default = 8)
+    val maxThreads: Int = config("maxthreads", default = 24)
     val threads: Int = config("threads", default = default)
     if (maxThreads > threads) threads
     else maxThreads
@@ -218,7 +220,7 @@ trait BiopetCommandLineFunctionTrait extends CommandLineFunction with Configurab
    * @return number of threads
    */
   def getThreads(default: Int, module: String): Int = {
-    val maxThreads: Int = config("maxthreads", default = 8, submodule = module)
+    val maxThreads: Int = config("maxthreads", default = 24, submodule = module)
     val threads: Int = config("threads", default = default, submodule = module)
     if (maxThreads > threads) threads
     else maxThreads
