@@ -39,7 +39,8 @@ object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
                   outputFile: File = null,
                   scatterpPlot: Option[File] = None,
-                  vcfFiles: List[File] = Nil) extends AbstractArgs
+                  vcfFiles: List[File] = Nil,
+                  exonsOnly: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('b', "bedFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -53,6 +54,9 @@ object RegionAfCount extends ToolCommand {
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(vcfFiles = c.vcfFiles ::: x :: Nil )
+    }
+    opt[Unit]("exonsOnly") unbounded () action { (x, c) =>
+      c.copy(exonsOnly = true )
     }
   }
 
@@ -68,25 +72,37 @@ object RegionAfCount extends ToolCommand {
       require(values.length >= 3, "to less columns in bed file")
       val name = if (values.length >= 4) values(3)
       else values(0) + ":" + values(1) + "-" + values(2)
-      new Interval(values(0), values(1).toInt, values(2).toInt, true, name)
+      val chr = values(0)
+      val start = values(1).toInt
+      val end = values(2).toInt
+
+      if (cmdArgs.exonsOnly) {
+        // Only reads the exons
+        require(values.length >= 12, "No exon information in bed file")
+        val blockSizes = values(10).split(",").map(_.toInt)
+        val blockStarts = values(11).split(",").map(_.toInt)
+        blockSizes.zip(blockStarts).map(x => new Interval(chr, start + x._2, start + x._2 + x._1, true, name)).toList
+      } else List(new Interval(chr, start, end, true, name))
     }).toList
 
     logger.info("Reading vcf files")
 
     var c = 0
-    val afCountsRaw = for (region <- regions.par) yield region.getName -> {
+    val afCountsRaw = for (region <- regions.par) yield region.head.getName -> {
       val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
         val reader = new VCFFileReader(vcfFile, true)
-        val it = reader.query(region.getContig, region.getStart, region.getEnd)
-        val sum = (for (v <- it) yield {
-          val bla = v.getAttribute("AF", 0) match {
-            case a:util.ArrayList[_] => a.map(_.toString.toDouble).toArray
-            case s => Array(s.toString.toDouble)
-          }
-          bla.sum
-        }).sum
+        val sums = for (r <- region) yield {
+          val it = reader.query(r.getContig, r.getStart, r.getEnd)
+          (for (v <- it) yield {
+            val bla = v.getAttribute("AF", 0) match {
+              case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
+              case s => Array(s.toString.toDouble)
+            }
+            bla.sum
+          }).sum
+        }
         reader.close()
-        sum
+        sums.sum
       }).toMap
 
       c += 1
