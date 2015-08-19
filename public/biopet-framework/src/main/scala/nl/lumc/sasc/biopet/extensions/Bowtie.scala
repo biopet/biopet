@@ -65,8 +65,8 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   }
 
   /** return commandline to execute */
-  def cmdLine = "BOWTIE_INDEXES=" + reference.getParent + " &&"
-  required(executable) +
+  def cmdLine = "BOWTIE_INDEXES=" + reference.getParent + " &&" +
+    required(executable) +
     optional("--threads", threads) +
     conditional(sam, "--sam") +
     conditional(best, "--best") +
