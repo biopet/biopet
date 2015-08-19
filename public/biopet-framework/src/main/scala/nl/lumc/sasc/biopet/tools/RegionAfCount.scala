@@ -38,6 +38,7 @@ import scala.math._
 object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
                   outputFile: File = null,
+                  scatterpPlot: Option[File] = None,
                   vcfFiles: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -46,6 +47,9 @@ object RegionAfCount extends ToolCommand {
     }
     opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
+    }
+    opt[File]('s', "scatterPlot") maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(scatterpPlot = Some(x))
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(vcfFiles = c.vcfFiles ::: x :: Nil )
@@ -57,6 +61,7 @@ object RegionAfCount extends ToolCommand {
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     logger.info("Start")
+    logger.info("Reading bed file")
 
     val regions = (for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) yield {
       val values = line.split("\t")
@@ -66,8 +71,9 @@ object RegionAfCount extends ToolCommand {
       new Interval(values(0), values(1).toInt, values(2).toInt, true, name)
     }).toList
 
-    var c = 0
+    logger.info("Reading vcf files")
 
+    var c = 0
     val afCountsRaw = for (region <- regions.par) yield region.getName -> {
       val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
         val reader = new VCFFileReader(vcfFile, true)
@@ -94,7 +100,7 @@ object RegionAfCount extends ToolCommand {
 
     val afCounts: Map[String, Map[File, Double]] = {
       val combinedAfCounts: mutable.Map[String, mutable.Map[File, Double]] = mutable.Map()
-      for (x <- afCountsRaw) {
+      for (x <- afCountsRaw.toList) {
         if (combinedAfCounts.contains(x._1)) {
           x._2.foreach(y => combinedAfCounts(x._1)(y._1) += y._2)
         } else combinedAfCounts += x._1 -> mutable.Map(x._2.toList:_*)
@@ -106,21 +112,23 @@ object RegionAfCount extends ToolCommand {
 
     val writer = new PrintWriter(cmdArgs.outputFile)
     writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
-    for (r <- regions) {
-      writer.print(r.getName + "\t")
-      writer.println(cmdArgs.vcfFiles.map(afCounts(r.getName)(_)).mkString("\t"))
+    for (r <- afCounts.keys) {
+      writer.print(r + "\t")
+      writer.println(cmdArgs.vcfFiles.map(afCounts(r)(_)).mkString("\t"))
     }
     writer.close()
 
-    logger.info("Generate plot")
+    cmdArgs.scatterpPlot.foreach { scatterPlotFile =>
+      logger.info("Generate plot")
 
-    val scatterPlot = new ScatterPlot(null)
-    scatterPlot.input = cmdArgs.outputFile
-    scatterPlot.output = new File(cmdArgs.outputFile.getAbsolutePath + ".png")
-    scatterPlot.ylabel = Some("Sum of AFs")
-    scatterPlot.width = Some(1200)
-    scatterPlot.height = Some(1000)
-    scatterPlot.runLocal()
+      val scatterPlot = new ScatterPlot(null)
+      scatterPlot.input = cmdArgs.outputFile
+      scatterPlot.output = scatterPlotFile
+      scatterPlot.ylabel = Some("Sum of AFs")
+      scatterPlot.width = Some(1200)
+      scatterPlot.height = Some(1000)
+      scatterPlot.runLocal()
+    }
 
     logger.info("Done")
   }
