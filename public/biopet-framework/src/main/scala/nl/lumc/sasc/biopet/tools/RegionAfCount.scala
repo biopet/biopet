@@ -47,7 +47,7 @@ object RegionAfCount extends ToolCommand {
       c.copy(outputFile = x)
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
-      c.copy(vcfFiles = x :: c.vcfFiles)
+      c.copy(vcfFiles = c.vcfFiles ::: x :: Nil )
     }
   }
 
