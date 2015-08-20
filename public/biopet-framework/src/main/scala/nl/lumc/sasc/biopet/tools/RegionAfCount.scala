@@ -94,11 +94,10 @@ object RegionAfCount extends ToolCommand {
         val sums = for (r <- region) yield {
           val it = reader.query(r.getContig, r.getStart, r.getEnd)
           (for (v <- it) yield {
-            val bla = v.getAttribute("AF", 0) match {
+            (v.getAttribute("AF", 0) match {
               case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
               case s => Array(s.toString.toDouble)
-            }
-            bla.sum
+            }).sum
           }).sum
         }
         reader.close()
