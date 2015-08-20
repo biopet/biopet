@@ -2,9 +2,6 @@ package nl.lumc.sasc.biopet.utils.intervals
 
 import java.io.File
 
-import htsjdk.samtools.util.Interval
-
-import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -21,6 +18,24 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
       .getOrElse(record.chr, Nil)
       .dropWhile(_.end < record.start)
       .takeWhile(_.start <= record.end)
+
+  def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
+    (for ((chr, records) <- chrRecords; record <- records) yield {
+      val overlaps = overlapWith(record)
+        .filterNot(strandSensitive && _.strand == record.strand)
+        .filterNot(_.name == record.name)
+      overlaps.foldLeft(List(record))((result, overlap) => {
+        (for (r <- result) yield {
+          (overlap.start < r.start, overlap.end > r.end) match {
+            case (true, true) => Nil
+            case (true, false) => List(r.copy(start = overlap.end + 1))
+            case (false, true) => List(r.copy(end = overlap.start - 1))
+            case (false, false) => List(r.copy(end = overlap.start -1), r.copy(start = overlap.end + 1))
+          }
+        }).flatten
+      })
+    }).flatten
+  }
 }
 
 object BedRecordList {
