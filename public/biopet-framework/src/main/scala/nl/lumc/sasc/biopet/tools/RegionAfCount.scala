@@ -28,6 +28,7 @@ import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
 import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.extensions.rscript.ScatterPlot
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -67,41 +68,35 @@ object RegionAfCount extends ToolCommand {
     logger.info("Start")
     logger.info("Reading bed file")
 
-    val regions = (for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) yield {
-      val values = line.split("\t")
-      require(values.length >= 3, "to less columns in bed file")
-      val name = if (values.length >= 4) values(3)
-      else values(0) + ":" + values(1) + "-" + values(2)
-      val chr = values(0)
-      val start = values(1).toInt
-      val end = values(2).toInt
+    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sort
 
-      if (cmdArgs.exonsOnly) {
-        // Only reads the exons
-        require(values.length >= 12, "No exon information in bed file")
-        val blockSizes = values(10).split(",").map(_.toInt)
-        val blockStarts = values(11).split(",").map(_.toInt)
-        blockSizes.zip(blockStarts).map(x => new Interval(chr, start + x._2, start + x._2 + x._1, true, name)).toList
-      } else List(new Interval(chr, start, end, true, name))
-    }).toList
+    logger.info(s"Combine ${bedRecords.allRecords.size} bed records")
+
+    val combinedBedRecords = BedRecordList.combineOverlap(bedRecords)
+
+    logger.info(s"${combinedBedRecords.allRecords.size} left")
 
     logger.info("Reading vcf files")
 
     var c = 0
-    val afCountsRaw = for (region <- regions.par) yield region.head.getName -> {
+    val afCountsRaw = for (region <- combinedBedRecords.allRecords.par) yield {
       val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
+        val afCounts = mutable.Map[String, Double]()
         val reader = new VCFFileReader(vcfFile, true)
-        val sums = for (r <- region) yield {
-          val it = reader.query(r.getContig, r.getStart, r.getEnd)
-          (for (v <- it) yield {
-            (v.getAttribute("AF", 0) match {
-              case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
-              case s => Array(s.toString.toDouble)
-            }).sum
+        val it = reader.query(region.chr, region.start, region.end)
+        for (variant <- it) {
+          val sum = (variant.getAttribute("AF", 0) match {
+            case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
+            case s => Array(s.toString.toDouble)
           }).sum
+          bedRecords
+            .overlapWith(BedRecord(variant.getContig, variant.getStart, variant.getEnd))
+            .map(_.name.getOrElse("error"))
+            .distinct
+            .foreach(name => afCounts += name -> (afCounts.getOrElse(name, 0.0) + sum))
         }
         reader.close()
-        sums.sum
+        afCounts.toMap
       }).toMap
 
       c += 1
@@ -111,14 +106,13 @@ object RegionAfCount extends ToolCommand {
     }
 
     logger.info(s"Done reading, $c regions")
-    logger.info("Combining duplicates bed records")
 
     val afCounts: Map[String, Map[File, Double]] = {
       val combinedAfCounts: mutable.Map[String, mutable.Map[File, Double]] = mutable.Map()
-      for (x <- afCountsRaw.toList) {
-        if (combinedAfCounts.contains(x._1)) {
-          x._2.foreach(y => combinedAfCounts(x._1)(y._1) += y._2)
-        } else combinedAfCounts += x._1 -> mutable.Map(x._2.toList:_*)
+      for (x <- afCountsRaw.toList; (file, counts) <- x.toList; (name, count) <- counts) {
+        val map = combinedAfCounts.getOrElse(name, mutable.Map())
+        map += file -> (map.getOrElse(file, 0.0) + count)
+        combinedAfCounts += name -> map
       }
       combinedAfCounts.map(x => x._1 -> x._2.toMap).toMap
     }
@@ -129,7 +123,7 @@ object RegionAfCount extends ToolCommand {
     writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
     for (r <- afCounts.keys) {
       writer.print(r + "\t")
-      writer.println(cmdArgs.vcfFiles.map(afCounts(r)(_)).mkString("\t"))
+      writer.println(cmdArgs.vcfFiles.map(afCounts(r).getOrElse(_, 0.0)).mkString("\t"))
     }
     writer.close()
 
