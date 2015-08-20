@@ -15,6 +15,8 @@ case class BedRecord(chr: String,
                      blockCount: Option[Int] = None,
                      blockSizes: Array[Int] = Array(),
                      blockStarts: Array[Int] = Array()) {
+
+  //TODO: Complete bed line output
   override def toString = {
     s"$chr\t$start\t$end"
   }
@@ -37,7 +39,7 @@ object BedRecord {
       },
       values.lift(6).map(_.toInt),
       values.lift(7)map(_.toInt),
-      values.lift(8).map(_.split(",", 3).map(_.toInt)).map(x => (x(0),x(1),x(2))),
+      values.lift(8).map(_.split(",", 3).map(_.toInt)).map(x => (x.lift(0).getOrElse(0),x.lift(1).getOrElse(0),x.lift(2).getOrElse(0))),
       values.lift(9).map(_.toInt),
       values.lift(10).map(_.split(",").map(_.toInt)).getOrElse(Array()),
       values.lift(11).map(_.split(",").map(_.toInt)).getOrElse(Array())
