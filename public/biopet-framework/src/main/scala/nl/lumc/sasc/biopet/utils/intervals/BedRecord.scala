@@ -35,7 +35,7 @@ object BedRecord {
       values.lift(5) match {
         case Some("-") => false
         case Some("+") => true
-        case _ => throw new IllegalStateException("")
+        case _ => throw new IllegalStateException("Strand (column 6) must be '+' or '-'")
       },
       values.lift(6).map(_.toInt),
       values.lift(7)map(_.toInt),
