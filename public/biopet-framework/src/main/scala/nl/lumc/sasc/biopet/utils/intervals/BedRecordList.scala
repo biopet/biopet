@@ -5,6 +5,7 @@ import java.io.{ PrintWriter, File }
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
+import nl.lumc.sasc.biopet.core.Logging
 
 /**
  * Created by pjvan_thof on 8/20/15.
@@ -14,7 +15,10 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
 
   def sort = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
 
-  lazy val isSorted = this == this.sort
+  lazy val isSorted = {
+    val sorted = this.sort
+    sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))
+  }
 
   def overlapWith(record: BedRecord) = (if (isSorted) this else sort).chrRecords
     .getOrElse(record.chr, Nil)
@@ -22,6 +26,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
     .takeWhile(_.start <= record.end)
 
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
+    if (!isSorted) Logging.logger.warn("Running squish bed method on a unsorted bed file may not work correctly")
     (for ((chr, records) <- chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
         .filterNot(strandSensitive && _.strand != record.strand)
