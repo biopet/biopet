@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.utils.intervals
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -15,9 +15,9 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
   def sort = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortBy(_.start)))
 
   def overlapWith(record: BedRecord) = chrRecords
-      .getOrElse(record.chr, Nil)
-      .dropWhile(_.end < record.start)
-      .takeWhile(_.start <= record.end)
+    .getOrElse(record.chr, Nil)
+    .dropWhile(_.end < record.start)
+    .takeWhile(_.start <= record.end)
 
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
     (for ((chr, records) <- chrRecords; record <- records) yield {
@@ -27,14 +27,20 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
       overlaps.foldLeft(List(record))((result, overlap) => {
         (for (r <- result) yield {
           (overlap.start < r.start, overlap.end > r.end) match {
-            case (true, true) => Nil
-            case (true, false) => List(r.copy(start = overlap.end + 1))
-            case (false, true) => List(r.copy(end = overlap.start - 1))
-            case (false, false) => List(r.copy(end = overlap.start -1), r.copy(start = overlap.end + 1))
+            case (true, true)   => Nil
+            case (true, false)  => List(r.copy(start = overlap.end + 1))
+            case (false, true)  => List(r.copy(end = overlap.start - 1))
+            case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
           }
         }).flatten
       })
     }).flatten
+  }
+
+  def writeToFile(file: File): Unit = {
+    val writer = new PrintWriter(file)
+    allRecords.foreach(writer.println)
+    writer.close()
   }
 }
 
@@ -55,7 +61,7 @@ object BedRecordList {
   def combineOverlap(list: BedRecordList): BedRecordList = {
     new BedRecordList(for ((chr, records) <- list.sort.chrRecords) yield chr -> {
       def combineOverlap(records: List[BedRecord],
-                                 newRecords: ListBuffer[BedRecord] = ListBuffer()): List[BedRecord] = {
+                         newRecords: ListBuffer[BedRecord] = ListBuffer()): List[BedRecord] = {
         if (records.nonEmpty) {
           val chr = records.head.chr
           val start = records.head.start
