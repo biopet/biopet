@@ -40,8 +40,7 @@ object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
                   outputFile: File = null,
                   scatterpPlot: Option[File] = None,
-                  vcfFiles: List[File] = Nil,
-                  exonsOnly: Boolean = false) extends AbstractArgs
+                  vcfFiles: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('b', "bedFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -55,9 +54,6 @@ object RegionAfCount extends ToolCommand {
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(vcfFiles = c.vcfFiles ::: x :: Nil)
-    }
-    opt[Unit]("exonsOnly") unbounded () action { (x, c) =>
-      c.copy(exonsOnly = true)
     }
   }
 
@@ -89,8 +85,8 @@ object RegionAfCount extends ToolCommand {
             case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
             case s                    => Array(s.toString.toDouble)
           }).sum
-          region.originals
-            .map(_.name.getOrElse("error"))
+          region.originals()
+            .map(x => x.name.getOrElse(s"${x.chr}:${x.start}-${x.end}"))
             .distinct
             .foreach(name => afCounts += name -> (afCounts.getOrElse(name, 0.0) + sum))
         }
