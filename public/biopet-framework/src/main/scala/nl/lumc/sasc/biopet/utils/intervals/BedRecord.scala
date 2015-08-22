@@ -24,7 +24,7 @@ case class BedRecord(chr: String,
     Some(BedRecordList.fromList(for (i <- 0 to blockCount.get) yield {
       val exonNumber = strand match {
         case Some(false) => blockCount.get - i
-        case _ => i + 1
+        case _           => i + 1
       }
       val record = BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
         name.map(_ + s"_exon-$exonNumber"))
@@ -37,7 +37,7 @@ case class BedRecord(chr: String,
     Some(BedRecordList.fromList(for (i <- 0 to (blockCount.get - 1)) yield {
       val intronNumber = strand match {
         case Some(false) => blockCount.get - i
-        case _ => i + 1
+        case _           => i + 1
       }
       val record = BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
         name.map(_ + s"_intron-$intronNumber"))
@@ -65,11 +65,11 @@ object BedRecord {
       values.lift(5).map(_ match {
         case "-" => false
         case "+" => true
-        case _ => throw new IllegalStateException("Strand (column 6) must be '+' or '-'")
+        case _   => throw new IllegalStateException("Strand (column 6) must be '+' or '-'")
       }),
       values.lift(6).map(_.toInt),
-      values.lift(7)map(_.toInt),
-      values.lift(8).map(_.split(",", 3).map(_.toInt)).map(x => (x.lift(0).getOrElse(0),x.lift(1).getOrElse(0),x.lift(2).getOrElse(0))),
+      values.lift(7) map (_.toInt),
+      values.lift(8).map(_.split(",", 3).map(_.toInt)).map(x => (x.lift(0).getOrElse(0), x.lift(1).getOrElse(0), x.lift(2).getOrElse(0))),
       values.lift(9).map(_.toInt),
       values.lift(10).map(_.split(",").map(_.toInt)).getOrElse(Array()),
       values.lift(11).map(_.split(",").map(_.toInt)).getOrElse(Array())

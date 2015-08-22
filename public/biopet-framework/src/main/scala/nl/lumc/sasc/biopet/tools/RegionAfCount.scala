@@ -15,20 +15,20 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, InputStream, File}
+import java.io.{ PrintWriter, InputStream, File }
 import java.util
 
 import htsjdk.samtools.util.Interval
-import htsjdk.samtools.{QueryInterval, SAMRecord, SamReader, SamReaderFactory}
+import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReader, SamReaderFactory }
 import htsjdk.tribble.AbstractFeatureReader._
-import htsjdk.tribble.{AbstractFeatureReader, TabixFeatureReader}
-import htsjdk.tribble.bed.{BEDFeature, SimpleBEDFeature, BEDCodec, FullBEDFeature}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
-import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
-import htsjdk.variant.vcf.{VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine}
+import htsjdk.tribble.{ AbstractFeatureReader, TabixFeatureReader }
+import htsjdk.tribble.bed.{ BEDFeature, SimpleBEDFeature, BEDCodec, FullBEDFeature }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.extensions.rscript.ScatterPlot
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
@@ -54,10 +54,10 @@ object RegionAfCount extends ToolCommand {
       c.copy(scatterpPlot = Some(x))
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
-      c.copy(vcfFiles = c.vcfFiles ::: x :: Nil )
+      c.copy(vcfFiles = c.vcfFiles ::: x :: Nil)
     }
     opt[Unit]("exonsOnly") unbounded () action { (x, c) =>
-      c.copy(exonsOnly = true )
+      c.copy(exonsOnly = true)
     }
   }
 
@@ -87,7 +87,7 @@ object RegionAfCount extends ToolCommand {
         for (variant <- it) {
           val sum = (variant.getAttribute("AF", 0) match {
             case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
-            case s => Array(s.toString.toDouble)
+            case s                    => Array(s.toString.toDouble)
           }).sum
           bedRecords
             .overlapWith(BedRecord(variant.getContig, variant.getStart, variant.getEnd))
