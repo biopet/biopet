@@ -4,7 +4,6 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 /**
  * Created by pjvanthof on 22/08/15.

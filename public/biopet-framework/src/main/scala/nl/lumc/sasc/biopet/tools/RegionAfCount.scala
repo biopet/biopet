@@ -89,8 +89,7 @@ object RegionAfCount extends ToolCommand {
             case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
             case s                    => Array(s.toString.toDouble)
           }).sum
-          bedRecords
-            .overlapWith(BedRecord(variant.getContig, variant.getStart, variant.getEnd))
+          region.originals
             .map(_.name.getOrElse("error"))
             .distinct
             .foreach(name => afCounts += name -> (afCounts.getOrElse(name, 0.0) + sum))
