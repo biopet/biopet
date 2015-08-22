@@ -12,9 +12,11 @@ import scala.io.Source
 class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
-  def sort = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortBy(_.start)))
+  def sort = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
 
-  def overlapWith(record: BedRecord) = chrRecords
+  lazy val isSorted = this == this.sort
+
+  def overlapWith(record: BedRecord) = (if (isSorted) this else sort).chrRecords
     .getOrElse(record.chr, Nil)
     .dropWhile(_.end < record.start)
     .takeWhile(_.start <= record.end)
@@ -22,18 +24,23 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
     (for ((chr, records) <- chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
-        .filterNot(strandSensitive && _.strand == record.strand)
+        .filterNot(strandSensitive && _.strand != record.strand)
         .filterNot(_.name == record.name)
-      overlaps.foldLeft(List(record))((result, overlap) => {
-        (for (r <- result) yield {
-          (overlap.start < r.start, overlap.end > r.end) match {
-            case (true, true)   => Nil
-            case (true, false)  => List(r.copy(start = overlap.end + 1))
-            case (false, true)  => List(r.copy(end = overlap.start - 1))
-            case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
-          }
-        }).flatten
-      })
+      if (overlaps.isEmpty) {
+        List(record)
+      } else {
+        overlaps
+          .foldLeft(List(record))((result, overlap) => {
+          (for (r <- result) yield {
+            (overlap.start < r.start, overlap.end > r.end) match {
+              case (true, true) => Nil
+              case (true, false) => List(r.copy(start = overlap.end + 1))
+              case (false, true) => List(r.copy(end = overlap.start - 1))
+              case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
+            }
+          }).flatten
+        })
+      }
     }).flatten
   }
 
