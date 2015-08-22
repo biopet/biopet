@@ -16,6 +16,36 @@ case class BedRecord(chr: String,
                      blockSizes: Array[Int] = Array(),
                      blockStarts: Array[Int] = Array()) {
 
+  protected[intervals] var _originals: List[BedRecord] = Nil
+
+  def originals = _originals
+
+  lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
+    Some(BedRecordList.fromList(for (i <- 0 to blockCount.get) yield {
+      val exonNumber = strand match {
+        case Some(false) => blockCount.get - i
+        case _ => i + 1
+      }
+      val record = BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
+        name.map(_ + s"_exon-$exonNumber"))
+      record._originals :+= this
+      record
+    }))
+  } else None
+
+  lazy val introns = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
+    Some(BedRecordList.fromList(for (i <- 0 to (blockCount.get - 1)) yield {
+      val intronNumber = strand match {
+        case Some(false) => blockCount.get - i
+        case _ => i + 1
+      }
+      val record = BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
+        name.map(_ + s"_intron-$intronNumber"))
+      record._originals :+= this
+      record
+    }))
+  } else None
+
   //TODO: Complete bed line output
   override def toString = {
     s"$chr\t$start\t$end"
