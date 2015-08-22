@@ -35,8 +35,12 @@ object SquishBed extends ToolCommand {
 
     if (!cmdArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + cmdArgs.input)
 
+    logger.info("Start")
+
     val records = BedRecordList.fromFile(cmdArgs.input).sort
     val squishBed = records.squishBed(cmdArgs.strandSensitive).sort
     squishBed.writeToFile(cmdArgs.output)
+
+    logger.info("Done")
   }
 }
