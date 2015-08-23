@@ -70,7 +70,17 @@ object BedRecordList {
   }
 
   def fromFile(bedFile: File) = {
-    fromList(Source.fromFile(bedFile).getLines().map(BedRecord.fromLine(_)))
+    var lineCount = 0L
+    fromList(Source.fromFile(bedFile).getLines().map(line => {
+      lineCount += 1
+      try {
+        BedRecord.fromLine(line).validate
+      } catch {
+        case e: Exception =>
+          Logging.logger.error(s"Parsing line number $lineCount failed on file: ${bedFile.getAbsolutePath}")
+          throw e
+      }
+    }))
   }
 
   def combineOverlap(list: BedRecordList): BedRecordList = {

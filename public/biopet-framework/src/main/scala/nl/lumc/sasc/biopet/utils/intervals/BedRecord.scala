@@ -60,6 +60,22 @@ case class BedRecord(chr: String,
       .flatten
       .mkString("\t")
   }
+
+  def validate = {
+    require(start <= end, "Start is greater then end")
+    (thickStart, thickEnd) match {
+      case (Some(s), Some(e)) => require(s <= e, "Thick start is greater then end")
+      case _ =>
+    }
+    blockCount match {
+      case Some(count) => {
+        require(count == blockSizes.length, "Number of sizes is not the same as blockCount")
+        require(count == blockStarts.length, "Number of starts is not the same as blockCount")
+      }
+      case _ =>
+    }
+    this
+  }
 }
 
 object BedRecord {
