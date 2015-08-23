@@ -50,9 +50,18 @@ case class BedRecord(chr: String,
     }))
   } else None
 
-  //TODO: Complete bed line output
   override def toString = {
-    s"$chr\t$start\t$end"
+    def arrayToOption[T](array: Array[T]): Option[Array[T]] = {
+      if (array.isEmpty) None
+      else Some(array)
+    }
+    List(Some(chr), Some(start), Some(end),
+      name, score, strand.map(if (_) "+" else "-"),
+      thickStart, thickEnd, rgbColor.map(x => s"${x._1},${x._2},${x._3}"),
+      blockCount, arrayToOption(blockSizes).map(_.mkString(",")), arrayToOption(blockStarts).map(_.mkString(",")))
+      .takeWhile(_.isDefined)
+      .flatten
+      .mkString("\t")
   }
 }
 
