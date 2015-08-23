@@ -37,7 +37,7 @@ object SquishBed extends ToolCommand {
 
     logger.info("Start")
 
-    val records = BedRecordList.fromFile(cmdArgs.input).sort
+    val records = BedRecordList.fromFile(cmdArgs.input)
     val squishBed = records.squishBed(cmdArgs.strandSensitive).sort
     squishBed.writeToFile(cmdArgs.output)
 

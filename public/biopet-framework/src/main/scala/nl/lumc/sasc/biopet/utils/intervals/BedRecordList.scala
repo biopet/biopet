@@ -13,21 +13,20 @@ import nl.lumc.sasc.biopet.core.Logging
 class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
-  def sort = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
-
-  lazy val isSorted = {
-    val sorted = this.sort
-    sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))
+  lazy val sort = {
+    val sorted = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
+    if (sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))) this else sorted
   }
 
-  def overlapWith(record: BedRecord) = (if (isSorted) this else sort).chrRecords
+  lazy val isSorted = sort.hashCode() == this.hashCode() || sort.chrRecords.forall(x => x._2 == chrRecords(x._1))
+
+  def overlapWith(record: BedRecord) = sort.chrRecords
     .getOrElse(record.chr, Nil)
     .dropWhile(_.end < record.start)
     .takeWhile(_.start <= record.end)
 
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
-    if (!isSorted) Logging.logger.warn("Running squish bed method on a unsorted bed file may not work correctly")
-    (for ((chr, records) <- chrRecords; record <- records) yield {
+    (for ((chr, records) <- sort.chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
         .filterNot(strandSensitive && _.strand != record.strand)
         .filterNot(_.name == record.name)
@@ -60,10 +59,12 @@ object BedRecordList {
   def fromList(records: Traversable[BedRecord]): BedRecordList = fromList(records.toIterator)
 
   def fromList(records: TraversableOnce[BedRecord]): BedRecordList = {
-    val map = mutable.Map[String, List[BedRecord]]()
-    for (record <- records)
-      map += record.chr -> (record :: map.getOrElse(record.chr, List()))
-    new BedRecordList(map.toMap)
+    val map = mutable.Map[String, ListBuffer[BedRecord]]()
+    for (record <- records) {
+      if (!map.contains(record.chr)) map += record.chr -> ListBuffer()
+      map(record.chr) += record
+    }
+    new BedRecordList(map.toMap.map(m => m._1 -> m._2.toList))
   }
 
   def fromFile(bedFile: File) = {
