@@ -10,7 +10,7 @@ import nl.lumc.sasc.biopet.core.Logging
 /**
  * Created by pjvan_thof on 8/20/15.
  */
-class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
+class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
   lazy val sort = {
@@ -58,29 +58,38 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
 }
 
 object BedRecordList {
-  def fromList(records: Traversable[BedRecord]): BedRecordList = fromList(records.toIterator)
+  def fromListWithHeader(records: Traversable[BedRecord],
+               header: List[String]): BedRecordList = fromListWithHeader(records.toIterator, header)
 
-  def fromList(records: TraversableOnce[BedRecord]): BedRecordList = {
+  def fromListWithHeader(records: TraversableOnce[BedRecord], header: List[String]): BedRecordList = {
     val map = mutable.Map[String, ListBuffer[BedRecord]]()
     for (record <- records) {
       if (!map.contains(record.chr)) map += record.chr -> ListBuffer()
       map(record.chr) += record
     }
-    new BedRecordList(map.toMap.map(m => m._1 -> m._2.toList))
+    new BedRecordList(map.toMap.map(m => m._1 -> m._2.toList), header)
   }
 
+  def fromList(records: Traversable[BedRecord]): BedRecordList = fromListWithHeader(records.toIterator, Nil)
+
+  def fromList(records: TraversableOnce[BedRecord]): BedRecordList = fromListWithHeader(records, Nil)
+
   def fromFile(bedFile: File) = {
-    var lineCount = 0L
-    fromList(Source.fromFile(bedFile).getLines().map(line => {
-      lineCount += 1
-      try {
+    val reader = Source.fromFile(bedFile)
+    val all = reader.getLines().toList
+    val header = all.takeWhile(x => x.startsWith("browser") || x.startsWith("track"))
+    var lineCount = header.length
+    val content = all.drop(lineCount)
+    try {
+      fromListWithHeader(content.map(line => {
+        lineCount += 1
         BedRecord.fromLine(line).validate
-      } catch {
-        case e: Exception =>
-          Logging.logger.error(s"Parsing line number $lineCount failed on file: ${bedFile.getAbsolutePath}")
-          throw e
-      }
-    }))
+      }), header)
+    } catch {
+      case e: Exception =>
+        Logging.logger.error(s"Parsing line number $lineCount failed on file: ${bedFile.getAbsolutePath}")
+        throw e
+    }
   }
 
   def combineOverlap(list: BedRecordList): BedRecordList = {

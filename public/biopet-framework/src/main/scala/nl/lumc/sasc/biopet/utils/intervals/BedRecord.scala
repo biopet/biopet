@@ -81,7 +81,7 @@ case class BedRecord(chr: String,
 object BedRecord {
   def fromLine(line: String): BedRecord = {
     val values = line.split("\t")
-    require(values.length >= 3)
+    require(values.length >= 3, "Not enough columns count for a bed file")
     BedRecord(
       values(0),
       values(1).toInt,
