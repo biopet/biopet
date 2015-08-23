@@ -24,6 +24,8 @@ case class BedRecord(chr: String,
     else _originals
   }
 
+  def length = end - start + 1
+
   lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
     Some(BedRecordList.fromList(for (i <- 0 to blockCount.get) yield {
       val exonNumber = strand match {

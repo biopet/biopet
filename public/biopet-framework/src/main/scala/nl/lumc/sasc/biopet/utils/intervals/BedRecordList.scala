@@ -25,6 +25,8 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]]) {
     .dropWhile(_.end < record.start)
     .takeWhile(_.start <= record.end)
 
+  def length = allRecords.foldLeft(0L)((a,b) => a + b.length)
+
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
     (for ((chr, records) <- sort.chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
