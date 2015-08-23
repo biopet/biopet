@@ -14,9 +14,8 @@ case class BedRecord(chr: String,
                      rgbColor: Option[(Int, Int, Int)] = None,
                      blockCount: Option[Int] = None,
                      blockSizes: Array[Int] = Array(),
-                     blockStarts: Array[Int] = Array()) {
-
-  protected[intervals] var _originals: List[BedRecord] = Nil
+                     blockStarts: Array[Int] = Array(),
+                     protected[intervals] val _originals: List[BedRecord] = Nil) {
 
   def originals(nested: Boolean = false): List[BedRecord] = {
     if (_originals.isEmpty) List(this)
@@ -32,10 +31,8 @@ case class BedRecord(chr: String,
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
-      val record = BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
-        name.map(_ + s"_exon-$exonNumber"))
-      record._originals :+= this
-      record
+      BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
+        name.map(_ + s"_exon-$exonNumber"), _originals = List(this))
     }))
   } else None
 
@@ -45,10 +42,8 @@ case class BedRecord(chr: String,
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
-      val record = BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
-        name.map(_ + s"_intron-$intronNumber"))
-      record._originals :+= this
-      record
+      BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
+        name.map(_ + s"_intron-$intronNumber"), _originals = List(this))
     }))
   } else None
 

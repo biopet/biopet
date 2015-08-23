@@ -83,9 +83,7 @@ object BedRecordList {
           val overlapRecords = records.takeWhile(_.start <= records.head.end)
           val end = overlapRecords.map(_.end).max
 
-          val newRecord = BedRecord(chr, start, end)
-          newRecord._originals = overlapRecords
-          newRecords += newRecord
+          newRecords += BedRecord(chr, start, end, _originals = overlapRecords)
           combineOverlap(records.drop(overlapRecords.length), newRecords)
         } else newRecords.toList
       }
