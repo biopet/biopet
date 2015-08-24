@@ -106,7 +106,9 @@ object BedRecordList {
     } catch {
       case e: Exception =>
         Logging.logger.error(s"Parsing line number $lineCount failed on file: ${bedFile.getAbsolutePath}")
+        reader.close()
         throw e
     }
+    reader.close()
   }
 }
