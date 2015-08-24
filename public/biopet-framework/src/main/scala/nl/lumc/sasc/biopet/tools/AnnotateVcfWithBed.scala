@@ -83,7 +83,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val bedRecords: mutable.Map[String, List[(Int, Int, String)]] = mutable.Map()
     // Read bed file
@@ -95,7 +95,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     }
     */
 
-    val fieldType = commandArgs.fieldType match {
+    val fieldType = cmdArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
       case "Flag"      => VCFHeaderLineType.Flag
       case "Character" => VCFHeaderLineType.Character
@@ -105,7 +105,7 @@ object AnnotateVcfWithBed extends ToolCommand {
 
     logger.info("Reading bed file")
 
-    for (line <- Source.fromFile(commandArgs.bedFile).getLines()) {
+    for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) {
       val values = line.split("\t")
       if (values.size >= 4)
         bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
@@ -122,16 +122,16 @@ object AnnotateVcfWithBed extends ToolCommand {
 
     logger.info("Starting output file")
 
-    val reader = new VCFFileReader(commandArgs.inputFile, false)
+    val reader = new VCFFileReader(cmdArgs.inputFile, false)
     val header = reader.getFileHeader
 
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
-      setOutputFile(commandArgs.outputFile).
+      setOutputFile(cmdArgs.outputFile).
       setReferenceDictionary(header.getSequenceDictionary).
       build)
 
-    header.addMetaDataLine(new VCFInfoHeaderLine(commandArgs.fieldName,
-      VCFHeaderLineCount.UNBOUNDED, fieldType, commandArgs.fieldDescription))
+    header.addMetaDataLine(new VCFInfoHeaderLine(cmdArgs.fieldName,
+      VCFHeaderLineCount.UNBOUNDED, fieldType, cmdArgs.fieldDescription))
     writer.writeHeader(header)
 
     logger.info("Start reading vcf records")
@@ -144,8 +144,8 @@ object AnnotateVcfWithBed extends ToolCommand {
         writer.add(record)
       } else {
         val builder = new VariantContextBuilder(record)
-        if (fieldType == VCFHeaderLineType.Flag) builder.attribute(commandArgs.fieldName, true)
-        else builder.attribute(commandArgs.fieldName, overlaps.map(_._3).mkString(","))
+        if (fieldType == VCFHeaderLineType.Flag) builder.attribute(cmdArgs.fieldName, true)
+        else builder.attribute(cmdArgs.fieldName, overlaps.map(_._3).mkString(","))
         writer.add(builder.make)
       }
     }
