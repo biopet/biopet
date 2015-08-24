@@ -54,7 +54,7 @@ object RegionAfCount extends ToolCommand {
     logger.info("Start")
     logger.info("Reading bed file")
 
-    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sort
+    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sorted
 
     logger.info(s"Combine ${bedRecords.allRecords.size} bed records")
 

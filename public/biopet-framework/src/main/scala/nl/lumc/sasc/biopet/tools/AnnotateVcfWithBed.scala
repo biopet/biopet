@@ -95,7 +95,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     }
 
     logger.info("Reading bed file")
-    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sort
+    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sorted
 
     logger.info("Starting output file")
 

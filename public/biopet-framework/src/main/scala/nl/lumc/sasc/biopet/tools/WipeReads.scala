@@ -24,6 +24,7 @@ import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
 import htsjdk.tribble.bed.BEDCodec
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -84,10 +85,7 @@ object WipeReads extends ToolCommand {
     logger.info("Parsing interval file ...")
 
     /** Function to create iterator from BED file */
-    def makeIntervalFromBed(inFile: File): Iterator[Interval] =
-      asScalaIteratorConverter(getFeatureReader(inFile.toPath.toString, new BEDCodec(), false).iterator)
-        .asScala
-        .map(x => new Interval(x.getContig, x.getStart, x.getEnd))
+    def makeIntervalFromBed(inFile: File) = BedRecordList.fromFile(inFile).sorted.intervals.toIterator
 
     /**
      * Parses a refFlat file to yield Interval objects

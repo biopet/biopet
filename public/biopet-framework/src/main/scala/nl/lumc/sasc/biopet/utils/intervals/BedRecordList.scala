@@ -2,6 +2,8 @@ package nl.lumc.sasc.biopet.utils.intervals
 
 import java.io.{ PrintWriter, File }
 
+import htsjdk.samtools.util.Interval
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -13,14 +15,21 @@ import nl.lumc.sasc.biopet.core.Logging
 class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
-  lazy val sort = {
+  def intervals = allRecords.map({ x =>
+    (x.name, x.strand) match {
+      case (Some(name), Some(strand)) => new Interval(x.chr, x.start, x.end, !strand, name)
+      case _ => new Interval(x.chr, x.start, x.end)
+    }
+  })
+  
+  lazy val sorted = {
     val sorted = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
     if (sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))) this else sorted
   }
 
-  lazy val isSorted = sort.hashCode() == this.hashCode() || sort.chrRecords.forall(x => x._2 == chrRecords(x._1))
+  lazy val isSorted = sorted.hashCode() == this.hashCode() || sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))
 
-  def overlapWith(record: BedRecord) = sort.chrRecords
+  def overlapWith(record: BedRecord) = sorted.chrRecords
     .getOrElse(record.chr, Nil)
     .dropWhile(_.end < record.start)
     .takeWhile(_.start <= record.end)
@@ -28,7 +37,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
   def length = allRecords.foldLeft(0L)((a, b) => a + b.length)
 
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
-    (for ((chr, records) <- sort.chrRecords; record <- records) yield {
+    (for ((chr, records) <- sorted.chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
         .filterNot(strandSensitive && _.strand != record.strand)
         .filterNot(_.name == record.name)
@@ -51,7 +60,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
   }
 
   def combineOverlap: BedRecordList = {
-    new BedRecordList(for ((chr, records) <- sort.chrRecords) yield chr -> {
+    new BedRecordList(for ((chr, records) <- sorted.chrRecords) yield chr -> {
       def combineOverlap(records: List[BedRecord],
                          newRecords: ListBuffer[BedRecord] = ListBuffer()): List[BedRecord] = {
         if (records.nonEmpty) {
