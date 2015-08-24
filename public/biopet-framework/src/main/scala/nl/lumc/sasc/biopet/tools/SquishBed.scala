@@ -39,14 +39,14 @@ object SquishBed extends ToolCommand {
 
     val records = BedRecordList.fromFile(cmdArgs.input)
     val length = records.length
-    val refLength = BedRecordList.combineOverlap(records).length
+    val refLength = records.combineOverlap.length
     logger.info(s"Total bases: $length")
     logger.info(s"Total bases on reference: $refLength")
     logger.info("Start squishing")
     val squishBed = records.squishBed(cmdArgs.strandSensitive).sort
     logger.info("Done squishing")
     val squishLength = squishBed.length
-    val squishRefLength = BedRecordList.combineOverlap(squishBed).length
+    val squishRefLength = squishBed.combineOverlap.length
     logger.info(s"Total bases left: $squishLength")
     logger.info(s"Total bases left on reference: $squishRefLength")
     logger.info(s"Total bases removed from ref: ${refLength - squishRefLength}")

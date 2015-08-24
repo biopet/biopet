@@ -50,6 +50,24 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
     }).flatten
   }
 
+  def combineOverlap: BedRecordList = {
+    new BedRecordList(for ((chr, records) <- sort.chrRecords) yield chr -> {
+      def combineOverlap(records: List[BedRecord],
+                         newRecords: ListBuffer[BedRecord] = ListBuffer()): List[BedRecord] = {
+        if (records.nonEmpty) {
+          val chr = records.head.chr
+          val start = records.head.start
+          val overlapRecords = records.takeWhile(_.start <= records.head.end)
+          val end = overlapRecords.map(_.end).max
+
+          newRecords += BedRecord(chr, start, end, _originals = overlapRecords)
+          combineOverlap(records.drop(overlapRecords.length), newRecords)
+        } else newRecords.toList
+      }
+      combineOverlap(records)
+    })
+  }
+
   def writeToFile(file: File): Unit = {
     val writer = new PrintWriter(file)
     allRecords.foreach(writer.println)
@@ -90,23 +108,5 @@ object BedRecordList {
         Logging.logger.error(s"Parsing line number $lineCount failed on file: ${bedFile.getAbsolutePath}")
         throw e
     }
-  }
-
-  def combineOverlap(list: BedRecordList): BedRecordList = {
-    new BedRecordList(for ((chr, records) <- list.sort.chrRecords) yield chr -> {
-      def combineOverlap(records: List[BedRecord],
-                         newRecords: ListBuffer[BedRecord] = ListBuffer()): List[BedRecord] = {
-        if (records.nonEmpty) {
-          val chr = records.head.chr
-          val start = records.head.start
-          val overlapRecords = records.takeWhile(_.start <= records.head.end)
-          val end = overlapRecords.map(_.end).max
-
-          newRecords += BedRecord(chr, start, end, _originals = overlapRecords)
-          combineOverlap(records.drop(overlapRecords.length), newRecords)
-        } else newRecords.toList
-      }
-      combineOverlap(records)
-    })
   }
 }

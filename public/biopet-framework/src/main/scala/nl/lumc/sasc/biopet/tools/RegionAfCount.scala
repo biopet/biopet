@@ -68,7 +68,7 @@ object RegionAfCount extends ToolCommand {
 
     logger.info(s"Combine ${bedRecords.allRecords.size} bed records")
 
-    val combinedBedRecords = BedRecordList.combineOverlap(bedRecords)
+    val combinedBedRecords = bedRecords.combineOverlap
 
     logger.info(s"${combinedBedRecords.allRecords.size} left")
 
