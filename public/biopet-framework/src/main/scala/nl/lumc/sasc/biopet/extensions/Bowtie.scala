@@ -58,16 +58,21 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var strata: Boolean = config("strata", default = false)
   var maqerr: Option[Int] = config("maqerr")
   var maxins: Option[Int] = config("maxins")
+  var largeIndex: Boolean = config("large-index", default = false)
 
   override def beforeGraph() {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
+    val basename = reference.getName.stripSuffix(".fasta").stripSuffix(".fa")
+    if (reference.getParentFile.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwtl")))
+      largeIndex = config("large-index", default = true)
   }
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
     optional("--threads", threads) +
     conditional(sam, "--sam") +
+    conditional(largeIndex, "--large-index") +
     conditional(best, "--best") +
     conditional(strata, "--strata") +
     optional("--sam-RG", sam_RG) +
