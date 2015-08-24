@@ -25,7 +25,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
     .dropWhile(_.end < record.start)
     .takeWhile(_.start <= record.end)
 
-  def length = allRecords.foldLeft(0L)((a,b) => a + b.length)
+  def length = allRecords.foldLeft(0L)((a, b) => a + b.length)
 
   def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
     (for ((chr, records) <- sort.chrRecords; record <- records) yield {
@@ -37,15 +37,15 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
       } else {
         overlaps
           .foldLeft(List(record))((result, overlap) => {
-          (for (r <- result) yield {
-            (overlap.start < r.start, overlap.end > r.end) match {
-              case (true, true) => Nil
-              case (true, false) => List(r.copy(start = overlap.end + 1))
-              case (false, true) => List(r.copy(end = overlap.start - 1))
-              case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
-            }
-          }).flatten
-        })
+            (for (r <- result) yield {
+              (overlap.start < r.start, overlap.end > r.end) match {
+                case (true, true)   => Nil
+                case (true, false)  => List(r.copy(start = overlap.end + 1))
+                case (false, true)  => List(r.copy(end = overlap.start - 1))
+                case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
+              }
+            }).flatten
+          })
       }
     }).flatten
   }
@@ -77,7 +77,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
 
 object BedRecordList {
   def fromListWithHeader(records: Traversable[BedRecord],
-               header: List[String]): BedRecordList = fromListWithHeader(records.toIterator, header)
+                         header: List[String]): BedRecordList = fromListWithHeader(records.toIterator, header)
 
   def fromListWithHeader(records: TraversableOnce[BedRecord], header: List[String]): BedRecordList = {
     val map = mutable.Map[String, ListBuffer[BedRecord]]()

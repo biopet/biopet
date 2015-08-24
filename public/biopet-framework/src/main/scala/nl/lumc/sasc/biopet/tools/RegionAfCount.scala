@@ -38,19 +38,19 @@ import scala.math._
 
 object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
-                  outputFile: File = null,
-                  scatterpPlot: Option[File] = None,
+                  outputPrefix: String = null,
+                  scatterpPlot: Boolean = false,
                   vcfFiles: List[File] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('b', "bedFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+    opt[File]('b', "bedFile") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(bedFile = x)
     }
-    opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(outputFile = x)
+    opt[String]('o', "outputPrefix") unbounded () required () maxOccurs 1 valueName "<file prefix>" action { (x, c) =>
+      c.copy(outputPrefix = x)
     }
-    opt[File]('s', "scatterPlot") maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(scatterpPlot = Some(x))
+    opt[Unit]('s', "scatterPlot") unbounded () action { (x, c) =>
+      c.copy(scatterpPlot = true)
     }
     opt[File]('V', "vcfFile") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(vcfFiles = c.vcfFiles ::: x :: Nil)
@@ -71,68 +71,94 @@ object RegionAfCount extends ToolCommand {
     val combinedBedRecords = bedRecords.combineOverlap
 
     logger.info(s"${combinedBedRecords.allRecords.size} left")
-
+    logger.info(s"${combinedBedRecords.allRecords.size * cmdArgs.vcfFiles.size} query's to do")
     logger.info("Reading vcf files")
 
+    case class AfCounts(var names: Double = 0,
+                        var namesExons: Double = 0,
+                        var namesIntrons: Double = 0,
+                        var namesCoding: Double = 0,
+                        var utr: Double = 0,
+                        var utr5: Double = 0,
+                        var utr3: Double = 0,
+                        var exons: Map[String, Double] = Map(),
+                        var intron: Map[String, Double] = Map())
+
     var c = 0
-    val afCountsRaw = for (region <- combinedBedRecords.allRecords.par) yield {
-      val sum = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
-        val afCounts = mutable.Map[String, Double]()
-        val reader = new VCFFileReader(vcfFile, true)
-        val it = reader.query(region.chr, region.start, region.end)
-        for (variant <- it) {
+
+    val afCounts = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
+      val reader = new VCFFileReader(vcfFile, true)
+      val afCounts: mutable.Map[String, AfCounts] = mutable.Map()
+      for (region <- combinedBedRecords.allRecords) yield {
+        val originals = region.originals()
+        for (variant <- reader.query(region.chr, region.start, region.end)) {
           val sum = (variant.getAttribute("AF", 0) match {
             case a: util.ArrayList[_] => a.map(_.toString.toDouble).toArray
             case s                    => Array(s.toString.toDouble)
           }).sum
-          region.originals()
-            .map(x => x.name.getOrElse(s"${x.chr}:${x.start}-${x.end}"))
-            .distinct
-            .foreach(name => afCounts += name -> (afCounts.getOrElse(name, 0.0) + sum))
+          val interval = BedRecord(variant.getContig, variant.getStart, variant.getEnd)
+          originals.foreach { x =>
+            val name = x.name.getOrElse(s"${x.chr}:${x.start}-${x.end}")
+            if (!afCounts.contains(name)) afCounts += name -> AfCounts()
+            afCounts(name).names += sum
+            val exons = x.exons.getOrElse(Seq()).filter(_.overlapWith(interval))
+            val introns = x.introns.getOrElse(Seq()).filter(_.overlapWith(interval))
+            val utr5 = x.utr5.map(_.overlapWith(interval))
+            val utr3 = x.utr3.map(_.overlapWith(interval))
+            if (exons.nonEmpty) {
+              afCounts(name).namesExons += sum
+              if (!utr5.getOrElse(false) && !utr3.getOrElse(false)) afCounts(name).namesCoding += sum
+            }
+            if (introns.nonEmpty) afCounts(name).namesIntrons += sum
+            if (utr5.getOrElse(false) || utr3.getOrElse(false)) afCounts(name).utr += sum
+            if (utr5.getOrElse(false)) afCounts(name).utr5 += sum
+            if (utr3.getOrElse(false)) afCounts(name).utr3 += sum
+          }
         }
-        reader.close()
-        afCounts.toMap
-      }).toMap
-
-      c += 1
-      if (c % 100 == 0) logger.info(s"$c regions done")
-
-      sum
-    }
-
-    logger.info(s"Done reading, $c regions")
-
-    val afCounts: Map[String, Map[File, Double]] = {
-      val combinedAfCounts: mutable.Map[String, mutable.Map[File, Double]] = mutable.Map()
-      for (x <- afCountsRaw.toList; (file, counts) <- x.toList; (name, count) <- counts) {
-        val map = combinedAfCounts.getOrElse(name, mutable.Map())
-        map += file -> (map.getOrElse(file, 0.0) + count)
-        combinedAfCounts += name -> map
+        c += 1
+        if (c % 100 == 0) logger.info(s"$c regions done")
       }
-      combinedAfCounts.map(x => x._1 -> x._2.toMap).toMap
+      afCounts.toMap
+    }).toMap
+
+    logger.info(s"Done reading, ${c} regions")
+
+    logger.info("Writing output files")
+
+    def writeOutput(tsvFile: File, function: AfCounts => Double): Unit = {
+      val writer = new PrintWriter(tsvFile)
+      writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
+      for (r <- cmdArgs.vcfFiles.foldLeft(Set[String]())((a, b) => a ++ afCounts(b).keySet)) {
+        writer.print(r + "\t")
+        writer.println(cmdArgs.vcfFiles.map(x => function(afCounts(x).getOrElse(r, AfCounts()))).mkString("\t"))
+      }
+      writer.close()
+
+      if (cmdArgs.scatterpPlot) generatePlot(tsvFile)
     }
 
-    logger.info("Writing output file")
-
-    val writer = new PrintWriter(cmdArgs.outputFile)
-    writer.println("\t" + cmdArgs.vcfFiles.map(_.getName).mkString("\t"))
-    for (r <- afCounts.keys) {
-      writer.print(r + "\t")
-      writer.println(cmdArgs.vcfFiles.map(afCounts(r).getOrElse(_, 0.0)).mkString("\t"))
-    }
-    writer.close()
-
-    cmdArgs.scatterpPlot.foreach { scatterPlotFile =>
-      logger.info("Generate plot")
+    def generatePlot(tsvFile: File): Unit = {
+      logger.info(s"Generate plot for $tsvFile")
 
       val scatterPlot = new ScatterPlot(null)
-      scatterPlot.input = cmdArgs.outputFile
-      scatterPlot.output = scatterPlotFile
+      scatterPlot.input = tsvFile
+      scatterPlot.output = new File(tsvFile.getAbsolutePath.stripSuffix(".tsv") + ".png")
       scatterPlot.ylabel = Some("Sum of AFs")
       scatterPlot.width = Some(1200)
       scatterPlot.height = Some(1000)
       scatterPlot.runLocal()
     }
+    for (
+      arg <- List[(File, AfCounts => Double)](
+        (new File(cmdArgs.outputPrefix + ".names.tsv"), _.names),
+        (new File(cmdArgs.outputPrefix + ".names.exons_only.tsv"), _.namesExons),
+        (new File(cmdArgs.outputPrefix + ".names.introns_only.tsv"), _.namesIntrons),
+        (new File(cmdArgs.outputPrefix + ".names.coding.tsv"), _.namesCoding),
+        (new File(cmdArgs.outputPrefix + ".names.utr.tsv"), _.utr),
+        (new File(cmdArgs.outputPrefix + ".names.utr5.tsv"), _.utr5),
+        (new File(cmdArgs.outputPrefix + ".names.utr3.tsv"), _.utr3)
+      ).par
+    ) writeOutput(arg._1, arg._2)
 
     logger.info("Done")
   }

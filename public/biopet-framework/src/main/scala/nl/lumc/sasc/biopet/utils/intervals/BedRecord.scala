@@ -23,27 +23,33 @@ case class BedRecord(chr: String,
     else _originals
   }
 
+  def overlapWith(record: BedRecord): Boolean = {
+    if (chr != record.chr) false
+    else if (start <= record.end && record.start <= end) true
+    else false
+  }
+
   def length = end - start + 1
 
   lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(for (i <- 0 to blockCount.get) yield {
+    Some(for (i <- 0 until blockCount.get) yield {
       val exonNumber = strand match {
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
       BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
-        name.map(_ + s"_exon-$exonNumber"), _originals = List(this))
+        Some(s"exon-$exonNumber"), _originals = List(this))
     })
   } else None
 
   lazy val introns = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(for (i <- 0 to (blockCount.get - 1)) yield {
+    Some(for (i <- 0 until (blockCount.get - 1)) yield {
       val intronNumber = strand match {
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
-      BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
-        name.map(_ + s"_intron-$intronNumber"), _originals = List(this))
+      BedRecord(chr, start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
+        Some(s"intron-$intronNumber"), _originals = List(this))
     })
   } else None
 
@@ -56,8 +62,10 @@ case class BedRecord(chr: String,
   }
 
   lazy val utr3 = (strand, thickStart, thickEnd) match {
-    case (Some(false), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr3")))
-    case (Some(true), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr3")))
+    case (Some(false), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+      Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr3")))
+    case (Some(true), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+      Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr3")))
     case _ => None
   }
 
@@ -79,7 +87,7 @@ case class BedRecord(chr: String,
     require(start <= end, "Start is greater then end")
     (thickStart, thickEnd) match {
       case (Some(s), Some(e)) => require(s <= e, "Thick start is greater then end")
-      case _ =>
+      case _                  =>
     }
     blockCount match {
       case Some(count) => {
@@ -105,7 +113,7 @@ object BedRecord {
       values.lift(5).map {
         case "-" => false
         case "+" => true
-        case _ => throw new IllegalStateException("Strand (column 6) must be '+' or '-'")
+        case _   => throw new IllegalStateException("Strand (column 6) must be '+' or '-'")
       },
       values.lift(6).map(_.toInt),
       values.lift(7) map (_.toInt),
