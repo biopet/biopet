@@ -18,23 +18,13 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ PrintWriter, InputStream, File }
 import java.util
 
-import htsjdk.samtools.util.Interval
-import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReader, SamReaderFactory }
-import htsjdk.tribble.AbstractFeatureReader._
-import htsjdk.tribble.{ AbstractFeatureReader, TabixFeatureReader }
-import htsjdk.tribble.bed.{ BEDFeature, SimpleBEDFeature, BEDCodec, FullBEDFeature }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
-import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
+import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.extensions.rscript.ScatterPlot
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.io.Source
-import scala.math._
 
 object RegionAfCount extends ToolCommand {
   case class Args(bedFile: File = null,
@@ -80,12 +70,9 @@ object RegionAfCount extends ToolCommand {
                         var namesCoding: Double = 0,
                         var utr: Double = 0,
                         var utr5: Double = 0,
-                        var utr3: Double = 0,
-                        var exons: Map[String, Double] = Map(),
-                        var intron: Map[String, Double] = Map())
+                        var utr3: Double = 0)
 
     var c = 0
-
     val afCounts = (for (vcfFile <- cmdArgs.vcfFiles.par) yield vcfFile -> {
       val reader = new VCFFileReader(vcfFile, true)
       val afCounts: mutable.Map[String, AfCounts] = mutable.Map()
