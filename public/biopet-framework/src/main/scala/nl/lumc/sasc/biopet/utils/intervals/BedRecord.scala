@@ -17,7 +17,7 @@ case class BedRecord(chr: String,
                      blockStarts: Array[Int] = Array(),
                      protected[intervals] val _originals: List[BedRecord] = Nil) {
 
-  def originals(nested: Boolean = false): List[BedRecord] = {
+  def originals(nested: Boolean = true): List[BedRecord] = {
     if (_originals.isEmpty) List(this)
     else if (nested) _originals.flatMap(_.originals(true))
     else _originals
@@ -48,8 +48,10 @@ case class BedRecord(chr: String,
   } else None
 
   lazy val utr5 = (strand, thickStart, thickEnd) match {
-    case (Some(true), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr5")))
-    case (Some(false), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr5")))
+    case (Some(true), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+      Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr5")))
+    case (Some(false), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
+      Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr5")))
     case _ => None
   }
 
