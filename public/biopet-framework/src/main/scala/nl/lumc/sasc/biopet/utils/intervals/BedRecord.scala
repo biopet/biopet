@@ -26,25 +26,25 @@ case class BedRecord(chr: String,
   def length = end - start + 1
 
   lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(BedRecordList.fromList(for (i <- 0 to blockCount.get) yield {
+    Some(for (i <- 0 to blockCount.get) yield {
       val exonNumber = strand match {
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
       BedRecord(chr, start + blockStarts(i), start + blockStarts(i) + blockSizes(i),
         name.map(_ + s"_exon-$exonNumber"), _originals = List(this))
-    }))
+    })
   } else None
 
   lazy val introns = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
-    Some(BedRecordList.fromList(for (i <- 0 to (blockCount.get - 1)) yield {
+    Some(for (i <- 0 to (blockCount.get - 1)) yield {
       val intronNumber = strand match {
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
       BedRecord(chr, start + start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
         name.map(_ + s"_intron-$intronNumber"), _originals = List(this))
-    }))
+    })
   } else None
 
   lazy val utr5 = (strand, thickStart, thickEnd) match {
