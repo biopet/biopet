@@ -48,14 +48,14 @@ case class BedRecord(chr: String,
   } else None
 
   lazy val utr5 = (strand, thickStart, thickEnd) match {
-    case (Some("+"), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr5")))
-    case (Some("-"), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr5")))
+    case (Some(true), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr5")))
+    case (Some(false), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr5")))
     case _ => None
   }
 
   lazy val utr3 = (strand, thickStart, thickEnd) match {
-    case (Some("-"), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr3")))
-    case (Some("+"), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr3")))
+    case (Some(false), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr3")))
+    case (Some(true), Some(tStart), Some(tEnd)) => Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr3")))
     case _ => None
   }
 
