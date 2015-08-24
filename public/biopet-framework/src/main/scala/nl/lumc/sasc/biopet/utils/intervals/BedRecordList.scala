@@ -15,10 +15,10 @@ import nl.lumc.sasc.biopet.core.Logging
 class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
-  def intervals = allRecords.map({ x =>
+  def samIntervals = allRecords.map({ x =>
     (x.name, x.strand) match {
-      case (Some(name), Some(strand)) => new Interval(x.chr, x.start, x.end, !strand, name)
-      case _ => new Interval(x.chr, x.start, x.end)
+      case (Some(name), Some(strand)) => new Interval(x.chr, x.start + 1, x.end, !strand, name)
+      case _ => new Interval(x.chr, x.start + 1, x.end)
     }
   })
   
@@ -31,8 +31,8 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
 
   def overlapWith(record: BedRecord) = sorted.chrRecords
     .getOrElse(record.chr, Nil)
-    .dropWhile(_.end < record.start)
-    .takeWhile(_.start <= record.end)
+    .dropWhile(_.end <= record.start)
+    .takeWhile(_.start < record.end)
 
   def length = allRecords.foldLeft(0L)((a, b) => a + b.length)
 
@@ -49,9 +49,9 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
             (for (r <- result) yield {
               (overlap.start < r.start, overlap.end > r.end) match {
                 case (true, true)   => Nil
-                case (true, false)  => List(r.copy(start = overlap.end + 1))
-                case (false, true)  => List(r.copy(end = overlap.start - 1))
-                case (false, false) => List(r.copy(end = overlap.start - 1), r.copy(start = overlap.end + 1))
+                case (true, false)  => List(r.copy(start = overlap.end))
+                case (false, true)  => List(r.copy(end = overlap.start))
+                case (false, false) => List(r.copy(end = overlap.start), r.copy(start = overlap.end))
               }
             }).flatten
           })
