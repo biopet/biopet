@@ -21,6 +21,7 @@ import htsjdk.variant.variantcontext.VariantContextBuilder
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.{ VCFFileReader, VCFHeaderLineCount, VCFHeaderLineType, VCFInfoHeaderLine }
 import nl.lumc.sasc.biopet.core.ToolCommand
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -85,16 +86,6 @@ object AnnotateVcfWithBed extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val bedRecords: mutable.Map[String, List[(Int, Int, String)]] = mutable.Map()
-    // Read bed file
-    /*
-    // function bedRecord.getName will not compile, not clear why
-    for (bedRecord <- asScalaIteratorConverter(getFeatureReader(commandArgs.bedFile.toPath.toString, new BEDCodec(), false).iterator()).asScala) {
-      logger.debug(bedRecord)
-      bedRecords(bedRecord.getChr) = (bedRecord.getStart, bedRecord.getEnd, bedRecord.getName) :: bedRecords.getOrElse(bedRecord.getChr, Nil)
-    }
-    */
-
     val fieldType = cmdArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
       case "Flag"      => VCFHeaderLineType.Flag
@@ -104,21 +95,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     }
 
     logger.info("Reading bed file")
-
-    for (line <- Source.fromFile(cmdArgs.bedFile).getLines()) {
-      val values = line.split("\t")
-      if (values.size >= 4)
-        bedRecords(values(0)) = (values(1).toInt, values(2).toInt, values(3)) :: bedRecords.getOrElse(values(0), Nil)
-      else values.size >= 3 && fieldType == VCFHeaderLineType.Flag
-      bedRecords(values(0)) = (values(1).toInt, values(2).toInt, "") :: bedRecords.getOrElse(values(0), Nil)
-    }
-
-    logger.info("Sorting bed records")
-
-    // Sort records when needed
-    for ((chr, record) <- bedRecords) {
-      bedRecords(chr) = record.sortBy(x => (x._1, x._2))
-    }
+    val bedRecords = BedRecordList.fromFile(cmdArgs.bedFile).sort
 
     logger.info("Starting output file")
 
@@ -137,15 +114,13 @@ object AnnotateVcfWithBed extends ToolCommand {
     logger.info("Start reading vcf records")
 
     for (record <- reader) {
-      val overlaps = bedRecords.getOrElse(record.getContig, Nil).filter(x => {
-        record.getStart <= x._2 && record.getEnd >= x._1
-      })
+      val overlaps = bedRecords.overlapWith(BedRecord(record.getContig, record.getStart, record.getEnd))
       if (overlaps.isEmpty) {
         writer.add(record)
       } else {
         val builder = new VariantContextBuilder(record)
         if (fieldType == VCFHeaderLineType.Flag) builder.attribute(cmdArgs.fieldName, true)
-        else builder.attribute(cmdArgs.fieldName, overlaps.map(_._3).mkString(","))
+        else builder.attribute(cmdArgs.fieldName, overlaps.map(_.name).mkString(","))
         writer.add(builder.make)
       }
     }
