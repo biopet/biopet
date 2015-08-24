@@ -264,6 +264,16 @@ class Tophat(val root: Configurable) extends BiopetCommandLineFunction with Refe
 
   var rg_platform: Option[String] = config("rg_platform")
 
+  override def beforeGraph: Unit = {
+    super.beforeGraph
+    if (bowtie1 && !new File(bowtie_index).getParentFile.list().toList
+      .filter(_.startsWith(new File(bowtie_index).getName)).exists(_.endsWith(".bt2")))
+      throw new IllegalArgumentException("No bowtie1 index found for tophat")
+    else if (new File(bowtie_index).getParentFile.list().toList
+      .filter(_.startsWith(new File(bowtie_index).getName)).exists(_.endsWith(".ebwt")))
+      throw new IllegalArgumentException("No bowtie2 index found for tophat")
+  }
+
   def cmdLine: String = required(executable) +
     optional("-o", output_dir) +
     conditional(bowtie1, "--bowtie1") +
