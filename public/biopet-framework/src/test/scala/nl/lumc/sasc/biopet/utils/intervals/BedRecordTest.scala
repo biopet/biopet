@@ -73,6 +73,15 @@ class BedRecordTest extends TestNGSuite with Matchers {
     introns.get.foldLeft(0)(_ + _.length) shouldBe 70
   }
 
+  @Test def testExonIntronOverlap: Unit = {
+    val record = BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t0,80")
+    val exons = record.exons
+    val introns = record.introns
+    for (exon <- exons.get; intron <- introns.get) {
+      exon.overlapWith(intron) shouldBe false
+    }
+  }
+
   @Test def testUtrsPositive: Unit = {
     BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+").utr3 shouldBe None
     BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+").utr5 shouldBe None
