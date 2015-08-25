@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import scala.collection.mutable
 
 import scala.io.Source
 
@@ -45,21 +46,30 @@ object SamplesTsvToJson extends ToolCommand {
       val header = lines.head.split("\t")
       val sampleColumn = header.indexOf("sample")
       val libraryColumn = header.indexOf("library")
-      if (sampleColumn == -1) throw new IllegalStateException("sample column does not exist in: " + inputFile)
+      if (sampleColumn == -1) throw new IllegalStateException("Sample column does not exist in: " + inputFile)
+
+      val sampleLibCache: mutable.Set[(String, Option[String])] = mutable.Set()
 
       val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
         val values = tsvLine.split("\t")
+        require(header.length == values.length, "Number of columns is not the same as the header")
         val sample = values(sampleColumn)
-        val library = if (libraryColumn != -1) values(libraryColumn) else null
+        val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
+
+        //FIXME: this is a workaround, should be removed after fixing #180
+        if (sample.head.isDigit || library.forall(_.head.isDigit))
+          throw new IllegalStateException("Sample or library may not start with a number")
+
+        if (sampleLibCache.contains((sample, library)))
+          throw new IllegalStateException(s"Combination of $sample and $library is found multiple times")
+        else sampleLibCache.add((sample, library))
         val valuesMap = (for (
           t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
         ) yield header(t) -> values(t)).toMap
-        val map: Map[String, Any] = if (library != null) {
-          Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
-        } else {
-          Map("samples" -> Map(sample -> valuesMap))
+        library match {
+          case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
+          case _         => Map("samples" -> Map(sample -> valuesMap))
         }
-        map
       }
       librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     }

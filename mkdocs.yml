@@ -3,6 +3,7 @@ pages:
 - Home: 'index.md'
 - General:
     - Config: 'general/config.md'
+    - Requirements: 'general/requirements.md'
 - Pipelines:
     - Basty: 'pipelines/basty.md'
     - Bam2Wig: 'pipelines/bam2wig.md'
