@@ -15,12 +15,7 @@ import nl.lumc.sasc.biopet.core.Logging
 class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
-  def samIntervals = allRecords.map({ x =>
-    (x.name, x.strand) match {
-      case (Some(name), Some(strand)) => new Interval(x.chr, x.start + 1, x.end, !strand, name)
-      case _ => new Interval(x.chr, x.start + 1, x.end)
-    }
-  })
+  def toSamIntervals = allRecords.map(_.toSamInterval)
   
   lazy val sorted = {
     val sorted = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))

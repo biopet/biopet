@@ -85,7 +85,7 @@ object WipeReads extends ToolCommand {
     logger.info("Parsing interval file ...")
 
     /** Function to create iterator from BED file */
-    def makeIntervalFromBed(inFile: File) = BedRecordList.fromFile(inFile).sorted.samIntervals.toIterator
+    def makeIntervalFromBed(inFile: File) = BedRecordList.fromFile(inFile).sorted.toSamIntervals.toIterator
 
     /**
      * Parses a refFlat file to yield Interval objects

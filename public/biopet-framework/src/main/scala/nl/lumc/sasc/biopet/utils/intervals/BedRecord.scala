@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.utils.intervals
 
+import htsjdk.samtools.util.Interval
+
 /**
  * Created by pjvanthof on 20/08/15.
  */
@@ -97,6 +99,11 @@ case class BedRecord(chr: String,
       case _ =>
     }
     this
+  }
+
+  def toSamInterval = (name, strand) match {
+    case (Some(name), Some(strand)) => new Interval(chr, start + 1, end, !strand, name)
+    case _ => new Interval(chr, start + 1, end)
   }
 }
 

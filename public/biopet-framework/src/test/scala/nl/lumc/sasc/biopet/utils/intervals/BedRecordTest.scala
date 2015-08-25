@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.utils.intervals
 
+import htsjdk.samtools.util.Interval
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -41,6 +42,11 @@ class BedRecordTest extends TestNGSuite with Matchers {
     BedRecord("chrQ", 0, 4).length shouldBe 4
     BedRecord("chrQ", 0, 1).length shouldBe 1
     BedRecord("chrQ", 3, 4).length shouldBe 1
+  }
+
+  @Test def testToSamInterval: Unit = {
+    BedRecord("chrQ", 0, 4).toSamInterval shouldBe new Interval("chrQ", 1, 4)
+    BedRecord("chrQ", 0, 4, Some("name"), Some(0.0), Some(true)).toSamInterval shouldBe new Interval("chrQ", 1, 4, false, "name")
   }
 
   @Test def testExons: Unit = {
