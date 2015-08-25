@@ -142,11 +142,13 @@ object MappingTest {
   copyFile("ref.fa")
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
+  copyFile("ref.1.bt2")
+  copyFile("ref.1.ebwt")
 
   val executables = Map(
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "db" -> "test",
-    "bowtie_index" -> "test",
+    "bowtie_index" -> (outputDir + File.separator + "ref"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "gsnap" -> Map("exe" -> "test"),
