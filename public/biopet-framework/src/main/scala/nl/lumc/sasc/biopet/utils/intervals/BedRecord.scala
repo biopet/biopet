@@ -48,7 +48,7 @@ case class BedRecord(chr: String,
         case Some(false) => blockCount.get - i
         case _           => i + 1
       }
-      BedRecord(chr, start + blockStarts(i) + blockSizes(i) + 1, start + blockStarts(i + 1) - 1,
+      BedRecord(chr, start + blockStarts(i) + blockSizes(i), start + blockStarts(i + 1),
         Some(s"intron-$intronNumber"), _originals = List(this))
     })
   } else None
@@ -63,9 +63,9 @@ case class BedRecord(chr: String,
 
   lazy val utr3 = (strand, thickStart, thickEnd) match {
     case (Some(false), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
-      Some(BedRecord(chr, start, tStart - 1, name.map(_ + "_utr3")))
+      Some(BedRecord(chr, start, tStart, name.map(_ + "_utr3")))
     case (Some(true), Some(tStart), Some(tEnd)) if (tStart > start && tEnd < end) =>
-      Some(BedRecord(chr, tEnd + 1, end, name.map(_ + "_utr3")))
+      Some(BedRecord(chr, tEnd, end, name.map(_ + "_utr3")))
     case _ => None
   }
 
