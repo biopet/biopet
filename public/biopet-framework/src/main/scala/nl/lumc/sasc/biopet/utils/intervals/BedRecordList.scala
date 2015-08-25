@@ -78,6 +78,7 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
 
   def writeToFile(file: File): Unit = {
     val writer = new PrintWriter(file)
+    header.foreach(writer.println)
     allRecords.foreach(writer.println)
     writer.close()
   }
