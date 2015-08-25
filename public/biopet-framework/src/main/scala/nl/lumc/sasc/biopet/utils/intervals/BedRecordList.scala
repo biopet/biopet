@@ -43,10 +43,14 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
           .foldLeft(List(record))((result, overlap) => {
             (for (r <- result) yield {
               (overlap.start < r.start, overlap.end > r.end) match {
-                case (true, true)   => Nil
-                case (true, false)  => List(r.copy(start = overlap.end))
-                case (false, true)  => List(r.copy(end = overlap.start))
-                case (false, false) => List(r.copy(end = overlap.start), r.copy(start = overlap.end))
+                case (true, true)   =>
+                  Nil
+                case (true, false)  =>
+                  List(r.copy(start = overlap.end))
+                case (false, true)  =>
+                  List(r.copy(end = overlap.start))
+                case (false, false) =>
+                  List(r.copy(end = overlap.start), r.copy(start = overlap.end))
               }
             }).flatten
           })
