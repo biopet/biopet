@@ -45,6 +45,14 @@ class MergeSamFiles(val root: Configurable) extends Picard {
   @Argument(doc = "COMMENT", required = false)
   var comment: Option[String] = config("comment")
 
+  @Output(doc = "Bam Index", required = true)
+  private var outputIndex: File = _
+
+  override def beforeGraph() {
+    super.beforeGraph()
+    if (createIndex) outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+  }
+
   /** Returns command to execute */
   override def commandLine = super.commandLine +
     repeat("INPUT=", input, spaceSeparated = false) +
