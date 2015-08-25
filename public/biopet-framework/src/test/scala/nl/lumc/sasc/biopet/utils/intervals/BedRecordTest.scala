@@ -16,10 +16,10 @@ class BedRecordTest extends TestNGSuite with Matchers {
     BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+\t1\t3") shouldBe
       BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true), Some(1), Some(3))
     BedRecord.fromLine("chrQ\t0\t4\tname\t3\t+\t1\t3\t255,0,0") shouldBe
-      BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255,0,0)))
+      BedRecord("chrQ", 0, 4, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255, 0, 0)))
     BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t20,50") shouldBe
-      BedRecord("chrQ", 0, 100, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255,0,0)),
-        Some(2), IndexedSeq(10,20), IndexedSeq(20,50))
+      BedRecord("chrQ", 0, 100, Some("name"), Some(3.0), Some(true), Some(1), Some(3), Some((255, 0, 0)),
+        Some(2), IndexedSeq(10, 20), IndexedSeq(20, 50))
   }
 
   @Test def testLineOutput: Unit = {
@@ -113,7 +113,18 @@ class BedRecordTest extends TestNGSuite with Matchers {
     utr3 should not be None
     utr5.get.length shouldBe 7
     utr3.get.length shouldBe 3
+  }
 
+  @Test def testOriginals: Unit = {
+    val original = BedRecord("chrQ", 1, 2)
+    val level1 = BedRecord("chrQ", 1, 2, _originals = List(original))
+    val level2 = BedRecord("chrQ", 2, 3, _originals = List(level1))
+    original.originals() shouldBe List(original)
+    original.originals(nested = false) shouldBe List(original)
+    level1.originals() shouldBe List(original)
+    level1.originals(nested = false) shouldBe List(original)
+    level2.originals() shouldBe List(original)
+    level2.originals(nested = false) shouldBe List(level1)
   }
 
   @Test def testErrors: Unit = {

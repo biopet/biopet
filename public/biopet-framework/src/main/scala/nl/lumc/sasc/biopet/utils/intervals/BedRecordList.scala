@@ -12,11 +12,11 @@ import nl.lumc.sasc.biopet.core.Logging
 /**
  * Created by pjvan_thof on 8/20/15.
  */
-class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[String] = Nil) {
+case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val header: List[String] = Nil) {
   def allRecords = for (chr <- chrRecords; record <- chr._2) yield record
 
   def toSamIntervals = allRecords.map(_.toSamInterval)
-  
+
   lazy val sorted = {
     val sorted = new BedRecordList(chrRecords.map(x => x._1 -> x._2.sortWith((a, b) => a.start < b.start)))
     if (sorted.chrRecords.forall(x => x._2 == chrRecords(x._1))) this else sorted
@@ -31,26 +31,27 @@ class BedRecordList(val chrRecords: Map[String, List[BedRecord]], header: List[S
 
   def length = allRecords.foldLeft(0L)((a, b) => a + b.length)
 
-  def squishBed(strandSensitive: Boolean = true) = BedRecordList.fromList {
+  def squishBed(strandSensitive: Boolean = true, nameSensitive: Boolean = true) = BedRecordList.fromList {
     (for ((chr, records) <- sorted.chrRecords; record <- records) yield {
       val overlaps = overlapWith(record)
+        .filterNot(_ == record)
         .filterNot(strandSensitive && _.strand != record.strand)
-        .filterNot(_.name == record.name)
+        .filterNot(nameSensitive && _.name == record.name)
       if (overlaps.isEmpty) {
         List(record)
       } else {
         overlaps
           .foldLeft(List(record))((result, overlap) => {
             (for (r <- result) yield {
-              (overlap.start < r.start, overlap.end > r.end) match {
-                case (true, true)   =>
+              (overlap.start <= r.start, overlap.end >= r.end) match {
+                case (true, true) =>
                   Nil
-                case (true, false)  =>
-                  List(r.copy(start = overlap.end))
-                case (false, true)  =>
-                  List(r.copy(end = overlap.start))
+                case (true, false) =>
+                  List(r.copy(start = overlap.end, _originals = List(r)))
+                case (false, true) =>
+                  List(r.copy(end = overlap.start, _originals = List(r)))
                 case (false, false) =>
-                  List(r.copy(end = overlap.start), r.copy(start = overlap.end))
+                  List(r.copy(end = overlap.start, _originals = List(r)), r.copy(start = overlap.end, _originals = List(r)))
               }
             }).flatten
           })

@@ -103,7 +103,8 @@ case class BedRecord(chr: String,
 
   def toSamInterval = (name, strand) match {
     case (Some(name), Some(strand)) => new Interval(chr, start + 1, end, !strand, name)
-    case _ => new Interval(chr, start + 1, end)
+    case (Some(name), _)            => new Interval(chr, start + 1, end, false, name)
+    case _                          => new Interval(chr, start + 1, end)
   }
 }
 
@@ -116,7 +117,7 @@ object BedRecord {
       values(1).toInt,
       values(2).toInt,
       values.lift(3),
-      values.lift(4).map(_.toInt),
+      values.lift(4).map(_.toDouble),
       values.lift(5).map {
         case "-" => false
         case "+" => true
