@@ -13,8 +13,8 @@ case class BedRecord(chr: String,
                      thickEnd: Option[Int] = None,
                      rgbColor: Option[(Int, Int, Int)] = None,
                      blockCount: Option[Int] = None,
-                     blockSizes: Array[Int] = Array(),
-                     blockStarts: Array[Int] = Array(),
+                     blockSizes: IndexedSeq[Int] = IndexedSeq(),
+                     blockStarts: IndexedSeq[Int] = IndexedSeq(),
                      protected[intervals] val _originals: List[BedRecord] = Nil) {
 
   def originals(nested: Boolean = true): List[BedRecord] = {
@@ -70,7 +70,7 @@ case class BedRecord(chr: String,
   }
 
   override def toString = {
-    def arrayToOption[T](array: Array[T]): Option[Array[T]] = {
+    def arrayToOption[T](array: IndexedSeq[T]): Option[IndexedSeq[T]] = {
       if (array.isEmpty) None
       else Some(array)
     }
@@ -84,7 +84,7 @@ case class BedRecord(chr: String,
   }
 
   def validate = {
-    require(start <= end, "Start is greater then end")
+    require(start < end, "Start is greater then end")
     (thickStart, thickEnd) match {
       case (Some(s), Some(e)) => require(s <= e, "Thick start is greater then end")
       case _                  =>
@@ -119,8 +119,8 @@ object BedRecord {
       values.lift(7) map (_.toInt),
       values.lift(8).map(_.split(",", 3).map(_.toInt)).map(x => (x.headOption.getOrElse(0), x.lift(1).getOrElse(0), x.lift(2).getOrElse(0))),
       values.lift(9).map(_.toInt),
-      values.lift(10).map(_.split(",").map(_.toInt)).getOrElse(Array()),
-      values.lift(11).map(_.split(",").map(_.toInt)).getOrElse(Array())
+      values.lift(10).map(_.split(",").map(_.toInt).toIndexedSeq).getOrElse(IndexedSeq()),
+      values.lift(11).map(_.split(",").map(_.toInt).toIndexedSeq).getOrElse(IndexedSeq())
     )
   }
 }
