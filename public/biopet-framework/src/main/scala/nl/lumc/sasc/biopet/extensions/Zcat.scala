@@ -29,13 +29,15 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Unzipped file")
   var output: File = _
 
+  var appending = false
+
   executable = config("exe", default = "zcat")
 
   override def versionRegex = """zcat \(gzip\) (.*)""".r
   override def versionCommand = executable + " --version"
 
   /** Returns command to execute */
-  def cmdLine = required(executable) + required(input) + " > " + required(output)
+  def cmdLine = required(executable) + required(input) + (if (appending) " >> " else " > ") + required(output)
 }
 
 object Zcat {

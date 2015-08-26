@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines
 import java.io.PrintWriter
 import java.util
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, PipelineCommand, BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
@@ -29,6 +29,7 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.utils.commandline.Input
 import scala.collection.JavaConversions._
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
@@ -54,23 +55,60 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
       val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) yield genomeName -> {
         val genomeConfig = ConfigUtils.any2map(c)
-        val fastaUri = genomeConfig.getOrElse("fasta_uri",
-          throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")).toString
+        val fastaUris = genomeConfig.getOrElse("fasta_uri",
+          throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
+            case a: Array[_] => a.map(_.toString)
+            case a           => Array(a.toString)
+          }
 
         val genomeDir = new File(speciesDir, genomeName)
         val fastaFile = new File(genomeDir, "reference.fa")
         var outputConfig: Map[String, Any] = Map("reference_fasta" -> fastaFile)
 
-        val curl = new Curl(this)
-        curl.url = fastaUri
-        if (fastaUri.endsWith(".gz")) {
-          curl.output = new File(genomeDir, "reference.fa.gz")
-          curl.isIntermediate = true
-          add(Zcat(this, curl.output, fastaFile))
-        } else curl.output = fastaFile
-        add(curl)
+        val fastaFiles = for (fastaUri <- fastaUris) yield {
+          val curl = new Curl(this)
+          curl.url = fastaUri
+          curl.output = if (fastaUris.length > 1 || fastaUri.endsWith(".gz")) {
+            curl.isIntermediate = true
+            new File(genomeDir, new File(fastaUri).getName)
+          } else fastaFile
 
-        add(Md5sum(this, curl.output, genomeDir))
+          add(curl)
+          add(Md5sum(this, curl.output, genomeDir))
+          curl.output
+        }
+
+        val fastaCat = new CommandLineFunction {
+          var cmds: Array[BiopetCommandLineFunction] = Array()
+
+          @Input
+          var input: List[File] = Nil
+
+          @Output
+          var output = fastaFile
+          def commandLine = cmds.mkString(" && ") + " > "
+        }
+
+        if (fastaUris.length > 1 || fastaFiles.filter(_.getName.endsWith(".gz")).nonEmpty) {
+          fastaFiles.foreach { file =>
+            if (file.getName.endsWith(".gz")) {
+              val zcat = new Zcat(this)
+              zcat.appending = true
+              zcat.input = file
+              zcat.output = fastaFile
+              fastaCat.cmds :+= zcat
+              fastaCat.input :+= file
+            } else {
+              val cat = new Cat(this)
+              cat.appending = true
+              cat.input :+= file
+              cat.output = fastaFile
+              fastaCat.cmds :+= cat
+              fastaCat.input :+= file
+            }
+          }
+          add(fastaCat)
+        }
 
         val faidx = SamtoolsFaidx(this, fastaFile)
         add(faidx)
@@ -80,7 +118,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         createDict.output = new File(genomeDir, fastaFile.getName.stripSuffix(".fa") + ".dict")
         createDict.species = Some(speciesName)
         createDict.genomeAssembly = Some(genomeName)
-        createDict.uri = Some(fastaUri)
+        createDict.uri = Some(fastaUris.mkString(","))
         add(createDict)
 
         def createLinks(dir: File): File = {
