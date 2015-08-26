@@ -116,7 +116,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
         }
 
         val counts = for (samRecord <- bamIter if !filterRead(samRecord)) {
-          checkAlles(samRecord, vcfRecord) match {
+          checkAlleles(samRecord, vcfRecord) match {
             case Some(a) => if (countReports(sample).aCounts.contains(a)) countReports(sample).aCounts(a) += 1
             else countReports(sample).aCounts += (a -> 1)
             case _ => countReports(sample).notFound += 1
@@ -142,7 +142,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
     writer.close()
   }
 
-  def checkAlles(samRecord: SAMRecord, vcfRecord: VariantContext): Option[String] = {
+  def checkAlleles(samRecord: SAMRecord, vcfRecord: VariantContext): Option[String] = {
     val readStartPos = List.range(0, samRecord.getReadBases.length)
       .find(x => samRecord.getReferencePositionAtReadPosition(x + 1) == vcfRecord.getStart) getOrElse { return None }
     val readBases = samRecord.getReadBases
