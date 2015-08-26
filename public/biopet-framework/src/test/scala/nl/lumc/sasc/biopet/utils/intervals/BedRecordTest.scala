@@ -127,6 +127,20 @@ class BedRecordTest extends TestNGSuite with Matchers {
     level2.originals(nested = false) shouldBe List(level1)
   }
 
+  @Test def testScatter: Unit = {
+    val list = BedRecord("chrQ", 0, 1000).scatter(10)
+    list.size shouldBe 100
+    BedRecordList.fromList(list).length shouldBe 1000
+
+    val list2 = BedRecord("chrQ", 0, 999).scatter(10)
+    list2.size shouldBe 99
+    BedRecordList.fromList(list2).length shouldBe 999
+
+    val list3 = BedRecord("chrQ", 0, 999).scatter(9)
+    list3.size shouldBe 111
+    BedRecordList.fromList(list3).length shouldBe 999
+  }
+
   @Test def testErrors: Unit = {
     BedRecord("chrQ", 0, 3).validate
     BedRecord.fromLine("chrQ\t0\t100\tname\t3\t+\t1\t3\t255,0,0\t2\t10,20\t20,50").validate
