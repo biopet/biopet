@@ -86,7 +86,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           @Output
           var output = fastaFile
-          def commandLine = cmds.mkString(" && ") + " > "
+          def commandLine = cmds.mkString(" && ")
         }
 
         if (fastaUris.length > 1 || fastaFiles.filter(_.getName.endsWith(".gz")).nonEmpty) {
