@@ -2,6 +2,8 @@ package nl.lumc.sasc.biopet.utils.intervals
 
 import htsjdk.samtools.util.Interval
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Created by pjvanthof on 20/08/15.
  */
@@ -32,6 +34,18 @@ case class BedRecord(chr: String,
   }
 
   def length = end - start
+
+  def scatter(binSize: Int) = {
+    val binNumber = length / binSize
+    if (binNumber <= 1) List(this)
+    else {
+      val size = length / binNumber
+      val buffer = ListBuffer[BedRecord]()
+      for (i <- 1 to binNumber) buffer += BedRecord(chr, start + ((i - 1) * size), start + (i * end))
+      buffer += BedRecord(chr, start + (binNumber * size), end)
+      buffer.toList
+    }
+  }
 
   lazy val exons = if (blockCount.isDefined && blockSizes.length > 0 && blockStarts.length > 0) {
     Some(for (i <- 0 until blockCount.get) yield {
