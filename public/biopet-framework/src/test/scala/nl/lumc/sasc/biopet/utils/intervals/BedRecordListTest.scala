@@ -124,6 +124,12 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     }
   }
 
+  @Test def testScatter: Unit = {
+    val list = BedRecordList.fromList(List(BedRecord("chrQ", 0, 1000), BedRecord("chrQ", 3000, 3500)))
+    list.scatter(100).allRecords.size shouldBe 15
+    list.scatter(100).length shouldBe 1500
+  }
+
   @AfterClass
   def end: Unit = {
     BedRecordListTest.bedFile.delete()

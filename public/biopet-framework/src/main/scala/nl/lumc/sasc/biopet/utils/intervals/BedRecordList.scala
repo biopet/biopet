@@ -3,7 +3,6 @@ package nl.lumc.sasc.biopet.utils.intervals
 import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.samtools.util.Interval
 
 import scala.collection.JavaConversions._
 
