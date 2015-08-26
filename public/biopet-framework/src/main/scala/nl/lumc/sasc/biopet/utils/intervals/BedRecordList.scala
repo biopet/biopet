@@ -2,7 +2,10 @@ package nl.lumc.sasc.biopet.utils.intervals
 
 import java.io.{ PrintWriter, File }
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.util.Interval
+
+import scala.collection.JavaConversions._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -77,6 +80,10 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val heade
     })
   }
 
+  def scatter(binSize: Int) = BedRecordList(
+    chrRecords.map(x => x._1 -> x._2.flatMap(_.scatter(binSize)))
+  )
+
   def writeToFile(file: File): Unit = {
     val writer = new PrintWriter(file)
     header.foreach(writer.println)
@@ -120,5 +127,13 @@ object BedRecordList {
     } finally {
       reader.close()
     }
+  }
+
+  def fromReference(file: File) = {
+    val referenceFile = new FastaSequenceFile(file, true)
+
+    fromList(for (contig <- referenceFile.getSequenceDictionary.getSequences) yield {
+      BedRecord(contig.getSequenceName, 0, contig.getSequenceLength)
+    })
   }
 }

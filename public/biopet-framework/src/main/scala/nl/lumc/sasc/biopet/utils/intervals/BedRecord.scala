@@ -41,8 +41,8 @@ case class BedRecord(chr: String,
     else {
       val size = length / binNumber
       val buffer = ListBuffer[BedRecord]()
-      for (i <- 1 to binNumber) buffer += BedRecord(chr, start + ((i - 1) * size), start + (i * end))
-      buffer += BedRecord(chr, start + (binNumber * size), end)
+      for (i <- 1 until binNumber) buffer += BedRecord(chr, start + ((i - 1) * size), start + (i * size))
+      buffer += BedRecord(chr, start + ((binNumber - 1) * size), end)
       buffer.toList
     }
   }
