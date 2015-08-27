@@ -24,6 +24,7 @@ import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
@@ -146,12 +147,9 @@ object VcfStats extends ToolCommand {
     opt[File]('o', "outputDir") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     }
-    //TODO: add interval argument
-    /*
     opt[File]('i', "intervals") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(intervals = Some(x))
     }
-    */
     opt[String]("infoTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(infoTags = x :: c.infoTags)
     }
@@ -258,7 +256,7 @@ object VcfStats extends ToolCommand {
     }
   }
 
-  protected var commandArgs: Args = _
+  protected var cmdArgs: Args = _
 
   val defaultGenotypeFields = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
 
@@ -273,9 +271,9 @@ object VcfStats extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val argsParser = new OptParser
-    commandArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val reader = new VCFFileReader(commandArgs.inputFile, true)
+    val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val header = reader.getFileHeader
     val samples = header.getSampleNamesInOrder.toList
 
@@ -283,44 +281,36 @@ object VcfStats extends ToolCommand {
 
     val adInfoTags = {
       (for (
-        infoTag <- commandArgs.infoTags if !defaultInfoFields.contains(infoTag)
+        infoTag <- cmdArgs.infoTags if !defaultInfoFields.contains(infoTag)
       ) yield {
         require(header.getInfoHeaderLine(infoTag) != null, "Info tag '" + infoTag + "' not found in header of vcf file")
         infoTag
       }) ::: (for (
-        line <- header.getInfoHeaderLines if commandArgs.allInfoTags if !defaultInfoFields.contains(line.getID) if !commandArgs.infoTags.contains(line.getID)
+        line <- header.getInfoHeaderLines if cmdArgs.allInfoTags if !defaultInfoFields.contains(line.getID) if !cmdArgs.infoTags.contains(line.getID)
       ) yield {
         line.getID
       }).toList ::: defaultInfoFields
     }
 
     val adGenotypeTags = (for (
-      genotypeTag <- commandArgs.genotypeTags if !defaultGenotypeFields.contains(genotypeTag)
+      genotypeTag <- cmdArgs.genotypeTags if !defaultGenotypeFields.contains(genotypeTag)
     ) yield {
       require(header.getFormatHeaderLine(genotypeTag) != null, "Format tag '" + genotypeTag + "' not found in header of vcf file")
       genotypeTag
     }) ::: (for (
-      line <- header.getFormatHeaderLines if commandArgs.allGenotypeTags if !defaultGenotypeFields.contains(line.getID) if !commandArgs.genotypeTags.contains(line.getID) if line.getID != "PL"
+      line <- header.getFormatHeaderLines if cmdArgs.allGenotypeTags if !defaultGenotypeFields.contains(line.getID) if !cmdArgs.genotypeTags.contains(line.getID) if line.getID != "PL"
     ) yield {
       line.getID
     }).toList ::: defaultGenotypeFields
 
-    val referenceFile = new FastaSequenceFile(commandArgs.referenceFile, true)
+    val bedRecords = (cmdArgs.intervals match {
+      case Some(intervals) => BedRecordList.fromFile(intervals).validateContigs(cmdArgs.referenceFile)
+      case _               => BedRecordList.fromReference(cmdArgs.referenceFile)
+    }).combineOverlap.scatter(cmdArgs.binSize)
 
-    val intervals: List[Interval] = (
-      for (
-        seq <- referenceFile.getSequenceDictionary.getSequences;
-        chunks = (seq.getSequenceLength / commandArgs.binSize) + (if (seq.getSequenceLength % commandArgs.binSize == 0) 0 else 1);
-        i <- 1 to chunks
-      ) yield {
-        val size = seq.getSequenceLength / chunks
-        val begin = size * (i - 1) + 1
-        val end = if (i >= chunks) seq.getSequenceLength else size * i
-        new Interval(seq.getSequenceName, begin, end)
-      }
-    ).toList
+    val intervals: List[Interval] = bedRecords.toSamIntervals.toList
 
-    val totalBases = intervals.foldRight(0L)(_.length() + _)
+    val totalBases = bedRecords.length
 
     // Reading vcf records
     logger.info("Start reading vcf records")
@@ -352,7 +342,7 @@ object VcfStats extends ToolCommand {
     val stats = (for (intervals <- Random.shuffle(intervals).grouped(intervals.size / (if (intervals.size > 10) 4 else 1)).toList.par) yield {
       val chunkStats = for (intervals <- intervals.grouped(25)) yield {
         val binStats = for (interval <- intervals.par) yield {
-          val reader = new VCFFileReader(commandArgs.inputFile, true)
+          val reader = new VCFFileReader(cmdArgs.inputFile, true)
           var chunkCounter = 0
           val stats = createStats
           logger.info("Starting on: " + interval)
@@ -375,8 +365,8 @@ object VcfStats extends ToolCommand {
           }
           reader.close()
 
-          if (commandArgs.writeBinStats) {
-            val binOutputDir = new File(commandArgs.outputDir, "bins" + File.separator + interval.getContig)
+          if (cmdArgs.writeBinStats) {
+            val binOutputDir = new File(cmdArgs.outputDir, "bins" + File.separator + interval.getContig)
 
             writeGenotypeField(stats, samples, "general", binOutputDir, prefix = "genotype-" + interval.getStart + "-" + interval.getEnd)
             writeField(stats, "general", binOutputDir, prefix = interval.getStart + "-" + interval.getEnd)
@@ -393,51 +383,52 @@ object VcfStats extends ToolCommand {
     logger.info("Done reading vcf records")
 
     // Writing info fields to tsv files
-    val infoOutputDir = new File(commandArgs.outputDir, "infotags")
-    writeField(stats, "general", commandArgs.outputDir)
+    val infoOutputDir = new File(cmdArgs.outputDir, "infotags")
+    writeField(stats, "general", cmdArgs.outputDir)
     for (field <- adInfoTags.distinct.par) {
       writeField(stats, field, infoOutputDir)
-      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+      for (line <- new FastaSequenceFile(cmdArgs.referenceFile, true).getSequenceDictionary.getSequences) {
         val chr = line.getSequenceName
         writeField(stats, field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
 
     // Write genotype field to tsv files
-    val genotypeOutputDir = new File(commandArgs.outputDir, "genotypetags")
-    writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
+    val genotypeOutputDir = new File(cmdArgs.outputDir, "genotypetags")
+    writeGenotypeField(stats, samples, "general", cmdArgs.outputDir, prefix = "genotype")
     for (field <- adGenotypeTags.distinct.par) {
       writeGenotypeField(stats, samples, field, genotypeOutputDir)
-      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+      for (line <- new FastaSequenceFile(cmdArgs.referenceFile, true).getSequenceDictionary.getSequences) {
         val chr = line.getSequenceName
         writeGenotypeField(stats, samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
     }
 
     // Write sample distributions to tsv files
-    val sampleDistributionsOutputDir = new File(commandArgs.outputDir, "sample_distributions")
+    val sampleDistributionsOutputDir = new File(cmdArgs.outputDir, "sample_distributions")
     for (field <- sampleDistributions) {
       writeField(stats, "SampleDistribution-" + field, sampleDistributionsOutputDir)
     }
 
     // Write general wiggle tracks
-    for (field <- commandArgs.generalWiggle) {
-      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
+    for (field <- cmdArgs.generalWiggle) {
+      val file = new File(cmdArgs.outputDir, "wigs" + File.separator + "general-" + field + ".wig")
       writeWiggle(intervals, field, "count", file, genotype = false)
     }
 
     // Write sample wiggle tracks
-    for (field <- commandArgs.genotypeWiggle; sample <- samples) {
-      val file = new File(commandArgs.outputDir, "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
+    for (field <- cmdArgs.genotypeWiggle; sample <- samples) {
+      val file = new File(cmdArgs.outputDir, "wigs" + File.separator + "genotype-" + sample + "-" + field + ".wig")
       writeWiggle(intervals, field, sample, file, genotype = true)
     }
 
-    writeOverlap(stats, _.genotypeOverlap, commandArgs.outputDir + "/sample_compare/genotype_overlap", samples)
-    writeOverlap(stats, _.alleleOverlap, commandArgs.outputDir + "/sample_compare/allele_overlap", samples)
+    writeOverlap(stats, _.genotypeOverlap, cmdArgs.outputDir + "/sample_compare/genotype_overlap", samples)
+    writeOverlap(stats, _.alleleOverlap, cmdArgs.outputDir + "/sample_compare/allele_overlap", samples)
 
     logger.info("Done")
   }
 
+  //FIXME: does only work correct for reference and not with a bed file
   protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
     val groupedIntervals = intervals.groupBy(_.getContig).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
@@ -448,8 +439,8 @@ object VcfStats extends ToolCommand {
       writer.println(s"fixedStep chrom=$chr start=1 step=$length span=$length")
       for (interval <- intervals) {
         val file = {
-          if (genotype) new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + "genotype-" + interval.getStart + "-" + interval.getEnd + "-general.tsv")
-          else new File(commandArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+          if (genotype) new File(cmdArgs.outputDir, "bins" + File.separator + chr + File.separator + "genotype-" + interval.getStart + "-" + interval.getEnd + "-general.tsv")
+          else new File(cmdArgs.outputDir, "bins" + File.separator + chr + File.separator + interval.getStart + "-" + interval.getEnd + "-general.tsv")
         }
         writer.println(valueFromTsv(file, row, column).getOrElse(0))
       }
