@@ -36,6 +36,4 @@ class FastqSplitterTest extends TestNGSuite with MockitoSugar with Matchers {
     main(args)
   }
 
-
-
 }

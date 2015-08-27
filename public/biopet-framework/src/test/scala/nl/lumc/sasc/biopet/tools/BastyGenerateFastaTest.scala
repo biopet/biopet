@@ -65,7 +65,6 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     val father = mock[Args]
     when(father.sampleName) thenReturn "Father_7006506"
 
-
     getMaxAllele(record)(child) shouldBe "C-"
     getMaxAllele(record)(father) shouldBe "CA"
 

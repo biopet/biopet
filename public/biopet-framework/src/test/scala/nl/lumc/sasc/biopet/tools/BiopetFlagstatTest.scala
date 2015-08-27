@@ -33,7 +33,7 @@ class BiopetFlagstatTest extends TestNGSuite with MockitoSugar with Matchers {
   processor.loadRecord(record)
 
   @Test
-  def testReport()= {
+  def testReport() = {
     processor.report shouldBe Source.fromFile(report).mkString
   }
 

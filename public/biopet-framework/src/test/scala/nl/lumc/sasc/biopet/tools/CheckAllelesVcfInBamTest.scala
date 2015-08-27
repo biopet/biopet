@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
-import htsjdk.samtools.{SamReaderFactory, SamReader}
+import htsjdk.samtools.{ SamReaderFactory, SamReader }
 import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar

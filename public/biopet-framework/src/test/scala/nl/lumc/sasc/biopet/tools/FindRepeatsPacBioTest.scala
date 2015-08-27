@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
-import htsjdk.samtools.{SamReaderFactory, QueryInterval}
+import htsjdk.samtools.{ SamReaderFactory, QueryInterval }
 import nl.lumc.sasc.biopet.tools.FastqSplitter._
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
@@ -59,6 +59,5 @@ class FindRepeatsPacBioTest extends TestNGSuite with MockitoSugar with Matchers 
     result.dels shouldEqual Nil
     result.ins shouldEqual Nil
   }
-
 
 }

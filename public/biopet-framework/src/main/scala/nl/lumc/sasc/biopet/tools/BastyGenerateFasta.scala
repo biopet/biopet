@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
 
-import htsjdk.samtools.{SAMSequenceRecord, SamReaderFactory}
+import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
