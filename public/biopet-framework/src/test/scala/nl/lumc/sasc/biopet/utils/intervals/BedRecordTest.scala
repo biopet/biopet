@@ -131,14 +131,17 @@ class BedRecordTest extends TestNGSuite with Matchers {
     val list = BedRecord("chrQ", 0, 1000).scatter(10)
     list.size shouldBe 100
     BedRecordList.fromList(list).length shouldBe 1000
+    for (l1 <- list; l2 <- list if l1 != l2) l1.overlapWith(l2) shouldBe false
 
     val list2 = BedRecord("chrQ", 0, 999).scatter(10)
     list2.size shouldBe 99
     BedRecordList.fromList(list2).length shouldBe 999
+    for (l1 <- list2; l2 <- list2 if l1 != l2) l1.overlapWith(l2) shouldBe false
 
     val list3 = BedRecord("chrQ", 0, 999).scatter(9)
     list3.size shouldBe 111
     BedRecordList.fromList(list3).length shouldBe 999
+    for (l1 <- list3; l2 <- list3 if l1 != l2) l1.overlapWith(l2) shouldBe false
   }
 
   @Test def testErrors: Unit = {
