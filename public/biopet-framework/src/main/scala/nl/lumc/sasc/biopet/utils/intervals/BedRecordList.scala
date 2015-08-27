@@ -83,6 +83,14 @@ case class BedRecordList(val chrRecords: Map[String, List[BedRecord]], val heade
     chrRecords.map(x => x._1 -> x._2.flatMap(_.scatter(binSize)))
   )
 
+  def validateContigs(reference: File) = {
+    val referenceFile = new FastaSequenceFile(reference, true)
+    val dict = referenceFile.getSequenceDictionary
+    val notExisting = chrRecords.keys.filter(dict.getSequence(_) == null).toList
+    require(notExisting.isEmpty, s"Contigs found in bed records but are not existing in reference: ${notExisting.mkString(",")}")
+    this
+  }
+
   def writeToFile(file: File): Unit = {
     val writer = new PrintWriter(file)
     header.foreach(writer.println)

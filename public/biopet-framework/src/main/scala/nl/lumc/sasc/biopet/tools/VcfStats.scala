@@ -305,7 +305,7 @@ object VcfStats extends ToolCommand {
 
 
     val bedRecords = (commandArgs.intervals match {
-      case Some(intervals) => BedRecordList.fromFile(intervals)
+      case Some(intervals) => BedRecordList.fromFile(intervals).validateContigs(commandArgs.referenceFile)
       case _ => BedRecordList.fromReference(commandArgs.referenceFile)
     }).combineOverlap.scatter(commandArgs.binSize)
 
