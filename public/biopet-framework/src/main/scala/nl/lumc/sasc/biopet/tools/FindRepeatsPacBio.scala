@@ -29,10 +29,10 @@ object FindRepeatsPacBio extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputBam") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBam = x)
-    }
+    } text "Path to input file"
     opt[File]('b', "inputBed") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBed = x)
-    } text "output file, default to stdout"
+    } text "Path to bed file"
   }
 
   /**
