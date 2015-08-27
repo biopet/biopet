@@ -24,6 +24,7 @@ import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
@@ -146,12 +147,9 @@ object VcfStats extends ToolCommand {
     opt[File]('o', "outputDir") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
     }
-    //TODO: add interval argument
-    /*
     opt[File]('i', "intervals") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(intervals = Some(x))
     }
-    */
     opt[String]("infoTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(infoTags = x :: c.infoTags)
     }
@@ -305,22 +303,15 @@ object VcfStats extends ToolCommand {
       line.getID
     }).toList ::: defaultGenotypeFields
 
-    val referenceFile = new FastaSequenceFile(commandArgs.referenceFile, true)
 
-    val intervals: List[Interval] = (
-      for (
-        seq <- referenceFile.getSequenceDictionary.getSequences;
-        chunks = (seq.getSequenceLength / commandArgs.binSize) + (if (seq.getSequenceLength % commandArgs.binSize == 0) 0 else 1);
-        i <- 1 to chunks
-      ) yield {
-        val size = seq.getSequenceLength / chunks
-        val begin = size * (i - 1) + 1
-        val end = if (i >= chunks) seq.getSequenceLength else size * i
-        new Interval(seq.getSequenceName, begin, end)
-      }
-    ).toList
+    val bedRecords = (commandArgs.intervals match {
+      case Some(intervals) => BedRecordList.fromFile(intervals)
+      case _ => BedRecordList.fromReference(commandArgs.referenceFile)
+    }).combineOverlap.scatter(commandArgs.binSize)
 
-    val totalBases = intervals.foldRight(0L)(_.length() + _)
+    val intervals: List[Interval] = bedRecords.toSamIntervals.toList
+
+    val totalBases = bedRecords.length
 
     // Reading vcf records
     logger.info("Start reading vcf records")
@@ -397,7 +388,7 @@ object VcfStats extends ToolCommand {
     writeField(stats, "general", commandArgs.outputDir)
     for (field <- adInfoTags.distinct.par) {
       writeField(stats, field, infoOutputDir)
-      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+      for (line <- new FastaSequenceFile(commandArgs.referenceFile, true).getSequenceDictionary.getSequences) {
         val chr = line.getSequenceName
         writeField(stats, field, new File(infoOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
@@ -408,7 +399,7 @@ object VcfStats extends ToolCommand {
     writeGenotypeField(stats, samples, "general", commandArgs.outputDir, prefix = "genotype")
     for (field <- adGenotypeTags.distinct.par) {
       writeGenotypeField(stats, samples, field, genotypeOutputDir)
-      for (line <- referenceFile.getSequenceDictionary.getSequences) {
+      for (line <- new FastaSequenceFile(commandArgs.referenceFile, true).getSequenceDictionary.getSequences) {
         val chr = line.getSequenceName
         writeGenotypeField(stats, samples, field, new File(genotypeOutputDir, "chrs" + File.separator + chr), chr = chr)
       }
@@ -438,6 +429,7 @@ object VcfStats extends ToolCommand {
     logger.info("Done")
   }
 
+  //FIXME: does only work correct for reference and not with a bed file
   protected def writeWiggle(intervals: List[Interval], row: String, column: String, outputFile: File, genotype: Boolean): Unit = {
     val groupedIntervals = intervals.groupBy(_.getContig).map { case (k, v) => k -> v.sortBy(_.getStart) }
     outputFile.getParentFile.mkdirs()
