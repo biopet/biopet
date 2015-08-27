@@ -303,10 +303,9 @@ object VcfStats extends ToolCommand {
       line.getID
     }).toList ::: defaultGenotypeFields
 
-
     val bedRecords = (cmdArgs.intervals match {
       case Some(intervals) => BedRecordList.fromFile(intervals).validateContigs(cmdArgs.referenceFile)
-      case _ => BedRecordList.fromReference(cmdArgs.referenceFile)
+      case _               => BedRecordList.fromReference(cmdArgs.referenceFile)
     }).combineOverlap.scatter(cmdArgs.binSize)
 
     val intervals: List[Interval] = bedRecords.toSamIntervals.toList
