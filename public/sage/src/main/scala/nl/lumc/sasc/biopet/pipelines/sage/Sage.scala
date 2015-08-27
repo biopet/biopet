@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.scripts.SquishBed
+import nl.lumc.sasc.biopet.tools.SquishBed
 import nl.lumc.sasc.biopet.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
@@ -49,7 +49,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   ), "flexiprep" -> Map(
     "skip_clip" -> true,
     "skip_trim" -> true
-  )
+  ), "strandSensitive" -> true
   ), super.defaults)
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
@@ -146,7 +146,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def biopetScript() {
-    val squishBed = SquishBed(this, countBed.get, outputDir)
+    val squishBed = new SquishBed(this)
+    squishBed.input = countBed.get
+    squishBed.output = new File(outputDir, countBed.get.getName.stripSuffix(".bed") + ".squish.bed")
     add(squishBed)
     squishedCountBed = squishBed.output
 
