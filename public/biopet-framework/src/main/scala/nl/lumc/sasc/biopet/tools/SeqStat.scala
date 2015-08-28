@@ -317,6 +317,8 @@ object SeqStat extends ToolCommand {
       ))
     )
 
+    // TODO: have function generate map so that it can be tested
+
     println(ConfigUtils.mapToJson(report))
   }
 }
