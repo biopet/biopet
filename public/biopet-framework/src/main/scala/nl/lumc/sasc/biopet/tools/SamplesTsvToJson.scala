@@ -71,7 +71,7 @@ object SamplesTsvToJson extends ToolCommand {
         t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
       ) yield header(t) -> values(t)).toMap
       library match {
-        case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
+        case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library.get -> valuesMap))))
         case _         => Map("samples" -> Map(sample -> valuesMap))
       }
     }
