@@ -40,41 +40,46 @@ object SamplesTsvToJson extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val fileMaps = for (inputFile <- commandArgs.inputFiles) yield {
-      val reader = Source.fromFile(inputFile)
-      val lines = reader.getLines().toList.filter(!_.isEmpty)
-      val header = lines.head.split("\t")
-      val sampleColumn = header.indexOf("sample")
-      val libraryColumn = header.indexOf("library")
-      if (sampleColumn == -1) throw new IllegalStateException("Sample column does not exist in: " + inputFile)
+    val jsonString = stringFromInputs(commandArgs.inputFiles)
+    println(jsonString)
+  }
 
-      val sampleLibCache: mutable.Set[(String, Option[String])] = mutable.Set()
+  def mapFromFile(inputFile: File) : Map[String, Any] = {
+    val reader = Source.fromFile(inputFile)
+    val lines = reader.getLines().toList.filter(!_.isEmpty)
+    val header = lines.head.split("\t")
+    val sampleColumn = header.indexOf("sample")
+    val libraryColumn = header.indexOf("library")
+    if (sampleColumn == -1) throw new IllegalStateException("Sample column does not exist in: " + inputFile)
 
-      val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
-        val values = tsvLine.split("\t")
-        require(header.length == values.length, "Number of columns is not the same as the header")
-        val sample = values(sampleColumn)
-        val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
+    val sampleLibCache: mutable.Set[(String, Option[String])] = mutable.Set()
 
-        //FIXME: this is a workaround, should be removed after fixing #180
-        if (sample.head.isDigit || library.forall(_.head.isDigit))
-          throw new IllegalStateException("Sample or library may not start with a number")
+    val librariesValues: List[Map[String, Any]] = for (tsvLine <- lines.tail) yield {
+      val values = tsvLine.split("\t")
+      require(header.length == values.length, "Number of columns is not the same as the header")
+      val sample = values(sampleColumn)
+      val library = if (libraryColumn != -1) Some(values(libraryColumn)) else None
 
-        if (sampleLibCache.contains((sample, library)))
-          throw new IllegalStateException(s"Combination of $sample and $library is found multiple times")
-        else sampleLibCache.add((sample, library))
-        val valuesMap = (for (
-          t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
-        ) yield header(t) -> values(t)).toMap
-        library match {
-          case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
-          case _         => Map("samples" -> Map(sample -> valuesMap))
-        }
+      //FIXME: this is a workaround, should be removed after fixing #180
+      if (sample.head.isDigit || library.forall(_.head.isDigit))
+        throw new IllegalStateException("Sample or library may not start with a number")
+
+      if (sampleLibCache.contains((sample, library)))
+        throw new IllegalStateException(s"Combination of $sample and ${library.get} is found multiple times")
+      else sampleLibCache.add((sample, library))
+      val valuesMap = (for (
+        t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
+      ) yield header(t) -> values(t)).toMap
+      library match {
+        case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library -> valuesMap))))
+        case _         => Map("samples" -> Map(sample -> valuesMap))
       }
-      librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     }
-    val map = fileMaps.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
-    val json = mapToJson(map)
-    println(json.spaces2)
+    librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
+  }
+
+  def stringFromInputs(inputs: List[File]) : String = {
+    val map = inputs.map(f => mapFromFile(f)).foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
+    mapToJson(map).spaces2
   }
 }
