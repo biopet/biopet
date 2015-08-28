@@ -58,7 +58,7 @@ To get the above example out of the tool one should provide 2 TSV files as follo
 
 ----
 
-| samples       | library | bam         |
+| sample        | library | bam         |
 | -------       | ------- | ---------   |
 |Sample_ID_1    |Lib_ID_1 |MyFirst.bam  |
 |Sample_ID_2    |Lib_ID_2 |MySecond.bam |
