@@ -65,13 +65,13 @@ object SamplesTsvToJson extends ToolCommand {
         throw new IllegalStateException("Sample or library may not start with a number")
 
       if (sampleLibCache.contains((sample, library)))
-        throw new IllegalStateException(s"Combination of $sample and ${library.get} is found multiple times")
+        throw new IllegalStateException(s"Combination of $sample ${library.map("and " + _).getOrElse("")} is found multiple times")
       else sampleLibCache.add((sample, library))
       val valuesMap = (for (
         t <- 0 until values.size if !values(t).isEmpty && t != sampleColumn && t != libraryColumn
       ) yield header(t) -> values(t)).toMap
       library match {
-        case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(library.get -> valuesMap))))
+        case Some(lib) => Map("samples" -> Map(sample -> Map("libraries" -> Map(lib -> valuesMap))))
         case _         => Map("samples" -> Map(sample -> valuesMap))
       }
     }
