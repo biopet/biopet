@@ -154,6 +154,7 @@
                             <goal>format</goal>
                         </goals>
                         <configuration>
+                            <baseDir>${basedir}/src</baseDir>
                             <rewriteArrowSymbols>false</rewriteArrowSymbols>
                             <alignParameters>true</alignParameters>
                             <alignSingleLineCaseStatements_maxArrowIndent>40
