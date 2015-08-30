@@ -8,6 +8,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by pjvanthof on 30/08/15.
  */
+//TODO: Replace class name, must be the same as the class of the pipeline
 class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
@@ -32,5 +33,5 @@ class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript 
   }
 }
 
-//TODO: Replace object Name, must be the same as the class of the pipeline
+//TODO: Replace object name, must be the same as the class of the pipeline
 object SimplePipeline extends PipelineCommand
