@@ -39,4 +39,4 @@ pages:
 - License: 'license.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs
-repo_url: https://git.lumc.nl/biopet/biopet
+repo_url: https://github.com/biopet/biopet
