@@ -1,0 +1,14 @@
+# Project-related
+dependency-reduced-pom.xml
+git.properties
+
+# gedit
+*~
+# Vim
+*.swp
+# IntelliJ
+.idea/*
+*.iml
+target/
+public/target/
+protected/target/
