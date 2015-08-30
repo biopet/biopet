@@ -8,7 +8,7 @@
     <groupId>org.example.group</groupId>
 
     <!--TODO: replace artifactId -->
-    <artifactId>SinglePipeline</artifactId>
+    <artifactId>ExternalExample</artifactId>
 
     <!--TODO: replace version, for a new pipeline it's advised to start with '0.1.0-SNAPSHOT' -->
     <version>0.5.0-DEV</version>
@@ -19,7 +19,7 @@
         <sting.shade.phase>package</sting.shade.phase>
 
         <!--TODO: replace app.main.class, this is the class that get executed when running the jar file -->
-        <app.main.class>org.example.group.BiopetPipeline</app.main.class>
+        <app.main.class>org.example.group.pipelines.BiopetPipeline</app.main.class>
     </properties>
 
     <dependencies>
