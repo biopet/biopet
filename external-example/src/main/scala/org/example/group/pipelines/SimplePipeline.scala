@@ -10,6 +10,7 @@ import org.broadinstitute.gatk.queue.QScript
  */
 //TODO: Replace class name, must be the same as the class of the pipeline
 class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript {
+  // A constructor without arguments is needed if this pipeline is a root pipeline
   def this() = this(null)
 
   @Input(required = true)

@@ -9,6 +9,7 @@ object ExecutableExample extends BiopetExecutable {
 
   /** This list defines the pipeline that are usable from the executable */
   def pipelines: List[MainCommand] = List(
+    org.example.group.pipelines.MultisamplePipeline,
     org.example.group.pipelines.BiopetPipeline,
     org.example.group.pipelines.SimplePipeline
   )
