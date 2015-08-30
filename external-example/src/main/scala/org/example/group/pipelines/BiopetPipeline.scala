@@ -1,4 +1,4 @@
-package org.example.group
+package org.example.group.pipelines
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -37,6 +37,8 @@ class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript
 
     /* Only required when using [[SummaryQScript]] */
     addSummaryQScript(shiva)
+
+    // From here you can use the output files of shiva as input file of other jobs
   }
 }
 
