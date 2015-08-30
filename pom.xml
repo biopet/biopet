@@ -16,6 +16,6 @@
     <modules>
         <module>public</module>
         <module>protected</module>
-        <module>external-examples</module>
+        <module>external-example</module>
     </modules>
 </project>
