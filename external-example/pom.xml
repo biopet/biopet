@@ -18,8 +18,15 @@
         <scoverage.plugin.version>1.0.4</scoverage.plugin.version>
         <sting.shade.phase>package</sting.shade.phase>
 
-        <!--TODO: replace app.main.class, this is the class that get executed when running the jar file -->
-        <app.main.class>org.example.group.pipelines.BiopetPipeline</app.main.class>
+        <!--
+        TODO: replace app.main.class, this is the class that get executed when running the jar file
+        This can be any executable that have a main method. In Biopet any pipeline can be used as direct executable.
+        Value for direct pipeline: 'org.example.group.pipelines.SimplePipeline'
+        In the given example is an extension of the biopet executable. In this example there are multiple pipelines in 1 executable.
+
+        It's also possible to make your own main function and call the main function with it's argument of the pipeline from there.
+        -->
+        <app.main.class>org.example.group.ExecutableExample</app.main.class>
     </properties>
 
     <dependencies>
@@ -70,7 +77,7 @@
                 <version>2.4.1</version>
                 <configuration>
                     <!--suppress MavenModelInspection -->
-                    <finalName>Magpie-${project.version}-${git.commit.id.abbrev}</finalName>
+                    <finalName>${project.artifactId}-${project.version}-${git.commit.id.abbrev}</finalName>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
@@ -221,7 +228,8 @@
                     <prefix>git</prefix>
                     <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
                     <verbose>false</verbose>
-                    <dotGitDirectory>${basedir}/../../.git</dotGitDirectory>
+                    <!-- TODO: This directory need to be changed depening where your .git folder is relative from this pom.xml -->
+                    <dotGitDirectory>${basedir}/../.git</dotGitDirectory>
                     <useNativeGit>true</useNativeGit>
                     <skipPoms>false</skipPoms>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
