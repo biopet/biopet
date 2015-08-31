@@ -99,7 +99,7 @@ object VcfWithVcf extends ToolCommand {
               | By default we will return all values found for a given field.
               | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
-              |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
+              |   - min   : takes minimum of found value, only works for numeric (integer/float) fields
               |   - unique: takes only unique values """.stripMargin
     opt[Boolean]("match") valueName "<Boolean>" maxOccurs 1 action { (x, c) =>
       c.copy(matchAllele = x)
@@ -124,7 +124,7 @@ object VcfWithVcf extends ToolCommand {
 
     for (x <- commandArgs.fields) {
       if (header.hasInfoLine(x.outputField))
-        throw new IllegalArgumentException("Field '" + x.outputField + "' already exist in input vcf")
+        throw new IllegalArgumentException("Field '" + x.outputField + "' already exists in input vcf")
       if (!secondHeader.hasInfoLine(x.inputField))
         throw new IllegalArgumentException("Field '" + x.inputField + "' does not exist in secondary vcf")
 
