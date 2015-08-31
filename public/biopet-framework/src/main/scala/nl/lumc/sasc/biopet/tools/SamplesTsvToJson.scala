@@ -44,7 +44,7 @@ object SamplesTsvToJson extends ToolCommand {
     println(jsonString)
   }
 
-  def mapFromFile(inputFile: File) : Map[String, Any] = {
+  def mapFromFile(inputFile: File): Map[String, Any] = {
     val reader = Source.fromFile(inputFile)
     val lines = reader.getLines().toList.filter(!_.isEmpty)
     val header = lines.head.split("\t")
@@ -78,7 +78,7 @@ object SamplesTsvToJson extends ToolCommand {
     librariesValues.foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
   }
 
-  def stringFromInputs(inputs: List[File]) : String = {
+  def stringFromInputs(inputs: List[File]): String = {
     val map = inputs.map(f => mapFromFile(f)).foldLeft(Map[String, Any]())((acc, kv) => mergeMaps(acc, kv))
     mapToJson(map).spaces2
   }

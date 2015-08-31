@@ -11,7 +11,6 @@ import org.testng.annotations.Test
 
 import scala.collection.JavaConversions._
 
-
 /**
  * Created by ahbbollen on 28-8-15.
  */
@@ -41,7 +40,7 @@ class PrefixFastqTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val reader = new FastqReader(temp)
 
-    for (read <- reader.iterator()){
+    for (read <- reader.iterator()) {
       read.getReadString.startsWith("AAA") shouldBe true
     }
   }

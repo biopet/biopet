@@ -13,7 +13,6 @@ import org.testng.annotations.Test
 
 import scala.collection.JavaConversions._
 
-
 /**
  * Created by ahbbollen on 27-8-15.
  */
@@ -52,7 +51,7 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def extraValidateOutVcf() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
-    val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1" ,"--minAP", "1")
+    val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1", "--minAP", "1")
     main(args)
 
     val vcfReader = new VCFFileReader(tmp, false)

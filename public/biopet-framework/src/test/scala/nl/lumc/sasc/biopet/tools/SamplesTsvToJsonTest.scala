@@ -8,7 +8,6 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-
 /**
  * Created by ahbbollen on 28-8-15.
  */
@@ -28,22 +27,22 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testNoSampleColumn() = {
     val tsv = resourcePath("/no_sample.tsv")
-    val thrown = the [IllegalStateException] thrownBy main(Array("-i", tsv))
-    thrown.getMessage should equal ("Sample column does not exist in: "  + tsv)
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    thrown.getMessage should equal("Sample column does not exist in: " + tsv)
   }
 
   @Test
   def testNumberInLibs = {
     val tsv = resourcePath("/number.tsv")
-    val thrown = the [IllegalStateException] thrownBy main(Array("-i", tsv))
-    thrown.getMessage should equal ("Sample or library may not start with a number")
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    thrown.getMessage should equal("Sample or library may not start with a number")
   }
 
   @Test
   def testSampleIDs = {
     val tsv = resourcePath("/same.tsv")
-    val thrown = the [IllegalStateException] thrownBy main(Array("-i", tsv))
-    thrown.getMessage should equal ("Combination of Sample_ID_1 and Lib_ID_1 is found multiple times")
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    thrown.getMessage should equal("Combination of Sample_ID_1 and Lib_ID_1 is found multiple times")
 
   }
 
@@ -52,7 +51,7 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
     val tsv = new File(resourcePath("/sample.tsv"))
     val json = stringFromInputs(List(tsv))
 
-    json should equal (
+    json should equal(
       """|{
         |  "samples" : {
         |    "Sample_ID_1" : {
@@ -72,7 +71,5 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
         |  }
         |}""".stripMargin)
   }
-
-
 
 }
