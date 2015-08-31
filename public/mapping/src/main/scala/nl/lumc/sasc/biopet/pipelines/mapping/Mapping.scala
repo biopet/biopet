@@ -239,7 +239,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
         case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
-      if (config("chunk_metrics", default = false))
+      if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
         addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
     }
     if (!skipFlexiprep) {

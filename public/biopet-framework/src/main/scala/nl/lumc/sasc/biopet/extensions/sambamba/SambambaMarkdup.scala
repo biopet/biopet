@@ -60,7 +60,7 @@ object SambambaMarkdup {
   }
 
   def apply(root: Configurable, input: File): SambambaMarkdup = {
-    apply(root, input, new File(swapExtension(input.getCanonicalPath)))
+    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
   }
 
   private def swapExtension(inputFile: String) = inputFile.stripSuffix(".bam") + ".dedup.bam"
