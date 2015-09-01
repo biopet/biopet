@@ -29,6 +29,7 @@ import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
+import scala.language.reflectiveCalls
 
 import scala.collection.JavaConversions._
 
