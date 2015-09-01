@@ -63,7 +63,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runThreadN")
 
-  override def defaultCoreMemory = 4.0
+  override def defaultCoreMemory = 6.0
   override def defaultThreads = 8
 
   /** Sets output files for the graph */
@@ -72,7 +72,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     if (reference == null) reference = referenceFasta()
     genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
-    val prefix = if (outFileNamePrefix != null) outputDir + outFileNamePrefix else outputDir
+    val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir + File.separator
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")

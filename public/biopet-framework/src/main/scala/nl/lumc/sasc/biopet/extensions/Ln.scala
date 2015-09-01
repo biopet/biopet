@@ -51,20 +51,14 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
   lazy val cmd: String = {
     lazy val inCanonical: String = {
       // need to remove "/~" to correctly expand path with tilde
-      input.getCanonicalPath.replace("/~", "")
+      input.getAbsolutePath.replace("/~", "")
     }
 
-    lazy val outCanonical: String = {
-      output.getCanonicalPath.replace("/~", "")
-    }
+    lazy val outCanonical: String = output.getAbsolutePath.replace("/~", "")
 
-    lazy val inToks: Array[String] = {
-      inCanonical.split(File.separator)
-    }
+    lazy val inToks: Array[String] = inCanonical.split(File.separator)
 
-    lazy val outToks: Array[String] = {
-      outCanonical.split(File.separator)
-    }
+    lazy val outToks: Array[String] = outCanonical.split(File.separator)
 
     lazy val commonPrefixLength: Int = {
       val maxLength = scala.math.min(inToks.length, outToks.length)

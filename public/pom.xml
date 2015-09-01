@@ -72,6 +72,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.18.1</version>
                 <configuration>
+                    <forkCount>1C</forkCount>
                     <workingDirectory>${project.build.directory}</workingDirectory>
                 </configuration>
             </plugin>
@@ -153,6 +154,7 @@
                             <goal>format</goal>
                         </goals>
                         <configuration>
+                            <baseDir>${basedir}/src</baseDir>
                             <rewriteArrowSymbols>false</rewriteArrowSymbols>
                             <alignParameters>true</alignParameters>
                             <alignSingleLineCaseStatements_maxArrowIndent>40

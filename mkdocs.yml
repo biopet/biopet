@@ -3,6 +3,7 @@ pages:
 - Home: 'index.md'
 - General:
     - Config: 'general/config.md'
+    - Requirements: 'general/requirements.md'
 - Pipelines:
     - Basty: 'pipelines/basty.md'
     - Bam2Wig: 'pipelines/bam2wig.md'
@@ -38,4 +39,4 @@ pages:
 - License: 'license.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs
-repo_url: https://git.lumc.nl/biopet/biopet
+repo_url: https://github.com/biopet/biopet

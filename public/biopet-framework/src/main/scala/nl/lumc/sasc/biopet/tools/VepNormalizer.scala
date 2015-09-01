@@ -47,8 +47,8 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Output VCF", shortName = "OutputFile", required = true)
   var outputVcf: File = null
 
-  var mode: String = config("mode", default = "explode")
-  var doNotRemove: Boolean = config("donotremove", default = false)
+  var mode: String = config("mode", default = "standard")
+  var doNotRemove: Boolean = config("do_not_remove", default = false)
 
   override def defaultCoreMemory = 1.0
 
