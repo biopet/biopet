@@ -43,31 +43,8 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
     // below is FreeC specific
 
-    val sampileup = new SamtoolsMpileup(this)
-    sampileup.input = List(bamFile)
-    sampileup.output = new File(outputDir, outputName + ".pileup.gz")
-
-    //TODO: need piping support
-    val smilepig = new CommandLineFunction {
-      @Input
-      var input = List(bamFile)
-
-      @Output
-      var output = new File(outputDir, outputName + ".pileup.gz")
-
-      val sampileup = new SamtoolsMpileup(qscript)
-      sampileup.input ::= bamFile
-
-      analysisName = "smilepig"
-      nCoresRequest = 2
-      isIntermediate = true
-      //TODO: pigz must be a extension
-      def commandLine: String = sampileup.cmdPipe + " | pigz -9 -p 4 -c > " + output.getAbsolutePath
-    }
-    add(smilepig)
-
     val freec = new FreeC(this)
-    freec.input = smilepig.output
+    freec.input = bamFile
     freec.outputPath = new File(outputDir, "cnv")
     add(freec)
 

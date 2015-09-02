@@ -65,7 +65,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
   // Default of 10k bins
   var window: Option[Int] = config("window", default = 10000)
-  var snpFile: String = config("snpFile")
+  var snpFile: Option[String] = config("snpFile")
 
   var samtoolsExe: String = config(key = "exe", submodule = "samtools")
 
@@ -125,7 +125,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
     // 0 = Single End
     writer.println("mateOrientation=FR")
     writer.println("[BAF]")
-    writer.println("SNPfile=" + this.snpFile)
+    snpFile.foreach(x => writer.println("SNPfile=" + x))
 
     writer.close()
   }
