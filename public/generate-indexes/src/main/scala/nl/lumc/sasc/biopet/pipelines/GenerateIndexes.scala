@@ -41,6 +41,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   var referenceConfig: Map[String, Any] = Map()
 
+  var configDeps: List[File] = Nil
+
   def outputConfigFile = new File(outputDir, "reference.json")
 
   /** This is executed before the script starts */
@@ -76,6 +78,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           add(curl)
           add(Md5sum(this, curl.output, genomeDir))
+          configDeps :+= curl.output
           curl.output
         }
 
@@ -109,10 +112,12 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             }
           }
           add(fastaCat)
+          configDeps :+= fastaCat.output
         }
 
         val faidx = SamtoolsFaidx(this, fastaFile)
         add(faidx)
+        configDeps :+= faidx.output
 
         val createDict = new CreateSequenceDictionary(this)
         createDict.reference = fastaFile
@@ -121,6 +126,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         createDict.genomeAssembly = Some(genomeName)
         createDict.uri = Some(fastaUris.mkString(","))
         add(createDict)
+        configDeps :+= createDict.output
 
         def createLinks(dir: File): File = {
           val newFastaFile = new File(dir, fastaFile.getName)
@@ -181,6 +187,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             tabix.p = Some("vcf")
             tabix.isIntermediate = true
             add(tabix)
+            configDeps :+= tabix.outputIndex
             cv.deps ::= tabix.outputIndex
           }
 
@@ -198,6 +205,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val bwaIndex = new BwaIndex(this)
         bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
         add(bwaIndex)
+        configDeps :+= bwaIndex.jobOutputFile
         outputConfig += "bwa" -> Map("reference_fasta" -> bwaIndex.reference.getAbsolutePath)
 
         // Gmap index
@@ -207,6 +215,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         gmapBuild.db = genomeName
         gmapBuild.fastaFiles ::= createLinks(gmapDir)
         add(gmapBuild)
+        configDeps :+= gmapBuild.jobOutputFile
         outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
         outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
 
@@ -216,6 +225,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         starIndex.reference = createLinks(starDir)
         starIndex.runmode = "genomeGenerate"
         add(starIndex)
+        configDeps :+= starIndex.jobOutputFile
         outputConfig += "star" -> Map(
           "reference_fasta" -> starIndex.reference.getAbsolutePath,
           "genomeDir" -> starDir.getAbsolutePath
@@ -225,12 +235,14 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         bowtieIndex.reference = createLinks(new File(genomeDir, "bowtie"))
         bowtieIndex.baseName = "reference"
         add(bowtieIndex)
+        configDeps :+= bowtieIndex.jobOutputFile
         outputConfig += "bowtie" -> Map("reference_fasta" -> bowtieIndex.reference.getAbsolutePath)
 
         val bowtie2Index = new Bowtie2Build(this)
         bowtie2Index.reference = createLinks(new File(genomeDir, "bowtie2"))
         bowtie2Index.baseName = "reference"
         add(bowtie2Index)
+        configDeps :+= bowtie2Index.jobOutputFile
         outputConfig += "bowtie2" -> Map("reference_fasta" -> bowtie2Index.reference.getAbsolutePath)
         outputConfig += "tophat" -> Map(
           "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
@@ -240,10 +252,15 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
       }
     }
 
-    //TODO: make this a [InprocessFunction]
-    val writer = new PrintWriter(outputConfigFile)
-    writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
-    writer.close()
+    add(new InProcessFunction {
+      @Input val deps: List[File] = configDeps
+
+      def run: Unit = {
+        val writer = new PrintWriter(outputConfigFile)
+        writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
+        writer.close()
+      }
+    })
   }
 }
 
