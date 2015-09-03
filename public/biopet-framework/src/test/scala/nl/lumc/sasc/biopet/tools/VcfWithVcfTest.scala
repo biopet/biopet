@@ -17,13 +17,16 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 import java.nio.file.Paths
+import java.util
 
+import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 import scala.util.Random
+import scala.collection.JavaConversions._
 
 /**
  * Test class for [[VcfWithVcfTest]]
@@ -38,7 +41,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   val veppedPath = resourcePath("/VEP_oneline.vcf.gz")
-  val unveppedPath = resourcePath("/unvepped.vcf.gz")
+  val unveppedPath = resourcePath("/unvep_online.vcf.gz")
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
@@ -89,6 +92,72 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     an [IllegalArgumentException] should be thrownBy main(args)
     val thrown = the [IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Type of field CSQ is not numeric")
+  }
+
+  @Test
+  def testFieldMap = {
+    val unvep_record = new VCFFileReader(new File(unveppedPath)).iterator().next()
+
+    var fields = List(new Fields("FG", "FG"))
+    fields :::= List(new Fields("FD", "FD"))
+    fields :::= List(new Fields("GM", "GM"))
+    fields :::= List(new Fields("GL", "GL"))
+    fields :::= List(new Fields("CP", "CP"))
+    fields :::= List(new Fields("CG", "CG"))
+    fields :::= List(new Fields("CN", "CN"))
+    fields :::= List(new Fields("DSP", "DSP"))
+    fields :::= List(new Fields("AC", "AC"))
+    fields :::= List(new Fields("AF", "AF"))
+    fields :::= List(new Fields("AN", "AN"))
+    fields :::= List(new Fields("BaseQRankSum", "BaseQRankSum"))
+    fields :::= List(new Fields("DP", "DP"))
+    fields :::= List(new Fields("FS", "FS"))
+    fields :::= List(new Fields("MLEAC", "MLEAC"))
+    fields :::= List(new Fields("MLEAF", "MLEAF"))
+    fields :::= List(new Fields("MQ", "MQ"))
+    fields :::= List(new Fields("MQ0", "MQ0"))
+    fields :::= List(new Fields("MQRankSum", "MQRankSum"))
+    fields :::= List(new Fields("QD", "QD"))
+    fields :::= List(new Fields("RPA", "RPA"))
+    fields :::= List(new Fields("RU", "RU"))
+    fields :::= List(new Fields("ReadPosRankSum", "ReadPosRankSum"))
+    fields :::= List(new Fields("VQSLOD", "VQSLOD"))
+    fields :::= List(new Fields("culprit", "culprit"))
+
+
+    val fieldMap = createFieldMap(fields, List(unvep_record))
+
+    fieldMap("FG") shouldBe List("intron")
+    fieldMap("FD") shouldBe List("unknown")
+    fieldMap("GM") shouldBe List("NM_152486.2")
+    fieldMap("GL") shouldBe List("SAMD11")
+    fieldMap("CP") shouldBe List("0.000")
+    fieldMap("CG") shouldBe List("-1.630")
+    val cn = new util.ArrayList[String]
+    cn.addAll(List("2294", "3274", "30362", "112930"))
+    fieldMap("CN") shouldBe List(cn)
+    fieldMap("DSP") shouldBe List("107")
+    fieldMap("AC") shouldBe List("2")
+    fieldMap("AF") shouldBe List("0.333")
+    fieldMap("AN") shouldBe List("6")
+    fieldMap("DP") shouldBe List("124")
+    fieldMap("FS") shouldBe List("1.322")
+    fieldMap("MLEAC") shouldBe List("2")
+    fieldMap("MLEAF") shouldBe List("0.333")
+    fieldMap("MQ") shouldBe List("60.0")
+    fieldMap("MQ0") shouldBe List("0")
+    fieldMap("MQRankSum") shouldBe List("-0.197")
+    fieldMap("QD") shouldBe List("19.03")
+    val rpa = new util.ArrayList[String]
+    rpa.addAll(List("1", "2"))
+    fieldMap("RPA") shouldBe List(rpa)
+    fieldMap("RU") shouldBe List("A")
+    fieldMap("ReadPosRankSum") shouldBe List("-0.424")
+    fieldMap("VQSLOD") shouldBe List("0.079")
+    fieldMap("culprit") shouldBe List("FS")
+
+
+    
   }
 
 }
