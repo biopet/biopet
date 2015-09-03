@@ -46,7 +46,7 @@ object SummaryToTsv extends ToolCommand {
     opt[String]('m', "mode") maxOccurs 1 unbounded () valueName "<root|sample|lib>" action { (x, c) =>
       c.copy(mode = x)
     } validate {
-      x => if (Set("root","sample","lib").contains(x)) success else failure("Unsupported mode")
+      x => if (Set("root", "sample", "lib").contains(x)) success else failure("Unsupported mode")
     } text
       """
         |Determines on what level to aggregate data.

@@ -11,7 +11,6 @@ import org.testng.annotations.Test
 
 import nl.lumc.sasc.biopet.core.summary.Summary
 
-
 /**
  * Created by ahbbollen on 31-8-15.
  */
@@ -34,7 +33,7 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test
-  def testHeader  = {
+  def testHeader = {
     val tsv = resourcePath("/test.summary.json")
     val path = List("something=flexiprep:settings:skip_trim")
 
