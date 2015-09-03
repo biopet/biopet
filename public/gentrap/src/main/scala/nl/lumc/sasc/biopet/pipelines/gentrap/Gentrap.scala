@@ -552,7 +552,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x40")
+            job.f = List("0x80")
             job.F = List("0x10")
             job.output = createFile(".r2.bam")
             job.isIntermediate = true
@@ -594,7 +594,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x80")
+            job.f = List("0x40")
             job.F = List("0x10")
             job.output = createFile(".r1.bam")
             job.isIntermediate = true
