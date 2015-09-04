@@ -101,22 +101,22 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Default pipeline config */
   override def defaults = Map(
-      "gsnap" -> Map(
-        "novelsplicing" -> 1,
-        "batch" -> 4,
-        "format" -> "sam"
-      ),
-      "cutadapt" -> Map("minimum_length" -> 20),
-      // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
-      "picard" -> Map(
-        "programrecordid" -> "null"
-      ),
-      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map(
-        "skip_markduplicates" -> true,
-        "skip_metrics" -> true
-      )
+    "gsnap" -> Map(
+      "novelsplicing" -> 1,
+      "batch" -> 4,
+      "format" -> "sam"
+    ),
+    "cutadapt" -> Map("minimum_length" -> 20),
+    // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
+    "picard" -> Map(
+      "programrecordid" -> "null"
+    ),
+    // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "skip_metrics" -> true
     )
+  )
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)

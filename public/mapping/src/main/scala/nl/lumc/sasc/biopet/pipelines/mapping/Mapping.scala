@@ -98,11 +98,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
   override def defaults = Map(
-      "gsnap" -> Map(
-        "batch" -> 4,
-        "format" -> "sam"
-      )
+    "gsnap" -> Map(
+      "batch" -> 4,
+      "format" -> "sam"
     )
+  )
 
   /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
