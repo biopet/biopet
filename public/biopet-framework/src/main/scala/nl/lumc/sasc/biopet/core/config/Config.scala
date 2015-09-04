@@ -23,10 +23,10 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 /**
  * This class can store nested config values
- * @param map Map with value for new config
+ * @param _map Map with value for new config
  * @constructor Load config with existing map
  */
-class Config(var map: Map[String, Any],
+class Config(protected var _map: Map[String, Any],
              protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
@@ -35,6 +35,8 @@ class Config(var map: Map[String, Any],
     this(Map())
     loadDefaultConfig()
   }
+
+  def map = _map
 
   /**
    * Loading a environmental variable as location of config files to merge into the config
@@ -71,9 +73,9 @@ class Config(var map: Map[String, Any],
       else defaults = mergeMaps(configMap, defaults)
       logger.debug("New defaults: " + defaults)
     } else {
-      if (map.isEmpty) map = configMap
-      else map = mergeMaps(configMap, map)
-      logger.debug("New config: " + map)
+      if (_map.isEmpty) _map = configMap
+      else _map = mergeMaps(configMap, _map)
+      logger.debug("New config: " + _map)
     }
   }
 
@@ -87,7 +89,7 @@ class Config(var map: Map[String, Any],
   def addValue(key: String, value: Any, path: List[String] = Nil, default: Boolean = false): Unit = {
     val valueMap = path.foldRight(Map(key -> value))((a, b) => Map(a -> b))
     if (default) defaults = mergeMaps(valueMap, defaults)
-    else map = mergeMaps(valueMap, map)
+    else _map = mergeMaps(valueMap, _map)
   }
 
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
@@ -106,7 +108,7 @@ class Config(var map: Map[String, Any],
    * @param s key
    * @return True if exist
    */
-  def contains(s: String): Boolean = map.contains(s)
+  def contains(s: String): Boolean = _map.contains(s)
 
   /**
    * Checks if value exist in config
@@ -131,7 +133,7 @@ class Config(var map: Map[String, Any],
         fixedCache += (requestedIndex -> fixedValue.get)
         true
       } else {
-        val value = Config.getValueFromMap(map, requestedIndex)
+        val value = Config.getValueFromMap(_map, requestedIndex)
         if (value.isDefined && value.get.value != None) {
           foundCache += (requestedIndex -> value.get)
           true
@@ -215,7 +217,7 @@ class Config(var map: Map[String, Any],
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(this.map, "input")
+    writeMapToJsonFile(this._map, "input")
     writeMapToJsonFile(found, "found")
     writeMapToJsonFile(effectiveFound, "effective.found")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")
@@ -224,7 +226,7 @@ class Config(var map: Map[String, Any],
     writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
-  override def toString: String = map.toString()
+  override def toString: String = _map.toString()
 }
 
 object Config extends Logging {
@@ -236,7 +238,7 @@ object Config extends Logging {
    * @param config2 Low prio map
    * @return Merged config
    */
-  def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
+  def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1._map, config2._map))
 
   /**
    * Search for value in index position in a map
