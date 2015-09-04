@@ -91,6 +91,7 @@ class Config(var map: Map[String, Any],
   }
 
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
+  protected[config] var fixedCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] def clearCache(): Unit = {
@@ -112,17 +113,32 @@ class Config(var map: Map[String, Any],
    * @param requestedIndex Index to value
    * @return True if exist
    */
-  def contains(requestedIndex: ConfigValueIndex): Boolean =
+  def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex, Map())
+
+  /**
+   * Checks if value exist in config
+   * @param requestedIndex Index to value
+   * @param fixedValues Fixed values
+   * @return True if exist
+   */
+  def contains(requestedIndex: ConfigValueIndex, fixedValues: Map[String, Any]): Boolean =
     if (notFoundCache.contains(requestedIndex)) false
+    else if (fixedCache.contains(requestedIndex)) true
     else if (foundCache.contains(requestedIndex)) true
     else {
-      val value = Config.getValueFromMap(map, requestedIndex)
-      if (value.isDefined && value.get.value != None) {
-        foundCache += (requestedIndex -> value.get)
+      val fixedValue = Config.getValueFromMap(fixedValues, requestedIndex)
+      if (fixedValue.isDefined) {
+        fixedCache += (requestedIndex -> fixedValue.get)
         true
       } else {
-        notFoundCache +:= requestedIndex
-        false
+        val value = Config.getValueFromMap(map, requestedIndex)
+        if (value.isDefined && value.get.value != None) {
+          foundCache += (requestedIndex -> value.get)
+          true
+        } else {
+          notFoundCache +:= requestedIndex
+          false
+        }
       }
     }
 
@@ -134,9 +150,12 @@ class Config(var map: Map[String, Any],
    * @param freeVar Default true, if set false value must exist in module
    * @return True if exist
    */
-  def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
+  def contains(module: String, path: List[String],
+               key: String,
+               freeVar: Boolean = true,
+               fixedValues: Map[String, Any] = Map()): Boolean = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    contains(requestedIndex)
+    contains(requestedIndex, fixedValues)
   }
 
   /**
@@ -148,9 +167,14 @@ class Config(var map: Map[String, Any],
    * @param freeVar Default true, if set false value must exist in module
    * @return Config value
    */
-  protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
+  protected[config] def apply(module: String,
+                              path: List[String],
+                              key: String,
+                              default: Any = null,
+                              freeVar: Boolean = true,
+                              fixedValues: Map[String, Any] = Map()): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    if (contains(requestedIndex)) foundCache(requestedIndex)
+    if (contains(requestedIndex, fixedValues)) fixedCache.get(requestedIndex).getOrElse(foundCache(requestedIndex))
     else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
       defaultCache(requestedIndex)

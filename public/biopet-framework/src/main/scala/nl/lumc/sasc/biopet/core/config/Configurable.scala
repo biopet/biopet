@@ -40,6 +40,12 @@ trait Configurable extends ImplicitConversions {
     else globalConfig.defaults
   }
 
+  /** All values found in this map will be skipped from the user config */
+  def fixedValues: Map[String, Any] = {
+    if (root != null) root.fixedValues
+    else Map()
+  }
+
   val config = new ConfigFunctions
 
   /**
@@ -93,8 +99,8 @@ trait Configurable extends ImplicitConversions {
         val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (d == null) globalConfig(m, p, key, freeVar = freeVar)
-      else globalConfig(m, p, key, d, freeVar)
+      if (d == null) globalConfig(m, p, key, freeVar = freeVar, fixedValues = fixedValues)
+      else globalConfig(m, p, key, d, freeVar, fixedValues = fixedValues)
     }
 
     /**
@@ -117,7 +123,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
 
-      globalConfig.contains(m, p, key, freeVar) || Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
+      globalConfig.contains(m, p, key, freeVar, fixedValues) || Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }
   }
 }
