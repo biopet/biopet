@@ -38,6 +38,7 @@ trait Configurable extends ImplicitConversions {
   /** Map to store defaults for config */
   def defaults: Map[String, Any] = Map()
 
+  /** This method merge defaults from the root to it's own */
   protected def internalDefaults: Map[String, Any] = {
     (root != null, defaults.isEmpty) match {
       case (true, true)   => root.defaults
@@ -50,6 +51,7 @@ trait Configurable extends ImplicitConversions {
   /** All values found in this map will be skipped from the user config */
   def fixedValues: Map[String, Any] = Map()
 
+  /** This method merge fixedValues from the root to it's own */
   protected def internalFixedValues: Map[String, Any] = {
     (root != null, fixedValues.isEmpty) match {
       case (true, true)   => root.fixedValues
