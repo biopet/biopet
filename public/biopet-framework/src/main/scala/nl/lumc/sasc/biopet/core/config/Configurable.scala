@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.core.config
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
@@ -35,9 +36,15 @@ trait Configurable extends ImplicitConversions {
   protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
-  def defaults: Map[String, Any] = {
-    if (root != null) root.defaults
-    else globalConfig.defaults
+  def defaults: Map[String, Any] = Map()
+
+  protected def internalDefaults: Map[String, Any] = {
+    (root != null, defaults.isEmpty) match {
+      case (true, true)   => root.defaults
+      case (true, false)  => ConfigUtils.mergeMaps(defaults, root.defaults)
+      case (false, true)  => globalConfig.defaults
+      case (false, false) => ConfigUtils.mergeMaps(defaults, globalConfig.defaults)
+    }
   }
 
   /** All values found in this map will be skipped from the user config */
@@ -96,7 +103,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
       val d = {
-        val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
+        val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
       if (d == null) globalConfig(m, p, key, freeVar = freeVar, fixedValues = fixedValues)
@@ -123,7 +130,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
 
-      globalConfig.contains(m, p, key, freeVar, fixedValues) || Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
+      globalConfig.contains(m, p, key, freeVar, fixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }
   }
 }

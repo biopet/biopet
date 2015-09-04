@@ -35,10 +35,10 @@ trait BastyTrait extends MultiSampleQScript {
 
   def variantcallers = List("freebayes")
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
-  ), super.defaults)
+  )
 
   lazy val shiva: ShivaTrait = new Shiva(qscript)
 

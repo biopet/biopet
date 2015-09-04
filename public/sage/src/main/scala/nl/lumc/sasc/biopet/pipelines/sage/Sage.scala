@@ -36,7 +36,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   var transcriptome: Option[File] = config("transcriptome")
   var tagsLibrary: Option[File] = config("tags_library")
 
-  override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
+  override def defaults = Map(
+    "bowtie" -> Map(
     "m" -> 1,
     "k" -> 1,
     "best" -> true,
@@ -50,7 +51,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
     "skip_clip" -> true,
     "skip_trim" -> true
   ), "strandSensitive" -> true
-  ), super.defaults)
+  )
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 

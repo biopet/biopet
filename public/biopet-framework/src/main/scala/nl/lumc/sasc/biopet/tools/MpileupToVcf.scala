@@ -51,8 +51,7 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Refer
 
   override def defaultCoreMemory = 3.0
 
-  override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
-    super.defaults)
+  override def defaults = Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
 
   override def beforeGraph() {
     super.beforeGraph()

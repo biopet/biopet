@@ -100,8 +100,7 @@ class Gentrap(val root: Configurable) extends QScript
     })
 
   /** Default pipeline config */
-  override def defaults = ConfigUtils.mergeMaps(
-    Map(
+  override def defaults = Map(
       "gsnap" -> Map(
         "novelsplicing" -> 1,
         "batch" -> 4,
@@ -117,7 +116,7 @@ class Gentrap(val root: Configurable) extends QScript
         "skip_markduplicates" -> true,
         "skip_metrics" -> true
       )
-    ), super.defaults)
+    )
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
