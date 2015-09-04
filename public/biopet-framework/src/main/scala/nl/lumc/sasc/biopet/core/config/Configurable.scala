@@ -48,9 +48,15 @@ trait Configurable extends ImplicitConversions {
   }
 
   /** All values found in this map will be skipped from the user config */
-  def fixedValues: Map[String, Any] = {
-    if (root != null) root.fixedValues
-    else Map()
+  def fixedValues: Map[String, Any] = Map()
+
+  protected def internalFixedValues: Map[String, Any] = {
+    (root != null, fixedValues.isEmpty) match {
+      case (true, true)   => root.fixedValues
+      case (true, false)  => ConfigUtils.mergeMaps(fixedValues, root.fixedValues)
+      case (false, true)  => Map()
+      case (false, false) => ConfigUtils.mergeMaps(fixedValues, globalConfig.defaults)
+    }
   }
 
   val config = new ConfigFunctions
@@ -106,8 +112,8 @@ trait Configurable extends ImplicitConversions {
         val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (d == null) globalConfig(m, p, key, freeVar = freeVar, fixedValues = fixedValues)
-      else globalConfig(m, p, key, d, freeVar, fixedValues = fixedValues)
+      if (d == null) globalConfig(m, p, key, freeVar = freeVar, fixedValues = internalFixedValues)
+      else globalConfig(m, p, key, d, freeVar, fixedValues = internalFixedValues)
     }
 
     /**
@@ -130,7 +136,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
 
-      globalConfig.contains(m, p, key, freeVar, fixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
+      globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }
   }
 }
