@@ -207,9 +207,11 @@ class Config(protected var _map: Map[String, Any],
 
     // Positions where values are found
     val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
+    val fixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
 
     // Positions where to start searching
     val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
+    val effectiveFixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val effectiveDefaultFound = convertIndexValuesToMap(defaultCache.filter(_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val notFound = convertIndexValuesToMap(notFoundCache.map((_, None)), Some(false))
 
@@ -217,9 +219,12 @@ class Config(protected var _map: Map[String, Any],
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(this._map, "input")
+    writeMapToJsonFile(this.map, "input")
+    writeMapToJsonFile(this.defaults, "defaults")
     writeMapToJsonFile(found, "found")
+    writeMapToJsonFile(fixed, "fixed")
     writeMapToJsonFile(effectiveFound, "effective.found")
+    writeMapToJsonFile(effectiveFixed, "effective.fixed")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")
     writeMapToJsonFile(notFound, "not.found")
     writeMapToJsonFile(fullEffective, "effective.full")
