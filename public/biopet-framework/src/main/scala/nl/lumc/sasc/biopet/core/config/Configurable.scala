@@ -54,10 +54,9 @@ trait Configurable extends ImplicitConversions {
   /** This method merge fixedValues from the root to it's own */
   protected def internalFixedValues: Map[String, Any] = {
     (root != null, fixedValues.isEmpty) match {
-      case (true, true)   => root.fixedValues
-      case (true, false)  => ConfigUtils.mergeMaps(fixedValues, root.fixedValues)
-      case (false, true)  => Map()
-      case (false, false) => ConfigUtils.mergeMaps(fixedValues, globalConfig.defaults)
+      case (true, true)  => root.internalFixedValues
+      case (true, false) => ConfigUtils.mergeMaps(fixedValues, root.internalFixedValues)
+      case _             => fixedValues
     }
   }
 
