@@ -66,8 +66,8 @@ class MergeTables(val root: Configurable) extends ToolCommandFuntion {
   var delimiter: Option[String] = config("delimiter")
 
   // executed command line
-  override def commandLine =
-    super.commandLine +
+  override def cmdLine =
+    super.cmdLine +
       required("-i", idColumnIndices.mkString(",")) +
       required("-a", valueColumnIndex) +
       optional("-n", idColumnName) +

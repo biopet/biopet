@@ -51,7 +51,7 @@ class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     repeat("-I", input) +
     required("-o", output) +
     required("-R", reference)

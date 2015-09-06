@@ -78,7 +78,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
     }
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", outputName, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=true") +

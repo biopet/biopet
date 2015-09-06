@@ -55,7 +55,7 @@ class CombineVariants(val root: Configurable) extends Gatk {
     }
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     (for (file <- inputFiles) yield {
       inputMap.get(file) match {
         case Some(name) => required("-V:" + name, file)

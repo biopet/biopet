@@ -68,7 +68,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
     else super.getVersion
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("TMP_DIR=" + jobTempDir) +
     optional("VERBOSITY=", verbosity, spaceSeparated = false) +
     conditional(quiet, "QUIET=TRUE") +

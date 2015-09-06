@@ -70,14 +70,14 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Refer
     }
   }
 
-  override def commandLine = {
+  override def cmdLine = {
     (if (inputMpileup == null) {
       val samtoolsMpileup = new SamtoolsMpileup(this)
       samtoolsMpileup.reference = referenceFasta()
       samtoolsMpileup.input = List(inputBam)
       samtoolsMpileup.cmdPipe + " | "
     } else "") +
-      super.commandLine +
+      super.cmdLine +
       required("-o", output) +
       optional("--minDP", minDP) +
       optional("--minAP", minAP) +

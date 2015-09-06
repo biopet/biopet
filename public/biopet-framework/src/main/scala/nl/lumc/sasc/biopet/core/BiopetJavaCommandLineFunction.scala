@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
 /** Biopet commandline class for java based programs */
-trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
+trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunction {
   executable = config("java", default = "java", submodule = "java", freeVar = false)
 
   javaGCThreads = config("java_gc_threads")
@@ -32,24 +32,24 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
 
   /** Creates command to execute extension */
-  override def commandLine: String = {
+  def cmdLine: String = {
     preCmdInternal()
-    val cmd = super.commandLine
-    val finalCmd = executable + cmd.substring(cmd.indexOf(" "))
-    cmd
+    required(executable) +
+      javaOpts +
+      javaExecutable
   }
 
   def javaVersionCommand: String = executable + " -version"
 
   def getJavaVersion: Option[String] = {
-    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+    if (!BiopetCommandLineFunction.executableCache.contains(executable))
       preProcessExecutable()
-    if (!BiopetCommandLineFunctionTrait.versionCache.contains(javaVersionCommand))
+    if (!BiopetCommandLineFunction.versionCache.contains(javaVersionCommand))
       getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
-        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += javaVersionCommand -> version
+        case Some(version) => BiopetCommandLineFunction.versionCache += javaVersionCommand -> version
         case _             =>
       }
-    BiopetCommandLineFunctionTrait.versionCache.get(javaVersionCommand)
+    BiopetCommandLineFunction.versionCache.get(javaVersionCommand)
   }
 
   override def setupRetry(): Unit = {

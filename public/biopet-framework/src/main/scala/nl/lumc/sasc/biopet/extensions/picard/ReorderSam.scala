@@ -45,7 +45,7 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +
     conditional(allowContigLengthDiscordance, "ALLOW_CONTIG_LENGTH_DISCORDANCE=TRUE") +
     required("REFERENCE=", reference, spaceSeparated = false) +

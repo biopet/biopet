@@ -60,7 +60,7 @@ class CollectTargetedPcrMetrics(val root: Configurable) extends Picard with Summ
     if (reference == null) reference = referenceFasta()
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +

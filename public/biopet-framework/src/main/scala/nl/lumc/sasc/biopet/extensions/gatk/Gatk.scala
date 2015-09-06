@@ -61,7 +61,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-T", analysisType) +
     required("-R", reference) +
     optional("-K", gatkKey) +

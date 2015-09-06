@@ -73,8 +73,8 @@ trait Reference extends Configurable {
     val fai = new File(file.getAbsolutePath + ".fai")
 
     this match {
-      case c: BiopetCommandLineFunctionTrait => c.deps :::= dict :: fai :: Nil
-      case _                                 =>
+      case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
+      case _                            =>
     }
 
     file

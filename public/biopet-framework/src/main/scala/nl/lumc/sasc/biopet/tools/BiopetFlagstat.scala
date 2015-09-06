@@ -41,7 +41,7 @@ class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Sum
 
   override def defaultCoreMemory = 6.0
 
-  override def commandLine = super.commandLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
+  override def cmdLine = super.cmdLine + required("-I", input) + required("-s", summaryFile) + " > " + required(output)
 
   def summaryFiles: Map[String, File] = Map()
 

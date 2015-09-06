@@ -32,7 +32,7 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
   @Argument(doc = "Insertsize")
   var insertsize: Option[Int] = _
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     "-i" + required(input) +
     "-s" + required(insertsize) +
     "-o" + required(output)

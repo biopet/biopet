@@ -21,7 +21,7 @@ class SquishBed(val root: Configurable) extends ToolCommandFuntion {
 
   var strandSensitive: Boolean = config("strandSensitive", default = false)
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", output) +
     conditional(strandSensitive, "-s")

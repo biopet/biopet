@@ -47,8 +47,8 @@ class Mpileup2cns(val root: Configurable) extends Varscan {
     variants.foreach { case v => require(validValues.contains(v), "variants value must be either 0 or 1") }
   }
 
-  override def commandLine = {
-    val baseCommand = super.commandLine + required("mpileup2cns") +
+  override def cmdLine = {
+    val baseCommand = super.cmdLine + required("mpileup2cns") +
       required("", input) +
       required("--min-coverage", minCoverage) +
       required("--min-reads2", minReads2) +

@@ -35,7 +35,7 @@ class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFuntio
 
   override def defaultCoreMemory = 3.0
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", output)
 }
