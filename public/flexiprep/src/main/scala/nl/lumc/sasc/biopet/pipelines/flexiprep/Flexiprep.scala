@@ -37,13 +37,19 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Skip Clip fastq files */
   var skipClip: Boolean = config("skip_clip", default = false)
 
+  /** Make a final fastq files, by default only when flexiprep is the main pipeline */
+  var keepQcFastqFiles: Boolean = config("keepQcFastqFiles", default = root == null)
+
   /** Location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".qc.summary.json")
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
-    Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
-      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
+    if (!skipTrim || !skipClip)
+      Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
+        (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
+    else Map("input_R1" -> input_R1) ++
+      (if (paired) Map("input_R2" -> input_R2.get) else Map())
   }
 
   /** returns settings to store in summary */
@@ -264,13 +270,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
     val R2 = new File(outputDir, R2_name + ".qc" + R2_ext + ".gz")
 
-    add(Gzip(this, fastq_R1, R1))
-    if (paired) add(Gzip(this, fastq_R2, R2))
-
-    outputFiles += ("output_R1_gzip" -> R1)
-    if (paired) outputFiles += ("output_R2_gzip" -> R2)
-
     if (!skipTrim || !skipClip) {
+      add(Gzip(this, fastq_R1, R1), !keepQcFastqFiles)
+      if (paired) add(Gzip(this, fastq_R2, R2), !keepQcFastqFiles)
+
+      outputFiles += ("output_R1_gzip" -> R1)
+      if (paired) outputFiles += ("output_R2_gzip" -> R2)
+
       fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
       add(fastqc_R1_after)
       addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
