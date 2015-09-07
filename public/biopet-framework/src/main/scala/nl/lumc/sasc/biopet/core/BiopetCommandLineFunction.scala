@@ -20,14 +20,14 @@ import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 
 import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 
 /** Biopet command line trait to auto check executable and cluster values */
-trait BiopetCommandLineFunction extends CommandLineFunction with Configurable {
+trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { biopetFunction =>
   analysisName = configName
 
   @Input(doc = "deps", required = false)
@@ -224,6 +224,31 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable {
     val threads: Int = config("threads", default = default, submodule = module)
     if (maxThreads > threads) threads
     else maxThreads
+  }
+
+  private[core] var _inputAsStdin = false
+  def inputAsStream = _inputAsStdin
+  private[core] var _outputAsStdout = false
+  def outputAsStsout = _outputAsStdout
+
+  def |(that:BiopetCommandLineFunction): BiopetCommandLineFunction = {
+    this._outputAsStdout = true
+    that._inputAsStdin = true
+    new BiopetCommandLineFunction {
+      @Input
+      val input: List[File] = biopetFunction.inputs.toList ::: that.inputs.toList
+
+      @Output
+      val output: List[File] = biopetFunction.outputs.toList ::: that.outputs.toList
+
+      {
+        val inputOutput = input.filter(x => output.exists(y => x == y))
+        require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
+      }
+      override val root: Configurable = biopetFunction.root
+      override def configName = biopetFunction.configName + "-" + that.configName
+      override protected def cmdLine: String = biopetFunction.cmdLine + " | " + that.cmdLine
+    }
   }
 
   /**
