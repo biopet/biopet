@@ -177,9 +177,9 @@ object VcfWithVcf extends ToolCommand {
         secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
       ) yield {
         secondRecord.getAttribute(f.inputField) match {
-          case l: List[_] => l
+          case l: List[_]           => l
           case y: util.ArrayList[_] => y.toList
-          case x          => List(x)
+          case x                    => List(x)
         }
       }).fold(Nil)(_ ::: _)
     }).toMap
@@ -220,9 +220,10 @@ object VcfWithVcf extends ToolCommand {
             case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
           }
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
-        case _                  => {
+        case _ => {
           print(attribute._2.getClass.toString)
-          scalaListToJavaObjectArrayList(attribute._2) }
+          scalaListToJavaObjectArrayList(attribute._2)
+        }
       })
     }).make()
   }

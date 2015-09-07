@@ -60,30 +60,30 @@ object VcfUtils {
     val out = new util.ArrayList[Object]()
 
     array.foreach {
-      case x: Int   => out.add(Int.box(x))
-      case x: Float => out.add(Float.box(x))
+      case x: Int    => out.add(Int.box(x))
+      case x: Float  => out.add(Float.box(x))
       case x: String => out.add(x)
       case x: Object => out.add(x)
-      case x        => out.add(x.toString)
+      case x         => out.add(x.toString)
     }
     out
   }
 
   def identicalVariantContext(var1: VariantContext, var2: VariantContext): Boolean = {
-    if(var1.getContig != var2.getContig) {
+    if (var1.getContig != var2.getContig) {
       false
     }
-    if(var1.getStart != var2.getStart) {
+    if (var1.getStart != var2.getStart) {
       false
     }
-    if(var1.getEnd != var2.getEnd) {
+    if (var1.getEnd != var2.getEnd) {
       false
     }
-    if(!var1.getAttributes.forall(x => var2.hasAttribute(x._1)) || !var2.getAttributes.forall(x => var1.hasAttribute(x._1))){
+    if (!var1.getAttributes.forall(x => var2.hasAttribute(x._1)) || !var2.getAttributes.forall(x => var1.hasAttribute(x._1))) {
       false
     }
-    if(!var1.getAttributes.forall(x => var2.getAttribute(x._1) == var1.getAttribute(x._1)) ||
-      !var2.getAttributes.forall(x => var1.getAttribute(x._1) == var2.getAttribute(x._1))){
+    if (!var1.getAttributes.forall(x => var2.getAttribute(x._1) == var1.getAttribute(x._1)) ||
+      !var2.getAttributes.forall(x => var1.getAttribute(x._1) == var2.getAttribute(x._1))) {
       false
     }
 
