@@ -234,12 +234,19 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def |(that:BiopetCommandLineFunction): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     that._inputAsStdin = true
+
     new BiopetCommandLineFunction {
       @Input
       val input: List[File] = biopetFunction.inputs.toList ::: that.inputs.toList
 
       @Output
       val output: List[File] = biopetFunction.outputs.toList ::: that.outputs.toList
+
+      override def freezeFieldValues {
+        super.freezeFieldValues()
+        biopetFunction.freezeFieldValues()
+        that.freezeFieldValues()
+      }
 
       {
         val inputOutput = input.filter(x => output.exists(y => x == y))
@@ -250,6 +257,14 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       override protected def cmdLine: String = biopetFunction.cmdLine + " | " + that.cmdLine
     }
   }
+
+  def >(file:File): BiopetCommandLineFunction = {
+    this._outputAsStdout = true
+    this.stdoutFile = Some(file)
+    this
+  }
+
+  var stdoutFile: Option[File] = None
 
   /**
    * This function needs to be implemented to define the command that is executed
@@ -264,7 +279,10 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
    */
   override final def commandLine: String = {
     preCmdInternal()
-    val cmd = cmdLine
+    val cmd = stdoutFile match {
+      case Some(file) => cmdLine + " > " + file
+      case _ => cmdLine
+    }
     addJobReportBinding("command", cmd)
     cmd
   }
