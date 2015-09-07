@@ -37,7 +37,7 @@ class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Sense count file", shortName = "sense", required = true)
   var countSense: File = _
 
-  @Output(doc = "Sense all coun filet", shortName = "allsense", required = true)
+  @Output(doc = "Sense all count file", shortName = "allsense", required = true)
   var countAllSense: File = _
 
   @Output(doc = "AntiSense count file", shortName = "antisense", required = true)
@@ -148,9 +148,18 @@ object SageCreateTagCounts extends ToolCommand {
         writer.close()
       }
     }
-    writeFile(commandArgs.countSense, senseCounts)
-    writeFile(commandArgs.countAllSense, allSenseCounts)
-    writeFile(commandArgs.countAntiSense, antiSenseCounts)
-    writeFile(commandArgs.countAllAntiSense, allAntiSenseCounts)
+
+    if(commandArgs.countSense != null){
+      writeFile(commandArgs.countSense, senseCounts)
+    }
+    if(commandArgs.countAllAntiSense != null) {
+      writeFile(commandArgs.countAllAntiSense, allAntiSenseCounts)
+    }
+    if(commandArgs.countAllSense != null){
+      writeFile(commandArgs.countAllSense, allSenseCounts)
+    }
+    if(commandArgs.countAntiSense != null){
+      writeFile(commandArgs.countAntiSense, antiSenseCounts)
+    }
   }
 }
