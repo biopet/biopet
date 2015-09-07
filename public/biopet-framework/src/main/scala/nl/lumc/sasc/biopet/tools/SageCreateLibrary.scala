@@ -77,10 +77,10 @@ object SageCreateLibrary extends ToolCommand {
     opt[Int]("length") required () unbounded () action { (x, c) =>
       c.copy(length = x)
     }
-    opt[File]("noTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]("noTagsOutput") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noTagsOutput = x)
     }
-    opt[File]("noAntiTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]("noAntiTagsOutput") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noAntiTagsOutput = x)
     }
     opt[File]("allGenesOutput") unbounded () valueName "<file>" action { (x, c) =>
@@ -121,7 +121,8 @@ object SageCreateLibrary extends ToolCommand {
     val reader = FastaReaderHelper.readFastaDNASequence(commandArgs.input)
     System.err.println("Finding tags")
     for ((name, seq) <- reader) {
-      getTags(name, seq)
+      val result = getTags(name, seq, tagRegex)
+      addTagresultToTaglib(name, result)
       count += 1
       if (count % 10000 == 0) System.err.println(count + " transcripts done")
     }
@@ -167,7 +168,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  def addTagresultToTaglib(name: String, tagResult: TagResult) {
+  private def addTagresultToTaglib(name: String, tagResult: TagResult) {
     val id = name.split(" ").head //.stripPrefix("hg19_ensGene_")
     val geneID = geneRegex.findFirstIn(name).getOrElse("unknown_gene")
     allGenes.add(geneID)
@@ -195,14 +196,12 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  def getTags(name: String, seq: DNASequence): TagResult = {
+  def getTags(name: String, seq: DNASequence, tagRegex: Regex): TagResult = {
     val allTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString()
     val firstTag = if (allTags.isEmpty) null else allTags.last
     val allAntiTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList) yield tag.toString()
     val firstAntiTag = if (allAntiTags.isEmpty) null else allAntiTags.head
     val result = new TagResult(firstTag, allTags, firstAntiTag, allAntiTags)
-
-    addTagresultToTaglib(name, result)
 
     result
   }
