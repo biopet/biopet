@@ -138,42 +138,86 @@ object VcfStats extends ToolCommand {
 
   /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
-    opt[File]('I', "inputFile") required () unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]('I', "inputFile") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    }
-    opt[File]('R', "referenceFile") required () unbounded () valueName "<file>" action { (x, c) =>
+    } validate {
+      x => if (x.exists) success else failure("Input VCF required")
+    } text "Input VCF file (required)"
+    opt[File]('R', "referenceFile") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(referenceFile = x)
-    }
-    opt[File]('o', "outputDir") required () unbounded () valueName "<file>" action { (x, c) =>
+    } validate {
+      x => if (x.exists) success else failure("Reference file required")
+    } text "Fasta reference which was used to call input VCF (required)"
+    opt[File]('o', "outputDir") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
-    }
+    } validate {
+      x => if (x == null) failure("Output directory required") else success
+    } text "Path to directory for output (required)"
     opt[File]('i', "intervals") unbounded () valueName ("<file>") action { (x, c) =>
       c.copy(intervals = Some(x))
-    }
+    } text "Path to interval (BED) file (optional)"
     opt[String]("infoTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(infoTags = x :: c.infoTags)
-    }
+    } text "Summarize these info tags. Default is all tags"
     opt[String]("genotypeTag") unbounded () valueName "<tag>" action { (x, c) =>
       c.copy(genotypeTags = x :: c.genotypeTags)
-    }
+    } text "Summarize these genotype tags. Default is all tags"
     opt[Unit]("allInfoTags") unbounded () action { (x, c) =>
       c.copy(allInfoTags = true)
-    }
+    } text "Summarize all info tags. Default false"
     opt[Unit]("allGenotypeTags") unbounded () action { (x, c) =>
       c.copy(allGenotypeTags = true)
-    }
+    } text "Summarize all genotype tags. Default false"
     opt[Int]("binSize") unbounded () action { (x, c) =>
       c.copy(binSize = x)
-    }
+    } text "Binsize in estimated base pairs"
     opt[Unit]("writeBinStats") unbounded () action { (x, c) =>
       c.copy(writeBinStats = true)
-    }
+    } text "Write bin statistics. Default False"
     opt[String]("generalWiggle") unbounded () action { (x, c) =>
       c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
-    }
+    } text
+      """
+        |Create a wiggle track with bin size <binSize> for any of the following statistics:
+        |Total
+        |Biallelic
+        |ComplexIndel
+        |Filtered
+        |FullyDecoded
+        |Indel
+        |Mixed
+        |MNP
+        |MonomorphicInSamples
+        |NotFiltered
+        |PointEvent
+        |PolymorphicInSamples
+        |SimpleDeletion
+        |SimpleInsertion
+        |SNP
+        |StructuralIndel
+        |Symbolic
+        |SymbolicOrSV
+        |Variant
+      """.stripMargin
     opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
       c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
-    }
+    } text
+      """
+        |Create a wiggle track with bin size <binSize> for any of the following genotype fields:
+        |Total
+        |Het
+        |HetNonRef
+        |Hom
+        |HomRef
+        |HomVar
+        |Mixed
+        |NoCall
+        |NonInformative
+        |Available
+        |Called
+        |Filtered
+        |Variant
+      """.stripMargin
   }
 
   /**
