@@ -15,6 +15,9 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
+import java.nio.file.{Files, Paths}
+
 import htsjdk.variant.variantcontext.Allele
 import nl.lumc.sasc.biopet.tools.VcfStats._
 import org.scalatest.Matchers
@@ -29,6 +32,10 @@ import scala.collection.mutable
  * Created by pjvan_thof on 2/5/15.
  */
 class VcfStatsTest extends TestNGSuite with Matchers {
+  private def resourcePath(p: String): String = {
+    Paths.get(getClass.getResource(p).toURI).toString
+  }
+
 
   @Test
   def testSampleToSampleStats(): Unit = {
@@ -168,12 +175,53 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testValueOfTsv = {
-    //stub
+    val i = new File(resourcePath("/sample.tsv"))
+
+    valueFromTsv(i, "Sample_ID_1", "library") should be (Some("Lib_ID_1"))
+    valueFromTsv(i, "Sample_ID_2", "library") should be (Some("Lib_ID_2"))
+    valueFromTsv(i, "Sample_ID_1", "bam") should be (Some("MyFirst.bam"))
+    valueFromTsv(i, "Sample_ID_2", "bam") should be (Some("MySecond.bam"))
+    valueFromTsv(i, "Sample_ID_3", "bam") should be (empty)
   }
 
   @Test
   def testMain = {
-    //stub
+    val tmp = Files.createTempDirectory("vcfStats")
+    val vcf = resourcePath("/chrQ.vcf.gz")
+    val ref = resourcePath("/fake_chrQ.fa")
+
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString))
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o", tmp.toAbsolutePath.toString, "--allInfoTags"))
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--allInfoTags", "--allGenotypeTags"))
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats"))
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+      "--generalWiggle", "Total"))
+    noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+      "--genotypeWiggle", "Total"))
+
+    val genotypes = List("Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall", "NonInformative",
+      "Available", "Called", "Filtered", "Variant")
+
+    genotypes.foreach(
+      x => noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+        "--genotypeWiggle", x))
+    )
+
+    val general = List("Biallelic", "ComplexIndel", "Filtered", "FullyDecoded", "Indel", "Mixed",
+      "MNP", "MonomorphicInSamples", "NotFiltered", "PointEvent", "PolymorphicInSamples",
+      "SimpleDeletion", "SimpleInsertion", "SNP", "StructuralIndel", "Symbolic",
+      "SymbolicOrSV", "Variant")
+
+    general.foreach(
+      x => noException should be thrownBy main(Array("-I", vcf, "-R", ref, "-o",
+        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+        "--generalWiggle", x))
+    )
   }
 
   @Test
