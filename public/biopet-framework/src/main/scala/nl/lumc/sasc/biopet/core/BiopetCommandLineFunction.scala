@@ -20,7 +20,7 @@ import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
@@ -54,7 +54,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   protected[core] def beforeCmd() {}
 
   /** Can override this method. This is executed after the script is done en queue starts to generate the graph */
-  protected[core] def beforeGraph() {}
+  def beforeGraph() {}
 
   /** Set default output file, threads and vmem for current job */
   override def freezeFieldValues() {
@@ -231,30 +231,15 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   private[core] var _outputAsStdout = false
   def outputAsStsout = _outputAsStdout
 
-  def |(that:BiopetCommandLineFunction): BiopetCommandLineFunction = {
+  def |(that: BiopetCommandLineFunction): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     that._inputAsStdin = true
-
-    new BiopetCommandLineFunction {
-      @Input
-      val input: List[File] = biopetFunction.inputs.toList ::: that.inputs.toList
-
-      @Output
-      val output: List[File] = biopetFunction.outputs.toList ::: that.outputs.toList
-
-      override def freezeFieldValues {
-        super.freezeFieldValues()
-        biopetFunction.freezeFieldValues()
-        that.freezeFieldValues()
+    this match {
+      case p: BiopetPipe => {
+        p.commands.last._outputAsStdout = true
+        new BiopetPipe(p.commands ::: that :: Nil)
       }
-
-      {
-        val inputOutput = input.filter(x => output.exists(y => x == y))
-        require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
-      }
-      override val root: Configurable = biopetFunction.root
-      override def configName = biopetFunction.configName + "-" + that.configName
-      override protected def cmdLine: String = biopetFunction.cmdLine + " | " + that.cmdLine
+      case _             => new BiopetPipe(List(this, that))
     }
   }
 
@@ -280,7 +265,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
    * This function needs to be implemented to define the command that is executed
    * @return Command to run
    */
-  protected def cmdLine: String
+  protected[core] def cmdLine: String
 
   /**
    * implementing a final version of the commandLine from org.broadinstitute.gatk.queue.function.CommandLineFunction
@@ -290,8 +275,8 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   override final def commandLine: String = {
     preCmdInternal()
     val cmd = cmdLine +
-      stdinFile.map(" < " + _).getOrElse("") +
-      stdoutFile.map(" > " + _).getOrElse("")
+      stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
+      stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
     addJobReportBinding("command", cmd)
     cmd
   }
