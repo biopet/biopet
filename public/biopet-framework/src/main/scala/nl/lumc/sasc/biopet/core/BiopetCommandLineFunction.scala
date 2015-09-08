@@ -227,7 +227,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   }
 
   private[core] var _inputAsStdin = false
-  def inputAsStream = _inputAsStdin
+  def inputAsStdin = _inputAsStdin
   private[core] var _outputAsStdout = false
   def outputAsStsout = _outputAsStdout
 
@@ -258,13 +258,23 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     }
   }
 
-  def >(file:File): BiopetCommandLineFunction = {
+  def :<:(file: File): BiopetCommandLineFunction = {
+    this._inputAsStdin = true
+    this.stdinFile = Some(file)
+    this
+  }
+
+  def >(file: File): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     this.stdoutFile = Some(file)
     this
   }
 
-  var stdoutFile: Option[File] = None
+  @Output(required = false)
+  private[core] var stdoutFile: Option[File] = None
+
+  @Input(required = false)
+  private[core] var stdinFile: Option[File] = None
 
   /**
    * This function needs to be implemented to define the command that is executed
@@ -279,10 +289,9 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
    */
   override final def commandLine: String = {
     preCmdInternal()
-    val cmd = stdoutFile match {
-      case Some(file) => cmdLine + " > " + file
-      case _ => cmdLine
-    }
+    val cmd = cmdLine +
+      stdinFile.map(" < " + _).getOrElse("") +
+      stdoutFile.map(" > " + _).getOrElse("")
     addJobReportBinding("command", cmd)
     cmd
   }
