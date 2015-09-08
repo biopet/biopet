@@ -136,6 +136,14 @@ object VcfStats extends ToolCommand {
                   generalWiggle: List[String] = Nil,
                   genotypeWiggle: List[String] = Nil) extends AbstractArgs
 
+  private val generalWiggleOptions =  List("Total","Biallelic", "ComplexIndel", "Filtered", "FullyDecoded", "Indel", "Mixed",
+    "MNP", "MonomorphicInSamples", "NotFiltered", "PointEvent", "PolymorphicInSamples",
+    "SimpleDeletion", "SimpleInsertion", "SNP", "StructuralIndel", "Symbolic",
+    "SymbolicOrSV", "Variant")
+
+  private val genotypeWiggleOptions =  List("Total", "Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall", "NonInformative",
+    "Available", "Called", "Filtered", "Variant")
+
   /** Parsing commandline arguments */
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -176,7 +184,9 @@ object VcfStats extends ToolCommand {
     } text "Write bin statistics. Default False"
     opt[String]("generalWiggle") unbounded () action { (x, c) =>
       c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
-    } text
+    } validate {
+      x => if (generalWiggleOptions.contains(x)) success else failure (s"""Nonexistent field $x""")
+    }text
       """
         |Create a wiggle track with bin size <binSize> for any of the following statistics:
         |Total
@@ -201,6 +211,8 @@ object VcfStats extends ToolCommand {
       """.stripMargin
     opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
       c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
+    } validate {
+      x => if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
     } text
       """
         |Create a wiggle track with bin size <binSize> for any of the following genotype fields:

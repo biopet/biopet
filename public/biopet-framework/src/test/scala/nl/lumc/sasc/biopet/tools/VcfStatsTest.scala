@@ -222,6 +222,24 @@ class VcfStatsTest extends TestNGSuite with Matchers {
         tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
         "--generalWiggle", x))
     )
+
+
+    // returns null when validation fails
+    def validateArgs(array: Array[String]): Option[Args] = {
+      val argsParser = new OptParser
+      argsParser.parse(array, Args())
+    }
+
+    validateArgs(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+      "--genotypeWiggle", "NonexistentThing")) shouldBe empty
+
+    validateArgs(Array("-I", vcf, "-R", ref, "-o",
+      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+      "--generalWiggle", "NonexistentThing")) shouldBe empty
+
+    validateArgs(Array("-R", ref, "-o",
+      tmp.toAbsolutePath.toString)) shouldBe empty
   }
 
   @Test
