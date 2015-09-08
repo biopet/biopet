@@ -116,4 +116,39 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     alleleOverlap(List(a1, a1), List(a2, a2)) shouldBe 0
     alleleOverlap(List(a2, a2), List(a1, a1)) shouldBe 0
   }
+
+  @Test
+  def testMergeStatsMap = {
+    //stub
+  }
+
+  @Test
+  def testMergeNestedStatsMap = {
+    //stub
+  }
+
+  @Test
+  def testValueOfTsv = {
+    //stub
+  }
+
+  @Test
+  def testMain = {
+    //stub
+  }
+
+  @Test
+  def testSortAnyAny = {
+    //stub
+  }
+
+  @Test
+  def testCheckGeneral = {
+    //stub
+  }
+
+  @Test
+  def testCheckGenotype = {
+    //stub
+  }
 }

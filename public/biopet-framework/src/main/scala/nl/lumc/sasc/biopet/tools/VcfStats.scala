@@ -525,7 +525,7 @@ object VcfStats extends ToolCommand {
   }
 
   /** Function to check all general stats, all info expect sample/genotype specific stats */
-  protected def checkGeneral(record: VariantContext, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+  protected[tools] def checkGeneral(record: VariantContext, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
@@ -581,7 +581,7 @@ object VcfStats extends ToolCommand {
   }
 
   /** Function to check sample/genotype specific stats */
-  protected def checkGenotype(record: VariantContext, genotype: Genotype, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+  protected[tools] def checkGenotype(record: VariantContext, genotype: Genotype, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
 
     def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
