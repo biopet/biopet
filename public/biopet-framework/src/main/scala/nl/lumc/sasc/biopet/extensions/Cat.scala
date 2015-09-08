@@ -25,10 +25,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Extension for GNU cat
  */
 class Cat(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "Input file", required = !inputAsStdin)
+  @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 
-  @Output(doc = "Unzipped file", required = !outputAsStsout)
+  @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
   executable = config("exe", default = "cat")
@@ -36,7 +36,7 @@ class Cat(val root: Configurable) extends BiopetCommandLineFunction {
   /** return commandline to execute */
   def cmdLine = required(executable) +
     (if (inputAsStdin) "" else repeat(input)) +
-    (if (outputAsStsout) "" else  " > " + required(output))
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 /**

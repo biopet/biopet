@@ -28,11 +28,11 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class SeqtkSeq(val root: Configurable) extends Seqtk {
 
   /** input file */
-  @Input(doc = "Input file (FASTQ or FASTA)", required = !inputAsStdin)
+  @Input(doc = "Input file (FASTQ or FASTA)", required = true)
   var input: File = _
 
   /** output file */
-  @Output(doc = "Output file", required = !outputAsStsout)
+  @Output(doc = "Output file", required = true)
   var output: File = _
 
   /** mask bases with quality lower than INT [0] */

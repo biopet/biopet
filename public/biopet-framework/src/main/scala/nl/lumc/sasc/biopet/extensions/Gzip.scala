@@ -22,10 +22,10 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "Input file", required = !inputAsStdin)
+  @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 
-  @Output(doc = "Unzipped file", required = !outputAsStsout)
+  @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
   executable = config("exe", default = "gzip")

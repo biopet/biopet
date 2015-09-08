@@ -23,10 +23,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for zcat */
 class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "Zipped file", required = !inputAsStdin)
+  @Input(doc = "Zipped file", required = true)
   var input: File = _
 
-  @Output(doc = "Unzipped file", required = !outputAsStsout)
+  @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
   executable = config("exe", default = "zcat")

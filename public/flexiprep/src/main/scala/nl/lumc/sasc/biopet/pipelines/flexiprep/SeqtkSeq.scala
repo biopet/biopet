@@ -58,7 +58,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
 }
 
 object SeqtkSeq {
-  def apply(root: Configurable, fastqc: Fastqc = null): SeqtkSeq = {
+  def apply(root: Configurable, fastqc: Fastqc): SeqtkSeq = {
     val seqtkSeq = new SeqtkSeq(root)
     seqtkSeq.fastqc = fastqc
     seqtkSeq
