@@ -23,10 +23,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for zcat */
 class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
-  @Input(doc = "Zipped file")
+  @Input(doc = "Zipped file", required = !inputAsStdin)
   var input: File = _
 
-  @Output(doc = "Unzipped file")
+  @Output(doc = "Unzipped file", required = !outputAsStsout)
   var output: File = _
 
   executable = config("exe", default = "zcat")
@@ -35,11 +35,16 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
   override def versionCommand = executable + " --version"
 
   /** Returns command to execute */
-  def cmdLine = required(executable) + required(input) + " > " + required(output)
+  def cmdLine = required(executable) +
+    (if (inputAsStdin) "" else required(input)) +
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object Zcat {
   /** Returns a default zcat */
+  def apply(root: Configurable): Zcat = new Zcat(root)
+
+  /** Returns Zcat with input and output files */
   def apply(root: Configurable, input: File, output: File): Zcat = {
     val zcat = new Zcat(root)
     zcat.input = input
