@@ -490,7 +490,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    buffer += "QUAL" -> Map(record.getPhredScaledQual -> 1)
+    buffer += "QUAL" -> Map(Math.round(record.getPhredScaledQual) -> 1)
 
     addToBuffer("SampleDistribution-Het", record.getGenotypes.count(genotype => genotype.isHet), found = true)
     addToBuffer("SampleDistribution-HetNonRef", record.getGenotypes.count(genotype => genotype.isHetNonRef), found = true)
