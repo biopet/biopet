@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
+import nl.lumc.sasc.biopet.tools.{SeqStat, FastqSync}
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -131,6 +131,18 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       addSummarizable(fastqc_R2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
     }
+
+    val seqstat_R1 = SeqStat(this, input_R1, outputDir)
+    seqstat_R1.isIntermediate = true
+    add(seqstat_R1)
+    addSummarizable(seqstat_R1, "seqstat_R1")
+
+    if (paired) {
+      val seqstat_R2 = SeqStat(this, input_R2.get, outputDir)
+      seqstat_R2.isIntermediate = true
+      add(seqstat_R2)
+      addSummarizable(seqstat_R2, "seqstat_R2")
+    }
   }
 
   //TODO: Refactor need to combine all this functions
@@ -172,20 +184,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       addSummarizable(seqtkSeq_R2, "seqtkSeq_R2")
       R2 = Some(seqtkSeq_R2.output)
       deps_R2 ::= R2.get
-    }
-
-    val seqstat_R1 = SeqStat(this, R1, outDir)
-    seqstat_R1.isIntermediate = true
-    seqstat_R1.deps = deps_R1
-    add(seqstat_R1)
-    addSummarizable(seqstat_R1, "seqstat_R1")
-
-    if (paired) {
-      val seqstat_R2 = SeqStat(this, R2.get, outDir)
-      seqstat_R2.isIntermediate = true
-      seqstat_R2.deps = deps_R2
-      add(seqstat_R2)
-      addSummarizable(seqstat_R2, "seqstat_R2")
     }
 
     if (!skipClip) { // Adapter clipping
