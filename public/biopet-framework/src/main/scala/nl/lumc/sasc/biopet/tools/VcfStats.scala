@@ -186,50 +186,14 @@ object VcfStats extends ToolCommand {
       c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
     } validate {
       x => if (generalWiggleOptions.contains(x)) success else failure(s"""Nonexistent field $x""")
-    } text
-      """
-        |Create a wiggle track with bin size <binSize> for any of the following statistics:
-        |Total
-        |Biallelic
-        |ComplexIndel
-        |Filtered
-        |FullyDecoded
-        |Indel
-        |Mixed
-        |MNP
-        |MonomorphicInSamples
-        |NotFiltered
-        |PointEvent
-        |PolymorphicInSamples
-        |SimpleDeletion
-        |SimpleInsertion
-        |SNP
-        |StructuralIndel
-        |Symbolic
-        |SymbolicOrSV
-        |Variant
-      """.stripMargin
+    } text s"""Create a wiggle track with bin size <binSize> for any of the following statistics:
+        |${generalWiggleOptions.mkString(", ")}""".stripMargin
     opt[String]("genotypeWiggle") unbounded () action { (x, c) =>
       c.copy(genotypeWiggle = x :: c.genotypeWiggle, writeBinStats = true)
     } validate {
       x => if (genotypeWiggleOptions.contains(x)) success else failure(s"""Non-existent field $x""")
-    } text
-      """
-        |Create a wiggle track with bin size <binSize> for any of the following genotype fields:
-        |Total
-        |Het
-        |HetNonRef
-        |Hom
-        |HomRef
-        |HomVar
-        |Mixed
-        |NoCall
-        |NonInformative
-        |Available
-        |Called
-        |Filtered
-        |Variant
-      """.stripMargin
+    } text s"""Create a wiggle track with bin size <binSize> for any of the following genotype fields:
+        |${genotypeWiggleOptions.mkString(", ")}""".stripMargin
   }
 
   /**
