@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
@@ -30,10 +30,10 @@ object SamplesTsvToJson extends ToolCommand {
   case class Args(inputFiles: List[File] = Nil, outputFile: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('i', "inputFiles") required() unbounded() valueName "<file>" action { (x, c) =>
+    opt[File]('i', "inputFiles") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(inputFiles = x :: c.inputFiles)
     } text "Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed"
-    opt[File]('o', "outputFile") unbounded() valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputFile") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
     }
   }
