@@ -54,7 +54,9 @@ class BiopetFlagstatTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test
   def testMain() = {
-    main(Array("-I", bam.getAbsolutePath))
+    //TODO: Test output file
+    val output = File.createTempFile("testMain", ".biopetflagstat")
+    main(Array("-I", bam.getAbsolutePath, "-o", output.toString))
   }
 
 }
