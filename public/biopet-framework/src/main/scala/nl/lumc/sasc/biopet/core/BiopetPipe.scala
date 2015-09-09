@@ -41,6 +41,8 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
 
     val inputOutput = input.filter(x => output.exists(y => x == y))
     require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
+
+    threads = commands.map(x => if (x.threads > 0) x.threads else 0).sum
   }
 
   val root: Configurable = commands.head.root
