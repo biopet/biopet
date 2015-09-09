@@ -117,21 +117,21 @@ object SageCreateLibrary extends ToolCommand {
     tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
 
     var count = 0
-    System.err.println("Reading fasta file")
+    logger.info("Reading fasta file")
     val reader = FastaReaderHelper.readFastaDNASequence(commandArgs.input)
-    System.err.println("Finding tags")
+    logger.info("Finding tags")
     for ((name, seq) <- reader) {
       val result = getTags(name, seq, tagRegex)
       addTagresultToTaglib(name, result)
       count += 1
-      if (count % 10000 == 0) System.err.println(count + " transcripts done")
+      if (count % 10000 == 0) logger.info(count + " transcripts done")
     }
-    System.err.println(count + " transcripts done")
+    logger.info(count + " transcripts done")
 
-    System.err.println("Start sorting tags")
+    logger.info("Start sorting tags")
     val tagGenesMapSorted: SortedMap[String, TagGenes] = SortedMap(tagGenesMap.toArray: _*)
 
-    System.err.println("Writting output files")
+    logger.info("Writting output files")
     val writer = new PrintWriter(commandArgs.output)
     writer.println("#tag\tfirstTag\tAllTags\tFirstAntiTag\tAllAntiTags")
     for ((tag, genes) <- tagGenesMapSorted) {
