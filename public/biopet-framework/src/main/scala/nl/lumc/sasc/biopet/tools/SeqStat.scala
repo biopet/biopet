@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -117,12 +117,12 @@ object SeqStat extends ToolCommand {
         |$commandName - Summarize FastQ
       """.stripMargin)
 
-    opt[File]('i', "fastq") required () unbounded() valueName "<fastq>" action { (x, c) =>
+    opt[File]('i', "fastq") required () unbounded () valueName "<fastq>" action { (x, c) =>
       c.copy(fastq = x)
     } validate {
       x => if (x.exists) success else failure("FASTQ file not found")
     } text "FastQ file to generate stats from"
-    opt[File]('o', "output") unbounded() valueName "<json>" action { (x, c) =>
+    opt[File]('o', "output") unbounded () valueName "<json>" action { (x, c) =>
       c.copy(fastq = x)
     } text "File to write output to, if not supplied output go to stdout"
   }

@@ -73,24 +73,11 @@ object VcfUtils {
     out
   }
 
+  //TODO: Add genotype comparing to this function
   def identicalVariantContext(var1: VariantContext, var2: VariantContext): Boolean = {
-    if (var1.getContig != var2.getContig) {
-      false
-    }
-    if (var1.getStart != var2.getStart) {
-      false
-    }
-    if (var1.getEnd != var2.getEnd) {
-      false
-    }
-    if (!var1.getAttributes.forall(x => var2.hasAttribute(x._1)) || !var2.getAttributes.forall(x => var1.hasAttribute(x._1))) {
-      false
-    }
-    if (!var1.getAttributes.forall(x => var2.getAttribute(x._1) == var1.getAttribute(x._1)) ||
-      !var2.getAttributes.forall(x => var1.getAttribute(x._1) == var2.getAttribute(x._1))) {
-      false
-    }
-
-    true
+    var1.getContig == var2.getContig &&
+      var1.getStart == var2.getStart &&
+      var1.getEnd == var2.getEnd &&
+      var1.getAttributes == var2.getAttributes
   }
 }
