@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import htsjdk.variant.variantcontext.Allele
 import htsjdk.variant.vcf.VCFFileReader
@@ -36,7 +36,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
   }
-
 
   @Test
   def testSampleToSampleStats(): Unit = {
@@ -127,62 +126,62 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testMergeStatsMap = {
-    val m1 : mutable.Map[Any, Int] = mutable.Map("a" -> 1)
-    val m2 : mutable.Map[Any, Int] = mutable.Map("b" -> 2)
+    val m1: mutable.Map[Any, Int] = mutable.Map("a" -> 1)
+    val m2: mutable.Map[Any, Int] = mutable.Map("b" -> 2)
 
     mergeStatsMap(m1, m2)
 
-    m1 should equal (mutable.Map("a" -> 1, "b" -> 2))
+    m1 should equal(mutable.Map("a" -> 1, "b" -> 2))
 
-    val m3 : mutable.Map[Any, Int] = mutable.Map(1 -> 500)
-    val m4 : mutable.Map[Any, Int] = mutable.Map(6 -> 125)
+    val m3: mutable.Map[Any, Int] = mutable.Map(1 -> 500)
+    val m4: mutable.Map[Any, Int] = mutable.Map(6 -> 125)
 
     mergeStatsMap(m3, m4)
 
-    m3 should equal (mutable.Map(1 -> 500, 6 -> 125))
+    m3 should equal(mutable.Map(1 -> 500, 6 -> 125))
 
     mergeStatsMap(m1, m3)
 
-    m1 should equal (mutable.Map("a" -> 1, "b" -> 2, 1 -> 500, 6 -> 125))
+    m1 should equal(mutable.Map("a" -> 1, "b" -> 2, 1 -> 500, 6 -> 125))
   }
 
   @Test
   def testMergeNestedStatsMap = {
-    val m1 : mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
+    val m1: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
       mutable.Map("nested" -> mutable.Map("a" -> 1)))
     val m2: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
       Map("nested" -> Map("b" -> 2)))
 
     mergeNestedStatsMap(m1, m2)
 
-    m1 should equal (mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2))))
+    m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2))))
 
-    val m3 : mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
+    val m3: mutable.Map[String, mutable.Map[String, mutable.Map[Any, Int]]] = mutable.Map("test" ->
       mutable.Map("nestedd" -> mutable.Map(1 -> 500)))
     val m4: Map[String, Map[String, Map[Any, Int]]] = Map("test" ->
       Map("nestedd" -> Map(6 -> 125)))
 
     mergeNestedStatsMap(m3, m4)
 
-    m3 should equal (mutable.Map("test" -> mutable.Map("nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
+    m3 should equal(mutable.Map("test" -> mutable.Map("nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
 
     val m5 = m3.toMap.map(x => x._1 -> x._2.toMap.map(y => y._1 -> y._2.toMap))
 
     mergeNestedStatsMap(m1, m5)
 
-    m1 should equal (mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2),
-    "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
+    m1 should equal(mutable.Map("test" -> mutable.Map("nested" -> mutable.Map("a" -> 1, "b" -> 2),
+      "nestedd" -> mutable.Map(1 -> 500, 6 -> 125))))
   }
 
   @Test
   def testValueOfTsv = {
     val i = new File(resourcePath("/sample.tsv"))
 
-    valueFromTsv(i, "Sample_ID_1", "library") should be (Some("Lib_ID_1"))
-    valueFromTsv(i, "Sample_ID_2", "library") should be (Some("Lib_ID_2"))
-    valueFromTsv(i, "Sample_ID_1", "bam") should be (Some("MyFirst.bam"))
-    valueFromTsv(i, "Sample_ID_2", "bam") should be (Some("MySecond.bam"))
-    valueFromTsv(i, "Sample_ID_3", "bam") should be (empty)
+    valueFromTsv(i, "Sample_ID_1", "library") should be(Some("Lib_ID_1"))
+    valueFromTsv(i, "Sample_ID_2", "library") should be(Some("Lib_ID_2"))
+    valueFromTsv(i, "Sample_ID_1", "bam") should be(Some("MyFirst.bam"))
+    valueFromTsv(i, "Sample_ID_2", "bam") should be(Some("MySecond.bam"))
+    valueFromTsv(i, "Sample_ID_3", "bam") should be(empty)
   }
 
   @Test
@@ -224,7 +223,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
         "--generalWiggle", x))
     )
 
-
     // returns null when validation fails
     def validateArgs(array: Array[String]): Option[Args] = {
       val argsParser = new OptParser
@@ -249,7 +247,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val one: Any = 1
     val two: Any = 2
     val text: Any = "hello"
-    val text2 : Any = "goodbye"
+    val text2: Any = "goodbye"
 
     sortAnyAny(one, two) shouldBe true
     sortAnyAny(two, one) shouldBe false
@@ -306,7 +304,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     general.get("Symbolic") shouldEqual Some(0)
     general.get("SimpleInsertion") shouldEqual Some(1)
 
-
     val total = blah.get("total").get
     total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
     total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
@@ -353,10 +350,10 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val genotype = record.getGenotype(0)
 
     val blah = checkGenotype(record, genotype, List())
-    
+
     blah.get("chrQ") should not be empty
     blah.get("total") should not be empty
-    
+
     val chrq = blah.get("chrQ").get
     chrq.get("GQ") shouldEqual Some(Map(99 -> 1))
     chrq.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
@@ -365,7 +362,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     chrq.get("AD-alt") shouldEqual Some(Map(21 -> 1))
     chrq.get("AD-ref") shouldEqual Some(Map(24 -> 1))
     chrq.get("general") should not be empty
-    
+
     val general = chrq.get("general").get
     general.get("Hom") shouldEqual Some(0)
     general.get("NoCall") shouldEqual Some(0)

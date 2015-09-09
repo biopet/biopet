@@ -136,12 +136,12 @@ object VcfStats extends ToolCommand {
                   generalWiggle: List[String] = Nil,
                   genotypeWiggle: List[String] = Nil) extends AbstractArgs
 
-  private val generalWiggleOptions =  List("Total","Biallelic", "ComplexIndel", "Filtered", "FullyDecoded", "Indel", "Mixed",
+  private val generalWiggleOptions = List("Total", "Biallelic", "ComplexIndel", "Filtered", "FullyDecoded", "Indel", "Mixed",
     "MNP", "MonomorphicInSamples", "NotFiltered", "PointEvent", "PolymorphicInSamples",
     "SimpleDeletion", "SimpleInsertion", "SNP", "StructuralIndel", "Symbolic",
     "SymbolicOrSV", "Variant")
 
-  private val genotypeWiggleOptions =  List("Total", "Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall", "NonInformative",
+  private val genotypeWiggleOptions = List("Total", "Het", "HetNonRef", "Hom", "HomRef", "HomVar", "Mixed", "NoCall", "NonInformative",
     "Available", "Called", "Filtered", "Variant")
 
   /** Parsing commandline arguments */
@@ -185,8 +185,8 @@ object VcfStats extends ToolCommand {
     opt[String]("generalWiggle") unbounded () action { (x, c) =>
       c.copy(generalWiggle = x :: c.generalWiggle, writeBinStats = true)
     } validate {
-      x => if (generalWiggleOptions.contains(x)) success else failure (s"""Nonexistent field $x""")
-    }text
+      x => if (generalWiggleOptions.contains(x)) success else failure(s"""Nonexistent field $x""")
+    } text
       """
         |Create a wiggle track with bin size <binSize> for any of the following statistics:
         |Total
