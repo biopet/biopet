@@ -176,7 +176,16 @@ class Config(protected var _map: Map[String, Any],
                               freeVar: Boolean = true,
                               fixedValues: Map[String, Any] = Map()): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    if (contains(requestedIndex, fixedValues)) fixedCache.get(requestedIndex).getOrElse(foundCache(requestedIndex))
+    if (contains(requestedIndex, fixedValues)) {
+      val fixedValue = fixedCache.get(requestedIndex)
+      if (fixedValue.isDefined) {
+        val userValue = Config.getValueFromMap(_map, requestedIndex)
+        if (userValue.isDefined)
+          logger.warn(s"Ignoring user-supplied value ${requestedIndex.key} at path ${requestedIndex.path} because it is a fixed value.")
+      }
+
+      fixedValue.getOrElse(foundCache(requestedIndex))
+    }
     else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
       defaultCache(requestedIndex)
