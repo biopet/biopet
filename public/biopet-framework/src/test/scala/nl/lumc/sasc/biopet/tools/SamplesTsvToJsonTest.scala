@@ -20,28 +20,32 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testCorrectSampleTsv = {
     val tsv = resourcePath("/sample.tsv")
+    val output = File.createTempFile("testCorrectSampleTsv", ".json")
 
-    noException should be thrownBy main(Array("-i", tsv))
+    noException should be thrownBy main(Array("-i", tsv, "-o", output.toString))
   }
 
   @Test
   def testNoSampleColumn() = {
     val tsv = resourcePath("/no_sample.tsv")
-    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    val output = File.createTempFile("testNoSampleColumn", ".json")
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv, "-o", output.toString))
     thrown.getMessage should equal("Sample column does not exist in: " + tsv)
   }
 
   @Test
   def testNumberInLibs = {
     val tsv = resourcePath("/number.tsv")
-    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    val output = File.createTempFile("testNumberInLibs", ".json")
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv, "-o", output.toString))
     thrown.getMessage should equal("Sample or library may not start with a number")
   }
 
   @Test
   def testSampleIDs = {
     val tsv = resourcePath("/same.tsv")
-    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv))
+    val output = File.createTempFile("testSampleIDs", ".json")
+    val thrown = the[IllegalStateException] thrownBy main(Array("-i", tsv, "-o", output.toString))
     thrown.getMessage should equal("Combination of Sample_ID_1 and Lib_ID_1 is found multiple times")
 
   }
