@@ -6,25 +6,27 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Output, Input}
 
 /**
+ * This class can pipe multiple BiopetCommandFunctions to 1 job
+ *
  * Created by pjvanthof on 08/09/15.
  */
 class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCommandLineFunction {
 
   @Input
   lazy val input: List[File] = try {
-    commands.map(_.inputs).flatten
+    commands.flatMap(_.inputs)
   } catch {
     case e: Exception => Nil
   }
 
   @Output
   lazy val output: List[File] = try {
-    commands.map(_.outputs).flatten
+    commands.flatMap(_.outputs)
   } catch {
     case e: Exception => Nil
   }
 
-  override def beforeGraph {
+  override def beforeGraph() {
     super.beforeGraph()
     commands.foreach(_.beforeGraph())
 
@@ -39,7 +41,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
 
     if (commands.head.stdinFile.isDefined) commands.head._inputAsStdin = true
 
-    val inputOutput = input.filter(x => output.exists(y => x == y))
+    val inputOutput = input.filter(x => output.contains(x))
     require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
 
     threads = commands.map(x => if (x.threads > 0) x.threads else 0).sum
