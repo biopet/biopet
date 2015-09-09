@@ -264,7 +264,6 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
 
     val blah = checkGeneral(record, List())
-    println(blah.toString())
 
     blah.get("chrQ") should not be empty
     blah.get("total") should not be empty
@@ -324,7 +323,7 @@ class VcfStatsTest extends TestNGSuite with Matchers {
     total.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
 
     chrq.get("general") should not be empty
-    val totGeneral = chrq.get("general").get
+    val totGeneral = total.get("general").get
 
     totGeneral.get("PolymorphicInSamples") shouldEqual Some(1)
     totGeneral.get("ComplexIndel") shouldEqual Some(0)
@@ -349,6 +348,61 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testCheckGenotype = {
-    //stub
+    val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
+
+    val genotype = record.getGenotype(0)
+
+    val blah = checkGenotype(record, genotype, List())
+    
+    blah.get("chrQ") should not be empty
+    blah.get("total") should not be empty
+    
+    val chrq = blah.get("chrQ").get
+    chrq.get("GQ") shouldEqual Some(Map(99 -> 1))
+    chrq.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    chrq.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    chrq.get("DP") shouldEqual Some(Map(45 -> 1))
+    chrq.get("AD-alt") shouldEqual Some(Map(21 -> 1))
+    chrq.get("AD-ref") shouldEqual Some(Map(24 -> 1))
+    chrq.get("general") should not be empty
+    
+    val general = chrq.get("general").get
+    general.get("Hom") shouldEqual Some(0)
+    general.get("NoCall") shouldEqual Some(0)
+    general.get("Variant") shouldEqual Some(1)
+    general.get("Filtered") shouldEqual Some(0)
+    general.get("NonInformative") shouldEqual Some(0)
+    general.get("Called") shouldEqual Some(1)
+    general.get("Total") shouldEqual Some(1)
+    general.get("HomVar") shouldEqual Some(0)
+    general.get("HomRef") shouldEqual Some(0)
+    general.get("Mixed") shouldEqual Some(0)
+    general.get("Available") shouldEqual Some(1)
+    general.get("Het") shouldEqual Some(1)
+    general.get("HetNonRef") shouldEqual Some(0)
+
+    val total = blah.get("total").get
+    total.get("GQ") shouldEqual Some(Map(99 -> 1))
+    total.get("AD") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    total.get("AD-used") shouldEqual Some(Map(24 -> 1, 21 -> 1))
+    total.get("DP") shouldEqual Some(Map(45 -> 1))
+    total.get("AD-alt") shouldEqual Some(Map(21 -> 1))
+    total.get("AD-ref") shouldEqual Some(Map(24 -> 1))
+    total.get("general") should not be empty
+
+    val totGeneral = total.get("general").get
+    totGeneral.get("Hom") shouldEqual Some(0)
+    totGeneral.get("NoCall") shouldEqual Some(0)
+    totGeneral.get("Variant") shouldEqual Some(1)
+    totGeneral.get("Filtered") shouldEqual Some(0)
+    totGeneral.get("NonInformative") shouldEqual Some(0)
+    totGeneral.get("Called") shouldEqual Some(1)
+    totGeneral.get("Total") shouldEqual Some(1)
+    totGeneral.get("HomVar") shouldEqual Some(0)
+    totGeneral.get("HomRef") shouldEqual Some(0)
+    totGeneral.get("Mixed") shouldEqual Some(0)
+    totGeneral.get("Available") shouldEqual Some(1)
+    totGeneral.get("Het") shouldEqual Some(1)
+    totGeneral.get("HetNonRef") shouldEqual Some(0)
   }
 }
