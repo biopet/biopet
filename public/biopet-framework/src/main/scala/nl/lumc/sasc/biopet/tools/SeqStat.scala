@@ -123,7 +123,7 @@ object SeqStat extends ToolCommand {
       x => if (x.exists) success else failure("FASTQ file not found")
     } text "FastQ file to generate stats from"
     opt[File]('o', "output") unbounded () valueName "<json>" action { (x, c) =>
-      c.copy(fastq = x)
+      c.copy(outputJson = Some(x))
     } text "File to write output to, if not supplied output go to stdout"
   }
 
