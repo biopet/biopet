@@ -19,6 +19,7 @@ import java.io.File
 import java.nio.file.{Files, Paths}
 
 import htsjdk.variant.variantcontext.Allele
+import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.tools.VcfStats._
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -260,7 +261,90 @@ class VcfStatsTest extends TestNGSuite with Matchers {
 
   @Test
   def testCheckGeneral = {
-    //stub
+    val record = new VCFFileReader(new File(resourcePath("/chrQ.vcf.gz"))).iterator().next()
+
+    val blah = checkGeneral(record, List())
+    println(blah.toString())
+
+    blah.get("chrQ") should not be empty
+    blah.get("total") should not be empty
+
+    val chrq = blah.get("chrQ").get
+    chrq.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
+    chrq.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-Hom") shouldEqual Some(Map(1 -> 1))
+    chrq.get("SampleDistribution-HomRef") shouldEqual Some(Map(1 -> 1))
+    chrq.get("SampleDistribution-Available") shouldEqual Some(Map(3 -> 1))
+    chrq.get("QUAL") shouldEqual Some(Map(1541 -> 1))
+    chrq.get("SampleDistribution-HetNonRef") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-Het") shouldEqual Some(Map(2 -> 1))
+    chrq.get("SampleDistribution-NoCall") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-Filtered") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
+    chrq.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
+
+    chrq.get("general") should not be empty
+    val general = chrq.get("general").get
+
+    general.get("PolymorphicInSamples") shouldEqual Some(1)
+    general.get("ComplexIndel") shouldEqual Some(0)
+    general.get("FullyDecoded") shouldEqual Some(0)
+    general.get("PointEvent") shouldEqual Some(0)
+    general.get("MNP") shouldEqual Some(0)
+    general.get("Indel") shouldEqual Some(1)
+    general.get("Biallelic") shouldEqual Some(1)
+    general.get("SimpleDeletion") shouldEqual Some(0)
+    general.get("Variant") shouldEqual Some(1)
+    general.get("SymbolicOrSV") shouldEqual Some(0)
+    general.get("MonomorphicInSamples") shouldEqual Some(0)
+    general.get("SNP") shouldEqual Some(0)
+    general.get("Filtered") shouldEqual Some(0)
+    general.get("StructuralIndel") shouldEqual Some(0)
+    general.get("Total") shouldEqual Some(1)
+    general.get("Mixed") shouldEqual Some(0)
+    general.get("NotFiltered") shouldEqual Some(1)
+    general.get("Symbolic") shouldEqual Some(0)
+    general.get("SimpleInsertion") shouldEqual Some(1)
+
+
+    val total = blah.get("total").get
+    total.get("SampleDistribution-NonInformative") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-Called") shouldEqual Some(Map(3 -> 1))
+    total.get("SampleDistribution-Mixed") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-Hom") shouldEqual Some(Map(1 -> 1))
+    total.get("SampleDistribution-HomRef") shouldEqual Some(Map(1 -> 1))
+    total.get("SampleDistribution-Available") shouldEqual Some(Map(3 -> 1))
+    total.get("QUAL") shouldEqual Some(Map(1541 -> 1))
+    total.get("SampleDistribution-HetNonRef") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-Het") shouldEqual Some(Map(2 -> 1))
+    total.get("SampleDistribution-NoCall") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-Filtered") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-HomVar") shouldEqual Some(Map(0 -> 1))
+    total.get("SampleDistribution-Variant") shouldEqual Some(Map(2 -> 1))
+
+    chrq.get("general") should not be empty
+    val totGeneral = chrq.get("general").get
+
+    totGeneral.get("PolymorphicInSamples") shouldEqual Some(1)
+    totGeneral.get("ComplexIndel") shouldEqual Some(0)
+    totGeneral.get("FullyDecoded") shouldEqual Some(0)
+    totGeneral.get("PointEvent") shouldEqual Some(0)
+    totGeneral.get("MNP") shouldEqual Some(0)
+    totGeneral.get("Indel") shouldEqual Some(1)
+    totGeneral.get("Biallelic") shouldEqual Some(1)
+    totGeneral.get("SimpleDeletion") shouldEqual Some(0)
+    totGeneral.get("Variant") shouldEqual Some(1)
+    totGeneral.get("SymbolicOrSV") shouldEqual Some(0)
+    totGeneral.get("MonomorphicInSamples") shouldEqual Some(0)
+    totGeneral.get("SNP") shouldEqual Some(0)
+    totGeneral.get("Filtered") shouldEqual Some(0)
+    totGeneral.get("StructuralIndel") shouldEqual Some(0)
+    totGeneral.get("Total") shouldEqual Some(1)
+    totGeneral.get("Mixed") shouldEqual Some(0)
+    totGeneral.get("NotFiltered") shouldEqual Some(1)
+    totGeneral.get("Symbolic") shouldEqual Some(0)
+    totGeneral.get("SimpleInsertion") shouldEqual Some(1)
   }
 
   @Test
