@@ -12,7 +12,6 @@ import org.testng.annotations.Test
 
 import scala.collection.JavaConversions._
 
-
 import scala.io.Source
 
 /**
@@ -36,7 +35,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
       "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",
-      antiTagsOutput.getAbsolutePath,"--allGenesOutput", allGenesOutput.getAbsolutePath)
+      antiTagsOutput.getAbsolutePath, "--allGenesOutput", allGenesOutput.getAbsolutePath)
 
     noException should be thrownBy main(args)
 
@@ -59,22 +58,22 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
       "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",
-      antiTagsOutput.getAbsolutePath,"--allGenesOutput", allGenesOutput.getAbsolutePath)
+      antiTagsOutput.getAbsolutePath, "--allGenesOutput", allGenesOutput.getAbsolutePath)
     main(args)
 
     Source.fromFile(output).mkString should equal(
       Source.fromFile(new File(resourcePath("/sageTest.tsv"))).mkString
     )
 
-    Source.fromFile(noTagsOutput).mkString should equal (
+    Source.fromFile(noTagsOutput).mkString should equal(
       Source.fromFile(new File(resourcePath("/sageNoTagsTest.tsv"))).mkString
     )
 
-    Source.fromFile(antiTagsOutput).mkString should equal (
+    Source.fromFile(antiTagsOutput).mkString should equal(
       Source.fromFile(new File(resourcePath("/sageNoAntiTest.tsv"))).mkString
     )
 
-    Source.fromFile(allGenesOutput).mkString should equal (
+    Source.fromFile(allGenesOutput).mkString should equal(
       Source.fromFile(new File(resourcePath("/sageAllGenesTest.tsv"))).mkString
     )
   }
@@ -93,7 +92,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     val record3 = records(2)
 
     val result1 = getTags(record1._1, record1._2, tagRegex)
-    val result2  = getTags(record2._1, record2._2, tagRegex)
+    val result2 = getTags(record2._1, record2._2, tagRegex)
     val result3 = getTags(record3._1, record3._2, tagRegex)
 
     result1.allTags.size shouldBe 2
@@ -109,7 +108,5 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     result3.allTags.size shouldBe 0
     result3.allAntiTags.size shouldBe 0
   }
-
-
 
 }

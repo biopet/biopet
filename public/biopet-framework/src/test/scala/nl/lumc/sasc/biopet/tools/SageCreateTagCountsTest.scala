@@ -31,8 +31,8 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
     val allAntiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
 
     noException should be thrownBy main(Array("-I", input, "--tagLib", tagLib,
-    "--countSense", sense.getAbsolutePath, "--countAllSense", allSense.getAbsolutePath,
-    "--countAntiSense", antiSense.getAbsolutePath, "--countAllAntiSense", allAntiSense.getAbsolutePath))
+      "--countSense", sense.getAbsolutePath, "--countAllSense", allSense.getAbsolutePath,
+      "--countAntiSense", antiSense.getAbsolutePath, "--countAllAntiSense", allAntiSense.getAbsolutePath))
     noException should be thrownBy main(Array("-I", input, "--tagLib", tagLib,
       "--countSense", sense.getAbsolutePath, "--countAllSense", allSense.getAbsolutePath,
       "--countAntiSense", antiSense.getAbsolutePath))
@@ -54,19 +54,14 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
     val antiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
     val allAntiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
 
-    main(Array("-I", input, "--tagLib", tagLib,"--countSense", sense.getAbsolutePath,
-      "--countAllSense", allSense.getAbsolutePath,"--countAntiSense", antiSense.getAbsolutePath,
+    main(Array("-I", input, "--tagLib", tagLib, "--countSense", sense.getAbsolutePath,
+      "--countAllSense", allSense.getAbsolutePath, "--countAntiSense", antiSense.getAbsolutePath,
       "--countAllAntiSense", allAntiSense.getAbsolutePath))
 
-    Source.fromFile(sense).mkString should equal ("ENSG00000254767\t40\nENSG00000255336\t55\n")
-    Source.fromFile(allSense).mkString should equal ("ENSG00000254767\t70\nENSG00000255336\t90\n")
-    Source.fromFile(antiSense).mkString should equal ("ENSG00000254767\t50\nENSG00000255336\t45\n")
-    Source.fromFile(allAntiSense).mkString should equal ("ENSG00000254767\t75\nENSG00000255336\t65\n")
+    Source.fromFile(sense).mkString should equal("ENSG00000254767\t40\nENSG00000255336\t55\n")
+    Source.fromFile(allSense).mkString should equal("ENSG00000254767\t70\nENSG00000255336\t90\n")
+    Source.fromFile(antiSense).mkString should equal("ENSG00000254767\t50\nENSG00000255336\t45\n")
+    Source.fromFile(allAntiSense).mkString should equal("ENSG00000254767\t75\nENSG00000255336\t65\n")
   }
-
-
-
-
-
 
 }

@@ -149,16 +149,16 @@ object SageCreateTagCounts extends ToolCommand {
       }
     }
 
-    if(commandArgs.countSense != null){
+    if (commandArgs.countSense != null) {
       writeFile(commandArgs.countSense, senseCounts)
     }
-    if(commandArgs.countAllAntiSense != null) {
+    if (commandArgs.countAllAntiSense != null) {
       writeFile(commandArgs.countAllAntiSense, allAntiSenseCounts)
     }
-    if(commandArgs.countAllSense != null){
+    if (commandArgs.countAllSense != null) {
       writeFile(commandArgs.countAllSense, allSenseCounts)
     }
-    if(commandArgs.countAntiSense != null){
+    if (commandArgs.countAntiSense != null) {
       writeFile(commandArgs.countAntiSense, antiSenseCounts)
     }
   }
