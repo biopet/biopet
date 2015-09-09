@@ -47,7 +47,6 @@ object VcfUtils {
   }
 
   /**
-   * HACK!!
    * Stands for scalaListToJavaObjectArrayList
    * Convert a scala List[Any] to a java ArrayList[Object]. This is necessary for BCF conversions
    * As scala ints and floats cannot be directly cast to java objects (they aren't objects),
@@ -60,8 +59,13 @@ object VcfUtils {
     val out = new util.ArrayList[Object]()
 
     array.foreach {
+      case x: Long    => out.add(Long.box(x))
       case x: Int    => out.add(Int.box(x))
+      case x: Char    => out.add(Char.box(x))
+      case x: Byte    => out.add(Byte.box(x))
+      case x: Double  => out.add(Double.box(x))
       case x: Float  => out.add(Float.box(x))
+      case x: Boolean  => out.add(Boolean.box(x))
       case x: String => out.add(x)
       case x: Object => out.add(x)
       case x         => out.add(x.toString)
