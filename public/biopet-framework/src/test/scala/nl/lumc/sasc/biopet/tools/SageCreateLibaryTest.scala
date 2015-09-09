@@ -85,7 +85,7 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = FastaReaderHelper.readFastaDNASequence(new File(input))
 
     val records = reader.iterator.toList
-    tagRegex = ("CATG" + "[CATG]{" + 17 + "}").r
+    val tagRegex = ("CATG" + "[CATG]{" + 17 + "}").r
 
     val record1 = records(0)
     val record2 = records(1)

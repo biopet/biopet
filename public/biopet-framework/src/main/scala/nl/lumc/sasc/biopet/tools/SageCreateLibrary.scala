@@ -88,8 +88,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  var tagRegex: Regex = null
-  var geneRegex = """ENSG[0-9]{11}""".r
+  val geneRegex = """ENSG[0-9]{11}""".r
 
   val tagGenesMap: mutable.Map[String, TagGenes] = mutable.Map()
 
@@ -114,7 +113,7 @@ object SageCreateLibrary extends ToolCommand {
 
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
-    tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
+    val tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
 
     var count = 0
     logger.info("Reading fasta file")
