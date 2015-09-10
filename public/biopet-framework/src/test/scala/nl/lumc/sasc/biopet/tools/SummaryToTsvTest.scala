@@ -28,9 +28,9 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
       "-m", "root", "-o", output.toString))
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
-      "-m", "sample", output.toString))
+      "-m", "sample", "-o", output.toString))
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
-      "-m", "lib", output.toString))
+      "-m", "lib", "-o", output.toString))
   }
 
   @Test
