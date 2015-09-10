@@ -229,16 +229,25 @@ class VcfStatsTest extends TestNGSuite with Matchers {
       argsParser.parse(array, Args())
     }
 
-    validateArgs(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-      "--genotypeWiggle", "NonexistentThing")) shouldBe empty
+    val stderr1 = new java.io.ByteArrayOutputStream
+    Console.withErr(stderr1) {
+      validateArgs(Array("-I", vcf, "-R", ref, "-o",
+        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+        "--genotypeWiggle", "NonexistentThing")) shouldBe empty
+    }
 
-    validateArgs(Array("-I", vcf, "-R", ref, "-o",
-      tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
-      "--generalWiggle", "NonexistentThing")) shouldBe empty
+    val stderr2 = new java.io.ByteArrayOutputStream
+    Console.withErr(stderr2) {
+      validateArgs(Array("-I", vcf, "-R", ref, "-o",
+        tmp.toAbsolutePath.toString, "--binSize", "50", "--writeBinStats",
+        "--generalWiggle", "NonexistentThing")) shouldBe empty
+    }
 
-    validateArgs(Array("-R", ref, "-o",
-      tmp.toAbsolutePath.toString)) shouldBe empty
+    val stderr3 = new java.io.ByteArrayOutputStream
+    Console.withErr(stderr3) {
+      validateArgs(Array("-R", ref, "-o",
+        tmp.toAbsolutePath.toString)) shouldBe empty
+    }
   }
 
   @Test
