@@ -23,13 +23,14 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testMain = {
     val tsv = resourcePath("/test.summary.json")
+    val output = File.createTempFile("main", "tsv")
 
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
-      "-m", "root"))
+      "-m", "root", "-o", output.toString))
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
-      "-m", "sample"))
+      "-m", "sample", output.toString))
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
-      "-m", "lib"))
+      "-m", "lib", output.toString))
   }
 
   @Test
