@@ -13,7 +13,9 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.core
+package nl.lumc.sasc.biopet
+
+import nl.lumc.sasc.biopet.core.{BiopetExecutable, MainCommand}
 
 object BiopetExecutablePublic extends BiopetExecutable {
   def publicPipelines: List[MainCommand] = List(
