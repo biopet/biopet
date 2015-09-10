@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.core.config
+package nl.lumc.sasc.biopet.utils.config
 
 /**
  * General case class used as index config values. This stores the path to the value, the module, name of the value and if freeVar is allowed

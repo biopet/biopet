@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView

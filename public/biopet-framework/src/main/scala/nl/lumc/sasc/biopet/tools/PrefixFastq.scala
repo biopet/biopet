@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 

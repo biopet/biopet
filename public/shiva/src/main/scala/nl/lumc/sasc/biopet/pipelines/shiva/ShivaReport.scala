@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot

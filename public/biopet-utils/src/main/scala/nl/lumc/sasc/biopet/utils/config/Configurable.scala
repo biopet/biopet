@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.core.config
+package nl.lumc.sasc.biopet.utils.config
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
@@ -29,10 +29,10 @@ trait Configurable extends ImplicitConversions {
   def configPath: List[String] = if (root != null) root.configFullPath else Nil
 
   /** Gets name of module for config */
-  protected[core] def configName = getClass.getSimpleName.toLowerCase
+  protected[config] def configName = getClass.getSimpleName.toLowerCase
 
   /** ull path with module in there */
-  protected[core] def configFullPath: List[String] = configPath ::: configName :: Nil
+  protected[config] def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
   def defaults: Map[String, Any] = {

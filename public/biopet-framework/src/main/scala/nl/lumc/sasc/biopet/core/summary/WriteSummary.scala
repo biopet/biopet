@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, BiopetJavaCommandLineFunction, SampleLibraryTag }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.{ LastCommitHash, Version }

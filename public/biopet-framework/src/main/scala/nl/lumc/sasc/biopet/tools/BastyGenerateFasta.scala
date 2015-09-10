@@ -21,7 +21,7 @@ import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }

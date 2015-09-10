@@ -8,7 +8,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }

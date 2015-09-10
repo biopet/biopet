@@ -22,7 +22,7 @@ import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 

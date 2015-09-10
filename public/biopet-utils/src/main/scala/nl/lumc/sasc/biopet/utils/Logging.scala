@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.utils
 
 import org.apache.log4j.Logger
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Trait to implement logger function on local class/object
  */
@@ -33,4 +35,27 @@ trait Logging {
  */
 object Logging {
   val logger = Logger.getRootLogger
+
+  private val errors: ListBuffer[Exception] = ListBuffer()
+
+  def addError(error: String, debug: String = null): Unit = {
+    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    errors.append(new Exception(msg))
+  }
+
+  protected def checkErrors(): Unit = {
+    if (errors.nonEmpty) {
+      logger.error("*************************")
+      logger.error("Biopet found some errors:")
+      if (logger.isDebugEnabled) {
+        for (e <- errors) {
+          logger.error(e.getMessage)
+          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+        }
+      } else {
+        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
+      }
+      throw new IllegalStateException("Biopet found errors")
+    }
+  }
 }

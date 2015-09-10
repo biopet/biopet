@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.scripts
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ConfigUtils

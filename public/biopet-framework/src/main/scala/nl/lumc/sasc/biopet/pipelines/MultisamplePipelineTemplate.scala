@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import org.broadinstitute.gatk.queue.QScript
 

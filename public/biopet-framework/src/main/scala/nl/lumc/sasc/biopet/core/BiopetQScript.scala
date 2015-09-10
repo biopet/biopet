@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QSettings
@@ -101,30 +101,5 @@ trait BiopetQScript extends Configurable with GatkLogging {
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
-  }
-}
-
-object BiopetQScript extends Logging {
-  private val errors: ListBuffer[Exception] = ListBuffer()
-
-  def addError(error: String, debug: String = null): Unit = {
-    val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
-    errors.append(new Exception(msg))
-  }
-
-  protected def checkErrors(): Unit = {
-    if (errors.nonEmpty) {
-      logger.error("*************************")
-      logger.error("Biopet found some errors:")
-      if (logger.isDebugEnabled) {
-        for (e <- errors) {
-          logger.error(e.getMessage)
-          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
-        }
-      } else {
-        errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
-      }
-      throw new IllegalStateException("Biopet found errors")
-    }
   }
 }

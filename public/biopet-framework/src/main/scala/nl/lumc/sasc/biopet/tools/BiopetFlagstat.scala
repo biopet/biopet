@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.ConfigUtils

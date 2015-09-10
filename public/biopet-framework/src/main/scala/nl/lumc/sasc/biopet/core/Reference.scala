@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
 

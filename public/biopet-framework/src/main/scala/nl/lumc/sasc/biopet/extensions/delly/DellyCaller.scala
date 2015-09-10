@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.delly
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {

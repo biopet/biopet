@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.pindel
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction {

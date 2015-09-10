@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage

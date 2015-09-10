@@ -13,10 +13,10 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.core.config
+package nl.lumc.sasc.biopet.utils.config
 
 import java.io.{ File, PrintWriter }
-import nl.lumc.sasc.biopet.utils.{Logging, ConfigUtils}
+import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 /**
@@ -25,7 +25,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils._
  * @constructor Load config with existing map
  */
 class Config(var map: Map[String, Any],
-             protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
+             protected[config] var defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
   /** Default constructor */

@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SamToFastq }

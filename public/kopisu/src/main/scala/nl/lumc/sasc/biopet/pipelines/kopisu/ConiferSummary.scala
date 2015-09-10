@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 import java.io.{ BufferedWriter, File, FileWriter }
 
 import argonaut._
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 

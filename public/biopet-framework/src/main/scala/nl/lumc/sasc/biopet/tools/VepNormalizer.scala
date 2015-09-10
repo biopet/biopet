@@ -21,7 +21,7 @@ import htsjdk.tribble.TribbleException
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 

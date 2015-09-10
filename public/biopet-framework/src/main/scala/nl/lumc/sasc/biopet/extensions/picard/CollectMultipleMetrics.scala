@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 

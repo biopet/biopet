@@ -8,7 +8,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }

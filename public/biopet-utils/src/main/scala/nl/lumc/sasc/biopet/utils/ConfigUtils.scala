@@ -19,9 +19,7 @@ import java.io.File
 
 import argonaut.Argonaut._
 import argonaut._
-import nl.lumc.sasc.biopet.utils.Logging
-import nl.lumc.sasc.biopet.core.{ BiopetQScript }
-import nl.lumc.sasc.biopet.core.config.ConfigValue
+import nl.lumc.sasc.biopet.utils.config.ConfigValue
 import org.yaml.snakeyaml.Yaml
 
 import scala.collection.JavaConversions._
@@ -317,7 +315,7 @@ object ConfigUtils extends Logging {
     private def requiredValue(value: ConfigValue): Boolean = {
       val exist = valueExists(value)
       if (!exist)
-        BiopetQScript.addError("Value does not exist but is required, key: " + value.requestIndex.key +
+        Logging.addError("Value does not exist but is required, key: " + value.requestIndex.key +
           "  module: " + value.requestIndex.module,
           if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null)
       exist

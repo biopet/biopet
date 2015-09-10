@@ -22,7 +22,7 @@ import htsjdk.samtools.{ QueryInterval, SAMFileWriter, SAMFileWriterFactory, SAM
 import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
 import htsjdk.tribble.AbstractFeatureReader.getFeatureReader
 import htsjdk.tribble.bed.BEDCodec
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.apache.commons.io.FilenameUtils.getExtension

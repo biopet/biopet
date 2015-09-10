@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.bamtobigwig
 import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.InProcessFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 

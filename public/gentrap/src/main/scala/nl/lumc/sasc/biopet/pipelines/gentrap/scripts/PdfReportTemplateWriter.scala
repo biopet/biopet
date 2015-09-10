@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.scripts
 
 import java.io.{ File, FileOutputStream }
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 

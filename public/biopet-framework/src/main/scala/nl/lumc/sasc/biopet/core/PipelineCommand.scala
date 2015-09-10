@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 import nl.lumc.sasc.biopet.utils.Logging
 import org.apache.log4j.{ PatternLayout, WriterAppender }

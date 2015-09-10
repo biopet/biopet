@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.clever
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference {

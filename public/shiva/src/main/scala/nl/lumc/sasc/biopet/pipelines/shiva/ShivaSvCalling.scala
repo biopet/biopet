@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer

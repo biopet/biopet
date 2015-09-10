@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.igvtools
 
 import java.io.{ File, FileNotFoundException }
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**

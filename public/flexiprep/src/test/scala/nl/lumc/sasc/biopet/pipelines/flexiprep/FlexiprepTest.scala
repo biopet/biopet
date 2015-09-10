@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Sickle, Zcat }
 import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
 import nl.lumc.sasc.biopet.utils.ConfigUtils

@@ -21,7 +21,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.samtools.util.Interval
 import htsjdk.variant.variantcontext.{ Allele, Genotype, VariantContext }
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList

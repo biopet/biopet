@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.delly
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.CatVariants
