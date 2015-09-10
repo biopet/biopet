@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 import java.nio.file.Paths
 
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -35,6 +35,9 @@ object SummaryToTsv extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('s', "summary") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
+    }
+    opt[File]('o', "outputFile") unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(outputFile = Some(x))
     }
     opt[String]('p', "path") required () unbounded () valueName "<string>" action { (x, c) =>
       c.copy(values = c.values ::: x :: Nil)
@@ -70,10 +73,19 @@ object SummaryToTsv extends ToolCommand {
 
     val values = fetchValues(summary, paths, sample = cmdArgs.mode == "sample", lib = cmdArgs.mode == "lib")
 
-    println(createHeader(paths))
-
-    for (lineId <- values.head._2.keys) {
-      println(createLine(paths, values, lineId))
+    cmdArgs.outputFile match {
+      case Some(file) => {
+        val writer = new PrintWriter(file)
+        writer.println(createHeader(paths))
+        for (lineId <- values.head._2.keys)
+          writer.println(createLine(paths, values, lineId))
+        writer.close()
+      }
+      case _ => {
+        println(createHeader(paths))
+        for (lineId <- values.head._2.keys)
+          println(createLine(paths, values, lineId))
+      }
     }
   }
 
