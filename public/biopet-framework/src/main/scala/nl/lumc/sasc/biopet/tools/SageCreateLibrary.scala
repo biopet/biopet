@@ -77,10 +77,10 @@ object SageCreateLibrary extends ToolCommand {
     opt[Int]("length") required () unbounded () action { (x, c) =>
       c.copy(length = x)
     }
-    opt[File]("noTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]("noTagsOutput") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noTagsOutput = x)
     }
-    opt[File]("noAntiTagsOutput") required () unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]("noAntiTagsOutput") unbounded () valueName "<file>" action { (x, c) =>
       c.copy(noAntiTagsOutput = x)
     }
     opt[File]("allGenesOutput") unbounded () valueName "<file>" action { (x, c) =>
@@ -88,8 +88,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  var tagRegex: Regex = null
-  var geneRegex = """ENSG[0-9]{11}""".r
+  val geneRegex = """ENSG[0-9]{11}""".r
 
   val tagGenesMap: mutable.Map[String, TagGenes] = mutable.Map()
 
@@ -114,23 +113,24 @@ object SageCreateLibrary extends ToolCommand {
 
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
-    tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
+    val tagRegex = (commandArgs.tag + "[CATG]{" + commandArgs.length + "}").r
 
     var count = 0
-    System.err.println("Reading fasta file")
+    logger.info("Reading fasta file")
     val reader = FastaReaderHelper.readFastaDNASequence(commandArgs.input)
-    System.err.println("Finding tags")
+    logger.info("Finding tags")
     for ((name, seq) <- reader) {
-      getTags(name, seq)
+      val result = getTags(name, seq, tagRegex)
+      addTagresultToTaglib(name, result)
       count += 1
-      if (count % 10000 == 0) System.err.println(count + " transcripts done")
+      if (count % 10000 == 0) logger.info(count + " transcripts done")
     }
-    System.err.println(count + " transcripts done")
+    logger.info(count + " transcripts done")
 
-    System.err.println("Start sorting tags")
+    logger.info("Start sorting tags")
     val tagGenesMapSorted: SortedMap[String, TagGenes] = SortedMap(tagGenesMap.toArray: _*)
 
-    System.err.println("Writting output files")
+    logger.info("Writting output files")
     val writer = new PrintWriter(commandArgs.output)
     writer.println("#tag\tfirstTag\tAllTags\tFirstAntiTag\tAllAntiTags")
     for ((tag, genes) <- tagGenesMapSorted) {
@@ -167,7 +167,7 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  def addTagresultToTaglib(name: String, tagResult: TagResult) {
+  private def addTagresultToTaglib(name: String, tagResult: TagResult) {
     val id = name.split(" ").head //.stripPrefix("hg19_ensGene_")
     val geneID = geneRegex.findFirstIn(name).getOrElse("unknown_gene")
     allGenes.add(geneID)
@@ -195,14 +195,12 @@ object SageCreateLibrary extends ToolCommand {
     }
   }
 
-  def getTags(name: String, seq: DNASequence): TagResult = {
+  def getTags(name: String, seq: DNASequence, tagRegex: Regex): TagResult = {
     val allTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getSequenceAsString).toList) yield tag.toString()
     val firstTag = if (allTags.isEmpty) null else allTags.last
     val allAntiTags: List[String] = for (tag <- tagRegex.findAllMatchIn(seq.getReverseComplement.getSequenceAsString).toList) yield tag.toString()
     val firstAntiTag = if (allAntiTags.isEmpty) null else allAntiTags.head
     val result = new TagResult(firstTag, allTags, firstAntiTag, allAntiTags)
-
-    addTagresultToTaglib(name, result)
 
     result
   }

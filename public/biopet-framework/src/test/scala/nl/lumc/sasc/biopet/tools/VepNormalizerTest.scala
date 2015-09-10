@@ -47,37 +47,37 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   val rand = new Random()
 
   @Test def testGzOutputExplode(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    val tmpPath = File.createTempFile("VepNormalizer_", ".vcf.gz").getAbsolutePath
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpPath, "-m", "explode")
     main(arguments)
   }
 
   @Test def testVcfOutputExplode(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
+    val tmpPath = File.createTempFile("VepNormalizer_", ".vcf").getAbsolutePath
+    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpPath, "-m", "explode")
     main(arguments)
   }
 
   @Test def testBcfOutputExplode(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val tmp_path = File.createTempFile("VepNormalizer_", ".bcf").getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "explode")
     main(arguments)
   }
 
   @Test def testGzOutputStandard(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf.gz"
+    val tmp_path = File.createTempFile("VepNormalizer_", ".vcf.gz").getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
     main(arguments)
   }
 
   @Test def testVcfOutputStandard(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".vcf"
+    val tmp_path = File.createTempFile("VepNormalizer_", ".vcf").getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
     main(arguments)
   }
 
   @Test def testBcfOutputStandard(): Unit = {
-    val tmp_path = "/tmp/VepNorm_" + rand.nextString(10) + ".bcf"
+    val tmp_path = File.createTempFile("VepNormalizer_", ".bcf").getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-O", tmp_path, "-m", "standard")
     main(arguments)
   }

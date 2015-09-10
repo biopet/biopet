@@ -55,10 +55,10 @@ object FastqSplitter extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text "out is a required file property"
+    } text "Path to input file"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x :: c.outputFile)
-    } text "out is a required file property"
+    } text "Path to output file"
   }
 
   /**

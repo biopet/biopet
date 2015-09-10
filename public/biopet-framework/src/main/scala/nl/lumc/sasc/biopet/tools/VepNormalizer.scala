@@ -50,7 +50,7 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
   var mode: String = config("mode", default = "standard")
   var doNotRemove: Boolean = config("do_not_remove", default = false)
 
-  override def defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 4.0
 
   override def commandLine = super.commandLine +
     required("-I", inputVCF) +

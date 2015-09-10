@@ -15,8 +15,11 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
 
+import htsjdk.samtools.{ SamReaderFactory, SamReader }
+import htsjdk.variant.vcf.VCFFileReader
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -38,6 +41,7 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
 
   val vcf = resourcePath("/chrQ.vcf")
   val bam = resourcePath("/single01.bam")
+  val vcf2 = new File(resourcePath("/chrQ2.vcf.gz"))
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
@@ -56,6 +60,21 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
     val tmp_path = "/tmp/CheckAllesVcfInBam_" + rand.nextString(10) + ".bcf"
     val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
     main(arguments)
+  }
+
+  @Test
+  def testCheckAllelesNone() = {
+    val variant = new File(vcf)
+    val samRecord = SamReaderFactory.makeDefault().open(new File(bam)).iterator().next()
+    val varRecord = new VCFFileReader(variant, false).iterator().next()
+    checkAlleles(samRecord, varRecord) shouldBe None
+  }
+
+  @Test
+  def testCheckAlleles() = {
+    val samRecord = SamReaderFactory.makeDefault().open(new File(bam)).iterator().next()
+    val varRecord = new VCFFileReader(vcf2).iterator().next()
+    checkAlleles(samRecord, varRecord) shouldBe Some("T")
   }
 
 }

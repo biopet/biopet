@@ -15,7 +15,8 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
+import java.io.{ PrintWriter, File }
+import java.nio.file.Paths
 
 import nl.lumc.sasc.biopet.core.ToolCommand
 import nl.lumc.sasc.biopet.core.summary.Summary
@@ -35,15 +36,27 @@ object SummaryToTsv extends ToolCommand {
     opt[File]('s', "summary") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
     }
-    opt[File]('o', "output") maxOccurs 1 unbounded () valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputFile") unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = Some(x))
     }
-    opt[String]('p', "path") required () unbounded () valueName "<value>" action { (x, c) =>
+    opt[String]('p', "path") required () unbounded () valueName "<string>" action { (x, c) =>
       c.copy(values = c.values ::: x :: Nil)
-    }
+    } text
+      """
+        |String that determines the values extracted from the summary. Should be of the format:
+        |<header_name>=<namespace>:<lower_namespace>:<even_lower_namespace>...
+      """.stripMargin
     opt[String]('m', "mode") maxOccurs 1 unbounded () valueName "<root|sample|lib>" action { (x, c) =>
       c.copy(mode = x)
-    }
+    } validate {
+      x => if (Set("root", "sample", "lib").contains(x)) success else failure("Unsupported mode")
+    } text
+      """
+        |Determines on what level to aggregate data.
+        |root: at the root level
+        |sample: at the sample level
+        |lib: at the library level
+      """.stripMargin
 
   }
 
@@ -56,14 +69,23 @@ object SummaryToTsv extends ToolCommand {
     val paths = cmdArgs.values.map(x => {
       val split = x.split("=", 2)
       split(0) -> split(1).split(":")
-    })
+    }).toMap
 
-    val values = fetchValues(summary, paths.toMap, sample = cmdArgs.mode == "sample", lib = cmdArgs.mode == "lib")
+    val values = fetchValues(summary, paths, sample = cmdArgs.mode == "sample", lib = cmdArgs.mode == "lib")
 
-    println(paths.map(_._1).mkString("\t", "\t", ""))
-
-    for (lineId <- values.head._2.keys) {
-      println(paths.map(x => values(x._1)(lineId).getOrElse("")).mkString(lineId + "\t", "\t", ""))
+    cmdArgs.outputFile match {
+      case Some(file) => {
+        val writer = new PrintWriter(file)
+        writer.println(createHeader(paths))
+        for (lineId <- values.head._2.keys)
+          writer.println(createLine(paths, values, lineId))
+        writer.close()
+      }
+      case _ => {
+        println(createHeader(paths))
+        for (lineId <- values.head._2.keys)
+          println(createLine(paths, values, lineId))
+      }
     }
   }
 
@@ -71,9 +93,19 @@ object SummaryToTsv extends ToolCommand {
                   sample: Boolean = false,
                   lib: Boolean = false) = {
     for ((name, path) <- paths) yield name -> {
-      if (lib) summary.getLibraryValues(path: _*).map(a => (a._1._1 + "-" + a._1._2) -> a._2)
-      else if (sample) summary.getSampleValues(path: _*)
+      if (lib) {
+        summary.getLibraryValues(path: _*).map(a => (a._1._1 + "-" + a._1._2) -> a._2)
+      } else if (sample) summary.getSampleValues(path: _*)
       else Map("value" -> summary.getValue(path: _*))
     }
+  }
+
+  def createHeader(paths: Map[String, Array[String]]): String = {
+    paths.map(_._1).mkString("\t", "\t", "")
+  }
+
+  def createLine(paths: Map[String, Array[String]],
+                 values: Map[String, Map[String, Option[Any]]], lineId: String): String = {
+    paths.map(x => values(x._1)(lineId).getOrElse("")).mkString(lineId + "\t", "\t", "")
   }
 }

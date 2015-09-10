@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
 import nl.lumc.sasc.biopet.core.config.Configurable
@@ -45,7 +45,7 @@ class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizab
 
   override def defaultCoreMemory = 2.5
 
-  override def commandLine = super.commandLine + required("-i", input) + " > " + required(output)
+  override def commandLine = super.commandLine + required("-i", input) + required("-o", output)
 
   def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)
@@ -108,7 +108,7 @@ object SeqStat extends ToolCommand {
   private var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
   private var readQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
 
-  case class Args(fastq: File = new File("")) extends AbstractArgs
+  case class Args(fastq: File = null, outputJson: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -117,11 +117,14 @@ object SeqStat extends ToolCommand {
         |$commandName - Summarize FastQ
       """.stripMargin)
 
-    opt[File]('i', "fastq") required () valueName "<fastq>" action { (x, c) =>
+    opt[File]('i', "fastq") required () unbounded () valueName "<fastq>" action { (x, c) =>
       c.copy(fastq = x)
     } validate {
       x => if (x.exists) success else failure("FASTQ file not found")
     } text "FastQ file to generate stats from"
+    opt[File]('o', "output") unbounded () valueName "<json>" action { (x, c) =>
+      c.copy(outputJson = Some(x))
+    } text "File to write output to, if not supplied output go to stdout"
   }
 
   /**
@@ -317,6 +320,13 @@ object SeqStat extends ToolCommand {
       ))
     )
 
-    println(ConfigUtils.mapToJson(report))
+    commandArgs.outputJson match {
+      case Some(file) => {
+        val writer = new PrintWriter(file)
+        writer.println(ConfigUtils.mapToJson(report))
+        writer.close()
+      }
+      case _ => println(ConfigUtils.mapToJson(report))
+    }
   }
 }
