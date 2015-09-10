@@ -40,6 +40,7 @@
 	    <module>toucan</module>
         <module>shiva</module>
         <module>basty</module>
+        <module>biopet-core</module>
     </modules>
 
     <properties>
