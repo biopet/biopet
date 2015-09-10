@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
+import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
 import nl.lumc.sasc.biopet.core.ToolCommand
@@ -24,11 +24,16 @@ import scala.collection.JavaConversions._
 import scala.io.Source
 
 object FindRepeatsPacBio extends ToolCommand {
-  case class Args(inputBam: File = null, inputBed: File = null) extends AbstractArgs
+  case class Args(inputBam: File = null,
+                  outputFile: Option[File] = None,
+                  inputBed: File = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputBam") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBam = x)
+    } text "Path to input file"
+    opt[File]('o', "outputFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(outputFile = Some(x))
     } text "Path to input file"
     opt[File]('b', "inputBed") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputBed = x)
@@ -50,7 +55,6 @@ object FindRepeatsPacBio extends ToolCommand {
     val header = List("chr", "startPos", "stopPos", "Repeat_seq", "repeatLength",
       "original_Repeat_readLength", "Calculated_repeat_readLength",
       "minLength", "maxLength", "inserts", "deletions", "notSpan")
-    println(header.mkString("\t"))
 
     for (
       bedLine <- Source.fromFile(commandArgs.inputBed).getLines();
@@ -84,9 +88,21 @@ object FindRepeatsPacBio extends ToolCommand {
           if (length < minLength || minLength == -1) minLength = length
         }
       }
-      println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength,
-        maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
       bamIter.close()
+      commandArgs.outputFile match {
+        case Some(file) => {
+          val writer = new PrintWriter(file)
+          writer.println(header.mkString("\t"))
+          writer.println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength,
+            maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
+          writer.close()
+        }
+        case _ => {
+          println(header.mkString("\t"))
+          println(List(chr, startPos, stopPos, typeRepeat, repeatLength, oriRepeatLength, calcRepeatLength.mkString(","), minLength,
+            maxLength, inserts.mkString("/"), deletions.mkString("/"), notSpan).mkString("\t"))
+        }
+      }
     }
   }
 
