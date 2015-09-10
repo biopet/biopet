@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.utils.{Logging, tryToParseNumber}
+import nl.lumc.sasc.biopet.utils.{ Logging, tryToParseNumber }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 import scala.io.Source

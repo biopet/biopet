@@ -43,7 +43,7 @@ object Logging {
     errors.append(new Exception(msg))
   }
 
-  protected def checkErrors(): Unit = {
+  def checkErrors(): Unit = {
     if (errors.nonEmpty) {
       logger.error("*************************")
       logger.error("Biopet found some errors:")
