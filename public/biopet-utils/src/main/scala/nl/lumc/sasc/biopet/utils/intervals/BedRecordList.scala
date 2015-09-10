@@ -9,7 +9,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
-import nl.lumc.sasc.biopet.core.Logging
+import nl.lumc.sasc.biopet.utils.Logging
 
 /**
  * Created by pjvan_thof on 8/20/15.

@@ -19,7 +19,8 @@ import java.io.File
 
 import argonaut.Argonaut._
 import argonaut._
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, Logging }
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.core.{ BiopetQScript }
 import nl.lumc.sasc.biopet.core.config.ConfigValue
 import org.yaml.snakeyaml.Yaml
 

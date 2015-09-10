@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QSettings
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction

@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.core
 
 import nl.lumc.sasc.biopet.FullVersion
+import nl.lumc.sasc.biopet.utils.Logging
 
 /**
  * Trait for biopet tools, sets some default args

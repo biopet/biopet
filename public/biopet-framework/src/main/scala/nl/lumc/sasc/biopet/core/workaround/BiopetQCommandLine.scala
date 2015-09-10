@@ -50,7 +50,7 @@ import java.util
 import java.util.ResourceBundle
 
 import nl.lumc.sasc.biopet.FullVersion
-import nl.lumc.sasc.biopet.core.Logging
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.engine.{ QGraph, QGraphSettings }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging, ScalaCompoundArgumentTypeDescriptor, ClassFieldCache }
 import org.broadinstitute.gatk.queue.{ QCommandPlugin, QScript, QScriptManager }
