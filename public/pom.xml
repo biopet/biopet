@@ -41,6 +41,7 @@
         <module>shiva</module>
         <module>basty</module>
         <module>biopet-core</module>
+        <module>biopet-utils</module>
     </modules>
 
     <properties>
