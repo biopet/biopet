@@ -19,7 +19,7 @@ import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ MainCommand, Logging }
 import org.apache.log4j.{ PatternLayout, WriterAppender }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 

@@ -16,10 +16,10 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
-
-import nl.lumc.sasc.biopet.core.summary.Summary
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
-import nl.lumc.sasc.biopet.utils.{Logging, IoUtils}
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.tools.ToolCommand
+import nl.lumc.sasc.biopet.utils.summary.Summary
+import nl.lumc.sasc.biopet.utils.{ Logging, IoUtils }
 import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 import scala.collection.mutable

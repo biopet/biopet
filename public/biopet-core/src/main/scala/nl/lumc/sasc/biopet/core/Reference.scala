@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
@@ -99,7 +100,7 @@ trait Reference extends Configurable {
   /** Check fasta file if file exist and index file are there */
   def checkFasta(file: File): Unit = {
     if (!Reference.checked.contains(file)) {
-      if (!file.exists()) BiopetQScript.addError(s"Reference not found: $file, species: $referenceSpecies, name: $referenceName, configValue: " + config("reference_fasta"))
+      if (!file.exists()) Logging.addError(s"Reference not found: $file, species: $referenceSpecies, name: $referenceName, configValue: " + config("reference_fasta"))
 
       if (dictRequired) Reference.requireDict(file)
       if (faiRequired) Reference.requireFai(file)

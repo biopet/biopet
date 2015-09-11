@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.{ PrintWriter, StringWriter }
 
 import nl.lumc.sasc.biopet.core.BiopetExecutable._
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ MainCommand, Logging }
 import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
 import org.apache.log4j.Logger
 

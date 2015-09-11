@@ -42,6 +42,8 @@
         <module>basty</module>
         <module>biopet-core</module>
         <module>biopet-utils</module>
+        <module>biopet-tools</module>
+        <module>biopet-tools-extensions</module>
     </modules>
 
     <properties>

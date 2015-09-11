@@ -152,7 +152,7 @@ trait MultiSampleQScript extends SummaryQScript {
   private var currentLib: Option[String] = None
 
   /** Prefix full path with sample and library for jobs that's are created in current state */
-  override protected[core] def configFullPath: List[String] = {
+  override def configFullPath: List[String] = {
     val sample = currentSample match {
       case Some(s) => "samples" :: s :: Nil
       case _       => Nil

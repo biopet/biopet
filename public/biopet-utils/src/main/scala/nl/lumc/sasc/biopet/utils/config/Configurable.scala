@@ -29,10 +29,10 @@ trait Configurable extends ImplicitConversions {
   def configPath: List[String] = if (root != null) root.configFullPath else Nil
 
   /** Gets name of module for config */
-  protected[config] def configName = getClass.getSimpleName.toLowerCase
+  def configName = getClass.getSimpleName.toLowerCase
 
   /** ull path with module in there */
-  protected[config] def configFullPath: List[String] = configPath ::: configName :: Nil
+  def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
   def defaults: Map[String, Any] = {
