@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>BiopetToolsExtensions</artifactId>
+    <artifactId>BiopetExtensions</artifactId>
 
     <dependencies>
         <dependency>
@@ -18,14 +18,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetExtensions</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetTools</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.10</artifactId>
+            <version>2.2.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

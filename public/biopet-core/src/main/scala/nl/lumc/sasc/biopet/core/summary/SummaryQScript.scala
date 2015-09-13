@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.Md5sum
+import nl.lumc.sasc.biopet.core.extensions.Md5sum
 
 import scala.collection.mutable
 
