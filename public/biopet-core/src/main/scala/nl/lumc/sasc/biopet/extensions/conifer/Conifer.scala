@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.conifer
 
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 
 abstract class Conifer extends PythonCommandLineFunction {
   override def subPath = "conifer" :: super.subPath

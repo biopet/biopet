@@ -13,9 +13,9 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions
+package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 

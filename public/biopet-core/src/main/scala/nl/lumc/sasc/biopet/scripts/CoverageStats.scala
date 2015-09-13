@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.scripts
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 

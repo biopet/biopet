@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
