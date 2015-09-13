@@ -17,14 +17,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
-import htsjdk.variant.variantcontext.{GenotypeType, VariantContext}
-import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
-import scala.collection.JavaConversions._
-import scala.io.Source
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName

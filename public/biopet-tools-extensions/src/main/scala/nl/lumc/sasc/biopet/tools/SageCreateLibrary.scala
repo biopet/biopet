@@ -15,18 +15,11 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.File
 
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
-import org.biojava3.core.sequence.DNASequence
-import org.biojava3.core.sequence.io.FastaReaderHelper
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import scala.collection.JavaConversions._
-import scala.collection.{ mutable, SortedMap }
-import scala.collection.mutable.{ Map, Set }
-import scala.util.matching.Regex
 
 class SageCreateLibrary(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName

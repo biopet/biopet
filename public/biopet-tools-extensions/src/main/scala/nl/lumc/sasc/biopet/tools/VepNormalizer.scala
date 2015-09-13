@@ -17,15 +17,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.tribble.TribbleException
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
-import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
-import htsjdk.variant.vcf._
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
-import scala.collection.JavaConversions._
-import scala.collection.mutable.{Map => MMap}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.

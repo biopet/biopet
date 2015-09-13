@@ -17,9 +17,8 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
@@ -51,7 +50,7 @@ class PrefixFastq(val root: Configurable) extends ToolCommandFuntion {
     optional("-s", prefixSeq)
 }
 
-object PrefixFastq extends ToolCommand {
+object PrefixFastq {
   /**
    * Create a PrefixFastq class object with a sufix ".prefix.fastq" in the output folder
    *

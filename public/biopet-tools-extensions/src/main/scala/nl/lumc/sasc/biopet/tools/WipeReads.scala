@@ -17,17 +17,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import com.google.common.hash.{BloomFilter, Funnel}
-import htsjdk.samtools.util.{Interval, IntervalTreeMap}
-import htsjdk.samtools.{QueryInterval, SAMFileWriter, SAMFileWriterFactory, SAMRecord, SamReader, SamReaderFactory, ValidationStringency}
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import org.apache.commons.io.FilenameUtils.getExtension
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
-import scala.collection.JavaConverters._
-import scala.io.Source
-import scala.math.{max, min}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 // TODO: finish implementation for usage in pipelines
 /**

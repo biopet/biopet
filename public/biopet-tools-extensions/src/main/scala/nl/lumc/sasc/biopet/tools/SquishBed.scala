@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvanthof on 22/08/15.

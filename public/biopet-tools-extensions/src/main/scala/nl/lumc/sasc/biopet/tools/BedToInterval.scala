@@ -15,14 +15,11 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.File
 
-import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import scala.io.Source
 
 /**
  * @deprecated Use picard.util.BedToIntervalList instead

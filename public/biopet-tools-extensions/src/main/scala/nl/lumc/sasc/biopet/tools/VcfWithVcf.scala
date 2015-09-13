@@ -16,16 +16,10 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
-import java.util
 
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
-import htsjdk.variant.variantcontext.{VariantContext, VariantContextBuilder}
-import htsjdk.variant.vcf._
-import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
-import scala.collection.JavaConversions._
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Biopet extension for tool VcfWithVcf

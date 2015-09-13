@@ -15,14 +15,13 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ BufferedWriter, File, FileWriter, OutputStreamWriter }
+import java.io.File
 
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable.{ Set => MutSet }
-import scala.io.{ BufferedSource, Source }
 
 /**
  * Biopet wrapper for the [[MergeTables]] command line tool.

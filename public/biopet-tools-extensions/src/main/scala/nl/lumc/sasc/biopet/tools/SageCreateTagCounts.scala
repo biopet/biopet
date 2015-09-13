@@ -15,15 +15,11 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.File
 
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import scala.collection.{ mutable, SortedMap }
-import scala.collection.mutable.Map
-import scala.io.Source
 
 class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName

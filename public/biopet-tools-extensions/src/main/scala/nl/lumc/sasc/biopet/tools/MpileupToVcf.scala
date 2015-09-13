@@ -15,20 +15,16 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, PrintWriter }
+import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommand, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.io.Source
-import scala.math.{ floor, round }
 
 class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
   javaMainClass = getClass.getName

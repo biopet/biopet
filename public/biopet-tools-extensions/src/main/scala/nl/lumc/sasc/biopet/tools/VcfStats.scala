@@ -15,23 +15,14 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, FileOutputStream, PrintWriter}
+import java.io.File
 
-import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.samtools.util.Interval
-import htsjdk.variant.variantcontext.{Allele, Genotype, VariantContext}
-import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.core.Reference
-import nl.lumc.sasc.biopet.core.summary.{Summarizable, SummaryQScript}
+import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable
 import scala.io.Source
-import scala.sys.process.{Process, ProcessLogger}
-import scala.util.Random
 
 /**
  * This tool will generate statistics from a vcf file

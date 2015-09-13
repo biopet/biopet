@@ -2,6 +2,12 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+
 /**
  * Seqstat function class for usage in Biopet pipelines
  *

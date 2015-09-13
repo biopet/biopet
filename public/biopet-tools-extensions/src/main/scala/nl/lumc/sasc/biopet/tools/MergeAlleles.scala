@@ -17,17 +17,9 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ Allele, VariantContext, VariantContextBuilder }
-import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader }
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ ToolCommand, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-
-import scala.collection.JavaConversions._
-import scala.collection.{ mutable, SortedMap }
-import scala.collection.mutable.{ Map, Set }
 
 class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
