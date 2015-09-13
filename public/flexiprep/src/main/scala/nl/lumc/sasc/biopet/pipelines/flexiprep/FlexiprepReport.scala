@@ -19,8 +19,8 @@ import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportBuilder, ReportPage, ReportSection }
-import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
+import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
   val builder = FlexiprepReport

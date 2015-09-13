@@ -16,7 +16,6 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.Ln
@@ -25,7 +24,7 @@ import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDupli
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.FastqSync
+import nl.lumc.sasc.biopet.extensions.tools.FastqSync
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.JavaConversions._

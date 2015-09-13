@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsInter
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 import nl.lumc.sasc.biopet.scripts.CoverageStats
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings

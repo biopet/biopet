@@ -47,7 +47,7 @@ class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizab
   }
 }
 
-object Seqstat {
+object SeqStat {
   def apply(root: Configurable, input: File, output: File): SeqStat = {
     val seqstat = new SeqStat(root)
     seqstat.input = input

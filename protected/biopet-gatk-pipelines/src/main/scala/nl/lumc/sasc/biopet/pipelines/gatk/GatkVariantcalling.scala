@@ -12,7 +12,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
-import nl.lumc.sasc.biopet.tools.{ MergeAlleles, MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeAlleles, MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile

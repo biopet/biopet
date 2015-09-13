@@ -12,7 +12,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.tools.VcfStats
+import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers

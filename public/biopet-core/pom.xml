@@ -41,6 +41,12 @@
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
             <version>3.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.broadinstitute.gatk</groupId>
+                    <artifactId>gsalib</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>

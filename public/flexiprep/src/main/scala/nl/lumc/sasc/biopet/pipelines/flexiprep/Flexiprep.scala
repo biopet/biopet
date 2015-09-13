@@ -15,11 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.tools.{ FastqSync, SeqStat }
+import nl.lumc.sasc.biopet.extensions.{ Pbzip2, Zcat, Gzip, Sickle }
+import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
