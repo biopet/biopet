@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.{ QueryInterval, SAMRecord, SamReaderFactory, ValidationStringency }
+import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
 import scala.io.Source

@@ -21,6 +21,7 @@ import htsjdk.samtools.SamReaderFactory
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.VcfUtils._
 
 import scala.collection.JavaConversions._

@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ BufferedWriter, File, FileWriter, OutputStreamWriter }
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
+
 import scala.collection.mutable.{ Set => MutSet }
 import scala.io.{ BufferedSource, Source }
 

@@ -21,6 +21,7 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ Allele, VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader }
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._

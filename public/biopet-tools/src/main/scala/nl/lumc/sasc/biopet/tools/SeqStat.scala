@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ToolCommand, ConfigUtils }
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map

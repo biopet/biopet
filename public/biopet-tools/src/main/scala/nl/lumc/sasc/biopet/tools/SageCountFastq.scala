@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, FileReader, PrintWriter }
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import org.biojava3.sequencing.io.fastq.{ Fastq, StreamListener, SangerFastqReader }
 
 import scala.collection.{ SortedMap, mutable }

@@ -20,6 +20,7 @@ import java.io.File
 import htsjdk.samtools.{ QueryInterval, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.fastq.{ BasicFastqWriter, FastqReader, FastqRecord }
 import htsjdk.samtools.util.Interval
+import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.{ Set => MSet }

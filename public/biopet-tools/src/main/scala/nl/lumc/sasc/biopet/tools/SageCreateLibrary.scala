@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import org.biojava3.core.sequence.DNASequence
 import org.biojava3.core.sequence.io.FastaReaderHelper
 

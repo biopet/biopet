@@ -21,6 +21,7 @@ import htsjdk.tribble.TribbleException
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.vcf._
+import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.{ Map => MMap }

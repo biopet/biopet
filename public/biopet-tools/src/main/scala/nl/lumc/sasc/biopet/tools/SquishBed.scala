@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 
 /**

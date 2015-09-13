@@ -19,6 +19,7 @@ import java.io.{ PrintWriter, InputStream, File }
 import java.util
 
 import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.rscript.ScatterPlot
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 

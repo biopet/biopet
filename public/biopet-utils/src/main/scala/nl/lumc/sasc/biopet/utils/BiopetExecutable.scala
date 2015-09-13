@@ -13,12 +13,10 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.core
+package nl.lumc.sasc.biopet.utils
 
 import java.io.{ PrintWriter, StringWriter }
 
-import nl.lumc.sasc.biopet.core.BiopetExecutable._
-import nl.lumc.sasc.biopet.utils.{ MainCommand, Logging }
 import nl.lumc.sasc.biopet.{ FullVersion, LastCommitHash }
 import org.apache.log4j.Logger
 
@@ -89,7 +87,7 @@ trait BiopetExecutable extends Logging {
       case Array("version") =>
         println("version: " + FullVersion)
       case Array("license") =>
-        println(getLicense)
+        println(BiopetExecutable.getLicense)
       case Array(module, name, passArgs @ _*) =>
         try {
           getCommand(module, name).main(passArgs.toArray)

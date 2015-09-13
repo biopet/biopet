@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ PrintWriter, File }
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.summary.Summary
 
 /**

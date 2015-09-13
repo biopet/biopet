@@ -21,6 +21,7 @@ import java.util
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
 
 import scala.collection.JavaConversions._

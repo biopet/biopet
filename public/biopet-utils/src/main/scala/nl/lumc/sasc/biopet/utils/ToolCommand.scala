@@ -13,9 +13,8 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.utils
 
-import nl.lumc.sasc.biopet.utils.{ Logging, MainCommand }
 import nl.lumc.sasc.biopet.FullVersion
 
 /**

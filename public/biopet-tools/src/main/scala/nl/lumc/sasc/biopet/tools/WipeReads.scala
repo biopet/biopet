@@ -20,6 +20,7 @@ import java.io.File
 import com.google.common.hash.{ PrimitiveSink, Funnel, BloomFilter }
 import htsjdk.samtools.{ QueryInterval, SAMFileWriter, SAMFileWriterFactory, SAMRecord, SamReader, SamReaderFactory, ValidationStringency }
 import htsjdk.samtools.util.{ Interval, IntervalTreeMap }
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.apache.commons.io.FilenameUtils.getExtension
 

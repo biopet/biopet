@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.utils.ToolCommand
+
 import scala.collection.{ SortedMap, mutable }
 import scala.io.Source
 

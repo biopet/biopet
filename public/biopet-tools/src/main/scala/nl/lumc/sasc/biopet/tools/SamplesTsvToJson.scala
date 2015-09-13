@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import scala.collection.mutable
 
 import scala.io.Source

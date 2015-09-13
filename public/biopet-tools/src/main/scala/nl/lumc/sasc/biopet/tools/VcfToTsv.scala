@@ -19,6 +19,7 @@ import java.io.{ File, PrintStream }
 import java.text.DecimalFormat
 
 import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable

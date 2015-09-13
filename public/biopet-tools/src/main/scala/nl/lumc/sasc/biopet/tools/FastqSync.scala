@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 
 import htsjdk.samtools.fastq.{ AsyncFastqWriter, BasicFastqWriter, FastqReader, FastqRecord }
+import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
