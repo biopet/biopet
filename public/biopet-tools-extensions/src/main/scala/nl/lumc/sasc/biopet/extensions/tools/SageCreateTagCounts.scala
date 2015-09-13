@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,29 +21,34 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
+class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input vcf", shortName = "I", required = true)
-  var inputVcf: File = _
+  @Input(doc = "Raw count file", shortName = "input", required = true)
+  var input: File = _
 
-  @Output(doc = "Output vcf", shortName = "o", required = false)
-  var outputVcf: File = _
+  @Input(doc = "tag library", shortName = "taglib", required = true)
+  var tagLib: File = _
 
-  var minSampleDepth: Option[Int] = config("min_sample_depth")
-  var minTotalDepth: Option[Int] = config("min_total_depth")
-  var minAlternateDepth: Option[Int] = config("min_alternate_depth")
-  var minSamplesPass: Option[Int] = config("min_samples_pass")
-  var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
+  @Output(doc = "Sense count file", shortName = "sense", required = true)
+  var countSense: File = _
+
+  @Output(doc = "Sense all count file", shortName = "allsense", required = true)
+  var countAllSense: File = _
+
+  @Output(doc = "AntiSense count file", shortName = "antisense", required = true)
+  var countAntiSense: File = _
+
+  @Output(doc = "AntiSense all count file", shortName = "allantisense", required = true)
+  var countAllAntiSense: File = _
 
   override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
-    required("-I", inputVcf) +
-    required("-o", outputVcf) +
-    optional("--minSampleDepth", minSampleDepth) +
-    optional("--minTotalDepth", minTotalDepth) +
-    optional("--minAlternateDepth", minAlternateDepth) +
-    optional("--minSamplesPass", minSamplesPass) +
-    conditional(filterRefCalls, "--filterRefCalls")
+    required("-I", input) +
+    required("--tagLib", tagLib) +
+    optional("--countSense", countSense) +
+    optional("--countAllSense", countAllSense) +
+    optional("--countAntiSense", countAntiSense) +
+    optional("--countAllAntiSense", countAllAntiSense)
 }

@@ -13,31 +13,33 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
+// TODO: finish implementation for usage in pipelines
 /**
- * Queue extension for the FastqSplitter
- * @param root Parent object
+ * WipeReads function class for usage in Biopet pipelines
+ *
+ * @param root Configuration object for the pipeline
  */
-class FastqSplitter(val root: Configurable) extends ToolCommandFuntion {
+class WipeReads(val root: Configurable) extends ToolCommandFuntion {
+
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input fastq", shortName = "input", required = true)
-  var input: File = _
+  @Input(doc = "Input BAM file (must be indexed)", shortName = "I", required = true)
+  var inputBam: File = null
 
-  @Output(doc = "Output fastq files", shortName = "output", required = true)
-  var output: List[File] = Nil
+  @Input(doc = "Interval file", shortName = "r", required = true)
+  var intervalFile: File = null
 
-  override def defaultCoreMemory = 4.0
+  @Output(doc = "Output BAM", shortName = "o", required = true)
+  var outputBam: File = null
 
-  /** * Generate command to execute */
-  override def commandLine = super.commandLine +
-    required("-I", input) +
-    repeat("-o", output)
+  @Output(doc = "BAM containing discarded reads", shortName = "f", required = false)
+  var discardedBam: File = null
 }

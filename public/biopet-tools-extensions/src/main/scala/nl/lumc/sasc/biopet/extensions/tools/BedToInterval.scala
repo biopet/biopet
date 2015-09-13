@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,25 +21,32 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-// TODO: finish implementation for usage in pipelines
 /**
- * WipeReads function class for usage in Biopet pipelines
- *
- * @param root Configuration object for the pipeline
+ * @deprecated Use picard.util.BedToIntervalList instead
  */
-class WipeReads(val root: Configurable) extends ToolCommandFuntion {
-
+class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input BAM file (must be indexed)", shortName = "I", required = true)
-  var inputBam: File = null
+  @Input(doc = "Input Bed file", required = true)
+  var input: File = _
 
-  @Input(doc = "Interval file", shortName = "r", required = true)
-  var intervalFile: File = null
+  @Input(doc = "Bam File", required = true)
+  var bamFile: File = _
 
-  @Output(doc = "Output BAM", shortName = "o", required = true)
-  var outputBam: File = null
+  @Output(doc = "Output interval list", required = true)
+  var output: File = _
 
-  @Output(doc = "BAM containing discarded reads", shortName = "f", required = false)
-  var discardedBam: File = null
+  override def defaultCoreMemory = 1.0
+
+  override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
+}
+
+object BedToInterval {
+  def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
+    val bedToInterval = new BedToInterval(root)
+    bedToInterval.input = inputBed
+    bedToInterval.bamFile = inputBam
+    bedToInterval.output = output
+    bedToInterval
+  }
 }

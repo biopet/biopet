@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,11 +21,17 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
+/**
+ * Biopet extension for tool VcfWithVcf
+ */
+class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input vcf files", shortName = "input", required = true)
-  var input: List[File] = Nil
+  @Input(doc = "Input vcf file", shortName = "input", required = true)
+  var input: File = _
+
+  @Input(doc = "Secondary vcf file", shortName = "secondary", required = true)
+  var secondaryVcf: File = _
 
   @Output(doc = "Output vcf file", shortName = "output", required = true)
   var output: File = _
@@ -33,27 +39,20 @@ class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "Output vcf file index", shortName = "output", required = true)
   private var outputIndex: File = _
 
-  var reference: File = config("reference")
+  var fields: List[(String, String, Option[String])] = List()
 
-  override def defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 2.0
 
   override def beforeGraph() {
     super.beforeGraph()
     if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
+    if (fields.isEmpty) throw new IllegalArgumentException("No fields found for VcfWithVcf")
   }
 
   override def commandLine = super.commandLine +
-    repeat("-I", input) +
+    required("-I", input) +
     required("-o", output) +
-    required("-R", reference)
-}
-
-object MergeAlleles {
-  def apply(root: Configurable, input: List[File], output: File): MergeAlleles = {
-    val mergeAlleles = new MergeAlleles(root)
-    mergeAlleles.input = input
-    mergeAlleles.output = output
-    mergeAlleles
-  }
+    required("-s", secondaryVcf) +
+    repeat("-f", fields.map(x => x._1 + ":" + x._2 + ":" + x._3.getOrElse("none")))
 }

@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,34 +21,29 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SageCreateLibrary(val root: Configurable) extends ToolCommandFuntion {
+class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input fasta", shortName = "input", required = true)
-  var input: File = _
+  @Input(doc = "Input vcf", shortName = "I", required = true)
+  var inputVcf: File = _
 
-  @Output(doc = "Output tag library", shortName = "output", required = true)
-  var output: File = _
+  @Output(doc = "Output vcf", shortName = "o", required = false)
+  var outputVcf: File = _
 
-  @Output(doc = "Output no tags", shortName = "noTagsOutput", required = false)
-  var noTagsOutput: File = _
-
-  @Output(doc = "Output no anti tags library", shortName = "noAntiTagsOutput", required = false)
-  var noAntiTagsOutput: File = _
-
-  @Output(doc = "Output file all genes", shortName = "allGenes", required = false)
-  var allGenesOutput: File = _
-
-  var tag: String = config("tag", default = "CATG")
-  var length: Option[Int] = config("length", default = 17)
+  var minSampleDepth: Option[Int] = config("min_sample_depth")
+  var minTotalDepth: Option[Int] = config("min_total_depth")
+  var minAlternateDepth: Option[Int] = config("min_alternate_depth")
+  var minSamplesPass: Option[Int] = config("min_samples_pass")
+  var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
   override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
-    required("-I", input) +
-    optional("--tag", tag) +
-    optional("--length", length) +
-    optional("--noTagsOutput", noTagsOutput) +
-    optional("--noAntiTagsOutput", noAntiTagsOutput) +
-    required("-o", output)
+    required("-I", inputVcf) +
+    required("-o", outputVcf) +
+    optional("--minSampleDepth", minSampleDepth) +
+    optional("--minTotalDepth", minTotalDepth) +
+    optional("--minAlternateDepth", minAlternateDepth) +
+    optional("--minSamplesPass", minSamplesPass) +
+    conditional(filterRefCalls, "--filterRefCalls")
 }

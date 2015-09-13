@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,32 +21,18 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-/**
- * @deprecated Use picard.util.BedToIntervalList instead
- */
-class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
+class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input Bed file", required = true)
+  @Input(doc = "Input fasta", shortName = "input", required = true)
   var input: File = _
 
-  @Input(doc = "Bam File", required = true)
-  var bamFile: File = _
-
-  @Output(doc = "Output interval list", required = true)
+  @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
-  override def defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 3.0
 
-  override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
-}
-
-object BedToInterval {
-  def apply(root: Configurable, inputBed: File, inputBam: File, output: File): BedToInterval = {
-    val bedToInterval = new BedToInterval(root)
-    bedToInterval.input = inputBed
-    bedToInterval.bamFile = inputBam
-    bedToInterval.output = output
-    bedToInterval
-  }
+  override def commandLine = super.commandLine +
+    required("-I", input) +
+    required("-o", output)
 }

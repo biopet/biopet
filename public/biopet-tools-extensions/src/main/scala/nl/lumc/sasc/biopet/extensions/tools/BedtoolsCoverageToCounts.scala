@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
@@ -21,34 +21,18 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SageCreateTagCounts(val root: Configurable) extends ToolCommandFuntion {
+class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Raw count file", shortName = "input", required = true)
+  @Input(doc = "Input fasta", shortName = "input", required = true)
   var input: File = _
 
-  @Input(doc = "tag library", shortName = "taglib", required = true)
-  var tagLib: File = _
-
-  @Output(doc = "Sense count file", shortName = "sense", required = true)
-  var countSense: File = _
-
-  @Output(doc = "Sense all count file", shortName = "allsense", required = true)
-  var countAllSense: File = _
-
-  @Output(doc = "AntiSense count file", shortName = "antisense", required = true)
-  var countAntiSense: File = _
-
-  @Output(doc = "AntiSense all count file", shortName = "allantisense", required = true)
-  var countAllAntiSense: File = _
+  @Output(doc = "Output tag library", shortName = "output", required = true)
+  var output: File = _
 
   override def defaultCoreMemory = 3.0
 
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("--tagLib", tagLib) +
-    optional("--countSense", countSense) +
-    optional("--countAllSense", countAllSense) +
-    optional("--countAntiSense", countAntiSense) +
-    optional("--countAllAntiSense", countAllAntiSense)
+    required("-o", output)
 }

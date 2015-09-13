@@ -13,26 +13,31 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.tools
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
+/**
+ * Queue extension for the FastqSplitter
+ * @param root Parent object
+ */
+class FastqSplitter(val root: Configurable) extends ToolCommandFuntion {
   javaMainClass = getClass.getName
 
-  @Input(doc = "Input fasta", shortName = "input", required = true)
+  @Input(doc = "Input fastq", shortName = "input", required = true)
   var input: File = _
 
-  @Output(doc = "Output tag library", shortName = "output", required = true)
-  var output: File = _
+  @Output(doc = "Output fastq files", shortName = "output", required = true)
+  var output: List[File] = Nil
 
-  override def defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 4.0
 
+  /** * Generate command to execute */
   override def commandLine = super.commandLine +
     required("-I", input) +
-    required("-o", output)
+    repeat("-o", output)
 }
