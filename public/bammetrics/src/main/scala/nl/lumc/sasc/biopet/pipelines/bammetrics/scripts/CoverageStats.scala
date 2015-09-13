@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.scripts
+package nl.lumc.sasc.biopet.pipelines.bammetrics.scripts
 
 import java.io.File
 
