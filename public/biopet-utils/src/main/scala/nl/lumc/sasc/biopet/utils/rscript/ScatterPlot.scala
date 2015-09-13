@@ -13,26 +13,22 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.rscript
+package nl.lumc.sasc.biopet.utils.rscript
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for en general line plot with R
  *
  * Created by pjvan_thof on 4/29/15.
  */
-class LinePlot(val root: Configurable) extends RscriptCommandLineFunction {
-  protected var script: File = config("script", default = "plotXY.R")
+class ScatterPlot(val root: Configurable) extends Rscript {
+  protected var script: File = config("script", default = "plotScatter.R")
 
-  @Input
   var input: File = _
 
-  @Output
   var output: File = _
 
   var width: Option[Int] = config("width")
@@ -43,14 +39,14 @@ class LinePlot(val root: Configurable) extends RscriptCommandLineFunction {
   var title: Option[String] = config("title")
   var removeZero: Boolean = config("removeZero", default = false)
 
-  override def cmdLine: String = super.cmdLine +
-    required("--input", input) +
-    required("--output", output) +
-    optional("--width", width) +
-    optional("--height", height) +
-    optional("--xlabel", xlabel) +
-    required("--ylabel", ylabel) +
-    optional("--llabel", llabel) +
-    optional("--title", title) +
-    optional("--removeZero", removeZero)
+  override def cmd = super.cmd ++
+    Seq("--input", input.getAbsolutePath) ++
+    Seq("--output", output.getAbsolutePath) ++
+    width.map(x => Seq("--width", x.toString)).getOrElse(Seq()) ++
+    height.map(x => Seq("--height", x.toString)).getOrElse(Seq()) ++
+    xlabel.map(Seq("--xlabel", _)).getOrElse(Seq()) ++
+    ylabel.map(Seq("--ylabel", _)).getOrElse(Seq()) ++
+    llabel.map(Seq("--llabel", _)).getOrElse(Seq()) ++
+    title.map(Seq("--title", _)).getOrElse(Seq()) ++
+    (if (removeZero) Seq("--removeZero") else Seq())
 }

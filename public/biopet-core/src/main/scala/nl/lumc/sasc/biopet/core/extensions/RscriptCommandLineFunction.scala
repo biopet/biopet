@@ -15,9 +15,10 @@
  */
 package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.utils.rscript.Rscript
 
 import scala.sys.process._
 
@@ -26,67 +27,13 @@ import scala.sys.process._
  *
  * Created by wyleung on 17-2-15.
  */
-trait RscriptCommandLineFunction extends BiopetCommandLineFunction {
+trait RscriptCommandLineFunction extends BiopetCommandLineFunction with Rscript {
 
-  protected var script: File
-
-  executable = config("exe", default = "Rscript", submodule = "Rscript")
+  executable = rscriptExecutable
 
   override def beforeGraph(): Unit = {
-    checkScript()
+    checkScript(Some(jobTempDir))
   }
 
-  /**
-   * If script not exist in file system it try to copy it from the jar
-   * @param local if true it use File.createTempFile instead of ".queue/tmp/"
-   */
-  protected def checkScript(local: Boolean = false): Unit = {
-    if (script.exists()) {
-      script = script.getAbsoluteFile
-    } else {
-      val rScript: File = {
-        if (local) File.createTempFile(script.getName, ".R")
-        else new File(".queue/tmp/" + script)
-      }
-      if (!rScript.getParentFile.exists) rScript.getParentFile.mkdirs
-
-      val is = getClass.getResourceAsStream(script.getPath)
-      val os = new FileOutputStream(rScript)
-
-      org.apache.commons.io.IOUtils.copy(is, os)
-      os.close()
-
-      script = rScript
-    }
-  }
-
-  /**
-   * Execute rscript on local system
-   * @param logger How to handle stdout and stderr
-   */
-  def runLocal(logger: ProcessLogger): Unit = {
-    checkScript(local = true)
-
-    this.logger.info(cmdLine)
-
-    val cmd = cmdLine.stripPrefix(" '").stripSuffix("' ").split("' *'")
-
-    this.logger.info(cmd.mkString(" "))
-
-    val process = Process(cmd.toSeq).run(logger)
-    this.logger.info(process.exitValue())
-  }
-
-  /**
-   * Execute rscript on local system
-   * Stdout and stderr will go to biopet logger
-   */
-  def runLocal(): Unit = {
-    runLocal(ProcessLogger(logger.info(_)))
-  }
-
-  def cmdLine: String = {
-    required(executable) +
-      required(script)
-  }
+  def cmdLine: String = repeat(cmd)
 }

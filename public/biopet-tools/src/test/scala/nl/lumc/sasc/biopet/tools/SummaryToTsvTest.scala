@@ -9,7 +9,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
-import nl.lumc.sasc.biopet.core.summary.Summary
+import nl.lumc.sasc.biopet.utils.summary.Summary
 
 /**
  * Created by ahbbollen on 31-8-15.

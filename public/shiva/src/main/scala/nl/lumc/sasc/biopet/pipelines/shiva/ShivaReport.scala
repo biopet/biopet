@@ -20,7 +20,7 @@ import java.io.{ File, PrintWriter }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.core.summary.{ Summary, SummaryValue }
-import nl.lumc.sasc.biopet.extensions.rscript.StackedBarPlot
+import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
