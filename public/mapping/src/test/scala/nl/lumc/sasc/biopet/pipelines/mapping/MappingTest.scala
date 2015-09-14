@@ -92,7 +92,7 @@ class MappingTest extends TestNGSuite with Matchers {
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
     mapping.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (!zipped || (chunks > 1 && skipFlexiprep)) 0 else if (paired) 2 else 1)
-    mapping.functions.count(_.isInstanceOf[SeqStat]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 4 else 2) * chunks)
+    mapping.functions.count(_.isInstanceOf[SeqStat]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * (chunks + 1))
     mapping.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[Cutadapt]) shouldBe ((if (skipFlexiprep) 0 else if (paired) 2 else 1) * chunks)
     mapping.functions.count(_.isInstanceOf[FastqSync]) shouldBe ((if (skipFlexiprep) 0 else if (paired && !skipFlexiprep) 1 else 0) * chunks)
