@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
+import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutablePublic extends BiopetExecutable {
   def publicPipelines: List[MainCommand] = List(

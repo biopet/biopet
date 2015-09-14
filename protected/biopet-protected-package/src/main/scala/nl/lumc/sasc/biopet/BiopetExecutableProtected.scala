@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
+import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutableProtected extends BiopetExecutable {
   def pipelines: List[MainCommand] = BiopetExecutablePublic.pipelines ::: List(
