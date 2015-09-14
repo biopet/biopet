@@ -73,7 +73,7 @@ object SageCountFastq extends ToolCommand {
         if (counts.contains(seq)) counts(seq) += 1
         else counts += (seq -> 1)
         count += 1
-        if (count % 1000000 == 0) System.err.println(count + " sequences done")
+        if (count % 1000000 == 0) logger.info(count + " sequences done")
       }
     })
     logger.info(count + " sequences done")

@@ -61,12 +61,18 @@ object BiopetFlagstat extends ToolCommand {
     flagstat
   }
 
-  case class Args(inputFile: File = null, summaryFile: Option[File] = None, region: Option[String] = None) extends AbstractArgs
+  case class Args(inputFile: File = null,
+                  outputFile: Option[File] = None,
+                  summaryFile: Option[File] = None,
+                  region: Option[String] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
     } text "input bam file"
+    opt[File]('o', "outputFile") valueName "<file>" action { (x, c) =>
+      c.copy(outputFile = Some(x))
+    } text "output file"
     opt[File]('s', "summaryFile") valueName "<file>" action { (x, c) =>
       c.copy(summaryFile = Some(x))
     } text "summary output file"
@@ -151,7 +157,14 @@ object BiopetFlagstat extends ToolCommand {
         writer.close()
     }
 
-    println(flagstatCollector.report)
+    commandArgs.outputFile match {
+      case Some(file) => {
+        val writer = new PrintWriter(file)
+        writer.println(flagstatCollector.report)
+        writer.close()
+      }
+      case _ => println(flagstatCollector.report)
+    }
   }
 
   class FlagstatCollector {

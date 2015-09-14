@@ -1,0 +1,17 @@
+{
+  "samples" : {
+    "016" : {
+      "libraries" : {
+        "L001" : {
+          "flexiprep" : {
+            "settings" : {
+              "skip_trim" : false,
+              "skip_clip" : false,
+              "paired" : true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -101,4 +101,6 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     val parsed = parseArgs(args)
     parsed.fastq shouldBe resourceFile("/paired01a.fq")
   }
+
+  // TODO: Shared state here. Calling main changes the state, which causes other tests to fail
 }

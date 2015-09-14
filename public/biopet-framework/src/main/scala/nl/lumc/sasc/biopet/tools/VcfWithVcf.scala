@@ -16,15 +16,18 @@
 package nl.lumc.sasc.biopet.tools
 
 import java.io.File
+import java.util
 
-import htsjdk.variant.variantcontext.VariantContextBuilder
+import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.core.{ ToolCommandFuntion, ToolCommand }
 import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
  * Biopet extension for tool VcfWithVcf
@@ -99,7 +102,7 @@ object VcfWithVcf extends ToolCommand {
               | By default we will return all values found for a given field.
               | With <method> the values will processed after getting it from the secondary VCF file, posible methods are:
               |   - max   : takes maximum of found value, only works for numeric (integer/float) fields
-              |   - min   : takes minemal of found value, only works for numeric (integer/float) fields
+              |   - min   : takes minimum of found value, only works for numeric (integer/float) fields
               |   - unique: takes only unique values """.stripMargin
     opt[Boolean]("match") valueName "<Boolean>" maxOccurs 1 action { (x, c) =>
       c.copy(matchAllele = x)
@@ -124,7 +127,7 @@ object VcfWithVcf extends ToolCommand {
 
     for (x <- commandArgs.fields) {
       if (header.hasInfoLine(x.outputField))
-        throw new IllegalArgumentException("Field '" + x.outputField + "' already exist in input vcf")
+        throw new IllegalArgumentException("Field '" + x.outputField + "' already exists in input vcf")
       if (!secondHeader.hasInfoLine(x.inputField))
         throw new IllegalArgumentException("Field '" + x.inputField + "' does not exist in secondary vcf")
 
@@ -140,44 +143,11 @@ object VcfWithVcf extends ToolCommand {
 
     var counter = 0
     for (record <- reader) {
-      val secondaryRecords = if (commandArgs.matchAllele) {
-        secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList.
-          filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele))
-      } else {
-        secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList
-      }
+      val secondaryRecords = getSecondaryRecords(secondaryReader, record, commandArgs.matchAllele)
 
-      val fieldMap = (for (
-        f <- commandArgs.fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
-      ) yield {
-        f.outputField -> (for (
-          secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
-        ) yield {
-          secondRecord.getAttribute(f.inputField) match {
-            case l: List[_] => l
-            case x          => List(x)
-          }
-        }).fold(Nil)(_ ::: _)
-      }).toMap
+      val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
 
-      writer.add(fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
-        builder.attribute(attribute._1, commandArgs.fields.filter(_.outputField == attribute._1).head.fieldMethod match {
-          case FieldMethod.max =>
-            header.getInfoHeaderLine(attribute._1).getType match {
-              case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).max)
-              case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).max)
-              case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
-            }
-          case FieldMethod.min =>
-            header.getInfoHeaderLine(attribute._1).getType match {
-              case VCFHeaderLineType.Integer => Array(attribute._2.map(_.toString.toInt).min)
-              case VCFHeaderLineType.Float   => Array(attribute._2.map(_.toString.toFloat).min)
-              case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
-            }
-          case FieldMethod.unique => attribute._2.distinct.toArray
-          case _                  => attribute._2.toArray
-        })
-      }).make())
+      writer.add(createRecord(fieldMap, record, commandArgs.fields, header))
 
       counter += 1
       if (counter % 100000 == 0) {
@@ -191,5 +161,70 @@ object VcfWithVcf extends ToolCommand {
     reader.close()
     secondaryReader.close()
     logger.info("Done")
+  }
+
+  /**
+   * Create Map of field -> List of attributes in secondary records
+   * @param fields List of Field
+   * @param secondaryRecords List of VariantContext with secondary records
+   * @return Map of fields and their values in secondary records
+   */
+  def createFieldMap(fields: List[Fields], secondaryRecords: List[VariantContext]): Map[String, List[Any]] = {
+    val fieldMap = (for (
+      f <- fields if secondaryRecords.exists(_.hasAttribute(f.inputField))
+    ) yield {
+      f.outputField -> (for (
+        secondRecord <- secondaryRecords if secondRecord.hasAttribute(f.inputField)
+      ) yield {
+        secondRecord.getAttribute(f.inputField) match {
+          case l: List[_]           => l
+          case y: util.ArrayList[_] => y.toList
+          case x                    => List(x)
+        }
+      }).fold(Nil)(_ ::: _)
+    }).toMap
+    fieldMap
+  }
+
+  /**
+   * Get secondary records matching the query record
+   * @param secondaryReader reader for secondary records
+   * @param record query record
+   * @param matchAllele allele has to match query allele?
+   * @return List of VariantContext
+   */
+  def getSecondaryRecords(secondaryReader: VCFFileReader,
+                          record: VariantContext, matchAllele: Boolean): List[VariantContext] = {
+    if (matchAllele) {
+      secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList.
+        filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele))
+    } else {
+      secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList
+    }
+  }
+
+  def createRecord(fieldMap: Map[String, List[Any]], record: VariantContext,
+                   fields: List[Fields], header: VCFHeader): VariantContext = {
+    fieldMap.foldLeft(new VariantContextBuilder(record))((builder, attribute) => {
+      builder.attribute(attribute._1, fields.filter(_.outputField == attribute._1).head.fieldMethod match {
+        case FieldMethod.max =>
+          header.getInfoHeaderLine(attribute._1).getType match {
+            case VCFHeaderLineType.Integer => scalaListToJavaObjectArrayList(List(attribute._2.map(_.toString.toInt).max))
+            case VCFHeaderLineType.Float   => scalaListToJavaObjectArrayList(List(attribute._2.map(_.toString.toFloat).max))
+            case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
+          }
+        case FieldMethod.min =>
+          header.getInfoHeaderLine(attribute._1).getType match {
+            case VCFHeaderLineType.Integer => scalaListToJavaObjectArrayList(List(attribute._2.map(_.toString.toInt).min))
+            case VCFHeaderLineType.Float   => scalaListToJavaObjectArrayList(List(attribute._2.map(_.toString.toFloat).min))
+            case _                         => throw new IllegalArgumentException("Type of field " + attribute._1 + " is not numeric")
+          }
+        case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
+        case _ => {
+          print(attribute._2.getClass.toString)
+          scalaListToJavaObjectArrayList(attribute._2)
+        }
+      })
+    }).make()
   }
 }

@@ -56,7 +56,7 @@ class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
 
 object VcfFilter extends ToolCommand {
   /** Container class for a trio */
-  protected case class Trio(child: String, father: String, mother: String) {
+  protected[tools] case class Trio(child: String, father: String, mother: String) {
     def this(arg: String) = {
       this(arg.split(":")(0), arg.split(":")(1), arg.split(":")(2))
     }
@@ -278,7 +278,7 @@ object VcfFilter extends ToolCommand {
   }
 
   /**
-   * Checks if AD genotype field have a minimal value
+   * Checks if non-ref AD genotype field have a minimal value
    * @param record VCF record
    * @param minAlternateDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
