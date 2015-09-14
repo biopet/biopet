@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.tools.{SeqStat, FastqSync}
+import nl.lumc.sasc.biopet.tools.{ SeqStat, FastqSync }
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {

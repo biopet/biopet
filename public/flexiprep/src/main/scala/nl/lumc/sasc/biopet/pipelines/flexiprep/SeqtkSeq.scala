@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.{Cat, Ln}
+import nl.lumc.sasc.biopet.extensions.{ Cat, Ln }
 
 class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq(root) {
   var fastqc: Fastqc = _
@@ -51,7 +51,7 @@ class SeqtkSeq(root: Configurable) extends nl.lumc.sasc.biopet.extensions.seqtk.
       analysisName = getClass.getSimpleName + "-skip"
       (inputAsStdin, outputAsStsout) match {
         case (true, true) => super.cmdLine
-        case _ => Ln(this, input, output).cmd
+        case _            => Ln(this, input, output).cmd
       }
     }
   }

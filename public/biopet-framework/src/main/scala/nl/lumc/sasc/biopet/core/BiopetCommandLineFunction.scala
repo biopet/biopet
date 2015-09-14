@@ -239,7 +239,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
         p.commands.last._outputAsStdout = true
         new BiopetPipe(p.commands ::: that :: Nil)
       }
-      case _             => new BiopetPipe(List(this, that))
+      case _ => new BiopetPipe(List(this, that))
     }
   }
 

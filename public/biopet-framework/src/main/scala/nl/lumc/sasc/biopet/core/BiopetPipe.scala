@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * This class can pipe multiple BiopetCommandFunctions to 1 job
@@ -32,7 +32,6 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
 
     stdoutFile = stdoutFile.map(_.getAbsoluteFile)
     stdinFile = stdinFile.map(_.getAbsoluteFile)
-
 
     if (stdoutFile.isDefined) {
       commands.last.stdoutFile = None
