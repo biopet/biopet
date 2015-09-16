@@ -33,6 +33,8 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
   /** Report builder object */
   val builder: ReportBuilder
 
+  def toolObject = builder
+
   @Input(required = true)
   var summaryFile: File = _
 
