@@ -14,7 +14,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  * @param root Configuration object for the pipeline
  */
 class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.SeqStat.getClass.getName
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
   var input: File = null

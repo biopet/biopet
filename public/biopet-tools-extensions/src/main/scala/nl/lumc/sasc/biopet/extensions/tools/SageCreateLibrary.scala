@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class SageCreateLibrary(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.SageCreateLibrary.getClass.getName
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
   var input: File = _

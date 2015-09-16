@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class MergeAlleles(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.MergeAlleles.getClass.getName
 
   @Input(doc = "Input vcf files", shortName = "input", required = true)
   var input: List[File] = Nil

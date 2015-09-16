@@ -29,7 +29,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 class WipeReads(val root: Configurable) extends ToolCommandFuntion {
 
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.WipeReads.getClass.getName
 
   @Input(doc = "Input BAM file (must be indexed)", shortName = "I", required = true)
   var inputBam: File = null

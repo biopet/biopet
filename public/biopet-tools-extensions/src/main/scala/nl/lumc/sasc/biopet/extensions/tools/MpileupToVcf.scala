@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.collection.JavaConversions._
 
 class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.MpileupToVcf.getClass.getName
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
   var inputMpileup: File = _

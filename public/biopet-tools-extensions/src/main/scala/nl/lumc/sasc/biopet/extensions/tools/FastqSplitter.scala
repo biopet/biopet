@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * @param root Parent object
  */
 class FastqSplitter(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.FastqSplitter.getClass.getName
 
   @Input(doc = "Input fastq", shortName = "input", required = true)
   var input: File = _

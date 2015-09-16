@@ -32,7 +32,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 
 class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.VepNormalizer.getClass.getName
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
   var inputVCF: File = null

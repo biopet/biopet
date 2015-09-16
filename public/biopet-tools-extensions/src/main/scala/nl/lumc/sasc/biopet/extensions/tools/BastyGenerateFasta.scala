@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with Reference {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.BastyGenerateFasta.getClass.getName
 
   @Input(doc = "Input vcf file", required = false)
   var inputVcf: File = _

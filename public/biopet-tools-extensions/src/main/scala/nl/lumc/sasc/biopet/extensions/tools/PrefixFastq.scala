@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * Created by pjvan_thof on 1/13/15.
  */
 class PrefixFastq(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.PrefixFastq.getClass.getName
 
   override def defaultCoreMemory = 1.0
 

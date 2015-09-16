@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.BiopetFlagstat.getClass.getName
 
   @Input(doc = "Input bam", shortName = "input", required = true)
   var input: File = _

@@ -30,7 +30,7 @@ import scala.collection.mutable.{ Set => MutSet }
  */
 class MergeTables(val root: Configurable) extends ToolCommandFuntion {
 
-  javaMainClass = getClass.getName
+  javaMainClass = nl.lumc.sasc.biopet.tools.MergeTables.getClass.getName
 
   override def defaultCoreMemory = 6.0
 
