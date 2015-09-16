@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * @deprecated Use picard.util.BedToIntervalList instead
  */
 class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = nl.lumc.sasc.biopet.tools.BedToInterval.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.BedToInterval
 
   @Input(doc = "Input Bed file", required = true)
   var input: File = _

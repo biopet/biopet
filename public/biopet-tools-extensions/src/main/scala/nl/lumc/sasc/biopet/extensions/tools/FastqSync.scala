@@ -32,7 +32,7 @@ import scala.util.matching.Regex
  */
 class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summarizable {
 
-  javaMainClass = nl.lumc.sasc.biopet.tools.FastqSync.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.FastqSync
 
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
   var refFastq: File = null

@@ -30,7 +30,7 @@ import scala.io.Source
  * Created by pjvan_thof on 1/10/15.
  */
 class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summarizable with Reference {
-  javaMainClass = nl.lumc.sasc.biopet.tools.VcfStats.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.VcfStats
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
   var input: File = _

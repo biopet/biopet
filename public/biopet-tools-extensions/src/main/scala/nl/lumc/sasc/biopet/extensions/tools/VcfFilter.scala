@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = nl.lumc.sasc.biopet.tools.VcfFilter.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.VcfFilter
 
   @Input(doc = "Input vcf", shortName = "I", required = true)
   var inputVcf: File = _

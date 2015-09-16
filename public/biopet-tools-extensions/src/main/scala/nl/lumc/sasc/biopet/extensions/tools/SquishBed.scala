@@ -10,7 +10,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Created by pjvanthof on 22/08/15.
  */
 class SquishBed(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = nl.lumc.sasc.biopet.tools.SquishBed.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.SquishBed
 
   @Input(doc = "Input Bed file", required = true)
   var input: File = _

@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Biopet extension for tool VcfWithVcf
  */
 class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = nl.lumc.sasc.biopet.tools.VcfWithVcf.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.VcfWithVcf
 
   @Input(doc = "Input vcf file", shortName = "input", required = true)
   var input: File = _

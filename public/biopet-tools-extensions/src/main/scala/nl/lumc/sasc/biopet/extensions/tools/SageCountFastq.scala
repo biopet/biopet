@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
-  javaMainClass = nl.lumc.sasc.biopet.tools.SageCountFastq.getClass.getName
+  def toolObject = nl.lumc.sasc.biopet.tools.SageCountFastq
 
   @Input(doc = "Input fasta", shortName = "input", required = true)
   var input: File = _
