@@ -180,9 +180,9 @@ object VcfFilter extends ToolCommand {
       } else
         invertedWriter.foreach(_.add(record))
       counterTotal += 1
-      if (counterTotal % 100000 == 0) logger.info(counterTotal + " variants processed, " + counterLeft + " left")
+      if (counterTotal % 100000 == 0) logger.info(s"$counterTotal variants processed, $counterLeft passed filter")
     }
-    logger.info(counterTotal + " variants processed, " + counterLeft + " left")
+    logger.info(s"$counterTotal variants processed, $counterLeft passed filter")
     reader.close()
     writer.close()
     invertedWriter.foreach(_.close())
