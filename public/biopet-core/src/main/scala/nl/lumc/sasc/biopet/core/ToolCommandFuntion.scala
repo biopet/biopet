@@ -11,7 +11,7 @@ trait ToolCommandFuntion extends BiopetJavaCommandLineFunction {
   override def getVersion = Some("Biopet " + FullVersion)
 
   override def freezeFieldValues(): Unit = {
-    javaMainClass = toolObject.getClass.getName.split("$").head
+    javaMainClass = toolObject.getClass.getName.takeWhile(_ != '$')
     super.freezeFieldValues()
   }
 }
