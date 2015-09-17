@@ -7,15 +7,17 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.ApplyRecalibration with GatkGeneral {
   scatterCount = config("scattercount", default = 0)
 
+  override val defaultThreads = 3
+
   override def beforeGraph() {
     super.beforeGraph()
 
-    nt = Option(getThreads(3))
+    nt = Option(getThreads)
     memoryLimit = Option(nt.getOrElse(1) * 2)
 
     import org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode

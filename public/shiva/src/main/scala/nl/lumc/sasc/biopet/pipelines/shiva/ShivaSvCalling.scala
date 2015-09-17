@@ -15,18 +15,16 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.File
-
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, BiopetQScript, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.Delly
-import nl.lumc.sasc.biopet.tools.VcfStats
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.Input
+
 import scala.collection.JavaConversions._
 
 /**
@@ -70,7 +68,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def biopetScript(): Unit = {
     for (cal <- configCallers) {
       if (!callersList.exists(_.name == cal))
-        BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
+        Logging.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
     }
 
     val callers = callersList.filter(x => configCallers.contains(x.name))

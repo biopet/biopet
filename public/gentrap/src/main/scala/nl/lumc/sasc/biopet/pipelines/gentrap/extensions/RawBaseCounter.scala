@@ -18,8 +18,8 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.language.reflectiveCalls

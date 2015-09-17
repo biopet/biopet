@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
@@ -29,7 +29,7 @@ import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -552,7 +552,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x40")
+            job.f = List("0x80")
             job.F = List("0x10")
             job.output = createFile(".r2.bam")
             job.isIntermediate = true
@@ -594,7 +594,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x80")
+            job.f = List("0x40")
             job.F = List("0x10")
             job.output = createFile(".r1.bam")
             job.isIntermediate = true
