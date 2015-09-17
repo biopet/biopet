@@ -7,7 +7,7 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class VariantEval(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantEval with GatkGeneral {
   override def beforeGraph() {
