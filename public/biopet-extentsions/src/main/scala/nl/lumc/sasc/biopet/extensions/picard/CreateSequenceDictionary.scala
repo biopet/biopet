@@ -17,7 +17,8 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class CreateSequenceDictionary(val root: Configurable) extends Picard {
 

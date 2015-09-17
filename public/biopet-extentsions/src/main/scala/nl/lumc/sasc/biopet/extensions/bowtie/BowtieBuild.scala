@@ -3,7 +3,8 @@ package nl.lumc.sasc.biopet.extensions.bowtie
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Created by pjvan_thof on 8/15/15.

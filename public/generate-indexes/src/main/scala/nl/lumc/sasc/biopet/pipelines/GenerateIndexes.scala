@@ -18,7 +18,8 @@ package nl.lumc.sasc.biopet.pipelines
 import java.io.PrintWriter
 import java.util
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.extensions.Md5sum
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
