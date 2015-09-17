@@ -35,13 +35,13 @@
 
     <properties>
         <sting.shade.phase>package</sting.shade.phase>
-        <app.main.class>nl.lumc.sasc.biopet.core.BiopetExecutablePublic</app.main.class>
+        <app.main.class>nl.lumc.sasc.biopet.BiopetExecutablePublic</app.main.class>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetFramework</artifactId>
+            <artifactId>BiopetCore</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
