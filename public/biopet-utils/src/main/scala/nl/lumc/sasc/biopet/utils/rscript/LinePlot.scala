@@ -48,5 +48,5 @@ class LinePlot(val root: Configurable) extends Rscript {
     ylabel.map(Seq("--ylabel", _)).getOrElse(Seq()) ++
     llabel.map(Seq("--llabel", _)).getOrElse(Seq()) ++
     title.map(Seq("--title", _)).getOrElse(Seq()) ++
-    (if (removeZero) Seq("--removeZero") else Seq())
+    (if (removeZero) Seq("--removeZero", "true") else Seq())
 }
