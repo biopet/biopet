@@ -186,8 +186,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
 object BamMetrics extends PipelineCommand {
   /** Make default implementation of BamMetrics and runs script already */
-  def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
+  def apply(root: Configurable,
+            bamFile: File, outputDir: File,
+            sampleId: Option[String] = None,
+            libId: Option[String] = None): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
+    bamMetrics.sampleId = sampleId
+    bamMetrics.libId = libId
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir
 
