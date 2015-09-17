@@ -25,7 +25,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
 import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
-import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
+import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 trait BastyTrait extends MultiSampleQScript {

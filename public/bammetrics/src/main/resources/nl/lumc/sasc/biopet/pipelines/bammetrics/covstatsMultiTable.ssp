@@ -1,5 +1,5 @@
 #import(nl.lumc.sasc.biopet.utils.IoUtils)
-#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 #import(org.apache.commons.io.FileUtils)
 #import(java.io.File)

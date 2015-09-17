@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.carp
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
