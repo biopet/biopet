@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, _ }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.conifer.{ ConiferAnalyze, ConiferCall, ConiferRPKM }

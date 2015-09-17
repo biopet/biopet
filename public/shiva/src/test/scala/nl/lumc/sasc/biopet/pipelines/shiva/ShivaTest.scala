@@ -18,10 +18,10 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.tools.VcfStats
+import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -103,6 +103,9 @@ object ShivaTest {
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",

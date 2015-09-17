@@ -19,7 +19,7 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.tools.FastqSplitter
+import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -239,7 +239,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
         case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
-      if (config("chunk_metrics", default = false))
+      if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
         addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
     }
     if (!skipFlexiprep) {
@@ -476,9 +476,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     RG += "PU:" + platformUnit + "\\t"
     RG += "SM:" + sampleId.get + "\\t"
     if (readgroupSequencingCenter.isDefined) RG += "CN:" + readgroupSequencingCenter.get + "\\t"
-    if (readgroupDescription.isDefined) RG += "DS" + readgroupDescription.get + "\\t"
-    if (readgroupDate != null) RG += "DT" + readgroupDate + "\\t"
-    if (predictedInsertsize.isDefined) RG += "PI" + predictedInsertsize.get + "\\t"
+    if (readgroupDescription.isDefined) RG += "DS:" + readgroupDescription.get + "\\t"
+    if (readgroupDate != null) RG += "DT:" + readgroupDate + "\\t"
+    if (predictedInsertsize.isDefined) RG += "PI:" + predictedInsertsize.get + "\\t"
 
     RG.substring(0, RG.lastIndexOf("\\t"))
   }

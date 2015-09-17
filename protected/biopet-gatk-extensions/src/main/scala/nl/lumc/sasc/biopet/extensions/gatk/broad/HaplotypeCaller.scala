@@ -5,10 +5,13 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.HaplotypeCaller with GatkGeneral {
+
+  override val defaultThreads = 1
+
   min_mapping_quality_score = config("minMappingQualityScore", default = 20)
   scatterCount = config("scattercount", default = 1)
   if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
@@ -41,7 +44,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
       threads = 1
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
     }
-    nct = Some(getThreads(1))
+    nct = Some(getThreads)
     memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
   }
 

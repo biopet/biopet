@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -122,6 +122,9 @@ object ShivaVariantcallingTest {
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
