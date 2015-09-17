@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings

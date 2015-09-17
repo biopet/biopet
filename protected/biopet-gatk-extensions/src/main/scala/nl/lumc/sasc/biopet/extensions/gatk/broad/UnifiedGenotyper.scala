@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.UnifiedGenotyper with GatkGeneral {
   if (config.contains("scattercount")) scatterCount = config("scattercount")
