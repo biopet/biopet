@@ -72,7 +72,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
   /** executed before script */
   def init(): Unit = {
-    inputFiles :+= InputFile(inputBam)
+    inputFiles :+= new InputFile(inputBam)
   }
 
   /** Script to add jobs */

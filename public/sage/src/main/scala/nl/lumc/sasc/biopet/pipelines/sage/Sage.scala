@@ -88,7 +88,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
-        inputFiles :+= InputFile(inputFastq, config("R1_md5"))
+        inputFiles :+= new InputFile(inputFastq, config("R1_md5"))
 
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq

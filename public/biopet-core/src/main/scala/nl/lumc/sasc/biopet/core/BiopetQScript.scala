@@ -48,7 +48,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputFiles: Map[String, File] = Map()
 
-  protected case class InputFile(file: File, md5: Option[String] = None)
+  type InputFile = BiopetQScript.InputFile
 
   var inputFiles: List[InputFile] = Nil
 
@@ -111,4 +111,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
+
+object BiopetQScript {
+  protected case class InputFile(file: File, md5: Option[String] = None)
 }

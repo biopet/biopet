@@ -136,11 +136,11 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
           case (true, _) => mapping.foreach(mapping => {
             mapping.input_R1 = config("R1")
             mapping.input_R2 = config("R2")
-            inputFiles :+= InputFile(mapping.input_R1, config("R1_md5"))
-            mapping.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
+            inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
+            mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
           })
           case (false, true) => {
-            inputFiles :+= InputFile(config("bam"), config("bam_md5"))
+            inputFiles :+= new InputFile(config("bam"), config("bam_md5"))
             config("bam_to_fastq", default = false).asBoolean match {
               case true =>
                 val samToFastq = SamToFastq(qscript, config("bam"),

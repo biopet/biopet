@@ -85,8 +85,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     paired = input_R2.isDefined
 
-    inputFiles :+= InputFile(input_R1)
-    input_R2.foreach(inputFiles :+= InputFile(_))
+    inputFiles :+= new InputFile(input_R1)
+    input_R2.foreach(inputFiles :+= new InputFile(_))
 
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
