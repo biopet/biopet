@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.{ CheckMd5, Md5sum }
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 
 import scala.collection.mutable
 
@@ -119,11 +119,11 @@ trait SummaryQScript extends BiopetQScript { qscript =>
     for (inputFile <- inputFiles) {
       inputFile.md5 match {
         case Some(checksum) => {
-          val checkMd5 = new CheckMd5
+          val checkMd5 = new CheckChecksum
           checkMd5.inputFile = inputFile.file
           require(SummaryQScript.md5sumCache.contains(inputFile.file), "Md5 job is not executed, checksum file can't be found")
-          checkMd5.md5file = SummaryQScript.md5sumCache(inputFile.file)
-          checkMd5.md5sum = checksum
+          checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
+          checkMd5.checksum = checksum
           add(checkMd5)
         }
         case _ =>

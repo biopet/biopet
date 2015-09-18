@@ -11,26 +11,26 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
  *
  * Created by pjvanthof on 16/08/15.
  */
-class CheckMd5 extends InProcessFunction {
+class CheckChecksum extends InProcessFunction {
   @Input(required = true)
   var inputFile: File = _
 
   @Input(required = true)
-  var md5file: File = _
+  var checksumFile: File = _
 
   @Argument(required = true)
-  var md5sum: String = _
+  var checksum: String = _
 
   override def freezeFieldValues(): Unit = {
     super.freezeFieldValues()
-    jobOutputFile = new File(md5file.getParentFile, md5file.getName + ".check.out")
+    jobOutputFile = new File(checksumFile.getParentFile, checksumFile.getName + ".check.out")
   }
 
   /** Exits whenever the input md5sum is not the same as the output md5sum */
   def run: Unit = {
-    val outputMd5sum = WriteSummary.parseChecksum(md5file).toLowerCase
+    val outputChecksum = WriteSummary.parseChecksum(checksumFile).toLowerCase
 
-    if (outputMd5sum != md5sum.toLowerCase) {
+    if (outputChecksum != checksum.toLowerCase) {
       logger.error(s"Input file: '$inputFile' md5sum is not as expected, aborting pipeline")
       System.exit(1)
     }
