@@ -91,8 +91,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
     inputFiles.foreach { i =>
-      if (!i.file.exists()) BiopetQScript.addError(s"Input file does not exist: ${i.file}")
-      if (!i.file.canRead()) BiopetQScript.addError(s"Input file can not be read: ${i.file}")
+      if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
+      if (!i.file.canRead()) Logging.addError(s"Input file can not be read: ${i.file}")
     }
 
     reportClass.foreach(add(_))
