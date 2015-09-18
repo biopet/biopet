@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.WriteSummary
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 
 /**
  * This class checks md5sums and give an exit code 1 when md5sum is not the same
