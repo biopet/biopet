@@ -32,6 +32,8 @@ class CheckChecksum extends InProcessFunction {
 
     if (outputChecksum != checksum.toLowerCase) {
       logger.error(s"Input file: '$inputFile' md5sum is not as expected, aborting pipeline")
+
+      // 130 Simulates a ctr-C
       Runtime.getRuntime.halt(130)
     }
   }
