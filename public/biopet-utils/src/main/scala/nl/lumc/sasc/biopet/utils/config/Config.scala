@@ -25,7 +25,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils._
  * @constructor Load config with existing map
  */
 class Config(protected var _map: Map[String, Any],
-             protected[core] var defaults: Map[String, Any] = Map()) extends Logging {
+             protected var _defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
   /** Default constructor */
@@ -35,6 +35,7 @@ class Config(protected var _map: Map[String, Any],
   }
 
   def map = _map
+  def defaults = _defaults
 
   /**
    * Loading a environmental variable as location of config files to merge into the config
@@ -67,9 +68,9 @@ class Config(protected var _map: Map[String, Any],
   def loadConfigFile(configFile: File, default: Boolean = false) {
     val configMap = fileToConfigMap(configFile)
     if (default) {
-      if (defaults.isEmpty) defaults = configMap
-      else defaults = mergeMaps(configMap, defaults)
-      logger.debug("New defaults: " + defaults)
+      if (_defaults.isEmpty) _defaults = configMap
+      else _defaults = mergeMaps(configMap, _defaults)
+      logger.debug("New defaults: " + _defaults)
     } else {
       if (_map.isEmpty) _map = configMap
       else _map = mergeMaps(configMap, _map)
@@ -86,7 +87,7 @@ class Config(protected var _map: Map[String, Any],
    */
   def addValue(key: String, value: Any, path: List[String] = Nil, default: Boolean = false): Unit = {
     val valueMap = path.foldRight(Map(key -> value))((a, b) => Map(a -> b))
-    if (default) defaults = mergeMaps(valueMap, defaults)
+    if (default) _defaults = mergeMaps(valueMap, _defaults)
     else _map = mergeMaps(valueMap, _map)
   }
 
@@ -183,8 +184,7 @@ class Config(protected var _map: Map[String, Any],
       }
 
       fixedValue.getOrElse(foundCache(requestedIndex))
-    }
-    else if (default != null) {
+    } else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
       defaultCache(requestedIndex)
     } else ConfigValue(requestedIndex, null, null, freeVar)
@@ -226,8 +226,8 @@ class Config(protected var _map: Map[String, Any],
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(this.map, "input")
-    writeMapToJsonFile(this.defaults, "defaults")
+    writeMapToJsonFile(_map, "input")
+    writeMapToJsonFile(_defaults, "defaults")
     writeMapToJsonFile(found, "found")
     writeMapToJsonFile(fixed, "fixed")
     writeMapToJsonFile(effectiveFound, "effective.found")
