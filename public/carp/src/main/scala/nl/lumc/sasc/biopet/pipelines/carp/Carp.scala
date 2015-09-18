@@ -78,6 +78,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
+
+          inputFiles :+= InputFile(mapping.input_R1, config("R1_md5"))
+          mapping.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
+
           mapping.init()
           mapping.biopetScript()
           addAll(mapping.functions)

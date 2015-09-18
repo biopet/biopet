@@ -89,6 +89,8 @@ trait BastyTrait extends MultiSampleQScript {
     addAll(shiva.functions)
     addSummaryQScript(shiva)
 
+    inputFiles :::= shiva.inputFiles
+
     addSamplesJobs()
   }
 
