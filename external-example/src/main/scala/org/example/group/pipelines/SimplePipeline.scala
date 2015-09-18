@@ -1,7 +1,7 @@
 package org.example.group.pipelines
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Cat }
 import org.broadinstitute.gatk.queue.QScript
 

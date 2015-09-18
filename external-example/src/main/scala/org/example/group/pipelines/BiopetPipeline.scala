@@ -1,9 +1,10 @@
 package org.example.group.pipelines
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**

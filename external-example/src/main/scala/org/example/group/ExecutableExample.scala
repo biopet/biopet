@@ -1,6 +1,6 @@
 package org.example.group
 
-import nl.lumc.sasc.biopet.core.{ MainCommand, BiopetExecutable }
+import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 /**
  * Created by pjvanthof on 30/08/15.
