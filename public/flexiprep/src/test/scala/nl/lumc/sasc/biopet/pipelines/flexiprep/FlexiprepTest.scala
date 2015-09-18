@@ -67,8 +67,8 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
-    flexiprep.input_R1 = new File(flexiprep.outputDir, "bla_R1.fq" + (if (zipped) ".gz" else ""))
-    if (paired) flexiprep.input_R2 = Some(new File(flexiprep.outputDir, "bla_R2.fq" + (if (zipped) ".gz" else "")))
+    flexiprep.input_R1 = (if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1)
+    if (paired) flexiprep.input_R2 = Some((if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2))
     flexiprep.sampleId = Some("1")
     flexiprep.libId = Some("1")
     flexiprep.script()
@@ -95,6 +95,16 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
 object FlexiprepTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+
+  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  Files.touch(r1)
+  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  Files.touch(r2)
+  val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  Files.touch(r1Zipped)
+  val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
+  Files.touch(r2Zipped)
 
   val executables = Map(
     "seqstat" -> Map("exe" -> "test"),

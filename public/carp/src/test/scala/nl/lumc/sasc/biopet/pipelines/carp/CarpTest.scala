@@ -97,6 +97,12 @@ class CarpTest extends TestNGSuite with Matchers {
 
 object CarpTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -127,8 +133,8 @@ object CarpTest {
   val sample1 = Map(
     "samples" -> Map("sample1" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "1_1_R1.fq",
-        "R2" -> "1_1_R2.fq"
+        "R1" -> inputTouch("1_1_R1.fq"),
+        "R2" -> inputTouch("1_1_R2.fq")
       )
     )
     )))
@@ -136,8 +142,8 @@ object CarpTest {
   val sample2 = Map(
     "samples" -> Map("sample2" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "2_1_R1.fq",
-        "R2" -> "2_1_R2.fq"
+        "R1" -> inputTouch("2_1_R1.fq"),
+        "R2" -> inputTouch("2_1_R2.fq")
       )
     )
     )))
@@ -145,12 +151,12 @@ object CarpTest {
   val sample3 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "3_1_R1.fq",
-        "R2" -> "3_1_R2.fq"
+        "R1" -> inputTouch("3_1_R1.fq"),
+        "R2" -> inputTouch("3_1_R2.fq")
       ),
       "lib2" -> Map(
-        "R1" -> "3_2_R1.fq",
-        "R2" -> "3_2_R2.fq"
+        "R1" -> inputTouch("3_2_R1.fq"),
+        "R2" -> inputTouch("3_2_R2.fq")
       )
     )
     )))
@@ -158,8 +164,8 @@ object CarpTest {
   val threatment1 = Map(
     "samples" -> Map("threatment" -> Map("control" -> "control1", "libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "threatment_1_R1.fq",
-        "R2" -> "threatment_1_R2.fq"
+        "R1" -> inputTouch("threatment_1_R1.fq"),
+        "R2" -> inputTouch("threatment_1_R2.fq")
       )
     )
     )))
@@ -167,8 +173,8 @@ object CarpTest {
   val control1 = Map(
     "samples" -> Map("control1" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "control_1_R1.fq",
-        "R2" -> "control_1_R2.fq"
+        "R1" -> inputTouch("control_1_R1.fq"),
+        "R2" -> inputTouch("control_1_R2.fq")
       )
     )
     )))
