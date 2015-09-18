@@ -221,6 +221,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         fqSync.outputFastq1 = swapExt(outDir, R1, R1_ext, ".sync" + R1_ext)
         fqSync.outputFastq2 = swapExt(outDir, R2.get, R2_ext, ".sync" + R2_ext)
         fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
+        fqSync.isIntermediate = true
         fqSync.deps :::= deps
         add(fqSync)
         addSummarizable(fqSync, "fastq_sync")
