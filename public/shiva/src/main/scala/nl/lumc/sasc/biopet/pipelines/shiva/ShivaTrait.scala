@@ -299,7 +299,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
       addAll(vc.functions)
       addSummaryQScript(vc)
 
-      if (config("annotation", default = true).asBoolean) {
+      if (config("annotation", default = false).asBoolean) {
         val toucan = new Toucan(this)
         toucan.outputDir = new File(outputDir, "annotation")
         toucan.inputVCF = vc.finalFile
