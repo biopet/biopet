@@ -6,7 +6,7 @@
 package nl.lumc.sasc.biopet.pipelines.gatk
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.broad.GenotypeGVCFs
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcallingTrait
 import org.broadinstitute.gatk.queue.QScript
