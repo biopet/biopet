@@ -18,7 +18,8 @@ package nl.lumc.sasc.biopet.core
 import java.io.{ File, FileInputStream }
 import java.security.MessageDigest
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -110,7 +111,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
             if (executableToCanonicalPath) executable = file.getCanonicalPath
             else executable = file.getAbsolutePath
           } else {
-            BiopetQScript.addError("executable: '" + executable + "' not found, please check config")
+            Logging.addError("executable: '" + executable + "' not found, please check config")
           }
           BiopetCommandLineFunction.executableCache += oldExecutable -> executable
           BiopetCommandLineFunction.executableCache += executable -> executable

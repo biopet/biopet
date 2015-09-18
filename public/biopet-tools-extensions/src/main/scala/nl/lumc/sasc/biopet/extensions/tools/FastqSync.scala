@@ -55,8 +55,8 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
   override def defaultCoreMemory = 4.0
 
   // executed command line
-  override def commandLine =
-    super.commandLine +
+  override def cmdLine =
+    super.cmdLine +
       required("-r", refFastq) +
       required("-i", inputFastq1) +
       required("-j", inputFastq2) +

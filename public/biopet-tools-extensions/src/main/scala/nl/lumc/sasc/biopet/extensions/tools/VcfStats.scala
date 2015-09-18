@@ -69,7 +69,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summariza
   }
 
   /** Creates command to execute extension */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", outputDir) +
     repeat("--infoTag", infoTags) +

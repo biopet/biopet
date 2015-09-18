@@ -2,8 +2,8 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * This class can pipe multiple BiopetCommandFunctions to 1 job
