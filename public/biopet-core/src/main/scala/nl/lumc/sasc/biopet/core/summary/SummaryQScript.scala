@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.Md5sum
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 
 import scala.collection.mutable
 
@@ -27,7 +27,7 @@ import scala.collection.mutable
  *
  * Created by pjvan_thof on 2/14/15.
  */
-trait SummaryQScript extends BiopetQScript {
+trait SummaryQScript extends BiopetQScript { qscript =>
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
@@ -114,6 +114,20 @@ trait SummaryQScript extends BiopetQScript {
         add(md5sum)
       }
       //TODO: add more checksums types
+    }
+
+    for (inputFile <- inputFiles) {
+      inputFile.md5 match {
+        case Some(checksum) => {
+          val checkMd5 = new CheckChecksum
+          checkMd5.inputFile = inputFile.file
+          require(SummaryQScript.md5sumCache.contains(inputFile.file), "Md5 job is not executed, checksum file can't be found")
+          checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
+          checkMd5.checksum = checksum
+          add(checkMd5)
+        }
+        case _ =>
+      }
     }
 
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {

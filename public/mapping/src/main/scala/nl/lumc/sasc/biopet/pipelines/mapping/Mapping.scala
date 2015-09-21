@@ -137,6 +137,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     require(sampleId.isDefined, "Missing sample ID on mapping module")
     require(libId.isDefined, "Missing library ID on mapping module")
 
+    inputFiles :+= new InputFile(input_R1)
+    input_R2.foreach(inputFiles :+= new InputFile(_))
+
     paired = input_R2.isDefined
 
     if (readgroupId == null) readgroupId = sampleId.get + "-" + libId.get

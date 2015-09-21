@@ -153,10 +153,11 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
-    if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
+    if (md5sum) map += "md5" -> WriteSummary.parseChecksum(SummaryQScript.md5sumCache(file))
     map.toMap
   }
-
+}
+object WriteSummary {
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)
