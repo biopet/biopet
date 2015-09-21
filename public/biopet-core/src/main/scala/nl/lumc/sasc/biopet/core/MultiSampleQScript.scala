@@ -131,7 +131,7 @@ trait MultiSampleQScript extends SummaryQScript {
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
-    if (onlySamples.isEmpty) {
+    if (onlySamples.isEmpty || samples.forall(x => onlySamples.contains(x._1))) {
       samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
       addMultiSampleJobs()
     } else onlySamples.foreach(sampleId => samples.get(sampleId) match {
