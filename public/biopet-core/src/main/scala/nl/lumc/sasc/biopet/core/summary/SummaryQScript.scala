@@ -135,7 +135,11 @@ trait SummaryQScript extends BiopetQScript {
     for ((_, file) <- this.summaryFiles)
       addChecksum(file)
 
-    add(writeSummary)
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write summary is skipped because sample flag is used")
+      case _ => add(writeSummary)
+    }
   }
 }
 
