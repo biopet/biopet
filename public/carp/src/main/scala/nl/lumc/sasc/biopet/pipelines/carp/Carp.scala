@@ -107,7 +107,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         add(merge)
       }
 
-      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"))
+      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"), sampleId = Some(sampleId))
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
       addAll(Bam2Wig(qscript, bamFile).functions)
