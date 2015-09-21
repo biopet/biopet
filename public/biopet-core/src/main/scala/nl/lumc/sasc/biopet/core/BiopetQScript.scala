@@ -86,7 +86,11 @@ trait BiopetQScript extends Configurable with GatkLogging {
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
-    reportClass.foreach(add(_))
+    this match {
+      case q: MultiSampleQScript if (q.onlySamples.nonEmpty) =>
+        logger.info("Write summary is skipped because sample flag is used")
+      case _ => reportClass.foreach(add(_))
+    }
 
     Logging.checkErrors()
   }

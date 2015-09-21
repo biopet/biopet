@@ -26,7 +26,7 @@ trait MultiSampleQScript extends SummaryQScript {
   qscript =>
 
   @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
-  private val onlySamples: List[String] = Nil
+  private[core] val onlySamples: List[String] = Nil
 
   require(globalConfig.map.contains("samples"), "No Samples found in config")
 
