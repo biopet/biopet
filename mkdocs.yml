@@ -4,6 +4,8 @@ pages:
 - General:
     - Config: 'general/config.md'
     - Requirements: 'general/requirements.md'
+    - About: 'general/about.md'
+    - License: 'general/license.md'
 - Pipelines:
     - Basty: 'pipelines/basty.md'
     - Bam2Wig: 'pipelines/bam2wig.md'
@@ -35,8 +37,8 @@ pages:
     - 0.3.2: 'release_notes_0.3.2.md'
     - 0.3.1: 'release_notes_0.3.1.md'
     - 0.3.0: 'release_notes_0.3.0.md'
-- About: 'about.md'
-- License: 'license.md'
+- Developer:
+    - 'developer/code-style.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs
 repo_url: https://github.com/biopet/biopet

@@ -83,8 +83,8 @@ If everything builds fine, you're good to go! Otherwise, don't hesitate to conta
 
 ## About
 
-Go to the [about page](about.md)
+Go to the [about page](general/about.md)
 
 ## License
 
-See: [License](license.md)
+See: [License](general/license.md)
