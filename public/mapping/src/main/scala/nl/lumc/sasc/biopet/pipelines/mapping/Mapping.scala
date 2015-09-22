@@ -333,7 +333,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (paired) bwaCommand.R2 = R2.get
     bwaCommand.deps = deps
     bwaCommand.R = Some(getReadGroupBwa)
-    bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
     if (config("use_pipes", default = true).asBoolean) {
       val samtoolsSort = new SamtoolsSort(this)
@@ -341,6 +340,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       samtoolsSort.output = output
       add(bwaCommand | samtoolsSort)
     } else {
+      bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
       add(bwaCommand)
       val sortSam = SortSam(this, bwaCommand.output, output)
       if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
