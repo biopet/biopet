@@ -31,6 +31,16 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   override def javaOpts = super.javaOpts +
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
 
+  override def beforeGraph(): Unit = {
+    if (javaMemoryLimit.isEmpty && memoryLimit.isDefined)
+      javaMemoryLimit = memoryLimit
+
+    if (javaMainClass != null && javaClasspath.isEmpty)
+      javaClasspath = JavaCommandLineFunction.currentClasspath
+
+    threads = getThreads(defaultThreads)
+  }
+
   /** Creates command to execute extension */
   def cmdLine: String = {
     preCmdInternal()
