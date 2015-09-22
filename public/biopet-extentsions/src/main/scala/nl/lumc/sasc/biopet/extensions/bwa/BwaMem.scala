@@ -111,6 +111,6 @@ class BwaMem(val root: Configurable) extends Bwa with Reference {
       required(reference) +
       required(R1) +
       optional(R2) +
-      " > " + required(output)
+      (if (outputAsStsout) "" else " > " + required(output))
   }
 }
