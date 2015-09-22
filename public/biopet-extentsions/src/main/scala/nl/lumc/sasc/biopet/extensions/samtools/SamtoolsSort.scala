@@ -24,7 +24,7 @@ class SamtoolsSort(val root: Configurable) extends Samtools {
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    prefix = config("prefix", default = new File(Files.createTempDir(), output.getAbsolutePath))
+    prefix = config("prefix", default = new File(System.getProperty("java.io.tmpdir"), output.getName))
   }
 
   def cmdLine = required(executable) + required("sort") +
