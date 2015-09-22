@@ -94,7 +94,7 @@ trait BiopetQScript extends Configurable with GatkLogging {
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
       else if (!i.file.canRead()) Logging.addError(s"Input file can not be read: ${i.file}")
     }
-    
+
     this match {
       case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
         logger.info("Write report is skipped because sample flag is used")
