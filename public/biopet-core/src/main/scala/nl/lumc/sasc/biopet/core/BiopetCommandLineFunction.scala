@@ -44,7 +44,8 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   var residentFactor: Double = config("resident_factor", default = 1.2)
 
-  private var coreMemory: Double = _
+  private var _coreMemory: Double = 2.0
+  def coreMemeory = _coreMemory
 
   var executable: String = _
 
@@ -66,15 +67,15 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
 
-    coreMemory = config("core_memory", default = defaultCoreMemory).asDouble + (0.5 * retry)
+    _coreMemory = config("core_memory", default = defaultCoreMemory).asDouble + (0.5 * retry)
 
     if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
-    else memoryLimit = Some(coreMemory * threads)
+    else memoryLimit = Some(_coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((coreMemory + (0.5 * retry)) * residentFactor)
+    else residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
 
-    if (!config.contains("vmem")) vmem = Some((coreMemory * (vmemFactor + (0.5 * retry))) + "G")
+    if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
 
