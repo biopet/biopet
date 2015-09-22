@@ -42,9 +42,10 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
 
     val inputOutput = input.filter(x => output.contains(x))
     require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
-
-    threads = commands.map(x => if (x.threads > 0) x.threads else 0).sum
   }
+
+  override def defaultCoreMemory = commands.map(_.defaultCoreMemory).sum
+  override def defaultThreads = commands.map(_.defaultThreads).sum
 
   val root: Configurable = commands.head.root
   override def configName = commands.map(_.configName).mkString("-")
