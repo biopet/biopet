@@ -27,10 +27,11 @@ class SamtoolsSort(val root: Configurable) extends Samtools {
     prefix = config("prefix", default = new File(Files.createTempDir(), output.getAbsolutePath))
   }
 
-  def cmdLine = executable + required("sort") +
+  def cmdLine = required(executable) + required("sort") +
     optional("-m", (coreMemeory + "G")) +
     optional("-@", threads) +
     optional("-O", outputFormat) +
+    required("-T", prefix) +
     conditional(sortByName, "-n") +
     (if (outputAsStsout) "" else required("-o", output)) +
     (if (inputAsStdin) "" else required(input))
