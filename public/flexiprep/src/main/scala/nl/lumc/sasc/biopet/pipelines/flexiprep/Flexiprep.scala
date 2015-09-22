@@ -85,6 +85,9 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     paired = input_R2.isDefined
 
+    inputFiles :+= new InputFile(input_R1)
+    input_R2.foreach(inputFiles :+= new InputFile(_))
+
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
     else R1_name = input_R1.getName
@@ -214,6 +217,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         fqSync.outputFastq1 = swapExt(outDir, R1, R1_ext, ".sync" + R1_ext)
         fqSync.outputFastq2 = swapExt(outDir, R2.get, R2_ext, ".sync" + R2_ext)
         fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
+        fqSync.isIntermediate = true
         fqSync.deps :::= deps
         add(fqSync)
         addSummarizable(fqSync, "fastq_sync")

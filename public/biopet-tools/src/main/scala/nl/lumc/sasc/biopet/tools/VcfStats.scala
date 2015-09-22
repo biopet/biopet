@@ -625,6 +625,7 @@ object VcfStats extends ToolCommand {
   def executeRscript(resource: String, args: Array[String]): Unit = {
     val is = getClass.getResourceAsStream(resource)
     val file = File.createTempFile("script.", "." + resource)
+    file.deleteOnExit()
     val os = new FileOutputStream(file)
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()

@@ -29,9 +29,13 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val input = resourcePath("/mini.transcriptome.fa")
     val output = File.createTempFile("sageCreateLibrary", ".tsv")
+    output.deleteOnExit()
     val noTagsOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    noTagsOutput.deleteOnExit()
     val antiTagsOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    antiTagsOutput.deleteOnExit()
     val allGenesOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    allGenesOutput.deleteOnExit()
 
     val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
       "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",
@@ -52,9 +56,13 @@ class SageCreateLibaryTest extends TestNGSuite with MockitoSugar with Matchers {
   def testOutPut = {
     val input = resourcePath("/mini.transcriptome.fa")
     val output = File.createTempFile("sageCreateLibrary", ".tsv")
+    output.deleteOnExit()
     val noTagsOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    noTagsOutput.deleteOnExit()
     val antiTagsOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    antiTagsOutput.deleteOnExit()
     val allGenesOutput = File.createTempFile("sageCreateLibrary", ".tsv")
+    allGenesOutput.deleteOnExit()
 
     val args = Array("-I", input, "-o", output.getAbsolutePath, "--tag", "CATG",
       "--length", "17", "--noTagsOutput", noTagsOutput.getAbsolutePath, "--noAntiTagsOutput",

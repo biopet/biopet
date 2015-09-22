@@ -57,7 +57,7 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Refer
   }
 
   override def beforeCmd(): Unit = {
-    if (sample == null && inputBam.exists()) {
+    if (sample == null && inputBam.exists() && inputBam.length() > 0) {
       val inputSam = SamReaderFactory.makeDefault.open(inputBam)
       val readGroups = inputSam.getFileHeader.getReadGroups
       val samples = readGroups.map(readGroup => readGroup.getSample).distinct

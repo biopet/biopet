@@ -231,6 +231,7 @@ object ReportBuilder {
       case Some(template) => template
       case _ =>
         val tempFile = File.createTempFile("ssp-template", new File(location).getName)
+        tempFile.deleteOnExit()
         IoUtils.copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
         templateCache += location -> tempFile
         tempFile

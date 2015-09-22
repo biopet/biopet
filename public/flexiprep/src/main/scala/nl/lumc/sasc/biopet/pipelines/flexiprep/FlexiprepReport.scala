@@ -95,7 +95,7 @@ object FlexiprepReport extends ReportBuilder {
     def getLine(summary: Summary, sample: String, lib: String): String = {
       val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "reads", "num_total"),
         summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_after", "reads", "num_total"),
+      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total"),
         summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
       val clippingDiscardedToShort = new SummaryValue(List("flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short"),
         summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
@@ -152,7 +152,7 @@ object FlexiprepReport extends ReportBuilder {
     def getLine(summary: Summary, sample: String, lib: String): String = {
       val beforeTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read, "bases", "num_total"),
         summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
-      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_after", "bases", "num_total"),
+      val afterTotal = new SummaryValue(List("flexiprep", "stats", "seqstat_" + read + "_qc", "bases", "num_total"),
         summary, Some(sample), Some(lib)).value.getOrElse(0).toString.toLong
 
       val sb = new StringBuffer()

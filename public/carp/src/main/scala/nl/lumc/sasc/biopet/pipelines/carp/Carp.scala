@@ -78,6 +78,10 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         if (config.contains("R1")) {
           mapping.input_R1 = config("R1")
           if (config.contains("R2")) mapping.input_R2 = config("R2")
+
+          inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
+          mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
+
           mapping.init()
           mapping.biopetScript()
           addAll(mapping.functions)
@@ -107,7 +111,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         add(merge)
       }
 
-      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"))
+      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"), sampleId = Some(sampleId))
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
       addAll(Bam2Wig(qscript, bamFile).functions)
