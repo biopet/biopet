@@ -2,8 +2,9 @@ package nl.lumc.sasc.biopet.extensions.samtools
 
 import java.io.File
 
+import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by pjvanthof on 22/09/15.
@@ -19,12 +20,18 @@ class SamtoolsSort(val root: Configurable) extends Samtools {
   var compresion: Option[Int] = config("l")
   var outputFormat: Option[String] = config("O")
   var sortByName: Boolean = config("sort_by_name", default = false)
-  val prefix: String = config("prefix", default = new File(qSettings.tempDirectory, output.getAbsolutePath))
+  var prefix: String = _
 
-  def cmdLine = optional("-m", (coreMemeory + "G")) +
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    prefix = config("prefix", default = new File(Files.createTempDir(), output.getAbsolutePath))
+  }
+
+  def cmdLine = executable + required("sort") +
+    optional("-m", (coreMemeory + "G")) +
     optional("-@", threads) +
     optional("-O", outputFormat) +
     conditional(sortByName, "-n") +
-    (if (outputAsStsout) "" else  required("-o", output)) +
+    (if (outputAsStsout) "" else required("-o", output)) +
     (if (inputAsStdin) "" else required(input))
 }
