@@ -38,8 +38,8 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def defaultThreads = 1
 
   var vmem: Option[String] = config("vmem")
-  protected def defaultCoreMemory: Double = 1.0
-  protected def defaultVmemFactor: Double = 1.4
+  def defaultCoreMemory: Double = 1.0
+  def defaultVmemFactor: Double = 1.4
   var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
   var residentFactor: Double = config("resident_factor", default = 1.2)
@@ -150,13 +150,13 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   }
 
   /** Command to get version of executable */
-  protected def versionCommand: String = null
+  protected[core] def versionCommand: String = null
 
   /** Regex to get version from version command output */
-  protected def versionRegex: Regex = null
+  protected[core] def versionRegex: Regex = null
 
   /** Allowed exit codes for the version command */
-  protected def versionExitcode = List(0)
+  protected[core] def versionExitcode = List(0)
 
   /** Executes the version command */
   private[core] def getVersionInternal: Option[String] = {
