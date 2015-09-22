@@ -19,6 +19,7 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsSort
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
@@ -331,11 +332,18 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bwaCommand.R = Some(getReadGroupBwa)
     bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     bwaCommand.isIntermediate = true
-    add(bwaCommand)
-    val sortSam = SortSam(this, bwaCommand.output, output)
-    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
-    add(sortSam)
-    sortSam.output
+    if (config("use_pipes", default = true).asBoolean) {
+      val samtoolsSort = new SamtoolsSort(this)
+      samtoolsSort.outputFormat = Some("bam")
+      samtoolsSort.output = output
+      add(bwaCommand | samtoolsSort)
+    } else {
+      add(bwaCommand)
+      val sortSam = SortSam(this, bwaCommand.output, output)
+      if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
+      add(sortSam)
+    }
+    output
   }
 
   def addGsnap(R1: File, R2: Option[File], output: File, deps: List[File]): File = {

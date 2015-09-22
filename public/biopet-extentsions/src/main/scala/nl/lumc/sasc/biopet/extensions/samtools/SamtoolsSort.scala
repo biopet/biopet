@@ -16,9 +16,9 @@ class SamtoolsSort(val root: Configurable) extends Samtools {
   @Output
   var output: File = _
 
-  val compresion: Option[Int] = config("l")
-  val outputFormat: Option[String] = config("O")
-  val sortByName: Boolean = config("sort_by_name", default = false)
+  var compresion: Option[Int] = config("l")
+  var outputFormat: Option[String] = config("O")
+  var sortByName: Boolean = config("sort_by_name", default = false)
   val prefix: String = config("prefix", default = new File(qSettings.tempDirectory, output.getAbsolutePath))
 
   def cmdLine = optional("-m", (coreMemeory + "G")) +
