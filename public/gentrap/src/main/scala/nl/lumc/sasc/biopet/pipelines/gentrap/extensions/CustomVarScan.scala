@@ -35,9 +35,6 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction wi
   @Input(doc = "Input BAM file", required = true)
   var input: File = null
 
-  @Input(doc = "Reference FASTA file", required = true)
-  var reference: File = null
-
   @Output(doc = "Output VCF file", required = true)
   var output: File = null
 
@@ -93,7 +90,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction wi
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
-    if (reference == null) reference = referenceFasta()
+    deps :+= referenceFasta()
   }
 
   def cmdLine: String = {
