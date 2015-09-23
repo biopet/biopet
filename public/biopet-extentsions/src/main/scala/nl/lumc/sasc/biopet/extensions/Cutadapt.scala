@@ -63,8 +63,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     optional("-M", opt_maximum_length) +
     // input / output
     required(fastq_input) +
-    required("--output", fastq_output) +
-    " > " + required(stats_output)
+    (if (outputAsStsout) "" else required("--output", fastq_output) +
+      " > " + required(stats_output))
 
   /** Output summary stats */
   def summaryStats: Map[String, Any] = {
