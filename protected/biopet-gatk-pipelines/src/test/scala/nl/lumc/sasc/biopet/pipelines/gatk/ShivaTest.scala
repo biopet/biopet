@@ -74,8 +74,8 @@ class ShivaTest extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
-      pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
+      //pipeline.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
+      //pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
 
       // Gatk preprocess
