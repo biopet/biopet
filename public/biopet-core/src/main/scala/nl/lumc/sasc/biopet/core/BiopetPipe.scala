@@ -33,7 +33,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
     stdoutFile = stdoutFile.map(_.getAbsoluteFile)
     stdinFile = stdinFile.map(_.getAbsoluteFile)
 
-    if (stdoutFile.isDefined) {
+    if (stdoutFile.isDefined || _outputAsStdout) {
       commands.last.stdoutFile = None
       commands.last._outputAsStdout = true
     }
