@@ -180,31 +180,36 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     val qcCmdR1 = new QcCommand(this, fastqc_R1)
     qcCmdR1.input = R1_in
-    qcCmdR1.output = new File(outDir, s"${sampleId}-${libId}.R1.qc.fq.gz")
+    qcCmdR1.output = if (paired)
+      new File("/dev/stdout")
+    else new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
-    add(qcCmdR1)
+    //add(qcCmdR1)
 
     if (paired) {
       val qcCmdR2 = new QcCommand(this, fastqc_R2)
       qcCmdR2.input = R2_in.get
-      qcCmdR2.output = new File(outDir, s"${sampleId}-${libId}.R2.qc.fq.gz")
-      qcCmdR2.isIntermediate = true
-      add(qcCmdR2)
+      qcCmdR2.output = new File("/dev/stdout")
+      //add(qcCmdR2)
 
       val fqSync = new FastqSync(this)
       fqSync.refFastq = R1_in
-      fqSync.inputFastq1 = qcCmdR1.output
-      fqSync.inputFastq2 = qcCmdR2.output
+      fqSync.inputFastq1 = Right(qcCmdR1)
+      fqSync.inputFastq2 = Right(qcCmdR2)
       fqSync.outputFastq1 = fastqR1Qc
       fqSync.outputFastq2 = fastqR2Qc.get
-      fqSync.outputStats = new File(outDir, s"${sampleId}-${libId}.sync.stats")
+      fqSync.threads = 6
+      fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
       fqSync.isIntermediate = !keepQcFastqFiles
       add(fqSync)
       addSummarizable(fqSync, "fastq_sync")
       outputFiles += ("syncStats" -> fqSync.outputStats)
       R1 = fqSync.outputFastq1
       R2 = Some(fqSync.outputFastq2)
-    } else R1 = qcCmdR1.output
+    } else {
+      add(qcCmdR1)
+      R1 = qcCmdR1.output
+    }
 
     val seqstat_R1_after = SeqStat(this, R1, outDir)
     add(seqstat_R1_after)

@@ -40,6 +40,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     deps :::= fastqc.outputFiles
   }
 
+  override def defaultCoreMemory = 2.0
+  override def defaultThreads = 3
+
   override def beforeCmd(): Unit = {
     seqtk.Q = fastqc.encoding match {
       case null => None

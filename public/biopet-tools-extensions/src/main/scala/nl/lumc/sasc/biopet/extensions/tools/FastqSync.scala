@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, ToolCommandFuntion}
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -37,11 +37,9 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
   var refFastq: File = null
 
-  @Input(doc = "Input read 1 FASTQ file", shortName = "i", required = true)
-  var inputFastq1: File = null
+  var inputFastq1: Either[File, BiopetCommandLineFunction] = null
 
-  @Input(doc = "Input read 2 FASTQ file", shortName = "j", required = true)
-  var inputFastq2: File = null
+  var inputFastq2: Either[File, BiopetCommandLineFunction] = null
 
   @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
   var outputFastq1: File = null
@@ -54,12 +52,29 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
 
   override def defaultCoreMemory = 4.0
 
+  override def beforeGraph(): Unit = {
+    inputFastq1  match {
+      case Left(file) => deps :+= file
+      case Right(cmd) => deps :::= cmd.deps
+    }
+    inputFastq2  match {
+      case Left(file) => deps :+= file
+      case _ =>
+    }
+  }
+
   // executed command line
   override def cmdLine =
     super.cmdLine +
       required("-r", refFastq) +
-      required("-i", inputFastq1) +
-      required("-j", inputFastq2) +
+      (inputFastq1 match {
+        case Left(file) => required("-i", file)
+        case Right(cmd) => " -i <( " + cmd.commandLine + " )"
+      }) +
+      (inputFastq2 match {
+        case Left(file) => required("-j", file)
+        case Right(cmd) => " -j <( " + cmd.commandLine + " )"
+      }) +
       required("-o", outputFastq1) +
       required("-p", outputFastq2) + " > " +
       required(outputStats)
