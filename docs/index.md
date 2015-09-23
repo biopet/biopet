@@ -64,7 +64,7 @@ We welcome any kind of contribution, be it merge requests on the code base, docu
 To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.4 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
 
 ~~~
-$ git clone https://github.com/broadgsa/gatk
+$ git clone https://github.com/broadgsa/gatk-protected
 $ cd gatk
 $ git checkout 3.4                              # the current release is based on GATK 3.4
 $ mvn -U clean install
