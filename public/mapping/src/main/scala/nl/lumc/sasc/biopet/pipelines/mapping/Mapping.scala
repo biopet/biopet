@@ -333,7 +333,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (paired) bwaCommand.R2 = R2.get
     bwaCommand.deps = deps
     bwaCommand.R = Some(getReadGroupBwa)
-    bwaCommand.isIntermediate = true
     val sortSam = new SortSam(this)
     sortSam.output = output
     add(bwaCommand | sortSam, chunking || !skipMarkduplicates)
