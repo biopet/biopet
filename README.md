@@ -65,7 +65,7 @@ To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.4 is required. Please c
 
 ~~~
 $ git clone https://github.com/broadgsa/gatk-protected
-$ cd gatk
+$ cd gatk-protected
 $ git checkout 3.4                              # the current release is based on GATK 3.4
 $ mvn -U clean install
 ~~~
