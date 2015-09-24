@@ -77,7 +77,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
         new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
       )
       samToFastq.isIntermediate = true
-      qscript.add(samToFastq)
+      add(samToFastq)
 
       // sync the fastq records
       val fastqSync = new FastqSync(qscript)
@@ -87,7 +87,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
       fastqSync.outputFastq1 = new File(outputDir, s"$outputName.unmapped.R1.sync.fq.gz")
       fastqSync.outputFastq2 = new File(outputDir, s"$outputName.unmapped.R2.sync.fq.gz")
       fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats.json")
-      qscript.add(fastqSync)
+      add(fastqSync)
 
       List(fastqSync.outputFastq1, fastqSync.outputFastq2)
     }.getOrElse(List(fastqFileR1, fastqFileR2).flatten)
@@ -99,7 +99,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
     krakenAnalysis.paired = true
     krakenAnalysis.classified_out = Option(new File(outputDir, s"$outputName.krkn.classified.fastq"))
     krakenAnalysis.unclassified_out = Option(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
-    qscript.add(krakenAnalysis)
+    add(krakenAnalysis)
 
     // create kraken summary file
 
@@ -107,7 +107,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
     krakenReport.input = krakenAnalysis.output
     krakenReport.show_zeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
-    qscript.add(krakenReport)
+    add(krakenReport)
 
     addSummaryJobs()
   }
