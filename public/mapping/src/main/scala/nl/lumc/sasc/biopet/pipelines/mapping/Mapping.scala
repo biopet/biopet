@@ -19,6 +19,7 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.pipelines.gears.Gears
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
@@ -272,6 +273,15 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
+
+    if (config("unmapped_to_gears", default = false).asBoolean) {
+      val gears = new Gears(this)
+      gears.bamFile = Some(finalBamFile)
+      gears.outputDir = new File(outputDir, "gears")
+      gears.init()
+      gears.biopetScript()
+      addAll(gears.functions)
+    }
 
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
