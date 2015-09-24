@@ -15,7 +15,7 @@ class ManweSamplesImport(val root: Configurable) extends Manwe {
    */
 
   @Argument(doc = "name of sample")
-  var uri: Option[String] = _
+  var name: Option[String] = _
 
   @Argument(doc = "Group uris")
   var group: List[String] = Nil
@@ -42,10 +42,10 @@ class ManweSamplesImport(val root: Configurable) extends Manwe {
   var poolSize : Option[Int] = _
 
   def subCommand = {
-    required("samples") + required("import") + required(uri) +
+    required("samples") + required("import") + required(name) +
     repeat("-g", group) + repeat("--vcf", vcfs) + repeat("--bed", beds) +
     optional("-s", poolSize) + conditional(alreadyUploaded, "-u") +
-    conditional(public, "-p") + conditional(preferLikelihood, "--l") +
+    conditional(public, "-p") + conditional(preferLikelihood, "-l") +
     conditional(noCoverage, "--no-coverage-profile")
   }
 
