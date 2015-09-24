@@ -35,4 +35,14 @@ abstract class Manwe extends BiopetCommandLineFunction {
     " > " +
     required(output)
   }
+
+  /**
+   * Convert cmdLine into line without quotes and double spaces
+   * primarily for testing
+   * @return
+   */
+  final def cmd = {
+    val a = cmdLine
+    a.replace("'", "").replace("  ", " ").trim
+  }
 }
