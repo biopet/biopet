@@ -13,9 +13,6 @@ abstract class ManweSamplesImportBed extends Manwe {
    * Import bed for existing sample
    */
 
-  @Output(doc = "output file")
-  var output: File = _
-
   @Argument(doc = "uri of sample to upload to")
   var uri: Option[String] = _
 
@@ -29,7 +26,7 @@ abstract class ManweSamplesImportBed extends Manwe {
   def subCommand = {
     required("samples") + required("import-vcf") +
       required(uri) + required(bed) +
-      conditional(alreadyUploaded, "-u") + " > " + required(output)
+      conditional(alreadyUploaded, "-u")
   }
 
 }

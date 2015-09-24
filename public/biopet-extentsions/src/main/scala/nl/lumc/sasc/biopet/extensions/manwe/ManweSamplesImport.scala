@@ -13,9 +13,6 @@ abstract class ManweSamplesImport extends Manwe {
    * Creates sample and imports vcf and bed files immediately
    */
 
-  @Output(doc = "output file")
-  var output: File = _
-
   @Argument(doc = "name of sample")
   var uri: Option[String] = _
 
@@ -48,7 +45,7 @@ abstract class ManweSamplesImport extends Manwe {
     repeat("-g", group) + repeat("--vcf", vcfs) + repeat("--bed", beds) +
     optional("-s", poolSize) + conditional(alreadyUploaded, "-u") +
     conditional(public, "-p") + conditional(preferLikelihood, "--l") +
-    conditional(noCoverage, "--no-coverage-profile") + " > " + required(output)
+    conditional(noCoverage, "--no-coverage-profile")
   }
 
 

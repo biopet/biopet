@@ -9,8 +9,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
  */
 abstract class ManweSamplesAdd extends Manwe {
 
-  @Output(doc = "output file")
-  var output: File = _
 
   @Argument(doc = "the sample name")
   var name: Option[String] = _
@@ -23,8 +21,7 @@ abstract class ManweSamplesAdd extends Manwe {
 
   def subCommand = {
     required("samples") + required("add") + required(name) +
-    optional("-s", poolSize) + repeat("-g", group) +
-      " > " + required(output)
+    optional("-s", poolSize) + repeat("-g", group)
   }
 
 

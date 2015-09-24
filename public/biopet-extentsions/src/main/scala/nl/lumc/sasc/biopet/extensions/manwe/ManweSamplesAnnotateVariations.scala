@@ -9,8 +9,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
  */
 abstract class ManweSamplesAnnotateVariations extends Manwe {
 
-  @Output(doc = "output file")
-  var output: File = _
 
   @Argument(doc= "uri to sample to annotate")
   var uri: Option[String] = _
@@ -20,8 +18,7 @@ abstract class ManweSamplesAnnotateVariations extends Manwe {
 
   def subCommand = {
     required("samples") + required("annotate-variations") +
-    required("uri") + repeat("-q", queries) + " > " +
-    required(output)
+    required("uri") + repeat("-q", queries)
   }
 
 

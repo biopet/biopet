@@ -9,9 +9,6 @@ import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
  */
 abstract class ManweSamplesList extends Manwe {
 
-  @Output(doc = "output file")
-  var output: File = _
-
   @Argument(doc = "filter by user URI")
   var user: Option[String] = None
 
@@ -22,8 +19,7 @@ abstract class ManweSamplesList extends Manwe {
 
   def subCommand = {
     required("samples") + required("list") + optional("-u", user) +
-    repeat("-g", group) + conditional(onlyPublic, "-p") + " > " +
-    required(output)
+    repeat("-g", group) + conditional(onlyPublic, "-p")
   }
 
 

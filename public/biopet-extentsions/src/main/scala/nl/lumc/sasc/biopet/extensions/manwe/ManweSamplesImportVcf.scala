@@ -13,9 +13,6 @@ abstract class ManweSamplesImportVcf extends Manwe {
    * Import vcf for existing sample
    */
 
-  @Output(doc = "output file")
-  var output: File = _
-
   @Argument(doc = "uri of sample to upload to")
   var uri: Option[String] = _
 
@@ -32,8 +29,7 @@ abstract class ManweSamplesImportVcf extends Manwe {
   def subCommand = {
     required("samples") + required("import-vcf") +
     required(uri) + required(vcf) +
-    conditional(alreadyUploaded, "-u") + conditional(preferLikelihoods, "-l") +
-    " > " + required(output)
+    conditional(alreadyUploaded, "-u") + conditional(preferLikelihoods, "-l")
   }
 
 }
