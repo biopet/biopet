@@ -26,6 +26,7 @@ class PrefixFastqTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testMain() = {
     val temp = File.createTempFile("out", ".fastq")
+    temp.deleteOnExit()
 
     val args = Array("-i", fq, "-o", temp.getAbsolutePath, "-s", "AAA")
     main(args)
@@ -34,6 +35,7 @@ class PrefixFastqTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testOutput() = {
     val temp = File.createTempFile("out", ".fastq")
+    temp.deleteOnExit()
 
     val args = Array("-i", fq, "-o", temp.getAbsolutePath, "-s", "AAA")
     main(args)

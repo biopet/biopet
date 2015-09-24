@@ -136,51 +136,56 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
           case (true, _) => mapping.foreach(mapping => {
             mapping.input_R1 = config("R1")
             mapping.input_R2 = config("R2")
+            inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
+            mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
           })
-          case (false, true) => config("bam_to_fastq", default = false).asBoolean match {
-            case true =>
-              val samToFastq = SamToFastq(qscript, config("bam"),
-                new File(libDir, sampleId + "-" + libId + ".R1.fastq"),
-                new File(libDir, sampleId + "-" + libId + ".R2.fastq"))
-              samToFastq.isIntermediate = true
-              qscript.add(samToFastq)
-              mapping.foreach(mapping => {
-                mapping.input_R1 = samToFastq.fastqR1
-                mapping.input_R2 = Some(samToFastq.fastqR2)
-              })
-            case false =>
-              val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
-              val readGroups = inputSam.getFileHeader.getReadGroups
+          case (false, true) => {
+            inputFiles :+= new InputFile(config("bam"), config("bam_md5"))
+            config("bam_to_fastq", default = false).asBoolean match {
+              case true =>
+                val samToFastq = SamToFastq(qscript, config("bam"),
+                  new File(libDir, sampleId + "-" + libId + ".R1.fastq"),
+                  new File(libDir, sampleId + "-" + libId + ".R2.fastq"))
+                samToFastq.isIntermediate = true
+                qscript.add(samToFastq)
+                mapping.foreach(mapping => {
+                  mapping.input_R1 = samToFastq.fastqR1
+                  mapping.input_R2 = Some(samToFastq.fastqR2)
+                })
+              case false =>
+                val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
+                val readGroups = inputSam.getFileHeader.getReadGroups
 
-              val readGroupOke = readGroups.forall(readGroup => {
-                if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
-                if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
-                readGroup.getSample == sampleId && readGroup.getLibrary == libId
-              })
-              inputSam.close()
+                val readGroupOke = readGroups.forall(readGroup => {
+                  if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
+                  if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
+                  readGroup.getSample == sampleId && readGroup.getLibrary == libId
+                })
+                inputSam.close()
 
-              if (!readGroupOke) {
-                if (config("correct_readgroups", default = false).asBoolean) {
-                  logger.info("Correcting readgroups, file:" + config("bam"))
-                  val aorrg = AddOrReplaceReadGroups(qscript, config("bam"), bamFile.get)
-                  aorrg.RGID = sampleId + "-" + libId
-                  aorrg.RGLB = libId
-                  aorrg.RGSM = sampleId
-                  aorrg.isIntermediate = true
-                  qscript.add(aorrg)
-                } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
-                  "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
-              } else {
-                val oldBamFile: File = config("bam")
-                val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-                val newIndex: File = new File(libDir, oldBamFile.getName.stripSuffix(".bam") + ".bai")
-                val baiLn = Ln(qscript, oldIndex, newIndex)
-                add(baiLn)
+                if (!readGroupOke) {
+                  if (config("correct_readgroups", default = false).asBoolean) {
+                    logger.info("Correcting readgroups, file:" + config("bam"))
+                    val aorrg = AddOrReplaceReadGroups(qscript, config("bam"), bamFile.get)
+                    aorrg.RGID = sampleId + "-" + libId
+                    aorrg.RGLB = libId
+                    aorrg.RGSM = sampleId
+                    aorrg.isIntermediate = true
+                    qscript.add(aorrg)
+                  } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
+                    "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
+                } else {
+                  val oldBamFile: File = config("bam")
+                  val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
+                  val newIndex: File = new File(libDir, oldBamFile.getName.stripSuffix(".bam") + ".bai")
+                  val baiLn = Ln(qscript, oldIndex, newIndex)
+                  add(baiLn)
 
-                val bamLn = Ln(qscript, oldBamFile, bamFile.get)
-                bamLn.deps :+= baiLn.output
-                add(bamLn)
-              }
+                  val bamLn = Ln(qscript, oldBamFile, bamFile.get)
+                  bamLn.deps :+= baiLn.output
+                  add(bamLn)
+                }
+            }
           }
           case _ => logger.warn("Sample: " + sampleId + "  Library: " + libId + ", no reads found")
         }
@@ -294,7 +299,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
       addAll(vc.functions)
       addSummaryQScript(vc)
 
-      if (config("annotation", default = true).asBoolean) {
+      if (config("annotation", default = false).asBoolean) {
         val toucan = new Toucan(this)
         toucan.outputDir = new File(outputDir, "annotation")
         toucan.inputVCF = vc.finalFile

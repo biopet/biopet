@@ -228,6 +228,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
 object ConfigUtilsTest {
   def writeTemp(text: String, extension: String): File = {
     val file = File.createTempFile("TestConfigUtils.", extension)
+    file.deleteOnExit()
     val w = new PrintWriter(file)
     w.write(text)
     w.close()

@@ -24,6 +24,7 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   def testMain = {
     val tsv = resourcePath("/test.summary.json")
     val output = File.createTempFile("main", "tsv")
+    output.deleteOnExit()
 
     noException should be thrownBy main(Array("-s", tsv, "-p", "something=flexiprep:settings:skip_trim",
       "-m", "root", "-o", output.toString))

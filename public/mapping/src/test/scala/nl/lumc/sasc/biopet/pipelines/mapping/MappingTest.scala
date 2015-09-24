@@ -79,11 +79,11 @@ class MappingTest extends TestNGSuite with Matchers {
     val mapping: Mapping = initPipeline(map)
 
     if (zipped) {
-      mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq.gz")
-      if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq.gz"))
+      mapping.input_R1 = MappingTest.r1Zipped
+      if (paired) mapping.input_R2 = Some(MappingTest.r2Zipped)
     } else {
-      mapping.input_R1 = new File(mapping.outputDir, "bla_R1.fq")
-      if (paired) mapping.input_R2 = Some(new File(mapping.outputDir, "bla_R2.fq"))
+      mapping.input_R1 = MappingTest.r1
+      if (paired) mapping.input_R2 = Some(MappingTest.r2)
     }
     mapping.sampleId = Some("1")
     mapping.libId = Some("1")
@@ -131,6 +131,16 @@ class MappingTest extends TestNGSuite with Matchers {
 
 object MappingTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+
+  val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
+  Files.touch(r1)
+  val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
+  Files.touch(r2)
+  val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
+  Files.touch(r1Zipped)
+  val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
+  Files.touch(r2Zipped)
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

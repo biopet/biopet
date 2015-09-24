@@ -87,6 +87,12 @@ class ShivaTest extends TestNGSuite with Matchers {
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -130,8 +136,8 @@ object ShivaTest {
   val sample1 = Map(
     "samples" -> Map("sample1" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "1_1_R1.fq",
-        "R2" -> "1_1_R2.fq"
+        "R1" -> inputTouch("1_1_R1.fq"),
+        "R2" -> inputTouch("1_1_R2.fq")
       )
     )
     )))
@@ -139,12 +145,12 @@ object ShivaTest {
   val sample2 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "3_1_R1.fq",
-        "R2" -> "3_1_R2.fq"
+        "R1" -> inputTouch("2_1_R1.fq"),
+        "R2" -> inputTouch("2_1_R2.fq")
       ),
       "lib2" -> Map(
-        "R1" -> "3_2_R1.fq",
-        "R2" -> "3_2_R2.fq"
+        "R1" -> inputTouch("2_2_R1.fq"),
+        "R2" -> inputTouch("2_2_R2.fq")
       )
     )
     )))

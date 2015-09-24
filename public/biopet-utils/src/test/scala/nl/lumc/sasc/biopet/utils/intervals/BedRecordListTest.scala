@@ -39,6 +39,7 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     records.header shouldBe Nil
 
     val tempFile = File.createTempFile("region", ".bed")
+    tempFile.deleteOnExit()
     records.writeToFile(tempFile)
     BedRecordList.fromFile(tempFile) shouldBe records
     tempFile.delete()
@@ -50,6 +51,7 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     records.header shouldBe BedRecordListTest.ucscHeader.split("\n").toList
 
     val tempFile = File.createTempFile("region", ".bed")
+    tempFile.deleteOnExit()
     records.writeToFile(tempFile)
     BedRecordList.fromFile(tempFile) shouldBe records
     tempFile.delete()
@@ -129,13 +131,6 @@ class BedRecordListTest extends TestNGSuite with Matchers {
     list.scatter(100).allRecords.size shouldBe 15
     list.scatter(100).length shouldBe 1500
   }
-
-  @AfterClass
-  def end: Unit = {
-    BedRecordListTest.bedFile.delete()
-    BedRecordListTest.corruptBedFile.delete()
-    BedRecordListTest.bedFileUcscHeader.delete()
-  }
 }
 
 object BedRecordListTest {
@@ -149,6 +144,9 @@ object BedRecordListTest {
                      |chr22	2000	6000	cloneB	900	-	2000	6000	0	2	433,399	0,3601""".stripMargin
 
   val bedFile = File.createTempFile("regions", ".bed")
+  bedFile.deleteOnExit()
   val corruptBedFile = File.createTempFile("regions", ".bed")
+  corruptBedFile.deleteOnExit()
   val bedFileUcscHeader = File.createTempFile("regions", ".bed")
+  bedFileUcscHeader.deleteOnExit()
 }
