@@ -20,7 +20,7 @@ class ManweAnnotateBed(val root: Configurable) extends Manwe {
   var queries: List[String] = Nil
 
   def subCommand = {
-    required("annotate-vcf") + required(bed) +
+    required("annotate-bed") + required(bed) +
       conditional(alreadyUploaded, "-u") +
       repeat("-q", queries)
   }
