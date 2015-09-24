@@ -25,7 +25,7 @@ class ManweSamplesImportBed(val root: Configurable) extends Manwe {
   var alreadyUploaded: Boolean = false
 
   def subCommand = {
-    required("samples") + required("import-vcf") +
+    required("samples") + required("import-bed") +
       required(uri) + required(bed) +
       conditional(alreadyUploaded, "-u")
   }
