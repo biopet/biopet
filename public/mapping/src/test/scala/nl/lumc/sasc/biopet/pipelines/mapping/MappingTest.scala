@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SortSam }
-import nl.lumc.sasc.biopet.pipelines.flexiprep.{ Cutadapt, Fastqc, SeqtkSeq }
+import nl.lumc.sasc.biopet.pipelines.flexiprep.{ Cutadapt, Fastqc }
 import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils

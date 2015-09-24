@@ -3,7 +3,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetPipe }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat, Sickle }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Sickle, Cutadapt }
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
@@ -23,18 +24,6 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   @Output(required = true)
   var output: File = _
 
-  val zcat = new Zcat(root)
-  val seqtk = new SeqtkSeq(root)
-  val cutadept = flexiprep.skipClip match {
-    case false => Some(new Cutadapt(root))
-    case true  => None
-  }
-  val sickle = flexiprep.skipTrim match {
-    case false => Some(new Sickle(root))
-    case true  => None
-  }
-  val gzip = Gzip(root)
-
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     deps :::= fastqc.outputFiles
@@ -43,7 +32,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 3
 
-  override def beforeCmd(): Unit = {
+  def cmdLine = {
+    val seqtk = new SeqtkSeq(root)
+    seqtk.input = input
     seqtk.Q = fastqc.encoding match {
       case null => None
       case enc if enc.contains("Sanger / Illumina 1.9") => None
@@ -53,27 +44,46 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       case _ => None
     }
     if (seqtk.Q.isDefined) seqtk.V = true
-  }
 
-  def cmdLine = {
-    val sanger = seqtk.Q match {
-      case Some(_) => Some(seqtk)
-      case _       => None
-    }
-    val clip = cutadept match {
-      case Some(cutadept) =>
-        val foundAdapters = fastqc.foundAdapters.map(_.seq)
+    val clip = if (!flexiprep.skipClip) {
+      val foundAdapters = fastqc.foundAdapters.map(_.seq)
+      if (foundAdapters.nonEmpty) {
+        val cutadept = new nl.lumc.sasc.biopet.extensions.Cutadapt(root)
+        cutadept.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.clip.stats")
         if (cutadept.default_clip_mode == "3") cutadept.opt_adapter ++= foundAdapters
         else if (cutadept.default_clip_mode == "5") cutadept.opt_front ++= foundAdapters
         else if (cutadept.default_clip_mode == "both") cutadept.opt_anywhere ++= foundAdapters
-        if (foundAdapters.nonEmpty) Some(cutadept)
-        else None
-      case _ => None
+        Some(cutadept)
+      } else None
+    } else None
+
+    val trim = if (!flexiprep.skipTrim) {
+      val sickle = new nl.lumc.sasc.biopet.extensions.Sickle(root)
+      sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.trim.stats")
+      Some(sickle)
+    } else None
+    val gzip = new Gzip(root)
+
+    val cmd = (clip, trim) match {
+      case (Some(clip), Some(trim)) => {
+        clip.fastq_output = Right(trim)
+        trim.output_R1 = Right(gzip > output)
+        seqtk | clip
+      }
+      case (Some(clip), _) => {
+        clip.fastq_output = Right(gzip > output)
+        seqtk | clip
+      }
+      case (_, Some(trim)) => {
+        trim.output_R1 = Right(gzip > output)
+        seqtk | trim
+      }
+      case _ => {
+        seqtk | gzip > output
+      }
     }
-    val trim = sickle
-    val cmds = ((if (input.getName.endsWith(".gz") || input.getName.endsWith(".gzip")) Some(zcat) else None) ::
-      sanger :: clip :: trim :: Some(gzip) :: Nil).flatten
-    val cmd = input :<: cmds.tail.foldLeft(cmds.head)((a, b) => a | b) > output
+
+    //val cmds = (Some(seqtk) :: clip :: trim :: Some(new Gzip(root)) :: Nil).flatten
     cmd.beforeGraph()
     cmd.commandLine
   }

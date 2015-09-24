@@ -28,7 +28,7 @@ class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
-  executable = config("exe", default = "gzip")
+  executable = config("exe", default = "gzip", freeVar = false)
 
   override def versionRegex = """gzip (.*)""".r
   override def versionCommand = executable + " --version"

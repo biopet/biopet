@@ -34,6 +34,9 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
+  @Output
+  var outputFiles: List[File] = Nil
+
   var threads = 0
   def defaultThreads = 1
 
@@ -281,6 +284,36 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
     addJobReportBinding("command", cmd)
     cmd
+  }
+
+  def requiredInput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
+    arg match {
+      case Left(file) => {
+        deps :+= file
+        required(prefix, file)
+      }
+      case Right(cmd) => {
+        cmd._outputAsStdout = true
+        if (cmd.outputs != null) outputFiles ++= cmd.outputs
+        if (cmd.inputs != null) deps ++= cmd.inputs
+        s"'${prefix}' <( ${cmd.commandLine} ) "
+      }
+    }
+  }
+
+  def requiredOutput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
+    arg match {
+      case Left(file) => {
+        deps :+= file
+        required(prefix, file)
+      }
+      case Right(cmd) => {
+        cmd._inputAsStdin = true
+        if (cmd.outputs != null) outputFiles ++= cmd.outputs
+        if (cmd.inputs != null) deps ++= cmd.inputs
+        s"'${prefix}' >( ${cmd.commandLine} ) "
+      }
+    }
   }
 }
 

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, ToolCommandFuntion}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, ToolCommandFuntion }
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -52,29 +52,12 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
 
   override def defaultCoreMemory = 4.0
 
-  override def beforeGraph(): Unit = {
-    inputFastq1  match {
-      case Left(file) => deps :+= file
-      case Right(cmd) => deps :::= cmd.deps
-    }
-    inputFastq2  match {
-      case Left(file) => deps :+= file
-      case _ =>
-    }
-  }
-
   // executed command line
   override def cmdLine =
     super.cmdLine +
       required("-r", refFastq) +
-      (inputFastq1 match {
-        case Left(file) => required("-i", file)
-        case Right(cmd) => " -i <( " + cmd.commandLine + " )"
-      }) +
-      (inputFastq2 match {
-        case Left(file) => required("-j", file)
-        case Right(cmd) => " -j <( " + cmd.commandLine + " )"
-      }) +
+      requiredInput("-i", inputFastq1) +
+      requiredInput("-j", inputFastq2) +
       required("-o", outputFastq1) +
       required("-p", outputFastq2) + " > " +
       required(outputStats)
