@@ -38,8 +38,10 @@ pages:
     - 0.3.1: 'release_notes_0.3.1.md'
     - 0.3.0: 'release_notes_0.3.0.md'
 - Developer:
-    - 'developer/getting-started.md'
-    - 'developer/code-style.md'
+    - Getting Started: 'developer/getting-started.md'
+    - Code Style: 'developer/code-style.md'
+    - Scala docs:
+      - 0.4.0: 'developer/code-style.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs
 repo_url: https://github.com/biopet/biopet
