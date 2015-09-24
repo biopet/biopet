@@ -2,12 +2,13 @@ package nl.lumc.sasc.biopet.extensions.manwe
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
 
 /**
  * Created by ahbbollen on 23-9-15.
  */
-abstract class ManweSamplesList extends Manwe {
+class ManweSamplesList(val root: Configurable) extends Manwe {
 
   @Argument(doc = "filter by user URI")
   var user: Option[String] = None

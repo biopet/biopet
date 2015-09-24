@@ -2,12 +2,13 @@ package nl.lumc.sasc.biopet.extensions.manwe
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
 
 /**
  * Created by ahbbollen on 24-9-15.
  */
-abstract class ManweSamplesAnnotateVariations extends Manwe {
+class ManweSamplesAnnotateVariations(val root: Configurable) extends Manwe {
 
 
   @Argument(doc= "uri to sample to annotate")

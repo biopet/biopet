@@ -1,11 +1,12 @@
 package nl.lumc.sasc.biopet.extensions.manwe
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 /**
  * Created by ahbbollen on 24-9-15.
  */
-abstract class ManweDataSourcesDownload extends Manwe {
+class ManweDataSourcesDownload(val root: Configurable) extends Manwe {
 
   @Argument(doc = "uri to data source to download")
   var uri: Option[String] = _

@@ -2,12 +2,13 @@ package nl.lumc.sasc.biopet.extensions.manwe
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
 
 /**
  * Created by ahbbollen on 24-9-15.
  */
-abstract class ManweAnnotateVcf extends Manwe {
+class ManweAnnotateVcf(val root: Configurable) extends Manwe {
 
   @Input(doc = "the vcf to annotate")
   var vcf: File = _
