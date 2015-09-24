@@ -19,7 +19,7 @@ class ManweSamplesAnnotateVariations(val root: Configurable) extends Manwe {
 
   def subCommand = {
     required("samples") + required("annotate-variations") +
-    required("uri") + repeat("-q", queries)
+    required(uri) + repeat("-q", queries)
   }
 
 
