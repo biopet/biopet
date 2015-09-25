@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetPipe }
-import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle, Cutadapt}
+import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
@@ -31,7 +31,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(read != null)
-    deps :::= fastqc.outputFiles
+    deps ::= output
   }
 
   override def defaultCoreMemory = 2.0
