@@ -246,9 +246,10 @@
               <configuration>
                   <scalaVersion>${scalaVersion}</scalaVersion>
                   <aggregate>true</aggregate>
+                  <highlighting>true</highlighting>
                   <!-- other parameters -->
               </configuration>
-            </plugin>
+          </plugin>
       </plugins>
     </build>
     <reporting>
@@ -257,6 +258,17 @@
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <aggregate>true</aggregate> <!-- for aggregated report -->
+                    <highlighting>true</highlighting>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report> <!-- select only one report from: report, integration-report and report-only reporters -->
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
     </reporting>
