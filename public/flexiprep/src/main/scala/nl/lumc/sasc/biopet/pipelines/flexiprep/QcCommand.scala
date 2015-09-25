@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetPipe }
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Sickle, Cutadapt }
+import nl.lumc.sasc.biopet.extensions.{Cat, Gzip, Sickle, Cutadapt}
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
@@ -24,8 +24,13 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   @Output(required = true)
   var output: File = _
 
+  var compress = true
+
+  var read: String = _
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
+    require(read != null)
     deps :::= fastqc.outputFiles
   }
 
@@ -49,7 +54,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
         val cutadept = new nl.lumc.sasc.biopet.extensions.Cutadapt(root)
-        cutadept.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.clip.stats")
+        cutadept.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
         if (cutadept.default_clip_mode == "3") cutadept.opt_adapter ++= foundAdapters
         else if (cutadept.default_clip_mode == "5") cutadept.opt_front ++= foundAdapters
         else if (cutadept.default_clip_mode == "both") cutadept.opt_anywhere ++= foundAdapters
@@ -59,27 +64,30 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     val trim = if (!flexiprep.skipTrim) {
       val sickle = new nl.lumc.sasc.biopet.extensions.Sickle(root)
-      sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.trim.stats")
+      sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       Some(sickle)
     } else None
-    val gzip = new Gzip(root)
+    val outputCommand = {
+      if (compress) new Gzip(root)
+      else new Cat(root)
+    }
 
     val cmd = (clip, trim) match {
       case (Some(clip), Some(trim)) => {
         clip.fastq_output = Right(trim)
-        trim.output_R1 = Right(gzip > output)
+        trim.output_R1 = Right(outputCommand > output)
         seqtk | clip
       }
       case (Some(clip), _) => {
-        clip.fastq_output = Right(gzip > output)
+        clip.fastq_output = Right(outputCommand > output)
         seqtk | clip
       }
       case (_, Some(trim)) => {
-        trim.output_R1 = Right(gzip > output)
+        trim.output_R1 = Right(outputCommand > output)
         seqtk | trim
       }
       case _ => {
-        seqtk | gzip > output
+        seqtk | outputCommand > output
       }
     }
 
