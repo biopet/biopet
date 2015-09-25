@@ -51,6 +51,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
+        <scalaVersion>2.10.4</scalaVersion>
     </properties>
     
     <build>
@@ -243,14 +244,10 @@
               <artifactId>scoverage-maven-plugin</artifactId>
               <version>${scoverage.plugin.version}</version>
               <configuration>
-                  <scalaVersion>2.10.2</scalaVersion>
+                  <scalaVersion>${scalaVersion}</scalaVersion>
+                  <aggregate>true</aggregate>
                   <!-- other parameters -->
               </configuration>
-              <executions>
-                  <execution>
-                      <phase>test</phase>
-                  </execution>
-              </executions>
             </plugin>
       </plugins>
     </build>
