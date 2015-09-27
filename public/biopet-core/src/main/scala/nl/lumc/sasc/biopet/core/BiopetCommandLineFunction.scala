@@ -59,7 +59,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
-    case jt:JobTemplate => jt.setRemoteCommand(remoteCommand)
+    case jt: JobTemplate => jt.setRemoteCommand(remoteCommand)
   }
 
   /**
@@ -304,8 +304,12 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._outputAsStdout = true
-        if (cmd.outputs != null) outputFiles ++= cmd.outputs
-        if (cmd.inputs != null) deps ++= cmd.inputs
+        try {
+          if (cmd.outputs != null) outputFiles ++= cmd.outputs
+          if (cmd.inputs != null) deps ++= cmd.inputs
+        } catch {
+          case e: NullPointerException =>
+        }
         s"'${prefix}' <( ${cmd.commandLine} ) "
       }
     }
@@ -319,8 +323,12 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._inputAsStdin = true
-        if (cmd.outputs != null) outputFiles ++= cmd.outputs
-        if (cmd.inputs != null) deps ++= cmd.inputs
+        try {
+          if (cmd.outputs != null) outputFiles ++= cmd.outputs
+          if (cmd.inputs != null) deps ++= cmd.inputs
+        } catch {
+          case e: NullPointerException =>
+        }
         s"'${prefix}' >( ${cmd.commandLine} ) "
       }
     }
