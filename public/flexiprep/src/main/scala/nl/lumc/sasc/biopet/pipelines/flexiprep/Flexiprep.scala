@@ -172,7 +172,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Adds all chunkable jobs of flexiprep */
   def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File, chunkarg: String): (File, Option[File], List[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
-    var results: Map[String, File] = Map()
 
     var R1 = R1_in
     var R2 = R2_in
@@ -181,9 +180,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val qcCmdR1 = new QcCommand(this, fastqc_R1)
     qcCmdR1.input = R1_in
     qcCmdR1.read = "R1"
-    qcCmdR1.output = if (paired)
-      new File("/dev/stdout")
-    else new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
+    qcCmdR1.output = if (paired) new File("/dev/stdout")
+    else fastqR1Qc
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
 
     if (paired) {

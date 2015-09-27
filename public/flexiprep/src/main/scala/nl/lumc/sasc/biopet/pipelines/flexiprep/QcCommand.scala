@@ -31,7 +31,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(read != null)
-    deps ::= output
+    deps ::= input
   }
 
   override def defaultCoreMemory = 2.0
