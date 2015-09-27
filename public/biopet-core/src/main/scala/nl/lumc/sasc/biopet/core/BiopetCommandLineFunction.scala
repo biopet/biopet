@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.ggf.drmaa.JobTemplate
 
 import scala.collection.mutable
 import scala.sys.process.{ Process, ProcessLogger }
@@ -51,6 +52,15 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def coreMemeory = _coreMemory
 
   var executable: String = _
+
+  /** This is the default shell for drmaa jobs */
+  def defaultRemoteCommand = "bash"
+  private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
+
+  // This overrides the default "sh" from queue. For Biopet the default is "bash"
+  updateJobRun = {
+    case jt:JobTemplate => jt.setRemoteCommand(remoteCommand)
+  }
 
   /**
    * Can override this method. This is executed just before the job is ready to run.
