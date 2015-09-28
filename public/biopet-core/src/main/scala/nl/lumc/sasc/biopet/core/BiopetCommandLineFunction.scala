@@ -81,6 +81,12 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   /** Set default output file, threads and vmem for current job */
   private[core] def internalBeforeGraph(): Unit = {
+    val firstOutput = try {
+      this.firstOutput
+    } catch {
+      case e:NullPointerException => null
+    }
+
     if (jobOutputFile == null && firstOutput != null)
       jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
@@ -254,6 +260,10 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def |(that: BiopetCommandLineFunction): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     that._inputAsStdin = true
+    this.beforeGraph()
+    this.internalBeforeGraph()
+    that.beforeGraph()
+    that.internalBeforeGraph()
     this match {
       case p: BiopetPipe => {
         p.commands.last._outputAsStdout = true
@@ -309,6 +319,11 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._outputAsStdout = true
+        cmd.beforeGraph()
+        cmd.internalBeforeGraph()
+        this.beforeGraph()
+        this.internalBeforeGraph()
+        this.threads += cmd.threads
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs
@@ -328,6 +343,11 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._inputAsStdin = true
+        cmd.beforeGraph()
+        cmd.internalBeforeGraph()
+        this.beforeGraph()
+        this.internalBeforeGraph()
+        this.threads += cmd.threads
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs
