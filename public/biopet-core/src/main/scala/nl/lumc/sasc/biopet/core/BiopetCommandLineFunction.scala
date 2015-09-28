@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
+import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
 
 import scala.collection.mutable
@@ -60,6 +61,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
     case jt: JobTemplate => jt.setRemoteCommand(remoteCommand)
+    case ps: ProcessSettings => ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
   }
 
   /**
