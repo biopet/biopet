@@ -84,16 +84,19 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     val firstOutput = try {
       this.firstOutput
     } catch {
-      case e:NullPointerException => null
+      case e: NullPointerException => null
     }
+
+    pipesJobs.foreach(_.beforeGraph())
+    pipesJobs.foreach(_.internalBeforeGraph())
 
     if (jobOutputFile == null && firstOutput != null)
       jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
-    if (threads == 0) threads = getThreads(defaultThreads)
+    if (threads == 0) threads = getThreads(defaultThreads) + pipesJobs.map(_.threads).sum
     if (threads > 1) nCoresRequest = Option(threads)
 
-    _coreMemory = config("core_memory", default = defaultCoreMemory).asDouble + (0.5 * retry)
+    _coreMemory = config("core_memory", default = defaultCoreMemory + pipesJobs.map(_.coreMemeory).sum).asDouble + (0.5 * retry)
 
     if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
     else memoryLimit = Some(_coreMemory * threads)
@@ -311,6 +314,8 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     cmd
   }
 
+  private[core] var pipesJobs: List[BiopetCommandLineFunction] = Nil
+
   def requiredInput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
     arg match {
       case Left(file) => {
@@ -319,11 +324,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._outputAsStdout = true
-        cmd.beforeGraph()
-        cmd.internalBeforeGraph()
-        this.beforeGraph()
-        this.internalBeforeGraph()
-        this.threads += cmd.threads
+        pipesJobs :+= cmd
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs
@@ -343,11 +344,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._inputAsStdin = true
-        cmd.beforeGraph()
-        cmd.internalBeforeGraph()
-        this.beforeGraph()
-        this.internalBeforeGraph()
-        this.threads += cmd.threads
+        pipesJobs :+= cmd
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs
