@@ -71,11 +71,18 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   /** Can override this method. This is executed after the script is done en queue starts to generate the graph */
   def beforeGraph() {}
 
-  /** Set default output file, threads and vmem for current job */
   override def freezeFieldValues() {
     preProcessExecutable()
     beforeGraph()
-    if (jobOutputFile == null) jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
+    internalBeforeGraph()
+
+    super.freezeFieldValues()
+  }
+
+  /** Set default output file, threads and vmem for current job */
+  private[core] def internalBeforeGraph(): Unit = {
+    if (jobOutputFile == null && firstOutput != null)
+      jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
     if (threads == 0) threads = getThreads(defaultThreads)
     if (threads > 1) nCoresRequest = Option(threads)
@@ -91,8 +98,6 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
     if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
-
-    super.freezeFieldValues()
   }
 
   var retry = 0

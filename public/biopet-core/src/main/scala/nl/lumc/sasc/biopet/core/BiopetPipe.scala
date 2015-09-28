@@ -29,6 +29,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   override def beforeGraph() {
     super.beforeGraph()
     commands.foreach(_.beforeGraph())
+    commands.foreach(_.internalBeforeGraph())
 
     stdoutFile = stdoutFile.map(_.getAbsoluteFile)
     stdinFile = stdinFile.map(_.getAbsoluteFile)
