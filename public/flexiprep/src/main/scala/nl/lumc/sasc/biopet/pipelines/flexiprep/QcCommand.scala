@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.summary.{SummaryQScript, Summarizable}
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
@@ -43,11 +43,11 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
     clip match {
       case Some(job) => qscript.addSummarizable(job, s"clipping_$read")
-      case _ =>
+      case _         =>
     }
     trim match {
       case Some(job) => qscript.addSummarizable(job, s"trimming_$read")
-      case _ =>
+      case _         =>
     }
   }
 

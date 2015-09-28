@@ -97,10 +97,11 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     if (jobOutputFile == null && firstOutput != null)
       jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
-    if (threads == 0) threads = getThreads(defaultThreads) + pipesJobs.map(_.threads).map(i => if (i == 0) 1 else i).sum
+    val ownThreads = getThreads(defaultThreads)
+    if (threads == 0) threads = ownThreads + pipesJobs.map(_.threads).map(i => if (i == 0) 1 else i).sum
     if (threads > 1) nCoresRequest = Option(threads)
 
-    _coreMemory = config("core_memory", default = defaultCoreMemory +
+    _coreMemory = config("core_memory", default = (defaultCoreMemory * (ownThreads.toDouble / this.threads.toDouble)) +
       pipesJobs.map(job => job.coreMemeory * (job.threads.toDouble / this.threads.toDouble)).sum).asDouble +
       (0.5 * retry)
 
