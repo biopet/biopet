@@ -199,7 +199,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.inputFastq2 = Right(qcCmdR2)
       fqSync.outputFastq1 = fastqR1Qc
       fqSync.outputFastq2 = fastqR2Qc.get
-      fqSync.threads = 6
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
       fqSync.isIntermediate = !keepQcFastqFiles
       fqSync.deps ::= fastqc_R1.output

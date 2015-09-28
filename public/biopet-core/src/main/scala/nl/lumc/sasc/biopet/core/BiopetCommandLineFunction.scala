@@ -60,7 +60,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
-    case jt: JobTemplate => jt.setRemoteCommand(remoteCommand)
+    case jt: JobTemplate     => jt.setRemoteCommand(remoteCommand)
     case ps: ProcessSettings => ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
   }
 
@@ -77,6 +77,8 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     preProcessExecutable()
     beforeGraph()
     internalBeforeGraph()
+
+    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
 
     super.freezeFieldValues()
   }
@@ -95,10 +97,12 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     if (jobOutputFile == null && firstOutput != null)
       jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
-    if (threads == 0) threads = getThreads(defaultThreads) + pipesJobs.map(_.threads).sum
+    if (threads == 0) threads = getThreads(defaultThreads) + pipesJobs.map(_.threads).map(i => if (i == 0) 1 else i).sum
     if (threads > 1) nCoresRequest = Option(threads)
 
-    _coreMemory = config("core_memory", default = defaultCoreMemory + pipesJobs.map(_.coreMemeory).sum).asDouble + (0.5 * retry)
+    _coreMemory = config("core_memory", default = defaultCoreMemory +
+      pipesJobs.map(job => job.coreMemeory * (job.threads.toDouble / this.threads.toDouble)).sum).asDouble +
+      (0.5 * retry)
 
     if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
     else memoryLimit = Some(_coreMemory * threads)
@@ -107,7 +111,6 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
     else residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
 
     if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
-    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
   }
 
@@ -317,6 +320,10 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   }
 
   private[core] var pipesJobs: List[BiopetCommandLineFunction] = Nil
+  def addPipeJob(job: BiopetCommandLineFunction) {
+    pipesJobs :+= job
+    pipesJobs = pipesJobs.distinct
+  }
 
   def requiredInput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
     arg match {
@@ -326,7 +333,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._outputAsStdout = true
-        pipesJobs :+= cmd
+        addPipeJob(cmd)
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs
@@ -346,7 +353,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
       }
       case Right(cmd) => {
         cmd._inputAsStdin = true
-        pipesJobs :+= cmd
+        addPipeJob(cmd)
         try {
           if (cmd.outputs != null) outputFiles ++= cmd.outputs
           if (cmd.inputs != null) deps ++= cmd.inputs

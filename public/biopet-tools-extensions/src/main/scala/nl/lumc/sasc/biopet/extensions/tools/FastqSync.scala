@@ -52,7 +52,18 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
 
   override def defaultCoreMemory = 4.0
 
-  // executed command line
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    inputFastq1 match {
+      case Right(job) => addPipeJob(job)
+      case _          =>
+    }
+    inputFastq2 match {
+      case Right(job) => addPipeJob(job)
+      case _          =>
+    }
+  }
+
   override def cmdLine =
     super.cmdLine +
       required("-r", refFastq) +

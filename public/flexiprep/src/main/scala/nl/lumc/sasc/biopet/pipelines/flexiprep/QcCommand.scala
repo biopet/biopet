@@ -28,17 +28,21 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
   var read: String = _
 
+  override def defaultCoreMemory = 2.0
+  override def defaultThreads = 3
+
+  val seqtk = new SeqtkSeq(root)
+  var clip: Option[Cutadapt] = None
+  var trim: Option[Sickle] = None
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(read != null)
     deps ::= input
+    outputFiles :+= output
   }
 
-  override def defaultCoreMemory = 2.0
-  override def defaultThreads = 3
-
-  def cmdLine = {
-    val seqtk = new SeqtkSeq(root)
+  override def beforeCmd(): Unit = {
     seqtk.input = input
     seqtk.Q = fastqc.encoding match {
       case null => None
@@ -50,7 +54,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     }
     if (seqtk.Q.isDefined) seqtk.V = true
 
-    val clip = if (!flexiprep.skipClip) {
+    clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
         val cutadept = new nl.lumc.sasc.biopet.extensions.Cutadapt(root)
@@ -62,11 +66,14 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       } else None
     } else None
 
-    val trim = if (!flexiprep.skipTrim) {
+    trim = if (!flexiprep.skipTrim) {
       val sickle = new nl.lumc.sasc.biopet.extensions.Sickle(root)
       sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       Some(sickle)
     } else None
+  }
+
+  def cmdLine = {
     val outputCommand = {
       if (compress) new Gzip(root)
       else new Cat(root)

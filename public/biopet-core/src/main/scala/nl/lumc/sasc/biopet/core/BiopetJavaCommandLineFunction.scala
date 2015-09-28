@@ -38,7 +38,7 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     if (javaMainClass != null && javaClasspath.isEmpty)
       javaClasspath = JavaCommandLineFunction.currentClasspath
 
-    threads = getThreads(defaultThreads)
+    //threads = getThreads(defaultThreads)
   }
 
   /** Creates command to execute extension */
