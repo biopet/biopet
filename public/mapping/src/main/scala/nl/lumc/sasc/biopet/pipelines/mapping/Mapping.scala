@@ -244,7 +244,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
       if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
-        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
+        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
@@ -265,7 +265,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     }
 
     if (!skipMetrics) {
-      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"))
+      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"), sampleId, libId)
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
     }
