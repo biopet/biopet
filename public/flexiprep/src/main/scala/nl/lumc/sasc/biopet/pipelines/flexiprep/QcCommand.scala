@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.summary.{SummaryQScript, Summarizable}
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
@@ -11,7 +12,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 /**
  * Created by pjvan_thof on 9/22/15.
  */
-class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetCommandLineFunction {
+class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetCommandLineFunction with Summarizable {
 
   val flexiprep = root match {
     case f: Flexiprep => f
@@ -34,6 +35,21 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   val seqtk = new SeqtkSeq(root)
   var clip: Option[Cutadapt] = None
   var trim: Option[Sickle] = None
+
+  def summaryFiles = Map()
+
+  def summaryStats = Map()
+
+  override def addToQscriptSummary(qscript: SummaryQScript, name: String): Unit = {
+    clip match {
+      case Some(job) => qscript.addSummarizable(job, s"clipping_$read")
+      case _ =>
+    }
+    trim match {
+      case Some(job) => qscript.addSummarizable(job, s"trimming_$read")
+      case _ =>
+    }
+  }
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

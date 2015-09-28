@@ -183,12 +183,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     qcCmdR1.output = if (paired) new File("/dev/stdout")
     else fastqR1Qc
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
+    addSummarizable(qcCmdR1, "qc_command_R1")
 
     if (paired) {
       val qcCmdR2 = new QcCommand(this, fastqc_R2)
       qcCmdR2.input = R2_in.get
       qcCmdR2.output = new File("/dev/stdout")
       qcCmdR2.read = "R2"
+      addSummarizable(qcCmdR2, "qc_command_R2")
 
       qcCmdR1.compress = false
       qcCmdR2.compress = false
