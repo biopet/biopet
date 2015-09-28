@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.manwe
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 
 /**
  * Created by ahbbollen on 24-9-15.
@@ -21,10 +21,7 @@ class ManweSamplesAdd(val root: Configurable) extends Manwe {
 
   def subCommand = {
     required("samples") + required("add") + required(name) +
-    optional("-s", poolSize) + repeat("-g", group)
+      optional("-s", poolSize) + repeat("-g", group)
   }
-
-
-
 
 }

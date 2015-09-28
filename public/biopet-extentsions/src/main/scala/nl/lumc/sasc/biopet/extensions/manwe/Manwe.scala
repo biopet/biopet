@@ -1,10 +1,9 @@
 package nl.lumc.sasc.biopet.extensions.manwe
 
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{Output, Argument}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Argument }
 
 /**
  * Created by ahbbollen on 23-9-15.
@@ -17,7 +16,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  @Argument(doc="Path to manwe config file containing your database settings", required = true)
+  @Argument(doc = "Path to manwe config file containing your database settings", required = true)
   var manweConfig: Option[File] = config("manwe_config")
 
   @Output(doc = "the output file")
@@ -25,15 +24,15 @@ abstract class Manwe extends BiopetCommandLineFunction {
 
   var manweHelp: Boolean = false
 
-  def subCommand : String
+  def subCommand: String
 
   final def cmdLine = {
     required(executable) +
-    subCommand +
-    required("-c", manweConfig) +
-    conditional(manweHelp, "-h") +
-    " > " +
-    required(output)
+      subCommand +
+      required("-c", manweConfig) +
+      conditional(manweHelp, "-h") +
+      " > " +
+      required(output)
   }
 
   /**

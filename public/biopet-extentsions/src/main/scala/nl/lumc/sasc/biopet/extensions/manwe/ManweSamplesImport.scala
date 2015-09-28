@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.manwe
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 
 /**
  * Created by ahbbollen on 24-9-15.
@@ -39,18 +39,14 @@ class ManweSamplesImport(val root: Configurable) extends Manwe {
   var preferLikelihood: Boolean = false
 
   @Argument(doc = "Pool size")
-  var poolSize : Option[Int] = _
+  var poolSize: Option[Int] = _
 
   def subCommand = {
     required("samples") + required("import") + required(name) +
-    repeat("-g", group) + repeat("--vcf", vcfs) + repeat("--bed", beds) +
-    optional("-s", poolSize) + conditional(alreadyUploaded, "-u") +
-    conditional(public, "-p") + conditional(preferLikelihood, "-l") +
-    conditional(noCoverage, "--no-coverage-profile")
+      repeat("-g", group) + repeat("--vcf", vcfs) + repeat("--bed", beds) +
+      optional("-s", poolSize) + conditional(alreadyUploaded, "-u") +
+      conditional(public, "-p") + conditional(preferLikelihood, "-l") +
+      conditional(noCoverage, "--no-coverage-profile")
   }
-
-
-
-
 
 }
