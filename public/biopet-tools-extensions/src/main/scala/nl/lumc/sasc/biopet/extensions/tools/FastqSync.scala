@@ -37,9 +37,11 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
   @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
   var refFastq: File = null
 
-  var inputFastq1: Either[File, BiopetCommandLineFunction] = null
+  @Input(required = true)
+  var inputFastq1: File = null
 
-  var inputFastq2: Either[File, BiopetCommandLineFunction] = null
+  @Input(required = true)
+  var inputFastq2: File = null
 
   @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
   var outputFastq1: File = null
@@ -52,23 +54,11 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
 
   override def defaultCoreMemory = 4.0
 
-  override def beforeGraph(): Unit = {
-    super.beforeGraph()
-    inputFastq1 match {
-      case Right(job) => addPipeJob(job)
-      case _          =>
-    }
-    inputFastq2 match {
-      case Right(job) => addPipeJob(job)
-      case _          =>
-    }
-  }
-
   override def cmdLine =
     super.cmdLine +
       required("-r", refFastq) +
-      requiredInput("-i", inputFastq1) +
-      requiredInput("-j", inputFastq2) +
+      required("-i", inputFastq1) +
+      required("-j", inputFastq2) +
       required("-o", outputFastq1) +
       required("-p", outputFastq2) + " > " +
       required(outputStats)

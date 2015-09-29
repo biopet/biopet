@@ -293,8 +293,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       // sync the fastq records
       val fastqSync = new FastqSync(qscript)
       fastqSync.refFastq = samToFastq.fastqR1
-      fastqSync.inputFastq1 = Left(samToFastq.fastqR1)
-      fastqSync.inputFastq2 = Left(samToFastq.fastqR2)
+      fastqSync.inputFastq1 = samToFastq.fastqR1
+      fastqSync.inputFastq2 = samToFastq.fastqR2
       fastqSync.outputFastq1 = createFile(".unmapsynced.R1.fastq.gz")
       fastqSync.outputFastq2 = createFile(".unmapsynced.R2.fastq.gz")
       fastqSync.outputStats = createFile(".syncstats.json")

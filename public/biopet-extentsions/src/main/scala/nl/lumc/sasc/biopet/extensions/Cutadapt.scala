@@ -33,7 +33,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   @Input(doc = "Input fastq file")
   var fastq_input: File = _
 
-  var fastq_output: Either[File, BiopetCommandLineFunction] = _
+  @Output
+  var fastq_output: File = _
 
   @Output(doc = "Output statistics file")
   var stats_output: File = _
@@ -62,7 +63,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     optional("-M", opt_maximum_length) +
     // input / output
     required(fastq_input) +
-    (if (outputAsStsout) "" else requiredOutput("--output", fastq_output) +
+    (if (outputAsStsout) "" else required("--output", fastq_output) +
       " > " + required(stats_output))
 
   /** Output summary stats */

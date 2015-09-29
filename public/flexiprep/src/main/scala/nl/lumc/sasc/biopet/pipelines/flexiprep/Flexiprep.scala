@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.{ Pbzip2, Zcat, Gzip, Sickle }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
@@ -180,7 +180,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     val qcCmdR1 = new QcCommand(this, fastqc_R1)
     qcCmdR1.input = R1_in
     qcCmdR1.read = "R1"
-    qcCmdR1.output = if (paired) new File("/dev/stdout")
+    qcCmdR1.output = if (paired) new File(fastqR1Qc.getAbsolutePath.stripSuffix(".gz"))
     else fastqR1Qc
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
     addSummarizable(qcCmdR1, "qc_command_R1")
@@ -188,7 +188,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (paired) {
       val qcCmdR2 = new QcCommand(this, fastqc_R2)
       qcCmdR2.input = R2_in.get
-      qcCmdR2.output = new File("/dev/stdout")
+      qcCmdR2.output = new File(fastqR2Qc.get.getAbsolutePath.stripSuffix(".gz"))
       qcCmdR2.read = "R2"
       addSummarizable(qcCmdR2, "qc_command_R2")
 
@@ -197,15 +197,38 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
       val fqSync = new FastqSync(this)
       fqSync.refFastq = R1_in
-      fqSync.inputFastq1 = Right(qcCmdR1)
-      fqSync.inputFastq2 = Right(qcCmdR2)
+      fqSync.inputFastq1 = qcCmdR1.output
+      fqSync.inputFastq2 = qcCmdR2.output
       fqSync.outputFastq1 = fastqR1Qc
       fqSync.outputFastq2 = fastqR2Qc.get
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
-      fqSync.isIntermediate = !keepQcFastqFiles
-      fqSync.deps ::= fastqc_R1.output
-      fqSync.deps ::= fastqc_R2.output
-      add(fqSync)
+      //add(fqSync)
+
+      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
+
+        override def defaultThreads = 4
+        override def defaultCoreMemory = 4.0
+        override def configName = "qc-cmd"
+
+        override def beforeGraph(): Unit = {
+          fqSync.beforeGraph()
+          super.beforeGraph()
+        }
+
+        override def beforeCmd(): Unit = {
+          qcCmdR1.beforeCmd()
+          qcCmdR2.beforeCmd()
+          fqSync.beforeCmd()
+          commands = qcCmdR1.jobs ::: qcCmdR2.jobs ::: fqSync :: Nil
+          super.beforeCmd()
+        }
+      }
+
+      pipe.deps ::= fastqc_R1.output
+      pipe.deps ::= fastqc_R2.output
+      pipe.isIntermediate = !keepQcFastqFiles
+      add(pipe)
+
       addSummarizable(fqSync, "fastq_sync")
       outputFiles += ("syncStats" -> fqSync.outputStats)
       R1 = fqSync.outputFastq1

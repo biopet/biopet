@@ -36,7 +36,8 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   @Input(doc = "R2 input", required = false)
   var input_R2: File = _
 
-  var output_R1: Either[File, BiopetCommandLineFunction] = _
+  @Output(doc = "R1 output", required = false)
+  var output_R1: File = _
 
   @Output(doc = "R2 output", required = false)
   var output_R2: File = _
@@ -75,7 +76,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
     cmd +
       (if (inputAsStdin) required("-f", new File("/dev/stdin")) else required("-f", input_R1)) +
       required("-t", qualityType) +
-      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else requiredOutput("-o", output_R1)) +
+      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else required("-o", output_R1)) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
       conditional(noFiveprime, "-x") +

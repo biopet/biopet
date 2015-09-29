@@ -85,7 +85,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
    * Can override this method. This is executed just before the job is ready to run.
    * Can check on run time files from pipeline here
    */
-  protected[core] def beforeCmd() {}
+  def beforeCmd() {}
 
   /** Can override this method. This is executed after the script is done en queue starts to generate the graph */
   def beforeGraph() {}
@@ -101,7 +101,7 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   }
 
   /** Set default output file, threads and vmem for current job */
-  private[core] def internalBeforeGraph(): Unit = {
+  final def internalBeforeGraph(): Unit = {
     val firstOutput = try {
       this.firstOutput
     } catch {
@@ -341,46 +341,6 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def addPipeJob(job: BiopetCommandLineFunction) {
     pipesJobs :+= job
     pipesJobs = pipesJobs.distinct
-  }
-
-  def requiredInput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
-    arg match {
-      case Left(file) => {
-        deps :+= file
-        required(prefix, file)
-      }
-      case Right(cmd) => {
-        cmd._outputAsStdout = true
-        addPipeJob(cmd)
-        try {
-          if (cmd.outputs != null) outputFiles ++= cmd.outputs
-          if (cmd.inputs != null) deps ++= cmd.inputs
-        } catch {
-          case e: NullPointerException =>
-        }
-        s"'${prefix}' <( ${cmd.commandLine} ) "
-      }
-    }
-  }
-
-  def requiredOutput(prefix: String, arg: Either[File, BiopetCommandLineFunction]): String = {
-    arg match {
-      case Left(file) => {
-        deps :+= file
-        required(prefix, file)
-      }
-      case Right(cmd) => {
-        cmd._inputAsStdin = true
-        addPipeJob(cmd)
-        try {
-          if (cmd.outputs != null) outputFiles ++= cmd.outputs
-          if (cmd.inputs != null) deps ++= cmd.inputs
-        } catch {
-          case e: NullPointerException =>
-        }
-        s"'${prefix}' >( ${cmd.commandLine} ) "
-      }
-    }
   }
 }
 

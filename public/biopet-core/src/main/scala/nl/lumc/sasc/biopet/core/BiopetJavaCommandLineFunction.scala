@@ -29,7 +29,7 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
 
   /** Constructs java opts, this adds scala threads */
   override def javaOpts = super.javaOpts +
-    optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
+    optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false)
 
   override def beforeGraph(): Unit = {
     if (javaMemoryLimit.isEmpty && memoryLimit.isDefined)
