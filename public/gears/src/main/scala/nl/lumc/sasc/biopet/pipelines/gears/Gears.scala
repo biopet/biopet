@@ -85,6 +85,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
       fastqSync.inputFastq1 = samToFastq.fastqR1
       fastqSync.inputFastq2 = samToFastq.fastqR2
       fastqSync.outputFastq1 = new File(outputDir, s"$outputName.unmapped.R1.sync.fq.gz")
+
+      // TODO: need some sanity check on whether R2 is really containing reads (e.g. Single End libraries)
       fastqSync.outputFastq2 = new File(outputDir, s"$outputName.unmapped.R2.sync.fq.gz")
       fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats.json")
       add(fastqSync)
@@ -96,7 +98,9 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
     val krakenAnalysis = new Kraken(qscript)
     krakenAnalysis.input = fastqFiles
     krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
-    krakenAnalysis.paired = true
+
+    krakenAnalysis.paired = (fastqFiles.length == 2)
+
     krakenAnalysis.classified_out = Option(new File(outputDir, s"$outputName.krkn.classified.fastq"))
     krakenAnalysis.unclassified_out = Option(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
