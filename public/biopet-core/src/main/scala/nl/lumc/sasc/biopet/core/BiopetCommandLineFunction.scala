@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{ File, FileInputStream }
+import java.io.{ PrintWriter, File, FileInputStream }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.utils.Logging
@@ -26,8 +26,10 @@ import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
 
 import scala.collection.mutable
+import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
+import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { biopetFunction =>
@@ -58,10 +60,25 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
   def defaultRemoteCommand = "bash"
   private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
 
+  private def changeScript(file: File): Unit = {
+    val lines = Source.fromFile(file).getLines().toList
+    val writer = new PrintWriter(file)
+    writer.println("set -eubf")
+    writer.println("set -o pipefail")
+    lines.foreach(writer.println(_))
+    writer.close()
+  }
+
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
-    case jt: JobTemplate     => jt.setRemoteCommand(remoteCommand)
-    case ps: ProcessSettings => ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
+    case jt: JobTemplate => {
+      changeScript(new File(jt.getArgs.head.toString))
+      jt.setRemoteCommand(remoteCommand)
+    }
+    case ps: ProcessSettings => {
+      changeScript(new File(ps.getCommand.tail.head))
+      ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
+    }
   }
 
   /**
