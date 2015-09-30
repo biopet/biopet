@@ -76,27 +76,57 @@ object BiopetFifoPipe {
   val waitScript =
     """
       |
+      |allJobs=`jobs -p`
+      |jobs=$allJobs
+      |
+      |echo [`date`] pids: $jobs
+      |
       |FAIL="0"
       |
-      |for job in `jobs -p`
+      |while echo $jobs | grep -e "\d" > /dev/null
       |do
-      |echo $job
-      |    wait $job || let "FAIL+=1"
+      |	for job in $jobs
+      |	do
+      |		if ps | grep "$job " | grep -v grep > /dev/null
+      |		then
+      |		    echo [`date`] $job still running > /dev/null
+      |		else
+      |		    jobs=`echo $jobs | sed "s/${job}//"`
+      |			wait $job || FAIL=$?
+      |			if echo $FAIL | grep -ve "^0$" > /dev/null
+      |			then
+      |			    echo [`date`] $job fails with exitcode: $FAIL
+      |				break
+      |			fi
+      |			echo [`date`] $job done
+      |		fi
+      |	done
+      |	if echo $FAIL | grep -ve "^0$" > /dev/null
+      |    then
+      |        break
+      |    fi
+      |	sleep 1
       |done
       |
-      |echo $FAIL
+      |if echo $FAIL | grep -ve "^0$" > /dev/null
+      |then
+      |    echo [`date`] kill other pids: $jobs
+      |    kill $jobs
+      |fi
+      |
+      |echo [`date`] Done
+      |
       |
     """.stripMargin
 
   val endScript =
     """
-echo $FAIL
       |
       |if [ "$FAIL" == "0" ];
       |then
-      |echo "BiopetFifoPipe Done"
+      |echo [`date`] "BiopetFifoPipe Done"
       |else
-      |echo BiopetFifoPipe "FAIL! ($FAIL)"
+      |echo [`date`] BiopetFifoPipe "FAIL! ($FAIL)"
       |exit $FAIL
       |fi
       |
