@@ -82,7 +82,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     //flexiprep.functions.count(_.isInstanceOf[Zcat]) shouldBe (if (zipped) if (paired) 2 else 1 else 0)
     //flexiprep.functions.count(_.isInstanceOf[SeqtkSeq]) shouldBe (if (paired) 2 else 1)
     //flexiprep.functions.count(_.isInstanceOf[Cutadapt]) shouldBe (if (skipClip) 0 else if (paired) 2 else 1)
-    flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe (if (paired) 1 else 0)
+    //flexiprep.functions.count(_.isInstanceOf[FastqSync]) shouldBe (if (paired) 1 else 0)
     //flexiprep.functions.count(_.isInstanceOf[Sickle]) shouldBe (if (skipTrim) 0 else 1)
     //flexiprep.functions.count(_.isInstanceOf[Gzip]) shouldBe (if (skipClip && skipTrim) 0 else if (paired) 2 else 1)
   }

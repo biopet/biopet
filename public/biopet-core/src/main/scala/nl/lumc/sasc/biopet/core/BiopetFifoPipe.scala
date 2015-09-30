@@ -54,7 +54,7 @@ class BiopetFifoPipe(val root: Configurable,
   }
 
   override def beforeCmd(): Unit = {
-    commands.foreach{ cmd =>
+    commands.foreach { cmd =>
       cmd.beforeGraph()
       cmd.internalBeforeGraph()
       cmd.beforeCmd()
