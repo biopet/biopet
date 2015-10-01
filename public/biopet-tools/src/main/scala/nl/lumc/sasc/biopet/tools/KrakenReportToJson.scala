@@ -23,6 +23,7 @@ import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.ToolCommand
+import scala.collection.mutable.ListBuffer
 import scala.collection.{ immutable, mutable }
 
 import scala.io.Source
@@ -34,9 +35,9 @@ case class KrakenHit(taxonomyID: Long,
                      taxonRank: String,
                      cladeLevel: Int,
                      parentTaxonomyID: Long,
-                     children: List[KrakenHit]) {
+                     children: ListBuffer[KrakenHit]) {
   def toJSON(): Map[String, Any] = {
-    val childJSON = children.map(entry => entry.toJSON())
+    val childJSON = children.toList.map(entry => entry.toJSON())
     Map(
       "name" -> taxonomyName,
       "taxid" -> taxonomyID,
@@ -84,53 +85,33 @@ object KrakenReportToJson extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
-  def mergeBranch(branchA: Map[Long, KrakenHit],
-                  branchB: KrakenHit): KrakenHit = {
 
-    var brA = branchA.head._2
-    var children = branchB.children
-    var cladeCount = branchB.cladeCount
-    var cladeSize = branchB.cladeSize
+  def parseLine( krakenRawHit: String ): Map[Long, KrakenHit] = {
+    val values: Array[String] = krakenRawHit.stripLineEnd.split("\t")
+    val scientificName: String = values(5)
+    val cladeLevel = spacePattern.findFirstIn(scientificName).getOrElse("").length / 2
 
-    /* special case for the root node */
-    if (brA.taxonomyID == branchB.taxonomyID) {
-      cladeCount = brA.cladeCount
-      cladeSize = brA.cladeSize
-
+    if (cladeIDs.length <= cladeLevel + 1) {
+      cladeIDs ++= mutable.ArrayBuffer.fill(10)(0L)
     }
 
-    /* determine to scan in branchB or return Map containing a because we cannot merge? */
-    if (brA.cladeLevel > branchB.cladeLevel) {
-      /* if brA's cladelevel is deeper than branchB, work on the children if any when it doesn't match it as parent */
-
-      if (brA.parentTaxonomyID == branchB.taxonomyID) {
-        children :+= brA
-      } else {
-        /* extend in its children */
-        // TODO: do preliminary escape, don't check deeper in the tree when we have a hit.
-        children = children.map(child => {
-          mergeBranch(branchA, child)
-        })
-      }
-    } else {
-      /*  Hits are on the same level(have siblings, adding to parent) */
-    }
-
-    new KrakenHit(
-      taxonomyID = branchB.taxonomyID,
-      taxonomyName = branchB.taxonomyName,
-      cladeCount = cladeCount,
-      cladeSize = cladeSize,
-      taxonRank = branchB.taxonRank,
-      cladeLevel = branchB.cladeLevel,
-      parentTaxonomyID = branchB.parentTaxonomyID,
-      children = children
-    )
+    cladeIDs(cladeLevel + 1) = values(4).toLong
+    Map(
+      values(4).toLong -> new KrakenHit(
+        taxonomyID = values(4).toLong,
+        taxonomyName = scientificName.trim,
+        cladeCount = values(2).toLong,
+        cladeSize = values(1).toLong,
+        taxonRank = values(3),
+        cladeLevel = cladeLevel,
+        parentTaxonomyID = cladeIDs(cladeLevel),
+        children = ListBuffer()
+      ))
   }
 
   def reportToJson(reportRaw: File): String = {
     val reader = Source.fromFile(reportRaw)
-    val lines = reader.getLines().toList.filter(!_.isEmpty)
+//    val lines = reader.getLines().toList.filter(!_.isEmpty)
 
     /*
     * http://ccb.jhu.edu/software/kraken/MANUAL.html
@@ -143,48 +124,20 @@ object KrakenReportToJson extends ToolCommand {
     * 6. indented scientific name
     * */
 
-    /*
-    * Entries will be formatted to:
-    * entries[ <taxid> ] = Map( <taxid>, Map(...))
-    * */
-    val entries: List[Map[Long, KrakenHit]] = for (tsvLine <- lines.tail) yield {
-      val values = tsvLine.split("\t")
-      val scientificName: String = values(5)
-      val cladeLevel = spacePattern.findFirstIn(scientificName).getOrElse("").length / 2
+    val lines = reader.getLines()
+                      .map(line => parseLine(line))
+                      .filter(p => p.head._2.cladeSize > 0)
+                      .foldLeft(Map.empty[Long, KrakenHit])( (a,b) => {
+      a + b.head
+    }  )
 
-      if (cladeIDs.length <= cladeLevel + 1) {
-        cladeIDs ++= mutable.ArrayBuffer.fill(10)(0L)
-      }
+    lines.keys.foreach(k => {
+      // append itself to the children attribute of the parent
+      lines(lines(k).parentTaxonomyID).children += lines(k)
+    })
 
-      cladeIDs(cladeLevel + 1) = values(4).toLong
-      Map(
-        values(4).toLong -> new KrakenHit(
-          taxonomyID = values(4).toLong,
-          taxonomyName = scientificName.trim,
-          cladeCount = values(2).toLong,
-          cladeSize = values(1).toLong,
-          taxonRank = values(3),
-          cladeLevel = cladeLevel,
-          parentTaxonomyID = cladeIDs(cladeLevel),
-          children = List()
-        ))
-    }
-    val mm: KrakenHit = entries.foldLeft(
-      new KrakenHit(
-        taxonomyID = 1L,
-        taxonomyName = "root",
-        cladeCount = 0L,
-        cladeSize = 0L,
-        taxonRank = "-",
-        cladeLevel = 0,
-        parentTaxonomyID = 0L,
-        children = List()
-      )) { (bb: KrakenHit, aa: Map[Long, KrakenHit]) =>
-        {
-          mergeBranch(aa, bb)
-        }
-      }
-    mapToJson(mm.toJSON()).spaces2
+    mapToJson(lines(1).toJSON()).spaces2
+
   }
 
   def main(args: Array[String]): Unit = {
