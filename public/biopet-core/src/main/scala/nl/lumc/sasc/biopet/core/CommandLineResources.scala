@@ -34,6 +34,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
 
   override def freezeFieldValues(): Unit = {
     setResources()
+    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
     super.freezeFieldValues()
   }
 

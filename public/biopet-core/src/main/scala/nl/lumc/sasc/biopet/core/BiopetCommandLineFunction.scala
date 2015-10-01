@@ -80,8 +80,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     beforeGraph()
     internalBeforeGraph()
 
-    if (vmem.isDefined) jobResourceRequests :+= "h_vmem=" + vmem.get
-
     super.freezeFieldValues()
   }
 
