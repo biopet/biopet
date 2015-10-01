@@ -41,7 +41,6 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
   override def beforeGraph() {
     super.beforeGraph()
     if (bamOutput != null && nct.getOrElse(1) > 1) {
-      threads = 1
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
     }
     nct = Some(getThreads)

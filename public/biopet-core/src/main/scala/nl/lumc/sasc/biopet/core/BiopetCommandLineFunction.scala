@@ -19,8 +19,6 @@ import java.io.{ PrintWriter, File, FileInputStream }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.utils.Logging
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
@@ -32,7 +30,7 @@ import scala.util.matching.Regex
 import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
-trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { biopetFunction =>
+trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   analysisName = configName
 
   @Input(doc = "deps", required = false)
@@ -40,19 +38,6 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   @Output
   var outputFiles: List[File] = Nil
-
-  var threads = 0
-  def defaultThreads = 1
-
-  var vmem: Option[String] = config("vmem")
-  def defaultCoreMemory: Double = 1.0
-  def defaultVmemFactor: Double = 1.4
-  var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
-
-  var residentFactor: Double = config("resident_factor", default = 1.2)
-
-  private var _coreMemory: Double = 2.0
-  def coreMemeory = _coreMemory
 
   var executable: String = _
 
@@ -102,44 +87,10 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
 
   /** Set default output file, threads and vmem for current job */
   final def internalBeforeGraph(): Unit = {
-    val firstOutput = try {
-      this.firstOutput
-    } catch {
-      case e: NullPointerException => null
-    }
 
     pipesJobs.foreach(_.beforeGraph())
     pipesJobs.foreach(_.internalBeforeGraph())
 
-    if (jobOutputFile == null && firstOutput != null)
-      jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
-
-    val ownThreads = getThreads(defaultThreads)
-    if (threads == 0) threads = ownThreads + pipesJobs.map(_.threads).map(i => if (i == 0) 1 else i).sum
-    if (threads > 1) nCoresRequest = Option(threads)
-
-    _coreMemory = config("core_memory", default = (defaultCoreMemory * (ownThreads.toDouble / this.threads.toDouble)) +
-      pipesJobs.map(job => job.coreMemeory * (job.threads.toDouble / this.threads.toDouble)).sum).asDouble +
-      (0.5 * retry)
-
-    if (config.contains("memory_limit")) memoryLimit = config("memory_limit")
-    else memoryLimit = Some(_coreMemory * threads)
-
-    if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
-
-    if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")
-    jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
-  }
-
-  var retry = 0
-
-  override def setupRetry(): Unit = {
-    super.setupRetry()
-    if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filterNot(_.contains("h_vmem="))
-    logger.info("Auto raise memory on retry")
-    retry += 1
-    this.freeze()
   }
 
   /** can override this value is executable may not be converted to CanonicalPath */
@@ -249,33 +200,6 @@ trait BiopetCommandLineFunction extends CommandLineFunction with Configurable { 
         case _             =>
       }
     BiopetCommandLineFunction.versionCache.get(versionCommand)
-  }
-
-  def getThreads: Int = getThreads(defaultThreads)
-
-  /**
-   * Get threads from config
-   * @param default default when not found in config
-   * @return number of threads
-   */
-  def getThreads(default: Int): Int = {
-    val maxThreads: Int = config("maxthreads", default = 24)
-    val threads: Int = config("threads", default = default)
-    if (maxThreads > threads) threads
-    else maxThreads
-  }
-
-  /**
-   * Get threads from config
-   * @param default default when not found in config
-   * @param module Module when this is difrent from default
-   * @return number of threads
-   */
-  def getThreads(default: Int, module: String): Int = {
-    val maxThreads: Int = config("maxthreads", default = 24, submodule = module)
-    val threads: Int = config("threads", default = default, submodule = module)
-    if (maxThreads > threads) threads
-    else maxThreads
   }
 
   private[core] var _inputAsStdin = false
