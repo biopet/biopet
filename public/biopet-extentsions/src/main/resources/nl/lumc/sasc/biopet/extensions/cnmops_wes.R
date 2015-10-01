@@ -10,6 +10,7 @@ option_list <- list(
     make_option(c("--cnv"), dest="cnv"),
     make_option(c("--cnr"), dest="cnr"),
     make_option(c("--chr"), dest="chr"),
+    make_option(c("--targetBed"), dest="targetBed"),
     make_option(c("--threads"), dest="threads", default=8, type="integer")
     )
 
@@ -24,12 +25,18 @@ CNRoutput <- opt$cnr
 bamFile <- args
 
 BAMFiles <- c(bamFile)
-bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=1000, parallel=opt$threads)
 
+segments <- read.table(opt$targetBed, sep="\t", as.is=TRUE)
+
+# filter the segments by the requested chromosome
+segments <- segments[ segments[,1] == chromosome, ]
+
+gr <- GRanges(segments[,1],IRanges(segments[,2],segments[,3]))
+bamDataRanges <- getSegmentReadCountsFromBAM(BAMFiles, GR=gr, mode="paired", parallel=opt$threads)
 
 write.table(as.data.frame( bamDataRanges ), quote = FALSE, opt$rawoutput, row.names=FALSE)
 
-res <- cn.mops(bamDataRanges)
+res <- exomecn.mops(bamDataRanges)
 res <- calcIntegerCopyNumbers(res)
 
 write.table(as.data.frame(cnvs(res)), quote = FALSE, CNVoutput, row.names=FALSE)
