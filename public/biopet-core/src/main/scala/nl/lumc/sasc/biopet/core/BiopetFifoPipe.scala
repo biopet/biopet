@@ -87,7 +87,7 @@ object BiopetFifoPipe {
       |
       |FAIL="0"
       |
-      |while echo $jobs | grep -e "\d" > /dev/null
+      |while echo $jobs | grep -e "\w" > /dev/null
       |do
       |	for job in $jobs
       |	do
