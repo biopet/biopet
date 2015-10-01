@@ -70,6 +70,10 @@ class BiopetFifoPipe(val root: Configurable,
       fifosFiles.map(required("rm", _)).mkString("\n\n", " \n", " \n\n") +
       BiopetFifoPipe.endScript
   }
+
+  override def setResources(): Unit = {
+    combineResources(commands)
+  }
 }
 
 object BiopetFifoPipe {

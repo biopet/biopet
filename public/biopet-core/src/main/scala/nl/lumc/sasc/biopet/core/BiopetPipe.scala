@@ -45,6 +45,10 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
     require(inputOutput.isEmpty, "File found as input and output in the same job, files: " + inputOutput.mkString(", "))
   }
 
+  override def setResources(): Unit = {
+    combineResources(pipesJobs)
+  }
+
   override def defaultCoreMemory = 0.0
   override def defaultThreads = 0
 
