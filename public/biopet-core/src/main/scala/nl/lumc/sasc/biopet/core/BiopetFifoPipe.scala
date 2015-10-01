@@ -46,10 +46,10 @@ class BiopetFifoPipe(val root: Configurable,
 
     val fifoFiles = fifos
 
-    outputFiles = outputs.values.toList.flatten.filter(!fifoFiles.contains(_))
+    outputFiles :::= outputs.values.toList.flatten.filter(!fifoFiles.contains(_))
     outputFiles = outputFiles.distinct
 
-    deps = inputs.values.toList.flatten.filter(!fifoFiles.contains(_))
+    deps :::= inputs.values.toList.flatten.filter(!fifoFiles.contains(_))
     deps = deps.distinct
   }
 
