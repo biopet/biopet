@@ -32,6 +32,7 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
     optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false)
 
   override def beforeGraph(): Unit = {
+    setResources()
     if (javaMemoryLimit.isEmpty && memoryLimit.isDefined)
       javaMemoryLimit = memoryLimit
 
