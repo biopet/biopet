@@ -49,6 +49,12 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
     combineResources(pipesJobs)
   }
 
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    commands.foreach(_.setupRetry())
+    combineResources(commands)
+  }
+
   override def defaultCoreMemory = 0.0
   override def defaultThreads = 0
 

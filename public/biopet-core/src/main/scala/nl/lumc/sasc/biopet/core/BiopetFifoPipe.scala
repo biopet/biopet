@@ -74,6 +74,12 @@ class BiopetFifoPipe(val root: Configurable,
   override def setResources(): Unit = {
     combineResources(commands)
   }
+
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    commands.foreach(_.setupRetry())
+    combineResources(commands)
+  }
 }
 
 object BiopetFifoPipe {
