@@ -107,9 +107,8 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     if (compress) outputCommand = {
       val gzip = new Gzip(root)
-      gzip.input = outputFile :: Nil
       gzip.output = output
-      gzip
+      outputFile :<: gzip
     }
     else outputCommand = {
       val cat = new Cat(root)
