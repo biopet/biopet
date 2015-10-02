@@ -196,7 +196,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
           extractIfNeeded(input_R1, flexiprep.outputDir),
           if (paired) Some(extractIfNeeded(input_R2.get, outputDir)) else None)
         )
-      } else Map(outputDir -> (flexiprep.outputFiles("fastq_input_R1"), flexiprep.outputFiles.get("fastq_input_R2")))
+      } else Map(outputDir -> (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc))
     }
 
     if (chunking) {

@@ -47,11 +47,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
-    if (!skipTrim || !skipClip)
-      Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
-        (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
-    else Map("input_R1" -> input_R1) ++
-      (if (paired) Map("input_R2" -> input_R2.get) else Map())
+    Map("input_R1" -> input_R1, "output_R1" -> fastqR1Qc) ++
+      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> fastqR2Qc.get) else Map())
   }
 
   /** returns settings to store in summary */
@@ -112,8 +109,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def biopetScript() {
     runInitialJobs()
 
-    val out = if (paired) runTrimClip(outputFiles("fastq_input_R1"), Some(outputFiles("fastq_input_R2")), outputDir)
-    else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
+    val out = if (paired) runTrimClip(input_R1, input_R2, outputDir)
+    else runTrimClip(input_R1, outputDir)
 
     val R1_files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
     val R2_files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
