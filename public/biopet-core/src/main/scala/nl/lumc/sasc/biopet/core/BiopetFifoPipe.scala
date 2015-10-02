@@ -80,6 +80,11 @@ class BiopetFifoPipe(val root: Configurable,
     commands.foreach(_.setupRetry())
     combineResources(commands)
   }
+
+  override def freezeFieldValues(): Unit = {
+    super.freezeFieldValues()
+    commands.foreach(_.qSettings = qSettings)
+  }
 }
 
 object BiopetFifoPipe {

@@ -66,4 +66,9 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
     } else "") + " | " + commands.tail.map(_.cmdLine).mkString(" | ") +
       (if (commands.last.stdoutFile.isDefined) " > " + required(commands.last.stdoutFile.map(_.getAbsoluteFile)) else "") + ")"
   }
+
+  override def freezeFieldValues(): Unit = {
+    super.freezeFieldValues()
+    commands.foreach(_.qSettings = qSettings)
+  }
 }
