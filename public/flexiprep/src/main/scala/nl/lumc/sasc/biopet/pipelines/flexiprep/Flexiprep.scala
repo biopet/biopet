@@ -15,11 +15,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Pbzip2, Zcat, Gzip, Sickle }
+import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
 import org.broadinstitute.gatk.queue.QScript
@@ -109,7 +107,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def biopetScript() {
     runInitialJobs()
 
-    val out = if (paired) runTrimClip(input_R1, input_R2, outputDir)
+    if (paired) runTrimClip(input_R1, input_R2, outputDir)
     else runTrimClip(input_R1, outputDir)
 
     val R1_files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v

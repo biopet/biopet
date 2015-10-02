@@ -19,7 +19,6 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsSort
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
@@ -178,13 +177,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var fastq_R2_output: List[File] = Nil
 
     val chunks: Map[File, (File, Option[File])] = {
-      if (chunking) {
-        (for (t <- 1 to numberChunks.getOrElse(1)) yield {
-          val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-          chunkDir -> (new File(chunkDir, input_R1.getName),
-            if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
-        }).toMap
-      } else if (skipFlexiprep) Map(outputDir -> (input_R1, (if (paired) input_R2 else None)))
+      if (chunking) (for (t <- 1 to numberChunks.getOrElse(1)) yield {
+        val chunkDir = new File(outputDir, "chunks" + File.separator + t)
+        chunkDir -> (new File(chunkDir, input_R1.getName),
+          if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
+      }).toMap
+      else if (skipFlexiprep) Map(outputDir -> (input_R1, if (paired) input_R2 else None))
       else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
     }
 
