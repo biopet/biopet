@@ -184,12 +184,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
           chunkDir -> (new File(chunkDir, input_R1.getName),
             if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
         }).toMap
-      } else if (skipFlexiprep) {
-        Map(outputDir -> (
-          extractIfNeeded(input_R1, flexiprep.outputDir),
-          if (paired) Some(extractIfNeeded(input_R2.get, outputDir)) else None)
-        )
-      } else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
+      } else if (skipFlexiprep) Map(outputDir -> (input_R1, (if (paired) input_R2 else None)))
+      else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
     }
 
     if (chunking) {
