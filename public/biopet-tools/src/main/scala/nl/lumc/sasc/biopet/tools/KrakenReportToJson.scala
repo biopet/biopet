@@ -85,8 +85,7 @@ object KrakenReportToJson extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
-
-  def parseLine( krakenRawHit: String ): Map[Long, KrakenHit] = {
+  def parseLine(krakenRawHit: String): Map[Long, KrakenHit] = {
     val values: Array[String] = krakenRawHit.stripLineEnd.split("\t")
     val scientificName: String = values(5)
     val cladeLevel = spacePattern.findFirstIn(scientificName).getOrElse("").length / 2
@@ -111,7 +110,7 @@ object KrakenReportToJson extends ToolCommand {
 
   def reportToJson(reportRaw: File): String = {
     val reader = Source.fromFile(reportRaw)
-//    val lines = reader.getLines().toList.filter(!_.isEmpty)
+    //    val lines = reader.getLines().toList.filter(!_.isEmpty)
 
     /*
     * http://ccb.jhu.edu/software/kraken/MANUAL.html
@@ -125,11 +124,11 @@ object KrakenReportToJson extends ToolCommand {
     * */
 
     val lines = reader.getLines()
-                      .map(line => parseLine(line))
-                      .filter(p => p.head._2.cladeSize > 0)
-                      .foldLeft(Map.empty[Long, KrakenHit])( (a,b) => {
-      a + b.head
-    }  )
+      .map(line => parseLine(line))
+      .filter(p => p.head._2.cladeSize > 0)
+      .foldLeft(Map.empty[Long, KrakenHit])((a, b) => {
+        a + b.head
+      })
 
     lines.keys.foreach(k => {
       // append itself to the children attribute of the parent

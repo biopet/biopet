@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.extensions.tools.FastqSync
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.tools.KrakenReportToJson
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -112,6 +113,11 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
     krakenReport.show_zeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
+
+    val krakenReportJSON = new KrakenReportToJson(qscript)
+    krakenReportJSON.input = krakenReport.output
+    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
+    add(krakenReportJSON)
 
     addSummaryJobs()
   }
