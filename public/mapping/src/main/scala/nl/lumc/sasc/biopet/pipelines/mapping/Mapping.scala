@@ -177,26 +177,19 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var fastq_R1_output: List[File] = Nil
     var fastq_R2_output: List[File] = Nil
 
-    def removeGz(file: File): File = {
-      val absPath = file.getAbsolutePath
-      if (absPath.endsWith(".gz")) new File(absPath.substring(0, absPath.lastIndexOf(".gz")))
-      else if (absPath.endsWith(".gzip")) new File(absPath.substring(0, absPath.lastIndexOf(".gzip")))
-      else file
-    }
-
     val chunks: Map[File, (File, Option[File])] = {
       if (chunking) {
         (for (t <- 1 to numberChunks.getOrElse(1)) yield {
           val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-          chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
-            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None)
+          chunkDir -> (new File(chunkDir, input_R1.getName),
+            if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
         }).toMap
       } else if (skipFlexiprep) {
         Map(outputDir -> (
           extractIfNeeded(input_R1, flexiprep.outputDir),
           if (paired) Some(extractIfNeeded(input_R2.get, outputDir)) else None)
         )
-      } else Map(outputDir -> (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc))
+      } else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
     }
 
     if (chunking) {
