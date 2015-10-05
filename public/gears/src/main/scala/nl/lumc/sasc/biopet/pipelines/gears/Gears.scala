@@ -20,16 +20,16 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.FastqSync
+import nl.lumc.sasc.biopet.extensions.tools.{KrakenReportToJson, FastqSync}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.tools.KrakenReportToJson
 import org.broadinstitute.gatk.queue.QScript
 
 /**
  * This is a trait for the Gears pipeline
  * The ShivaTrait is used as template for this pipeline
  */
-class Gears(val root: Configurable) extends QScript with SummaryQScript { qscript =>
+class Gears(val root: Configurable) extends QScript with SummaryQScript {
+  qscript =>
   def this() = this(null)
 
   @Input(shortName = "R1", required = false)
@@ -115,9 +115,15 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
     add(krakenReport)
 
     val krakenReportJSON = new KrakenReportToJson(qscript)
-    krakenReportJSON.input = krakenReport.output
+    krakenReportJSON.inputReport = krakenAnalysis.output
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
+    krakenReportJSON.skipNames = config("skipNames", default = true)
     add(krakenReportJSON)
+
+//    val krakenReportJSON = new KrakenReportToJson(qscript)
+//    krakenReportJSON.input = krakenReport.output
+//    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
+//    add(krakenReportJSON)
 
     addSummaryJobs()
   }
@@ -129,7 +135,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript { qscrip
   def summarySettings = Map()
 
   /** Files for the summary */
-  def summaryFiles = Map()
+  def summaryFiles = (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
+    (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map())
 }
 
 /** This object give a default main method to the pipelines */

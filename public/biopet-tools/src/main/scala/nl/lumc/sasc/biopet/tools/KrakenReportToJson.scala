@@ -56,7 +56,7 @@ object KrakenReportToJson extends ToolCommand {
   var cladeIDs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill(32)(0)
   val spacePattern = "^( +)".r
 
-  case class Args(krakenreport: File = null, outputJson: Option[File] = None) extends AbstractArgs
+  case class Args(krakenreport: File = null, outputJson: Option[File] = None, skipNames: Boolean = true) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -70,9 +70,15 @@ object KrakenReportToJson extends ToolCommand {
     } validate {
       x => if (x.exists) success else failure("Krakenreport not found")
     } text "Kraken report to generate stats from"
+
     opt[File]('o', "output") unbounded () valueName "<json>" action { (x, c) =>
       c.copy(outputJson = Some(x))
     } text "File to write output to, if not supplied output go to stdout"
+
+    opt[Boolean]('n', "skipnames") unbounded () valueName "<skipnames>" action { (x, c) =>
+      c.copy(skipNames = x)
+    } text "Don't report the scientific name of the taxon."
+
   }
 
   /**
@@ -85,7 +91,7 @@ object KrakenReportToJson extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
-  def parseLine(krakenRawHit: String): Map[Long, KrakenHit] = {
+  def parseLine(krakenRawHit: String, skipNames: Boolean): Map[Long, KrakenHit] = {
     val values: Array[String] = krakenRawHit.stripLineEnd.split("\t")
     val scientificName: String = values(5)
     val cladeLevel = spacePattern.findFirstIn(scientificName).getOrElse("").length / 2
@@ -98,7 +104,7 @@ object KrakenReportToJson extends ToolCommand {
     Map(
       values(4).toLong -> new KrakenHit(
         taxonomyID = values(4).toLong,
-        taxonomyName = scientificName.trim,
+        taxonomyName = if (skipNames) "" else scientificName.trim,
         cladeCount = values(2).toLong,
         cladeSize = values(1).toLong,
         taxonRank = values(3),
@@ -108,7 +114,7 @@ object KrakenReportToJson extends ToolCommand {
       ))
   }
 
-  def reportToJson(reportRaw: File): String = {
+  def reportToJson(reportRaw: File, skipNames: Boolean): String = {
     val reader = Source.fromFile(reportRaw)
     //    val lines = reader.getLines().toList.filter(!_.isEmpty)
 
@@ -124,7 +130,7 @@ object KrakenReportToJson extends ToolCommand {
     * */
 
     val lines = reader.getLines()
-      .map(line => parseLine(line))
+      .map(line => parseLine(line, skipNames))
       .filter(p => p.head._2.cladeSize > 0)
       .foldLeft(Map.empty[Long, KrakenHit])((a, b) => {
         a + b.head
@@ -142,7 +148,7 @@ object KrakenReportToJson extends ToolCommand {
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = parseArgs(args)
 
-    val jsonString: String = reportToJson(commandArgs.krakenreport)
+    val jsonString: String = reportToJson(commandArgs.krakenreport, skipNames = commandArgs.skipNames)
     commandArgs.outputJson match {
       case Some(file) => {
         val writer = new PrintWriter(file)
