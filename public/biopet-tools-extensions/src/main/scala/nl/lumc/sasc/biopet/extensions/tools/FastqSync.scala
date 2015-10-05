@@ -34,22 +34,28 @@ class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summariz
 
   def toolObject = nl.lumc.sasc.biopet.tools.FastqSync
 
-  @Input(doc = "Original FASTQ file (read 1 or 2)", shortName = "r", required = true)
+  /** Original FASTQ file (read 1 or 2) */
+  @Input(required = true)
   var refFastq: File = null
 
+  /** "Input read 1 FASTQ file" */
   @Input(required = true)
   var inputFastq1: File = null
 
+  /** Input read 2 FASTQ file */
   @Input(required = true)
   var inputFastq2: File = null
 
-  @Output(doc = "Output read 1 FASTQ file", shortName = "o", required = true)
+  /** Output read 1 FASTQ file */
+  @Output(required = true)
   var outputFastq1: File = null
 
-  @Output(doc = "Output read 2 FASTQ file", shortName = "p", required = true)
+  /** Output read 2 FASTQ file */
+  @Output(required = true)
   var outputFastq2: File = null
 
-  @Output(doc = "Sync statistics", required = true)
+  /** Sync statistics */
+  @Output(required = true)
   var outputStats: File = null
 
   override def defaultCoreMemory = 4.0
