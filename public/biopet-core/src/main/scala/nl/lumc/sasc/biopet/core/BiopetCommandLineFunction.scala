@@ -206,6 +206,11 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   private[core] var _outputAsStdout = false
   def outputAsStsout = _outputAsStdout
 
+  /**
+   * This operator sends stdout to `that` and combine this into 1 command line function
+   * @param that Function that will read from stdin
+   * @return BiopetPipe function
+   */
   def |(that: BiopetCommandLineFunction): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     that._inputAsStdin = true
@@ -222,12 +227,22 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     }
   }
 
+  /**
+   * This operator can be used to give a program a file as stdin
+   * @param file File that will become stdin for this program
+   * @return It's own class
+   */
   def :<:(file: File): BiopetCommandLineFunction = {
     this._inputAsStdin = true
     this.stdinFile = Some(file)
     this
   }
 
+  /**
+   * This operator can be used to give a program a file write it's atdout
+   * @param file File that will become stdout for this program
+   * @return It's own class
+   */
   def >(file: File): BiopetCommandLineFunction = {
     this._outputAsStdout = true
     this.stdoutFile = Some(file)
