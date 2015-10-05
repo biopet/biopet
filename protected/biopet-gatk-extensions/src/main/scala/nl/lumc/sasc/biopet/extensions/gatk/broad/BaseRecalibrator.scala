@@ -20,7 +20,6 @@ object BaseRecalibrator {
     val br = new BaseRecalibrator(root)
     br.input_file :+= input
     br.out = output
-    br.beforeGraph()
     br
   }
 }

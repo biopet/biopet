@@ -30,7 +30,7 @@ class GatherBamFiles(val root: Configurable) extends Picard {
   @Output(doc = "The output file to bam file to", required = true)
   var output: File = _
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false)
 }

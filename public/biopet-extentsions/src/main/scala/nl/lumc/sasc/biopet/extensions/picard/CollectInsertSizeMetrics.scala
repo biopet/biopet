@@ -62,7 +62,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   }
 
   /** Returns command to execute */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("HISTOGRAM_FILE=", outputHistogram, spaceSeparated = false) +

@@ -73,7 +73,7 @@ class SamToFastq(val root: Configurable) extends Picard {
   var includeNonPrimaryAlignments: Boolean = config("includeNonPrimaryAlignments", default = false)
 
   /** Returns command to execute */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("FASTQ=", fastqR1, spaceSeparated = false) +
     optional("SECOND_END_FASTQ=", fastqR2, spaceSeparated = false) +
