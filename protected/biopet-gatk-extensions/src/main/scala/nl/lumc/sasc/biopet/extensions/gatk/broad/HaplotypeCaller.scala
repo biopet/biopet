@@ -42,6 +42,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     super.freezeFieldValues()
     if (bamOutput != null && nct.getOrElse(1) > 1) {
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
+      nCoresRequest = Some(1)
     }
     nct = Some(getThreads)
     memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
