@@ -198,12 +198,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.outputFastq1 = fastqR1Qc
       fqSync.outputFastq2 = fastqR2Qc.get
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
-      //add(fqSync)
 
       val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
-
-        override def defaultThreads = 4
-        override def defaultCoreMemory = 4.0
         override def configName = "qc-cmd"
 
         override def beforeGraph(): Unit = {
