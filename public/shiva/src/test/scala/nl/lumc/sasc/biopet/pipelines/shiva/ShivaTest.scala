@@ -62,7 +62,6 @@ class ShivaTest extends TestNGSuite with Matchers {
       ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library), m)
-
     }
 
     if (!sample1 && !sample2 && !sample3) { // When no samples
@@ -76,8 +75,6 @@ class ShivaTest extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0)
 
-      //pipeline.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
-      //pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
 
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0) +
