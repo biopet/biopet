@@ -177,6 +177,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     qcCmdR1.read = "R1"
     qcCmdR1.output = if (paired) new File(fastqR1Qc.getAbsolutePath.stripSuffix(".gz"))
     else fastqR1Qc
+    qcCmdR1.deps :+= fastqc_R1.output
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
     addSummarizable(qcCmdR1, "qc_command_R1")
 
