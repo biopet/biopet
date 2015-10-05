@@ -99,37 +99,38 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   protected[core] def preProcessExecutable() {
     if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
-      try if (executable != null) {
+      if (executable != null) {
         if (!BiopetCommandLineFunction.executableCache.contains(executable)) {
-          val oldExecutable = executable
-          val buffer = new StringBuffer()
-          val cmd = Seq("which", executable)
-          val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
-          if (process.exitValue == 0) {
-            executable = buffer.toString
-            val file = new File(executable)
-            if (executableToCanonicalPath) executable = file.getCanonicalPath
-            else executable = file.getAbsolutePath
-          } else {
-            Logging.addError("executable: '" + executable + "' not found, please check config")
+          try {
+            val oldExecutable = executable
+            val buffer = new StringBuffer()
+            val cmd = Seq("which", executable)
+            val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
+            if (process.exitValue == 0) {
+              executable = buffer.toString
+              val file = new File(executable)
+              if (executableToCanonicalPath) executable = file.getCanonicalPath
+              else executable = file.getAbsolutePath
+            } else Logging.addError("executable: '" + executable + "' not found, please check config")
+            BiopetCommandLineFunction.executableCache += oldExecutable -> executable
+            BiopetCommandLineFunction.executableCache += executable -> executable
+          } catch {
+            case ioe: java.io.IOException =>
+              logger.warn(s"Could not use 'which' on '$executable', check on executable skipped: " + ioe)
           }
-          BiopetCommandLineFunction.executableCache += oldExecutable -> executable
-          BiopetCommandLineFunction.executableCache += executable -> executable
-        } else {
-          executable = BiopetCommandLineFunction.executableCache(executable)
-        }
+        } else executable = BiopetCommandLineFunction.executableCache(executable)
 
         if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
-          val is = new FileInputStream(executable)
-          val cnt = is.available
-          val bytes = Array.ofDim[Byte](cnt)
-          is.read(bytes)
-          is.close()
-          val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
-          BiopetCommandLineFunction.executableMd5Cache += executable -> temp
+          if (new File(executable).exists()) {
+            val is = new FileInputStream(executable)
+            val cnt = is.available
+            val bytes = Array.ofDim[Byte](cnt)
+            is.read(bytes)
+            is.close()
+            val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+            BiopetCommandLineFunction.executableMd5Cache += executable -> temp
+          } else BiopetCommandLineFunction.executableMd5Cache += executable -> "file_does_not_exist"
         }
-      } catch {
-        case ioe: java.io.IOException => logger.warn("Could not use 'which', check on executable skipped: " + ioe)
       }
     }
     val md5 = BiopetCommandLineFunction.executableMd5Cache.get(executable)
