@@ -32,7 +32,7 @@ class SageCountFastq(val root: Configurable) extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 3.0
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", output)
 }
