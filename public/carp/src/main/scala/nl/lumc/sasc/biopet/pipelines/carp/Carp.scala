@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.carp
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
@@ -40,10 +41,13 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
 
   override def defaults = ConfigUtils.mergeMaps(Map(
     "mapping" -> Map(
-      "skip_markduplicates" -> true,
+      "skip_markduplicates" -> false,
       "aligner" -> "bwa-mem"
-    )
+    ),
+    "samtoolsview" -> Map("q" -> 10)
   ), super.defaults)
+
+
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
@@ -93,6 +97,7 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
     }
 
     val bamFile = createFile(".bam")
+    val bamFileFilter = createFile(".filter.bam")
     val controls: List[String] = config("control", default = Nil)
 
     def addJobs(): Unit = {
@@ -116,8 +121,15 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       addSummaryQScript(bamMetrics)
       addAll(Bam2Wig(qscript, bamFile).functions)
 
+      val samtoolsView = new SamtoolsView(qscript)
+      samtoolsView.input = bamFile
+      samtoolsView.output = bamFileFilter
+      samtoolsView.b = true
+      samtoolsView.h = true
+      add(samtoolsView)
+
       val macs2 = new Macs2CallPeak(qscript)
-      macs2.treatment = bamFile
+      macs2.treatment = bamFileFilter
       macs2.name = Some(sampleId)
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
@@ -155,8 +167,8 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
         if (!samples.contains(controlId))
           throw new IllegalStateException("For sample: " + sampleId + " this control: " + controlId + " does not exist")
         val macs2 = new Macs2CallPeak(this)
-        macs2.treatment = sample.bamFile
-        macs2.control = samples(controlId).bamFile
+        macs2.treatment = sample.bamFileFilter
+        macs2.control = samples(controlId).bamFileFilter
         macs2.name = Some(sampleId + "_VS_" + controlId)
         macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
         add(macs2)
