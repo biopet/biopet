@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
-import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import nl.lumc.sasc.biopet.extensions.picard.{BuildBamIndex, MergeSamFiles}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -127,6 +127,11 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       samtoolsView.b = true
       samtoolsView.h = true
       add(samtoolsView)
+
+      val buildBamIndex = new BuildBamIndex(qscript)
+      buildBamIndex.input = bamFileFilter
+      buildBamIndex.output = swapExt(bamFileFilter.getParent, bamFileFilter, ".bam", ".bai")
+      add(buildBamIndex)
 
       val macs2 = new Macs2CallPeak(qscript)
       macs2.treatment = bamFileFilter
