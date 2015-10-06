@@ -5,16 +5,18 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ CommandLineResources, Reference, BiopetJavaCommandLineFunction }
 import org.broadinstitute.gatk.engine.phonehome.GATKRunReport
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
-trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction with Reference {
+trait GatkGeneral extends CommandLineGATK with CommandLineResources with Reference {
   memoryLimit = Option(3)
 
   override def subPath = "gatk" :: super.subPath
 
   jarFile = config("gatk_jar")
+
+  reference_sequence = referenceFasta()
 
   override def defaultCoreMemory = 4.0
   override def faiRequired = true
@@ -33,14 +35,9 @@ trait GatkGeneral extends CommandLineGATK with BiopetJavaCommandLineFunction wit
   if (config.contains("gatk_key")) gatk_key = config("gatk_key")
   if (config.contains("pedigree")) pedigree = config("pedigree")
 
-  override def versionRegex = """(.*)""".r
-  override def versionExitcode = List(0, 1)
-  override def versionCommand = executable + " -jar " + jarFile + " -version"
+  //override def versionRegex = """(.*)""".r
+  //override def versionExitcode = List(0, 1)
+  //override def versionCommand = executable + " -jar " + jarFile + " -version"
 
-  override def getVersion = super.getVersion.collect { case v => "Gatk " + v }
-
-  override def beforeGraph(): Unit = {
-    super.beforeGraph()
-    if (reference_sequence == null) reference_sequence = referenceFasta()
-  }
+  //override def getVersion = super.getVersion.collect { case v => "Gatk " + v }
 }

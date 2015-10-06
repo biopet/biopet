@@ -38,7 +38,7 @@ class BedToIntervalList(val root: Configurable) extends Picard with Reference {
   @Output(doc = "Output interval list", required = true)
   var output: File = null
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("SEQUENCE_DICTIONARY=", dict, spaceSeparated = false) +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false)

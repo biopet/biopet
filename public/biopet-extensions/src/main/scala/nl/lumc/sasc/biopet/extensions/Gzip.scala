@@ -28,15 +28,19 @@ class Gzip(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
-  executable = config("exe", default = "gzip")
+  executable = config("exe", default = "gzip", freeVar = false)
 
   override def versionRegex = """gzip (.*)""".r
   override def versionCommand = executable + " --version"
 
-  def cmdLine = required(executable) + " -c " + repeat(input) + " > " + required(output)
+  def cmdLine = required(executable) + " -c " +
+    (if (inputAsStdin) "" else repeat(input)) +
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object Gzip {
+  def apply(root: Configurable): Gzip = new Gzip(root)
+
   def apply(root: Configurable, input: List[File], output: File): Gzip = {
     val gzip = new Gzip(root)
     gzip.input = input

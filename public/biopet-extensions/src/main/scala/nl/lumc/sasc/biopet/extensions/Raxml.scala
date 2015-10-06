@@ -74,7 +74,6 @@ class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
   /** Sets correct output files to job */
   override def beforeGraph() {
     require(w != null)
-    if (threads == 0) threads = getThreads
     executable = if (threads > 1 && executableThreads.isDefined) executableThreads.get else executableNonThreads
     super.beforeGraph()
     out :::= List(Some(getInfoFile), getBestTreeFile, getBootstrapFile, getBipartitionsFile).flatten
