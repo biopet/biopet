@@ -10,6 +10,11 @@ trait ToolCommandFuntion extends BiopetJavaCommandLineFunction {
 
   override def getVersion = Some("Biopet " + FullVersion)
 
+  override def beforeGraph(): Unit = {
+    javaMainClass = toolObject.getClass.getName.takeWhile(_ != '$')
+    super.beforeGraph()
+  }
+
   override def freezeFieldValues(): Unit = {
     javaMainClass = toolObject.getClass.getName.takeWhile(_ != '$')
     super.freezeFieldValues()

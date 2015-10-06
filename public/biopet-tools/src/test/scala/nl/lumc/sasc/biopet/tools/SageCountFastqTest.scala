@@ -22,6 +22,7 @@ class SageCountFastqTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testMain() = {
     val temp = File.createTempFile("out", ".fastq")
+    temp.deleteOnExit()
 
     val args = Array("-I", fq, "-o", temp.getAbsolutePath)
     main(args)

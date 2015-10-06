@@ -844,6 +844,8 @@ class Gentrap(val root: Configurable) extends QScript
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // Input file checking
+        inputFiles :::= mappingJob.inputFiles
         // add bigwig track
         addAll(bam2wigModule.functions)
         qscript.addSummaryQScript(mappingJob)

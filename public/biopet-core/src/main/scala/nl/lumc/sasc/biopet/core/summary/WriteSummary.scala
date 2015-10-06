@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
@@ -71,16 +71,16 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
       val executables: Map[String, Any] = {
-        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
+        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunction]) yield {
           f match {
             case f: BiopetJavaCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
+                "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
                 "jar_path" -> f.jarFile)
             case f: BiopetCommandLineFunction =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
+                "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "path" -> f.executable)
             case _ => throw new IllegalStateException("This should not be possible")
           }
@@ -153,10 +153,11 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
-    if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
+    if (md5sum) map += "md5" -> WriteSummary.parseChecksum(SummaryQScript.md5sumCache(file))
     map.toMap
   }
-
+}
+object WriteSummary {
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)

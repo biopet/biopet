@@ -90,7 +90,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
     "metrics" -> Picard.getMetrics(output).getOrElse(Map()),
     "histogram" -> Picard.getHistogram(output).getOrElse(Map()))
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("REF_FLAT=", refFlat, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +

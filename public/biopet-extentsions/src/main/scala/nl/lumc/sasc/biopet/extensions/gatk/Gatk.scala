@@ -49,6 +49,8 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
   @Input(required = false)
   var pedigree: List[File] = config("pedigree", default = Nil)
 
+  var et: Option[String] = config("et")
+
   override def versionRegex = """(.*)""".r
   override def versionExitcode = List(0, 1)
   override def versionCommand = executable + " -jar " + jarFile + " -version"
@@ -61,10 +63,11 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
     if (reference == null) reference = referenceFasta()
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-T", analysisType) +
     required("-R", reference) +
     optional("-K", gatkKey) +
+    optional("-et", et) +
     repeat("-I", intervals) +
     repeat("-XL", excludeIntervals) +
     repeat("-ped", pedigree)

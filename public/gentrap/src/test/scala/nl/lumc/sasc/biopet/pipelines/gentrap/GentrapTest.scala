@@ -44,8 +44,8 @@ class GentrapTest extends TestNGSuite with Matchers {
 
   /** Convenience method for making library config */
   private def makeLibConfig(idx: Int, paired: Boolean = true) = {
-    val files = Map("R1" -> "test_R1.fq")
-    if (paired) (s"lib_$idx", files ++ Map("R2" -> "test_R2.fq"))
+    val files = Map("R1" -> GentrapTest.inputTouch("test_R1.fq"))
+    if (paired) (s"lib_$idx", files ++ Map("R2" -> GentrapTest.inputTouch("test_R2.fq")))
     else (s"lib_$idx", files)
   }
 
@@ -180,6 +180,12 @@ class GentrapTest extends TestNGSuite with Matchers {
 
 object GentrapTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

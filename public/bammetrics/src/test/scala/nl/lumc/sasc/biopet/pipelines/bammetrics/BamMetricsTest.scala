@@ -69,7 +69,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
       Map("regions_of_interest" -> (1 to rois).map("roi_" + _ + ".bed").toList)
     val bammetrics: BamMetrics = initPipeline(map)
 
-    bammetrics.inputBam = new File("input.bam")
+    bammetrics.inputBam = BamMetricsTest.bam
     bammetrics.sampleId = Some("1")
     bammetrics.libId = Some("1")
     bammetrics.script()
@@ -98,6 +98,10 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 
 object BamMetricsTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+
+  val bam = new File(outputDir, "input" + File.separator + "bla.bam")
+  Files.touch(bam)
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

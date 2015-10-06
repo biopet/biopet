@@ -54,9 +54,6 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
 
-  @Output
-  protected var outputFiles: List[File] = Nil
-
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
@@ -79,7 +76,7 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
     }
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", outputName, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=true") +

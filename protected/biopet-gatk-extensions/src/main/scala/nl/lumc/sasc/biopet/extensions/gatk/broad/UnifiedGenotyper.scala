@@ -28,8 +28,8 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
 
   override val defaultThreads = 1
 
-  override def beforeGraph() {
-    super.beforeGraph()
+  override def freezeFieldValues() {
+    super.freezeFieldValues()
 
     genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
     nct = Some(getThreads)

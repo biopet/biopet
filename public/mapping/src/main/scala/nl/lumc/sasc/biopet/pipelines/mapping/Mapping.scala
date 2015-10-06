@@ -139,6 +139,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     require(sampleId.isDefined, "Missing sample ID on mapping module")
     require(libId.isDefined, "Missing library ID on mapping module")
 
+    inputFiles :+= new InputFile(input_R1)
+    input_R2.foreach(inputFiles :+= new InputFile(_))
+
     paired = input_R2.isDefined
 
     if (readgroupId == null) readgroupId = sampleId.get + "-" + libId.get
@@ -175,26 +178,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     var fastq_R1_output: List[File] = Nil
     var fastq_R2_output: List[File] = Nil
 
-    def removeGz(file: File): File = {
-      val absPath = file.getAbsolutePath
-      if (absPath.endsWith(".gz")) new File(absPath.substring(0, absPath.lastIndexOf(".gz")))
-      else if (absPath.endsWith(".gzip")) new File(absPath.substring(0, absPath.lastIndexOf(".gzip")))
-      else file
-    }
-
     val chunks: Map[File, (File, Option[File])] = {
-      if (chunking) {
-        (for (t <- 1 to numberChunks.getOrElse(1)) yield {
-          val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-          chunkDir -> (removeGz(new File(chunkDir, input_R1.getName)),
-            if (paired) Some(removeGz(new File(chunkDir, input_R2.get.getName))) else None)
-        }).toMap
-      } else if (skipFlexiprep) {
-        Map(outputDir -> (
-          extractIfNeeded(input_R1, flexiprep.outputDir),
-          if (paired) Some(extractIfNeeded(input_R2.get, outputDir)) else None)
-        )
-      } else Map(outputDir -> (flexiprep.outputFiles("fastq_input_R1"), flexiprep.outputFiles.get("fastq_input_R2")))
+      if (chunking) (for (t <- 1 to numberChunks.getOrElse(1)) yield {
+        val chunkDir = new File(outputDir, "chunks" + File.separator + t)
+        chunkDir -> (new File(chunkDir, input_R1.getName),
+          if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
+      }).toMap
+      else if (skipFlexiprep) Map(outputDir -> (input_R1, if (paired) input_R2 else None))
+      else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
     }
 
     if (chunking) {
@@ -242,7 +233,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
       if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
-        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics")).functions)
+        addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
     }
     if (!skipFlexiprep) {
       flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
@@ -263,7 +254,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     }
 
     if (!skipMetrics) {
-      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"))
+      val bamMetrics = BamMetrics(this, bamFile, new File(outputDir, "metrics"), sampleId, libId)
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
     }
@@ -331,13 +322,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (paired) bwaCommand.R2 = R2.get
     bwaCommand.deps = deps
     bwaCommand.R = Some(getReadGroupBwa)
-    bwaCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
-    bwaCommand.isIntermediate = true
-    add(bwaCommand)
-    val sortSam = SortSam(this, bwaCommand.output, output)
-    if (chunking || !skipMarkduplicates) sortSam.isIntermediate = true
-    add(sortSam)
-    sortSam.output
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    add(bwaCommand | sortSam, chunking || !skipMarkduplicates)
+    output
   }
 
   def addGsnap(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
