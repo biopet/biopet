@@ -10,7 +10,7 @@ import nl.lumc.sasc.biopet.core.ToolCommandFuntion
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 
 /**
  * KrakenReportToJson function class for usage in Biopet pipelines

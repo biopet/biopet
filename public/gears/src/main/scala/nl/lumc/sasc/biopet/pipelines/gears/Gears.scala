@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{KrakenReportToJson, FastqSync}
+import nl.lumc.sasc.biopet.extensions.tools.{ KrakenReportToJson, FastqSync }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -120,11 +120,6 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenReportJSON.skipNames = config("skipNames", default = true)
     add(krakenReportJSON)
 
-//    val krakenReportJSON = new KrakenReportToJson(qscript)
-//    krakenReportJSON.input = krakenReport.output
-//    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
-//    add(krakenReportJSON)
-
     addSummaryJobs()
   }
 
@@ -135,7 +130,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
   def summarySettings = Map()
 
   /** Files for the summary */
-  def summaryFiles = (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
+  def summaryFiles: Map[String, File] = Map.empty ++
+    (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
     (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map())
 }
 
