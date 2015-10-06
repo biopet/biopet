@@ -53,6 +53,8 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   @Argument(doc = "IS_BISULFITE_SEQUENCED", required = false)
   var isBisulfiteSequinced: Option[Boolean] = config("isbisulfitesequinced")
 
+  override def defaultCoreMemory = 5.0
+
   override def beforeGraph() {
     super.beforeGraph()
     if (outputChart == null) outputChart = new File(output + ".pdf")
