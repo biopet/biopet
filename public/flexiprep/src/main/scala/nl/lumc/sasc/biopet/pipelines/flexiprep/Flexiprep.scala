@@ -250,24 +250,22 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (fastq_R1.length != fastq_R2.length && paired)
       throw new IllegalStateException("R1 and R2 file number is not the same")
 
-    if (!skipTrim || !skipClip) {
-      if (fastq_R1.length > 1) {
-        add(Zcat(this, fastq_R1, fastqR1Qc) | new Gzip(this) > fastqR1Qc)
-        if (paired) add(Zcat(this, fastq_R2, fastqR2Qc.get) | new Gzip(this) > fastqR2Qc.get)
-      }
+    if (fastq_R1.length > 1) {
+      add(Zcat(this, fastq_R1, fastqR1Qc) | new Gzip(this) > fastqR1Qc)
+      if (paired) add(Zcat(this, fastq_R2, fastqR2Qc.get) | new Gzip(this) > fastqR2Qc.get)
+    }
 
-      outputFiles += ("output_R1_gzip" -> fastqR1Qc)
-      if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
+    outputFiles += ("output_R1_gzip" -> fastqR1Qc)
+    if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
 
-      fastqc_R1_after = Fastqc(this, fastqR1Qc, new File(outputDir, R1_name + ".qc.fastqc/"))
-      add(fastqc_R1_after)
-      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
+    fastqc_R1_after = Fastqc(this, fastqR1Qc, new File(outputDir, R1_name + ".qc.fastqc/"))
+    add(fastqc_R1_after)
+    addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
 
-      if (paired) {
-        fastqc_R2_after = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2_name + ".qc.fastqc/"))
-        add(fastqc_R2_after)
-        addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
-      }
+    if (paired) {
+      fastqc_R2_after = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2_name + ".qc.fastqc/"))
+      add(fastqc_R2_after)
+      addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
     }
 
     addSummaryJobs()
