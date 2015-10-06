@@ -60,7 +60,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   }
 
   /** Returns command to execute */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("CHART_OUTPUT=", outputChart, spaceSeparated = false) +

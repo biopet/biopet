@@ -36,7 +36,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   @Input(doc = "R2 input", required = false)
   var input_R2: File = _
 
-  @Output(doc = "R1 output")
+  @Output(doc = "R1 output", required = false)
   var output_R1: File = _
 
   @Output(doc = "R2 output", required = false)
@@ -47,8 +47,6 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
 
   @Output(doc = "stats output")
   var output_stats: File = _
-
-  var fastqc: Fastqc = _
 
   executable = config("exe", default = "sickle", freeVar = false)
   var qualityType: Option[String] = config("qualitytype")
@@ -76,15 +74,15 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
         required("-s", output_singles)
     } else cmd += required("se")
     cmd +
-      required("-f", input_R1) +
+      (if (inputAsStdin) required("-f", new File("/dev/stdin")) else required("-f", input_R1)) +
       required("-t", qualityType) +
-      required("-o", output_R1) +
+      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else required("-o", output_R1)) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
       conditional(noFiveprime, "-x") +
       conditional(discardN, "-n") +
-      conditional(quiet, "--quiet") +
-      " > " + required(output_stats)
+      conditional(quiet || outputAsStsout, "--quiet") +
+      (if (outputAsStsout) "" else " > " + required(output_stats))
   }
 
   /** returns stats map for summary */

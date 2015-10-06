@@ -132,8 +132,8 @@ trait SummaryQScript extends BiopetQScript { qscript =>
 
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {
       summarizable match {
-        case f: BiopetCommandLineFunctionTrait => f.beforeGraph()
-        case _                                 =>
+        case f: BiopetCommandLineFunction => f.beforeGraph()
+        case _                            =>
       }
     }
 

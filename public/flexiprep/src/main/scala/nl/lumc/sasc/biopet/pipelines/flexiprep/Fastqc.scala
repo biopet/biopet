@@ -181,9 +181,6 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
     } else Set()
   }
 
-  @Output
-  var outputFiles: List[File] = Nil
-
   def summaryFiles: Map[String, File] = {
     val outputFiles = Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),
       "plot_kmer_profiles" -> ("Images" + File.separator + "kmer_profiles.png"),

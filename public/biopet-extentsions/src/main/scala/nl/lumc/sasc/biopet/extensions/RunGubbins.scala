@@ -34,9 +34,6 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Fasta file", shortName = "FQ")
   var fastafile: File = _
 
-  @Output(doc = "Output", shortName = "out")
-  var outputFiles: List[File] = Nil
-
   @Argument(required = true)
   var outputDirectory: File = null
 

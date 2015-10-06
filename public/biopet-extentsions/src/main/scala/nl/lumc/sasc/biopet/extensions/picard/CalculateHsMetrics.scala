@@ -56,7 +56,7 @@ class CalculateHsMetrics(val root: Configurable) extends Picard with Summarizabl
   }
 
   /** Returns command to execute */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +

@@ -80,7 +80,7 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
   }
 
   /** Returns command to execute */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     repeat("INPUT=", input, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     required("METRICS_FILE=", outputMetrics, spaceSeparated = false) +

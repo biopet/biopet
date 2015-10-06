@@ -24,7 +24,7 @@ class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizab
 
   override def defaultCoreMemory = 2.5
 
-  override def commandLine = super.commandLine + required("-i", input) + required("-o", output)
+  override def cmdLine = super.cmdLine + required("-i", input) + required("-o", output)
 
   def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)
