@@ -36,7 +36,7 @@ class CreateSequenceDictionary(val root: Configurable) extends Picard {
   var truncateAtWhiteSpace: Boolean = config("truncateAtWhiteSpace", default = false)
   var numSequences: Option[Int] = config("numSequences")
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("REFERENCE=", reference, spaceSeparated = false) +
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("GENOME_ASSEMBLY=", genomeAssembly, spaceSeparated = false) +

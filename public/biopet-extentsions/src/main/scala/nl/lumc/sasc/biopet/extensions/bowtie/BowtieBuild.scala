@@ -13,9 +13,6 @@ class BowtieBuild(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(required = true)
   var reference: File = _
 
-  @Output
-  var outputFiles: List[File] = Nil
-
   @Argument(required = true)
   var baseName: String = _
 

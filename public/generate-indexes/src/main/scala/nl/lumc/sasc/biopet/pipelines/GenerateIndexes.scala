@@ -99,7 +99,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             if (file.getName.endsWith(".gz")) {
               val zcat = new Zcat(this)
               zcat.appending = true
-              zcat.input = file
+              zcat.input :+= file
               zcat.output = fastaFile
               fastaCat.cmds :+= zcat
               fastaCat.input :+= file
