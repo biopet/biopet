@@ -44,7 +44,7 @@
         <module>biopet-utils</module>
         <module>biopet-tools</module>
         <module>biopet-tools-extensions</module>
-        <module>biopet-extentsions</module>
+        <module>biopet-extensions</module>
         <module>biopet-tools-package</module>
     </modules>
 
