@@ -29,6 +29,7 @@ class FindRepeatsPacBioTest extends TestNGSuite with MockitoSugar with Matchers 
   def testMain() = {
 
     val outputFile = File.createTempFile("repeats", ".tsv")
+    outputFile.deleteOnExit()
     val args = Array("-I", bam, "-b", bed, "-o", outputFile.toString)
     main(args)
   }

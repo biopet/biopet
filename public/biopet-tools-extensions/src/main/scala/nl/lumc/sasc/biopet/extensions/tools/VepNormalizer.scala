@@ -45,7 +45,7 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 4.0
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", inputVCF) +
     required("-O", outputVcf) +
     required("-m", mode) +

@@ -23,7 +23,7 @@ class FastqSplitterTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testMain() = {
     val temp = File.createTempFile("out", ".fastq")
-
+    temp.deleteOnExit()
     val args = Array("-I", fq, "-o", temp.getAbsolutePath)
     main(args)
   }
@@ -31,6 +31,7 @@ class FastqSplitterTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testManyOutMain() = {
     val files = (0 until 10).map(_ => File.createTempFile("out", ".fastq"))
+    files.foreach(_.deleteOnExit())
     var args = Array("-I", fq)
     files.foreach(x => args ++= Array("-o", x.getAbsolutePath))
     main(args)

@@ -35,6 +35,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   var inputVCF: File = _
 
   def init(): Unit = {
+    inputFiles :+= new InputFile(inputVCF)
   }
 
   override def defaults = Map(

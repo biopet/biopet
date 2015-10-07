@@ -54,8 +54,8 @@ trait ReportBuilderExtension extends ToolCommandFuntion {
   }
 
   /** Command to generate the report */
-  override def commandLine: String = {
-    super.commandLine +
+  override def cmdLine: String = {
+    super.cmdLine +
       required("--summary", summaryFile) +
       required("--outputDir", outputDir) +
       args.map(x => required("-a", x._1 + "=" + x._2)).mkString
@@ -231,6 +231,7 @@ object ReportBuilder {
       case Some(template) => template
       case _ =>
         val tempFile = File.createTempFile("ssp-template", new File(location).getName)
+        tempFile.deleteOnExit()
         IoUtils.copyStreamToFile(getClass.getResourceAsStream(location), tempFile)
         templateCache += location -> tempFile
         tempFile

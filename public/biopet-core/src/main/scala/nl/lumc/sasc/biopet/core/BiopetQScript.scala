@@ -48,6 +48,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
   var outputFiles: Map[String, File] = Map()
 
+  type InputFile = BiopetQScript.InputFile
+
+  var inputFiles: List[InputFile] = Nil
+
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var qSettings: QSettings
 
@@ -75,9 +79,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait =>
+      case f: BiopetCommandLineFunction =>
         f.preProcessExecutable()
         f.beforeGraph()
+        f.internalBeforeGraph()
         f.commandLine
       case _ =>
     }
@@ -86,7 +91,16 @@ trait BiopetQScript extends Configurable with GatkLogging {
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
-    reportClass.foreach(add(_))
+    inputFiles.foreach { i =>
+      if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
+      else if (!i.file.canRead()) Logging.addError(s"Input file can not be read: ${i.file}")
+    }
+
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write report is skipped because sample flag is used")
+      case _ => reportClass.foreach(add(_))
+    }
 
     Logging.checkErrors()
   }
@@ -102,4 +116,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
+
+object BiopetQScript {
+  protected case class InputFile(file: File, md5: Option[String] = None)
 }

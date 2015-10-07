@@ -26,9 +26,13 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
     val tagLib = resourcePath("/sageTest.tsv")
 
     val sense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    sense.deleteOnExit()
     val allSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    allSense.deleteOnExit()
     val antiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    antiSense.deleteOnExit()
     val allAntiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    allAntiSense.deleteOnExit()
 
     noException should be thrownBy main(Array("-I", input, "--tagLib", tagLib,
       "--countSense", sense.getAbsolutePath, "--countAllSense", allSense.getAbsolutePath,
@@ -50,9 +54,13 @@ class SageCreateTagCountsTest extends TestNGSuite with MockitoSugar with Matcher
     val tagLib = resourcePath("/sageTest.tsv")
 
     val sense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    sense.deleteOnExit()
     val allSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    allSense.deleteOnExit()
     val antiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    antiSense.deleteOnExit()
     val allAntiSense = File.createTempFile("SageCreateTagCountsTEst", ".tsv")
+    allAntiSense.deleteOnExit()
 
     main(Array("-I", input, "--tagLib", tagLib, "--countSense", sense.getAbsolutePath,
       "--countAllSense", allSense.getAbsolutePath, "--countAntiSense", antiSense.getAbsolutePath,
