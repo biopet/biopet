@@ -201,7 +201,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
   def summaryStats: Map[String, Any] = Map(
     "per_base_sequence_quality" -> perBaseSequenceQuality,
-    "per_base_sequence_content" -> perBaseSequenceContent)
+    "per_base_sequence_content" -> perBaseSequenceContent,
+    "adapters" -> foundAdapters.map(x => x.name -> x.seq).toMap)
 }
 
 object Fastqc {
