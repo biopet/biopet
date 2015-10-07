@@ -73,11 +73,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.libId = Some("1")
     flexiprep.script()
 
-    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (
-      if (paired && (skipClip && skipTrim)) 2
-      else if (!paired && (skipClip && skipTrim)) 1
-      else if (paired && !(skipClip && skipTrim)) 4
-      else if (!paired && !(skipClip && skipTrim)) 2)
+    flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (paired) 4 else 2)
     flexiprep.functions.count(_.isInstanceOf[SeqStat]) shouldBe (if (paired) 4 else 2)
   }
 

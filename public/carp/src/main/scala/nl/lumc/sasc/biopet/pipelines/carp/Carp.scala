@@ -38,12 +38,12 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
   qscript =>
   def this() = this(null)
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "mapping" -> Map(
       "skip_markduplicates" -> true,
       "aligner" -> "bwa-mem"
     )
-  ), super.defaults)
+  )
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 

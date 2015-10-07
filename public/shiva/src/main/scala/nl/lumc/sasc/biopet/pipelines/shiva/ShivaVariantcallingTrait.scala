@@ -199,11 +199,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
         val vcfFilter = new VcfFilter(qscript) {
           override def configName = "vcffilter"
-          override def defaults = ConfigUtils.mergeMaps(Map("min_sample_depth" -> 8,
+          override def defaults = Map("min_sample_depth" -> 8,
             "min_alternate_depth" -> 2,
             "min_samples_pass" -> 1,
             "filter_ref_calls" -> true
-          ), super.defaults)
+          )
         }
         vcfFilter.inputVcf = m2v.output
         vcfFilter.outputVcf = new File(outputDir, bamFile.getName.stripSuffix(".bam") + ".raw.filter.vcf.gz")
