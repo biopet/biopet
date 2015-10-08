@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
-import nl.lumc.sasc.biopet.extensions.picard.{BuildBamIndex, MergeSamFiles}
+import nl.lumc.sasc.biopet.extensions.picard.{ BuildBamIndex, MergeSamFiles }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
@@ -46,7 +46,14 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
     ),
     "samtoolsview" -> Map("q" -> 10)
   )
-  
+
+  override def fixedValues = Map(
+    "samtoolsview" -> Map(
+      "h" -> true,
+      "b" -> true
+    )
+  )
+
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
   //TODO: Add summary
@@ -122,8 +129,6 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       val samtoolsView = new SamtoolsView(qscript)
       samtoolsView.input = bamFile
       samtoolsView.output = bamFileFilter
-      samtoolsView.b = true
-      samtoolsView.h = true
       add(samtoolsView)
 
       val buildBamIndex = new BuildBamIndex(qscript)
