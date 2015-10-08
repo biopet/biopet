@@ -124,11 +124,20 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
       val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"), sampleId = Some(sampleId))
       addAll(bamMetrics.functions)
       addSummaryQScript(bamMetrics)
+
+      val bamMetricsFilter = BamMetrics(qscript, bamFileFilter, new File(sampleDir, "metrics-filter"), sampleId = Some(sampleId))
+      addAll(bamMetricsFilter.functions)
+      bamMetricsFilter.summaryName = "bamMetrics-filter"
+      addSummaryQScript(bamMetricsFilter)
+
       addAll(Bam2Wig(qscript, bamFile).functions)
+      addAll(Bam2Wig(qscript, bamFileFilter).functions)
 
       val samtoolsView = new SamtoolsView(qscript)
       samtoolsView.input = bamFile
       samtoolsView.output = bamFileFilter
+      samtoolsView.b = true
+      samtoolsView.h = true
       add(samtoolsView)
 
       val buildBamIndex = new BuildBamIndex(qscript)
