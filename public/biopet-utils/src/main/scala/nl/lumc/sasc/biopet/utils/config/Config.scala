@@ -21,11 +21,11 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils._
 
 /**
  * This class can store nested config values
- * @param map Map with value for new config
+ * @param _map Map with value for new config
  * @constructor Load config with existing map
  */
-class Config(var map: Map[String, Any],
-             protected[config] var defaults: Map[String, Any] = Map()) extends Logging {
+class Config(protected var _map: Map[String, Any],
+             protected var _defaults: Map[String, Any] = Map()) extends Logging {
   logger.debug("Init phase of config")
 
   /** Default constructor */
@@ -33,6 +33,9 @@ class Config(var map: Map[String, Any],
     this(Map())
     loadDefaultConfig()
   }
+
+  def map = _map
+  def defaults = _defaults
 
   /**
    * Loading a environmental variable as location of config files to merge into the config
@@ -65,13 +68,13 @@ class Config(var map: Map[String, Any],
   def loadConfigFile(configFile: File, default: Boolean = false) {
     val configMap = fileToConfigMap(configFile)
     if (default) {
-      if (defaults.isEmpty) defaults = configMap
-      else defaults = mergeMaps(configMap, defaults)
-      logger.debug("New defaults: " + defaults)
+      if (_defaults.isEmpty) _defaults = configMap
+      else _defaults = mergeMaps(configMap, _defaults)
+      logger.debug("New defaults: " + _defaults)
     } else {
-      if (map.isEmpty) map = configMap
-      else map = mergeMaps(configMap, map)
-      logger.debug("New config: " + map)
+      if (_map.isEmpty) _map = configMap
+      else _map = mergeMaps(configMap, _map)
+      logger.debug("New config: " + _map)
     }
   }
 
@@ -84,11 +87,12 @@ class Config(var map: Map[String, Any],
    */
   def addValue(key: String, value: Any, path: List[String] = Nil, default: Boolean = false): Unit = {
     val valueMap = path.foldRight(Map(key -> value))((a, b) => Map(a -> b))
-    if (default) defaults = mergeMaps(valueMap, defaults)
-    else map = mergeMaps(valueMap, map)
+    if (default) _defaults = mergeMaps(valueMap, _defaults)
+    else _map = mergeMaps(valueMap, _map)
   }
 
   protected[config] var notFoundCache: List[ConfigValueIndex] = List()
+  protected[config] var fixedCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] def clearCache(): Unit = {
@@ -103,24 +107,39 @@ class Config(var map: Map[String, Any],
    * @param s key
    * @return True if exist
    */
-  def contains(s: String): Boolean = map.contains(s)
+  def contains(s: String): Boolean = _map.contains(s)
 
   /**
    * Checks if value exist in config
    * @param requestedIndex Index to value
    * @return True if exist
    */
-  def contains(requestedIndex: ConfigValueIndex): Boolean =
+  def contains(requestedIndex: ConfigValueIndex): Boolean = contains(requestedIndex, Map())
+
+  /**
+   * Checks if value exist in config
+   * @param requestedIndex Index to value
+   * @param fixedValues Fixed values
+   * @return True if exist
+   */
+  def contains(requestedIndex: ConfigValueIndex, fixedValues: Map[String, Any]): Boolean =
     if (notFoundCache.contains(requestedIndex)) false
+    else if (fixedCache.contains(requestedIndex)) true
     else if (foundCache.contains(requestedIndex)) true
     else {
-      val value = Config.getValueFromMap(map, requestedIndex)
-      if (value.isDefined && value.get.value != None) {
-        foundCache += (requestedIndex -> value.get)
+      val fixedValue = Config.getValueFromMap(fixedValues, requestedIndex)
+      if (fixedValue.isDefined) {
+        fixedCache += (requestedIndex -> fixedValue.get)
         true
       } else {
-        notFoundCache +:= requestedIndex
-        false
+        val value = Config.getValueFromMap(_map, requestedIndex)
+        if (value.isDefined && value.get.value != None) {
+          foundCache += (requestedIndex -> value.get)
+          true
+        } else {
+          notFoundCache +:= requestedIndex
+          false
+        }
       }
     }
 
@@ -132,9 +151,12 @@ class Config(var map: Map[String, Any],
    * @param freeVar Default true, if set false value must exist in module
    * @return True if exist
    */
-  def contains(module: String, path: List[String], key: String, freeVar: Boolean = true): Boolean = {
+  def contains(module: String, path: List[String],
+               key: String,
+               freeVar: Boolean = true,
+               fixedValues: Map[String, Any] = Map()): Boolean = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    contains(requestedIndex)
+    contains(requestedIndex, fixedValues)
   }
 
   /**
@@ -146,10 +168,23 @@ class Config(var map: Map[String, Any],
    * @param freeVar Default true, if set false value must exist in module
    * @return Config value
    */
-  protected[config] def apply(module: String, path: List[String], key: String, default: Any = null, freeVar: Boolean = true): ConfigValue = {
+  protected[config] def apply(module: String,
+                              path: List[String],
+                              key: String,
+                              default: Any = null,
+                              freeVar: Boolean = true,
+                              fixedValues: Map[String, Any] = Map()): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
-    if (contains(requestedIndex)) foundCache(requestedIndex)
-    else if (default != null) {
+    if (contains(requestedIndex, fixedValues)) {
+      val fixedValue = fixedCache.get(requestedIndex)
+      if (fixedValue.isDefined) {
+        val userValue = Config.getValueFromMap(_map, requestedIndex)
+        if (userValue.isDefined)
+          logger.warn(s"Ignoring user-supplied value ${requestedIndex.key} at path ${requestedIndex.path} because it is a fixed value.")
+      }
+
+      fixedValue.getOrElse(foundCache(requestedIndex))
+    } else if (default != null) {
       defaultCache += (requestedIndex -> ConfigValue(requestedIndex, null, default, freeVar))
       defaultCache(requestedIndex)
     } else ConfigValue(requestedIndex, null, null, freeVar)
@@ -179,9 +214,11 @@ class Config(var map: Map[String, Any],
 
     // Positions where values are found
     val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
+    val fixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
 
     // Positions where to start searching
     val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
+    val effectiveFixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val effectiveDefaultFound = convertIndexValuesToMap(defaultCache.filter(_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val notFound = convertIndexValuesToMap(notFoundCache.map((_, None)), Some(false))
 
@@ -189,16 +226,19 @@ class Config(var map: Map[String, Any],
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(this.map, "input")
+    writeMapToJsonFile(_map, "input")
+    writeMapToJsonFile(_defaults, "defaults")
     writeMapToJsonFile(found, "found")
+    writeMapToJsonFile(fixed, "fixed")
     writeMapToJsonFile(effectiveFound, "effective.found")
+    writeMapToJsonFile(effectiveFixed, "effective.fixed")
     writeMapToJsonFile(effectiveDefaultFound, "effective.defaults")
     writeMapToJsonFile(notFound, "not.found")
     writeMapToJsonFile(fullEffective, "effective.full")
     writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
-  override def toString: String = map.toString()
+  override def toString: String = _map.toString()
 }
 
 object Config extends Logging {
@@ -210,7 +250,7 @@ object Config extends Logging {
    * @param config2 Low prio map
    * @return Merged config
    */
-  def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1.map, config2.map))
+  def mergeConfigs(config1: Config, config2: Config): Config = new Config(mergeMaps(config1._map, config2._map))
 
   /**
    * Search for value in index position in a map
