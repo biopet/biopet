@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** This trait creates a structured way of use multisample pipelines */
@@ -90,6 +90,8 @@ trait MultiSampleQScript extends SummaryQScript {
 
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
+      if (sampleRegex.findFirstIn(sampleId) == None)
+        Logging.addError(s"Sample '$sampleId' contains illegal chars")
       currentSample = Some(sampleId)
       addJobs()
       qscript.addSummarizable(this, "pipeline", Some(sampleId))
@@ -128,6 +130,8 @@ trait MultiSampleQScript extends SummaryQScript {
 
   /** Returns a list of all sampleIDs */
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
+
+  protected lazy val sampleRegex = """^[a-zA-Z0-9-_]+$""".r
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
