@@ -3,12 +3,12 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  * Created by sajvanderzeeuw on 6-10-15.
  */
-class BuildBamIndex (val root: Configurable) extends Picard {
+class BuildBamIndex(val root: Configurable) extends Picard {
 
   javaMainClass = new picard.sam.BuildBamIndex().getClass.getName
 
