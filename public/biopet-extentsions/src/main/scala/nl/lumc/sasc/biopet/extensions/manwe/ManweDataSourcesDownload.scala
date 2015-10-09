@@ -9,10 +9,12 @@ import org.broadinstitute.gatk.utils.commandline.Argument
 class ManweDataSourcesDownload(val root: Configurable) extends Manwe {
 
   @Argument(doc = "uri to data source to download")
-  var uri: Option[String] = _
+  var uri: String = _
 
   def subCommand = {
     required("data-sources") + required("download") + required(uri)
   }
+
+  this.deps
 
 }

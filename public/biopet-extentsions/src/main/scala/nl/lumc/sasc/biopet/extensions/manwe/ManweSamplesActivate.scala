@@ -11,7 +11,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
 class ManweSamplesActivate(val root: Configurable) extends Manwe {
 
   @Argument(doc = "uri to sample to activate")
-  var uri: Option[String] = _
+  var uri: String = _
 
   def subCommand = {
     required("samples") + required("activate") +
