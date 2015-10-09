@@ -16,13 +16,16 @@ class ManweAnnotateBed(val root: Configurable) extends Manwe {
   @Argument(doc = "flag if data has already been uploaded")
   var alreadyUploaded: Boolean = false
 
+  @Argument(doc = "Flag whether to wait for annotation to complete on the server")
+  var waitToComplete: Boolean = false
+
   @Argument(doc = "annotation queries")
   var queries: List[String] = Nil
 
   def subCommand = {
     required("annotate-bed") + required(bed) +
       conditional(alreadyUploaded, "-u") +
-      repeat("-q", queries)
+      repeat("-q", queries) + conditional(waitToComplete, "--wait")
   }
 
 }

@@ -41,12 +41,16 @@ class ManweSamplesImport(val root: Configurable) extends Manwe {
   @Argument(doc = "Pool size")
   var poolSize: Option[Int] = _
 
+  @Argument(doc = " Flag whether to wait for import to complete on server")
+  var waitToComplete: Boolean = false
+
   def subCommand = {
     required("samples") + required("import") + required(name) +
       repeat("-g", group) + repeat("--vcf", vcfs) + repeat("--bed", beds) +
       optional("-s", poolSize) + conditional(alreadyUploaded, "-u") +
       conditional(public, "-p") + conditional(preferLikelihood, "-l") +
-      conditional(noCoverage, "--no-coverage-profile")
+      conditional(noCoverage, "--no-coverage-profile") +
+      conditional(waitToComplete, "--wait")
   }
 
 }

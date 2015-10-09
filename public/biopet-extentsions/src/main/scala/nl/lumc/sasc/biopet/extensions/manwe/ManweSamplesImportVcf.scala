@@ -26,10 +26,14 @@ class ManweSamplesImportVcf(val root: Configurable) extends Manwe {
   @Argument(doc = "Flag when to prefer genotype likelihoods")
   var preferLikelihoods: Boolean = false
 
+  @Argument(doc = " Flag whether to wait for import to complete on server")
+  var waitToComplete: Boolean = false
+
   def subCommand = {
     required("samples") + required("import-vcf") +
       required(uri) + required(vcf) +
-      conditional(alreadyUploaded, "-u") + conditional(preferLikelihoods, "-l")
+      conditional(alreadyUploaded, "-u") + conditional(preferLikelihoods, "-l") +
+      conditional(waitToComplete, "--wait")
   }
 
 }

@@ -23,10 +23,13 @@ class ManweSamplesImportBed(val root: Configurable) extends Manwe {
   @Argument(doc = "flag if data is already uploaded?") // TODO: What is the use of this flag even? We're specifically uploading with this command
   var alreadyUploaded: Boolean = false
 
+  @Argument(doc = " Flag whether to wait for import to complete on server")
+  var waitToComplete: Boolean = false
+
   def subCommand = {
     required("samples") + required("import-bed") +
       required(uri) + required(bed) +
-      conditional(alreadyUploaded, "-u")
+      conditional(alreadyUploaded, "-u") + conditional(waitToComplete, "--wait")
   }
 
 }

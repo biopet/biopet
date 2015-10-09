@@ -16,13 +16,16 @@ class ManweAnnotateVcf(val root: Configurable) extends Manwe {
   @Argument(doc = "flag if data has already been uploaded")
   var alreadyUploaded: Boolean = false
 
+  @Argument(doc = "flag whether to wait for annotation to complete")
+  var waitToComplete: Boolean = false
+
   @Argument(doc = "annotation queries")
   var queries: List[String] = Nil
 
   def subCommand = {
     required("annotate-vcf") + required(vcf) +
       conditional(alreadyUploaded, "-u") +
-      repeat("-q", queries)
+      repeat("-q", queries) + conditional(waitToComplete, "--wait")
   }
 
 }

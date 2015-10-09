@@ -32,6 +32,9 @@ class ManweTest extends TestNGSuite with Matchers {
 
     manwe.alreadyUploaded = true
     manwe.cmd should equal(s"manwe annotate-bed ${bed.getAbsolutePath} -u -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe annotate-bed ${bed.getAbsolutePath} -u -q /uri/1&&/uri/2 --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
@@ -53,6 +56,9 @@ class ManweTest extends TestNGSuite with Matchers {
 
     manwe.alreadyUploaded = true
     manwe.cmd should equal(s"manwe annotate-vcf ${vcf.getAbsolutePath} -u -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe annotate-vcf ${vcf.getAbsolutePath} -u -q /uri/1&&/uri/2 --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
@@ -68,6 +74,9 @@ class ManweTest extends TestNGSuite with Matchers {
     manwe.uri = Some("/uri/1")
     manwe.queries = List("/uri/1&&/uri/2")
     manwe.cmd should equal(s"manwe data-sources annotate /uri/1 -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe data-sources annotate /uri/1 -q /uri/1&&/uri/2 --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
@@ -204,6 +213,9 @@ class ManweTest extends TestNGSuite with Matchers {
 
     manwe.noCoverage = true
     manwe.cmd should equal(s"manwe samples import pietje -g /uri/1&&/uri/2 -g /uri/3 $vcfLine $bedLine -s 4 -u -p -l --no-coverage-profile -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe samples import pietje -g /uri/1&&/uri/2 -g /uri/3 $vcfLine $bedLine -s 4 -u -p -l --no-coverage-profile --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
@@ -227,6 +239,9 @@ class ManweTest extends TestNGSuite with Matchers {
 
     manwe.alreadyUploaded = true
     manwe.cmd should equal(s"manwe samples import-bed /uri/1 ${bed.getAbsolutePath} -u -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe samples import-bed /uri/1 ${bed.getAbsolutePath} -u --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
@@ -252,6 +267,9 @@ class ManweTest extends TestNGSuite with Matchers {
 
     manwe.preferLikelihoods = true
     manwe.cmd should equal(s"manwe samples import-vcf /uri/1 ${vcf.getAbsolutePath} -u -l -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
+    manwe.waitToComplete = true
+    manwe.cmd should equal(s"manwe samples import-vcf /uri/1 ${vcf.getAbsolutePath} -u -l --wait -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
   @Test
