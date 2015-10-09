@@ -39,10 +39,10 @@ trait Configurable extends ImplicitConversions {
   def defaults: Map[String, Any] = Map()
 
   /** This method merge defaults from the root to it's own */
-  protected def internalDefaults: Map[String, Any] = {
+  protected[config] def internalDefaults: Map[String, Any] = {
     (root != null, defaults.isEmpty) match {
-      case (true, true)   => root.defaults
-      case (true, false)  => ConfigUtils.mergeMaps(defaults, root.defaults)
+      case (true, true)   => root.internalDefaults
+      case (true, false)  => ConfigUtils.mergeMaps(defaults, root.internalDefaults)
       case (false, true)  => globalConfig.defaults
       case (false, false) => ConfigUtils.mergeMaps(defaults, globalConfig.defaults)
     }
