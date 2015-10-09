@@ -204,13 +204,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     for ((chunkDir, fastqfile) <- chunks) {
       var R1 = fastqfile._1
       var R2 = fastqfile._2
-      var deps: List[File] = Nil
       if (!skipFlexiprep) {
         val flexiout = flexiprep.runTrimClip(R1, R2, new File(chunkDir, "flexiprep"), chunkDir)
         logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
-        deps = flexiout._3
         fastq_R1_output :+= R1
         R2.foreach(R2 => fastq_R2_output :+= R2)
       }
@@ -218,15 +216,15 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       val outputBam = new File(chunkDir, outputName + ".bam")
       bamFiles :+= outputBam
       aligner match {
-        case "bwa-mem"    => addBwaMem(R1, R2, outputBam, deps)
-        case "bwa-aln"    => addBwaAln(R1, R2, outputBam, deps)
-        case "bowtie"     => addBowtie(R1, R2, outputBam, deps)
-        case "gsnap"      => addGsnap(R1, R2, outputBam, deps)
+        case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
+        case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
+        case "bowtie"     => addBowtie(R1, R2, outputBam)
+        case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
-        case "tophat"     => addTophat(R1, R2, outputBam, deps)
-        case "stampy"     => addStampy(R1, R2, outputBam, deps)
-        case "star"       => addStar(R1, R2, outputBam, deps)
-        case "star-2pass" => addStar2pass(R1, R2, outputBam, deps)
+        case "tophat"     => addTophat(R1, R2, outputBam)
+        case "stampy"     => addStampy(R1, R2, outputBam)
+        case "star"       => addStar(R1, R2, outputBam)
+        case "star-2pass" => addStar2pass(R1, R2, outputBam)
         case _            => throw new IllegalStateException("Option aligner: '" + aligner + "' is not valid")
       }
       if (chunking && numberChunks.getOrElse(1) > 1 && config("chunk_metrics", default = false))
@@ -267,10 +265,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Add bwa aln jobs */
-  def addBwaAln(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addBwaAln(R1: File, R2: Option[File], output: File): File = {
     val bwaAlnR1 = new BwaAln(this)
     bwaAlnR1.fastq = R1
-    bwaAlnR1.deps = deps
     bwaAlnR1.output = swapExt(output.getParent, output, ".bam", ".R1.sai")
     bwaAlnR1.isIntermediate = true
     add(bwaAlnR1)
@@ -278,7 +275,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val samFile: File = if (paired) {
       val bwaAlnR2 = new BwaAln(this)
       bwaAlnR2.fastq = R2.get
-      bwaAlnR2.deps = deps
       bwaAlnR2.output = swapExt(output.getParent, output, ".bam", ".R2.sai")
       bwaAlnR2.isIntermediate = true
       add(bwaAlnR2)
@@ -313,11 +309,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Adds bwa mem jobs */
-  def addBwaMem(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addBwaMem(R1: File, R2: Option[File], output: File): File = {
     val bwaCommand = new BwaMem(this)
     bwaCommand.R1 = R1
     if (paired) bwaCommand.R2 = R2.get
-    bwaCommand.deps = deps
     bwaCommand.R = Some(getReadGroupBwa)
     val sortSam = new SortSam(this)
     sortSam.output = output
@@ -325,10 +320,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     output
   }
 
-  def addGsnap(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addGsnap(R1: File, R2: Option[File], output: File): File = {
     val gsnapCommand = new Gsnap(this)
     gsnapCommand.input = if (paired) List(R1, R2.get) else List(R1)
-    gsnapCommand.deps = deps
     gsnapCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
     gsnapCommand.isIntermediate = true
     add(gsnapCommand)
@@ -341,13 +335,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addAddOrReplaceReadGroups(reorderSam.output, output)
   }
 
-  def addTophat(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addTophat(R1: File, R2: Option[File], output: File): File = {
     // TODO: merge mapped and unmapped BAM ~ also dealing with validation errors in the unmapped BAM
     val tophat = new Tophat(this)
     tophat.R1 = tophat.R1 :+ R1
     if (paired) tophat.R2 = tophat.R2 :+ R2.get
     tophat.output_dir = new File(outputDir, "tophat_out")
-    tophat.deps = deps
     // always output BAM
     tophat.no_convert_bam = false
     // and always keep input ordering
@@ -384,7 +377,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     addAddOrReplaceReadGroups(reorderSam.output, output)
   }
   /** Adds stampy jobs */
-  def addStampy(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addStampy(R1: File, R2: Option[File], output: File): File = {
 
     var RG: String = "ID:" + readgroupId + ","
     RG += "SM:" + sampleId.get + ","
@@ -399,7 +392,6 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val stampyCmd = new Stampy(this)
     stampyCmd.R1 = R1
     if (paired) stampyCmd.R2 = R2.get
-    stampyCmd.deps = deps
     stampyCmd.readgroup = RG
     stampyCmd.sanger = true
     stampyCmd.output = this.swapExt(output.getParent, output, ".bam", ".sam")
@@ -412,11 +404,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Adds bowtie jobs */
-  def addBowtie(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
+  def addBowtie(R1: File, R2: Option[File], output: File): File = {
     val bowtie = new Bowtie(this)
     bowtie.R1 = R1
     if (paired) bowtie.R2 = R2
-    bowtie.deps = deps
     bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
     bowtie.isIntermediate = true
     add(bowtie)
@@ -424,15 +415,15 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   /** Adds Star jobs */
-  def addStar(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
-    val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
+  def addStar(R1: File, R2: Option[File], output: File): File = {
+    val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true)
     add(starCommand)
     addAddOrReplaceReadGroups(starCommand.outputSam, output)
   }
 
   /** Adds Start 2 pass jobs */
-  def addStar2pass(R1: File, R2: Option[File], output: File, deps: List[File]): File = {
-    val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true, deps = deps)
+  def addStar2pass(R1: File, R2: Option[File], output: File): File = {
+    val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true)
     addAll(starCommand._2)
     addAddOrReplaceReadGroups(starCommand._1, output)
   }

@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.samtools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvanthof on 22/09/15.
