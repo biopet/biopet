@@ -253,8 +253,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       throw new IllegalStateException("R1 and R2 file number is not the same")
 
     if (fastq_R1.length > 1) {
-      add(Zcat(this, fastq_R1, fastqR1Qc) | new Gzip(this) > fastqR1Qc)
-      if (paired) add(Zcat(this, fastq_R2, fastqR2Qc.get) | new Gzip(this) > fastqR2Qc.get)
+      val zcat = new Zcat(this)
+      zcat.input = fastq_R1
+      add(zcat | new Gzip(this) > fastqR1Qc)
+      if (paired) {
+        val zcat = new Zcat(this)
+        zcat.input = fastq_R2
+        add(zcat | new Gzip(this) > fastqR2Qc.get)
+      }
     }
 
     outputFiles += ("output_R1_gzip" -> fastqR1Qc)
