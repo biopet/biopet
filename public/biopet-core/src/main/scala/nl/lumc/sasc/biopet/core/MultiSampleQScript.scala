@@ -47,6 +47,8 @@ trait MultiSampleQScript extends SummaryQScript {
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
+        if (nameRegex.findFirstIn(libId) == None)
+          Logging.addError(s"Library '$libId' contains illegal chars, may only exist alphanumeric, '-' or '_' chars")
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
@@ -90,8 +92,8 @@ trait MultiSampleQScript extends SummaryQScript {
 
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
-      if (sampleRegex.findFirstIn(sampleId) == None)
-        Logging.addError(s"Sample '$sampleId' contains illegal chars")
+      if (nameRegex.findFirstIn(sampleId) == None)
+        Logging.addError(s"Sample '$sampleId' contains illegal chars, may only exist alphanumeric, '-' or '_' chars")
       currentSample = Some(sampleId)
       addJobs()
       qscript.addSummarizable(this, "pipeline", Some(sampleId))
@@ -131,7 +133,7 @@ trait MultiSampleQScript extends SummaryQScript {
   /** Returns a list of all sampleIDs */
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
-  protected lazy val sampleRegex = """^[a-zA-Z0-9-_]+$""".r
+  protected lazy val nameRegex = """^[a-zA-Z0-9-_]+$""".r
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
