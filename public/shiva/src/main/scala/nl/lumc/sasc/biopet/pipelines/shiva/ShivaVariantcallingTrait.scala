@@ -161,6 +161,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       val mp = new SamtoolsMpileup(qscript)
       mp.input = inputBams
       mp.u = true
+      //TODO: proper piping should be implemented
+      mp.reference = referenceFasta()
 
       val bt = new BcftoolsCall(qscript)
       bt.O = "z"
