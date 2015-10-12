@@ -55,7 +55,7 @@ class BastyGenerateFasta(val root: Configurable) extends ToolCommandFuntion with
     reference = referenceFasta()
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     optional("--inputVcf", inputVcf) +
     optional("--bamFile", bamFile) +
     optional("--outputVariants", outputVariants) +

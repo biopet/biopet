@@ -50,7 +50,7 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
     if (fields.isEmpty) throw new IllegalArgumentException("No fields found for VcfWithVcf")
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", output) +
     required("-s", secondaryVcf) +

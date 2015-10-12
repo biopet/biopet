@@ -35,10 +35,10 @@ trait BastyTrait extends MultiSampleQScript {
 
   def variantcallers = List("freebayes")
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
-  ), super.defaults)
+  )
 
   lazy val shiva: ShivaTrait = new Shiva(qscript)
 
@@ -137,7 +137,6 @@ trait BastyTrait extends MultiSampleQScript {
       val numBoot = config("boot_runs", default = 100, submodule = "raxml").asInt
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
-        raxmlBoot.threads = 1
         raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = Some(seed)

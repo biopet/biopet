@@ -79,9 +79,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _                            =>
     }
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait =>
+      case f: BiopetCommandLineFunction =>
         f.preProcessExecutable()
         f.beforeGraph()
+        f.internalBeforeGraph()
         f.commandLine
       case _ =>
     }
