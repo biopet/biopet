@@ -116,7 +116,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "skip_markduplicates" -> skipMarkduplicates,
     "aligner" -> aligner,
     "chunking" -> chunking,
-    "numberChunks" -> numberChunks.getOrElse(1)
+    "numberChunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
   override def reportClass = {
