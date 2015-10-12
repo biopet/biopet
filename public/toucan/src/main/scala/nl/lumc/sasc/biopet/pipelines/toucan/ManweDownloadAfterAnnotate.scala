@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweDataSourcesDownload}
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweDataSourcesDownload }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
@@ -13,7 +13,6 @@ import scala.io.Source
 class ManweDownloadAfterAnnotate(root: Configurable,
                                  annotate: ManweAnnotateVcf) extends ManweDataSourcesDownload(root) {
 
-
   override def beforeGraph: Unit = {
     super.beforeGraph
     require(annotate != null, "Annotate should be defined")
@@ -22,7 +21,6 @@ class ManweDownloadAfterAnnotate(root: Configurable,
 
   override def beforeCmd: Unit = {
     super.beforeCmd
-
 
     val reader = Source.fromFile(annotate.output)
     this.uri = reader.getLines().toList.head

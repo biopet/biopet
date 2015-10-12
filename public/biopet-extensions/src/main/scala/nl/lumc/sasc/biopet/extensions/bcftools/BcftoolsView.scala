@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.extensions.bcftools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Created by ahbbollen on 12-10-15.
@@ -112,8 +112,6 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   @Argument(doc = "Exclude privates")
   var excludePrivate: Boolean = false
 
-
-
   override def beforeGraph() = {
     super.beforeGraph()
 
@@ -126,21 +124,21 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
 
   def baseCmd = {
     executable + conditional(dropGenotype, "-G") + conditional(headerOnly, "-h") +
-    required("-l", compressionLevel) + required("-O", outputType) +
-    optional("-r", regions) + optional("-R", regionFile) +
-    optional("-t", targets) + optional("-T", targetFile) +
-    conditional(trimAltAlleles, "-a") + conditional(noUpdate, "-I") +
-    repeat("-s", samples) + optional("-S", sampleFile) +
-    optional("-c", minAC) + optional("-C", maxAC) +
-    optional("-e", exclude) + optional("-f", applyFilters) +
-    optional("-g", genotype) + optional("-i", include) +
-    conditional(known, "-k") + optional("-m", minAlleles) +
-    optional("-M", maxAlleles) + conditional(novel, "-n") +
-    conditional(phased, "-p") + conditional(excludePhased, "-P") +
-    optional("-q", minAF) + optional("-Q", maxAF) +
-    conditional(uncalled, "-u") + conditional(excludeUncalled, "-U") +
-    optional("-v", types) + conditional(onlyPrivate, "-x") +
-    conditional(excludePrivate, "-X")
+      required("-l", compressionLevel) + required("-O", outputType) +
+      optional("-r", regions) + optional("-R", regionFile) +
+      optional("-t", targets) + optional("-T", targetFile) +
+      conditional(trimAltAlleles, "-a") + conditional(noUpdate, "-I") +
+      repeat("-s", samples) + optional("-S", sampleFile) +
+      optional("-c", minAC) + optional("-C", maxAC) +
+      optional("-e", exclude) + optional("-f", applyFilters) +
+      optional("-g", genotype) + optional("-i", include) +
+      conditional(known, "-k") + optional("-m", minAlleles) +
+      optional("-M", maxAlleles) + conditional(novel, "-n") +
+      conditional(phased, "-p") + conditional(excludePhased, "-P") +
+      optional("-q", minAF) + optional("-Q", maxAF) +
+      conditional(uncalled, "-u") + conditional(excludeUncalled, "-U") +
+      optional("-v", types) + conditional(onlyPrivate, "-x") +
+      conditional(excludePrivate, "-X")
   }
 
   def cmdPipeInput = {

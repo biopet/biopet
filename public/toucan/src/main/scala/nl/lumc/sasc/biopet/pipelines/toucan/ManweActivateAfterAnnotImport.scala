@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesActivate, ManweSamplesImport}
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesActivate, ManweSamplesImport }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
@@ -10,8 +10,8 @@ import scala.io.Source
  * Wrapper for manwe activate after importing and annotating
  */
 class ManweActivateAfterAnnotImport(root: Configurable,
-                                     annotate: ManweAnnotateVcf,
-                                     imported: ManweSamplesImport) extends ManweSamplesActivate(root) {
+                                    annotate: ManweAnnotateVcf,
+                                    imported: ManweSamplesImport) extends ManweSamplesActivate(root) {
 
   override def beforeGraph: Unit = {
     super.beforeGraph

@@ -89,7 +89,7 @@ class ManweTest extends TestNGSuite with Matchers {
     out.deleteOnExit()
 
     manwe.output = out
-    manwe.uri = Some("/uri/1")
+    manwe.uri = "/uri/1"
     manwe.cmd should equal(s"manwe data-sources download /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
@@ -130,7 +130,7 @@ class ManweTest extends TestNGSuite with Matchers {
     out.deleteOnExit()
 
     manwe.output = out
-    manwe.uri = Some("/uri/1")
+    manwe.uri = "/uri/1"
     manwe.cmd should equal(s"manwe samples activate /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
 
