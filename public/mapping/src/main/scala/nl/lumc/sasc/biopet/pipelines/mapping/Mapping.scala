@@ -316,7 +316,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bwaCommand.R = Some(getReadGroupBwa)
     val sortSam = new SortSam(this)
     sortSam.output = output
-    add(bwaCommand | sortSam, chunking || !skipMarkduplicates)
+    val pipe = bwaCommand | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = -1
+    add(pipe)
     output
   }
 
@@ -334,6 +337,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
     val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
       Some(gsnapCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
+    pipe.threadsCorrection = -1
+    zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
+    zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
     add(pipe)
     ar._2
   }
@@ -399,7 +405,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (paired) stampyCmd.R2 = R2.get
     stampyCmd.readgroup = RG
     stampyCmd.sanger = true
-    stampyCmd.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    stampyCmd.output = this.swapExt(output.getParentFile, output, ".bam", ".sam")
     stampyCmd.isIntermediate = true
     add(stampyCmd)
     val sortSam = SortSam(this, stampyCmd.output, output)
@@ -421,6 +427,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bowtie.isIntermediate = true
     val ar = addAddOrReplaceReadGroups(bowtie.output, output)
     val pipe = new BiopetFifoPipe(this, (Some(bowtie) :: Some(ar._1) :: Nil).flatten)
+    pipe.threadsCorrection = -1
     add(pipe)
     ar._2
   }
@@ -433,6 +440,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val ar = addAddOrReplaceReadGroups(starCommand.outputSam, output)
     val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
       Some(starCommand) :: Some(ar._1) :: Nil).flatten)
+    pipe.threadsCorrection = -1
+    zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
+    zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
     add(pipe)
     ar._2
   }
