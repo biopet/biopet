@@ -53,10 +53,10 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var sampleFile: File = _
 
   @Argument(doc = "minimum allele count")
-  var minAC: Int = _
+  var minAC: Option[Int] = _
 
   @Argument(doc = "max allele count")
-  var maxAC: Int = _
+  var maxAC: Option[Int] = _
 
   @Argument(doc = "exclude (expression)")
   var exclude: String = _
@@ -74,10 +74,10 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var known: Boolean = false
 
   @Argument(doc = "min alleles")
-  var minAlleles: Int = _
+  var minAlleles: Option[Int] = _
 
   @Argument(doc = "max alleles")
-  var maxAlleles: Int = _
+  var maxAlleles: Option[Int] = _
 
   @Argument(doc = "novel (ID field is .) only")
   var novel: Boolean = false
@@ -89,10 +89,10 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var excludePhased: Boolean = false
 
   @Argument(doc = "min allele frequency")
-  var minAF: Int = _
+  var minAF: Option[Int] = _
 
   @Argument(doc = "max allele frequency")
-  var maxAF: Int = _
+  var maxAF: Option[Int] = _
 
   @Argument(doc = "uncalled only")
   var uncalled: Boolean = false
@@ -123,7 +123,7 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   }
 
   def baseCmd = {
-    executable + conditional(dropGenotype, "-G") + conditional(headerOnly, "-h") +
+    executable + " view " + conditional(dropGenotype, "-G") + conditional(headerOnly, "-h") +
       required("-l", compressionLevel) + required("-O", outputType) +
       optional("-r", regions) + optional("-R", regionFile) +
       optional("-t", targets) + optional("-T", targetFile) +
@@ -151,6 +151,16 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
 
   def cmdLine = {
     baseCmd + required("-o", output) + required(input)
+  }
+
+  /**
+   * Convert cmdLine into line without quotes and double spaces
+   * primarily for testing
+   * @return
+   */
+  final def cmd = {
+    val a = cmdLine
+    a.replace("'", "").replace("  ", " ").trim
   }
 
 }

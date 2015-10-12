@@ -11,7 +11,7 @@ import org.testng.annotations.Test
 /**
  * Created by ahbbollen on 12-10-15.
  */
-class BcfToolsTest extends TestNGSuite with MockitoSugar with Matchers {
+class BcfToolsTest extends TestNGSuite with Matchers with MockitoSugar {
 
   @Test
   def BcfToolsViewTest = {
@@ -29,7 +29,7 @@ class BcfToolsTest extends TestNGSuite with MockitoSugar with Matchers {
     view.input = tmpInput
     view.output = tmpOutput
 
-    // view.cmdLine should equal(s"bcftools -o $outputPath $inputPath}")
+    view.cmd should equal(s"bcftools view -l 9 -O z -o $outputPath $inputPath")
   }
 
 }
