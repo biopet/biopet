@@ -321,18 +321,21 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   def addGsnap(R1: File, R2: Option[File], output: File): File = {
+    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
+    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
     val gsnapCommand = new Gsnap(this)
-    gsnapCommand.input = if (paired) List(R1, R2.get) else List(R1)
-    gsnapCommand.output = swapExt(output.getParent, output, ".bam", ".sam")
-    gsnapCommand.isIntermediate = true
-    add(gsnapCommand)
+    gsnapCommand.input = if (paired) List(zcatR1._2, zcatR2.get._2) else List(zcatR1._2)
+    gsnapCommand.output = swapExt(output.getParentFile, output, ".bam", ".sam")
 
     val reorderSam = new ReorderSam(this)
     reorderSam.input = gsnapCommand.output
-    reorderSam.output = swapExt(output.getParent, output, ".sorted.bam", ".reordered.bam")
-    add(reorderSam)
+    reorderSam.output = swapExt(output.getParentFile, output, ".sorted.bam", ".reordered.bam")
 
-    addAddOrReplaceReadGroups(reorderSam.output, output)
+    val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
+    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
+      Some(gsnapCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
+    add(pipe)
+    ar._2
   }
 
   def addTophat(R1: File, R2: Option[File], output: File): File = {
@@ -374,7 +377,9 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     reorderSam.output = swapExt(output.getParent, output, ".merge.bam", ".reordered.bam")
     add(reorderSam)
 
-    addAddOrReplaceReadGroups(reorderSam.output, output)
+    val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
+    add(ar._1)
+    ar._2
   }
   /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File): File = {
@@ -405,31 +410,49 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   /** Adds bowtie jobs */
   def addBowtie(R1: File, R2: Option[File], output: File): File = {
+    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
+    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
+    zcatR1._1.foreach(add(_))
+    zcatR2.foreach(_._1.foreach(add(_)))
     val bowtie = new Bowtie(this)
-    bowtie.R1 = R1
-    if (paired) bowtie.R2 = R2
-    bowtie.output = this.swapExt(output.getParent, output, ".bam", ".sam")
+    bowtie.R1 = zcatR1._2
+    if (paired) bowtie.R2 = Some(zcatR2.get._2)
+    bowtie.output = this.swapExt(output.getParentFile, output, ".bam", ".sam")
     bowtie.isIntermediate = true
-    add(bowtie)
-    addAddOrReplaceReadGroups(bowtie.output, output)
+    val ar = addAddOrReplaceReadGroups(bowtie.output, output)
+    val pipe = new BiopetFifoPipe(this, (Some(bowtie) :: Some(ar._1) :: Nil).flatten)
+    add(pipe)
+    ar._2
   }
 
   /** Adds Star jobs */
   def addStar(R1: File, R2: Option[File], output: File): File = {
-    val starCommand = Star(this, R1, R2, outputDir, isIntermediate = true)
-    add(starCommand)
-    addAddOrReplaceReadGroups(starCommand.outputSam, output)
+    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
+    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
+    val starCommand = Star(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
+    val ar = addAddOrReplaceReadGroups(starCommand.outputSam, output)
+    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
+      Some(starCommand) :: Some(ar._1) :: Nil).flatten)
+    add(pipe)
+    ar._2
   }
 
   /** Adds Start 2 pass jobs */
   def addStar2pass(R1: File, R2: Option[File], output: File): File = {
-    val starCommand = Star._2pass(this, R1, R2, outputDir, isIntermediate = true)
+    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
+    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
+    zcatR1._1.foreach(add(_))
+    zcatR2.foreach(_._1.foreach(add(_)))
+
+    val starCommand = Star._2pass(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
     addAll(starCommand._2)
-    addAddOrReplaceReadGroups(starCommand._1, output)
+    val ar = addAddOrReplaceReadGroups(starCommand._1, output)
+    add(ar._1)
+    ar._2
   }
 
   /** Adds AddOrReplaceReadGroups */
-  def addAddOrReplaceReadGroups(input: File, output: File): File = {
+  def addAddOrReplaceReadGroups(input: File, output: File): (AddOrReplaceReadGroups, File) = {
     val addOrReplaceReadGroups = AddOrReplaceReadGroups(this, input, output)
     addOrReplaceReadGroups.createIndex = true
 
@@ -441,9 +464,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (readgroupSequencingCenter.isDefined) addOrReplaceReadGroups.RGCN = readgroupSequencingCenter.get
     if (readgroupDescription.isDefined) addOrReplaceReadGroups.RGDS = readgroupDescription.get
     if (!skipMarkduplicates) addOrReplaceReadGroups.isIntermediate = true
-    add(addOrReplaceReadGroups)
 
-    addOrReplaceReadGroups.output
+    (addOrReplaceReadGroups, addOrReplaceReadGroups.output)
   }
 
   /** Returns readgroup for bwa */
@@ -468,22 +490,18 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
    * @param runDir directory to extract when needed
    * @return returns extracted file
    */
-  def extractIfNeeded(file: File, runDir: File): File = {
-    if (file == null) file
-    else if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
+  def extractIfNeeded(file: File, runDir: File): (Option[BiopetCommandLineFunction], File) = {
+    require(file != null)
+    if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
       var newFile: File = swapExt(runDir, file, ".gz", "")
       if (file.getName.endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
       val zcatCommand = Zcat(this, file, newFile)
-      zcatCommand.isIntermediate = true
-      add(zcatCommand)
-      newFile
+      (Some(zcatCommand), newFile)
     } else if (file.getName.endsWith(".bz2")) {
       val newFile = swapExt(runDir, file, ".bz2", "")
       val pbzip2 = Pbzip2(this, file, newFile)
-      pbzip2.isIntermediate = true
-      add(pbzip2)
-      newFile
-    } else file
+      (Some(pbzip2), newFile)
+    } else (None, file)
   }
 
 }
