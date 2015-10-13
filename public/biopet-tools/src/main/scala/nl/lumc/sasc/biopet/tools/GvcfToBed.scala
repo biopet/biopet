@@ -1,11 +1,12 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ PrintWriter, File }
+import java.io.{File, PrintWriter}
 
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.{ ToolCommand, VcfUtils }
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.BedRecord
+
 import scala.collection.JavaConversions._
 
 /**
