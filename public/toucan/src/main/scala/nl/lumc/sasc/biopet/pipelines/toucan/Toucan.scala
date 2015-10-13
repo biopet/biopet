@@ -53,8 +53,10 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
   def biopetScript(): Unit = {
+    val doVarda = config("use_varda", default = false)
+    val useVcf: File = if (doVarda) varda(inputVCF) else inputVCF
     val vep = new VariantEffectPredictor(this)
-    vep.input = inputVCF
+    vep.input = useVcf
     vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
     vep.isIntermediate = true
     add(vep)
@@ -101,6 +103,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    * @return return vcf
    */
   def varda(vcf: File): File = {
+    //TODO: add groups!!! Need sample-specific group tags for this
     val splits = sampleIds.map(x => {
       val view = new BcftoolsView(this)
       view.input = vcf
@@ -163,6 +166,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         importing.output = swapExt(vcf.outputVcf, ".vcf.gz", ".tmp.import")
         importing.public = isPublic
         importing.manweConfig = vardaConfig
+        add(importing)
         importing
       }
 
@@ -170,6 +174,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       val active = new ManweActivateAfterAnnotImport(this, annotate, x)
       active.manweConfig = vardaConfig
       active.output = swapExt(x.output, ".tmp.import", ".tmp.activated")
+      add(active)
       active
     })
 
@@ -178,6 +183,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     finalLn.input = annotatedVcf.output
     finalLn.output = swapExt(annotatedVcf.output, "tmp.annot.vcf.gz", ".varda_annotated.vcf.gz")
     finalLn.relative = true
+    add(finalLn)
 
     finalLn.output
   }
