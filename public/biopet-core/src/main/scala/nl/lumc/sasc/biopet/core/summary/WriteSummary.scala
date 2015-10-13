@@ -71,23 +71,29 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
       val executables: Map[String, Any] = {
-        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunction]) yield {
+
+        def fetchVersion(f: QFunction): Option[(String, Any)] = {
           f match {
             case f: BiopetJavaCommandLineFunction with Version =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
-                "jar_path" -> f.jarFile)
+                "jar_path" -> f.jarFile))
             case f: BiopetCommandLineFunction with Version =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
-                "path" -> f.executable)
+                "path" -> f.executable))
             case f: Configurable with Version =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None))
-            case _ => throw new IllegalStateException("This should not be possible")
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None)))
+            case _ => None
           }
+        }
 
-        }).toMap
+        (
+          qscript.functions.flatMap(fetchVersion(_)) ++
+          qscript.functions.flatMap { case f: BiopetCommandLineFunction => f.pipesJobs }
+          .flatMap(fetchVersion(_))
+        ).toMap
       }
 
       val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
