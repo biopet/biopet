@@ -16,12 +16,12 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.manwe.{ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate}
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.{Ln, Gzip, VariantEffectPredictor}
-import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer}
+import nl.lumc.sasc.biopet.extensions.{ Ln, Gzip, VariantEffectPredictor }
+import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -30,7 +30,7 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference{
+class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
@@ -41,9 +41,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     inputFiles :+= new InputFile(inputVCF)
     sampleIds = root match {
       case m: MultiSampleQScript => m.samples.keys.toList
-      case null => Nil //TODO: get names from vcf header
-      case s: SampleLibraryTag => s.sampleId.toList
-      case _ => throw new IllegalArgumentException("You don't have any samples")
+      case null                  => Nil //TODO: get names from vcf header
+      case s: SampleLibraryTag   => s.sampleId.toList
+      case _                     => throw new IllegalArgumentException("You don't have any samples")
     }
   }
 
@@ -158,17 +158,17 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val imports = for (
       (sample: String, bed, vcf) <- (sampleIds, bedTracks, filteredVcfs).zipped
     ) yield {
-        val importing = new ManweSamplesImport(this)
-        importing.beds = List(bed.outputBed)
-        importing.vcfs = List(vcf.outputVcf)
-        importing.name = Some(sample)
-        importing.waitToComplete = true
-        importing.output = swapExt(vcf.outputVcf, ".vcf.gz", ".tmp.import")
-        importing.public = isPublic
-        importing.manweConfig = vardaConfig
-        add(importing)
-        importing
-      }
+      val importing = new ManweSamplesImport(this)
+      importing.beds = List(bed.outputBed)
+      importing.vcfs = List(vcf.outputVcf)
+      importing.name = Some(sample)
+      importing.waitToComplete = true
+      importing.output = swapExt(vcf.outputVcf, ".vcf.gz", ".tmp.import")
+      importing.public = isPublic
+      importing.manweConfig = vardaConfig
+      add(importing)
+      importing
+    }
 
     val activates = imports.map(x => {
       val active = new ManweActivateAfterAnnotImport(this, annotate, x)
@@ -179,7 +179,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     })
 
     val finalLn = new Ln(this)
-    activates.foreach(x => finalLn.deps :+= x)
+    activates.foreach(x => finalLn.deps :+= x.output)
     finalLn.input = annotatedVcf.output
     finalLn.output = swapExt(annotatedVcf.output, "tmp.annot.vcf.gz", ".varda_annotated.vcf.gz")
     finalLn.relative = true
