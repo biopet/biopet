@@ -91,8 +91,11 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
         (
           qscript.functions.flatMap(fetchVersion(_)) ++
-          qscript.functions.flatMap { case f: BiopetCommandLineFunction => f.pipesJobs }
-          .flatMap(fetchVersion(_))
+          qscript.functions
+          .flatMap {
+            case f: BiopetCommandLineFunction => f.pipesJobs
+            case _                            => Nil
+          }.flatMap(fetchVersion(_))
         ).toMap
       }
 
