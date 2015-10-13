@@ -118,8 +118,6 @@ class GentrapTest extends TestNGSuite with Matchers {
     val functions = gentrap.functions.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
 
-    functions(classOf[Gsnap]).size should be >= 1
-
     if (expMeasures.contains("fragments_per_gene")) {
       gentrap.functions
         .collect { case x: HtseqCount => x.output.toString.endsWith(".fragments_per_gene") }.size shouldBe numSamples
