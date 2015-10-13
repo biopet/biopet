@@ -153,29 +153,31 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   else None
 
   /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File], List[File]) =
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File]) =
     runTrimClip(R1_in, None, outDir, chunk)
 
   /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, outDir: File): (File, Option[File], List[File]) =
+  def runTrimClip(R1_in: File, outDir: File): (File, Option[File]) =
     runTrimClip(R1_in, None, outDir, "")
 
   /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File): (File, Option[File], List[File]) =
+  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File): (File, Option[File]) =
     runTrimClip(R1_in, R2_in, outDir, "")
 
   /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File, chunkarg: String): (File, Option[File], List[File]) = {
+  def runTrimClip(R1_in: File,
+                  R2_in: Option[File],
+                  outDir: File,
+                  chunkarg: String): (File, Option[File]) = {
     val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
 
     var R1 = R1_in
     var R2 = R2_in
-    def deps: List[File] = Nil
 
     val qcCmdR1 = new QcCommand(this, fastqc_R1)
     qcCmdR1.input = R1_in
     qcCmdR1.read = "R1"
-    qcCmdR1.output = if (paired) new File(fastqR1Qc.getAbsolutePath.stripSuffix(".gz"))
+    qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
     else fastqR1Qc
     qcCmdR1.deps :+= fastqc_R1.output
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
@@ -184,7 +186,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     if (paired) {
       val qcCmdR2 = new QcCommand(this, fastqc_R2)
       qcCmdR2.input = R2_in.get
-      qcCmdR2.output = new File(fastqR2Qc.get.getAbsolutePath.stripSuffix(".gz"))
+      qcCmdR2.output = new File(outDir, fastqR2Qc.get.getName.stripSuffix(".gz"))
       qcCmdR2.read = "R2"
       addSummarizable(qcCmdR2, "qc_command_R2")
 
@@ -195,8 +197,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.refFastq = R1_in
       fqSync.inputFastq1 = qcCmdR1.output
       fqSync.inputFastq2 = qcCmdR2.output
-      fqSync.outputFastq1 = fastqR1Qc
-      fqSync.outputFastq2 = fastqR2Qc.get
+      fqSync.outputFastq1 = new File(outDir, fastqR1Qc.getName)
+      fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
       val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
@@ -242,7 +244,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     outputFiles += (chunk + "output_R1" -> R1)
     if (paired) outputFiles += (chunk + "output_R2" -> R2.get)
-    (R1, R2, deps)
+    (R1, R2)
   }
 
   /** Adds last non chunkable jobs */
@@ -251,8 +253,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       throw new IllegalStateException("R1 and R2 file number is not the same")
 
     if (fastq_R1.length > 1) {
-      add(Zcat(this, fastq_R1, fastqR1Qc) | new Gzip(this) > fastqR1Qc)
-      if (paired) add(Zcat(this, fastq_R2, fastqR2Qc.get) | new Gzip(this) > fastqR2Qc.get)
+      val zcat = new Zcat(this)
+      zcat.input = fastq_R1
+      add(zcat | new Gzip(this) > fastqR1Qc)
+      if (paired) {
+        val zcat = new Zcat(this)
+        zcat.input = fastq_R2
+        add(zcat | new Gzip(this) > fastqR2Qc.get)
+      }
     }
 
     outputFiles += ("output_R1_gzip" -> fastqR1Qc)
