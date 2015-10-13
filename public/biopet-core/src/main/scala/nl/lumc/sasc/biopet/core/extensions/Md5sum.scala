@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.core.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for md5sum */
-class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
+class Md5sum(val root: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Input")
   var input: File = _
 
@@ -31,8 +31,8 @@ class Md5sum(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "md5sum")
 
-  override def versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """md5sum \(GNU coreutils\) (.*)""".r
+  def versionCommand = executable + " --version"
 
   /** return commandline to execute */
   def cmdLine = required(executable) + required(input) + " > " + required(output)

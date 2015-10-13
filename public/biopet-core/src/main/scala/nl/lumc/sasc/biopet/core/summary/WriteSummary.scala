@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
@@ -73,15 +73,17 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val executables: Map[String, Any] = {
         (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunction]) yield {
           f match {
-            case f: BiopetJavaCommandLineFunction =>
+            case f: BiopetJavaCommandLineFunction with Version =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
                 "jar_path" -> f.jarFile)
-            case f: BiopetCommandLineFunction =>
+            case f: BiopetCommandLineFunction with Version =>
               f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "path" -> f.executable)
+            case f: Configurable with Version =>
+              f.configName -> Map("version" -> f.getVersion.getOrElse(None))
             case _ => throw new IllegalStateException("This should not be possible")
           }
 
@@ -113,7 +115,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
       Map("meta" -> Map(
         "last_commit_hash" -> LastCommitHash,
-        "pipeline_version" -> Version,
+        "pipeline_version" -> nl.lumc.sasc.biopet.Version,
         "pipeline_name" -> qscript.summaryName,
         "output_dir" -> qscript.outputDir,
         "run_name" -> config("run_name", default = qSettings.runName).asString,
