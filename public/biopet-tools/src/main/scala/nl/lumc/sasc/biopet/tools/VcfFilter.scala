@@ -129,8 +129,9 @@ object VcfFilter extends ToolCommand {
     opt[File]("idFile") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset ++ Source.fromFile(x).getLines())
     } text "File that contain list of IDs to get from vcf file"
-    opt[Int]("minGenomeQuality") unbounded() action { (x, c) =>
-      c.copy(minGenomeQuality = x)}
+    opt[Int]("minGenomeQuality") unbounded () action { (x, c) =>
+      c.copy(minGenomeQuality = x)
+    }
   }
 
   /** @param args the command line arguments */

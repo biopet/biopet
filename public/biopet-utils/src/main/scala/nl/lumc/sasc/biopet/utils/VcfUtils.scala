@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.utils
 import java.util
 
 import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.vcf.{ VCFHeader, VCFFilterHeaderLine }
 
 import scala.collection.JavaConversions._
 
@@ -79,5 +80,14 @@ object VcfUtils {
       var1.getStart == var2.getStart &&
       var1.getEnd == var2.getEnd &&
       var1.getAttributes == var2.getAttributes
+  }
+
+  /**
+   * Return true if header is a block-type GVCF file
+   * @param header header of Vcf file
+   * @return boolean
+   */
+  def isBlockGVcf(header: VCFHeader): Boolean = {
+    header.getMetaDataLine("GVCFBlock") != null
   }
 }
