@@ -54,7 +54,8 @@ object VcfFilter extends ToolCommand {
                   filterHetVarToHomVar: List[(String, String)] = Nil,
                   filterRefCalls: Boolean = false,
                   filterNoCalls: Boolean = false,
-                  iDset: Set[String] = Set()) extends AbstractArgs
+                  iDset: Set[String] = Set(),
+                  minGenomeQuality: Int = 0) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -128,6 +129,8 @@ object VcfFilter extends ToolCommand {
     opt[File]("idFile") unbounded () action { (x, c) =>
       c.copy(iDset = c.iDset ++ Source.fromFile(x).getLines())
     } text "File that contain list of IDs to get from vcf file"
+    opt[Int]("minGenomeQuality") unbounded() action { (x, c) =>
+      c.copy(minGenomeQuality = x)}
   }
 
   /** @param args the command line arguments */
@@ -161,6 +164,7 @@ object VcfFilter extends ToolCommand {
         hasMinTotalDepth(record, cmdArgs.minTotalDepth) &&
         hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
         minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
+        minGenomeQuality(record, cmdArgs.minGenomeQuality, cmdArgs.minSamplesPass) &&
         (cmdArgs.mustHaveVariant.isEmpty || mustHaveVariant(record, cmdArgs.mustHaveVariant)) &&
         calledIn(record, cmdArgs.calledIn) &&
         hasGenotype(record, cmdArgs.mustHaveGenotype) &&
@@ -261,6 +265,18 @@ object VcfFilter extends ToolCommand {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
       if (AD.nonEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
     }) >= minSamplesPass
+  }
+
+  /**
+   * Checks if genome quality field has minimum value
+   * @param record VCF record
+   * @param minGQ smallest GQ allowed
+   * @param minSamplesPass number of samples to consider
+   * @return
+   */
+  def minGenomeQuality(record: VariantContext, minGQ: Int, minSamplesPass: Int = 1): Boolean = {
+    record.getGenotypes.count(x => if (!x.hasGQ) false
+    else if (x.getGQ >= minGQ) true else false) >= minSamplesPass
   }
 
   /**
