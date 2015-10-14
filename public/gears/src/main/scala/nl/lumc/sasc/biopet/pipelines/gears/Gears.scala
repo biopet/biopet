@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
+import nl.lumc.sasc.biopet.extensions.picard.{SortSam, SamToFastq}
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.extensions.tools.{ KrakenReportToJson, FastqSync }
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -43,6 +43,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
 
   @Argument(required = false)
   var outputName: String = _
+
+  var GearsOutputFiles: Map[String, File] = Map.empty
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -69,14 +71,22 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       samFilterUnmapped.input = bamfile
       samFilterUnmapped.filter = Some("unmapped or mate_is_unmapped")
       samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      samFilterUnmapped.isIntermediate = true
+      samFilterUnmapped.isIntermediate = false
       add(samFilterUnmapped)
 
+      val samNameSort = new SortSam(qscript)
+      samNameSort.input = samFilterUnmapped.output
+      samNameSort.output = new File(outputDir, s"$outputName.unmapped.nsort.bam")
+      samNameSort.sortOrder = "queryname"
+      samNameSort.isIntermediate = false
+      add(samNameSort)
+
       // start bam to fastq (only on unaligned reads) also extract the matesam
-      val samToFastq = SamToFastq(qscript, samFilterUnmapped.output,
-        new File(outputDir, s"$outputName.unmapped.R1.fq.gz"),
-        new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
-      )
+      val samToFastq = new SamToFastq(qscript)
+      samToFastq.input= samNameSort.output
+      samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
+      samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
+      samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
       samToFastq.isIntermediate = true
       add(samToFastq)
 
@@ -92,6 +102,10 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats.json")
       add(fastqSync)
 
+      GearsOutputFiles ++ Map("fastqsync_stats" -> fastqSync.outputStats)
+      GearsOutputFiles ++ Map("fastqsync_R1" -> fastqSync.outputFastq1)
+      GearsOutputFiles ++ Map("fastqsync_R2" -> fastqSync.outputFastq2)
+
       List(fastqSync.outputFastq1, fastqSync.outputFastq2)
     }.getOrElse(List(fastqFileR1, fastqFileR2).flatten)
 
@@ -106,6 +120,10 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenAnalysis.unclassified_out = Option(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
+    GearsOutputFiles ++ Map("kraken_output_raw" -> krakenAnalysis.output)
+    GearsOutputFiles ++ Map("kraken_classified_out" -> krakenAnalysis.classified_out)
+    GearsOutputFiles ++ Map("kraken_unclassified_out" -> krakenAnalysis.unclassified_out)
+
     // create kraken summary file
 
     val krakenReport = new KrakenReport(qscript)
@@ -114,6 +132,9 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 
+    GearsOutputFiles ++ Map("kraken_report_input" -> krakenReport.input)
+    GearsOutputFiles ++ Map("kraken_report_output" -> krakenReport.output)
+
     val krakenReportJSON = new KrakenReportToJson(qscript)
     krakenReportJSON.inputReport = krakenAnalysis.output
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
@@ -121,18 +142,24 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     add(krakenReportJSON)
 
     addSummaryJobs()
+
+    GearsOutputFiles ++ Map("kraken_report_json_input" -> krakenReportJSON.inputReport)
+    GearsOutputFiles ++ Map("kraken_report_json_output" -> krakenReportJSON.output)
   }
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "gears.summary.json")
 
-  /** Settings of pipeline for summary */
-  def summarySettings = Map()
-
-  /** Files for the summary */
-  def summaryFiles: Map[String, File] = Map.empty ++
+  /** Pipeline settings shown in the summary file */
+  def summarySettings: Map[String, Any] = Map.empty ++
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
     (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map())
+
+  /** Statistics shown in the summary file */
+  def summaryFiles: Map[String, File] = Map.empty ++
+    (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
+    (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map()) ++
+    GearsOutputFiles
 }
 
 /** This object give a default main method to the pipelines */
