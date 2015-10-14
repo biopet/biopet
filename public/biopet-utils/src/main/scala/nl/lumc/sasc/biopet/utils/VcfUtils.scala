@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.utils
 
+import java.io.File
 import java.util
 
 import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.vcf.{ VCFHeader, VCFFilterHeaderLine }
+import htsjdk.variant.vcf.{VCFFileReader, VCFHeader, VCFFilterHeaderLine}
 
 import scala.collection.JavaConversions._
 
@@ -89,5 +90,17 @@ object VcfUtils {
    */
   def isBlockGVcf(header: VCFHeader): Boolean = {
     header.getMetaDataLine("GVCFBlock") != null
+  }
+
+  /**
+   * Get sample IDs from vcf File
+   * @param vcf File object pointing to vcf
+   * @return list of strings with sample IDs
+   */
+  def getSampleIds(vcf: File): List[String] = {
+    val reader = new VCFFileReader(vcf, false)
+    val samples = reader.getFileHeader.getSampleNamesInOrder.toList
+    reader.close()
+    samples
   }
 }

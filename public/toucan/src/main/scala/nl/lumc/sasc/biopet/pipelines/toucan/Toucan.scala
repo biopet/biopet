@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.extensions.{ Ln, Gzip, VariantEffectPredictor }
 import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{VcfUtils, ConfigUtils}
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -43,7 +43,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     inputFiles :+= new InputFile(inputVCF)
     sampleIds = root match {
       case m: MultiSampleQScript => m.samples.keys.toList
-      case null                  => Nil //TODO: get names from vcf header
+      case null                  => VcfUtils.getSampleIds(inputVCF)
       case s: SampleLibraryTag   => s.sampleId.toList
       case _                     => throw new IllegalArgumentException("You don't have any samples")
     }
