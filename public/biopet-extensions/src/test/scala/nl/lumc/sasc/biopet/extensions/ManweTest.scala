@@ -8,6 +8,8 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
+import scala.io.Source
+
 /**
  * Created by ahbbollen on 24-9-15.
  */
@@ -24,6 +26,7 @@ class ManweTest extends TestNGSuite with Matchers {
     out.deleteOnExit()
     bed.deleteOnExit()
 
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.bed = bed
     manwe.alreadyUploaded = false
@@ -48,6 +51,7 @@ class ManweTest extends TestNGSuite with Matchers {
     out.deleteOnExit()
     vcf.deleteOnExit()
 
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.vcf = vcf
     manwe.alreadyUploaded = false
@@ -70,6 +74,7 @@ class ManweTest extends TestNGSuite with Matchers {
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
 
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = Some("/uri/1")
     manwe.queries = List("/uri/1&&/uri/2")
@@ -87,6 +92,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
 
     manwe.output = out
     manwe.uri = "/uri/1"
@@ -101,7 +107,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.cmd should equal(s"manwe data-sources list -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
   }
@@ -114,7 +120,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = Some("/uri/1")
     manwe.cmd should equal(s"manwe data-sources show /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -128,7 +134,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = "/uri/1"
     manwe.cmd should equal(s"manwe samples activate /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -142,7 +148,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.name = Some("pietje")
     manwe.cmd should equal(s"manwe samples add pietje -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -162,7 +168,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = Some("/uri/1")
     manwe.cmd should equal(s"manwe samples annotate-variations /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -179,7 +185,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.name = Some("pietje")
     manwe.cmd should equal(s"manwe samples import pietje -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -227,7 +233,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
 
     val bed = File.createTempFile("manwe", "test")
@@ -252,7 +258,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
 
     val vcf = File.createTempFile("manwe", "test")
@@ -280,7 +286,7 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
 
     manwe.cmd should equal(s"manwe samples list -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
@@ -303,11 +309,34 @@ class ManweTest extends TestNGSuite with Matchers {
 
     val out = File.createTempFile("manwe", "test")
     out.deleteOnExit()
-
+    manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = Some("/uri/1")
 
     manwe.cmd should equal(s"manwe samples show /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+  }
+
+  @Test def testConfigCreation = {
+    val manwe = new ManweAnnotateBed(null) {
+      override def globalConfig = new Config(Map(
+        "varda_root" -> "http://127.0.0.1:5000",
+      "varda_token" -> "QWERTYUIOPASDFGHJKLZXCVBNM",
+      "varda_cache_size" -> 25,
+      "varda_buffer_size" -> 200,
+      "varda_task_poll_wait" -> 5,
+      "varda_verify_certificate" -> true))
+    }
+
+    val file: File = manwe.createManweConfig
+    val contents = Source.fromFile(file).getLines().mkString("\n")
+
+    contents should equal ("""API_ROOT = 'http://127.0.0.1:5000'
+        |TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'
+        |VERIFY_CERTIFICATE = True
+        |COLLECTION_CACHE_SIZE = 25
+        |DATA_BUFFER_SIZE = 200
+        |TASK_POLL_WAIT = 5""".stripMargin)
+
   }
 
 }

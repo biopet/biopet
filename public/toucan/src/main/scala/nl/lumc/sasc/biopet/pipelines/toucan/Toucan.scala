@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
+import java.io.{File, PrintWriter}
+
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
 import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -115,7 +117,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     })
 
     val minGQ = config("minimumGenomeQuality", default = 20)
-    val vardaConfig: Option[File] = config("vardaConfig") // TODO: create on the fly
     val annotationQueries: List[String] = config("annotationQueries")
     val isPublic: Boolean = config("vardaIsPublic")
 
@@ -146,7 +147,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
     val annotate = new ManweAnnotateVcf(this)
     annotate.vcf = vcf
-    annotate.manweConfig = vardaConfig
     annotate.queries = annotationQueries
     annotate.waitToComplete = true
     annotate.output = swapExt(vcf, ".vcf.gz", ".tmp.annot")
@@ -165,14 +165,12 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       importing.waitToComplete = true
       importing.output = swapExt(vcf.outputVcf, ".vcf.gz", ".tmp.import")
       importing.public = isPublic
-      importing.manweConfig = vardaConfig
       add(importing)
       importing
     }
 
     val activates = imports.map(x => {
       val active = new ManweActivateAfterAnnotImport(this, annotate, x)
-      active.manweConfig = vardaConfig
       active.output = swapExt(x.output, ".tmp.import", ".tmp.activated")
       add(active)
       active
