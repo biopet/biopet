@@ -60,10 +60,10 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val urlString = s"API_ROOT = '${url.toString}'"
     val tokenString = s"TOKEN = '${token.toString}'"
     val sslSettingString = sslSettings match {
-      case Some("true") => "VERIFY_CERTIFICATE = True"
+      case Some("true")  => "VERIFY_CERTIFICATE = True"
       case Some("false") => "VERIFY_CERTIFICATE = False"
-      case Some(x) => s"VERIFY_CERTIFICATE = '$x"
-      case _ => "VERIFY_CERTIFICATE = True"
+      case Some(x)       => s"VERIFY_CERTIFICATE = '$x"
+      case _             => "VERIFY_CERTIFICATE = True"
     }
 
     val collectionString = s"COLLECTION_CACHE_SIZE = ${collectionCacheSize.getOrElse(20)}"

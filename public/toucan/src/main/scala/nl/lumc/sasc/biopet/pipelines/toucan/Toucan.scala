@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
 import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.extensions.{ Ln, Gzip, VariantEffectPredictor }
 import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer }
-import nl.lumc.sasc.biopet.utils.{VcfUtils, ConfigUtils}
+import nl.lumc.sasc.biopet.utils.{ VcfUtils, ConfigUtils }
 import org.broadinstitute.gatk.queue.QScript
 
 /**

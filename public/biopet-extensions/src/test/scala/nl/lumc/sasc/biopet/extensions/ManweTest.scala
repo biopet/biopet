@@ -320,17 +320,17 @@ class ManweTest extends TestNGSuite with Matchers {
     val manwe = new ManweAnnotateBed(null) {
       override def globalConfig = new Config(Map(
         "varda_root" -> "http://127.0.0.1:5000",
-      "varda_token" -> "QWERTYUIOPASDFGHJKLZXCVBNM",
-      "varda_cache_size" -> 25,
-      "varda_buffer_size" -> 200,
-      "varda_task_poll_wait" -> 5,
-      "varda_verify_certificate" -> true))
+        "varda_token" -> "QWERTYUIOPASDFGHJKLZXCVBNM",
+        "varda_cache_size" -> 25,
+        "varda_buffer_size" -> 200,
+        "varda_task_poll_wait" -> 5,
+        "varda_verify_certificate" -> true))
     }
 
     val file: File = manwe.createManweConfig
     val contents = Source.fromFile(file).getLines().mkString("\n")
 
-    contents should equal ("""API_ROOT = 'http://127.0.0.1:5000'
+    contents should equal("""API_ROOT = 'http://127.0.0.1:5000'
         |TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'
         |VERIFY_CERTIFICATE = True
         |COLLECTION_CACHE_SIZE = 25

@@ -19,7 +19,7 @@ import java.io.File
 import java.util
 
 import htsjdk.variant.variantcontext.VariantContext
-import htsjdk.variant.vcf.{VCFFileReader, VCFHeader, VCFFilterHeaderLine}
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader, VCFFilterHeaderLine }
 
 import scala.collection.JavaConversions._
 
