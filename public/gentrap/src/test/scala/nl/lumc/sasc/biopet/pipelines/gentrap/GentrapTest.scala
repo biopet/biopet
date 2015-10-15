@@ -196,7 +196,6 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "refFlat" -> "test",
     "annotation_gtf" -> "test",
