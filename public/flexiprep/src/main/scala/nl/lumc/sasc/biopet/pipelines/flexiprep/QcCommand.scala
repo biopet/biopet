@@ -95,7 +95,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       sickle.input_R1 = clip match {
         case Some(c) => c.fastq_output
-        case _          => seqtk.output
+        case _       => seqtk.output
       }
       sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
       addPipeJob(sickle)
@@ -105,7 +105,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     val outputFile = (clip, trim) match {
       case (_, Some(t)) => t.output_R1
       case (Some(c), _) => c.fastq_output
-      case _               => seqtk.output
+      case _            => seqtk.output
     }
 
     if (compress) outputCommand = {
@@ -135,9 +135,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     val cmd = (clip, trim) match {
       case (Some(c), Some(t)) => new BiopetFifoPipe(root, seqtk :: c :: t :: outputCommand :: Nil)
-      case (Some(c), _)          => new BiopetFifoPipe(root, seqtk :: c :: outputCommand :: Nil)
-      case (_, Some(t))          => new BiopetFifoPipe(root, seqtk :: t :: outputCommand :: Nil)
-      case _                        => new BiopetFifoPipe(root, seqtk :: outputCommand :: Nil)
+      case (Some(c), _)       => new BiopetFifoPipe(root, seqtk :: c :: outputCommand :: Nil)
+      case (_, Some(t))       => new BiopetFifoPipe(root, seqtk :: t :: outputCommand :: Nil)
+      case _                  => new BiopetFifoPipe(root, seqtk :: outputCommand :: Nil)
     }
 
     //val cmds = (Some(seqtk) :: clip :: trim :: Some(new Gzip(root)) :: Nil).flatten
