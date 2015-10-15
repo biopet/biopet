@@ -73,6 +73,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       case _ => None
     }
     if (seqtk.Q.isDefined) seqtk.V = true
+    seqtk.getVersion
 
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
@@ -84,6 +85,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
         if (cutadept.default_clip_mode == "3") cutadept.opt_adapter ++= foundAdapters
         else if (cutadept.default_clip_mode == "5") cutadept.opt_front ++= foundAdapters
         else if (cutadept.default_clip_mode == "both") cutadept.opt_anywhere ++= foundAdapters
+        cutadept.getVersion
         Some(cutadept)
       } else None
     } else None
@@ -96,6 +98,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
         case _          => seqtk.output
       }
       sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
+      sickle.getVersion
       Some(sickle)
     } else None
 
