@@ -48,6 +48,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction wi
     disableBaq = true
     depth = Option(1000000)
     outputMappingQuality = true
+
   }
 
   private def fixMpileup = new PythonCommandLineFunction {
@@ -96,7 +97,6 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction wi
   def cmdLine: String = {
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
-    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile().commandLine + " | " +
-      varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
+    (mpileup | fixMpileup | removeEmptyPile() | varscan).commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }

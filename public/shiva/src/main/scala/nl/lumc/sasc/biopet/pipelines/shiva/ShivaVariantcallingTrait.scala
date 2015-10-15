@@ -48,6 +48,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
     }
   }
 
+  override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
+
   /** Executed before script */
   def init(): Unit = {
   }
@@ -165,20 +167,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       mp.reference = referenceFasta()
 
       val bt = new BcftoolsCall(qscript)
-      bt.O = "z"
+      bt.O = Some("z")
       bt.v = true
       bt.c = true
 
-      //TODO: add proper class with piping support, see also issue #114
-      add(new CommandLineFunction {
-        @Input
-        var input = inputBams
-
-        @Output
-        var output = outputFile
-
-        def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + outputFile + " && tabix -p vcf " + outputFile
-      })
+      add(mp | bt > outputFile)
     }
   }
 
@@ -195,27 +188,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
         val mp = new SamtoolsMpileup(qscript)
         mp.input :+= inputBam
         mp.u = true
-        //TODO: proper piping should be implemented
         mp.reference = referenceFasta()
 
         val bt = new BcftoolsCall(qscript)
-        bt.O = "z"
+        bt.O = Some("z")
         bt.v = true
         bt.c = true
+        bt.output = new File(outputDir, inputBam.getName + ".vcf.gz")
 
-        val sampleVcf = new File(outputDir, inputBam.getName + ".vcf.gz")
-
-        //TODO: add proper class with piping support, see also issue #114
-        add(new CommandLineFunction {
-          @Input
-          var input = inputBam
-
-          @Output
-          var output = sampleVcf
-
-          def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + output + " && tabix -p vcf " + output
-        })
-        sampleVcf
+        add(mp | bt)
+        bt.output
       }
 
       val cv = new CombineVariants(qscript)
@@ -238,10 +220,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
     def addJobs() {
       val rawFiles = inputBams.map(bamFile => {
+        val mp = new SamtoolsMpileup(qscript) {
+          override def configName = "samtoolsmpileup"
+          override def defaults = Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
+        }
+        mp.input :+= bamFile
+
         val m2v = new MpileupToVcf(qscript)
         m2v.inputBam = bamFile
         m2v.output = new File(outputDir, bamFile.getName.stripSuffix(".bam") + ".raw.vcf")
-        add(m2v)
+        add(mp | m2v)
 
         val vcfFilter = new VcfFilter(qscript) {
           override def configName = "vcffilter"
