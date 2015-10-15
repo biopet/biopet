@@ -95,15 +95,15 @@ object Picard extends Logging {
 
         logger.debug("dependencies: " + dependencies)
 
-        val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
-          case dep =>
-            "samtools htsjdk " + dep("version")
-        }
+        val htsjdk = dependencies.find(dep =>
+          (dep("groupId") == "com.github.samtools" || dep("groupId") == "samtools") &&
+            dep("artifactId") == "htsjdk")
+          .collect { case dep => "samtools htsjdk " + dep("version") }
 
-        dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
-          case dep =>
-            "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
-        }
+        dependencies.find(dep =>
+          (dep("groupId") == "com.github.broadinstitute" || dep("groupId") == "picard") &&
+            dep("artifactId") == "picard")
+          .collect { case dep => "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk") }
       case otherwise => None
     }
   }
