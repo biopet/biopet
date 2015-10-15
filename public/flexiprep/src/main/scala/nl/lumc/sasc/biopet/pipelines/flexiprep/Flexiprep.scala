@@ -214,6 +214,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
           qcCmdR2.beforeCmd()
           fqSync.beforeCmd()
           commands = qcCmdR1.jobs ::: qcCmdR2.jobs ::: fqSync :: Nil
+          commands.foreach(addPipeJob)
           super.beforeCmd()
         }
       }
