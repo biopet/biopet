@@ -117,8 +117,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     })
 
     val minGQ = config("minimumGenomeQuality", default = 20)
-    val annotationQueries: List[String] = config("annotationQueries")
-    val isPublic: Boolean = config("vardaIsPublic")
+    val annotationQueries: List[String] = config("annotationQueries", default = Nil)
+    val isPublic: Boolean = config("vardaIsPublic", default = true)
 
     val filteredVcfs = splits.map(x => {
       val filter = new VcfFilter(this)
@@ -154,12 +154,13 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
     val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
     annotatedVcf.output = swapExt(annotate.output, ".tmp.annot", "tmp.annot.vcf.gz")
+    add(annotatedVcf)
 
     val imports = for (
-      (sample: String, bed, vcf) <- (sampleIds, bedTracks, filteredVcfs).zipped
+      (sample: String, bed, vcf) <- (sampleIds, zippedBedTracks, filteredVcfs).zipped
     ) yield {
       val importing = new ManweSamplesImport(this)
-      importing.beds = List(bed.outputBed)
+      importing.beds = List(bed.output)
       importing.vcfs = List(vcf.outputVcf)
       importing.name = Some(sample)
       importing.waitToComplete = true

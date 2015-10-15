@@ -22,9 +22,13 @@ class ManweDownloadAfterAnnotate(root: Configurable,
   override def beforeCmd: Unit = {
     super.beforeCmd
 
-    val reader = Source.fromFile(annotate.output)
-    this.uri = reader.getLines().toList.head
-    reader.close()
+    if (annotate.output.exists()) {
+      val reader = Source.fromFile(annotate.output)
+      this.uri = reader.getLines().toList.head
+      reader.close()
+    } else {
+      this.uri = ""
+    }
   }
 
 }

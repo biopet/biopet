@@ -16,7 +16,6 @@ abstract class Manwe extends BiopetCommandLineFunction {
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  @Argument(doc = "Path to manwe config file containing your database settings")
   var manweConfig: File = createManweConfig
 
   @Output(doc = "the output file")

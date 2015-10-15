@@ -18,13 +18,13 @@ class GvcfToBed(val root: Configurable) extends ToolCommandFuntion {
   @Output(doc = "output bed")
   var outputBed: File = _
 
-  @Argument(doc = "sample")
+  @Argument(doc = "sample", required = false)
   var sample: Option[String] = None
 
-  @Argument(doc = "minquality")
+  @Argument(doc = "minquality", required = false)
   var minQuality: Int = 0
 
-  @Argument(doc = "inverse")
+  @Argument(doc = "inverse", required = false)
   var inverse: Boolean = false
 
   override def defaultCoreMemory = 4.0

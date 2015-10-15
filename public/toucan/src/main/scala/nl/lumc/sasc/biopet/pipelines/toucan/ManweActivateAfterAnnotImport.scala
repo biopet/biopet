@@ -24,9 +24,13 @@ class ManweActivateAfterAnnotImport(root: Configurable,
   override def beforeCmd: Unit = {
     super.beforeCmd
 
-    val reader = Source.fromFile(imported.output)
-    this.uri = reader.getLines().toList.head
-    reader.close()
+    if (imported.output.exists()) {
+      val reader = Source.fromFile(imported.output)
+      this.uri = reader.getLines().toList.head
+      reader.close()
+    } else {
+      this.uri = ""
+    }
   }
 
 }
