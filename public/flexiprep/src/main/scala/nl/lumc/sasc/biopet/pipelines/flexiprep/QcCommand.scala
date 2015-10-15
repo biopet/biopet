@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction, BiopetPipe }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -73,20 +73,20 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       case _ => None
     }
     if (seqtk.Q.isDefined) seqtk.V = true
-    seqtk.getVersion
+    addPipeJob(seqtk)
 
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadept = new Cutadapt(root)
-        cutadept.fastq_input = seqtk.output
-        cutadept.fastq_output = new File(output.getParentFile, input.getName + ".cutadept.fq")
-        cutadept.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
-        if (cutadept.default_clip_mode == "3") cutadept.opt_adapter ++= foundAdapters
-        else if (cutadept.default_clip_mode == "5") cutadept.opt_front ++= foundAdapters
-        else if (cutadept.default_clip_mode == "both") cutadept.opt_anywhere ++= foundAdapters
-        cutadept.getVersion
-        Some(cutadept)
+        val cutadapt = new Cutadapt(root)
+        cutadapt.fastq_input = seqtk.output
+        cutadapt.fastq_output = new File(output.getParentFile, input.getName + ".cutadapt.fq")
+        cutadapt.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
+        if (cutadapt.default_clip_mode == "3") cutadapt.opt_adapter ++= foundAdapters
+        else if (cutadapt.default_clip_mode == "5") cutadapt.opt_front ++= foundAdapters
+        else if (cutadapt.default_clip_mode == "both") cutadapt.opt_anywhere ++= foundAdapters
+        addPipeJob(cutadapt)
+        Some(cutadapt)
       } else None
     } else None
 
@@ -94,17 +94,17 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       val sickle = new Sickle(root)
       sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       sickle.input_R1 = clip match {
-        case Some(clip) => clip.fastq_output
+        case Some(c) => c.fastq_output
         case _          => seqtk.output
       }
       sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
-      sickle.getVersion
+      addPipeJob(sickle)
       Some(sickle)
     } else None
 
     val outputFile = (clip, trim) match {
-      case (_, Some(trim)) => trim.output_R1
-      case (Some(clip), _) => clip.fastq_output
+      case (_, Some(t)) => t.output_R1
+      case (Some(c), _) => c.fastq_output
       case _               => seqtk.output
     }
 
@@ -134,9 +134,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   def cmdLine = {
 
     val cmd = (clip, trim) match {
-      case (Some(clip), Some(trim)) => new BiopetFifoPipe(root, seqtk :: clip :: trim :: outputCommand :: Nil)
-      case (Some(clip), _)          => new BiopetFifoPipe(root, seqtk :: clip :: outputCommand :: Nil)
-      case (_, Some(trim))          => new BiopetFifoPipe(root, seqtk :: trim :: outputCommand :: Nil)
+      case (Some(c), Some(t)) => new BiopetFifoPipe(root, seqtk :: c :: t :: outputCommand :: Nil)
+      case (Some(c), _)          => new BiopetFifoPipe(root, seqtk :: c :: outputCommand :: Nil)
+      case (_, Some(t))          => new BiopetFifoPipe(root, seqtk :: t :: outputCommand :: Nil)
       case _                        => new BiopetFifoPipe(root, seqtk :: outputCommand :: Nil)
     }
 
