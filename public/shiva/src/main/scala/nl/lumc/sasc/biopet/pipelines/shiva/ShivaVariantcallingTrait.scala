@@ -98,7 +98,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools)
+  protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools, new BcftoolsSingleSample)
 
   /** General trait for a variantcaller mode */
   trait Variantcaller {
@@ -179,6 +179,50 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
         def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + outputFile + " && tabix -p vcf " + outputFile
       })
+    }
+  }
+
+  /** default mode of bcftools */
+  class BcftoolsSingleSample extends Variantcaller {
+    val name = "bcftools_singlesample"
+    protected val defaultPrio = 8
+
+    /** Final output file of this mode */
+    def outputFile = new File(outputDir, namePrefix + ".bcftools_singlesample.vcf.gz")
+
+    def addJobs() {
+      val sampleVcfs = for (inputBam <- inputBams) yield {
+        val mp = new SamtoolsMpileup(qscript)
+        mp.input :+= inputBam
+        mp.u = true
+        //TODO: proper piping should be implemented
+        mp.reference = referenceFasta()
+
+        val bt = new BcftoolsCall(qscript)
+        bt.O = "z"
+        bt.v = true
+        bt.c = true
+
+        val sampleVcf = new File(outputDir, inputBam.getName + ".vcf.gz")
+
+        //TODO: add proper class with piping support, see also issue #114
+        add(new CommandLineFunction {
+          @Input
+          var input = inputBam
+
+          @Output
+          var output = sampleVcf
+
+          def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + output + " && tabix -p vcf " + output
+        })
+        sampleVcf
+      }
+
+      val cv = new CombineVariants(qscript)
+      cv.inputFiles = sampleVcfs
+      cv.outputFile = outputFile
+      cv.setKey = "null"
+      add(cv)
     }
   }
 
