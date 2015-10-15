@@ -36,7 +36,7 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
  *
  * Created by pjvan_thof on 2/12/15.
  */
-class MappingTest extends TestNGSuite with Matchers {
+abstract class AbstractTestMapping extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Mapping = {
     new Mapping {
       override def configName = "mapping"
@@ -45,6 +45,8 @@ class MappingTest extends TestNGSuite with Matchers {
       qSettings.runName = "test"
     }
   }
+
+  val aligner: String
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
@@ -56,7 +58,6 @@ class MappingTest extends TestNGSuite with Matchers {
     val zipped = Array(true, false)
 
     for (
-      aligner <- aligners;
       pair <- paired;
       chunk <- chunks;
       skipMarkDuplicate <- skipMarkDuplicates;
@@ -99,7 +100,42 @@ class MappingTest extends TestNGSuite with Matchers {
   }
 }
 
+class MappingBwaMemTest extends AbstractTestMapping {
+  val aligner = "bwa-mem"
+}
+
+class MappingBwaAlnTest extends AbstractTestMapping {
+  val aligner = "bwa-aln"
+}
+
+class MappingStarTest extends AbstractTestMapping {
+  val aligner = "star"
+}
+
+class MappingStar2PassTest extends AbstractTestMapping {
+  val aligner = "star-2pass"
+}
+
+class MappingBowtieTest extends AbstractTestMapping {
+  val aligner = "bowtie"
+}
+
+class MappingStampyTest extends AbstractTestMapping {
+  val aligner = "stampy"
+}
+
+class MappingGsnapTest extends AbstractTestMapping {
+  val aligner = "gsnap"
+}
+
+class MappingTophatTest extends AbstractTestMapping {
+  val aligner = "tophat"
+}
+
 object MappingTest {
+
+  val aligners = Array("bwa-mem", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
+
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
 
