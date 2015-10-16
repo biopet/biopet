@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
+import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsMerge, BcftoolsCall }
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
@@ -201,11 +201,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
         bt.output
       }
 
-      val cv = new CombineVariants(qscript)
-      cv.inputFiles = sampleVcfs
-      cv.outputFile = outputFile
-      cv.setKey = "null"
-      add(cv)
+      val bcfmerge = new BcftoolsMerge(qscript)
+      bcfmerge.input = sampleVcfs
+      bcfmerge.output = outputFile
+      bcfmerge.O = Some("z")
+      add(bcfmerge)
+      add(Tabix(qscript, outputFile))
     }
   }
 
