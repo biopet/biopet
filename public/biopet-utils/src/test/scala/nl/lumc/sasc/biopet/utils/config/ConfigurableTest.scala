@@ -25,10 +25,36 @@ import org.testng.annotations.Test
  * Created by pjvan_thof on 1/8/15.
  */
 class ConfigurableTest extends TestNGSuite with Matchers {
+
+  abstract class Cfg extends Configurable {
+    def get(key: String,
+            default: String = null,
+            submodule: String = null,
+            freeVar: Boolean = true,
+            sample: String = null,
+            library: String = null) = {
+      config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
+    }
+  }
+
+  class ClassA(val root: Configurable) extends Cfg
+
+  class ClassB(val root: Configurable) extends Cfg {
+    lazy val classA = new ClassA(this)
+    // Why this needs to be lazy?
+  }
+
+  class ClassC(val root: Configurable) extends Cfg {
+    def this() = this(null)
+    lazy val classB = new ClassB(this)
+    // Why this needs to be lazy?
+  }
+
   @Test def testConfigurable(): Unit = {
     val classC = new ClassC {
       override def configName = "classc"
       override val globalConfig = new Config(ConfigurableTest.map)
+      override val fixedValues = Map("fixed" -> "fixed")
     }
 
     classC.configPath shouldBe Nil
@@ -51,46 +77,33 @@ class ConfigurableTest extends TestNGSuite with Matchers {
     classC.get("bla", sample = "sample1", library = "library1").asString shouldBe "bla"
     classC.get("test", sample = "sample1", library = "library1").asString shouldBe "test"
     classC.get("test", sample = "sample1").asString shouldBe "test"
+
+    // Fixed values
+    classC.get("fixed").asString shouldBe "fixed"
+    classC.classB.get("fixed").asString shouldBe "fixed"
+    classC.classB.classA.get("fixed").asString shouldBe "fixed"
   }
-}
-
-abstract class Cfg extends Configurable {
-  def get(key: String,
-          default: String = null,
-          submodule: String = null,
-          freeVar: Boolean = true,
-          sample: String = null,
-          library: String = null) = {
-    config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
-  }
-}
-
-class ClassA(val root: Configurable) extends Cfg
-
-class ClassB(val root: Configurable) extends Cfg {
-  lazy val classA = new ClassA(this)
-  // Why this needs to be lazy?
-}
-
-class ClassC(val root: Configurable) extends Cfg {
-  def this() = this(null)
-  lazy val classB = new ClassB(this)
-  // Why this needs to be lazy?
 }
 
 object ConfigurableTest {
   val map = Map(
+    "fixed" -> "nonfixed",
     "classa" -> Map(
-      "k1" -> "a1"
+      "k1" -> "a1",
+      "fixed" -> "nonfixed"
     ), "classb" -> Map(
-      "k1" -> "b1"
+      "k1" -> "b1",
+      "fixed" -> "nonfixed"
     ), "classc" -> Map(
-      "k1" -> "c1"
+      "k1" -> "c1",
+      "fixed" -> "nonfixed"
     ), "samples" -> Map(
       "sample1" -> Map(
+        "fixed" -> "nonfixed",
         "test" -> "test",
         "libraries" -> Map(
           "library1" -> Map(
+            "fixed" -> "nonfixed",
             "bla" -> "bla"
           )
         )

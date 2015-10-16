@@ -26,17 +26,10 @@ import scala.sys.process.{ Process, ProcessLogger }
 
 class GsnapTest extends TestNGSuite with Matchers {
 
-  private def setConfig(key: String, value: String): Map[String, Any] = {
-    val oldMap: Map[String, Any] = Config.global.map
-    Config.global.map += (key -> value)
-    oldMap
-  }
-
-  private def restoreConfig(oldMap: Map[String, Any]): Unit = Config.global.map = oldMap
-
   @BeforeClass def checkExecutable() = {
-    val oldMap = setConfig("db", "mock")
-    val wrapper = new Gsnap(null)
+    val wrapper = new Gsnap(null) {
+      override def globalConfig = new Config(Map("db" -> "mock"))
+    }
     val proc = Process(wrapper.versionCommand)
     val exitCode =
       try {
@@ -48,13 +41,12 @@ class GsnapTest extends TestNGSuite with Matchers {
       }
     if (exitCode != 0)
       throw new SkipException("Skipping GSNAP test because the executable can not be found")
-    restoreConfig(oldMap)
   }
 
   @Test(description = "GSNAP version number capture from executable")
   def testVersion() = {
-    val oldMap = setConfig("db", "mock")
-    new Gsnap(null).getVersion should not be "N/A"
-    restoreConfig(oldMap)
+    new Gsnap(null) {
+      override def globalConfig = new Config(Map("db" -> "mock"))
+    }.getVersion should not be "N/A"
   }
 }

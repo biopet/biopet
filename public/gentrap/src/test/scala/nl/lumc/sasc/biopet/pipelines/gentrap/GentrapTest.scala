@@ -119,8 +119,6 @@ class GentrapTest extends TestNGSuite with Matchers {
     val functions = gentrap.functions.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
 
-    functions(classOf[Gsnap]).size should be >= 1
-
     if (expMeasures.contains("fragments_per_gene")) {
       gentrap.functions
         .collect { case x: HtseqCount => x.output.toString.endsWith(".fragments_per_gene") }.size shouldBe numSamples
@@ -199,7 +197,6 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "refFlat" -> "test",
     "annotation_gtf" -> "test",

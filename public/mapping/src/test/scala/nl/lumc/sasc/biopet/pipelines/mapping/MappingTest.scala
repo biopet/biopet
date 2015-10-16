@@ -92,28 +92,6 @@ class MappingTest extends TestNGSuite with Matchers {
 
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
-
-    //aligners
-    mapping.functions.count(_.isInstanceOf[BwaAln]) shouldBe ((if (aligner == "bwa-aln") if (paired) 2 else 1 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSampe]) shouldBe ((if (aligner == "bwa-aln") if (paired) 1 else 0 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[BwaSamse]) shouldBe ((if (aligner == "bwa-aln") if (paired) 0 else 1 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[Star]) shouldBe ((if (aligner == "star") 1 else if (aligner == "star-2pass") 3 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[Bowtie]) shouldBe ((if (aligner == "bowtie") 1 else 0) * chunks)
-    mapping.functions.count(_.isInstanceOf[Stampy]) shouldBe ((if (aligner == "stampy") 1 else 0) * chunks)
-
-    // Sort sam or replace readgroup
-    val sort = aligner match {
-      case "bwa-mem" | "bwa-aln" | "stampy" => "sortsam"
-      case "star" | "star-2pass" | "bowtie" | "gsnap" | "tophat" => "replacereadgroups"
-      case _ => throw new IllegalArgumentException("aligner: " + aligner + " does not exist")
-    }
-
-    if (aligner != "tophat") { // FIXME
-      //mapping.functions.count(_.isInstanceOf[SortSam]) shouldBe ((if (sort == "sortsam") 1 else 0) * chunks)
-      mapping.functions.count(_.isInstanceOf[AddOrReplaceReadGroups]) shouldBe ((if (sort == "replacereadgroups") 1 else 0) * chunks)
-      mapping.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (if (skipMarkDuplicate && chunks > 1) 1 else 0)
-      mapping.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (if (skipMarkDuplicate) 0 else 1)
-    }
   }
 
   // remove temporary run directory all tests in the class have been run

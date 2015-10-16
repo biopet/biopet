@@ -38,7 +38,7 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    (if (inputAsStdin) "" else required(input)) +
+    (if (inputAsStdin) "" else repeat(input)) +
     (if (outputAsStsout) "" else (if (appending) " >> " else " > ") + required(output))
 }
 

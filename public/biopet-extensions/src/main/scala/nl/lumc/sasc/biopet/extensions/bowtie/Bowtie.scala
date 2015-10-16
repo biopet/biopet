@@ -46,7 +46,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
 
-  var sam: Boolean = config("sam", default = true)
+  var sam: Boolean = config("sam", default = false)
   var sam_RG: Option[String] = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
   var seedmms: Option[Int] = config("seedmms")
