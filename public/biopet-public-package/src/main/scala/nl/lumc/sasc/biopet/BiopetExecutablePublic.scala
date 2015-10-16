@@ -29,8 +29,7 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.kopisu.ConiferPipeline,
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
     nl.lumc.sasc.biopet.pipelines.toucan.Toucan,
-    nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling,
-    nl.lumc.sasc.biopet.pipelines.gears.Gears
+    nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling
   )
 
   def pipelines: List[MainCommand] = List(

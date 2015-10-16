@@ -14,8 +14,8 @@ class ApplyRecalibration(val root: Configurable) extends org.broadinstitute.gatk
 
   override val defaultThreads = 3
 
-  override def beforeGraph() {
-    super.beforeGraph()
+  override def freezeFieldValues() {
+    super.freezeFieldValues()
 
     nt = Option(getThreads)
     memoryLimit = Option(nt.getOrElse(1) * 2)

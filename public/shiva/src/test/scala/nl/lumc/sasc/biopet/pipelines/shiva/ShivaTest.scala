@@ -62,7 +62,6 @@ class ShivaTest extends TestNGSuite with Matchers {
       ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
         "single_sample_variantcalling" -> single,
         "library_variantcalling" -> library), m)
-
     }
 
     if (!sample1 && !sample2 && !sample3) { // When no samples
@@ -76,8 +75,6 @@ class ShivaTest extends TestNGSuite with Matchers {
       val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 2 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
-      pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
       pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
 
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0) +
@@ -88,6 +85,12 @@ class ShivaTest extends TestNGSuite with Matchers {
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -106,7 +109,6 @@ object ShivaTest {
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
@@ -131,8 +133,8 @@ object ShivaTest {
   val sample1 = Map(
     "samples" -> Map("sample1" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "1_1_R1.fq",
-        "R2" -> "1_1_R2.fq"
+        "R1" -> inputTouch("1_1_R1.fq"),
+        "R2" -> inputTouch("1_1_R2.fq")
       )
     )
     )))
@@ -140,8 +142,8 @@ object ShivaTest {
   val sample2 = Map(
     "samples" -> Map("sample2" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "2_1_R1.fq",
-        "R2" -> "2_1_R2.fq"
+        "R1" -> inputTouch("2_1_R1.fq"),
+        "R2" -> inputTouch("2_1_R2.fq")
       )
     )
     )))
@@ -149,12 +151,12 @@ object ShivaTest {
   val sample3 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "3_1_R1.fq",
-        "R2" -> "3_1_R2.fq"
+        "R1" -> inputTouch("3_1_R1.fq"),
+        "R2" -> inputTouch("3_1_R2.fq")
       ),
       "lib2" -> Map(
-        "R1" -> "3_2_R1.fq",
-        "R2" -> "3_2_R2.fq"
+        "R1" -> inputTouch("3_2_R1.fq"),
+        "R2" -> inputTouch("3_2_R2.fq")
       )
     )
     )))

@@ -26,7 +26,7 @@ trait MultiSampleQScript extends SummaryQScript {
   qscript =>
 
   @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
-  private val onlySamples: List[String] = Nil
+  private[core] val onlySamples: List[String] = Nil
 
   require(globalConfig.map.contains("samples"), "No Samples found in config")
 
@@ -131,7 +131,7 @@ trait MultiSampleQScript extends SummaryQScript {
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
-    if (onlySamples.isEmpty) {
+    if (onlySamples.isEmpty || samples.forall(x => onlySamples.contains(x._1))) {
       samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
       addMultiSampleJobs()
     } else onlySamples.foreach(sampleId => samples.get(sampleId) match {

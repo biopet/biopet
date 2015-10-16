@@ -35,11 +35,12 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   var inputVCF: File = _
 
   def init(): Unit = {
+    inputFiles :+= new InputFile(inputVCF)
   }
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "varianteffectpredictor" -> Map("everything" -> true)
-  ), super.defaults)
+  )
 
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 

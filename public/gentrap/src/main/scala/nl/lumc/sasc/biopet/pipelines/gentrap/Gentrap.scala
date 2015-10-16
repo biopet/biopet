@@ -100,24 +100,23 @@ class Gentrap(val root: Configurable) extends QScript
     })
 
   /** Default pipeline config */
-  override def defaults = ConfigUtils.mergeMaps(
-    Map(
-      "gsnap" -> Map(
-        "novelsplicing" -> 1,
-        "batch" -> 4,
-        "format" -> "sam"
-      ),
-      "cutadapt" -> Map("minimum_length" -> 20),
-      // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
-      "picard" -> Map(
-        "programrecordid" -> "null"
-      ),
-      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map(
-        "skip_markduplicates" -> true,
-        "skip_metrics" -> true
-      )
-    ), super.defaults)
+  override def defaults = Map(
+    "gsnap" -> Map(
+      "novelsplicing" -> 1,
+      "batch" -> 4,
+      "format" -> "sam"
+    ),
+    "cutadapt" -> Map("minimum_length" -> 20),
+    // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
+    "picard" -> Map(
+      "programrecordid" -> "null"
+    ),
+    // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "skip_metrics" -> true
+    )
+  )
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
@@ -844,6 +843,8 @@ class Gentrap(val root: Configurable) extends QScript
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // Input file checking
+        inputFiles :::= mappingJob.inputFiles
         // add bigwig track
         addAll(bam2wigModule.functions)
         qscript.addSummaryQScript(mappingJob)

@@ -16,10 +16,10 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Pbzip2, Zcat, Gzip, Sickle }
-import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -45,11 +45,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
-    if (!skipTrim || !skipClip)
-      Map("input_R1" -> input_R1, "output_R1" -> outputFiles("output_R1_gzip")) ++
-        (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> outputFiles("output_R2_gzip")) else Map())
-    else Map("input_R1" -> input_R1) ++
-      (if (paired) Map("input_R2" -> input_R2.get) else Map())
+    Map("input_R1" -> input_R1, "output_R1" -> fastqR1Qc) ++
+      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> fastqR2Qc.get) else Map())
   }
 
   /** returns settings to store in summary */
@@ -85,6 +82,9 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     paired = input_R2.isDefined
 
+    inputFiles :+= new InputFile(input_R1)
+    input_R2.foreach(inputFiles :+= new InputFile(_))
+
     if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
     else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
     else R1_name = input_R1.getName
@@ -107,8 +107,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def biopetScript() {
     runInitialJobs()
 
-    val out = if (paired) runTrimClip(outputFiles("fastq_input_R1"), Some(outputFiles("fastq_input_R2")), outputDir)
-    else runTrimClip(outputFiles("fastq_input_R1"), outputDir)
+    if (paired) runTrimClip(input_R1, input_R2, outputDir)
+    else runTrimClip(input_R1, outputDir)
 
     val R1_files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
     val R2_files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
@@ -117,8 +117,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Add init non chunkable jobs */
   def runInitialJobs() {
-    outputFiles += ("fastq_input_R1" -> extractIfNeeded(input_R1, outputDir))
-    if (paired) outputFiles += ("fastq_input_R2" -> extractIfNeeded(input_R2.get, outputDir))
+    outputFiles += ("fastq_input_R1" -> input_R1)
+    if (paired) outputFiles += ("fastq_input_R2" -> input_R2.get)
 
     fastqc_R1 = Fastqc(this, input_R1, new File(outputDir, R1_name + ".fastqc/"))
     add(fastqc_R1)
@@ -131,183 +131,152 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       addSummarizable(fastqc_R2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqc_R2.output)
     }
-  }
 
-  //TODO: Refactor need to combine all this functions
-
-  /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File], List[File]) =
-    runTrimClip(R1_in, None, outDir, chunk)
-
-  /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, outDir: File): (File, Option[File], List[File]) =
-    runTrimClip(R1_in, None, outDir, "")
-
-  /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File): (File, Option[File], List[File]) =
-    runTrimClip(R1_in, R2_in, outDir, "")
-
-  /** Adds all chunkable jobs of flexiprep */
-  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File, chunkarg: String): (File, Option[File], List[File]) = {
-    val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
-    var results: Map[String, File] = Map()
-
-    var R1 = R1_in
-    var R2 = R2_in
-    var deps_R1 = R1 :: Nil
-    var deps_R2 = if (paired) R2.get :: Nil else Nil
-    def deps: List[File] = deps_R1 ::: deps_R2
-
-    val seqtkSeq_R1 = SeqtkSeq(this, R1, swapExt(outDir, R1, R1_ext, ".sanger" + R1_ext), fastqc_R1)
-    seqtkSeq_R1.isIntermediate = true
-    add(seqtkSeq_R1)
-    addSummarizable(seqtkSeq_R1, "seqtkSeq_R1")
-    R1 = seqtkSeq_R1.output
-    deps_R1 ::= R1
-
-    if (paired) {
-      val seqtkSeq_R2 = SeqtkSeq(this, R2.get, swapExt(outDir, R2.get, R2_ext, ".sanger" + R2_ext), fastqc_R2)
-      seqtkSeq_R2.isIntermediate = true
-      add(seqtkSeq_R2)
-      addSummarizable(seqtkSeq_R2, "seqtkSeq_R2")
-      R2 = Some(seqtkSeq_R2.output)
-      deps_R2 ::= R2.get
-    }
-
-    val seqstat_R1 = SeqStat(this, R1, outDir)
+    val seqstat_R1 = SeqStat(this, input_R1, outputDir)
     seqstat_R1.isIntermediate = true
-    seqstat_R1.deps = deps_R1
     add(seqstat_R1)
     addSummarizable(seqstat_R1, "seqstat_R1")
 
     if (paired) {
-      val seqstat_R2 = SeqStat(this, R2.get, outDir)
+      val seqstat_R2 = SeqStat(this, input_R2.get, outputDir)
       seqstat_R2.isIntermediate = true
-      seqstat_R2.deps = deps_R2
       add(seqstat_R2)
       addSummarizable(seqstat_R2, "seqstat_R2")
     }
+  }
 
-    if (!skipClip) { // Adapter clipping
+  def fastqR1Qc = if (paired)
+    new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.sync.fq.gz")
+  else new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R1.qc.fq.gz")
+  def fastqR2Qc = if (paired)
+    Some(new File(outputDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.R2.qc.sync.fq.gz"))
+  else None
 
-      val cutadapt_R1 = Cutadapt(this, R1, swapExt(outDir, R1, R1_ext, ".clip" + R1_ext))
-      cutadapt_R1.fastqc = fastqc_R1
-      cutadapt_R1.isIntermediate = true
-      cutadapt_R1.deps = deps_R1
-      add(cutadapt_R1)
-      addSummarizable(cutadapt_R1, "clipping_R1")
-      R1 = cutadapt_R1.fastq_output
-      deps_R1 ::= R1
-      outputFiles += ("cutadapt_R1_stats" -> cutadapt_R1.stats_output)
+  /** Adds all chunkable jobs of flexiprep */
+  def runTrimClip(R1_in: File, outDir: File, chunk: String): (File, Option[File]) =
+    runTrimClip(R1_in, None, outDir, chunk)
 
-      if (paired) {
-        val cutadapt_R2 = Cutadapt(this, R2.get, swapExt(outDir, R2.get, R2_ext, ".clip" + R2_ext))
-        outputFiles += ("cutadapt_R2_stats" -> cutadapt_R2.stats_output)
-        cutadapt_R2.fastqc = fastqc_R2
-        cutadapt_R2.isIntermediate = true
-        cutadapt_R2.deps = deps_R2
-        add(cutadapt_R2)
-        addSummarizable(cutadapt_R2, "clipping_R2")
-        R2 = Some(cutadapt_R2.fastq_output)
-        deps_R2 ::= R2.get
+  /** Adds all chunkable jobs of flexiprep */
+  def runTrimClip(R1_in: File, outDir: File): (File, Option[File]) =
+    runTrimClip(R1_in, None, outDir, "")
 
-        val fqSync = new FastqSync(this)
-        fqSync.refFastq = cutadapt_R1.fastq_input
-        fqSync.inputFastq1 = cutadapt_R1.fastq_output
-        fqSync.inputFastq2 = cutadapt_R2.fastq_output
-        fqSync.outputFastq1 = swapExt(outDir, R1, R1_ext, ".sync" + R1_ext)
-        fqSync.outputFastq2 = swapExt(outDir, R2.get, R2_ext, ".sync" + R2_ext)
-        fqSync.outputStats = swapExt(outDir, R1, R1_ext, ".sync.stats")
-        fqSync.deps :::= deps
-        add(fqSync)
-        addSummarizable(fqSync, "fastq_sync")
-        outputFiles += ("syncStats" -> fqSync.outputStats)
-        R1 = fqSync.outputFastq1
-        R2 = Some(fqSync.outputFastq2)
-        deps_R1 ::= R1
-        deps_R2 ::= R2.get
+  /** Adds all chunkable jobs of flexiprep */
+  def runTrimClip(R1_in: File, R2_in: Option[File], outDir: File): (File, Option[File]) =
+    runTrimClip(R1_in, R2_in, outDir, "")
+
+  /** Adds all chunkable jobs of flexiprep */
+  def runTrimClip(R1_in: File,
+                  R2_in: Option[File],
+                  outDir: File,
+                  chunkarg: String): (File, Option[File]) = {
+    val chunk = if (chunkarg.isEmpty || chunkarg.endsWith("_")) chunkarg else chunkarg + "_"
+
+    var R1 = R1_in
+    var R2 = R2_in
+
+    val qcCmdR1 = new QcCommand(this, fastqc_R1)
+    qcCmdR1.input = R1_in
+    qcCmdR1.read = "R1"
+    qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
+    else fastqR1Qc
+    qcCmdR1.deps :+= fastqc_R1.output
+    qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
+    addSummarizable(qcCmdR1, "qc_command_R1")
+
+    if (paired) {
+      val qcCmdR2 = new QcCommand(this, fastqc_R2)
+      qcCmdR2.input = R2_in.get
+      qcCmdR2.output = new File(outDir, fastqR2Qc.get.getName.stripSuffix(".gz"))
+      qcCmdR2.read = "R2"
+      addSummarizable(qcCmdR2, "qc_command_R2")
+
+      qcCmdR1.compress = false
+      qcCmdR2.compress = false
+
+      val fqSync = new FastqSync(this)
+      fqSync.refFastq = R1_in
+      fqSync.inputFastq1 = qcCmdR1.output
+      fqSync.inputFastq2 = qcCmdR2.output
+      fqSync.outputFastq1 = new File(outDir, fastqR1Qc.getName)
+      fqSync.outputFastq2 = new File(outDir, fastqR2Qc.get.getName)
+      fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
+
+      val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
+        override def configName = "qc-cmd"
+
+        override def beforeGraph(): Unit = {
+          fqSync.beforeGraph()
+          super.beforeGraph()
+        }
+
+        override def beforeCmd(): Unit = {
+          qcCmdR1.beforeCmd()
+          qcCmdR2.beforeCmd()
+          fqSync.beforeCmd()
+          commands = qcCmdR1.jobs ::: qcCmdR2.jobs ::: fqSync :: Nil
+          super.beforeCmd()
+        }
       }
-    }
 
-    if (!skipTrim) { // Quality trimming
-      val sickle = new Sickle(this)
-      sickle.input_R1 = R1
-      sickle.output_R1 = swapExt(outDir, R1, R1_ext, ".trim" + R1_ext)
-      if (paired) {
-        sickle.input_R2 = R2.get
-        sickle.output_R2 = swapExt(outDir, R2.get, R2_ext, ".trim" + R2_ext)
-        sickle.output_singles = swapExt(outDir, R2.get, R2_ext, ".trim.singles" + R1_ext)
-      }
-      sickle.output_stats = swapExt(outDir, R1, R1_ext, ".trim.stats")
-      sickle.deps = deps
-      sickle.isIntermediate = true
-      add(sickle)
-      addSummarizable(sickle, "trimming")
-      R1 = sickle.output_R1
-      if (paired) R2 = Some(sickle.output_R2)
+      pipe.deps ::= fastqc_R1.output
+      pipe.deps ::= fastqc_R2.output
+      pipe.isIntermediate = !keepQcFastqFiles
+      add(pipe)
+
+      addSummarizable(fqSync, "fastq_sync")
+      outputFiles += ("syncStats" -> fqSync.outputStats)
+      R1 = fqSync.outputFastq1
+      R2 = Some(fqSync.outputFastq2)
+    } else {
+      add(qcCmdR1)
+      R1 = qcCmdR1.output
     }
 
     val seqstat_R1_after = SeqStat(this, R1, outDir)
-    seqstat_R1_after.deps = deps_R1
     add(seqstat_R1_after)
     addSummarizable(seqstat_R1_after, "seqstat_R1_qc")
 
     if (paired) {
       val seqstat_R2_after = SeqStat(this, R2.get, outDir)
-      seqstat_R2_after.deps = deps_R2
       add(seqstat_R2_after)
       addSummarizable(seqstat_R2_after, "seqstat_R2_qc")
     }
 
     outputFiles += (chunk + "output_R1" -> R1)
     if (paired) outputFiles += (chunk + "output_R2" -> R2.get)
-    (R1, R2, deps)
+    (R1, R2)
   }
 
   /** Adds last non chunkable jobs */
   def runFinalize(fastq_R1: List[File], fastq_R2: List[File]) {
-    if (fastq_R1.length != fastq_R2.length && paired) throw new IllegalStateException("R1 and R2 file number is not the same")
-    val R1 = new File(outputDir, R1_name + ".qc" + R1_ext + ".gz")
-    val R2 = new File(outputDir, R2_name + ".qc" + R2_ext + ".gz")
+    if (fastq_R1.length != fastq_R2.length && paired)
+      throw new IllegalStateException("R1 and R2 file number is not the same")
 
-    if (!skipTrim || !skipClip) {
-      add(Gzip(this, fastq_R1, R1), !keepQcFastqFiles)
-      if (paired) add(Gzip(this, fastq_R2, R2), !keepQcFastqFiles)
-
-      outputFiles += ("output_R1_gzip" -> R1)
-      if (paired) outputFiles += ("output_R2_gzip" -> R2)
-
-      fastqc_R1_after = Fastqc(this, R1, new File(outputDir, R1_name + ".qc.fastqc/"))
-      add(fastqc_R1_after)
-      addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
-
+    if (fastq_R1.length > 1) {
+      val zcat = new Zcat(this)
+      zcat.input = fastq_R1
+      add(zcat | new Gzip(this) > fastqR1Qc)
       if (paired) {
-        fastqc_R2_after = Fastqc(this, R2, new File(outputDir, R2_name + ".qc.fastqc/"))
-        add(fastqc_R2_after)
-        addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
+        val zcat = new Zcat(this)
+        zcat.input = fastq_R2
+        add(zcat | new Gzip(this) > fastqR2Qc.get)
       }
     }
 
-    addSummaryJobs()
-  }
+    outputFiles += ("output_R1_gzip" -> fastqR1Qc)
+    if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
 
-  /** Extracts file if file is compressed */
-  def extractIfNeeded(file: File, runDir: File): File = {
-    if (file == null) file
-    else if (file.getName.endsWith(".gz") || file.getName.endsWith(".gzip")) {
-      var newFile: File = swapExt(runDir, file, ".gz", "")
-      if (file.getName.endsWith(".gzip")) newFile = swapExt(runDir, file, ".gzip", "")
-      val zcatCommand = Zcat(this, file, newFile)
-      zcatCommand.isIntermediate = true
-      add(zcatCommand)
-      newFile
-    } else if (file.getName.endsWith(".bz2")) {
-      val newFile = swapExt(runDir, file, ".bz2", "")
-      val pbzip2 = Pbzip2(this, file, newFile)
-      pbzip2.isIntermediate = true
-      add(pbzip2)
-      newFile
-    } else file
+    fastqc_R1_after = Fastqc(this, fastqR1Qc, new File(outputDir, R1_name + ".qc.fastqc/"))
+    add(fastqc_R1_after)
+    addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
+
+    if (paired) {
+      fastqc_R2_after = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2_name + ".qc.fastqc/"))
+      add(fastqc_R2_after)
+      addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
+    }
+
+    addSummaryJobs()
   }
 }
 

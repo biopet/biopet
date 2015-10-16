@@ -61,7 +61,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !freebayes)
 
@@ -88,6 +88,12 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): File = {
+    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    Files.touch(file)
+    file
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -106,7 +112,6 @@ object ShivaVariantcallingTest {
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),

@@ -36,21 +36,22 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   var transcriptome: Option[File] = config("transcriptome")
   var tagsLibrary: Option[File] = config("tags_library")
 
-  override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
-    "m" -> 1,
-    "k" -> 1,
-    "best" -> true,
-    "strata" -> true,
-    "seedmms" -> 1
-  ), "mapping" -> Map(
-    "aligner" -> "bowtie",
-    "skip_flexiprep" -> true,
-    "skip_markduplicates" -> true
-  ), "flexiprep" -> Map(
-    "skip_clip" -> true,
-    "skip_trim" -> true
-  ), "strandSensitive" -> true
-  ), super.defaults)
+  override def defaults = Map(
+    "bowtie" -> Map(
+      "m" -> 1,
+      "k" -> 1,
+      "best" -> true,
+      "strata" -> true,
+      "seedmms" -> 1
+    ), "mapping" -> Map(
+      "aligner" -> "bowtie",
+      "skip_flexiprep" -> true,
+      "skip_markduplicates" -> true
+    ), "flexiprep" -> Map(
+      "skip_clip" -> true,
+      "skip_trim" -> true
+    ), "strandSensitive" -> true
+  )
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
@@ -88,6 +89,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
+        inputFiles :+= new InputFile(inputFastq, config("R1_md5"))
+
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq
         flexiprep.init()

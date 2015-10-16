@@ -31,6 +31,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
 
   @Test def testMainVcf = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
@@ -40,6 +41,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
 
   @Test def testMainVcfAndBam = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
@@ -49,6 +51,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
 
   @Test def testMainVcfAndBamMore = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 

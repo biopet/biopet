@@ -19,7 +19,7 @@ import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.{ SAMSequenceRecord, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.config.Configurable
+import scala.collection.JavaConversions._
 
 import scala.io.Source
 
@@ -52,8 +52,7 @@ object BedToInterval extends ToolCommand {
     val writer = new PrintWriter(commandArgs.outputFile)
 
     val inputSam = SamReaderFactory.makeDefault.open(commandArgs.bamFile)
-    val refs = for (SQ <- inputSam.getFileHeader.getSequenceDictionary.getSequences.toArray) yield {
-      val record = SQ.asInstanceOf[SAMSequenceRecord]
+    val refs = for (record <- inputSam.getFileHeader.getSequenceDictionary.getSequences) yield {
       writer.write("@SQ\tSN:" + record.getSequenceName + "\tLN:" + record.getSequenceLength + "\n")
       record.getSequenceName -> record.getSequenceLength
     }
