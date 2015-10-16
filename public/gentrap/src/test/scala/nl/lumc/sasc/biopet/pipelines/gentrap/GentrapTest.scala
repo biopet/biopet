@@ -70,7 +70,7 @@ abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNG
       .toMap
     )
 
-   val validExpressionMeasures = Set(
+  val validExpressionMeasures = Set(
     "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
     "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
