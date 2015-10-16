@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -73,7 +73,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
 
     val illegalArgumentException = pipeline.inputBams.isEmpty ||
       (!raw && !bcftools &&
@@ -107,6 +107,12 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): File = {
+    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    Files.touch(file)
+    file
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -125,7 +131,6 @@ object ShivaVariantcallingTest {
     "cache" -> true,
     "dir" -> "test",
     "vep_script" -> "test",
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),

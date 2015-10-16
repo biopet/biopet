@@ -25,7 +25,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
 import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
-import nl.lumc.sasc.biopet.tools.BastyGenerateFasta
+import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 
 trait BastyTrait extends MultiSampleQScript {
@@ -35,10 +35,10 @@ trait BastyTrait extends MultiSampleQScript {
 
   def variantcallers = List("freebayes")
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "ploidy" -> 1,
     "variantcallers" -> variantcallers
-  ), super.defaults)
+  )
 
   lazy val shiva: ShivaTrait = new Shiva(qscript)
 
@@ -89,6 +89,8 @@ trait BastyTrait extends MultiSampleQScript {
     addAll(shiva.functions)
     addSummaryQScript(shiva)
 
+    inputFiles :::= shiva.inputFiles
+
     addSamplesJobs()
   }
 
@@ -135,7 +137,6 @@ trait BastyTrait extends MultiSampleQScript {
       val numBoot = config("boot_runs", default = 100, submodule = "raxml").asInt
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
-        raxmlBoot.threads = 1
         raxmlBoot.input = variants
         raxmlBoot.m = config("raxml_ml_model", default = "GTRGAMMAX")
         raxmlBoot.p = Some(seed)

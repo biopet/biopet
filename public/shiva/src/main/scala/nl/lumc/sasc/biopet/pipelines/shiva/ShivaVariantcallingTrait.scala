@@ -18,13 +18,13 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -62,7 +62,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   def biopetScript(): Unit = {
     for (cal <- configCallers) {
       if (!callersList.exists(_.name == cal))
-        BiopetQScript.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
+        Logging.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
     }
 
     val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
@@ -199,11 +199,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
         val vcfFilter = new VcfFilter(qscript) {
           override def configName = "vcffilter"
-          override def defaults = ConfigUtils.mergeMaps(Map("min_sample_depth" -> 8,
+          override def defaults = Map("min_sample_depth" -> 8,
             "min_alternate_depth" -> 2,
             "min_samples_pass" -> 1,
             "filter_ref_calls" -> true
-          ), super.defaults)
+          )
         }
         vcfFilter.inputVcf = m2v.output
         vcfFilter.outputVcf = new File(outputDir, bamFile.getName.stripSuffix(".bam") + ".raw.filter.vcf.gz")

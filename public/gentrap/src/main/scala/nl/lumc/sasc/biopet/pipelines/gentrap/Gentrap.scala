@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
+import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
@@ -29,7 +29,7 @@ import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -100,24 +100,23 @@ class Gentrap(val root: Configurable) extends QScript
     })
 
   /** Default pipeline config */
-  override def defaults = ConfigUtils.mergeMaps(
-    Map(
-      "gsnap" -> Map(
-        "novelsplicing" -> 1,
-        "batch" -> 4,
-        "format" -> "sam"
-      ),
-      "cutadapt" -> Map("minimum_length" -> 20),
-      // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
-      "picard" -> Map(
-        "programrecordid" -> "null"
-      ),
-      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map(
-        "skip_markduplicates" -> true,
-        "skip_metrics" -> true
-      )
-    ), super.defaults)
+  override def defaults = Map(
+    "gsnap" -> Map(
+      "novelsplicing" -> 1,
+      "batch" -> 4,
+      "format" -> "sam"
+    ),
+    "cutadapt" -> Map("minimum_length" -> 20),
+    // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
+    "picard" -> Map(
+      "programrecordid" -> "null"
+    ),
+    // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "skip_metrics" -> true
+    )
+  )
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
@@ -552,7 +551,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x40")
+            job.f = List("0x80")
             job.F = List("0x10")
             job.output = createFile(".r2.bam")
             job.isIntermediate = true
@@ -594,7 +593,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x80")
+            job.f = List("0x40")
             job.F = List("0x10")
             job.output = createFile(".r1.bam")
             job.isIntermediate = true
@@ -844,6 +843,8 @@ class Gentrap(val root: Configurable) extends QScript
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // Input file checking
+        inputFiles :::= mappingJob.inputFiles
         // add bigwig track
         addAll(bam2wigModule.functions)
         qscript.addSummaryQScript(mappingJob)

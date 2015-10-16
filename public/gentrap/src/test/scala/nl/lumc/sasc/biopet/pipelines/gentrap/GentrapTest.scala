@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -43,8 +43,8 @@ class GentrapTest extends TestNGSuite with Matchers {
 
   /** Convenience method for making library config */
   private def makeLibConfig(idx: Int, paired: Boolean = true) = {
-    val files = Map("R1" -> "test_R1.fq")
-    if (paired) (s"lib_$idx", files ++ Map("R2" -> "test_R2.fq"))
+    val files = Map("R1" -> GentrapTest.inputTouch("test_R1.fq"))
+    if (paired) (s"lib_$idx", files ++ Map("R2" -> GentrapTest.inputTouch("test_R2.fq")))
     else (s"lib_$idx", files)
   }
 
@@ -118,8 +118,6 @@ class GentrapTest extends TestNGSuite with Matchers {
     val functions = gentrap.functions.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
 
-    functions(classOf[Gsnap]).size should be >= 1
-
     if (expMeasures.contains("fragments_per_gene")) {
       gentrap.functions
         .collect { case x: HtseqCount => x.output.toString.endsWith(".fragments_per_gene") }.size shouldBe numSamples
@@ -179,6 +177,12 @@ class GentrapTest extends TestNGSuite with Matchers {
 
 object GentrapTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -192,7 +196,6 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "refFlat" -> "test",
     "annotation_gtf" -> "test",

@@ -15,11 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
-import nl.lumc.sasc.biopet.tools.{ VcfWithVcf, VepNormalizer }
+import nl.lumc.sasc.biopet.extensions.tools.{ VcfWithVcf, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -35,11 +35,12 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   var inputVCF: File = _
 
   def init(): Unit = {
+    inputFiles :+= new InputFile(inputVCF)
   }
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
+  override def defaults = Map(
     "varianteffectpredictor" -> Map("everything" -> true)
-  ), super.defaults)
+  )
 
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 

@@ -7,11 +7,13 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 class VariantRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantRecalibrator with GatkGeneral {
-  nt = Option(getThreads(4))
+  override val defaultThreads = 4
+
+  nt = Option(getThreads)
   memoryLimit = Option(nt.getOrElse(1) * 2)
 
   if (config.contains("dbsnp")) resource :+= new TaggedFile(config("dbsnp").asString, "known=true,training=false,truth=false,prior=2.0")

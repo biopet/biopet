@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -69,7 +69,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
       Map("regions_of_interest" -> (1 to rois).map("roi_" + _ + ".bed").toList)
     val bammetrics: BamMetrics = initPipeline(map)
 
-    bammetrics.inputBam = new File("input.bam")
+    bammetrics.inputBam = BamMetricsTest.bam
     bammetrics.sampleId = Some("1")
     bammetrics.libId = Some("1")
     bammetrics.script()
@@ -98,6 +98,10 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 
 object BamMetricsTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+
+  val bam = new File(outputDir, "input" + File.separator + "bla.bam")
+  Files.touch(bam)
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

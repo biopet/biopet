@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import org.broadinstitute.gatk.queue.QScript
 
 class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -71,7 +71,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   }
 
   /** executed before script */
-  def init() {
+  def init(): Unit = {
+    inputFiles :+= new InputFile(inputBam)
   }
 
   /** Script to add jobs */
@@ -186,8 +187,13 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
 object BamMetrics extends PipelineCommand {
   /** Make default implementation of BamMetrics and runs script already */
-  def apply(root: Configurable, bamFile: File, outputDir: File): BamMetrics = {
+  def apply(root: Configurable,
+            bamFile: File, outputDir: File,
+            sampleId: Option[String] = None,
+            libId: Option[String] = None): BamMetrics = {
     val bamMetrics = new BamMetrics(root)
+    bamMetrics.sampleId = sampleId
+    bamMetrics.libId = libId
     bamMetrics.inputBam = bamFile
     bamMetrics.outputDir = outputDir
 
