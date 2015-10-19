@@ -56,7 +56,7 @@ object KrakenReportToJson extends ToolCommand {
   var cladeIDs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill(32)(0)
   val spacePattern = "^( +)".r
 
-  case class Args(krakenreport: File = null, outputJson: Option[File] = None, skipNames: Boolean = true) extends AbstractArgs
+  case class Args(krakenreport: File = null, outputJson: Option[File] = None, skipNames: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
 
@@ -93,6 +93,9 @@ object KrakenReportToJson extends ToolCommand {
 
   def parseLine(krakenRawHit: String, skipNames: Boolean): Map[Long, KrakenHit] = {
     val values: Array[String] = krakenRawHit.stripLineEnd.split("\t")
+
+    assert(values.length == 6)
+
     val scientificName: String = values(5)
     val cladeLevel = spacePattern.findFirstIn(scientificName).getOrElse("").length / 2
 

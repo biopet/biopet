@@ -39,11 +39,6 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
 
   var db: File = config("db")
 
-  var inputFastQ: Boolean = true
-  var compression: Boolean = false
-  var compressionGzip: Boolean = false
-  var compressionBzip: Boolean = false
-
   var quick: Boolean = false
   var minHits: Option[Int] = config("min_hits")
 
@@ -68,8 +63,6 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine = required(executable) +
     "--db" + required(db) +
     optional("--threads", nCoresRequest) +
-    conditional(inputFastQ, "--fastq-input") +
-    conditional(!inputFastQ, "--fasta-input") +
     conditional(quick, "--quick") +
     optional("--min_hits", minHits) +
     optional("--unclassified-out ", unclassified_out.get) +
@@ -77,5 +70,6 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
     "--output" + required(output) +
     conditional(preLoad, "--preload") +
     conditional(paired, "--paired") +
+    conditional(paired, "--check-names") +
     repeat(input)
 }

@@ -24,14 +24,17 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with
   var inputReport: File = null
 
   @Argument(required = false)
-  var skipNames: Boolean = true
+  var skipNames: Boolean = false
 
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = null
 
   override def defaultCoreMemory = 1.0
 
-  override def cmdLine = super.cmdLine + required("-i", inputReport) + required("-o", output)
+  override def cmdLine = super.cmdLine +
+                      required("-i", inputReport) +
+                      required("-o", output) +
+                      conditional(skipNames, "--skipnames")
 
   def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)

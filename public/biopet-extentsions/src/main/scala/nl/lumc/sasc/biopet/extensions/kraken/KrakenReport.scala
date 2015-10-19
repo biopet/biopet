@@ -44,9 +44,9 @@ class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction {
   var output: File = _
 
   def cmdLine: String = {
-    val cmd: String = "--db " + required(db) +
+    val cmd: String = required(executable) + "--db " + required(db) +
       conditional(show_zeros, "--show-zeros") +
-      input.getAbsolutePath + ">" + output.getAbsolutePath
+      required(input.getAbsolutePath) + " > " + required(output.getAbsolutePath)
     cmd
   }
 }

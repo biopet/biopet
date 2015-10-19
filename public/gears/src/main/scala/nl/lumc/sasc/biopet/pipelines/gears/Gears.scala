@@ -74,16 +74,10 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       samFilterUnmapped.isIntermediate = false
       add(samFilterUnmapped)
 
-      val samNameSort = new SortSam(qscript)
-      samNameSort.input = samFilterUnmapped.output
-      samNameSort.output = new File(outputDir, s"$outputName.unmapped.nsort.bam")
-      samNameSort.sortOrder = "queryname"
-      samNameSort.isIntermediate = false
-      add(samNameSort)
-
       // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = new SamToFastq(qscript)
-      samToFastq.input= samNameSort.output
+      samToFastq.input= samFilterUnmapped.output
+      samToFastq.stringency = Some("LENIENT")
       samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
       samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
       samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
@@ -136,9 +130,9 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     GearsOutputFiles ++ Map("kraken_report_output" -> krakenReport.output)
 
     val krakenReportJSON = new KrakenReportToJson(qscript)
-    krakenReportJSON.inputReport = krakenAnalysis.output
+    krakenReportJSON.inputReport = krakenReport.output
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
-    krakenReportJSON.skipNames = config("skipNames", default = true)
+    krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
 
     addSummaryJobs()
