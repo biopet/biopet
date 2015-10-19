@@ -20,6 +20,8 @@ import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibrary
 import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
+
+import org.apache.commons.io.FilenameUtils.getExtension
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -73,6 +75,31 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     Some(flexiprepReport)
   }
 
+  /** Possible compression extensions to trim from input files. */
+  private val zipExtensions = Set(".gz", ".gzip")
+
+  /**
+   * Given a file object and a set of compression extensions, return the filename without any of the compression
+   * extensions and the filename's extension.
+   *
+   * Examples:
+   *  - my_file.fq.gz returns ("my_file.fq", ".fq")
+   *  - my_other_file.fastq returns ("my_file.fastq", ".fastq")
+   *
+   * @param f Input file object.
+   * @param exts Possible compression extensions to trim.
+   * @return Filename without compression extension and its extension.
+   */
+  private def getNameAndExt(f: File, exts: Set[String] = zipExtensions): (String, String) = {
+    val unzippedFilename = zipExtensions
+      .foldLeft(f.toString) { case (fname, ext) =>
+      if (fname.toLowerCase.endsWith(ext)) fname.dropRight(ext.length)
+      else fname
+    }
+    val unzippedExt = "." + getExtension(unzippedFilename)
+    (unzippedFilename, unzippedExt)
+  }
+
   /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
@@ -85,21 +112,10 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     inputFiles :+= new InputFile(input_R1)
     input_R2.foreach(inputFiles :+= new InputFile(_))
 
-    if (input_R1.endsWith(".gz")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gz"))
-    else if (input_R1.endsWith(".gzip")) R1_name = input_R1.getName.substring(0, input_R1.getName.lastIndexOf(".gzip"))
-    else R1_name = input_R1.getName
-    R1_ext = R1_name.substring(R1_name.lastIndexOf("."), R1_name.length)
-    R1_name = R1_name.substring(0, R1_name.lastIndexOf(R1_ext))
-
-    input_R2 match {
-      case Some(fileR2) =>
+    (R1_ext, R1_name) = getNameAndExt(input_R1)
+    input_R2.foreach { fileR2 =>
         paired = true
-        if (fileR2.endsWith(".gz")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gz"))
-        else if (fileR2.endsWith(".gzip")) R2_name = fileR2.getName.substring(0, fileR2.getName.lastIndexOf(".gzip"))
-        else R2_name = fileR2.getName
-        R2_ext = R2_name.substring(R2_name.lastIndexOf("."), R2_name.length)
-        R2_name = R2_name.substring(0, R2_name.lastIndexOf(R2_ext))
-      case _ =>
+        (R2_ext, R2_name) = getNameAndExt(fileR2)
     }
   }
 
