@@ -28,7 +28,7 @@ class SamtoolsView(val root: Configurable) extends Samtools {
   @Output(doc = "output File")
   var output: File = null
 
-  var quality: Option[Int] = config("quality")
+  var q: Option[Int] = config("q")
   var b: Boolean = config("b", default = false)
   var h: Boolean = config("h", default = false)
   var f: List[String] = config("f", default = List.empty[String])
@@ -36,7 +36,7 @@ class SamtoolsView(val root: Configurable) extends Samtools {
 
   def cmdBase = required(executable) +
     required("view") +
-    optional("-q", quality) +
+    optional("-q", q) +
     repeat("-f", f) +
     repeat("-F", F) +
     conditional(b, "-b") +
