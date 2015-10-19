@@ -98,7 +98,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
     val unzippedExt = "." + getExtension(unzippedFilename)
     (unzippedFilename, unzippedExt)
-  }
+  } ensuring(_._2.length > 1, "Flexiprep input files must have an extension when uncompressed.")
 
   /** Function that's need to be executed before the script is accessed */
   def init() {
