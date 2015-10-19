@@ -18,15 +18,14 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsMerge, BcftoolsCall }
+import nl.lumc.sasc.biopet.core.{Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
-import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix}
+import nl.lumc.sasc.biopet.utils.Logging
+import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
  * Common trait for ShivaVariantcalling
