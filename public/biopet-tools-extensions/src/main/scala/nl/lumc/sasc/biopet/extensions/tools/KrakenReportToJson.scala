@@ -32,9 +32,9 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with
   override def defaultCoreMemory = 1.0
 
   override def cmdLine = super.cmdLine +
-                      required("-i", inputReport) +
-                      required("-o", output) +
-                      conditional(skipNames, "--skipnames")
+    required("-i", inputReport) +
+    required("-o", output) +
+    conditional(skipNames, "--skipnames")
 
   def summaryStats: Map[String, Any] = {
     val map = ConfigUtils.fileToConfigMap(output)

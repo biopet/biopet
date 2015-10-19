@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.{SortSam, SamToFastq}
+import nl.lumc.sasc.biopet.extensions.picard.{ SortSam, SamToFastq }
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
 import nl.lumc.sasc.biopet.extensions.tools.{ KrakenReportToJson, FastqSync }
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -76,7 +76,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
 
       // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = new SamToFastq(qscript)
-      samToFastq.input= samFilterUnmapped.output
+      samToFastq.input = samFilterUnmapped.output
       samToFastq.stringency = Some("LENIENT")
       samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
       samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
