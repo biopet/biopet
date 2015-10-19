@@ -69,7 +69,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
       val samFilterUnmapped = new SambambaView(qscript)
       samFilterUnmapped.input = bamfile
-      samFilterUnmapped.filter = Some("unmapped or mate_is_unmapped")
+      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment)")
       samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
       samFilterUnmapped.isIntermediate = false
       add(samFilterUnmapped)
