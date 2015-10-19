@@ -90,11 +90,10 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
    * @return Filename without compression extension.
    */
   private def getUncompressedName(f: File, exts: Set[String] = zipExtensions): String =
-    zipExtensions
-      .foldLeft(f.toString) { case (fname, ext) =>
-        if (fname.toLowerCase.endsWith(ext)) fname.dropRight(ext.length)
-        else fname
-      }
+    exts.foldLeft(f.toString) { case (fname, ext) =>
+      if (fname.toLowerCase.endsWith(ext)) fname.dropRight(ext.length)
+      else fname
+    }
 
   /** Function that's need to be executed before the script is accessed */
   def init() {
