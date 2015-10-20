@@ -48,7 +48,7 @@ trait MultiSampleQScript extends SummaryQScript {
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
         if (nameRegex.findFirstIn(libId) == None)
-          Logging.addError(s"Library '$libId' does not conform to '$nameRegex'")
+          Logging.addError(s"Library '$libId' $nameError")
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
@@ -93,7 +93,7 @@ trait MultiSampleQScript extends SummaryQScript {
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
       if (nameRegex.findFirstIn(sampleId) == None)
-        Logging.addError(s"Sample '$sampleId' does not conform to '$nameRegex'")
+        Logging.addError(s"Sample '$sampleId' $nameError")
       currentSample = Some(sampleId)
       addJobs()
       qscript.addSummarizable(this, "pipeline", Some(sampleId))
@@ -134,6 +134,10 @@ trait MultiSampleQScript extends SummaryQScript {
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
   protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
+  protected lazy val nameError = " name invalid." +
+    "Name must have at least 3 characters," +
+    "must begin and end with an alphanumeric character, " +
+    "and must not have whitespace."
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
