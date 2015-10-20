@@ -25,8 +25,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * This is a trait for the Gears pipeline
- * The ShivaTrait is used as template for this pipeline
+ * Created by wyleung
  */
 class Gears(val root: Configurable) extends QScript with SummaryQScript {
   qscript =>
@@ -44,7 +43,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
   @Argument(required = false)
   var outputName: String = _
 
-  var GearsOutputFiles: Map[String, File] = Map.empty
+  var GearsOutputFiles: scala.collection.mutable.Map[String, File] = scala.collection.mutable.Map.empty
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -61,6 +60,12 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     }
   }
 
+  override def reportClass = {
+    val gears = new GearsReport(this)
+    gears.outputDir = new File(outputDir, "report")
+    gears.summaryFile = summaryFile
+    Some(gears)
+  }
   /** Method to add jobs */
   def biopetScript(): Unit = {
 
@@ -96,9 +101,9 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats.json")
       add(fastqSync)
 
-      GearsOutputFiles ++ Map("fastqsync_stats" -> fastqSync.outputStats)
-      GearsOutputFiles ++ Map("fastqsync_R1" -> fastqSync.outputFastq1)
-      GearsOutputFiles ++ Map("fastqsync_R2" -> fastqSync.outputFastq2)
+      GearsOutputFiles += ("fastqsync_stats" -> fastqSync.outputStats)
+      GearsOutputFiles += ("fastqsync_R1" -> fastqSync.outputFastq1)
+      GearsOutputFiles += ("fastqsync_R2" -> fastqSync.outputFastq2)
 
       List(fastqSync.outputFastq1, fastqSync.outputFastq2)
     }.getOrElse(List(fastqFileR1, fastqFileR2).flatten)
@@ -114,9 +119,9 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenAnalysis.unclassified_out = Option(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
-    GearsOutputFiles ++ Map("kraken_output_raw" -> krakenAnalysis.output)
-    GearsOutputFiles ++ Map("kraken_classified_out" -> krakenAnalysis.classified_out)
-    GearsOutputFiles ++ Map("kraken_unclassified_out" -> krakenAnalysis.unclassified_out)
+    GearsOutputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
+    GearsOutputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
+    GearsOutputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
 
     // create kraken summary file
 
@@ -126,8 +131,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 
-    GearsOutputFiles ++ Map("kraken_report_input" -> krakenReport.input)
-    GearsOutputFiles ++ Map("kraken_report_output" -> krakenReport.output)
+    GearsOutputFiles += ("kraken_report_input" -> krakenReport.input)
+    GearsOutputFiles += ("kraken_report_output" -> krakenReport.output)
 
     val krakenReportJSON = new KrakenReportToJson(qscript)
     krakenReportJSON.inputReport = krakenReport.output
@@ -135,10 +140,10 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
 
-    addSummaryJobs()
+    GearsOutputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
+    GearsOutputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)
 
-    GearsOutputFiles ++ Map("kraken_report_json_input" -> krakenReportJSON.inputReport)
-    GearsOutputFiles ++ Map("kraken_report_json_output" -> krakenReportJSON.output)
+    addSummaryJobs()
   }
 
   /** Location of summary file */
