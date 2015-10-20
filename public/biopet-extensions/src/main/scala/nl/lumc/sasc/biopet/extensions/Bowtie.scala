@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Based on version 1.1.1
  */
-class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
 
@@ -40,9 +40,9 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var output: File = null
 
   executable = config("exe", default = "bowtie", freeVar = false)
-  override def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex = """.*[Vv]ersion:? (.*)""".r
   override def versionExitcode = List(0, 1)
-  override def versionCommand = executable + " --version"
+  def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
