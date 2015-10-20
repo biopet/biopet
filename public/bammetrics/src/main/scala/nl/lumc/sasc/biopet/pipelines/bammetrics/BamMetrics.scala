@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, SampleLibraryTag}
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
@@ -173,11 +173,12 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
 
       //FIXME:should use piping
-      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), isIntermediate = true)
+      val bedCov = BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true)
       val covStats = CoverageStats(this, coverageFile, targetDir)
       covStats.title = Some("Coverage for " + targetName)
       covStats.subTitle = Some(".")
-      add(covStats)
+      val pipe = new BiopetFifoPipe(this, bedCov :: covStats :: Nil)
+      add(pipe)
       addSummarizable(covStats, targetName + "_cov_stats")
     }
 
