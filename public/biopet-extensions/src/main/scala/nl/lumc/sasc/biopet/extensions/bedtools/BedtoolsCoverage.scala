@@ -56,7 +56,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     conditional(depth, "-d") +
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +
-    " > " + required(output)
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object BedtoolsCoverage {

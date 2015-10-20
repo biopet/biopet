@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 class CoverageStats(val root: Configurable) extends PythonCommandLineFunction with Summarizable {
   setPythonScript("bedtools_cov_stats.py")
 
-  @Input(doc = "Input file")
+  @Input(doc = "Input file", required = false)
   var input: File = _
 
   @Output(doc = "output File")
@@ -41,7 +41,7 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction wi
   override def defaultCoreMemory = 9.0
 
   def cmdLine = getPythonCommand +
-    required(input) +
+    (if (inputAsStdin) " - " else required(input)) +
     required("--plot", plot) +
     optional("--title", title) +
     optional("--subtitle", subTitle) +

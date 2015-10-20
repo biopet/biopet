@@ -176,8 +176,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val covStats = CoverageStats(this, coverageFile, targetDir)
       covStats.title = Some("Coverage for " + targetName)
       covStats.subTitle = Some(".")
-      val pipe = new BiopetFifoPipe(this, bedCov :: covStats :: Nil)
-      add(pipe)
+      add(bedCov | covStats)
       addSummarizable(covStats, targetName + "_cov_stats")
     }
 
