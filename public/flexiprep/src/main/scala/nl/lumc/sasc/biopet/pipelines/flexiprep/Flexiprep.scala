@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.IoUtils._
 import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
 
 import org.broadinstitute.gatk.queue.QScript
@@ -54,8 +55,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
-  var R1_ext: String = _
-  var R2_ext: String = _
   var R1_name: String = _
   var R2_name: String = _
 
@@ -74,27 +73,6 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     Some(flexiprepReport)
   }
 
-  /** Possible compression extensions to trim from input files. */
-  private val zipExtensions = Set(".gz", ".gzip")
-
-  /**
-   * Given a file object and a set of compression extensions, return the filename without any of the compression
-   * extensions.
-   *
-   * Examples:
-   *  - my_file.fq.gz returns "my_file.fq"
-   *  - my_other_file.fastq returns "my_file.fastq"
-   *
-   * @param f Input file object.
-   * @param exts Possible compression extensions to trim.
-   * @return Filename without compression extension.
-   */
-  private def getUncompressedName(f: File, exts: Set[String] = zipExtensions): String =
-    exts.foldLeft(f.toString) { case (fname, ext) =>
-      if (fname.toLowerCase.endsWith(ext)) fname.dropRight(ext.length)
-      else fname
-    }
-
   /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
@@ -107,10 +85,10 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     inputFiles :+= new InputFile(input_R1)
     input_R2.foreach(inputFiles :+= new InputFile(_))
 
-    R1_name = getUncompressedName(input_R1)
+    R1_name = getUncompressedFileName(input_R1)
     input_R2.foreach { fileR2 =>
-        paired = true
-        R2_name = getUncompressedName(fileR2)
+      paired = true
+      R2_name = getUncompressedFileName(fileR2)
     }
   }
 
