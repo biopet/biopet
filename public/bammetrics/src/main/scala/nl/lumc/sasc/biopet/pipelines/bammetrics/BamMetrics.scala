@@ -172,7 +172,6 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
       val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
 
-      //FIXME:should use piping
       val bedCov = BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true)
       val covStats = CoverageStats(this, coverageFile, targetDir)
       covStats.title = Some("Coverage for " + targetName)
