@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
@@ -71,21 +71,32 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
       val executables: Map[String, Any] = {
-        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunction]) yield {
+
+        def fetchVersion(f: QFunction): Option[(String, Any)] = {
           f match {
-            case f: BiopetJavaCommandLineFunction =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+            case f: BiopetJavaCommandLineFunction with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
-                "jar_path" -> f.jarFile)
-            case f: BiopetCommandLineFunction =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+                "jar_path" -> f.jarFile))
+            case f: BiopetCommandLineFunction with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
-                "path" -> f.executable)
-            case _ => throw new IllegalStateException("This should not be possible")
+                "path" -> f.executable))
+            case f: Configurable with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None)))
+            case _ => None
           }
+        }
 
-        }).toMap
+        (
+          qscript.functions.flatMap(fetchVersion(_)) ++
+          qscript.functions
+          .flatMap {
+            case f: BiopetCommandLineFunction => f.pipesJobs
+            case _                            => Nil
+          }.flatMap(fetchVersion(_))
+        ).toMap
       }
 
       val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
@@ -113,7 +124,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
       Map("meta" -> Map(
         "last_commit_hash" -> LastCommitHash,
-        "pipeline_version" -> Version,
+        "pipeline_version" -> nl.lumc.sasc.biopet.Version,
         "pipeline_name" -> qscript.summaryName,
         "output_dir" -> qscript.outputDir,
         "run_name" -> config("run_name", default = qSettings.runName).asString,

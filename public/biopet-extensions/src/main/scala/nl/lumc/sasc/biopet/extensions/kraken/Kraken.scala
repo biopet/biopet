@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for Kraken */
-class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
+class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input: FastQ or FastA")
   var input: List[File] = _
@@ -51,9 +51,9 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction {
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
-  override def versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
+  def versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
   override def versionExitcode = List(0, 1)
-  override def versionCommand = executable + " --version"
+  def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 8.0
   override def defaultThreads = 4

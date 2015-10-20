@@ -17,18 +17,18 @@ package nl.lumc.sasc.biopet.extensions.breakdancer
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction {
+class BreakdancerCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "breakdancer-max", freeVar = false)
 
   override def defaultThreads = 1 // breakdancer can only work on 1 single thread
 
-  override def versionRegex = """.*[Vv]ersion:? (.*)""".r
+  def versionRegex = """.*[Vv]ersion:? (.*)""".r
   override def versionExitcode = List(1)
-  override def versionCommand = executable
+  def versionCommand = executable
 
   @Input(doc = "The breakdancer configuration file")
   var input: File = _

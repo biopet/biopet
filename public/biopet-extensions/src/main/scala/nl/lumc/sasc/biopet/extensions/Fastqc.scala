@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Extension for fastqc
  * Based on version 0.10.1 and 0.11.2
  */
-class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
+class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Contaminants", required = false)
   var contaminants: Option[File] = None
@@ -47,8 +47,8 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction {
   var nogroup: Boolean = config("nogroup", default = false)
   var extract: Boolean = config("extract", default = true)
 
-  override def versionRegex = """FastQC (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """FastQC (.*)""".r
+  def versionCommand = executable + " --version"
   override def defaultThreads = 4
 
   /** Sets contaminants and adapters when not yet set */

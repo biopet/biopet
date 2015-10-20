@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
 /** General abstract class for bedtools extensions */
-abstract class Bedtools extends BiopetCommandLineFunction {
+abstract class Bedtools extends BiopetCommandLineFunction with Version {
   override def subPath = "bedtools" :: super.subPath
   executable = config("exe", default = "bedtools", submodule = "bedtools")
-  override def versionCommand = executable + " --version"
-  override def versionRegex = """bedtools (.*)""".r
+  def versionCommand = executable + " --version"
+  def versionRegex = """bedtools (.*)""".r
 }
