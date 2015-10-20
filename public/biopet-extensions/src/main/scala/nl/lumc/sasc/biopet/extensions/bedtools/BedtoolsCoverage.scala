@@ -61,12 +61,12 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
 object BedtoolsCoverage {
   /** Returns defaul bedtools coverage */
-  def apply(root: Configurable, input: File, intersect: File, output: File,
+  def apply(root: Configurable, input: File, intersect: File, output: Option[File] = None,
             depth: Boolean = true, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
     val bedtoolsCoverage = new BedtoolsCoverage(root)
     bedtoolsCoverage.input = input
     bedtoolsCoverage.intersectFile = intersect
-    bedtoolsCoverage.output = output
+    output.foreach(bedtoolsCoverage.output = _)
     bedtoolsCoverage.depth = depth
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand

@@ -55,11 +55,10 @@ class CoverageStats(val root: Configurable) extends PythonCommandLineFunction wi
 }
 
 object CoverageStats {
-  def apply(root: Configurable, input: File, outputDir: File): CoverageStats = {
+  def apply(root: Configurable, outputDir: File, name: String): CoverageStats = {
     val coverageStats = new CoverageStats(root)
-    coverageStats.input = input
-    coverageStats.output = new File(outputDir, input.getName + ".stats")
-    coverageStats.plot = new File(outputDir, input.getName + ".stats.png")
+    coverageStats.output = new File(outputDir, name + ".stats")
+    coverageStats.plot = new File(outputDir, name + ".stats.png")
     coverageStats
   }
 }
