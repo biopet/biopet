@@ -133,7 +133,7 @@ trait MultiSampleQScript extends SummaryQScript {
   /** Returns a list of all sampleIDs */
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
-  protected lazy val nameRegex = """^[a-zA-Z][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
+  protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
