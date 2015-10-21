@@ -198,8 +198,8 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
         })
 
         variantcalling.foreach(vc => {
-          vc.sampleId = Some(libId)
-          vc.libId = Some(sampleId)
+          vc.sampleId = Some(sampleId)
+          vc.libId = Some(libId)
           vc.outputDir = new File(libDir, "variantcalling")
           if (preProcessBam.isDefined) vc.inputBams = preProcessBam.get :: Nil
           else vc.inputBams = bamFile.get :: Nil
