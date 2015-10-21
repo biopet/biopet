@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -29,7 +29,7 @@ import scala.io.Source
  * Extension for sickle
  * Based on version 1.33
  */
-class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
+class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "R1 input")
   var input_R1: File = _
 
@@ -56,8 +56,8 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   var discardN: Boolean = config("discardN", default = false)
   var quiet: Boolean = config("quiet", default = false)
   var defaultQualityType: String = config("defaultqualitytype", default = "sanger")
-  override def versionRegex = """sickle version (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """sickle version (.*)""".r
+  def versionCommand = executable + " --version"
 
   /** Sets qualityType is still empty */
   override def beforeGraph() {

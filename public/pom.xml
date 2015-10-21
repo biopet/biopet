@@ -80,6 +80,7 @@
                 <version>2.18.1</version>
                 <configuration>
                     <forkCount>1C</forkCount>
+                    <argLine>-Xmx300m</argLine>
                     <workingDirectory>${project.build.directory}</workingDirectory>
                 </configuration>
             </plugin>

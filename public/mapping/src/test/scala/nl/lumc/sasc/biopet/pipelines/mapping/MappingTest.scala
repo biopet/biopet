@@ -18,13 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
-import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -36,7 +32,7 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
  *
  * Created by pjvan_thof on 2/12/15.
  */
-class MappingTest extends TestNGSuite with Matchers {
+abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Mapping = {
     new Mapping {
       override def configName = "mapping"
@@ -48,15 +44,13 @@ class MappingTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val aligners = Array("bwa-mem", "bwa-aln", "star", "star-2pass", "bowtie", "stampy", "gsnap", "tophat")
     val paired = Array(true, false)
-    val chunks = Array(1, 5, 10, 100)
+    val chunks = Array(1, 5)
     val skipMarkDuplicates = Array(true, false)
     val skipFlexipreps = Array(true, false)
     val zipped = Array(true, false)
 
     for (
-      aligner <- aligners;
       pair <- paired;
       chunk <- chunks;
       skipMarkDuplicate <- skipMarkDuplicates;
@@ -99,7 +93,17 @@ class MappingTest extends TestNGSuite with Matchers {
   }
 }
 
+class MappingBwaMemTest extends AbstractTestMapping("bwa-mem")
+class MappingBwaAlnTest extends AbstractTestMapping("bwa-aln")
+class MappingStarTest extends AbstractTestMapping("star")
+class MappingStar2PassTest extends AbstractTestMapping("star-2pass")
+class MappingBowtieTest extends AbstractTestMapping("bowtie")
+class MappingStampyTest extends AbstractTestMapping("stampy")
+class MappingGsnapTest extends AbstractTestMapping("gsnap")
+class MappingTophatTest extends AbstractTestMapping("tophat")
+
 object MappingTest {
+
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
 

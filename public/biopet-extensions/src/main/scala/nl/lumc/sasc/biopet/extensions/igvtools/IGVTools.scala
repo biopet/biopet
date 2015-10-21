@@ -16,16 +16,16 @@
 
 package nl.lumc.sasc.biopet.extensions.igvtools
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
 /**
  * General igvtools extension
  *
  * Created by wyleung on 5-1-15
  */
-abstract class IGVTools extends BiopetCommandLineFunction {
+abstract class IGVTools extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "igvtools", submodule = "igvtools", freeVar = false)
-  override def versionCommand = executable + " version"
-  override def versionRegex = """IGV Version:? ([\w\.]*) .*""".r
+  def versionCommand = executable + " version"
+  def versionRegex = """IGV Version:? ([\w\.]*) .*""".r
   override def versionExitcode = List(0)
 }
