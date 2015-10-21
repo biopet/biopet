@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -13,7 +13,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  *
  * @param root Configuration object for the pipeline
  */
-class SeqStat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class SeqStat(val root: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.SeqStat
 
   @Input(doc = "Input FASTQ", shortName = "input", required = true)
