@@ -47,4 +47,26 @@ object IoUtils {
       }
     }
   }
+
+  /** Possible compression extensions to trim from input files. */
+  val zipExtensions = Set(".gz", ".gzip", ".bzip2", ".bz", ".xz", ".zip")
+
+  /**
+   * Given a file object and a set of compression extensions, return the filename without any of the compression
+   * extensions.
+   *
+   * Examples:
+   *  - my_file.fq.gz returns "my_file.fq"
+   *  - my_other_file.fastq returns "my_file.fastq"
+   *
+   * @param f Input file object.
+   * @param exts Possible compression extensions to trim.
+   * @return Filename without compression extension.
+   */
+  def getUncompressedFileName(f: File, exts: Set[String] = zipExtensions): String =
+    exts.foldLeft(f.getName) {
+      (fname, ext) =>
+        if (fname.toLowerCase.endsWith(ext)) fname.dropRight(ext.length)
+        else fname
+    }
 }
