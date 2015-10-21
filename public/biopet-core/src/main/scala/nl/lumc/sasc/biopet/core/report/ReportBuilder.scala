@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.Summary
 import nl.lumc.sasc.biopet.utils.{ ToolCommand, Logging, IoUtils }
 import org.broadinstitute.gatk.utils.commandline.Input
@@ -28,7 +28,7 @@ import scala.collection.mutable
  *
  * @author pjvan_thof
  */
-trait ReportBuilderExtension extends ToolCommandFuntion {
+trait ReportBuilderExtension extends ToolCommandFunction {
 
   /** Report builder object */
   val builder: ReportBuilder

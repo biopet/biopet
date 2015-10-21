@@ -5,7 +5,7 @@ import nl.lumc.sasc.biopet.FullVersion
 /**
  * Created by pjvanthof on 11/09/15.
  */
-trait ToolCommandFuntion extends BiopetJavaCommandLineFunction with Version {
+trait ToolCommandFunction extends BiopetJavaCommandLineFunction with Version {
   def toolObject: Object
 
   def versionCommand = ""
