@@ -28,7 +28,6 @@ import org.broadinstitute.gatk.queue.QScript
  * Created by wyleung
  */
 class Gears(val root: Configurable) extends QScript with SummaryQScript {
-  qscript =>
   def this() = this(null)
 
   @Input(shortName = "R1", required = false)
@@ -72,7 +71,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     val fastqFiles: List[File] = bamFile.map { bamfile =>
 
       // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
-      val samFilterUnmapped = new SambambaView(qscript)
+      val samFilterUnmapped = new SambambaView(this)
       samFilterUnmapped.input = bamfile
       samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
       samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
@@ -80,7 +79,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       add(samFilterUnmapped)
 
       // start bam to fastq (only on unaligned reads) also extract the matesam
-      val samToFastq = new SamToFastq(qscript)
+      val samToFastq = new SamToFastq(this)
       samToFastq.input = samFilterUnmapped.output
       samToFastq.stringency = Some("LENIENT")
       samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
@@ -90,7 +89,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
       add(samToFastq)
 
       // sync the fastq records
-      val fastqSync = new FastqSync(qscript)
+      val fastqSync = new FastqSync(this)
       fastqSync.refFastq = samToFastq.fastqR1
       fastqSync.inputFastq1 = samToFastq.fastqR1
       fastqSync.inputFastq2 = samToFastq.fastqR2
@@ -109,7 +108,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     }.getOrElse(List(fastqFileR1, fastqFileR2).flatten)
 
     // start kraken
-    val krakenAnalysis = new Kraken(qscript)
+    val krakenAnalysis = new Kraken(this)
     krakenAnalysis.input = fastqFiles
     krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
 
@@ -125,7 +124,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
 
     // create kraken summary file
 
-    val krakenReport = new KrakenReport(qscript)
+    val krakenReport = new KrakenReport(this)
     krakenReport.input = krakenAnalysis.output
     krakenReport.show_zeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
@@ -134,11 +133,12 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     GearsOutputFiles += ("kraken_report_input" -> krakenReport.input)
     GearsOutputFiles += ("kraken_report_output" -> krakenReport.output)
 
-    val krakenReportJSON = new KrakenReportToJson(qscript)
+    val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = krakenReport.output
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
     krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
+    addSummarizable(krakenReportJSON, "krakenreport")
 
     GearsOutputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
     GearsOutputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)

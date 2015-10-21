@@ -21,13 +21,13 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with
   def toolObject = nl.lumc.sasc.biopet.tools.KrakenReportToJson
 
   @Input(doc = "Input Kraken Full report", shortName = "inputReport", required = true)
-  var inputReport: File = null
+  var inputReport: File = _
 
   @Argument(required = false)
   var skipNames: Boolean = false
 
   @Output(doc = "Output JSON", shortName = "output", required = true)
-  var output: File = null
+  var output: File = _
 
   override def defaultCoreMemory = 1.0
 
@@ -37,9 +37,7 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with
     conditional(skipNames, "--skipnames")
 
   def summaryStats: Map[String, Any] = {
-    val map = ConfigUtils.fileToConfigMap(output)
-
-    ConfigUtils.any2map(map.getOrElse("stats", Map()))
+    ConfigUtils.fileToConfigMap(output)
   }
 
   def summaryFiles: Map[String, File] = Map()

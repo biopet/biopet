@@ -39,16 +39,13 @@ object GearsReport extends MultisampleReportBuilder {
   }
 
   def samplePage(sampleId: String, args: Map[String, Any]) = {
-    ReportPage(List(
-    ), List(
+    ReportPage(List(), List(
       "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp")
     ), args)
   }
 
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]) = {
-    ReportPage(List(
-    ), List(
-    ), args)
+    ReportPage(List(), List(), args)
   }
 
   def reportName = "Gears :: Metagenomics Report"

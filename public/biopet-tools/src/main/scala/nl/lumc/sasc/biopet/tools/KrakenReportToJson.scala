@@ -24,7 +24,7 @@ import java.io.{ PrintWriter, File }
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import scala.collection.mutable.ListBuffer
-import scala.collection.{ immutable, mutable }
+import scala.collection.mutable
 
 import scala.io.Source
 
@@ -36,8 +36,8 @@ case class KrakenHit(taxonomyID: Long,
                      cladeLevel: Int,
                      parentTaxonomyID: Long,
                      children: ListBuffer[KrakenHit]) {
-  def toJSON(): Map[String, Any] = {
-    val childJSON = children.toList.map(entry => entry.toJSON())
+  def toJSON(withChildren: Boolean = false): Map[String, Any] = {
+    val childJSON = if (withChildren) children.toList.map(entry => entry.toJSON(withChildren)) else List()
     Map(
       "name" -> taxonomyName,
       "taxid" -> taxonomyID,
@@ -55,6 +55,7 @@ object KrakenReportToJson extends ToolCommand {
 
   var cladeIDs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill(32)(0)
   val spacePattern = "^( +)".r
+  private var lines: Map[Long, KrakenHit] = Map.empty
 
   case class Args(krakenreport: File = null, outputJson: Option[File] = None, skipNames: Boolean = false) extends AbstractArgs
 
@@ -132,7 +133,7 @@ object KrakenReportToJson extends ToolCommand {
     * 6. indented scientific name
     * */
 
-    val lines = reader.getLines()
+    lines = reader.getLines()
       .map(line => parseLine(line, skipNames))
       .filter(p => p.head._2.cladeSize > 0)
       .foldLeft(Map.empty[Long, KrakenHit])((a, b) => {
@@ -141,11 +142,22 @@ object KrakenReportToJson extends ToolCommand {
 
     lines.keys.foreach(k => {
       // append itself to the children attribute of the parent
-      lines(lines(k).parentTaxonomyID).children += lines(k)
+      if (lines(k).parentTaxonomyID > 0L) {
+        // avoid the root and unclassified appending to the unclassified node
+        lines(lines(k).parentTaxonomyID).children += lines(k)
+      }
     })
 
-    mapToJson(lines(1).toJSON()).spaces2
+    val result = Map("unclasified" -> lines(0).toJSON(withChildren = false),
+      "classified" -> lines(1).toJSON(withChildren = true))
+    mapToJson(result).spaces2
 
+  }
+
+  def summary: String = {
+    val result = Map("unclasified" -> lines(0).toJSON(withChildren = false),
+      "classified" -> lines(1).toJSON(withChildren = true))
+    mapToJson(result).spaces2
   }
 
   def main(args: Array[String]): Unit = {
@@ -153,11 +165,10 @@ object KrakenReportToJson extends ToolCommand {
 
     val jsonString: String = reportToJson(commandArgs.krakenreport, skipNames = commandArgs.skipNames)
     commandArgs.outputJson match {
-      case Some(file) => {
+      case Some(file) =>
         val writer = new PrintWriter(file)
         writer.println(jsonString)
         writer.close()
-      }
       case _ => println(jsonString)
     }
 
