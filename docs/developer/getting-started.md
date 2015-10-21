@@ -32,8 +32,8 @@ mvn -DskipTests=true clean install
 
 ### Basic components
 
-#### Qscript (pipeline)
-A basic pipeline would look like this.
+### Qscript (pipeline)
+A basic pipeline would look like this. [Extended example](example-pipeline.md)
 
 ```scala
 package org.example.group.pipelines
@@ -73,7 +73,7 @@ class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript 
 object SimplePipeline extends PipelineCommand
 ```
 
-#### Extensions (wrappers)
+### Extensions (wrappers)
 Wrappers have to be written for each tool used inside the pipeline. A basic wrapper (example wraps the linux ```cat``` command) would look like this:
 ```scala
 package nl.lumc.sasc.biopet.extensions
@@ -101,9 +101,12 @@ class Cat(val root: Configurable) extends BiopetCommandLineFunction {
 }
 ```
 
-#### Tools (Scala programs)
-Within the Biopet framework it is also possible to write your own tools in Scala. If a give functionality or script is not incorporated within the framework
-one can write a tool that does the job. Below you can see an example tool which is written for automatically building sample configs.
+### Tools (Scala programs)
+Within the Biopet framework it is also possible to write your own tools in Scala. 
+When a certain functionality or script is not incorporated within the framework one can write a tool that does the job. 
+Below you can see an example tool which is written for automatically building sample configs.
+
+[Extended example](example-tool.md)
 
 ```scala
 package nl.lumc.sasc.biopet.tools
