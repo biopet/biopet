@@ -49,11 +49,13 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
     val bool = Array(true, false)
-    (for (bams <- 0 to 3;
-          raw <- bool;
-          bcftools <- bool;
-          bcftools_singlesample <- bool;
-          freebayes <- bool) yield Array(bams, raw, bcftools, bcftools_singlesample, freebayes)).toArray
+    (for (
+      bams <- 0 to 3;
+      raw <- bool;
+      bcftools <- bool;
+      bcftools_singlesample <- bool;
+      freebayes <- bool
+    ) yield Array(bams, raw, bcftools, bcftools_singlesample, freebayes)).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
@@ -72,7 +74,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
     pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !freebayes)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftools_singlesample && !freebayes)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
