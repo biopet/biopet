@@ -144,8 +144,8 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
             config("bam_to_fastq", default = false).asBoolean match {
               case true =>
                 val samToFastq = SamToFastq(qscript, config("bam"),
-                  new File(libDir, sampleId + "-" + libId + ".R1.fastq"),
-                  new File(libDir, sampleId + "-" + libId + ".R2.fastq"))
+                  new File(libDir, sampleId + "-" + libId + ".R1.fq.gz"),
+                  new File(libDir, sampleId + "-" + libId + ".R2.fq.gz"))
                 samToFastq.isIntermediate = true
                 qscript.add(samToFastq)
                 mapping.foreach(mapping => {
