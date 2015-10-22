@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
+import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -44,8 +44,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
 
   /** Executed before running the script */
   def init(): Unit = {
-    require(fastqR1.isDefined || bamFile.isDefined, "Must define fastq file(s) or a bam file")
-    require(fastqR1.isDefined != bamFile.isDefined, "Can't define a bam file and a R1 file")
+    require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
+    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or la R1 file")
 
     if (outputName == null) {
       if (fastqR1.isDefined) outputName = fastqR1.map(_.getName

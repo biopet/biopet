@@ -19,13 +19,13 @@ package nl.lumc.sasc.biopet.tools
  * Created by wyleung on 25-9-15.
  */
 
-import java.io.{ PrintWriter, File }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable
 
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 case class KrakenHit(taxonomyID: Long,
@@ -120,7 +120,6 @@ object KrakenReportToJson extends ToolCommand {
 
   def reportToJson(reportRaw: File, skipNames: Boolean): String = {
     val reader = Source.fromFile(reportRaw)
-    //    val lines = reader.getLines().toList.filter(!_.isEmpty)
 
     /*
     * http://ccb.jhu.edu/software/kraken/MANUAL.html
@@ -135,7 +134,7 @@ object KrakenReportToJson extends ToolCommand {
 
     lines = reader.getLines()
       .map(line => parseLine(line, skipNames))
-      .filter(p => p.head._2.cladeSize > 0)
+      .filter(p => (p.head._2.cladeSize > 0) || List(0L, 1L).contains(p.head._2.taxonomyID))
       .foldLeft(Map.empty[Long, KrakenHit])((a, b) => {
         a + b.head
       })
