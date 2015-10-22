@@ -44,19 +44,25 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf"
+    val tmp = File.createTempFile("VcfFilter", ".vcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".bcf"
+    val tmp = File.createTempFile("VcfFilter", ".bcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
+    val tmp = File.createTempFile("VcfFilter", ".vcf.gz")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }

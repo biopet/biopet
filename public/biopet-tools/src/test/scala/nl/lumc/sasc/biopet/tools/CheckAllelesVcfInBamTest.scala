@@ -45,19 +45,25 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/CheckAllesVcfInBam_" + rand.nextString(10) + ".vcf"
+    val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/CheckAllesVcfInBam_" + rand.nextString(10) + ".vcf.gz"
+    val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf.gz")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/CheckAllesVcfInBam_" + rand.nextString(10) + ".bcf"
+    val tmp = File.createTempFile("CheckAllelesVcfInBam", ".bcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
     main(arguments)
   }
