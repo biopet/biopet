@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.extensions.sambamba
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 
 /** General Sambamba extension */
-abstract class Sambamba extends BiopetCommandLineFunction {
+abstract class Sambamba extends BiopetCommandLineFunction with Version {
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 2
 
   override def subPath = "sambamba" :: super.subPath
 
   executable = config("exe", default = "sambamba", submodule = "sambamba")
-  override def versionCommand = executable
-  override def versionRegex = """sambamba v(.*)""".r
+  def versionCommand = executable
+  def versionRegex = """sambamba v(.*)""".r
   override def versionExitcode = List(0, 1)
 }

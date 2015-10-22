@@ -3,21 +3,20 @@ package nl.lumc.sasc.biopet.extensions.tools
 /**
  * Created by waiyileung on 05-10-15.
  */
-
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 /**
  * KrakenReportToJson function class for usage in Biopet pipelines
  *
  * @param root Configuration object for the pipeline
  */
-class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class KrakenReportToJson(val root: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.KrakenReportToJson
 
   @Input(doc = "Input Kraken Full report", shortName = "inputReport", required = true)
@@ -31,10 +30,11 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFuntion with
 
   override def defaultCoreMemory = 1.0
 
-  override def cmdLine = super.cmdLine +
-    required("-i", inputReport) +
-    required("-o", output) +
-    conditional(skipNames, "--skipnames")
+  override def cmdLine =
+    super.cmdLine +
+      required("-i", inputReport) +
+      required("-o", output) +
+      conditional(skipNames, "--skipnames")
 
   def summaryStats: Map[String, Any] = {
     ConfigUtils.fileToConfigMap(output)
