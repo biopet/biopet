@@ -17,13 +17,13 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BiopetFlagstat(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class BiopetFlagstat(val root: Configurable) extends ToolCommandFunction with Summarizable {
   def toolObject = nl.lumc.sasc.biopet.tools.BiopetFlagstat
 
   @Input(doc = "Input bam", shortName = "input", required = true)

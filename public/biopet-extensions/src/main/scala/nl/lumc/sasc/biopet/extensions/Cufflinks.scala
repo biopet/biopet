@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the cufflinks command line tool.
  * Written based on cufflinks version v2.2.1 (md5: 07c831c4f8b4e161882731ea5694ff80)
  */
-class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
+class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cufflinks")
@@ -185,8 +185,8 @@ class Cufflinks(val root: Configurable) extends BiopetCommandLineFunction {
   /** do not contact server to check for update availability [FALSE] */
   var no_update_check: Boolean = config("no_update_check", default = false)
 
-  override def versionRegex = """cufflinks v(.*)""".r
-  override def versionCommand = executable
+  def versionRegex = """cufflinks v(.*)""".r
+  def versionCommand = executable
   override def versionExitcode = List(0, 1)
 
   def cmdLine =

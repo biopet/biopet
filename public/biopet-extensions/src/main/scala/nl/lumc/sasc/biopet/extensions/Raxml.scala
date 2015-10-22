@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
@@ -27,11 +27,11 @@ import scalaz.std.boolean.option
  * extension for raxml
  * based on version 8.1.3
  */
-class Raxml(val root: Configurable) extends BiopetCommandLineFunction {
+class Raxml(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   override def defaultThreads = 1
-  override def versionCommand = executable + " -v"
-  override def versionRegex = """.*version ([\w\.]*) .*""".r
+  def versionCommand = executable + " -v"
+  def versionRegex = """.*version ([\w\.]*) .*""".r
 
   @Input(doc = "Input phy/fasta file", required = true)
   var input: File = _

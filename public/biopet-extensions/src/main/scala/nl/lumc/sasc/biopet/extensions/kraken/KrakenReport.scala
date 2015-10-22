@@ -18,21 +18,21 @@ package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for Kraken */
-class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction {
+class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   executable = config("exe", default = "kraken-report")
-  override def versionRegex = """Kraken version (.*)""".r
+  def versionRegex = """Kraken version (.*)""".r
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 1
 
-  override def versionCommand = new File(new File(executable).getParent, "kraken").getAbsolutePath + " --version"
+  def versionCommand = new File(new File(executable).getParent, "kraken").getAbsolutePath + " --version"
 
   var db: File = config("db")
   var show_zeros: Boolean = config("show_zeros", default = false)

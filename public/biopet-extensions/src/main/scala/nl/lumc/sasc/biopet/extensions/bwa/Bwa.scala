@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.extensions.bwa
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
 /**
  * General bwa extension
  *
  * Created by pjvan_thof on 1/16/15.
  */
-abstract class Bwa extends BiopetCommandLineFunction {
+abstract class Bwa extends BiopetCommandLineFunction with Version {
   override def subPath = "bwa" :: super.subPath
   executable = config("exe", default = "bwa")
-  override def versionRegex = """Version: (.*)""".r
+  def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
-  override def versionCommand = executable
+  def versionCommand = executable
 }

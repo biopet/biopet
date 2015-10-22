@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFuntion {
+class BedtoolsCoverageToCounts(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts
 
   @Input(doc = "Input fasta", shortName = "input", required = true)

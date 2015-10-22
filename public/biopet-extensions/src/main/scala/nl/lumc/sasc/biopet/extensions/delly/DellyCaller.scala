@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.extensions.delly
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {
+class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "delly")
 
   private lazy val versionexecutable: File = new File(executable)
@@ -29,8 +29,8 @@ class DellyCaller(val root: Configurable) extends BiopetCommandLineFunction {
   override def defaultThreads = 1
   override def defaultCoreMemory = 4.0
 
-  override def versionCommand = versionexecutable.getAbsolutePath
-  override def versionRegex = """DELLY \(Version: (.*)\)""".r
+  def versionCommand = versionexecutable.getAbsolutePath
+  def versionRegex = """DELLY \(Version: (.*)\)""".r
   override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")

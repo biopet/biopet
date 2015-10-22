@@ -55,12 +55,12 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
   def getJavaVersion: Option[String] = {
     if (!BiopetCommandLineFunction.executableCache.contains(executable))
       preProcessExecutable()
-    if (!BiopetCommandLineFunction.versionCache.contains(javaVersionCommand))
-      getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
-        case Some(version) => BiopetCommandLineFunction.versionCache += javaVersionCommand -> version
+    if (!Version.versionCache.contains(javaVersionCommand))
+      Version.getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
+        case Some(version) => Version.versionCache += javaVersionCommand -> version
         case _             =>
       }
-    BiopetCommandLineFunction.versionCache.get(javaVersionCommand)
+    Version.versionCache.get(javaVersionCommand)
   }
 
   override def setupRetry(): Unit = {

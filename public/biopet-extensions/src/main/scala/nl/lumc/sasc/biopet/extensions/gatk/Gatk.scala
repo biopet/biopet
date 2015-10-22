@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetJavaCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
  *
  * Created by pjvan_thof on 2/26/15.
  */
-abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
+abstract class Gatk extends BiopetJavaCommandLineFunction with Reference with Version {
   override def subPath = "gatk" :: super.subPath
 
   jarFile = config("gatk_jar")
@@ -51,9 +51,9 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference {
 
   var et: Option[String] = config("et")
 
-  override def versionRegex = """(.*)""".r
+  def versionRegex = """(.*)""".r
   override def versionExitcode = List(0, 1)
-  override def versionCommand = executable + " -jar " + jarFile + " -version"
+  def versionCommand = executable + " -jar " + jarFile + " -version"
 
   override def getVersion = super.getVersion.collect { case version => "Gatk " + version }
   override def dictRequired = true

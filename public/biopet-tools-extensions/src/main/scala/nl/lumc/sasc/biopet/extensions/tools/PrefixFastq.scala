@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  *
  * Created by pjvan_thof on 1/13/15.
  */
-class PrefixFastq(val root: Configurable) extends ToolCommandFuntion {
+class PrefixFastq(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.PrefixFastq
 
   override def defaultCoreMemory = 1.0
