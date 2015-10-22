@@ -1,7 +1,7 @@
 # Developer - Code style
 
 ## General rules
-- Variable names should always be in *CamelCase* and does **not** start with a capital letter
+- Variable names should always be in *camelCase* and does **not** start with a capital letter
 
 ```scala
 // correct: 
@@ -11,7 +11,7 @@ val outputFromProgram: String = "foobar"
 val OutputFromProgram: String = "foobar"
 ```
 
-- Class names should always be in *CamelCase* and does **always** start with a capital letter
+- Class names should always be in *CamelCase* and **always** start with a capital letter
 
 ```scala
 // correct:

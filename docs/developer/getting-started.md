@@ -43,9 +43,10 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Cat }
 import org.broadinstitute.gatk.queue.QScript
 
-//TODO: Replace class name, must be the same as the class of the pipeline
+//TODO: Replace class name, must be the same as the name of the pipeline
 class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript {
   // A constructor without arguments is needed if this pipeline is a root pipeline
+  // Root pipeline = the pipeline one wants to start on the commandline
   def this() = this(null)
 
   @Input(required = true)
@@ -69,7 +70,7 @@ class SimplePipeline(val root: Configurable) extends QScript with BiopetQScript 
   }
 }
 
-//TODO: Replace object name, must be the same as the class of the pipeline
+
 object SimplePipeline extends PipelineCommand
 ```
 
