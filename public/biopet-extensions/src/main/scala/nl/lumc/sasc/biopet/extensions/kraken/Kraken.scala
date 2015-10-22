@@ -46,11 +46,15 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
+
   def versionRegex = """^Kraken version ([\d\w\-\.]+)""".r
+
   override def versionExitcode = List(0, 1)
+
   def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 8.0
+
   override def defaultThreads = 4
 
   /** Sets readgroup when not set yet */
