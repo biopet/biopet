@@ -18,9 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.{ SortSam, SamToFastq }
+import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{ KrakenReportToJson, FastqSync }
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -30,27 +30,25 @@ import org.broadinstitute.gatk.queue.QScript
 class Gears(val root: Configurable) extends QScript with SummaryQScript {
   def this() = this(null)
 
-  @Input(shortName = "R1", required = false)
-  var fastqFileR1: Option[File] = None
+  @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
+  var fastqR1: Option[File] = None
 
-  @Input(shortName = "R2", required = false)
-  var fastqFileR2: Option[File] = None
+  @Input(doc = "R2 reads in FastQ format", shortName = "R2", required = false)
+  var fastqR2: Option[File] = None
 
-  @Input(doc = "From the bam all the upmapped reads are used for kraken", shortName = "bam", required = false)
+  @Input(doc = "All unmapped reads will be extracted from this bam for analysis", shortName = "bam", required = false)
   var bamFile: Option[File] = None
 
   @Argument(required = false)
   var outputName: String = _
 
-  var GearsOutputFiles: scala.collection.mutable.Map[String, File] = scala.collection.mutable.Map.empty
-
   /** Executed before running the script */
   def init(): Unit = {
-    require(fastqFileR1.isDefined || bamFile.isDefined, "Must define fastq file(s) or a bam file")
-    require(fastqFileR1.isDefined != bamFile.isDefined, "Can't define a bam file and a R1 file")
+    require(fastqR1.isDefined || bamFile.isDefined, "Must define fastq file(s) or a bam file")
+    require(fastqR1.isDefined != bamFile.isDefined, "Can't define a bam file and a R1 file")
 
     if (outputName == null) {
-      if (fastqFileR1.isDefined) outputName = fastqFileR1.map(_.getName
+      if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
         .stripSuffix(".gz")
         .stripSuffix(".fastq")
         .stripSuffix(".fq"))
@@ -97,41 +95,41 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
 
       // TODO: need some sanity check on whether R2 is really containing reads (e.g. Single End libraries)
       fastqSync.outputFastq2 = new File(outputDir, s"$outputName.unmapped.R2.sync.fq.gz")
-      fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats.json")
+      fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats")
       add(fastqSync)
+      addSummarizable(fastqSync, "fastqsync")
 
-      GearsOutputFiles += ("fastqsync_stats" -> fastqSync.outputStats)
-      GearsOutputFiles += ("fastqsync_R1" -> fastqSync.outputFastq1)
-      GearsOutputFiles += ("fastqsync_R2" -> fastqSync.outputFastq2)
+      outputFiles += ("fastqsync_stats" -> fastqSync.outputStats)
+      outputFiles += ("fastqsync_R1" -> fastqSync.outputFastq1)
+      outputFiles += ("fastqsync_R2" -> fastqSync.outputFastq2)
 
       List(fastqSync.outputFastq1, fastqSync.outputFastq2)
-    }.getOrElse(List(fastqFileR1, fastqFileR2).flatten)
+    }.getOrElse(List(fastqR1, fastqR2).flatten)
 
     // start kraken
     val krakenAnalysis = new Kraken(this)
     krakenAnalysis.input = fastqFiles
     krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
 
-    krakenAnalysis.paired = (fastqFiles.length == 2)
+    krakenAnalysis.paired = fastqFiles.length == 2
 
-    krakenAnalysis.classified_out = Option(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Option(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
+    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
+    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
-    GearsOutputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    GearsOutputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    GearsOutputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
+    outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
+    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
+    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
 
     // create kraken summary file
-
     val krakenReport = new KrakenReport(this)
     krakenReport.input = krakenAnalysis.output
     krakenReport.show_zeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 
-    GearsOutputFiles += ("kraken_report_input" -> krakenReport.input)
-    GearsOutputFiles += ("kraken_report_output" -> krakenReport.output)
+    outputFiles += ("kraken_report_input" -> krakenReport.input)
+    outputFiles += ("kraken_report_output" -> krakenReport.output)
 
     val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = krakenReport.output
@@ -140,8 +138,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
     add(krakenReportJSON)
     addSummarizable(krakenReportJSON, "krakenreport")
 
-    GearsOutputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
-    GearsOutputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)
+    outputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
+    outputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)
 
     addSummaryJobs()
   }
@@ -152,13 +150,13 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map.empty ++
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map())
+    (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map())
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = Map.empty ++
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    (if (fastqFileR1.isDefined) Map("input_R1" -> fastqFileR1.get) else Map()) ++
-    GearsOutputFiles
+    (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
+    outputFiles
 }
 
 /** This object give a default main method to the pipelines */

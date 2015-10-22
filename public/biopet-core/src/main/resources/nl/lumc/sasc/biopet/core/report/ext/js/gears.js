@@ -175,7 +175,7 @@ function loadTable(d, target) {
             .data(child)
             .on("click", outerclick);
         row.append("td").attr("class", "col-md-3").text( child.size );
-        row.append("td").attr("class", "col-md-3").text( child.value );
+        row.append("td").attr("class", "col-md-3").text( child.count );
 
     }
 
@@ -221,7 +221,7 @@ var y = d3.scale.sqrt()
 
 var color = d3.scale.category20c();
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#svgholder").append("svg")
     .attr("width", width)
     .attr("height", height)
     .append("g")
@@ -248,7 +248,7 @@ var arc = d3.svg.arc()
 // Keep track of the node that is currently being displayed as the root.
 var node;
 
-d3.json("./tst.json", function(error, root) {
+function loadGears( root ) {
     console.log(root);
     node = root;
     var path = svg.datum(root).selectAll("path")
@@ -291,9 +291,7 @@ d3.json("./tst.json", function(error, root) {
 
     // Get total size of the tree = value of root node from partition.
     totalSize = path.node().__data__.value;
-
-});
-
+}
 d3.select(self.frameElement).style("height", height + "px");
 
 

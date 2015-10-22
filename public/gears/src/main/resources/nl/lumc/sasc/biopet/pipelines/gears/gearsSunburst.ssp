@@ -33,9 +33,7 @@
 
 #if (showPlot)
 <div class="row">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
-    <script src="${rootPath}ext/js/gears.js"></script>
-
+    <div class="col-md-12">
     <h3 id='currentlevel'>Root</h3>
     <div>
         <span id="selection_name"></span> -
@@ -49,7 +47,15 @@
     </form>
     <div id="sequence"></div>
 
-    <div id="datatable">
+    <div id="datatable"></div>
+    <div id="svgholder"></div>
+
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script src="${rootPath}ext/js/gears.js"></script>
+
     <script type="application/ecmascript">
 
     #{
@@ -58,9 +64,9 @@
     }#
 
         var krakenresult = JSON.parse('<%= unescape(bla) %>');
-
-
+        loadGears(krakenresult.kraken.classified);
     </script>
-    </div>
+
+
 </div>
 #end

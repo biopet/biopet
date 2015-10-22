@@ -148,16 +148,10 @@ object KrakenReportToJson extends ToolCommand {
       }
     })
 
-    val result = Map("unclasified" -> lines(0).toJSON(withChildren = false),
+    val result = Map("unclassified" -> lines(0).toJSON(withChildren = false),
       "classified" -> lines(1).toJSON(withChildren = true))
     mapToJson(result).spaces2
 
-  }
-
-  def summary: String = {
-    val result = Map("unclasified" -> lines(0).toJSON(withChildren = false),
-      "classified" -> lines(1).toJSON(withChildren = true))
-    mapToJson(result).spaces2
   }
 
   def main(args: Array[String]): Unit = {
