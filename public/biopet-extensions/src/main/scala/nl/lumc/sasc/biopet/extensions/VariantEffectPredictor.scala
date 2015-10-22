@@ -18,14 +18,14 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   executable = config("exe", submodule = "perl", default = "perl")
   var vepScript: String = config("vep_script")
@@ -36,8 +36,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   @Output(doc = "output file", required = true)
   var output: File = null
 
-  override def versionRegex = """version (\d*)""".r
-  override def versionCommand = executable + " " + vepScript + " --help"
+  def versionRegex = """version (\d*)""".r
+  def versionCommand = executable + " " + vepScript + " --help"
 
   //Boolean vars
   var v: Boolean = config("v", default = true)

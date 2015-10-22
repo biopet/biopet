@@ -15,12 +15,12 @@
  */
 package nl.lumc.sasc.biopet.extensions.bcftools
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
-abstract class Bcftools extends BiopetCommandLineFunction {
+abstract class Bcftools extends BiopetCommandLineFunction with Version {
   override def subPath = "bcftools" :: super.subPath
   executable = config("exe", default = "bcftools")
-  override def versionCommand = executable
-  override def versionRegex = """Version: (.*)""".r
+  def versionCommand = executable
+  def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 }

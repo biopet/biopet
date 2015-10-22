@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.{ Logging, tryToParseNumber }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
@@ -28,7 +28,7 @@ import scala.io.Source
  *
  * This is based on using class files directly from the jar, if needed other picard jar can be used
  */
-abstract class Picard extends BiopetJavaCommandLineFunction {
+abstract class Picard extends BiopetJavaCommandLineFunction with Version {
   override def subPath = "picard" :: super.subPath
 
   if (config.contains("picard_jar")) jarFile = config("picard_jar")
@@ -54,11 +54,11 @@ abstract class Picard extends BiopetJavaCommandLineFunction {
   @Argument(doc = "CREATE_MD5_FILE", required = false)
   var createMd5: Boolean = config("createmd5", default = false)
 
-  override def versionCommand = {
+  def versionCommand = {
     if (jarFile != null) executable + " -cp " + jarFile + " " + javaMainClass + " -h"
     else null
   }
-  override def versionRegex = """Version: (.*)""".r
+  def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 
   override def defaultCoreMemory = 3.0
@@ -95,15 +95,15 @@ object Picard extends Logging {
 
         logger.debug("dependencies: " + dependencies)
 
-        val htsjdk = dependencies.find(dep => dep("groupId") == "samtools" && dep("artifactId") == "htsjdk").collect {
-          case dep =>
-            "samtools htsjdk " + dep("version")
-        }
+        val htsjdk = dependencies.find(dep =>
+          (dep("groupId") == "com.github.samtools" || dep("groupId") == "samtools") &&
+            dep("artifactId") == "htsjdk")
+          .collect { case dep => "samtools htsjdk " + dep("version") }
 
-        dependencies.find(dep => dep("groupId") == "picard" && dep("artifactId") == "picard").collect {
-          case dep =>
-            "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk")
-        }
+        dependencies.find(dep =>
+          (dep("groupId") == "com.github.broadinstitute" || dep("groupId") == "picard") &&
+            dep("artifactId") == "picard")
+          .collect { case dep => "Picard " + dep("version") + " using " + htsjdk.getOrElse("unknown htsjdk") }
       case otherwise => None
     }
   }

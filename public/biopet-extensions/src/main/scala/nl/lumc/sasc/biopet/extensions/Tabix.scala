@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * Note that tabix can either index a file (no stdout stream) or retrieve regions from an indexed file (stdout stream)
  *
  */
-class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
+class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(doc = "Input bgzipped file", required = true)
   var input: File = null
@@ -58,8 +58,8 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "tabix")
 
-  override def versionCommand = executable
-  override def versionRegex = """Version: (.*)""".r
+  def versionCommand = executable
+  def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 
   /** Formats that tabix can handle */

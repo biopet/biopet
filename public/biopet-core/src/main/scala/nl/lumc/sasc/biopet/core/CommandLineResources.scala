@@ -85,9 +85,11 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     this.freeze()
   }
 
+  var threadsCorrection = 0
+
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
-    nCoresRequest = Some(commands.map(_.threads).sum)
+    nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
 
     _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)

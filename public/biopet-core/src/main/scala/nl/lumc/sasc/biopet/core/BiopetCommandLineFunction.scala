@@ -146,59 +146,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
       case Some(n) if n > 0 => n
       case _                => 1
     })
-    addJobReportBinding("version", getVersion)
-  }
-
-  /** Command to get version of executable */
-  protected[core] def versionCommand: String = null
-
-  /** Regex to get version from version command output */
-  protected[core] def versionRegex: Regex = null
-
-  /** Allowed exit codes for the version command */
-  protected[core] def versionExitcode = List(0)
-
-  /** Executes the version command */
-  private[core] def getVersionInternal: Option[String] = {
-    if (versionCommand == null || versionRegex == null) None
-    else getVersionInternal(versionCommand, versionRegex)
-  }
-
-  /** Executes the version command */
-  private[core] def getVersionInternal(versionCommand: String, versionRegex: Regex): Option[String] = {
-    if (versionCommand == null || versionRegex == null) return None
-    val exe = new File(versionCommand.trim.split(" ")(0))
-    if (!exe.exists()) return None
-    val stdout = new StringBuffer()
-    val stderr = new StringBuffer()
-    def outputLog = "Version command: \n" + versionCommand +
-      "\n output log: \n stdout: \n" + stdout.toString +
-      "\n stderr: \n" + stderr.toString
-    val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
-    if (!versionExitcode.contains(process.exitValue())) {
-      logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
-      return None
-    }
-    for (line <- stdout.toString.split("\n") ++ stderr.toString.split("\n")) {
-      line match {
-        case versionRegex(m) => return Some(m)
-        case _               =>
-      }
-    }
-    logger.warn("getVersion give a exit code " + process.exitValue + " but no version was found, executable correct? \n" + outputLog)
-    None
-  }
-
-  /** Get version from cache otherwise execute the version command  */
-  def getVersion: Option[String] = {
-    if (!BiopetCommandLineFunction.executableCache.contains(executable))
-      preProcessExecutable()
-    if (!BiopetCommandLineFunction.versionCache.contains(versionCommand))
-      getVersionInternal match {
-        case Some(version) => BiopetCommandLineFunction.versionCache += versionCommand -> version
-        case _             =>
-      }
-    BiopetCommandLineFunction.versionCache.get(versionCommand)
   }
 
   private[core] var _inputAsStdin = false
@@ -284,7 +231,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
 /** stores global caches */
 object BiopetCommandLineFunction {
-  private[core] val versionCache: mutable.Map[String, String] = mutable.Map()
   private[core] val executableMd5Cache: mutable.Map[String, String] = mutable.Map()
   private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
 }

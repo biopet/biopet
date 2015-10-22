@@ -18,14 +18,14 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Wrapper for the gsnap command line tool
  * Written based on gsnap version 2014-05-15
  */
-class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   /** default executable */
   executable = config("exe", default = "gsnap", freeVar = false)
@@ -328,8 +328,8 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   /** value to put into read-group library (rg-pl) field */
   var read_group_platform: Option[String] = config("read_group_platform")
 
-  override def versionRegex = """.* version (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """.* version (.*)""".r
+  def versionCommand = executable + " --version"
 
   def cmdLine = {
     required(executable) +

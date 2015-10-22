@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
@@ -24,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 import scala.collection.immutable.Nil
 
 /** Extension for picard CollectInsertSizeMetrics */
-class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.CollectInsertSizeMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -37,7 +38,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
   protected var outputHistogram: File = null
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  var reference: File = _
 
   @Argument(doc = "DEVIATIONS", required = false)
   var deviations: Option[Double] = config("deviations")
@@ -59,6 +60,7 @@ class CollectInsertSizeMetrics(val root: Configurable) extends Picard with Summa
 
   override def beforeGraph() {
     outputHistogram = new File(output + ".pdf")
+    if (reference == null) reference = referenceFasta()
   }
 
   /** Returns command to execute */
