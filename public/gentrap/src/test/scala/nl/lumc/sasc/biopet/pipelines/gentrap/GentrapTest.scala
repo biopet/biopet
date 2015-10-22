@@ -29,7 +29,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
-class GentrapTest extends TestNGSuite with Matchers {
+abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
@@ -71,7 +71,7 @@ class GentrapTest extends TestNGSuite with Matchers {
       .toMap
     )
 
-  private lazy val validExpressionMeasures = Set(
+  val validExpressionMeasures = Set(
     "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
     "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
@@ -97,7 +97,7 @@ class GentrapTest extends TestNGSuite with Matchers {
 
     for {
       sampleConfig <- sampleConfigs.toArray
-      expressionMeasure <- expressionMeasures
+      //expressionMeasure <- expressionMeasures
       strandProtocol <- strandProtocols
     } yield Array(sampleConfig, List(expressionMeasure), strandProtocol)
   }
@@ -175,6 +175,14 @@ class GentrapTest extends TestNGSuite with Matchers {
     FileUtils.deleteDirectory(GentrapTest.outputDir)
   }
 }
+
+class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene")
+class GentrapFragmentsPerExonTest extends GentrapTestAbstract("fragments_per_exon")
+class GentrapBasesPerGeneTest extends GentrapTestAbstract("bases_per_gene")
+class GentrapBasesPerExonTest extends GentrapTestAbstract("bases_per_exon")
+class GentrapCufflinksStrictTest extends GentrapTestAbstract("cufflinks_strict")
+class GentrapCufflinksGuidedTest extends GentrapTestAbstract("cufflinks_guided")
+class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind")
 
 object GentrapTest {
   val outputDir = Files.createTempDir()

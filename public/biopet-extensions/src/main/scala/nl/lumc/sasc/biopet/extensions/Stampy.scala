@@ -18,11 +18,11 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for stampy */
-class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "FastQ file R1", shortName = "R1")
   var R1: File = _
 
@@ -60,14 +60,14 @@ class Stampy(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var logfile: Option[String] = config("logfile")
 
   executable = config("exe", default = "stampy.py", freeVar = false)
-  override def versionRegex = """stampy v(.*) \(.*\), .*""".r
+  def versionRegex = """stampy v(.*) \(.*\), .*""".r
   override def versionExitcode = List(0, 1)
 
   /// Stampy uses approx factor 1.1 times the size of the genome in memory.
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 8
 
-  override def versionCommand = executable + " --help"
+  def versionCommand = executable + " --help"
 
   /** Sets readgroup when not set yet */
   override def beforeGraph(): Unit = {

@@ -143,8 +143,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     paired = input_R2.isDefined
 
-    if (readgroupId == null) readgroupId = sampleId.get + "-" + libId.get
-    else if (readgroupId == null) readgroupId = config("readgroup_id")
+    if (readgroupId == null)
+      readgroupId = config("readgroup_id", default = sampleId.get + "-" + libId.get)
 
     if (outputName == null) outputName = readgroupId
 

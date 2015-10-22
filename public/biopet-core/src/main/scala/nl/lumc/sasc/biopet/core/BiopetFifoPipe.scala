@@ -51,6 +51,9 @@ class BiopetFifoPipe(val root: Configurable,
 
     deps :::= inputs.values.toList.flatten.filter(!fifoFiles.contains(_))
     deps = deps.distinct
+
+    pipesJobs :::= commands
+    pipesJobs = pipesJobs.distinct
   }
 
   override def beforeCmd(): Unit = {

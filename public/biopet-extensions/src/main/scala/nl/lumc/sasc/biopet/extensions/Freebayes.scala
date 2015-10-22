@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  *
  * Created by pjvan_thof on 3/3/15.
  */
-class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   @Input(required = true)
   var bamfiles: List[File] = Nil
@@ -41,8 +41,8 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var haplotypeLength: Option[Int] = config("haplotype_length")
 
   executable = config("exe", default = "freebayes")
-  override def versionRegex = """version:  (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """version:  (.*)""".r
+  def versionCommand = executable + " --version"
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
