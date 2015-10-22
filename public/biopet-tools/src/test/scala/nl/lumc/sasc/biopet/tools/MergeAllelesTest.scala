@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
 
 import org.scalatest.Matchers
@@ -48,19 +49,25 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/MergeAlleles_" + rand.nextString(10) + ".vcf"
+    val tmp = File.createTempFile("MergeAlleles", ".vcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/MergeAlleles_" + rand.nextString(10) + ".vcf.gz"
+    val tmp = File.createTempFile("MergeAlleles", ".vcf.gz")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/MergeAlleles_" + rand.nextString(10) + ".bcf"
+    val tmp = File.createTempFile("MergeAlleles", ".bcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
     main(arguments)
   }

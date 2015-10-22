@@ -44,19 +44,25 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf"
+    val tmp = File.createTempFile("VcfFilter", ".vcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".bcf"
+    val tmp = File.createTempFile("VcfFilter", ".bcf")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
+    val tmp = File.createTempFile("VcfFilter", ".vcf.gz")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
     main(arguments)
   }
@@ -65,20 +71,20 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    hasGenotype(record, List(("Child_7006504", GenotypeType.HET))) shouldBe true
-    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_VAR))) shouldBe false
-    hasGenotype(record, List(("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
-    hasGenotype(record, List(("Child_7006504", GenotypeType.NO_CALL))) shouldBe false
-    hasGenotype(record, List(("Child_7006504", GenotypeType.MIXED))) shouldBe false
+    hasGenotype(record, List(("Sample_101", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Sample_101", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Sample_101", GenotypeType.HOM_REF))) shouldBe false
+    hasGenotype(record, List(("Sample_101", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Sample_101", GenotypeType.MIXED))) shouldBe false
 
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET))) shouldBe false
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_VAR))) shouldBe false
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF))) shouldBe true
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.NO_CALL))) shouldBe false
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.MIXED))) shouldBe false
+    hasGenotype(record, List(("Sample_103", GenotypeType.HET))) shouldBe false
+    hasGenotype(record, List(("Sample_103", GenotypeType.HOM_VAR))) shouldBe false
+    hasGenotype(record, List(("Sample_103", GenotypeType.HOM_REF))) shouldBe true
+    hasGenotype(record, List(("Sample_103", GenotypeType.NO_CALL))) shouldBe false
+    hasGenotype(record, List(("Sample_103", GenotypeType.MIXED))) shouldBe false
 
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.HOM_REF), ("Child_7006504", GenotypeType.HET))) shouldBe true
-    hasGenotype(record, List(("Mother_7006508", GenotypeType.HET), ("Child_7006504", GenotypeType.HOM_REF))) shouldBe false
+    hasGenotype(record, List(("Sample_103", GenotypeType.HOM_REF), ("Sample_101", GenotypeType.HET))) shouldBe true
+    hasGenotype(record, List(("Sample_103", GenotypeType.HET), ("Sample_101", GenotypeType.HOM_REF))) shouldBe false
   }
 
   @Test def testMinQualScore() = {
@@ -142,42 +148,42 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    mustHaveVariant(record, List("Child_7006504")) shouldBe true
-    mustHaveVariant(record, List("Child_7006504", "Father_7006506")) shouldBe true
-    mustHaveVariant(record, List("Child_7006504", "Father_7006506", "Mother_7006508")) shouldBe false
+    mustHaveVariant(record, List("Sample_101")) shouldBe true
+    mustHaveVariant(record, List("Sample_101", "Sample_102")) shouldBe true
+    mustHaveVariant(record, List("Sample_101", "Sample_102", "Sample_103")) shouldBe false
   }
 
   @Test def testSameGenotype() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    notSameGenotype(record, "Child_7006504", "Father_7006506") shouldBe false
-    notSameGenotype(record, "Child_7006504", "Mother_7006508") shouldBe true
-    notSameGenotype(record, "Father_7006506", "Mother_7006508") shouldBe true
+    notSameGenotype(record, "Sample_101", "Sample_102") shouldBe false
+    notSameGenotype(record, "Sample_101", "Sample_103") shouldBe true
+    notSameGenotype(record, "Sample_102", "Sample_103") shouldBe true
   }
 
   @Test def testfilterHetVarToHomVar() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    filterHetVarToHomVar(record, "Child_7006504", "Father_7006506") shouldBe true
-    filterHetVarToHomVar(record, "Child_7006504", "Mother_7006508") shouldBe true
-    filterHetVarToHomVar(record, "Father_7006506", "Mother_7006508") shouldBe true
+    filterHetVarToHomVar(record, "Sample_101", "Sample_102") shouldBe true
+    filterHetVarToHomVar(record, "Sample_101", "Sample_103") shouldBe true
+    filterHetVarToHomVar(record, "Sample_102", "Sample_103") shouldBe true
   }
 
   @Test def testDeNovo() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    denovoInSample(record, "Child_7006504") shouldBe false
-    denovoInSample(record, "Father_7006506") shouldBe false
-    denovoInSample(record, "Mother_7006508") shouldBe false
+    denovoInSample(record, "Sample_101") shouldBe false
+    denovoInSample(record, "Sample_102") shouldBe false
+    denovoInSample(record, "Sample_103") shouldBe false
   }
 
   @Test def testResToDom() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
 
     resToDom(record, List(trio)) shouldBe false
   }
@@ -185,7 +191,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testTrioCompound = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
 
     trioCompound(record, List(trio))
   }
@@ -193,7 +199,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testDeNovoTrio = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
-    val trio = new Trio("Child_7006504", "Father_7006506", "Mother_7006508")
+    val trio = new Trio("Sample_101", "Sample_102", "Sample_103")
 
     denovoTrio(record, List(trio))
   }
