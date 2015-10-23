@@ -2,14 +2,14 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Output, Input }
 
 /**
  * Created by ahbbollen on 13-10-15.
  */
-class GvcfToBed(val root: Configurable) extends ToolCommandFuntion {
+class GvcfToBed(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.GvcfToBed
 
   @Input(doc = "input vcf")

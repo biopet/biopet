@@ -46,7 +46,7 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    an [IllegalArgumentException] should be thrownBy hasMinGenomeQuality(record, Some("dummy"), 99)
+    an[IllegalArgumentException] should be thrownBy hasMinGenomeQuality(record, Some("dummy"), 99)
   }
 
   @Test def testCreateBedRecord = {
