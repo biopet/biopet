@@ -50,7 +50,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.0.4</scoverage.plugin.version>
+        <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
+        <scalaVersion>2.10.4</scalaVersion>
     </properties>
     
     <build>
@@ -79,6 +80,7 @@
                 <version>2.18.1</version>
                 <configuration>
                     <forkCount>1C</forkCount>
+                    <argLine>-Xmx300m</argLine>
                     <workingDirectory>${project.build.directory}</workingDirectory>
                 </configuration>
             </plugin>
@@ -243,10 +245,12 @@
               <artifactId>scoverage-maven-plugin</artifactId>
               <version>${scoverage.plugin.version}</version>
               <configuration>
-                  <scalaVersion>2.10.2</scalaVersion>
+                  <scalaVersion>${scalaVersion}</scalaVersion>
+                  <aggregate>true</aggregate>
+                  <highlighting>true</highlighting>
                   <!-- other parameters -->
               </configuration>
-            </plugin>
+          </plugin>
       </plugins>
     </build>
     <reporting>
@@ -255,6 +259,17 @@
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <aggregate>true</aggregate> <!-- for aggregated report -->
+                    <highlighting>true</highlighting>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report> <!-- select only one report from: report, integration-report and report-only reporters -->
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
     </reporting>

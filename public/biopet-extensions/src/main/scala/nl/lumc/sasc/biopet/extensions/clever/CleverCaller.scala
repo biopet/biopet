@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.extensions.clever
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ Version, Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
-class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "clever")
 
   private lazy val versionExecutable: File = config("version_exe", default = new File(executable).getParent + "/ctk-version")
@@ -29,8 +29,8 @@ class CleverCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   override def defaultThreads = 8
   override def defaultCoreMemory = 3.0
 
-  override def versionCommand = versionExecutable.getAbsolutePath
-  override def versionRegex = """(.*)""".r
+  def versionCommand = versionExecutable.getAbsolutePath
+  def versionRegex = """(.*)""".r
   override def versionExitcode = List(0, 1)
 
   @Input(doc = "Input file (bam)")

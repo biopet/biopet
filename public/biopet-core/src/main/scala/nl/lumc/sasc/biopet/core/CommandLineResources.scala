@@ -28,7 +28,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   var residentFactor: Double = config("resident_factor", default = 1.2)
 
   private var _coreMemory: Double = 2.0
-  def coreMemeory = _coreMemory
+  def coreMemory = _coreMemory
 
   var retry = 0
 
@@ -85,11 +85,13 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     this.freeze()
   }
 
+  var threadsCorrection = 0
+
   protected def combineResources(commands: List[CommandLineResources]): Unit = {
     commands.foreach(_.setResources())
-    nCoresRequest = Some(commands.map(_.threads).sum)
+    nCoresRequest = Some(commands.map(_.threads).sum + threadsCorrection)
 
-    _coreMemory = commands.map(cmd => cmd.coreMemeory * (cmd.threads.toDouble / threads.toDouble)).sum
+    _coreMemory = commands.map(cmd => cmd.coreMemory * (cmd.threads.toDouble / threads.toDouble)).sum
     memoryLimit = Some(_coreMemory * threads)
     residentLimit = Some((_coreMemory + (0.5 * retry)) * residentFactor)
     vmem = Some((_coreMemory * (vmemFactor + (0.5 * retry))) + "G")

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -29,7 +29,7 @@ import scala.io.Source
  * Extension for cutadept
  * Based on version 1.5
  */
-class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Summarizable {
+class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "Input fastq file")
   var fastq_input: File = _
 
@@ -40,8 +40,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var stats_output: File = _
 
   executable = config("exe", default = "cutadapt")
-  override def versionCommand = executable + " --version"
-  override def versionRegex = """(.*)""".r
+  def versionCommand = executable + " --version"
+  def versionRegex = """(.*)""".r
 
   var default_clip_mode: String = config("default_clip_mode", default = "3")
   var opt_adapter: Set[String] = config("adapter", default = Nil)

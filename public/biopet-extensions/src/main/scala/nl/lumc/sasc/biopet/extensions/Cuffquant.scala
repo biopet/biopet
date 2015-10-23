@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the cuffquant command line tool.
  * Written based on cuffquant version v2.2.1 (md5: 0765b82b11db9256f5be341a7da884d6)
  */
-class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction {
+class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "cuffquant")
@@ -117,8 +117,8 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction {
   /** Disable SCV correction */
   var no_scv_correction: Boolean = config("no_scv_correction", default = false)
 
-  override def versionRegex = """cuffquant v(.*)""".r
-  override def versionCommand = executable
+  def versionRegex = """cuffquant v(.*)""".r
+  def versionCommand = executable
   override def versionExitcode = List(0, 1)
 
   def cmdLine =

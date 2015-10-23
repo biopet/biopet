@@ -18,14 +18,14 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Queue extension for the FastqSplitter
  * @param root Parent object
  */
-class FastqSplitter(val root: Configurable) extends ToolCommandFuntion {
+class FastqSplitter(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.FastqSplitter
 
   @Input(doc = "Input fastq", shortName = "input", required = true)

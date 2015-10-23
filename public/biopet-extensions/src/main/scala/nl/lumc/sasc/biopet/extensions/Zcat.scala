@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Extension for zcat */
-class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
+class Zcat(val root: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Zipped file", required = true)
   var input: List[File] = _
 
@@ -31,12 +31,12 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction {
 
   executable = config("exe", default = "zcat")
 
-  override def versionRegex = """zcat \(gzip\) (.*)""".r
-  override def versionCommand = executable + " --version"
+  def versionRegex = """zcat \(gzip\) (.*)""".r
+  def versionCommand = executable + " --version"
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    (if (inputAsStdin) "" else required(input)) +
+    (if (inputAsStdin) "" else repeat(input)) +
     (if (outputAsStsout) "" else " > " + required(output))
 }
 

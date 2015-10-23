@@ -19,14 +19,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
+import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
-import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
-import org.broadinstitute.gatk.queue.function.CommandLineFunction
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import nl.lumc.sasc.biopet.utils.Logging
+import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
  * Common trait for ShivaVariantcalling
@@ -47,6 +46,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       case _                  => config("name_prefix")
     }
   }
+
+  override def defaults = Map("bcftoolscall" -> Map("f" -> List("GQ")))
 
   /** Executed before script */
   def init(): Unit = {
@@ -98,7 +99,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools)
+  protected def callersList: List[Variantcaller] = List(new Freebayes, new RawVcf, new Bcftools, new BcftoolsSingleSample)
 
   /** General trait for a variantcaller mode */
   trait Variantcaller {
@@ -161,22 +162,50 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       val mp = new SamtoolsMpileup(qscript)
       mp.input = inputBams
       mp.u = true
+      mp.reference = referenceFasta()
 
       val bt = new BcftoolsCall(qscript)
-      bt.O = "z"
+      bt.O = Some("z")
       bt.v = true
       bt.c = true
 
-      //TODO: add proper class with piping support, see also issue #114
-      add(new CommandLineFunction {
-        @Input
-        var input = inputBams
+      add(mp | bt > outputFile)
+      add(Tabix(qscript, outputFile))
+    }
+  }
 
-        @Output
-        var output = outputFile
+  /** default mode of bcftools */
+  class BcftoolsSingleSample extends Variantcaller {
+    val name = "bcftools_singlesample"
+    protected val defaultPrio = 8
 
-        def commandLine: String = mp.cmdPipe + " | " + bt.cmdPipeInput + " > " + outputFile + " && tabix -p vcf " + outputFile
-      })
+    /** Final output file of this mode */
+    def outputFile = new File(outputDir, namePrefix + ".bcftools_singlesample.vcf.gz")
+
+    def addJobs() {
+      val sampleVcfs = for (inputBam <- inputBams) yield {
+        val mp = new SamtoolsMpileup(qscript)
+        mp.input :+= inputBam
+        mp.u = true
+        mp.reference = referenceFasta()
+
+        val bt = new BcftoolsCall(qscript)
+        bt.O = Some("z")
+        bt.v = true
+        bt.c = true
+        bt.output = new File(outputDir, inputBam.getName + ".vcf.gz")
+
+        add(mp | bt)
+        add(Tabix(qscript, bt.output))
+        bt.output
+      }
+
+      val bcfmerge = new BcftoolsMerge(qscript)
+      bcfmerge.input = sampleVcfs
+      bcfmerge.output = outputFile
+      bcfmerge.O = Some("z")
+      add(bcfmerge)
+      add(Tabix(qscript, outputFile))
     }
   }
 
@@ -192,10 +221,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
     def addJobs() {
       val rawFiles = inputBams.map(bamFile => {
+        val mp = new SamtoolsMpileup(qscript) {
+          override def configName = "samtoolsmpileup"
+          override def defaults = Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
+        }
+        mp.input :+= bamFile
+
         val m2v = new MpileupToVcf(qscript)
         m2v.inputBam = bamFile
         m2v.output = new File(outputDir, bamFile.getName.stripSuffix(".bam") + ".raw.vcf")
-        add(m2v)
+        add(mp | m2v)
 
         val vcfFilter = new VcfFilter(qscript) {
           override def configName = "vcffilter"

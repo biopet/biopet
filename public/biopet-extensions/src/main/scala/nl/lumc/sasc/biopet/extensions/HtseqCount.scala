@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Wrapper for the htseq-count command line tool
  * Written based on htseq-count version 0.6.1p1
  */
-class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
+class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   /** default executable */
   executable = config("exe", default = "htseq-count")
@@ -70,8 +70,8 @@ class HtseqCount(val root: Configurable) extends BiopetCommandLineFunction {
   /** suppress progress report */
   var quiet: Boolean = config("quiet", default = false)
 
-  override def versionRegex = """.*, version (.*)\.""".r
-  override def versionCommand = executable + " --help"
+  def versionRegex = """.*, version (.*)\.""".r
+  def versionCommand = executable + " --help"
 
   def cmdLine = {
     required(executable) +

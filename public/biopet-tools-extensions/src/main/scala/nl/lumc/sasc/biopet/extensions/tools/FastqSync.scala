@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, ToolCommandFunction }
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -30,7 +30,7 @@ import scala.util.matching.Regex
  *
  * @param root Configuration object for the pipeline
  */
-class FastqSync(val root: Configurable) extends ToolCommandFuntion with Summarizable {
+class FastqSync(val root: Configurable) extends ToolCommandFunction with Summarizable {
 
   def toolObject = nl.lumc.sasc.biopet.tools.FastqSync
 

@@ -17,12 +17,13 @@ package nl.lumc.sasc.biopet.extensions.picard
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /** Extension for picard CollectAlignmentSummaryMetrics */
-class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable {
+class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with Summarizable with Reference {
   javaMainClass = new picard.analysis.CollectAlignmentSummaryMetrics().getClass.getName
 
   @Input(doc = "The input SAM or BAM files to analyze.  Must be coordinate sorted.", required = true)
@@ -41,7 +42,7 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
   var output: File = _
 
   @Argument(doc = "Reference file", required = false)
-  var reference: File = config("reference")
+  var reference: File = _
 
   @Argument(doc = "ASSUME_SORTED", required = false)
   var assumeSorted: Boolean = config("assumeSorted", default = true)
@@ -51,6 +52,11 @@ class CollectAlignmentSummaryMetrics(val root: Configurable) extends Picard with
 
   @Argument(doc = "STOP_AFTER", required = false)
   var stopAfter: Option[Long] = config("stopAfter")
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
+  }
 
   /** Returns command to execute */
   override def cmdLine = super.cmdLine +
