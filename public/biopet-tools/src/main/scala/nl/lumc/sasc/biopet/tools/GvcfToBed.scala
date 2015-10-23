@@ -79,6 +79,8 @@ object GvcfToBed extends ToolCommand {
    * @return
    */
   def hasMinGenomeQuality(record: VariantContext, sample: Option[String], minGQ: Int): Boolean = {
+    sample foreach { x => if (!record.getSampleNamesOrderedByName.contains(x))
+      throw new IllegalArgumentException("Sample does not exist")}
     val gt = record.getGenotype(sample.getOrElse(record.getSampleNamesOrderedByName.head))
     gt.hasGQ && gt.getGQ >= minGQ
   }

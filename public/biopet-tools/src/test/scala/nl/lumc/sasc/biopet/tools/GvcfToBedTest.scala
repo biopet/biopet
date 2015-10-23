@@ -31,15 +31,22 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
     val record = reader.iterator().next()
 
     hasMinGenomeQuality(record, None, 99) shouldBe true
-    hasMinGenomeQuality(record, Some("Child_7006504"), 99) shouldBe true
+    hasMinGenomeQuality(record, Some("Sample_101"), 99) shouldBe true
 
     val reader2 = new VCFFileReader(unvepped, false)
     val record2 = reader2.iterator.next()
 
     hasMinGenomeQuality(record2, None, 99) shouldBe false
     hasMinGenomeQuality(record2, None, 0) shouldBe false
-    hasMinGenomeQuality(record2, Some("Father_7006506"), 3) shouldBe true
-    hasMinGenomeQuality(record2, Some("Father_7006506"), 99) shouldBe false
+    hasMinGenomeQuality(record2, Some("Sample_102"), 3) shouldBe true
+    hasMinGenomeQuality(record2, Some("Sample_102"), 99) shouldBe false
+  }
+
+  @Test def wrongSample = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    an [IllegalArgumentException] should be thrownBy hasMinGenomeQuality(record, Some("dummy"), 99)
   }
 
   @Test def testCreateBedRecord = {
