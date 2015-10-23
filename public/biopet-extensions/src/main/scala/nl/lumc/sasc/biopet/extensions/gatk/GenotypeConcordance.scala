@@ -20,7 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
-import org.broadinstitute.gatk.utils.report.{GATKReportTable, GATKReport}
+import org.broadinstitute.gatk.utils.report.{ GATKReportTable, GATKReport }
 
 /**
  * Extension for CombineVariants from GATK
@@ -54,8 +54,7 @@ class GenotypeConcordance(val root: Configurable) extends Gatk with Summarizable
     val samples = for (i <- 0 until genotypeSummary.getNumRows) yield genotypeSummary.get(i, "Sample").toString
 
     def getMap(table: GATKReportTable, column: String) = samples.distinct.map(sample => sample -> {
-      (for (i <- 0 until table.getNumRows if table.get(i, "Sample") == sample) yield
-        s"${table.get(i, "Eval_Genotype")}__${table.get(i, "Comp_Genotype")}" -> table.get(i, column)).toMap
+      (for (i <- 0 until table.getNumRows if table.get(i, "Sample") == sample) yield s"${table.get(i, "Eval_Genotype")}__${table.get(i, "Comp_Genotype")}" -> table.get(i, column)).toMap
     }).toMap
 
     Map(
