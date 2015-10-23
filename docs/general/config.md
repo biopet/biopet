@@ -58,6 +58,7 @@ Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
 This config file should be written in either JSON or YAML format. It can contain setup settings like:
+
  * references,
  * cut offs,
  * program modes and memory limits (program specific),
