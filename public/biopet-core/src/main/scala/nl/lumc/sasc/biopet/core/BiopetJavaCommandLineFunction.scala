@@ -21,9 +21,9 @@ import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunction {
   executable = config("java", default = "java", submodule = "java", freeVar = false)
 
-  javaGCThreads = config("java_gc_threads")
-  javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
-  javaGCTimeLimit = config("java_gc_timelimit")
+  javaGCThreads = config("java_gc_threads", default = 4)
+  javaGCHeapFreeLimit = config("java_gc_heap_freelimit", default = 10)
+  javaGCTimeLimit = config("java_gc_timelimit", default = 50)
 
   override def defaultVmemFactor: Double = 2.0
 
@@ -38,8 +38,6 @@ trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetC
 
     if (javaMainClass != null && javaClasspath.isEmpty)
       javaClasspath = JavaCommandLineFunction.currentClasspath
-
-    //threads = getThreads(defaultThreads)
   }
 
   /** Creates command to execute extension */
