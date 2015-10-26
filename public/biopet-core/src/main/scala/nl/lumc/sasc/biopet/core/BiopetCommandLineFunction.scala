@@ -230,7 +230,7 @@ object BiopetCommandLineFunction extends Logging {
         if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
           val newExe = BiopetCommandLineFunction.executableCache(executable)
           if (new File(newExe).exists()) {
-            val is = new FileInputStream(executable)
+            val is = new FileInputStream(newExe)
             val cnt = is.available
             val bytes = Array.ofDim[Byte](cnt)
             is.read(bytes)
