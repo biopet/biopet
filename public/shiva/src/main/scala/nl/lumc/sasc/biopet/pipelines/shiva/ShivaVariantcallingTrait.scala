@@ -97,7 +97,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
         gc.outputFile = new File(caller.outputDir, s"$namePrefix-genotype_concordance.${caller.name}.txt")
         referenceVcfRegions.foreach(gc.intervals ::= _)
         add(gc)
-        addSummarizable(gc, s"$namePrefix-genotype_concordance_${caller.name}")
+        addSummarizable(gc, s"$namePrefix-genotype_concordance-${caller.name}")
       })
     }
     add(cv)
@@ -116,7 +116,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       gc.outputFile = new File(outputDir, s"$namePrefix-genotype_concordance.final.txt")
       referenceVcfRegions.foreach(gc.intervals ::= _)
       add(gc)
-      addSummarizable(gc, s"$namePrefix-genotype_concordance_final")
+      addSummarizable(gc, s"$namePrefix-genotype_concordance-final")
     })
 
     addSummaryJobs()
