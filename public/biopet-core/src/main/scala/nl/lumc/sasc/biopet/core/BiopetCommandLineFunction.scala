@@ -203,7 +203,7 @@ object BiopetCommandLineFunction extends Logging {
   private[core] val executableMd5Cache: mutable.Map[String, String] = mutable.Map()
   private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
 
-  private case class Executable(path: String, md5: Option[String])
+  case class Executable(path: String, md5: Option[String])
   def preProcessExecutable(executable: String): Executable = {
     if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
       if (executable != null) {
