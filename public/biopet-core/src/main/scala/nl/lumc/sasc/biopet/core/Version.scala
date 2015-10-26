@@ -54,8 +54,6 @@ object Version extends Logging {
     if (versionCache.contains(versionCommand)) return versionCache.get(versionCommand)
     else if (versionCommand == null || versionRegex == null) return None
     else {
-      val exe = new File(versionCommand.trim.split(" ")(0))
-      if (!exe.exists()) return None
       val stdout = new StringBuffer()
       val stderr = new StringBuffer()
       def outputLog = "Version command: \n" + versionCommand +
