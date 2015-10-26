@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
 import nl.lumc.sasc.biopet.extensions.gatk.{ GenotypeConcordance, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
+import nl.lumc.sasc.biopet.extensions.{ Ln, Bgzip, Tabix }
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -224,11 +224,13 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
         bt.output
       }
 
-      val bcfmerge = new BcftoolsMerge(qscript)
-      bcfmerge.input = sampleVcfs
-      bcfmerge.output = outputFile
-      bcfmerge.O = Some("z")
-      add(bcfmerge)
+      if (sampleVcfs.size > 1) {
+        val bcfmerge = new BcftoolsMerge(qscript)
+        bcfmerge.input = sampleVcfs
+        bcfmerge.output = outputFile
+        bcfmerge.O = Some("z")
+        add(bcfmerge)
+      } else add(Ln.apply(qscript, sampleVcfs.head, outputFile))
       add(Tabix(qscript, outputFile))
     }
   }
