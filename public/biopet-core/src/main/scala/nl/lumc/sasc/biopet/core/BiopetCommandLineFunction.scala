@@ -99,7 +99,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   protected[core] def preProcessExecutable() {
     val exe = BiopetCommandLineFunction.preProcessExecutable(executable)
-    executable = exe.path
+    exe.path.foreach(executable = _)
     addJobReportBinding("md5sum_exe", exe.md5.getOrElse("N/A"))
   }
 
@@ -199,7 +199,7 @@ object BiopetCommandLineFunction extends Logging {
   private[core] val executableMd5Cache: mutable.Map[String, String] = mutable.Map()
   private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
 
-  case class Executable(path: String, md5: Option[String])
+  case class Executable(path: Option[String], md5: Option[String])
   def preProcessExecutable(executable: String): Executable = {
     if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
       if (executable != null) {
@@ -236,7 +236,7 @@ object BiopetCommandLineFunction extends Logging {
         }
       }
     }
-    Executable(BiopetCommandLineFunction.executableCache(executable),
+    Executable(BiopetCommandLineFunction.executableCache.get(executable),
       BiopetCommandLineFunction.executableMd5Cache.get(executable))
   }
 }

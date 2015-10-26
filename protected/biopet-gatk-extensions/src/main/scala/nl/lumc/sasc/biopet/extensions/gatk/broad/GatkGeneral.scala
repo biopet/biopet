@@ -43,7 +43,7 @@ trait GatkGeneral extends CommandLineGATK with CommandLineResources with Referen
   def versionCommand = "java" + " -jar " + jarFile + " -version"
 
   override def getVersion = {
-    executable = BiopetCommandLineFunction.preProcessExecutable(executable).path
+    BiopetCommandLineFunction.preProcessExecutable(executable).path.foreach(executable = _)
     super.getVersion.collect { case v => "Gatk " + v }
   }
 }
