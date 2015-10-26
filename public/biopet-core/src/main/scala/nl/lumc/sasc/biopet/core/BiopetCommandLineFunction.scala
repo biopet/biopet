@@ -26,7 +26,6 @@ import org.ggf.drmaa.JobTemplate
 import scala.collection.mutable
 import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
-import scala.util.matching.Regex
 import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
@@ -50,20 +49,18 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     val writer = new PrintWriter(file)
     writer.println("set -eubf")
     writer.println("set -o pipefail")
-    lines.foreach(writer.println(_))
+    lines.foreach(writer.println)
     writer.close()
   }
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
-    case jt: JobTemplate => {
+    case jt: JobTemplate =>
       changeScript(new File(jt.getArgs.head.toString))
       jt.setRemoteCommand(remoteCommand)
-    }
-    case ps: ProcessSettings => {
+    case ps: ProcessSettings =>
       changeScript(new File(ps.getCommand.tail.head))
       ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
-    }
   }
 
   /**
@@ -135,10 +132,9 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     that.beforeGraph()
     that.internalBeforeGraph()
     this match {
-      case p: BiopetPipe => {
+      case p: BiopetPipe =>
         p.commands.last._outputAsStdout = true
         new BiopetPipe(p.commands ::: that :: Nil)
-      }
       case _ => new BiopetPipe(List(this, that))
     }
   }
@@ -209,7 +205,6 @@ object BiopetCommandLineFunction extends Logging {
       if (executable != null) {
         if (!BiopetCommandLineFunction.executableCache.contains(executable)) {
           try {
-            val oldExecutable = executable
             val buffer = new StringBuffer()
             val cmd = Seq("which", executable)
             val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
