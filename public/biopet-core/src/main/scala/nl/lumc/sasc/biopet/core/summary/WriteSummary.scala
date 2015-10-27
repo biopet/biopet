@@ -107,19 +107,21 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
 
       qscript match {
         case tag: SampleLibraryTag => prefixSampleLibrary(map, tag.sampleId, tag.libId)
-        case q:MultiSampleQScript  => {
-          q.samples.map { case (sampleName,sample) =>
-            sampleName -> Map(
-              qscript.summaryName -> Map("settings" -> sample.summarySettings),
-              "libraries" -> sample.libraries.map { case (libName, lib) =>
-                sampleName -> Map(
-                  qscript.summaryName -> Map("settings" -> lib)
-                )
-              }
-            )
+        case q: MultiSampleQScript => {
+          q.samples.map {
+            case (sampleName, sample) =>
+              sampleName -> Map(
+                qscript.summaryName -> Map("settings" -> sample.summarySettings),
+                "libraries" -> sample.libraries.map {
+                  case (libName, lib) =>
+                    sampleName -> Map(
+                      qscript.summaryName -> Map("settings" -> lib)
+                    )
+                }
+              )
           } ++ map
         }
-        case _                     => map
+        case _ => map
       }
     }
 
