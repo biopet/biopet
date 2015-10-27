@@ -18,7 +18,6 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
@@ -33,7 +32,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
+trait ShivaTrait extends MultiSampleQScript with Reference {
   qscript =>
 
   /** Executed before running the script */
