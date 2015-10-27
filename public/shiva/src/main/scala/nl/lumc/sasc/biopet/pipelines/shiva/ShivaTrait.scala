@@ -274,11 +274,6 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
 
-        val oldIndex: File = new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        val newIndex: File = new File(bam + ".bai")
-        val baiLn = Ln(qscript, oldIndex, newIndex)
-        add(baiLn)
-
         variantcalling.foreach(vc => {
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
