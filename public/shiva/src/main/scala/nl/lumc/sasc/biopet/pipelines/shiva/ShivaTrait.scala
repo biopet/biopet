@@ -93,7 +93,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
       def summaryFiles: Map[String, File] = {
         ((bamFile, preProcessBam) match {
           case (Some(b), Some(pb)) => Map("bamFile" -> b, "preProcessBam" -> pb)
-          case (Some(b), _)        => Map("bamFile" -> b)
+          case (Some(b), _)        => Map("bamFile" -> b, "preProcessBam" -> b)
           case _                   => Map()
         }) ++ (inputR1.map("input_R1" -> _) ::
           inputR2.map("input_R2" -> _) ::
