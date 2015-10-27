@@ -19,7 +19,7 @@ package nl.lumc.sasc.biopet.tools
  * Created by wyleung on 25-9-15.
  */
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.ToolCommand

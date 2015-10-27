@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
+import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 

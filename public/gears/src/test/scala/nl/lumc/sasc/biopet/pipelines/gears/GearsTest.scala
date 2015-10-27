@@ -18,10 +18,10 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
+import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
