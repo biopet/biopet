@@ -37,7 +37,7 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 object ShivaReport extends MultisampleReportBuilder {
 
   def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
-    case true => true
+    case Some(true) => true
     case _ => false
   }
 
