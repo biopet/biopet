@@ -21,7 +21,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
   }
 
   var vmem: Option[String] = config("vmem")
-  def defaultCoreMemory: Double = 1.0
+  def defaultCoreMemory: Double = 2.0
   def defaultVmemFactor: Double = 1.4
   var vmemFactor: Double = config("vmem_factor", default = defaultVmemFactor)
 
