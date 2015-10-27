@@ -26,7 +26,6 @@ import org.ggf.drmaa.JobTemplate
 import scala.collection.mutable
 import scala.io.Source
 import scala.sys.process.{ Process, ProcessLogger }
-import scala.util.matching.Regex
 import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
@@ -50,20 +49,18 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     val writer = new PrintWriter(file)
     writer.println("set -eubf")
     writer.println("set -o pipefail")
-    lines.foreach(writer.println(_))
+    lines.foreach(writer.println)
     writer.close()
   }
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
-    case jt: JobTemplate => {
+    case jt: JobTemplate =>
       changeScript(new File(jt.getArgs.head.toString))
       jt.setRemoteCommand(remoteCommand)
-    }
-    case ps: ProcessSettings => {
+    case ps: ProcessSettings =>
       changeScript(new File(ps.getCommand.tail.head))
       ps.setCommand(Array(remoteCommand) ++ ps.getCommand.tail)
-    }
   }
 
   /**
@@ -91,50 +88,19 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   }
 
-  /** can override this value is executable may not be converted to CanonicalPath */
+  /**
+   * Can override this value is executable may not be converted to CanonicalPath
+   * @deprecated
+   */
   val executableToCanonicalPath = true
 
   /**
    * Checks executable. Follow full CanonicalPath, checks if it is existing and do a md5sum on it to store in job report
    */
   protected[core] def preProcessExecutable() {
-    if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
-      if (executable != null) {
-        if (!BiopetCommandLineFunction.executableCache.contains(executable)) {
-          try {
-            val oldExecutable = executable
-            val buffer = new StringBuffer()
-            val cmd = Seq("which", executable)
-            val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
-            if (process.exitValue == 0) {
-              executable = buffer.toString
-              val file = new File(executable)
-              if (executableToCanonicalPath) executable = file.getCanonicalPath
-              else executable = file.getAbsolutePath
-            } else Logging.addError("executable: '" + executable + "' not found, please check config")
-            BiopetCommandLineFunction.executableCache += oldExecutable -> executable
-            BiopetCommandLineFunction.executableCache += executable -> executable
-          } catch {
-            case ioe: java.io.IOException =>
-              logger.warn(s"Could not use 'which' on '$executable', check on executable skipped: " + ioe)
-          }
-        } else executable = BiopetCommandLineFunction.executableCache(executable)
-
-        if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
-          if (new File(executable).exists()) {
-            val is = new FileInputStream(executable)
-            val cnt = is.available
-            val bytes = Array.ofDim[Byte](cnt)
-            is.read(bytes)
-            is.close()
-            val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
-            BiopetCommandLineFunction.executableMd5Cache += executable -> temp
-          } else BiopetCommandLineFunction.executableMd5Cache += executable -> "file_does_not_exist"
-        }
-      }
-    }
-    val md5 = BiopetCommandLineFunction.executableMd5Cache.get(executable)
-    addJobReportBinding("md5sum_exe", md5.getOrElse("None"))
+    val exe = BiopetCommandLineFunction.preProcessExecutable(executable)
+    exe.path.foreach(executable = _)
+    addJobReportBinding("md5sum_exe", exe.md5.getOrElse("N/A"))
   }
 
   /** executes checkExecutable method and fill job report */
@@ -166,10 +132,9 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     that.beforeGraph()
     that.internalBeforeGraph()
     this match {
-      case p: BiopetPipe => {
+      case p: BiopetPipe =>
         p.commands.last._outputAsStdout = true
         new BiopetPipe(p.commands ::: that :: Nil)
-      }
       case _ => new BiopetPipe(List(this, that))
     }
   }
@@ -230,7 +195,48 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 }
 
 /** stores global caches */
-object BiopetCommandLineFunction {
+object BiopetCommandLineFunction extends Logging {
   private[core] val executableMd5Cache: mutable.Map[String, String] = mutable.Map()
   private[core] val executableCache: mutable.Map[String, String] = mutable.Map()
+
+  case class Executable(path: Option[String], md5: Option[String])
+  def preProcessExecutable(executable: String): Executable = {
+    if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
+      if (executable != null) {
+        if (!BiopetCommandLineFunction.executableCache.contains(executable)) {
+          try {
+            val buffer = new StringBuffer()
+            val cmd = Seq("which", executable)
+            val process = Process(cmd).run(ProcessLogger(buffer.append(_)))
+            if (process.exitValue == 0) {
+              val file = new File(buffer.toString)
+              BiopetCommandLineFunction.executableCache += executable -> file.getAbsolutePath
+            } else {
+              Logging.addError("executable: '" + executable + "' not found, please check config")
+              BiopetCommandLineFunction.executableCache += executable -> executable
+            }
+          } catch {
+            case ioe: java.io.IOException =>
+              logger.warn(s"Could not use 'which' on '$executable', check on executable skipped: " + ioe)
+              BiopetCommandLineFunction.executableCache += executable -> executable
+          }
+        }
+
+        if (!BiopetCommandLineFunction.executableMd5Cache.contains(executable)) {
+          val newExe = BiopetCommandLineFunction.executableCache(executable)
+          if (new File(newExe).exists()) {
+            val is = new FileInputStream(newExe)
+            val cnt = is.available
+            val bytes = Array.ofDim[Byte](cnt)
+            is.read(bytes)
+            is.close()
+            val temp = MessageDigest.getInstance("MD5").digest(bytes).map("%02X".format(_)).mkString.toLowerCase
+            BiopetCommandLineFunction.executableMd5Cache += newExe -> temp
+          } else BiopetCommandLineFunction.executableMd5Cache += newExe -> "file_does_not_exist"
+        }
+      }
+    }
+    Executable(BiopetCommandLineFunction.executableCache.get(executable),
+      BiopetCommandLineFunction.executableMd5Cache.get(executable))
+  }
 }

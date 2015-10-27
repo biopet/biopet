@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
 import java.nio.file.Paths
 
 import org.scalatest.Matchers
@@ -41,19 +42,25 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   val unvepped = resourcePath("/unvepped.vcf")
 
   @Test def testAllFields() = {
-    val tmp_path = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
+    val tmp = File.createTempFile("VcfToTsv", ".tsv")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", unvepped, "-o", tmp_path, "--all_info")
     main(arguments)
   }
 
   @Test def testSpecificField() = {
-    val tmp_path = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
+    val tmp = File.createTempFile("VcfToTsv", ".tsv")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vepped, "-o", tmp_path, "-i", "CSQ")
     main(arguments)
   }
 
   @Test def testNewSeparators() = {
-    val tmp_path = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
+    val tmp = File.createTempFile("VcfToTsv", ".tsv")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
     val arguments = Array("-I", vepped, "-o", tmp_path, "--all_info", "--separator", ",", "--list_separator", "|")
     main(arguments)
   }

@@ -27,7 +27,7 @@ class SamtoolsSort(val root: Configurable) extends Samtools {
   }
 
   def cmdLine = required(executable) + required("sort") +
-    optional("-m", (coreMemeory + "G")) +
+    optional("-m", (coreMemory + "G")) +
     optional("-@", threads) +
     optional("-O", outputFormat) +
     required("-T", prefix) +

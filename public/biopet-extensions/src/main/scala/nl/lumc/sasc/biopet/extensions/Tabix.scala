@@ -35,10 +35,9 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
   @Output(doc = "Output (for region query)", required = false)
   var outputQuery: File = null
 
-  @Output(doc = "Output (for indexing)", required = false) // NOTE: it's a def since we can't change the index name ~ it's always input_name + .tbi
-  lazy val outputIndex: File = {
-    require(input != null, "Input must be defined")
-    new File(input.toString + ".tbi")
+  def outputIndex: File = {
+    require(input != null, "Input should be defined")
+    new File(input.getAbsolutePath + ".tbi")
   }
 
   @Argument(doc = "Regions to query", required = false)
@@ -70,7 +69,8 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
     p match {
       case Some(fmt) =>
         require(validFormats.contains(fmt), "-p flag must be one of " + validFormats.mkString(", "))
-      case None => ;
+        outputFiles :+= outputIndex
+      case None =>
     }
   }
 
@@ -94,5 +94,21 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
     if (regions.nonEmpty) baseCommand + required("", repeat(regions), escape = false) + " > " + required(outputQuery)
     // indexing mode
     else baseCommand
+  }
+}
+
+object Tabix {
+  def apply(root: Configurable, input: File) = {
+    val tabix = new Tabix(root)
+    tabix.input = input
+    tabix.p = tabix.input.getName match {
+      case s if s.endsWith(".vcf.gz")    => Some("vcf")
+      case s if s.endsWith(".bed.gz")    => Some("bed")
+      case s if s.endsWith(".sam.gz")    => Some("sam")
+      case s if s.endsWith(".gff.gz")    => Some("gff")
+      case s if s.endsWith(".psltbl.gz") => Some("psltbl")
+      case _                             => throw new IllegalArgumentException("Unknown file type")
+    }
+    tabix
   }
 }
