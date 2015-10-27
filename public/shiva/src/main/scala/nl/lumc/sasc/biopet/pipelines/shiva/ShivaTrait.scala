@@ -121,7 +121,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
 
       lazy val inputR1: Option[File] = config("R1")
       lazy val inputR2: Option[File] = config("R2")
-      lazy val inputBam: Option[File] = if (r1.isEmpty) config("bam") else None
+      lazy val inputBam: Option[File] = if (inputR1.isEmpty) config("bam") else None
 
       lazy val (mapping, bamFile, preProcessBam): (Option[Mapping], Option[File], Option[File]) =
         (inputR1.isDefined, inputBam.isDefined) match {
@@ -226,9 +226,9 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input == Nil) None
       else if (input.tail == Nil) {
-        val bamFile = new File(sampleDir, input.head.getName)
+        val bamFile = new File(sampleDir, s"$sampleId.bam")
         val oldIndex: File = new File(input.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        val newIndex: File = new File(sampleDir, input.head.getName.stripSuffix(".bam") + ".bai")
+        val newIndex: File = new File(sampleDir, s"$sampleId.bai")
         val baiLn = Ln(qscript, oldIndex, newIndex)
         add(baiLn)
 

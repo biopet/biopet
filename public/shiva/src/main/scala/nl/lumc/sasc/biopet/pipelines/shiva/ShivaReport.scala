@@ -38,7 +38,7 @@ object ShivaReport extends MultisampleReportBuilder {
 
   def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
     case Some(true) => true
-    case _ => false
+    case _          => false
   }
 
   /** Root page for the shiva report */
@@ -58,19 +58,20 @@ object ShivaReport extends MultisampleReportBuilder {
       List(
         "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")) ++
         (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-          Map("showPlot" -> true, "showTable" -> false))) else Nil) ++
+          Map("showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
         List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false)),
-        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false))
-      ),
+          "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
+          "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
+          "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+            Map("showPlot" -> true, "showTable" -> false)),
+          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            Map("showPlot" -> true, "showTable" -> false))
+        ),
       pageArgs
     )
   }
@@ -135,8 +136,8 @@ object ShivaReport extends MultisampleReportBuilder {
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
       (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil) ++
       List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-      "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-    ), args)
+        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+      ), args)
   }
 
   /** Library page */
