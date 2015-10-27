@@ -35,6 +35,9 @@ trait MultiSampleQScript extends SummaryQScript {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
+    /** Sample specific settings */
+    def summarySettings: Map[String, Any] = Map()
+
     /** Library class with basic functions build in */
     abstract class AbstractLibrary(val libId: String) extends Summarizable {
       /** Overrules config of qscript with default sample and default library */
@@ -44,6 +47,9 @@ trait MultiSampleQScript extends SummaryQScript {
       def addSummarizable(summarizable: Summarizable, name: String): Unit = {
         qscript.addSummarizable(summarizable, name, Some(sampleId), Some(libId))
       }
+
+      /** Library specific settings */
+      def summarySettings: Map[String, Any] = Map()
 
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {

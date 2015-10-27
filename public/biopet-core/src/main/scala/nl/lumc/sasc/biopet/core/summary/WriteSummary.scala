@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
@@ -99,12 +99,26 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         ).toMap
       }
 
-      val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
-        (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map("pipeline" -> files))) ++
-        (if (executables.isEmpty) Map[String, Any]() else Map("executables" -> executables.toMap))))
+      val map = Map(qscript.summaryName -> (Map(
+        "settings" -> settings,
+        "files" -> Map("pipeline" -> files),
+        "executables" -> executables.toMap))
+      )
 
       qscript match {
         case tag: SampleLibraryTag => prefixSampleLibrary(map, tag.sampleId, tag.libId)
+        case q:MultiSampleQScript  => {
+          q.samples.map { case (sampleName,sample) =>
+            sampleName -> Map(
+              qscript.summaryName -> Map("settings" -> sample.summarySettings),
+              "libraries" -> sample.libraries.map { case (libName, lib) =>
+                sampleName -> Map(
+                  qscript.summaryName -> Map("settings" -> lib)
+                )
+              }
+            )
+          } ++ map
+        }
         case _                     => map
       }
     }
