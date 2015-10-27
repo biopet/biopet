@@ -49,7 +49,7 @@ class Delly(val root: Configurable) extends QScript with Reference with SummaryQ
     if (outputVcf == null) outputVcf = new File(workDir, outputName + ".delly.vcf")
   }
 
-  override def summaryFile: File = new File(outputDir, "Delly.summary.json")
+  override def summaryFile: File = new File(workDir, "Delly.summary.json")
 
   override def summaryFiles: Map[String, File] = Map.empty ++
     Map("input" -> input) ++
@@ -57,9 +57,7 @@ class Delly(val root: Configurable) extends QScript with Reference with SummaryQ
 
   override def summarySettings = {
     Map(
-      "input" -> input,
       "workDir" -> workDir,
-      "outputVCF" -> outputVcf,
       "outputName" -> outputName,
       "del" -> del,
       "dup" -> dup,
