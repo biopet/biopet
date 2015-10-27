@@ -36,6 +36,11 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 /** Object for report generation for Shiva pipeline */
 object ShivaReport extends MultisampleReportBuilder {
 
+  def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
+    case true => true
+    case _ => false
+  }
+
   /** Root page for the shiva report */
   def indexPage = {
     val regions = regionsPage
@@ -51,10 +56,10 @@ object ShivaReport extends MultisampleReportBuilder {
           ), Map())
         ),
       List(
-        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
-        "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-          Map("showPlot" -> true, "showTable" -> false)),
-        "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
+        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")) ++
+        (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+          Map("showPlot" -> true, "showTable" -> false))) else Nil) ++
+        List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
@@ -127,9 +132,9 @@ object ShivaReport extends MultisampleReportBuilder {
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
-      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true)),
-      "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
-      "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
+      (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil) ++
+      List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
     ), args)
   }
