@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet/pipelines.mypipeline
+package nl.lumc.sasc.biopet.pipelines.mypipeline
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
@@ -29,10 +29,8 @@ class HelloPipeline(val root: Configurable) extends QScript with SummaryQScript 
 
     val fastqc = new Fastqc(this)
     fastqc.fastqfile = config("fastqc_input")
-    fastqc.output = new File(outputDir,
-
-    /* Only required when using [[SummaryQScript]] */
-    addSummaryQScript(shiva)
+    fastqc.output = new File(outputDir, "fastqc.txt")
+    add(fastqc)
 
     // From here you can use the output files of shiva as input file of other jobs
   }
