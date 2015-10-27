@@ -166,8 +166,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
       val bedCov = BedtoolsCoverage(this, intervals.bed, inputBam, depth = true)
       val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
-      covStats.title = Some("Coverage for " + targetName)
-      covStats.subTitle = Some(".")
+      covStats.title = Some("Coverage Plot")
+      covStats.subTitle = Some(s"for file '$targetName.bed'")
       add(bedCov | covStats)
       addSummarizable(covStats, targetName + "_cov_stats")
     }
