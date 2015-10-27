@@ -91,11 +91,13 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     class Library(libId: String) extends AbstractLibrary(libId) {
       /** Library specific files to add to the summary */
       def summaryFiles: Map[String, File] = {
-        (bamFile, preProcessBam) match {
+        ((bamFile, preProcessBam) match {
           case (Some(b), Some(pb)) => Map("bamFile" -> b, "preProcessBam" -> pb)
           case (Some(b), _)        => Map("bamFile" -> b)
           case _                   => Map()
-        }
+        }) ++ (inputR1.map("input_R1" -> _) ::
+          inputR2.map("input_R2" -> _) ::
+          inputBam.map("input_bam" -> _) :: Nil).flatten.toMap
       }
 
       /** Library specific stats to add to summary */
@@ -117,8 +119,12 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         (Some(mapping), Some(mapping.finalBamFile), preProcess(mapping.finalBamFile))
       }
 
+      lazy val inputR1: Option[File] = config("R1")
+      lazy val inputR2: Option[File] = config("R2")
+      lazy val inputBam: Option[File] = if (r1.isEmpty) config("bam") else None
+
       lazy val (mapping, bamFile, preProcessBam): (Option[Mapping], Option[File], Option[File]) =
-        (config.contains("R1"), config.contains("bam")) match {
+        (inputR1.isDefined, inputBam.isDefined) match {
           case (true, _) => makeMapping // Default starting from fastq files
           case (false, true) => // Starting from bam file
             config("bam_to_fastq", default = false).asBoolean match {
@@ -137,18 +143,18 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
 
       /** This will add jobs for this library */
       def addJobs(): Unit = {
-        (config.contains("R1"), config.contains("bam")) match {
+        (inputR1.isDefined, inputBam.isDefined) match {
           case (true, _) => mapping.foreach(mapping => {
-            mapping.input_R1 = config("R1")
-            mapping.input_R2 = config("R2")
+            mapping.input_R1 = inputR1.get
+            mapping.input_R2 = inputR2
             inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
             mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
           })
           case (false, true) => {
-            inputFiles :+= new InputFile(config("bam"), config("bam_md5"))
+            inputFiles :+= new InputFile(inputBam.get, config("bam_md5"))
             config("bam_to_fastq", default = false).asBoolean match {
               case true =>
-                val samToFastq = SamToFastq(qscript, config("bam"),
+                val samToFastq = SamToFastq(qscript, inputBam.get,
                   new File(libDir, sampleId + "-" + libId + ".R1.fq.gz"),
                   new File(libDir, sampleId + "-" + libId + ".R2.fq.gz"))
                 samToFastq.isIntermediate = true
@@ -158,7 +164,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
                   mapping.input_R2 = Some(samToFastq.fastqR2)
                 })
               case false =>
-                val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
+                val inputSam = SamReaderFactory.makeDefault.open(inputBam.get)
                 val readGroups = inputSam.getFileHeader.getReadGroups
 
                 val readGroupOke = readGroups.forall(readGroup => {
@@ -170,8 +176,8 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
 
                 if (!readGroupOke) {
                   if (config("correct_readgroups", default = false).asBoolean) {
-                    logger.info("Correcting readgroups, file:" + config("bam"))
-                    val aorrg = AddOrReplaceReadGroups(qscript, config("bam"), bamFile.get)
+                    logger.info("Correcting readgroups, file:" + inputBam.get)
+                    val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
                     aorrg.RGID = sampleId + "-" + libId
                     aorrg.RGLB = libId
                     aorrg.RGSM = sampleId
@@ -180,7 +186,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
                   } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                     "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
                 } else {
-                  val oldBamFile: File = config("bam")
+                  val oldBamFile: File = inputBam.get
                   val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
                   val newIndex: File = new File(libDir, oldBamFile.getName.stripSuffix(".bam") + ".bai")
                   val baiLn = Ln(qscript, oldIndex, newIndex)
