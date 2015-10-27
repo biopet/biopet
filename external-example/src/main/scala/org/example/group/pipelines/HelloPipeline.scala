@@ -1,20 +1,16 @@
-package org.example.group.pipelines
+package nl.lumc.sasc.biopet/pipelines.mypipeline
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+import nl.lumc.sasc.biopet.extensions.Fastqc
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-/**
- * Created by pjvan_thof on 8/28/15.
- */
-//TODO: Replace class Name
-class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript {
+class HelloPipeline(val root: Configurable) extends QScript with SummaryQScript {
   def this() = this(null)
 
   /** Only required when using [[SummaryQScript]] */
-  def summaryFile = new File(outputDir, "magpie.summary.json")
+  def summaryFile = new File(outputDir, "hello.summary.json")
 
   /** Only required when using [[SummaryQScript]] */
   def summaryFiles: Map[String, File] = Map()
@@ -29,11 +25,11 @@ class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript
   // This method is the actual pipeline
   def biopetScript: Unit = {
 
-    // Executing a biopet pipeline inside
-    val shiva = new Shiva(this)
-    shiva.init()
-    shiva.biopetScript()
-    addAll(shiva.functions)
+    // Executing a tool like FastQC, calling the extension in `nl.lumc.sasc.biopet.extensions.Fastqc`
+
+    val fastqc = new Fastqc(this)
+    fastqc.fastqfile = config("fastqc_input")
+    fastqc.output = new File(outputDir,
 
     /* Only required when using [[SummaryQScript]] */
     addSummaryQScript(shiva)
@@ -43,4 +39,4 @@ class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript
 }
 
 //TODO: Replace object Name, must be the same as the class of the pipeline
-object BiopetPipeline extends PipelineCommand
+object HelloPipeline extends PipelineCommand

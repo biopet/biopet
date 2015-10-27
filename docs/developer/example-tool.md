@@ -27,7 +27,9 @@ object SimpleTool extends ToolCommand {
 }
 ```
 
-This is the minimum setup for having a working tool. (not functional yet)
+This is the minimum setup for having a working tool. We will place some code for line counting in ``main``. Like in other 
+higher order programming languages like Java, C++, .Net. One need to specify an entry for the program to run. ``def main``
+is here the first entrypoint from commandline into your tool.
 
 
 ### Program arguments and environment variables
@@ -40,13 +42,13 @@ In biopet we facilitate an ``AbstractArgs`` case-class which stores the argument
   case class Args(inputFile: File = Nil, outputFile: Option[File] = None) extends AbstractArgs
 ```
 
-The arguments are stored in ``Args``
+The arguments are stored in ``Args``, this is a `Case Class` which acts as a java `HashMap` storing the arguments in an 
+object-like fashion.
 
-Then add code that fills the Args.
+Consuming and placing values in `Args` works as follows:
 
 ```scala
   class OptParser extends AbstractOptParser {
-
     head(
       s"""
          |$commandName - Count lines in a textfile
@@ -65,7 +67,11 @@ Then add code that fills the Args.
   }
 ```
 
-In the end your tool would look like the following:
+One has to implement class `OptParser` in order to fill `Args`. In `OptParser` one defines the commandline args and how it should be processed.
+ In our example, we just copy the values passed on the commandline. Further reading: [scala scopt](https://github.com/scopt/scopt)
+
+Let's compile the code into 1 file and test with real functional code:
+
 
 ```scala
 
@@ -134,15 +140,22 @@ object SimpleTool extends ToolCommand {
 
 ### Running your new tool
 
+#!TODO: write how to run the tool from a compiled state 
+
+
 ### Debugging the tool with IDEA
 
 ### Setting up unit tests
 
 ### Adding tool-extension for usage in pipeline
 
-When this tool is used in a pipeline in biopet, one has to add a tool wrapper for the tool created.
+In order to use this tool within biopet, one should write an `extension` for the tool. (as we also do for normal executables like `bwa-mem`)
  
-The wrapper would look like:
+The wrapper would look like this, basicly exposing the same commandline arguments to biopet in an OOP format.
+Note: we also add some functionalities for getting summary data and passing on to biopet.
+
+The concept of having (extension)-wrappers is to create a black-box service model. One should only know how to interact with the tool without necessarily knowing the internals.
+
 
 ```scala
 package nl.lumc.sasc.biopet.extensions.tools
@@ -169,6 +182,7 @@ class SimpleTool(val root: Configurable) extends ToolCommandFunction with Summar
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = _
 
+  // setting the memory for this tool where it starts from.
   override def defaultCoreMemory = 1.0
 
   override def cmdLine = super.cmdLine +
