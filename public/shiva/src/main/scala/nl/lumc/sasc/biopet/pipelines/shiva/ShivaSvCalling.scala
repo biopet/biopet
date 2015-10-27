@@ -17,10 +17,9 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, SampleLibraryTag}
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
-import nl.lumc.sasc.biopet.extensions.delly.Delly
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -135,6 +134,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
         val delly = Delly(qscript, bamFile, dellyDir)
         delly.outputName = sample
         addAll(delly.functions)
+        addSummaryQScript(delly)
       }
     }
   }
