@@ -57,10 +57,16 @@ Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md
 
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
-This config file should be written in JSON format.
-It can contain setup settings like references, cut offs, program modes, memory limits (program specific), if chunking should be used and many more, one can even set program executables here, if for some reason the user does not want to use the systems default tools.
-One could set global variables containing settings for all tools used in the pipeline or set tool specific options one layer deeper into the JSON file.
-E.g. in the example below the settings for Picard tools are altered only for Picard and not global. 
+This config file should be written in either JSON or YAML format. It can contain setup settings like:
+
+ * references,
+ * cut offs,
+ * program modes and memory limits (program specific),
+ * Whether chunking should be used
+ * set program executables (if for some reason the user does not want to use the systems default tools)
+ * One could set global variables containing settings for all tools used in the pipeline or set tool specific options one layer 
+ deeper into the JSON file. E.g. in the example below the settings for Picard tools are altered only for Picard and not global. 
+
 
 ~~~
 "picard": { "validationstringency": "LENIENT" } 
