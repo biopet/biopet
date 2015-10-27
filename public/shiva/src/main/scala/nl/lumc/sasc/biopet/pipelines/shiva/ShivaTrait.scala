@@ -84,6 +84,9 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     /** Method to make a library */
     def makeLibrary(id: String) = new Library(id)
 
+    /** Sample specific settings */
+    override def summarySettings = Map("single_sample_variantcalling" -> variantcalling.isDefined)
+
     /** Class to generate jobs for a library */
     class Library(libId: String) extends AbstractLibrary(libId) {
       /** Library specific files to add to the summary */
@@ -100,6 +103,9 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
 
       /** Method to execute library preprocess */
       def preProcess(input: File): Option[File] = None
+
+      /** Library specific settings */
+      override def summarySettings = Map("library_variantcalling" -> variantcalling.isDefined)
 
       /** Method to make the mapping submodule */
       def makeMapping = {
@@ -280,7 +286,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     }
   }
 
-  lazy val variantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
+  lazy val multisampleVariantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
   } else None
 
@@ -288,9 +294,14 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     Some(new ShivaSvCalling(this))
   } else None
 
+  lazy val annotation = if (multisampleVariantCalling.isDefined &&
+    config("annotation", default = false).asBoolean) {
+    Some(new Toucan(this))
+  } else None
+
   /** This will add the mutisample variantcalling */
   def addMultiSampleJobs(): Unit = {
-    variantCalling.foreach(vc => {
+    multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap(_._2.preProcessBam).toList
       vc.init()
@@ -298,8 +309,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
       addAll(vc.functions)
       addSummaryQScript(vc)
 
-      if (config("annotation", default = false).asBoolean) {
-        val toucan = new Toucan(this)
+      annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
         toucan.inputVCF = vc.finalFile
         toucan.init()
@@ -330,7 +340,10 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
     Map(
       "reference" -> referenceSummary,
       "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed")),
+      "annotation" -> annotation.isDefined,
+      "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
+      "sv_calling" -> svCalling.isDefined
     )
   }
 
