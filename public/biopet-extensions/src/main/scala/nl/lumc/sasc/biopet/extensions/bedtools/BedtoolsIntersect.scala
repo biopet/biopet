@@ -40,6 +40,8 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
 
   var inputTag = "-a"
 
+  var ubam = false
+
   override def beforeCmd() {
     if (input.getName.endsWith(".bam")) inputTag = "-abam"
   }
@@ -50,6 +52,7 @@ class BedtoolsIntersect(val root: Configurable) extends Bedtools {
     required("-b", intersectFile) +
     optional("-f", minOverlap) +
     conditional(count, "-c") +
+    conditional(ubam, "-ubam") +
     " > " + required(output)
 }
 
@@ -61,6 +64,7 @@ object BedtoolsIntersect {
     bedtoolsIntersect.input = input
     bedtoolsIntersect.intersectFile = intersect
     bedtoolsIntersect.output = output
+    if (output.getName.endsWith(".sam")) bedtoolsIntersect.ubam = true
     bedtoolsIntersect.minOverlap = minOverlap
     bedtoolsIntersect.count = count
     bedtoolsIntersect
