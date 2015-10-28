@@ -92,6 +92,15 @@ object KrakenReportToJson extends ToolCommand {
     .parse(args, Args())
     .getOrElse(sys.exit(1))
 
+  /**
+   * Takes a line from the kraken report, converts into Map with taxonID and
+   * information on this hit as `KrakenHit`. `KrakenHit` is used later on for
+   * building the tree
+   *
+   * @param krakenRawHit Line from the KrakenReport output
+   * @param skipNames Specify to skip names in the report output to reduce size of JSON
+   * @return
+   */
   def parseLine(krakenRawHit: String, skipNames: Boolean): Map[Long, KrakenHit] = {
     val values: Array[String] = krakenRawHit.stripLineEnd.split("\t")
 
@@ -118,6 +127,14 @@ object KrakenReportToJson extends ToolCommand {
       ))
   }
 
+  /**
+   * Read the `KrakenReport` output and transform into `Map` by TaxonID and `KrakenHit`
+   * A JSON-string output is given.
+   *
+   * @param reportRaw The `KrakenReport` output
+   * @param skipNames Specify to skip names in the report output to reduce size of JSON
+   * @return
+   */
   def reportToJson(reportRaw: File, skipNames: Boolean): String = {
     val reader = Source.fromFile(reportRaw)
 

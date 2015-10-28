@@ -18,9 +18,9 @@ package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** Extension for Kraken */
 class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Version {
@@ -65,13 +65,13 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    "--db" + required(db) +
+    required("--db", db) +
     optional("--threads", nCoresRequest) +
     conditional(quick, "--quick") +
     optional("--min_hits", minHits) +
     optional("--unclassified-out ", unclassified_out.get) +
     optional("--classified-out ", classified_out.get) +
-    "--output" + required(output) +
+    required("--output", output) +
     conditional(preLoad, "--preload") +
     conditional(paired, "--paired") +
     conditional(paired, "--check-names") +
