@@ -15,19 +15,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
+import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
  * Created by wyleung
  */
-class Gears(val root: Configurable) extends QScript with SummaryQScript {
+class Gears(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
@@ -145,12 +145,10 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript {
   }
 
   /** Location of summary file */
-  def summaryFile = new File(outputDir, "gears.summary.json")
+  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".gears.summary.json")
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty ++
-    (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map())
+  def summarySettings: Map[String, Any] = Map.empty
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = Map.empty ++

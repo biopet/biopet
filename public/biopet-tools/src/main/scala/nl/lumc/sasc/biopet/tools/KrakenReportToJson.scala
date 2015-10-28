@@ -19,7 +19,7 @@ package nl.lumc.sasc.biopet.tools
  * Created by wyleung on 25-9-15.
  */
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils._
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -28,30 +28,30 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-case class KrakenHit(taxonomyID: Long,
-                     taxonomyName: String,
-                     cladeCount: Long,
-                     cladeSize: Long, // size of parent - including itself
-                     taxonRank: String,
-                     cladeLevel: Int,
-                     parentTaxonomyID: Long,
-                     children: ListBuffer[KrakenHit]) {
-  def toJSON(withChildren: Boolean = false): Map[String, Any] = {
-    val childJSON = if (withChildren) children.toList.map(entry => entry.toJSON(withChildren)) else List()
-    Map(
-      "name" -> taxonomyName,
-      "taxid" -> taxonomyID,
-      "taxonrank" -> taxonRank,
-      "cladelevel" -> cladeLevel,
-      "count" -> cladeCount,
-      "size" -> cladeSize,
-      "children" -> childJSON
-    )
-  }
-
-}
-
 object KrakenReportToJson extends ToolCommand {
+
+  case class KrakenHit(taxonomyID: Long,
+                       taxonomyName: String,
+                       cladeCount: Long,
+                       cladeSize: Long, // size of parent - including itself
+                       taxonRank: String,
+                       cladeLevel: Int,
+                       parentTaxonomyID: Long,
+                       children: ListBuffer[KrakenHit]) {
+    def toJSON(withChildren: Boolean = false): Map[String, Any] = {
+      val childJSON = if (withChildren) children.toList.map(entry => entry.toJSON(withChildren)) else List()
+      Map(
+        "name" -> taxonomyName,
+        "taxid" -> taxonomyID,
+        "taxonrank" -> taxonRank,
+        "cladelevel" -> cladeLevel,
+        "count" -> cladeCount,
+        "size" -> cladeSize,
+        "children" -> childJSON
+      )
+    }
+
+  }
 
   var cladeIDs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill(32)(0)
   val spacePattern = "^( +)".r

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
+import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
 
 object BiopetToolsExecutable extends BiopetExecutable {
 
@@ -44,6 +44,5 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
-    nl.lumc.sasc.biopet.tools.VcfWithVcf,
-    nl.lumc.sasc.biopet.tools.KrakenReportToJson)
+    nl.lumc.sasc.biopet.tools.VcfWithVcf)
 }
