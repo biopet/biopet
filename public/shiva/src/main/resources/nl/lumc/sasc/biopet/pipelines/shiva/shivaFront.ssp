@@ -11,7 +11,7 @@
     <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
     <tr>
         <th>Variantcallers</th>
-        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").get.asInstanceOf[List[String]].mkString(", ")}</td>
+        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").getOrElse(List("None")).asInstanceOf[List[String]].mkString(", ")}</td>
     </tr>
     <tr><th>Reference</th><td>${summary.getValue("shiva", "settings", "reference", "species")} - ${summary.getValue("shiva", "settings", "reference", "name")}</td></tr>
     <tr><th>Number of samples</th><td>${summary.samples.size}</td></tr>
