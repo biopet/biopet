@@ -108,7 +108,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       qscript match {
         case tag: SampleLibraryTag => prefixSampleLibrary(map, tag.sampleId, tag.libId)
         case q: MultiSampleQScript => {
-          q.samples.map {
+          Map("samples" -> q.samples.map {
             case (sampleName, sample) =>
               sampleName -> Map(
                 qscript.summaryName -> Map("settings" -> sample.summarySettings),
@@ -119,7 +119,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
                     )
                 }
               )
-          } ++ map
+          }) ++ map
         }
         case _ => map
       }
