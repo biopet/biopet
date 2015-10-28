@@ -181,6 +181,8 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
                     aorrg.RGID = sampleId + "-" + libId
                     aorrg.RGLB = libId
                     aorrg.RGSM = sampleId
+                    aorrg.RGPL = "unknown"
+                    aorrg.RGPU = "na"
                     aorrg.isIntermediate = true
                     qscript.add(aorrg)
                   } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
