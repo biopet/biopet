@@ -16,11 +16,13 @@
 package nl.lumc.sasc.biopet.core.report
 
 import java.io._
+
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{ ToolCommand, Logging, IoUtils }
+import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
 import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
+import org.fusesource.scalate.{TemplateEngine, TemplateSource}
+
 import scala.collection.mutable
 
 /**
@@ -95,6 +97,19 @@ trait ReportBuilder extends ToolCommand {
   private var _libId: Option[String] = None
   protected def libId = _libId
 
+  def extFiles = List(
+    "css/bootstrap_dashboard.css",
+    "css/bootstrap.min.css",
+    "css/bootstrap-theme.min.css",
+    "css/sortable-theme-bootstrap.css",
+    "js/jquery.min.js",
+    "js/sortable.min.js",
+    "js/bootstrap.min.js",
+    "fonts/glyphicons-halflings-regular.woff",
+    "fonts/glyphicons-halflings-regular.ttf",
+    "fonts/glyphicons-halflings-regular.woff2"
+  ).map("/nl/lumc/sasc/biopet/core/report/ext/" + _)
+
   /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
     logger.info("Start")
@@ -123,23 +138,9 @@ trait ReportBuilder extends ToolCommand {
 
     // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
     val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
-    val resourceDir: String = "/nl/lumc/sasc/biopet/core/report/ext/"
-    val extFiles = List(
-      "css/bootstrap_dashboard.css",
-      "css/bootstrap.min.css",
-      "css/bootstrap-theme.min.css",
-      "css/sortable-theme-bootstrap.css",
-      "js/jquery.min.js",
-      "js/sortable.min.js",
-      "js/bootstrap.min.js",
-      "js/gears.js",
-      "fonts/glyphicons-halflings-regular.woff",
-      "fonts/glyphicons-halflings-regular.ttf",
-      "fonts/glyphicons-halflings-regular.woff2"
-    )
 
     for (resource <- extFiles.par) {
-      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resourceDir + resource), new File(extOutputDir, resource), createDirs = true)
+      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource), new File(extOutputDir, resource), createDirs = true)
     }
 
     logger.info("Parsing summary")

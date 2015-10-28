@@ -14,6 +14,10 @@ object GearsReport extends ReportBuilder {
   // TODO: Add dustbin analysis (aggregated)
   // TODO: Add alignment stats per sample for the dustbin analysis
 
+  override def extFiles = super.extFiles ++ List(
+    "js/gears.js"
+  ).map("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + _)
+
   def indexPage = {
     ReportPage(
       List() ++
