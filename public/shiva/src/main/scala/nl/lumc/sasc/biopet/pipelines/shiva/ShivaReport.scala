@@ -122,8 +122,8 @@ object ShivaReport extends MultisampleReportBuilder {
     "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
       Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))) ++
     (if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-      Map("sampleId" -> None))) else Nil)
-  , Map())
+      Map("sampleId" -> None)))
+    else Nil), Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
