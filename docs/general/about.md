@@ -15,7 +15,7 @@ need.
 
 ## Contributors
 
-As of the 0.4.0 release, the following people (sorted by last name) have contributed to Biopet:
+As of the 0.5.0 release, the following people (sorted by last name) have contributed to Biopet:
 
 - Wibowo Arindrarto
 - Sander Bollen

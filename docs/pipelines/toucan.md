@@ -12,7 +12,7 @@ Currently, it comprises just two steps:
 Example
 -----------
 ~~~~bash
-java -jar Biopet-0.3.0.jar pipeline Toucan -h
+biopet pipeline Toucan -h
 Arguments for Toucan:
  -Input,--inputvcf <inputvcf>          Input VCF file
  -config,--config_file <config_file>   JSON config file(s)

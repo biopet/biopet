@@ -49,7 +49,7 @@ Arguments for Sage:
 If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:
 
 ~~~
-$ module load biopet/v0.3.0
+$ module load biopet/v0.5.0
 $ biopet pipeline sage
 
 ~~~

@@ -22,7 +22,7 @@ Example
 ---------
 
 ~~~~bash
-java -jar Biopet-0.3.0.jar tool VepNormalizer -h
+biopet tool VepNormalizer -h
 |VepNormalizer - Parse VEP-annotated VCF to standard VCF format 
 Usage: VepNormalizer [options]
 

@@ -125,7 +125,7 @@ $ java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json
 You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
 ~~~
-$ module load biopet/v0.3.1
+$ module load biopet/v0.5.0
 $ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 

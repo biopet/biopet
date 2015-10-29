@@ -33,7 +33,7 @@ Arguments for Bam2Wig:
 If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:
 
 ~~~bash
-$ module load biopet/v0.3.0
+$ module load biopet/v0.5.0
 $ biopet pipeline bam2wig
 
 ~~~
