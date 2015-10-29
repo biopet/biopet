@@ -39,7 +39,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   }
 
   override def defaults = Map(
-    "varianteffectpredictor" -> Map("everything" -> true)
+    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> true)
   )
 
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
@@ -48,7 +48,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val vep = new VariantEffectPredictor(this)
     vep.input = inputVCF
     vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
-    vep.failed = true
     vep.isIntermediate = true
     add(vep)
 
