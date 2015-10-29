@@ -121,7 +121,6 @@ object Reference {
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
-    require(fai.exists(), "Reference is missing a fai file")
     if (fai.exists()) {
       if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
         Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
