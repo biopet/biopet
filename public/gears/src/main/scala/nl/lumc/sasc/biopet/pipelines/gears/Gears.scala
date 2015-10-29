@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
 import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
-import nl.lumc.sasc.biopet.extensions.sambamba.SambambaView
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -73,17 +73,27 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
   def biopetScript(): Unit = {
     val fastqFiles: List[File] = bamFile.map { bamfile =>
 
-      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
-      val samFilterUnmapped = new SambambaView(this)
-      samFilterUnmapped.input = bamfile
-      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
-      samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      samFilterUnmapped.isIntermediate = false
-      add(samFilterUnmapped)
+//      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
+//      val samFilterUnmapped = new SambambaView(this)
+//      samFilterUnmapped.input = bamfile
+//      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
+//      samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
+//      samFilterUnmapped.isIntermediate = false
+//      add(samFilterUnmapped)
+
+
+      val samtoolsViewSelectUnmapped = new SamtoolsView(this)
+      samtoolsViewSelectUnmapped.input = bamfile
+      samtoolsViewSelectUnmapped.b = true
+      samtoolsViewSelectUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
+      samtoolsViewSelectUnmapped.f = List("4")
+      samtoolsViewSelectUnmapped.F = List("8")
+      samtoolsViewSelectUnmapped.isIntermediate = true
+      add(samtoolsViewSelectUnmapped)
 
       // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = new SamToFastq(this)
-      samToFastq.input = samFilterUnmapped.output
+      samToFastq.input = samtoolsViewSelectUnmapped.output
       samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
       samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
       samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
