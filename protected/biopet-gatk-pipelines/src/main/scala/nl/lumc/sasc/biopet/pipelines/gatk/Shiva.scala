@@ -43,8 +43,12 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     /** Class will generate library jobs */
     class Library(libId: String) extends super.Library(libId) {
 
-      val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
-      val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
+      lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
+      lazy val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
+
+      override def summarySettings = super.summarySettings +
+        ("use_indel_realigner" -> useIndelRealigner) +
+        ("use_base_recalibration" ->useBaseRecalibration)
 
       /** Return true when baserecalibration is executed */
       protected def doneBaseRecalibrator: Boolean = {
@@ -69,12 +73,16 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
+    override def summarySettings = super.summarySettings + ("use_indel_realigner" -> useIndelRealigner)
+
+    lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
+
     /** This methods will add double preprocess steps, with GATK indel realignment */
     override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input.size <= 1) super.addDoublePreProcess(input)
-      else super.addDoublePreProcess(input, isIntermediate = true).collect {
+      else super.addDoublePreProcess(input, isIntermediate = useIndelRealigner).collect {
         case file =>
-          config("use_indel_realigner", default = true).asBoolean match {
+          useIndelRealigner match {
             case true  => addIndelRealign(file, sampleDir, isIntermediate = false)
             case false => file
           }
