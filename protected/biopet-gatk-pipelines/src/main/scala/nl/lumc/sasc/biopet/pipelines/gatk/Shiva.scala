@@ -48,7 +48,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
 
       override def summarySettings = super.summarySettings +
         ("use_indel_realigner" -> useIndelRealigner) +
-        ("use_base_recalibration" ->useBaseRecalibration)
+        ("use_base_recalibration" -> useBaseRecalibration)
 
       /** Return true when baserecalibration is executed */
       protected def doneBaseRecalibrator: Boolean = {
