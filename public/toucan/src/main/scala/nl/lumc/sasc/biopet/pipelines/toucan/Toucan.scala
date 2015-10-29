@@ -48,6 +48,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val vep = new VariantEffectPredictor(this)
     vep.input = inputVCF
     vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
+    vep.failed = true
     vep.isIntermediate = true
     add(vep)
 
@@ -80,7 +81,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         vcfWithVcf.input = outputFile
         vcfWithVcf.secondaryVcf = exacFile
         vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
-        vcfWithVcf.fields ::= ("MAF", "MAF_exac", None)
+        vcfWithVcf.fields ::= ("AF", "AF_exac", None)
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
       case _ =>
