@@ -115,7 +115,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
                   qscript.summaryName -> Map("settings" -> sample.summarySettings),
                   "libraries" -> sample.libraries.map {
                     case (libName, lib) =>
-                      sampleName -> Map(
+                      libName -> Map(
                         qscript.summaryName -> Map("settings" -> lib.summarySettings)
                       )
                   }
