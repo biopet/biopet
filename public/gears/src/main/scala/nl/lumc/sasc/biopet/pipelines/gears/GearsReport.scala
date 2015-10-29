@@ -16,7 +16,7 @@ object GearsReport extends ReportBuilder {
 
   override def extFiles = super.extFiles ++ List(
     "js/gears.js"
-  ).map("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + _)
+  ).map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
     ReportPage(

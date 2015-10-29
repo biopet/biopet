@@ -97,6 +97,8 @@ trait ReportBuilder extends ToolCommand {
   private var _libId: Option[String] = None
   protected def libId = _libId
 
+  case class ExtFile(resourcePath: String, targetPath: String)
+
   def extFiles = List(
     "css/bootstrap_dashboard.css",
     "css/bootstrap.min.css",
@@ -108,7 +110,7 @@ trait ReportBuilder extends ToolCommand {
     "fonts/glyphicons-halflings-regular.woff",
     "fonts/glyphicons-halflings-regular.ttf",
     "fonts/glyphicons-halflings-regular.woff2"
-  ).map("/nl/lumc/sasc/biopet/core/report/ext/" + _)
+  ).map(x => ExtFile("/nl/lumc/sasc/biopet/core/report/ext/" + x, x))
 
   /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
@@ -140,7 +142,7 @@ trait ReportBuilder extends ToolCommand {
     val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
 
     for (resource <- extFiles.par) {
-      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource), new File(extOutputDir, resource), createDirs = true)
+      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource.resourcePath), new File(extOutputDir, resource.targetPath), createDirs = true)
     }
 
     logger.info("Parsing summary")
