@@ -19,9 +19,9 @@ import java.io._
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.summary.Summary
-import nl.lumc.sasc.biopet.utils.{IoUtils, Logging, ToolCommand}
+import nl.lumc.sasc.biopet.utils.{ IoUtils, Logging, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.Input
-import org.fusesource.scalate.{TemplateEngine, TemplateSource}
+import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 import scala.collection.mutable
 
