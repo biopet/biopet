@@ -63,9 +63,14 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
     gears.summaryFile = summaryFile
     Some(gears)
   }
+
+  override def defaults = Map(
+    "samtofastq" -> Map(
+      "validationstringency" -> "LENIENT"
+    )
+  )
   /** Method to add jobs */
   def biopetScript(): Unit = {
-
     val fastqFiles: List[File] = bamFile.map { bamfile =>
 
       // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
@@ -79,7 +84,6 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
       // start bam to fastq (only on unaligned reads) also extract the matesam
       val samToFastq = new SamToFastq(this)
       samToFastq.input = samFilterUnmapped.output
-      samToFastq.stringency = Some("LENIENT")
       samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
       samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
       samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
