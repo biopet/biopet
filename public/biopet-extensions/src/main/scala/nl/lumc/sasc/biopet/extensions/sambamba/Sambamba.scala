@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.sambamba
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 
 /** General Sambamba extension */
 abstract class Sambamba extends BiopetCommandLineFunction with Version {

@@ -16,11 +16,11 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{PipelineCommand, SampleLibraryTag}
-import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.{FastqSync, KrakenReportToJson}
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -158,7 +158,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
   }
 
   /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".gears.summary.json")
+  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".gears.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map.empty
