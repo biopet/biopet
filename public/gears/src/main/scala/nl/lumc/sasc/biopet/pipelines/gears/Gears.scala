@@ -73,14 +73,13 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
   def biopetScript(): Unit = {
     val fastqFiles: List[File] = bamFile.map { bamfile =>
 
-//      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
-//      val samFilterUnmapped = new SambambaView(this)
-//      samFilterUnmapped.input = bamfile
-//      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
-//      samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-//      samFilterUnmapped.isIntermediate = false
-//      add(samFilterUnmapped)
-
+      //      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
+      //      val samFilterUnmapped = new SambambaView(this)
+      //      samFilterUnmapped.input = bamfile
+      //      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
+      //      samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
+      //      samFilterUnmapped.isIntermediate = false
+      //      add(samFilterUnmapped)
 
       val samtoolsViewSelectUnmapped = new SamtoolsView(this)
       samtoolsViewSelectUnmapped.input = bamfile

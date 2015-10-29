@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
 
 /** General Sambamba extension */
 abstract class Sambamba extends BiopetCommandLineFunction with Version {
-  override def defaultCoreMemory = 2.0
+  override def defaultCoreMemory = 4.0
   override def defaultThreads = 2
 
   override def subPath = "sambamba" :: super.subPath
