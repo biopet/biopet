@@ -197,6 +197,16 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
                   val bamLn = Ln(qscript, oldBamFile, bamFile.get)
                   bamLn.deps :+= baiLn.output
                   add(bamLn)
+
+                  val bamMetrics = new BamMetrics(qscript)
+                  bamMetrics.sampleId = Some(sampleId)
+                  bamMetrics.libId = Some(libId)
+                  bamMetrics.inputBam = bamFile.get
+                  bamMetrics.outputDir = new File(libDir, "metrics")
+                  bamMetrics.init()
+                  bamMetrics.biopetScript()
+                  addAll(bamMetrics.functions)
+                  addSummaryQScript(bamMetrics)
                 }
             }
           }
