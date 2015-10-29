@@ -190,7 +190,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
                 } else {
                   val oldBamFile: File = inputBam.get
                   val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-                  val newIndex: File = new File(libDir, oldBamFile.getName.stripSuffix(".bam") + ".bai")
+                  val newIndex: File = new File(libDir, bamFile.get.getName.stripSuffix(".bam") + ".bai")
                   val baiLn = Ln(qscript, oldIndex, newIndex)
                   add(baiLn)
 
