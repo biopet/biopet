@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
+import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -73,20 +73,11 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
   def biopetScript(): Unit = {
     val fastqFiles: List[File] = bamFile.map { bamfile =>
 
-      //      // sambamba view -f bam -F "unmapped or mate_is_unmapped" <alnFile> > <extracted.bam>
-      //      val samFilterUnmapped = new SambambaView(this)
-      //      samFilterUnmapped.input = bamfile
-      //      samFilterUnmapped.filter = Some("(unmapped or mate_is_unmapped) and not (secondary_alignment) and [XH] == null")
-      //      samFilterUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      //      samFilterUnmapped.isIntermediate = false
-      //      add(samFilterUnmapped)
-
       val samtoolsViewSelectUnmapped = new SamtoolsView(this)
       samtoolsViewSelectUnmapped.input = bamfile
       samtoolsViewSelectUnmapped.b = true
       samtoolsViewSelectUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      samtoolsViewSelectUnmapped.f = List("4")
-      samtoolsViewSelectUnmapped.F = List("8")
+      samtoolsViewSelectUnmapped.f = List("12")
       samtoolsViewSelectUnmapped.isIntermediate = true
       add(samtoolsViewSelectUnmapped)
 
@@ -99,24 +90,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
       samToFastq.isIntermediate = true
       add(samToFastq)
 
-      // sync the fastq records
-      val fastqSync = new FastqSync(this)
-      fastqSync.refFastq = samToFastq.fastqR1
-      fastqSync.inputFastq1 = samToFastq.fastqR1
-      fastqSync.inputFastq2 = samToFastq.fastqR2
-      fastqSync.outputFastq1 = new File(outputDir, s"$outputName.unmapped.R1.sync.fq.gz")
-
-      // TODO: need some sanity check on whether R2 is really containing reads (e.g. Single End libraries)
-      fastqSync.outputFastq2 = new File(outputDir, s"$outputName.unmapped.R2.sync.fq.gz")
-      fastqSync.outputStats = new File(outputDir, s"$outputName.sync.stats")
-      add(fastqSync)
-      addSummarizable(fastqSync, "fastqsync")
-
-      outputFiles += ("fastqsync_stats" -> fastqSync.outputStats)
-      outputFiles += ("fastqsync_R1" -> fastqSync.outputFastq1)
-      outputFiles += ("fastqsync_R2" -> fastqSync.outputFastq2)
-
-      List(fastqSync.outputFastq1, fastqSync.outputFastq2)
+      List(samToFastq.fastqR1, samToFastq.fastqR2)
     }.getOrElse(List(fastqR1, fastqR2).flatten)
 
     // start kraken

@@ -21,7 +21,7 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, KrakenReportToJson }
+import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
@@ -96,10 +96,8 @@ class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
     }
 
     // SamToFastq should have started if it was started from bam
-    gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (fromBam) 1 else 0)
-    //    gears.functions.count(_.isInstanceOf[SambambaView]) shouldBe (if (fromBam) 1 else 0)
     gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (fromBam) 1 else 0)
-    gears.functions.count(_.isInstanceOf[FastqSync]) shouldBe (if (fromBam) 1 else 0)
+    gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (fromBam) 1 else 0)
 
     gears.functions.count(_.isInstanceOf[Kraken]) shouldBe 1
     gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe 1
