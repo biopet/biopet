@@ -41,32 +41,26 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
 
-  var inputTag = "-a"
-
-  override def beforeCmd() {
-    if (input.getName.endsWith(".bam")) inputTag = "-abam"
-  }
-
   override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +
-    required(inputTag, input) +
+    required("-a", input) +
     required("-b", intersectFile) +
     conditional(depth, "-d") +
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +
-    " > " + required(output)
+    (if (outputAsStsout) "" else " > " + required(output))
 }
 
 object BedtoolsCoverage {
   /** Returns defaul bedtools coverage */
-  def apply(root: Configurable, input: File, intersect: File, output: File,
-            depth: Boolean = true, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
+  def apply(root: Configurable, input: File, intersect: File, output: Option[File] = None,
+            depth: Boolean = false, sameStrand: Boolean = false, diffStrand: Boolean = false): BedtoolsCoverage = {
     val bedtoolsCoverage = new BedtoolsCoverage(root)
     bedtoolsCoverage.input = input
     bedtoolsCoverage.intersectFile = intersect
-    bedtoolsCoverage.output = output
+    output.foreach(bedtoolsCoverage.output = _)
     bedtoolsCoverage.depth = depth
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand
