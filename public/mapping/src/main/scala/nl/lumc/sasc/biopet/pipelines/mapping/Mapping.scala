@@ -19,18 +19,17 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.pipelines.gears.Gears
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
+import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.pipelines.gears.Gears
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.math._
@@ -266,6 +265,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       gears.init()
       gears.biopetScript()
       addAll(gears.functions)
+      addSummaryQScript(gears)
     }
 
     if (config("generate_wig", default = false).asBoolean)
