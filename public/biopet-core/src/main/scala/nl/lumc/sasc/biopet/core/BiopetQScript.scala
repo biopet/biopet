@@ -119,5 +119,5 @@ trait BiopetQScript extends Configurable with GatkLogging {
 }
 
 object BiopetQScript {
-  protected case class InputFile(file: File, md5: Option[String] = None)
+  case class InputFile(file: File, md5: Option[String] = None)
 }

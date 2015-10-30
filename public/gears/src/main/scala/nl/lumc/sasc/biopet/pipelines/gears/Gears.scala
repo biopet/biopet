@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
@@ -54,6 +55,13 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
         .stripSuffix(".fq"))
         .getOrElse("noName")
       else outputName = bamFile.map(_.getName.stripSuffix(".bam")).getOrElse("noName")
+    }
+
+    if (fastqR1.isDefined) {
+      fastqR1.foreach(inputFiles :+= InputFile(_))
+      fastqR2.foreach(inputFiles :+= InputFile(_))
+    } else {
+      inputFiles :+= InputFile(bamFile.get)
     }
   }
 
