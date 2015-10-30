@@ -28,7 +28,7 @@ class KrakenReportToJson(val root: Configurable) extends ToolCommandFunction wit
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = _
 
-  override def defaultCoreMemory = 1.0
+  override def defaultCoreMemory = 2.0
 
   override def cmdLine =
     super.cmdLine +
