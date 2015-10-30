@@ -44,24 +44,24 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     class Library(libId: String) extends super.Library(libId) {
 
       lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
-      lazy val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
+      lazy val useBaseRecalibration: Boolean = {
+        val c: Boolean = config("use_base_recalibration", default = true)
+        val br = new BaseRecalibrator(qscript)
+        if (c && br.knownSites.isEmpty)
+          logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
+        c && br.knownSites.nonEmpty
+      }
 
       override def summarySettings = super.summarySettings +
         ("use_indel_realigner" -> useIndelRealigner) +
         ("use_base_recalibration" -> useBaseRecalibration)
 
-      /** Return true when baserecalibration is executed */
-      protected def doneBaseRecalibrator: Boolean = {
-        val br = new BaseRecalibrator(qscript)
-        useBaseRecalibration && br.knownSites.nonEmpty
-      }
-
       /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
       override def preProcess(input: File): Option[File] = {
-        if (!useIndelRealigner && !doneBaseRecalibrator) None
+        if (!useIndelRealigner && !useBaseRecalibration) None
         else {
           val indelRealignFile = useIndelRealigner match {
-            case true  => addIndelRealign(input, libDir, doneBaseRecalibrator || libraries.size > 1)
+            case true  => addIndelRealign(input, libDir, useBaseRecalibration || libraries.size > 1)
             case false => input
           }
 
@@ -107,10 +107,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
-    if (baseRecalibrator.knownSites.isEmpty) {
-      logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
-      return inputBam
-    }
+    if (baseRecalibrator.knownSites.isEmpty) return inputBam
     add(baseRecalibrator)
 
     if (config("use_analyze_covariates", default = false).asBoolean) {
