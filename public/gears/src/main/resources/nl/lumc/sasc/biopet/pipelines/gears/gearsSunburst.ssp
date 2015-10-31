@@ -5,11 +5,8 @@
 <%@ var sampleId: Option[String] = None %>
 <%@ var libId: Option[String] = None %>
 <%@ var rootPath: String %>
-<%@ var outputDir: File %>
 <%@ var showPlot: Boolean = true %>
-<%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true %>
-<%@ var multisample: Boolean = false %>
 #{
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
@@ -59,7 +56,7 @@
     <script type="application/ecmascript">
 
     #{
-        val rawreport = Map("kraken" -> summary.getValue("gears", "stats", "krakenreport"))
+        val rawreport = Map("kraken" -> summary.getValue(sampleId, libId, "gears", "stats", "krakenreport"))
         val bla = ConfigUtils.mapToJson(rawreport)
     }#
 

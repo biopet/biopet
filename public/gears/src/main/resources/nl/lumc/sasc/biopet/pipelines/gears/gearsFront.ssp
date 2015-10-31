@@ -2,6 +2,8 @@
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
+<%@ var sampleId: Option[String] = None %>
+<%@ var libId: Option[String] = None %>
 
 <table class="table">
 <tbody>
@@ -9,6 +11,8 @@
     <tr><th>Version</th><td>${summary.getValue("meta", "pipeline_version")}</td></tr>
     <tr><th>Last commit hash</th><td>${summary.getValue("meta", "last_commit_hash")}</td></tr>
     <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
+    #if(sampleId.isDefined) <tr><th>Sample</th><td>${sampleId}</td></tr> #end
+    #if(libId.isDefined) <tr><th>Library</th><td>${libId}</td></tr> #end
 </tbody>
 </table>
 <br/>

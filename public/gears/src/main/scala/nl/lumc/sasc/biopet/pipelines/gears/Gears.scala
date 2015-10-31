@@ -69,6 +69,8 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
     val gears = new GearsReport(this)
     gears.outputDir = new File(outputDir, "report")
     gears.summaryFile = summaryFile
+    sampleId.foreach(gears.args += "sampleId" -> _)
+    libId.foreach(gears.args += "libId" -> _)
     Some(gears)
   }
 
