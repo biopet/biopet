@@ -18,7 +18,6 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
@@ -33,7 +32,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
+trait ShivaTrait extends MultiSampleQScript with Reference {
   qscript =>
 
   /** Executed before running the script */
@@ -85,15 +84,20 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     /** Method to make a library */
     def makeLibrary(id: String) = new Library(id)
 
+    /** Sample specific settings */
+    override def summarySettings = Map("single_sample_variantcalling" -> variantcalling.isDefined)
+
     /** Class to generate jobs for a library */
     class Library(libId: String) extends AbstractLibrary(libId) {
       /** Library specific files to add to the summary */
       def summaryFiles: Map[String, File] = {
-        (bamFile, preProcessBam) match {
+        ((bamFile, preProcessBam) match {
           case (Some(b), Some(pb)) => Map("bamFile" -> b, "preProcessBam" -> pb)
-          case (Some(b), _)        => Map("bamFile" -> b)
+          case (Some(b), _)        => Map("bamFile" -> b, "preProcessBam" -> b)
           case _                   => Map()
-        }
+        }) ++ (inputR1.map("input_R1" -> _) ::
+          inputR2.map("input_R2" -> _) ::
+          inputBam.map("input_bam" -> _) :: Nil).flatten.toMap
       }
 
       /** Library specific stats to add to summary */
@@ -101,6 +105,9 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
 
       /** Method to execute library preprocess */
       def preProcess(input: File): Option[File] = None
+
+      /** Library specific settings */
+      override def summarySettings = Map("library_variantcalling" -> variantcalling.isDefined)
 
       /** Method to make the mapping submodule */
       def makeMapping = {
@@ -112,8 +119,12 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
         (Some(mapping), Some(mapping.finalBamFile), preProcess(mapping.finalBamFile))
       }
 
+      lazy val inputR1: Option[File] = config("R1")
+      lazy val inputR2: Option[File] = config("R2")
+      lazy val inputBam: Option[File] = if (inputR1.isEmpty) config("bam") else None
+
       lazy val (mapping, bamFile, preProcessBam): (Option[Mapping], Option[File], Option[File]) =
-        (config.contains("R1"), config.contains("bam")) match {
+        (inputR1.isDefined, inputBam.isDefined) match {
           case (true, _) => makeMapping // Default starting from fastq files
           case (false, true) => // Starting from bam file
             config("bam_to_fastq", default = false).asBoolean match {
@@ -132,18 +143,18 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
 
       /** This will add jobs for this library */
       def addJobs(): Unit = {
-        (config.contains("R1"), config.contains("bam")) match {
+        (inputR1.isDefined, inputBam.isDefined) match {
           case (true, _) => mapping.foreach(mapping => {
-            mapping.input_R1 = config("R1")
-            mapping.input_R2 = config("R2")
+            mapping.input_R1 = inputR1.get
+            mapping.input_R2 = inputR2
             inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
             mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
           })
           case (false, true) => {
-            inputFiles :+= new InputFile(config("bam"), config("bam_md5"))
+            inputFiles :+= new InputFile(inputBam.get, config("bam_md5"))
             config("bam_to_fastq", default = false).asBoolean match {
               case true =>
-                val samToFastq = SamToFastq(qscript, config("bam"),
+                val samToFastq = SamToFastq(qscript, inputBam.get,
                   new File(libDir, sampleId + "-" + libId + ".R1.fq.gz"),
                   new File(libDir, sampleId + "-" + libId + ".R2.fq.gz"))
                 samToFastq.isIntermediate = true
@@ -153,7 +164,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
                   mapping.input_R2 = Some(samToFastq.fastqR2)
                 })
               case false =>
-                val inputSam = SamReaderFactory.makeDefault.open(config("bam"))
+                val inputSam = SamReaderFactory.makeDefault.open(inputBam.get)
                 val readGroups = inputSam.getFileHeader.getReadGroups
 
                 val readGroupOke = readGroups.forall(readGroup => {
@@ -165,25 +176,37 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
 
                 if (!readGroupOke) {
                   if (config("correct_readgroups", default = false).asBoolean) {
-                    logger.info("Correcting readgroups, file:" + config("bam"))
-                    val aorrg = AddOrReplaceReadGroups(qscript, config("bam"), bamFile.get)
+                    logger.info("Correcting readgroups, file:" + inputBam.get)
+                    val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
                     aorrg.RGID = sampleId + "-" + libId
                     aorrg.RGLB = libId
                     aorrg.RGSM = sampleId
+                    aorrg.RGPL = "unknown"
+                    aorrg.RGPU = "na"
                     aorrg.isIntermediate = true
                     qscript.add(aorrg)
                   } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                     "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
                 } else {
-                  val oldBamFile: File = config("bam")
+                  val oldBamFile: File = inputBam.get
                   val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-                  val newIndex: File = new File(libDir, oldBamFile.getName.stripSuffix(".bam") + ".bai")
+                  val newIndex: File = new File(libDir, bamFile.get.getName.stripSuffix(".bam") + ".bai")
                   val baiLn = Ln(qscript, oldIndex, newIndex)
                   add(baiLn)
 
                   val bamLn = Ln(qscript, oldBamFile, bamFile.get)
                   bamLn.deps :+= baiLn.output
                   add(bamLn)
+
+                  val bamMetrics = new BamMetrics(qscript)
+                  bamMetrics.sampleId = Some(sampleId)
+                  bamMetrics.libId = Some(libId)
+                  bamMetrics.inputBam = bamFile.get
+                  bamMetrics.outputDir = new File(libDir, "metrics")
+                  bamMetrics.init()
+                  bamMetrics.biopetScript()
+                  addAll(bamMetrics.functions)
+                  addSummaryQScript(bamMetrics)
                 }
             }
           }
@@ -215,9 +238,9 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input == Nil) None
       else if (input.tail == Nil) {
-        val bamFile = new File(sampleDir, input.head.getName)
+        val bamFile = new File(sampleDir, s"$sampleId.bam")
         val oldIndex: File = new File(input.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        val newIndex: File = new File(sampleDir, input.head.getName.stripSuffix(".bam") + ".bai")
+        val newIndex: File = new File(sampleDir, s"$sampleId.bai")
         val baiLn = Ln(qscript, oldIndex, newIndex)
         add(baiLn)
 
@@ -263,11 +286,6 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
         addAll(bamMetrics.functions)
         addSummaryQScript(bamMetrics)
 
-        val oldIndex: File = new File(bam.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        val newIndex: File = new File(bam + ".bai")
-        val baiLn = Ln(qscript, oldIndex, newIndex)
-        add(baiLn)
-
         variantcalling.foreach(vc => {
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
@@ -281,7 +299,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     }
   }
 
-  lazy val variantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
+  lazy val multisampleVariantCalling = if (config("multisample_variantcalling", default = true).asBoolean) {
     Some(makeVariantcalling(multisample = true))
   } else None
 
@@ -289,9 +307,14 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     Some(new ShivaSvCalling(this))
   } else None
 
+  lazy val annotation = if (multisampleVariantCalling.isDefined &&
+    config("annotation", default = false).asBoolean) {
+    Some(new Toucan(this))
+  } else None
+
   /** This will add the mutisample variantcalling */
   def addMultiSampleJobs(): Unit = {
-    variantCalling.foreach(vc => {
+    multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap(_._2.preProcessBam).toList
       vc.init()
@@ -299,8 +322,7 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
       addAll(vc.functions)
       addSummaryQScript(vc)
 
-      if (config("annotation", default = false).asBoolean) {
-        val toucan = new Toucan(this)
+      annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
         toucan.inputVCF = vc.finalFile
         toucan.init()
@@ -331,7 +353,10 @@ trait ShivaTrait extends MultiSampleQScript with SummaryQScript with Reference {
     Map(
       "reference" -> referenceSummary,
       "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed")),
+      "annotation" -> annotation.isDefined,
+      "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
+      "sv_calling" -> svCalling.isDefined
     )
   }
 

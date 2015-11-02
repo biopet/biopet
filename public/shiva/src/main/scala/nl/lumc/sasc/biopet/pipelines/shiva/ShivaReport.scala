@@ -36,6 +36,11 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 /** Object for report generation for Shiva pipeline */
 object ShivaReport extends MultisampleReportBuilder {
 
+  def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
+    case Some(true) => true
+    case _          => false
+  }
+
   override def extFiles = super.extFiles ++ List("js/gears.js")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
@@ -54,21 +59,22 @@ object ShivaReport extends MultisampleReportBuilder {
           ), Map())
         ),
       List(
-        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp"),
-        "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-          Map("showPlot" -> true, "showTable" -> false)),
-        "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
+        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")) ++
+        (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+          Map("showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
+        List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false)),
-        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false))
-      ),
+          "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
+          "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
+          "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+            Map("showPlot" -> true, "showTable" -> false)),
+          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            Map("showPlot" -> true, "showTable" -> false))
+        ),
       pageArgs
     )
   }
@@ -117,9 +123,10 @@ object ShivaReport extends MultisampleReportBuilder {
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
     "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam")),
-    "VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp", Map("sampleId" -> None))
-  ), Map())
+      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))) ++
+    (if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
+      Map("sampleId" -> None)))
+    else Nil), Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
@@ -130,28 +137,30 @@ object ShivaReport extends MultisampleReportBuilder {
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
-      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true)),
-      "Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
-      "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-      "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-    ), args)
+      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
+      (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil) ++
+      List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+      ), args)
   }
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
-    def krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gears", "stats", "krakenreport").isDefined
+    val flexiprepExecuted = summary.getLibraryValue(sampleId, libId, "flexiprep").isDefined
+    val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gears", "stats", "krakenreport").isDefined
 
-    ReportPage(List(
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
-      "QC" -> FlexiprepReport.flexiprepPage
-    ) ::: (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
-        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
-        )), Map()))
-      else Nil), List(
-      "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-      "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-      "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-    ), args)
+    ReportPage(
+      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)) ::
+        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
+        ) ::: (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+          "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+          )), Map()))
+        else Nil), "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
+        (if (flexiprepExecuted) List(
+          "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+        )
+        else Nil), args)
   }
 
   /** Name of the report */

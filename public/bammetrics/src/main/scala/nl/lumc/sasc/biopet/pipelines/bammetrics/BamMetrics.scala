@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
@@ -27,7 +27,11 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import org.broadinstitute.gatk.queue.QScript
 
-class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class BamMetrics(val root: Configurable) extends QScript
+  with SummaryQScript
+  with SampleLibraryTag
+  with Reference {
+
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
@@ -51,7 +55,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   }
 
   /** returns files to store in summary */
-  def summaryFiles = Map("input_bam" -> inputBam) ++
+  def summaryFiles = Map("reference" -> referenceFasta(),
+    "input_bam" -> inputBam) ++
     ampliconBedFile.map("amplicon" -> _).toMap ++
     ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
 
