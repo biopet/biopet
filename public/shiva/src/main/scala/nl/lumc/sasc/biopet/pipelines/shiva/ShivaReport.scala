@@ -41,6 +41,9 @@ object ShivaReport extends MultisampleReportBuilder {
     case _          => false
   }
 
+  override def extFiles = super.extFiles ++ List("js/gears.js")
+    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+
   /** Root page for the shiva report */
   def indexPage = {
     val regions = regionsPage
@@ -144,10 +147,15 @@ object ShivaReport extends MultisampleReportBuilder {
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     val flexiprepExecuted = summary.getLibraryValue(sampleId, libId, "flexiprep").isDefined
+    val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gears", "stats", "krakenreport").isDefined
+
     ReportPage(
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
-        ), "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
+        ) ::: (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+        )), Map()))
+      else Nil), "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List(
           "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")

@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, ReportBuilder }
+import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
@@ -33,6 +33,11 @@ object MappingReport extends ReportBuilder {
   /** Name of report */
   val reportName = "Mapping Report"
 
+  override def extFiles = super.extFiles ++ List("js/gears.js")
+    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+
+  def krakenExecuted = summary.getValue(sampleId, libId, "gears", "stats", "krakenreport").isDefined
+
   /** Root page for single BamMetrcis report */
   def indexPage = {
     val skipFlexiprep = summary.getValue(sampleId, libId, "mapping", "settings", "skip_flexiprep").getOrElse(false) == true
@@ -48,7 +53,11 @@ object MappingReport extends ReportBuilder {
           "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"))) :::
           List("Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false))
           ), Map())
-      ), List(
+      ) :::
+        (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+          "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+          )), Map()))
+        else Nil), List(
       "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/mappingFront.ssp")
     ) ::: bamMetricsPage.map(_.sections).getOrElse(Nil),
       Map()
