@@ -324,10 +324,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   def addGsnap(R1: File, R2: Option[File], output: File): File = {
-    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
-    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
     val gsnapCommand = new Gsnap(this)
-    gsnapCommand.input = if (paired) List(zcatR1._2, zcatR2.get._2) else List(zcatR1._2)
+    gsnapCommand.input = if (paired) List(R1, R2.get) else List(R1)
     gsnapCommand.output = swapExt(output.getParentFile, output, ".bam", ".sam")
 
     val reorderSam = new ReorderSam(this)
@@ -335,11 +333,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     reorderSam.output = swapExt(output.getParentFile, output, ".sorted.bam", ".reordered.bam")
 
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
-    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
-      Some(gsnapCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
-    pipe.threadsCorrection = -1
-    zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
-    zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
+    val pipe = new BiopetFifoPipe(this, gsnapCommand :: ar._1 :: reorderSam :: Nil)
+    pipe.threadsCorrection = -2
     add(pipe)
     ar._2
   }
