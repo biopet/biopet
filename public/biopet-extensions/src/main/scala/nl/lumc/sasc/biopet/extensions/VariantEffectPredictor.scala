@@ -75,7 +75,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var maf_esp: Boolean = config("maf_esp", default = false)
   var old_map: Boolean = config("old_maf", default = false)
   var pubmed: Boolean = config("pubmed", default = false)
-  var failed: Boolean = config("failed", default = false)
+
   var vcf: Boolean = config("vcf", default = true)
   var json: Boolean = config("json", default = false)
   var gvf: Boolean = config("gvf", default = false)
@@ -140,6 +140,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var port: Option[Int] = config("port")
   var db_version: Option[Int] = config("db_version")
   var buffer_size: Option[Int] = config("buffer_size")
+  // ought to be a flag, but is BUG in VEP; becomes numeric ("1" is true)
+  var failed: Option[Int] = config("failed")
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -189,7 +191,6 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     conditional(maf_1kg, "--maf_1kg") +
     conditional(maf_esp, "--maf_esp") +
     conditional(pubmed, "--pubmed") +
-    conditional(failed, "--failed") +
     conditional(vcf, "--vcf") +
     conditional(json, "--json") +
     conditional(gvf, "--gvf") +
@@ -249,6 +250,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     optional("--freq_freq", freq_freq) +
     optional("--port", port) +
     optional("--db_version", db_version) +
-    optional("--buffer_size", buffer_size)
+    optional("--buffer_size", buffer_size) +
+    optional("--failed", failed)
 
 }

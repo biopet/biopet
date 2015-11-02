@@ -39,7 +39,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   }
 
   override def defaults = Map(
-    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> true)
+    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> 1, "allow_non_variant" -> true)
   )
 
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
