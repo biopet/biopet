@@ -36,6 +36,9 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 /** Object for report generation for Shiva pipeline */
 object ShivaReport extends MultisampleReportBuilder {
 
+  override def extFiles = super.extFiles ++ List("js/gears.js")
+    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+
   /** Root page for the shiva report */
   def indexPage = {
     val regions = regionsPage
@@ -136,10 +139,15 @@ object ShivaReport extends MultisampleReportBuilder {
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
+    def krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gears", "stats", "krakenreport").isDefined
+
     ReportPage(List(
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
       "QC" -> FlexiprepReport.flexiprepPage
-    ), List(
+    ) ::: (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+        )), Map()))
+      else Nil), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
       "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")

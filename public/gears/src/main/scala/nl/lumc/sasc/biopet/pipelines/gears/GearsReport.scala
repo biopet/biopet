@@ -9,8 +9,6 @@ class GearsReport(val root: Configurable) extends ReportBuilderExtension {
 
 object GearsReport extends ReportBuilder {
 
-  // FIXME: Not yet finished
-  // TODO: Sample specific: Add summary (sunflare plot)
   // TODO: Add dustbin analysis (aggregated)
   // TODO: Add alignment stats per sample for the dustbin analysis
 

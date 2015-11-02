@@ -57,10 +57,10 @@
 
     #{
         val rawreport = Map("kraken" -> summary.getValue(sampleId, libId, "gears", "stats", "krakenreport"))
-        val bla = ConfigUtils.mapToJson(rawreport)
+        val jsonReport = ConfigUtils.mapToJson(rawreport)
     }#
 
-        var krakenresult = JSON.parse('<%= unescape(bla) %>');
+        var krakenresult = JSON.parse('<%= unescape(jsonReport) %>');
         loadGears(krakenresult.kraken.classified);
     </script>
 
