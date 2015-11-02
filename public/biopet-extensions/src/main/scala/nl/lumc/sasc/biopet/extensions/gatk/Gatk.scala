@@ -68,7 +68,7 @@ abstract class Gatk extends BiopetJavaCommandLineFunction with Reference with Ve
     required("-R", reference) +
     optional("-K", gatkKey) +
     optional("-et", et) +
-    repeat("-I", intervals) +
+    repeat("-L", intervals) +
     repeat("-XL", excludeIntervals) +
     repeat("-ped", pedigree)
 }
