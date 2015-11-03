@@ -49,8 +49,6 @@
 
     </div>
 
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="${rootPath}ext/js/gears.js"></script>
 
     <script type="application/ecmascript">
@@ -60,7 +58,7 @@
         val jsonReport = ConfigUtils.mapToJson(rawreport)
     }#
 
-        var krakenresult = JSON.parse('<%= unescape(jsonReport) %>');
+        var krakenresult = ${unescape(jsonReport)};
         loadGears(krakenresult.kraken.classified);
     </script>
 

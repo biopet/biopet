@@ -67,6 +67,7 @@
 
         <!-- sortable tables //-->
         <script src="${rootPath}ext/js/sortable.min.js"></script>
+        <script src="${rootPath}ext/js/d3.v3.5.5.min.js"></script>
         <script language="JavaScript">
             <!--
             $(document).ready(function() {
