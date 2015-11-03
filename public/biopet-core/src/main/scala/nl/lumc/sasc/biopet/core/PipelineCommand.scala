@@ -18,19 +18,22 @@ package nl.lumc.sasc.biopet.core
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Config
+import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 import nl.lumc.sasc.biopet.core.workaround.BiopetQCommandLine
 import nl.lumc.sasc.biopet.utils.{ MainCommand, Logging }
 import org.apache.log4j.{ PatternLayout, WriterAppender }
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 
 /** Wrapper around executable from Queue */
-trait PipelineCommand extends MainCommand with GatkLogging {
+trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversions {
 
   /**
    * Gets location of compiled class of pipeline
    * @return path from classPath to class file
    */
   def pipeline = "/" + getClass.getName.stripSuffix("$").replaceAll("\\.", "/") + ".class"
+
+  def pipelineName = getClass.getSimpleName.takeWhile(_ != '$').toLowerCase
 
   /** Class can be used directly from java with -cp option */
   def main(args: Array[String]): Unit = {
@@ -86,6 +89,11 @@ trait PipelineCommand extends MainCommand with GatkLogging {
     argv ++= args
     if (!args.contains("--log_to_file") && !args.contains("-log")) {
       argv ++= List("--log_to_file", new File(logFile.getParentFile, "queue." + BiopetQCommandLine.timestamp + ".log").getAbsolutePath)
+    }
+    if (!args.contains("-retry") && !args.contains("--retry_failed")) {
+      val retry: Int = Config.global(pipelineName, Nil, "retry", default = 5)
+      logger.info("No retry flag found, ")
+      argv ++= List("-retry", retry.toString)
     }
     BiopetQCommandLine.main(argv)
   }
