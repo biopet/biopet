@@ -60,7 +60,7 @@
         val jsonReport = ConfigUtils.mapToJson(rawreport)
     }#
 
-        var krakenresult = JSON.parse('<%= unescape(jsonReport) %>');
+        var krakenresult = ${unescape(jsonReport)};
         loadGears(krakenresult.kraken.classified);
     </script>
 
