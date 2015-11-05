@@ -123,7 +123,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val filteredVcfs = splits.map(x => {
       val filter = new VcfFilter(this)
       filter.inputVcf = x.output
-      filter.outputVcf = swapExt(x.output, ".vcf.gz", ".filtered.vcf.gz")
+      filter.outputVcf = swapExt(outputDir, x.output, ".vcf.gz", ".filtered.vcf.gz")
       filter.minGenomeQuality = minGQ
       add(filter)
       filter
@@ -132,7 +132,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val bedTracks = filteredVcfs.map(x => {
       val bed = new GvcfToBed(this)
       bed.inputVcf = x.outputVcf
-      bed.outputBed = swapExt(x.outputVcf, ".vcf.gz", ".bed")
+      bed.outputBed = swapExt(outputDir, x.outputVcf, ".vcf.gz", ".bed")
       add(bed)
       bed
     })
@@ -140,7 +140,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val zippedBedTracks = bedTracks.map(x => {
       val gzip = new Gzip(this)
       gzip.input = List(x.outputBed)
-      gzip.output = swapExt(x.outputBed, ".bed", ".bed.gz")
+      gzip.output = swapExt(outputDir, x.outputBed, ".bed", ".bed.gz")
       add(gzip)
       gzip
     })
@@ -149,11 +149,11 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     annotate.vcf = vcf
     annotate.queries = annotationQueries
     annotate.waitToComplete = true
-    annotate.output = swapExt(vcf, ".vcf.gz", ".tmp.annot")
+    annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".tmp.annot")
     add(annotate)
 
     val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
-    annotatedVcf.output = swapExt(annotate.output, ".tmp.annot", "tmp.annot.vcf.gz")
+    annotatedVcf.output = swapExt(outputDir, annotate.output, ".tmp.annot", "tmp.annot.vcf.gz")
     add(annotatedVcf)
 
     val imports = for (
@@ -164,7 +164,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       importing.vcfs = List(vcf.outputVcf)
       importing.name = Some(sample)
       importing.waitToComplete = true
-      importing.output = swapExt(vcf.outputVcf, ".vcf.gz", ".tmp.import")
+      importing.output = swapExt(outputDir, vcf.outputVcf, ".vcf.gz", ".tmp.import")
       importing.public = isPublic
       add(importing)
       importing
@@ -172,7 +172,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
     val activates = imports.map(x => {
       val active = new ManweActivateAfterAnnotImport(this, annotate, x)
-      active.output = swapExt(x.output, ".tmp.import", ".tmp.activated")
+      active.output = swapExt(outputDir, x.output, ".tmp.import", ".tmp.activated")
       add(active)
       active
     })
@@ -180,7 +180,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val finalLn = new Ln(this)
     activates.foreach(x => finalLn.deps :+= x.output)
     finalLn.input = annotatedVcf.output
-    finalLn.output = swapExt(annotatedVcf.output, "tmp.annot.vcf.gz", ".varda_annotated.vcf.gz")
+    finalLn.output = swapExt(outputDir, annotatedVcf.output, "tmp.annot.vcf.gz", ".varda_annotated.vcf.gz")
     finalLn.relative = true
     add(finalLn)
 
