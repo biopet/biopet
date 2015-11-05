@@ -68,9 +68,9 @@ This config file should be written in either JSON or YAML format. It can contain
  deeper into the JSON file. E.g. in the example below the settings for Picard tools are altered only for Picard and not global. 
 
 
-~~~
+``` json
 "picard": { "validationstringency": "LENIENT" } 
-~~~
+```
 
 Global setting examples are:
 ~~~
@@ -89,7 +89,7 @@ E.g. pipelines and tools which uses FASTA references should now set value `"refe
 Additionally, we can set `"reference_name"` for the name to be used (e.g. `"hg19"`). If unset, Biopet will default to `unknown`.
 It is also possible to set the `"species"` flag. Again, we will default to `unknown` if unset.
 #### Example settings config
-~~~
+``` json
 {
         "reference_fasta": "/references/hg19_nohap/ucsc.hg19_nohap.fasta",
         "reference_name": "hg19_nohap",
@@ -111,7 +111,7 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
         "chunking": true,
         "haplotypecaller": { "scattercount": 1000 }
 }
-~~~
+```
 
 ### JSON validation
 

@@ -39,7 +39,8 @@ The layout of the sample configuration for Carp is basically the same as with ou
 }
 ~~~
 
-What's important there is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
+What's important here is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually 
+ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
 
 ### Pipeline Settings Configuration
 
@@ -51,7 +52,8 @@ For the pipeline settings, there are some values that you need to specify while 
 While optional settings are:
 
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
-
+2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github
+.com/taoliu/MACS/#call-peaks)
 ## Running Carp
 
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:
