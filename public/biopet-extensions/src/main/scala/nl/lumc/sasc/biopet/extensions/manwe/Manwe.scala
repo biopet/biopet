@@ -16,7 +16,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  var manweConfig: File = createManweConfig
+  var manweConfig: File = createManweConfig(None)
 
   @Output(doc = "the output file")
   var output: File = _
@@ -26,12 +26,14 @@ abstract class Manwe extends BiopetCommandLineFunction {
   def subCommand: String
 
   final def cmdLine = {
+    manweConfig = createManweConfig(Option(output).map(_.getParentFile))
     required(executable) +
       subCommand +
       required("-c", manweConfig) +
       conditional(manweHelp, "-h") +
       " > " +
       required(output)
+
   }
 
   /**
@@ -48,7 +50,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
    * Create Manwe config from biopet config
    * @return Manwe config file
    */
-  def createManweConfig: File = {
+  def createManweConfig(directory: Option[File]): File = {
     val url: String = config("varda_root")
     val token: String = config("varda_token")
     val sslSettings: Option[String] = config("varda_verify_certificate")
@@ -68,7 +70,10 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val collectionString = s"COLLECTION_CACHE_SIZE = ${collectionCacheSize.getOrElse(20)}"
     val dataString = s"DATA_BUFFER_SIZE = ${dataBufferSize.getOrElse(1048576)}"
     val taskString = s"TASK_POLL_WAIT = ${taskPollWait.getOrElse(2)}"
-    val file = File.createTempFile("manwe_config", ".py", output.getParentFile)
+    val file = directory match {
+      case Some(dir) => File.createTempFile("manwe_config", ".py", dir)
+      case None => File.createTempFile("manwe_config", ".py")
+    }
     file.deleteOnExit()
     val writer = new PrintWriter(file)
     writer.println(urlString)
