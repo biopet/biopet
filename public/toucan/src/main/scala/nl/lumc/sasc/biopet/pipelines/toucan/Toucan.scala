@@ -133,6 +133,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       val bed = new GvcfToBed(this)
       bed.inputVcf = x.outputVcf
       bed.outputBed = swapExt(outputDir, x.outputVcf, ".vcf.gz", ".bed")
+      bed.minQuality = minGQ
       add(bed)
       bed
     })

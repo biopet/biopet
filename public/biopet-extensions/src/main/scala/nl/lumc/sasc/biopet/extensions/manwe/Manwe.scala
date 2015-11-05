@@ -68,8 +68,8 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val collectionString = s"COLLECTION_CACHE_SIZE = ${collectionCacheSize.getOrElse(20)}"
     val dataString = s"DATA_BUFFER_SIZE = ${dataBufferSize.getOrElse(1048576)}"
     val taskString = s"TASK_POLL_WAIT = ${taskPollWait.getOrElse(2)}"
-
-    val file = File.createTempFile("manwe_config", ".py")
+    val file = File.createTempFile("manwe_config", ".py", output.getParentFile)
+    file.deleteOnExit()
     val writer = new PrintWriter(file)
     writer.println(urlString)
     writer.println(tokenString)
