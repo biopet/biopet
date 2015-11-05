@@ -53,7 +53,7 @@ While optional settings are:
 
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
 2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github
-.com/taoliu/MACS/#call-peaks)
+.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: macs2_callpeak
 ## Running Carp
 
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:
@@ -68,9 +68,11 @@ If you already have the `biopet` environment module loaded, you can also simply 
 biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
-It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
+It is also a good idea to specify retries (we recomend `-retry 4` up to `-retry 8`) so that cluster glitches do not interfere 
+with your pipeline runs.
 
 ## Getting Help
 
 If you have any questions on running Carp, suggestions on how to improve the overall flow, or requests for your favorite ChIP-seq related program to be added, feel free to post an issue to our issue tracker at [https://git.lumc.nl/biopet/biopet/issues](https://git.lumc.nl/biopet/biopet/issues).
+Or contact us directly via: [SASC email](mailto: SASC@lumc.nl)
 
