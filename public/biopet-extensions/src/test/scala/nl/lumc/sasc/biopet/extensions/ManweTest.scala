@@ -343,6 +343,26 @@ class ManweTest extends TestNGSuite with Matchers {
         |DATA_BUFFER_SIZE = 200
         |TASK_POLL_WAIT = 5""".stripMargin)
 
+    val manwe2 = new ManweAnnotateBed(null) {
+      override def globalConfig = new Config(Map(
+        "varda_root" -> "http://127.0.0.1:5000",
+        "varda_token" -> "QWERTYUIOPASDFGHJKLZXCVBNM",
+        "varda_cache_size" -> 25,
+        "varda_buffer_size" -> 200,
+        "varda_task_poll_wait" -> 5,
+        "varda_verify_certificate" -> "/a/b/c/d.crt"))
+    }
+
+    val file2: File = manwe2.createManweConfig(None)
+    val contents2 = Source.fromFile(file2).getLines().mkString("\n")
+
+    contents2 should equal("""API_ROOT = 'http://127.0.0.1:5000'
+                            |TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'
+                            |VERIFY_CERTIFICATE = '/a/b/c/d.crt'
+                            |COLLECTION_CACHE_SIZE = 25
+                            |DATA_BUFFER_SIZE = 200
+                            |TASK_POLL_WAIT = 5""".stripMargin)
+
   }
 
 }

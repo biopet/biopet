@@ -63,7 +63,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val sslSettingString = sslSettings match {
       case Some("true")  => "VERIFY_CERTIFICATE = True"
       case Some("false") => "VERIFY_CERTIFICATE = False"
-      case Some(x)       => s"VERIFY_CERTIFICATE = '$x"
+      case Some(x)       => s"VERIFY_CERTIFICATE = '$x'"
       case _             => "VERIFY_CERTIFICATE = True"
     }
 
@@ -72,7 +72,7 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val taskString = s"TASK_POLL_WAIT = ${taskPollWait.getOrElse(2)}"
     val file = directory match {
       case Some(dir) => File.createTempFile("manwe_config", ".py", dir)
-      case None => File.createTempFile("manwe_config", ".py")
+      case None      => File.createTempFile("manwe_config", ".py")
     }
     file.deleteOnExit()
     val writer = new PrintWriter(file)
