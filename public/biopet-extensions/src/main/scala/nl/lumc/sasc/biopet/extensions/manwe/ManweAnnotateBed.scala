@@ -19,7 +19,7 @@ class ManweAnnotateBed(val root: Configurable) extends Manwe {
   @Argument(doc = "Flag whether to wait for annotation to complete on the server")
   var waitToComplete: Boolean = false
 
-  @Argument(doc = "annotation queries")
+  @Argument(doc = "annotation queries", required = false)
   var queries: List[String] = Nil
 
   def subCommand = {

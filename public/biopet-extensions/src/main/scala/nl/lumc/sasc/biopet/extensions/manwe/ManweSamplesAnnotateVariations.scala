@@ -13,7 +13,7 @@ class ManweSamplesAnnotateVariations(val root: Configurable) extends Manwe {
   @Argument(doc = "uri to sample to annotate")
   var uri: Option[String] = _
 
-  @Argument(doc = "Annotation queries")
+  @Argument(doc = "Annotation queries", required = false)
   var queries: List[String] = Nil
 
   def subCommand = {

@@ -11,7 +11,7 @@ class ManweDataSourcesAnnotate(val root: Configurable) extends Manwe {
   @Argument(doc = "uri to data source to annotate")
   var uri: Option[String] = _
 
-  @Argument(doc = "list of queries")
+  @Argument(doc = "list of queries", required = false)
   var queries: List[String] = Nil
 
   @Argument(doc = "Flag whether to wait for annotation to complete on server")

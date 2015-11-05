@@ -19,7 +19,7 @@ class ManweAnnotateVcf(val root: Configurable) extends Manwe {
   @Argument(doc = "flag whether to wait for annotation to complete")
   var waitToComplete: Boolean = false
 
-  @Argument(doc = "annotation queries")
+  @Argument(doc = "annotation queries", required = false)
   var queries: List[String] = Nil
 
   def subCommand = {

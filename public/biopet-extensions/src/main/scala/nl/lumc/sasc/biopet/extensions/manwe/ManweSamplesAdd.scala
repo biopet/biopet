@@ -13,7 +13,7 @@ class ManweSamplesAdd(val root: Configurable) extends Manwe {
   @Argument(doc = "the sample name")
   var name: Option[String] = _
 
-  @Argument(doc = "the sample groups [uris]")
+  @Argument(doc = "the sample groups [uris]", required = false)
   var group: List[String] = Nil
 
   @Argument(doc = "pool size")

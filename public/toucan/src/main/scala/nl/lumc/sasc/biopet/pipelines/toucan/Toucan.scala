@@ -109,7 +109,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val splits = sampleIds.map(x => {
       val view = new BcftoolsView(this)
       view.input = vcf
-      view.output = swapExt(vcf, ".vcf.gz", s"$x.vcf.gz")
+      view.output = swapExt(outputDir, vcf, ".vcf.gz", s"$x.vcf.gz")
       view.samples = List(x)
       view.minAC = Some(1)
       add(view)
@@ -147,7 +147,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
     val annotate = new ManweAnnotateVcf(this)
     annotate.vcf = vcf
-    annotate.queries = annotationQueries
+    if (annotationQueries.nonEmpty) {
+      annotate.queries = annotationQueries
+    }
     annotate.waitToComplete = true
     annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".tmp.annot")
     add(annotate)

@@ -10,10 +10,10 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Output }
  */
 class ManweSamplesList(val root: Configurable) extends Manwe {
 
-  @Argument(doc = "filter by user URI")
+  @Argument(doc = "filter by user URI", required = false)
   var user: Option[String] = None
 
-  @Argument(doc = "filter by group URI")
+  @Argument(doc = "filter by group URI", required = false)
   var group: List[String] = Nil
 
   var onlyPublic: Boolean = false

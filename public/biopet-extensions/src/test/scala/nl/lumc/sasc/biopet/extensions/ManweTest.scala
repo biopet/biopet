@@ -30,6 +30,8 @@ class ManweTest extends TestNGSuite with Matchers {
     manwe.output = out
     manwe.bed = bed
     manwe.alreadyUploaded = false
+    manwe.cmd should equal(s"manwe annotate-bed ${bed.getAbsolutePath} -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
     manwe.queries = List("/uri/1&&/uri/2")
     manwe.cmd should equal(s"manwe annotate-bed ${bed.getAbsolutePath} -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
 
@@ -55,6 +57,8 @@ class ManweTest extends TestNGSuite with Matchers {
     manwe.output = out
     manwe.vcf = vcf
     manwe.alreadyUploaded = false
+    manwe.cmd should equal(s"manwe annotate-vcf ${vcf.getAbsolutePath} -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
     manwe.queries = List("/uri/1&&/uri/2")
     manwe.cmd should equal(s"manwe annotate-vcf ${vcf.getAbsolutePath} -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
 
@@ -77,6 +81,8 @@ class ManweTest extends TestNGSuite with Matchers {
     manwe.manweConfig = new File("/usr/local/nonexistent.conf")
     manwe.output = out
     manwe.uri = Some("/uri/1")
+    manwe.cmd should equal(s"manwe data-sources annotate /uri/1 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
+
     manwe.queries = List("/uri/1&&/uri/2")
     manwe.cmd should equal(s"manwe data-sources annotate /uri/1 -q /uri/1&&/uri/2 -c /usr/local/nonexistent.conf > ${out.getAbsolutePath}")
 
