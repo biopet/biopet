@@ -102,6 +102,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case _ => reportClass.foreach(add(_))
     }
 
+    if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
+
     Logging.checkErrors()
   }
 
