@@ -343,24 +343,29 @@ class Gentrap(val root: Configurable) extends QScript
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
-    if (expMeasures.contains(FragmentsPerGene))
-      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per gene")
+    if (expMeasures.contains(FragmentsPerGene) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for counting fragments per gene, config key: 'annotation_gtf'")
 
-    if (expMeasures.contains(FragmentsPerExon))
-      // TODO: validate that GTF file contains exon features
-      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per exon")
+    if (expMeasures.contains(FragmentsPerExon) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for counting fragments per exon, config key: 'annotation_gtf'")
+    // TODO: validate that GTF file contains exon features
 
-    if (expMeasures.contains(BasesPerGene))
-      require(annotationBed.isDefined, "BED file must be defined for counting bases per gene")
+    if (expMeasures.contains(BasesPerGene) && annotationBed.isEmpty)
+      Logging.addError("BED file must be defined for counting bases per gene, config key: 'annotation_bed'")
 
-    if (expMeasures.contains(BasesPerExon))
-      require(annotationBed.isDefined, "BED file must be defined for counting bases per exon")
+    if (expMeasures.contains(BasesPerExon) && annotationBed.isEmpty)
+      Logging.addError("BED file must be defined for counting bases per exon, config key: 'annotation_bed'")
 
-    if (expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict))
-      require(annotationGtf.isDefined, "GTF file must be defined for Cufflinks-based modes")
+    if ((expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict)) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for Cufflinks-based modes, config key: 'annotation_gtf'")
 
-    if (removeRibosomalReads)
-      require(ribosomalRefFlat.isDefined, "rRNA intervals must be supplied if removeRibosomalReads is set")
+    if (removeRibosomalReads && ribosomalRefFlat.isEmpty)
+      Logging.addError("rRNA intervals must be supplied if removeRibosomalReads is set, config key: 'ribosome_refflat'")
+
+    annotationGtf.foreach(inputFiles :+= new InputFile(_))
+    annotationBed.foreach(inputFiles :+= new InputFile(_))
+    ribosomalRefFlat.foreach(inputFiles :+= new InputFile(_))
+    if (annotationRefFlat.getName.nonEmpty) inputFiles :+= new InputFile(annotationRefFlat)
   }
 
   /** Pipeline run for each sample */
@@ -508,7 +513,7 @@ class Gentrap(val root: Configurable) extends QScript
       .option {
         require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
-        job.inputAnnotation = annotationGtf.get
+        annotationGtf.foreach(job.inputAnnotation = _)
         job.inputAlignment = idSortingJob.get.output
         job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
@@ -643,7 +648,7 @@ class Gentrap(val root: Configurable) extends QScript
           .option {
             val job = new RawBaseCounter(qscript)
             job.inputBoth = alnFile
-            job.annotationBed = annotationBed.get
+            annotationBed.foreach(job.annotationBed = _)
             job.output = createFile(".raw_base_count")
             job
           }
@@ -654,7 +659,7 @@ class Gentrap(val root: Configurable) extends QScript
             val job = new RawBaseCounter(qscript)
             job.inputPlus = alnFilePlusStrand.get
             job.inputMinus = alnFileMinusStrand.get
-            job.annotationBed = annotationBed.get
+            annotationBed.foreach(job.annotationBed = _)
             job.output = createFile(".raw_base_count")
             job
           }
@@ -711,10 +716,10 @@ class Gentrap(val root: Configurable) extends QScript
     /** Job for removing ribosomal reads */
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
-        require(ribosomalRefFlat.isDefined)
+        //require(ribosomalRefFlat.isDefined)
         val job = new WipeReads(qscript)
         job.inputBam = alnFileDirty
-        job.intervalFile = ribosomalRefFlat.get
+        ribosomalRefFlat.foreach(job.intervalFile = _)
         job.outputBam = createFile(".cleaned.bam")
         job.discardedBam = createFile(".rrna.bam")
         job
