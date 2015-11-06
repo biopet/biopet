@@ -42,6 +42,7 @@ import scalaz.Scalaz._
  * Gentrap pipeline
  * Generic transcriptome analysis pipeline
  *
+ * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
 class Gentrap(val root: Configurable) extends QScript
@@ -65,7 +66,7 @@ class Gentrap(val root: Configurable) extends QScript
     if (config.contains("expression_measures"))
       config("expression_measures")
         .asStringList
-        .map { makeExpMeasure }
+        .flatMap { makeExpMeasure }
         .toSet
     else {
       Logging.addError("'expression_measures' is missing in the config")
@@ -76,7 +77,7 @@ class Gentrap(val root: Configurable) extends QScript
   /** Strandedness modes */
   var strandProtocol: StrandProtocol.Value = {
     if (config.contains("strand_protocol"))
-      makeStrandProtocol(config("strand_protocol").asString)
+      makeStrandProtocol(config("strand_protocol").asString).getOrElse(StrandProtocol.NonSpecific)
     else {
       Logging.addError("'strand_protocol' is missing in the config")
       StrandProtocol.NonSpecific
@@ -894,22 +895,26 @@ object Gentrap extends PipelineCommand {
     .mkString("")
 
   /** Conversion from raw user-supplied expression measure string to enum value */
-  private def makeExpMeasure(rawName: String): ExpMeasures.Value = {
+  private def makeExpMeasure(rawName: String): Option[ExpMeasures.Value] = {
     try {
-      ExpMeasures.withName(camelize(rawName))
+      Some(ExpMeasures.withName(camelize(rawName)))
     } catch {
-      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid expression measure: " + rawName)
-      case e: Exception                => throw e
+      case nse: NoSuchElementException =>
+        Logging.addError(s"Invalid expression measure: $rawName")
+        None
+      case e: Exception => throw e
     }
   }
 
   /** Conversion from raw user-supplied expression measure string to enum value */
-  private def makeStrandProtocol(rawName: String): StrandProtocol.Value = {
+  private def makeStrandProtocol(rawName: String): Option[StrandProtocol.Value] = {
     try {
-      StrandProtocol.withName(camelize(rawName))
+      Some(StrandProtocol.withName(camelize(rawName)))
     } catch {
-      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid strand protocol: " + rawName)
-      case e: Exception                => throw e
+      case nse: NoSuchElementException =>
+        Logging.addError(s"Invalid strand protocol: $rawName")
+        None
+      case e: Exception => throw e
     }
   }
 }
