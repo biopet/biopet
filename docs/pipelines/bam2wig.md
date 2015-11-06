@@ -39,6 +39,7 @@ $ biopet pipeline bam2wig
 ~~~
 
 To run the pipeline:
+
 ~~~bash
  biopet pipeline bam2wig -config </path/to/config.json> --bamfile </path/to/bam.bam> -qsub -jobParaEnv BWA -run
 ~~~
