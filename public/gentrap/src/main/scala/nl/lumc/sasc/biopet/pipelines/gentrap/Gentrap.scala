@@ -19,25 +19,24 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.utils.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
 import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 import scala.language.reflectiveCalls
 import scalaz.Scalaz._
-import scalaz._
 
 /**
  * Gentrap pipeline
@@ -62,13 +61,27 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Expression measurement modes */
   // see the enumeration below for valid modes
-  var expMeasures: Set[ExpMeasures.Value] = config("expression_measures")
-    .asStringList
-    .map { makeExpMeasure }
-    .toSet
+  var expMeasures: Set[ExpMeasures.Value] = {
+    if (config.contains("expression_measures"))
+      config("expression_measures")
+        .asStringList
+        .map { makeExpMeasure }
+        .toSet
+    else {
+      Logging.addError("'expression_measures' is missing in the config")
+      Set()
+    }
+  }
 
   /** Strandedness modes */
-  var strandProtocol: StrandProtocol.Value = makeStrandProtocol(config("strand_protocol").asString)
+  var strandProtocol: StrandProtocol.Value = {
+    if (config.contains("strand_protocol"))
+      makeStrandProtocol(config("strand_protocol").asString)
+    else {
+      Logging.addError("'strand_protocol' is missing in the config")
+      StrandProtocol.NonSpecific
+    }
+  }
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf")
