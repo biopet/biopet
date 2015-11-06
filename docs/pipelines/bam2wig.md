@@ -46,3 +46,8 @@ To run the pipeline:
 ## Output Files
 
 The pipeline generates three output track files: a bigWig file, a wiggle file, and a TDF file.
+
+## Getting Help
+
+If you have any questions on running Bam2Wig or suggestions on how to improve the overall flow, feel free to post an issue to our
+ issue tracker at [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto: SASC@lumc.nl)

@@ -174,3 +174,11 @@ The config for these therefore is:
 ```
 
 ## References
+
+* Shiva follows the best practices of GATK: [GATK best practices](https://www.broadinstitute.org/gatk/guide/best-practices)
+
+
+## Getting Help
+
+If you have any questions on running Shiva, suggestions on how to improve the overall flow, or requests for your favorite variant calling related program to be added, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

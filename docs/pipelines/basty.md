@@ -152,3 +152,8 @@ The output files this pipeline produces are:
 
 
 ## References
+
+## Getting Help
+
+If you have any questions on running Basty, suggestions on how to improve the overall flow, or requests for your favorite 
+SNP typing algorithm, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

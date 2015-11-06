@@ -209,6 +209,6 @@ with your pipeline runs.
 
 ## Getting Help
 
-If you have any questions on running Carp, suggestions on how to improve the overall flow, or requests for your favorite ChIP-seq related program to be added, feel free to post an issue to our issue tracker at [https://git.lumc.nl/biopet/biopet/issues](https://git.lumc.nl/biopet/biopet/issues).
-Or contact us directly via: [SASC email](mailto: SASC@lumc.nl)
+If you have any questions on running Carp, suggestions on how to improve the overall flow, or requests for your favorite ChIP-seq related program to be added, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)
 

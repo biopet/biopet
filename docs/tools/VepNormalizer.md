@@ -21,7 +21,7 @@ The CSQ tag is by default removed from the output VCF file. If one wishes to ret
 Example
 ---------
 
-~~~~bash
+~~~ bash
 biopet tool VepNormalizer -h
 |VepNormalizer - Parse VEP-annotated VCF to standard VCF format 
 Usage: VepNormalizer [options]
@@ -40,5 +40,5 @@ Usage: VepNormalizer [options]
         Mode
   --do-not-remove
         Do not remove CSQ tag
-~~~~   
+~~~   
 

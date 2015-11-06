@@ -123,3 +123,8 @@ Below is an example of the output files that you will get after running Sage. He
     ├── no_sense_genes.txt
     └── tag.lib
 ~~~
+
+## Getting Help
+
+If you have any questions on running SAGE or suggestions on how to improve the overall flow, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

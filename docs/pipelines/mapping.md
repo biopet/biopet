@@ -126,3 +126,9 @@ To perform a dry run simply remove `-run` from the commandline call.
     ├── metrics
     └── report
 ~~~
+
+## Getting Help
+
+If you have any questions on running Mapping, suggestions on how to improve the overall flow, or requests for your favorite aligner to be added, feel free to post an issue to our issue tracker at
+ [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)
+

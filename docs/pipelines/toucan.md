@@ -11,6 +11,7 @@ Currently, it comprises just two steps:
 
 Example
 -----------
+
 ~~~~bash
 biopet pipeline Toucan -h
 Arguments for Toucan:
@@ -36,7 +37,8 @@ Furthermore, the `fork` field will be overwritten by `threads` in case that one 
 Therefore, it is recommended not to use `fork`, but to rather use `threads`. 
 
 With that in mind, an example configuration using mode `standard` of the VepNormalizer would thus be:
-~~~~
+
+~~~ json
 {
     "varianteffectpredictor": {
         "vep_script": <path_to_exe>,
@@ -49,16 +51,24 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
     },
     "output_dir": <path_to_output_directory>
 }
-~~~~
+~~~
 
 Running the pipeline
 ---------------
 The command to run the pipeline is:
-~~~~
+
+~~~~ bash
 java -jar pipeline Toucan -Input <input_vcf> -config <config_json> -run
 ~~~~
 
-If one wishes to run it on a cluster, the command becomes
-~~~~
+If one wishes to run it on a cluster, the command becomes:
+
+~~~~ bash
 java -jar pipeline Toucan -Input <input_vcf> -config <config_json> -run -qsub -jobParaEnv <PE>
 ~~~~
+
+
+## Getting Help
+
+If you have any questions on running Toucan, suggestions on how to improve the overall flow, or requests for your favorite VCF annotator to be added, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

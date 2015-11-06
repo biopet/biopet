@@ -4,7 +4,8 @@ Note that these tools are already implemented in the pipeline.
 
 ## SageCountFastq
 To open the help menu:
-~~~
+
+~~~ bash
 java -jar Biopet-0.2.0.jar tool SageCreateLibrary -h
 Usage: SageCountFastq [options]
 
@@ -21,7 +22,8 @@ Usage: SageCountFastq [options]
 
 ## SageCreateLibrary
 To open the help menu:
-~~~
+
+~~~ bash
 java -jar Biopet-0.2.0.jar tool SageCreateLibrary -h
 Usage: SageCreateLibrary [options]
 
@@ -48,7 +50,8 @@ Usage: SageCreateLibrary [options]
 
 ## SageCreateTagCounts
 To open the help menu:
-~~~
+
+~~~ bash
 java -jar Biopet-0.2.0.jar tool SageCreateTagCounts -h
 Usage: SageCreateTagCounts [options]
 

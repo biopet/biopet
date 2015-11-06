@@ -3,13 +3,13 @@
 This tool enables a user to create a full sample sheet in JSON format suitable for all our Queue pipelines.
 The tool can be started as follows:
 
-~~~
+~~~ bash
 java -jar <Biopet.jar> tool SamplesTsvToJson
 ~~~
 
 To open the help:
 
-~~~
+~~~ bash
 java -jar Biopet-0.2.0.jar tool SamplesTsvToJson -h
 Usage: SamplesTsvToJson [options]
 
@@ -29,7 +29,7 @@ JSON file is parsed with those properties inside it as well. The order of column
 
 #### Example
 
-~~~
+~~~ json
 {
   "samples" : {
     "Sample_ID_1" : {
