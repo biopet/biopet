@@ -1,7 +1,5 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 
