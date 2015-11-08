@@ -26,8 +26,6 @@ import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFun
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
-import scala.collection.mutable.ListBuffer
-
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging {
 
@@ -100,13 +98,15 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
     inputFiles.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
-      else if (!i.file.canRead()) Logging.addError(s"Input file can not be read: ${i.file}")
+      else if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
     }
 
     functions.filter(_.jobOutputFile == null).foreach(f => {
-      if (f.jobOutputFile == null && f.firstOutput != null)
+      try {
         f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + configName + ".out")
-      else throw new IllegalStateException(s"Can't generate a jobOutputFile for $f")
+      } catch {
+        case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
+      }
     })
 
     if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
