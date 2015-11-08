@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import org.broadinstitute.gatk.queue.function.{ CommandLineFunction, QFunction }
 import scala.collection.mutable
@@ -17,8 +18,8 @@ object WriteDependencies extends Logging {
     val cache: mutable.Map[String, Int] = mutable.Map()
     for (function <- functions) {
       val baseName = function match {
-        case f: BiopetCommandLineFunction => f.configName
-        case f                            => f.getClass.getSimpleName
+        case f: Configurable => f.configName
+        case f               => f.getClass.getSimpleName
       }
       cache += baseName -> (cache.getOrElse(baseName, 0) + 1)
       functionNames += function -> s"$baseName-${cache(baseName)}"
@@ -78,7 +79,7 @@ object WriteDependencies extends Logging {
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
       "jobs" -> jobs.toMap,
-      "files" -> files.values.toList.map(_.getMap)
+      "files" -> files.values.par.map(_.getMap).toList
     )).spaces2)
     writer.close()
   }
