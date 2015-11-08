@@ -58,9 +58,6 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
       case e: NullPointerException => null
     }
 
-    if (jobOutputFile == null && firstOutput != null)
-      jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
-
     nCoresRequest = Option(threads)
 
     /** The 1e retry does not yet upgrade the memory */
