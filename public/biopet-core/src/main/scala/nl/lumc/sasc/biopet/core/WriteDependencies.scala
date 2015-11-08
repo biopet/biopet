@@ -32,17 +32,20 @@ object WriteDependencies extends Logging {
     case class QueueFile(file: File) {
       private val inputJobs: ListBuffer[QFunction] = ListBuffer()
       def addInputJob(function: QFunction) = inputJobs += function
+      def inputJobNames = inputJobs.toList.map(functionNames)
+
       private val outputJobs: ListBuffer[QFunction] = ListBuffer()
       def addOutputJob(function: QFunction) = {
         if (outputJobs.nonEmpty) logger.warn(s"File '$file' is found as output of multiple jobs")
         outputJobs += function
       }
+      def outputJobNames = outputJobs.toList.map(functionNames)
 
       def getMap = Map(
         "path" -> file.getAbsolutePath,
         "intermediate" -> isIntermediate,
-        "output_jobs" -> outputJobs.toList.map(functionNames),
-        "input_jobs" -> inputJobs.toList.map(functionNames),
+        "output_jobs" -> outputJobNames,
+        "input_jobs" -> inputJobNames,
         "exist_at_start" -> file.exists(),
         "pipeline_input" -> outputJobs.isEmpty
       )
@@ -52,29 +55,38 @@ object WriteDependencies extends Logging {
 
     val files: mutable.Map[File, QueueFile] = mutable.Map()
 
+    def outputFiles(function: QFunction) = {
+      if (function.jobErrorFile == null) function.outputs :+ function.jobOutputFile
+      else function.outputs :+ function.jobOutputFile :+ function.jobErrorFile
+    }
+
     for (function <- functions) {
       for (input <- function.inputs) {
         val file = files.getOrElse(input, QueueFile(input))
         file.addInputJob(function)
         files += input -> file
       }
-      for (output <- function.outputs) {
+      for (output <- outputFiles(function)) {
         val file = files.getOrElse(output, QueueFile(output))
         file.addOutputJob(function)
         files += output -> file
       }
     }
 
-    val jobs = functionNames.map {
+    val jobs = functionNames.par.map {
       case (f, name) =>
         name -> Map("command" -> (f match {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
         }), "intermediate" -> f.isIntermediate,
           "depens_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
-          "outputs" -> f.outputs.toList,
-          "inputs" -> f.inputs.toList)
-    }
+          "depens_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
+          "ouput_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
+          "outputs" -> outputFiles(f).toList,
+          "inputs" -> f.inputs.toList,
+          "done_at_start" -> f.isDone,
+          "fail_at_start" -> f.isFail)
+    }.toIterator.toMap
 
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
