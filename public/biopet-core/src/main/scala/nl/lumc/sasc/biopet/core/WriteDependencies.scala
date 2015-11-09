@@ -11,10 +11,11 @@ import scala.collection.mutable.ListBuffer
 /**
  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  */
-object WriteDependencies extends Logging {
-  val functionNames: mutable.Map[QFunction, String] = mutable.Map()
+object WriteDependencies extends Logging with Configurable {
+  val root: Configurable = null
+  private val functionNames: mutable.Map[QFunction, String] = mutable.Map()
 
-  def createFunctionNames(functions: Seq[QFunction]): Unit = {
+  private def createFunctionNames(functions: Seq[QFunction]): Unit = {
     val cache: mutable.Map[String, Int] = mutable.Map()
     for (function <- functions) {
       val baseName = function match {
@@ -27,6 +28,7 @@ object WriteDependencies extends Logging {
   }
 
   def writeDependencies(functions: Seq[QFunction], outputFile: File): Unit = {
+    logger.info("Start calculating dependencies")
     createFunctionNames(functions)
 
     case class QueueFile(file: File) {
@@ -88,12 +90,14 @@ object WriteDependencies extends Logging {
           "fail_at_start" -> f.isFail)
     }.toIterator.toMap
 
+    logger.info(s"Writing dependencies to: $outputFile")
     val writer = new PrintWriter(outputFile)
     writer.println(ConfigUtils.mapToJson(Map(
       "jobs" -> jobs.toMap,
       "files" -> files.values.par.map(_.getMap).toList
     )).spaces2)
     writer.close()
-  }
 
+    logger.info("done calculating dependencies")
+  }
 }
