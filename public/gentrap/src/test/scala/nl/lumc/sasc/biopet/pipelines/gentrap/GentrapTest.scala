@@ -205,10 +205,10 @@ object GentrapTest {
 
   val executables = Map(
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
-    "refFlat" -> "test",
-    "annotation_gtf" -> "test",
-    "annotation_bed" -> "test",
-    "annotation_refflat" -> "test",
+    "refFlat" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test"
   ) ++ Seq(
       // fastqc executables
