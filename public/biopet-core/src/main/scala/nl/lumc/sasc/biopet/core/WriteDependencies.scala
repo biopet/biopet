@@ -29,6 +29,9 @@ object WriteDependencies extends Logging with Configurable {
 
   def writeDependencies(functions: Seq[QFunction], outputFile: File): Unit = {
     logger.info("Start calculating dependencies")
+
+    val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
+
     createFunctionNames(functions)
 
     case class QueueFile(file: File) {
@@ -43,14 +46,21 @@ object WriteDependencies extends Logging with Configurable {
       }
       def outputJobNames = outputJobs.toList.map(functionNames)
 
-      def getMap = Map(
-        "path" -> file.getAbsolutePath,
-        "intermediate" -> isIntermediate,
-        "output_jobs" -> outputJobNames,
-        "input_jobs" -> inputJobNames,
-        "exist_at_start" -> file.exists(),
-        "pipeline_input" -> outputJobs.isEmpty
-      )
+      def getMap = {
+        val fileExist = file.exists()
+        if (!fileExist && outputJobs.isEmpty) {
+          if (errorOnMissingInput) Logging.addError(s"Input file does not exist: $file")
+          else logger.warn(s"Input file does not exist: $file")
+        }
+        Map(
+          "path" -> file.getAbsolutePath,
+          "intermediate" -> isIntermediate,
+          "output_jobs" -> outputJobNames,
+          "input_jobs" -> inputJobNames,
+          "exist_at_start" -> fileExist,
+          "pipeline_input" -> outputJobs.isEmpty
+        )
+      }
 
       def isIntermediate = outputJobs.exists(_.isIntermediate)
     }
