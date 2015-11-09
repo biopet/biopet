@@ -83,7 +83,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   override def beforeGraph(): Unit = {
-    if (annotationBed != null) Logging.addError("Annotation BED must be supplied")
+    if (annotationBed == null) Logging.addError("Annotation BED must be supplied")
     require(output != null, "Output must be defined")
     require((mixedStrand && !distinctStrand) || (!mixedStrand && distinctStrand),
       "Invalid input BAM combinations for RawBaseCounter")
