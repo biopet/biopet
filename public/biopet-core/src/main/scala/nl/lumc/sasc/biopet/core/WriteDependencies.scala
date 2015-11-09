@@ -9,8 +9,10 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 /**
- * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
- */
+  * This object will generate with [[WriteDependencies.writeDependencies]] a json file where information about job and file dependencies are stored
+  *
+  * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
+  */
 object WriteDependencies extends Logging with Configurable {
   val root: Configurable = null
   private val functionNames: mutable.Map[QFunction, String] = mutable.Map()
@@ -27,6 +29,12 @@ object WriteDependencies extends Logging with Configurable {
     }
   }
 
+  /**
+    * This method will generate a json file where information about job and file dependencies are stored
+    *
+    * @param functions This should be all functions that are given to the graph of Queue
+    * @param outputFile Json file to write dependencies to
+    */
   def writeDependencies(functions: Seq[QFunction], outputFile: File): Unit = {
     logger.info("Start calculating dependencies")
 
