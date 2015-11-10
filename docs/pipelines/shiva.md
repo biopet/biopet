@@ -89,6 +89,7 @@ At this moment the following variant callers can be used
 * <a href="https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_genotyper_UnifiedGenotyper.php">unifiedgenotyper_allele</a>
     * Only genotype a given list of alleles with UnifiedGenotyper
 * <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools</a>
+* <a href="https://samtools.github.io/bcftools/bcftools.html">bcftools_singlesample</a>
 * <a href="https://github.com/ekg/freebayes">freebayes</a>
 * [raw](../tools/MpileupToVcf)
 
@@ -108,6 +109,8 @@ To view all possible config options please navigate to our Gitlab wiki page
 
 | Namespace | Name |  Type | Default | Function |
 | ----------- | ---- | ----- | ------- | -------- |
+| shiva | species | String | unknown_species | Name of species, like H.sapiens |
+| shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 |
 | shiva | reference_fasta | String |  | reference to align to |
 | shiva | dbsnp | String |  | vcf file of dbsnp records |
 | shiva | variantcallers | List[String] |  | variantcaller to use, see list |
@@ -122,7 +125,6 @@ To view all possible config options please navigate to our Gitlab wiki page
 | vcffilter | min_alternate_depth | Integer | 2 | Filter variants with at least x depth on the alternate allele |
 | vcffilter | min_samples_pass | Integer | 1 | Minimum amount of samples which pass custom filter (requires additional flags) |
 | vcffilter | filter_ref_calls | Boolean | true | Remove reference calls |
-| vcfstats | reference | String | Path to reference to be used by `vcfstats` |
 
 Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
@@ -151,26 +153,23 @@ The config for these therefore is:
 
 **Config example**
 
-```json
-{ 
-    "samples": {
-	    "SampleID": {
-		    "libraries": { 
-			    "lib_id_1": { "bam": "YourBam.bam" },
-			    "lib_id_2": { "R1": "file_R1.fq.gz", "R2": "file_R2.fq.gz" }
-	        }
-	    }
-    },
-    "shiva": {
-        "reference": "<location of fasta of reference>",
-        "variantcallers": [ "haplotypecaller", "unifiedgenotyper" ],
-        "dbsnp": "</path/to/dbsnp.vcf>",
-        "vcffilter": {
-            "min_alternate_depth": 1
-        }
-    },
-    "output_dir": "<output directory>"
-}
+``` yaml
+samples:
+    SampleID:
+        libraries:
+            lib_id_1:
+                bam: YourBam.bam
+            lib_id_2:
+                R1: file_R1.fq.gz
+                R2: file_R2.fq.gz
+dbsnp: <dbsnp.vcf.gz>
+vcffilter:
+    min_alternate_depth: 1
+output_dir: <output directory>
+variantcallers:
+    - haplotypecaller
+    - unifiedgenotyper
+    - haplotypecaller_gvcf
 ```
 
 ## References
