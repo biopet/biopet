@@ -9,7 +9,7 @@ There is a wide set of options which one can use to change the filter settings.
 To open the help menu:
 
 ~~~ bash
-java -jar Biopet-0.2.0.jar tool VcfFilter -h
+boppet tool VcfFilter -h
 Usage: VcfFilter [options]
 
   -l <value> | --log_level <value>
@@ -49,7 +49,7 @@ Usage: VcfFilter [options]
 
 To run the tool:
 ~~~ bash
-java -jar Biopet-0.2.0.jar tool VcfFilter --inputVcf myInput.vcf \
+biopet tool VcfFilter --inputVcf myInput.vcf \
 --outputVcf myOutput.vcf --filterRefCalls --minSampleDepth 
 ~~~
 

@@ -119,7 +119,7 @@ In most cases, it's practical to combine the samples and settings configuration 
 As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
 
 ~~~ bash
-$ java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:

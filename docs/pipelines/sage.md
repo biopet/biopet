@@ -35,7 +35,7 @@ Specific configuration values for the Sage pipeline are:
 As with other pipelines, you can run the Sage pipeline by invoking the `pipeline` subcommand. There is also a general help available which can be invoked using the `-h` flag:
 
 ~~~
-$ java -jar /path/to/biopet.jar pipeline sage -h
+$ biopet pipeline sage -h
 
 Arguments for Sage:
  -s,--sample <sample>                  Only Sample
@@ -56,7 +56,7 @@ $ biopet pipeline sage
 
 To run the pipeline:
 ~~~
- biopet pipeline sage -config /path/to/config.json -qsub -jobParaEnv BWA -run
+$ biopet pipeline sage -config /path/to/config.json -qsub -jobParaEnv BWA -run
 ~~~
 
 

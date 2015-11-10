@@ -59,7 +59,7 @@ While optional settings are:
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:
 
 ~~~ bash
-java -jar </path/to/biopet.jar> pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 If you already have the `biopet` environment module loaded, you can also simply call `biopet`:

@@ -58,13 +58,13 @@ Running the pipeline
 The command to run the pipeline is:
 
 ~~~~ bash
-java -jar pipeline Toucan -Input <input_vcf> -config <config_json> -run
+biopet pipeline Toucan -Input <input_vcf> -config <config_json> -run
 ~~~~
 
 If one wishes to run it on a cluster, the command becomes:
 
 ~~~~ bash
-java -jar pipeline Toucan -Input <input_vcf> -config <config_json> -run -qsub -jobParaEnv <PE>
+biopet pipeline Toucan -Input <input_vcf> -config <config_json> -run -qsub -jobParaEnv <PE>
 ~~~~
 
 

@@ -8,7 +8,7 @@ It captures for example the # of mapped reads, # of duplicates, # of mates unmap
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool BiopetFlagstat -h
+biopet tool BiopetFlagstat -h
 Usage: BiopetFlagstat [options]
 
   -l <value> | --log_level <value>
@@ -25,7 +25,7 @@ Usage: BiopetFlagstat [options]
 
 To run the tool:
 ~~~
-java -jar Biopet-0.2.0.jar tool BiopetFlagstat -I myBAM.bam
+biopet tool BiopetFlagstat -I myBAM.bam
 ~~~
 
 ### Output

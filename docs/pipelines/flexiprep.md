@@ -13,7 +13,7 @@ Flexiprep only works on `.fastq` files.
 To get the help menu:
 
 ``` bash
-java -jar </path/to/biopet.jar> pipeline Flexiprep -h
+biopet pipeline Flexiprep -h
 
 Arguments for Flexiprep:
  -R1,--input_r1 <input_r1>             R1 fastq file (gzipped allowed)

@@ -67,14 +67,14 @@ Specific configuration options additional to Basty are:
 
 ##### For the help screen:
 ~~~
-java -jar </path/to/biopet.jar> pipeline basty -h
+biopet pipeline basty -h
 ~~~
 
 ##### Run the pipeline:
 Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~
-java -jar </path/to/biopet/jar>  pipeline basty -run -config MySamples.json -config MySettings.json
+biopet pipeline basty -run -config MySamples.json -config MySettings.json
 ~~~
 
 ### Result files

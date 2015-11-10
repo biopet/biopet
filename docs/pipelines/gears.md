@@ -16,7 +16,7 @@ Pipeline analysis components include:
 To get the help menu:
 
 ``` bash
-java -jar </path/to/biopet.jar> pipeline Gears -h
+biopet pipeline Gears -h
 
 ... default config ...
 
@@ -40,7 +40,7 @@ Note that the pipeline also works on unpaired reads where one should only provid
 To start the pipeline (remove `-run` for a dry run):
 
 ``` bash
-java -jar Biopet-0.5.0.jar pipeline Gears -run  \
+biopet pipeline Gears -run  \
 -R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
 -library myLibname -config mySettings.json
 ```

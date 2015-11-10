@@ -7,7 +7,7 @@ This tool is used to merge overlapping alleles.
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool MergeAlleles -h
+biopet tool MergeAlleles -h
 Usage: MergeAlleles [options]
 
   -l <value> | --log_level <value>

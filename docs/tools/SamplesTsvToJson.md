@@ -4,13 +4,13 @@ This tool enables a user to create a full sample sheet in JSON format suitable f
 The tool can be started as follows:
 
 ~~~ bash
-java -jar <Biopet.jar> tool SamplesTsvToJson
+biopet tool SamplesTsvToJson
 ~~~
 
 To open the help:
 
 ~~~ bash
-java -jar Biopet-0.2.0.jar tool SamplesTsvToJson -h
+biopet tool SamplesTsvToJson -h
 Usage: SamplesTsvToJson [options]
 
   -l <value> | --log_level <value>

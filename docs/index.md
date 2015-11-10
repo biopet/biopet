@@ -48,6 +48,24 @@ $ biopet pipeline <pipeline_name> -config <path/to/config.json> -qsub -jobParaEn
 
 It is usually a good idea to do the real run using `screen` or `nohup` to prevent the job from terminating when you log out of SHARK. In practice, using `biopet` as it is is also fine. What you need to keep in mind, is that each pipeline has their own expected config layout. You can check out more about the general structure of our config files [here](general/config.md). For the specific structure that each pipeline accepts, please consult the respective pipeline page.
 
+### Convention in this documentation
+
+To unify the commands used in the examples, we agree on the following:
+
+Whenever an example command starts with `biopet` as in: 
+
+```
+biopet tool ...
+```
+
+One can replace the `biopet` command with:
+
+```
+java -jar </path/to/biopet.jar> tool
+```
+
+The `biopet` shortcut is only available on the SHARK cluster with the `module` environment installed.
+
 ### Running Biopet in your own computer
 
 At the moment, we do not provide links to download the Biopet package. If you are interested in trying out Biopet locally, please contact us as [sasc@lumc.nl](mailto:sasc@lumc.nl).

@@ -30,7 +30,7 @@ The full pipeline can start from fastq or from bam file. This pipeline will incl
 
 To view the help menu, execute:
 ~~~
-java -jar </path/to/biopet.jar> pipeline shiva -h
+biopet pipeline shiva -h
 
 Arguments for Shiva:
  -sample,--onlysample <onlysample>               Only Sample
@@ -41,7 +41,7 @@ Arguments for Shiva:
 
 To run the pipeline:
 ~~~
-java -jar </path/to/biopet.jar> pipeline shiva -config MySamples.json -config MySettings.json -run
+biopet pipeline shiva -config MySamples.json -config MySettings.json -run
 ~~~
 
 A dry run can be performed by simply removing the `-run` flag from the command line call.
@@ -67,7 +67,7 @@ Arguments for ShivaVariantcalling:
 
 To run the pipeline:
 ~~~
-java -jar </path/to/biopet.jar> pipeline shivavariantcalling -config MySettings.json -run
+biopet pipeline shivavariantcalling -config MySettings.json -run
 ~~~
 
 A dry run can be performed by simply removing the `-run` flag from the command line call.
