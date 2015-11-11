@@ -262,6 +262,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         md.input = input
         md.output = new File(sampleDir, sampleId + ".dedup.bam")
         md.outputMetrics = new File(sampleDir, sampleId + ".dedup.metrics")
+        //FIXME: making this file intermediate make the pipeline restart unnessery jobs
         //md.isIntermediate = isIntermediate
         add(md)
         addSummarizable(md, "mark_duplicates")
