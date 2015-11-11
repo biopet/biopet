@@ -262,7 +262,7 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         md.input = input
         md.output = new File(sampleDir, sampleId + ".dedup.bam")
         md.outputMetrics = new File(sampleDir, sampleId + ".dedup.metrics")
-        md.isIntermediate = isIntermediate
+        //md.isIntermediate = isIntermediate
         add(md)
         addSummarizable(md, "mark_duplicates")
         Some(md.output)
