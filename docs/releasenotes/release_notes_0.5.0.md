@@ -24,3 +24,4 @@
 * Shiva: fixed a lot of small bugs when developing integration tests
 * Gentrap: Better error handeling on missing annotation files
 * Shiva: Workaround: Fixed a dependency on rerun, with this change there can be 2 bam files in the samples folder
+* Added external example for developers
