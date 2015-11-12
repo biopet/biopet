@@ -30,7 +30,7 @@ Note that the pipeline also works on unpaired reads where one should only provid
 To start the pipeline (remove `-run` for a dry run):
 
 ``` bash
-java -jar Biopet-0.2.0.jar pipeline Flexiprep -run -outDir myDir \
+biopet pipeline Flexiprep -run -outDir myDir \
 -R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
 -library myLibname -config mySettings.json
 ```
