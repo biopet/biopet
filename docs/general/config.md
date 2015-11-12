@@ -8,7 +8,7 @@ The sample config should be in [__JSON__](http://www.json.org/) or [__YAML__](ht
 - Second field should contain the __"libraries"__
 - Third field contains __"R1" or "R2"__ or __"bam"__
 - The fastq input files can be provided zipped and unzipped
-- `output_dir` is a required setting that should be set either in a `config.json` or specified on the invocation command via -cv output_dir=<path/to/outputdir\>. The default value is to place the pipeline output in the current working directory.
+- `output_dir` is a required setting that should be set either in a `config.json` or specified on the invocation command via -cv output_dir=<path/to/outputdir\>.
 
 #### Example sample config
 
