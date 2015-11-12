@@ -1,7 +1,5 @@
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.function.CommandLineFunction
 
@@ -57,9 +55,6 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     } catch {
       case e: NullPointerException => null
     }
-
-    if (jobOutputFile == null && firstOutput != null)
-      jobOutputFile = new File(firstOutput.getAbsoluteFile.getParent, "." + firstOutput.getName + "." + configName + ".out")
 
     nCoresRequest = Option(threads)
 

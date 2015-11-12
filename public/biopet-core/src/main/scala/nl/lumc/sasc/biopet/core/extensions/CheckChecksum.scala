@@ -21,11 +21,6 @@ class CheckChecksum extends InProcessFunction {
   @Argument(required = true)
   var checksum: String = _
 
-  override def freezeFieldValues(): Unit = {
-    super.freezeFieldValues()
-    jobOutputFile = new File(checksumFile.getParentFile, checksumFile.getName + ".check.out")
-  }
-
   /** Exits whenever the input md5sum is not the same as the output md5sum */
   def run: Unit = {
     val outputChecksum = WriteSummary.parseChecksum(checksumFile).toLowerCase

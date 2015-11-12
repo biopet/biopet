@@ -144,6 +144,7 @@ trait SummaryQScript extends BiopetQScript { qscript =>
             s"Md5 job is not executed, checksum file can't be found for: ${inputFile.file}")
           checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
           checkMd5.checksum = checksum
+          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile, checkMd5.checksumFile.getName + ".check.out")
           add(checkMd5)
         }
         case _ =>

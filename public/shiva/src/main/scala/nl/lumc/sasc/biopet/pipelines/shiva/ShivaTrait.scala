@@ -24,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDupli
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
+import nl.lumc.sasc.biopet.utils.Logging
 
 import scala.collection.JavaConversions._
 
@@ -119,9 +120,17 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         (Some(mapping), Some(mapping.finalBamFile), preProcess(mapping.finalBamFile))
       }
 
-      lazy val inputR1: Option[File] = config("R1")
-      lazy val inputR2: Option[File] = config("R2")
-      lazy val inputBam: Option[File] = if (inputR1.isEmpty) config("bam") else None
+      def fileMustBeAbsulute(file: Option[File]): Option[File] = {
+        if (file.forall(_.isAbsolute)) file
+        else {
+          Logging.addError(s"$file for $sampleId / $libId should be a absolute file path")
+          file.map(_.getAbsoluteFile)
+        }
+      }
+
+      lazy val inputR1: Option[File] = fileMustBeAbsulute(config("R1"))
+      lazy val inputR2: Option[File] = fileMustBeAbsulute(config("R2"))
+      lazy val inputBam: Option[File] = fileMustBeAbsulute(if (inputR1.isEmpty) config("bam") else None)
 
       lazy val (mapping, bamFile, preProcessBam): (Option[Mapping], Option[File], Option[File]) =
         (inputR1.isDefined, inputBam.isDefined) match {
@@ -253,7 +262,8 @@ trait ShivaTrait extends MultiSampleQScript with Reference {
         md.input = input
         md.output = new File(sampleDir, sampleId + ".dedup.bam")
         md.outputMetrics = new File(sampleDir, sampleId + ".dedup.metrics")
-        md.isIntermediate = isIntermediate
+        //FIXME: making this file intermediate make the pipeline restart unnessery jobs
+        //md.isIntermediate = isIntermediate
         add(md)
         addSummarizable(md, "mark_duplicates")
         Some(md.output)
