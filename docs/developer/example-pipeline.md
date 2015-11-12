@@ -136,8 +136,23 @@ Setting up the pipeline is done within the pipeline itself, fine-tuning is alway
 
 ### Config setup
 
+For our new pipeline, one should setup the (default) config options.
+
+Since our pipeline is called `HelloPipeline`, the root of the configoptions will called `hellopipeline` (lowercaps).
+
+```json
+{
+    "output_dir": "/home/user/mypipelineoutpt",
+    "hellopipeline": {
+        
+    }
+}
+
+```
+
+
 ### Test pipeline
 
 ### Summary output
 
-### Reporting output (opt)
+### Reporting output (optional)
