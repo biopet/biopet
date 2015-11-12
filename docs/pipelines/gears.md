@@ -1,4 +1,4 @@
-# Flexiprep
+# Gears
 
 ## Introduction
 Gears is a metagenomics pipeline. (``GE``nome ``A``nnotation of ``R``esidual ``S``equences). One can use this pipeline to identify contamination in sequencing runs on either raw FastQ files or BAM files.
