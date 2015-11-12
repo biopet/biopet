@@ -94,25 +94,42 @@ class HelloPipeline(val root: Configurable) extends QScript with SummaryQScript 
 
   // This method is the actual pipeline
   def biopetScript: Unit = {
+    // Executing a tool like FastQC, calling the extension in `nl.lumc.sasc.biopet.extensions.Fastqc`
 
-    // Executing a tool like FastQC
-    val shiva = new Shiva(this)
-    shiva.init()
-    shiva.biopetScript()
-    addAll(shiva.functions)
+    val fastqc = new Fastqc(this)
+    fastqc.fastqfile = config("fastqc_input")
+    fastqc.output = new File(outputDir, "fastqc.txt")
+    add(fastqc)
 
-    /* Only required when using [[SummaryQScript]] */
-    addSummaryQScript(shiva)
-
-    // From here you can use the output files of shiva as input file of other jobs
   }
 }
 
-//TODO: Replace object Name, must be the same as the class of the pipeline
 object HelloPipeline extends PipelineCommand
 
 ```
 
+Looking at the pipeline, you can see that it inherits from `QScript`. `QScript` is the fundamental class which gives access to the Queue scheduling system. In addition `SummaryQScript` (trait) will add another layer of functions which provides functions to handle and create summary files from pipeline output.
+`class HelloPipeline(val root: Configurable`, our pipeline is called HelloPipeline and is taking a `root` with configuration options passed down to Biopet via a JSON specified on the commandline (--config).
+
+```
+  def biopetScript: Unit = {
+  }
+```
+
+One can start adding pipeline components in `biopetScript`, this is the programmatically equivalent to the `main` method in most popular programming languages. For example, adding a QC tool to the pipeline like `FastQC`. Look at the example shown above.
+Setting up the pipeline is done within the pipeline itself, fine-tuning is always possible by overriding in the following way:
+ 
+```
+    val fastqc = new Fastqc(this)
+    fastqc.fastqfile = config("fastqc_input")
+    fastqc.output = new File(outputDir, "fastqc.txt")
+    
+    // change kmers settings to 9, wrap with `Some()` because `fastqc.kmers` is a `Option` value.
+    fastqc.kmers = Some(9)
+    
+    add(fastqc)
+
+```
 
 
 
