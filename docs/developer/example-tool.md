@@ -138,15 +138,6 @@ object SimpleTool extends ToolCommand {
 }
 ```
 
-### Running your new tool
-
-#!TODO: write how to run the tool from a compiled state 
-
-
-### Debugging the tool with IDEA
-
-### Setting up unit tests
-
 ### Adding tool-extension for usage in pipeline
 
 In order to use this tool within biopet, one should write an `extension` for the tool. (as we also do for normal executables like `bwa-mem`)
