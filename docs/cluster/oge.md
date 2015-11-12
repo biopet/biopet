@@ -6,10 +6,10 @@ different users in a fair way. So Resources are shared equally between multiple 
 
 # Sun Grid Engine
 
-Oracle Grid Engine or Sun Grid Engine is a computer cluster software sytem otherwise also known as a batch-queing system. These
+Oracle Grid Engine or Sun Grid Engine is a computer cluster software system also known as a batch-queing system. These
  systems help the computer cluster users to distribute and fairly schedule the jobs to the different computers in the cluster.
 
 # Open Grid Engine
 
-The Open Grid Engine (OGE) is based on the SunGridEngine but completely open source. It does support commercially batch-queuing
+The Open Grid Engine (OGE) is based on the SunGridEngine but is completely open source. It does support commercially batch-queuing
  systems.

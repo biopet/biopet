@@ -28,14 +28,14 @@ object SimpleTool extends ToolCommand {
 ```
 
 This is the minimum setup for having a working tool. We will place some code for line counting in ``main``. Like in other 
-higher order programming languages like Java, C++, .Net. One need to specify an entry for the program to run. ``def main``
-is here the first entrypoint from commandline into your tool.
+higher order programming languages like Java, C++ and .Net, one needs to specify an entry for the program to run. ``def main``
+is here the first entry point from the command line into your tool.
 
 
 ### Program arguments and environment variables
 
 A basic application/tool usually takes arguments to configure and set parameters to be used within the tool.
-In biopet we facilitate an ``AbstractArgs`` case-class which stores the arguments read from commandline.
+In biopet we facilitate an ``AbstractArgs`` case-class which stores the arguments read from command line.
 
 
 ```scala
@@ -67,8 +67,8 @@ Consuming and placing values in `Args` works as follows:
   }
 ```
 
-One has to implement class `OptParser` in order to fill `Args`. In `OptParser` one defines the commandline args and how it should be processed.
- In our example, we just copy the values passed on the commandline. Further reading: [scala scopt](https://github.com/scopt/scopt)
+One has to implement class `OptParser` in order to fill `Args`. In `OptParser` one defines the command line args and how it should be processed.
+ In our example, we just copy the values passed on the command line. Further reading: [scala scopt](https://github.com/scopt/scopt)
 
 Let's compile the code into 1 file and test with real functional code:
 
@@ -151,7 +151,7 @@ object SimpleTool extends ToolCommand {
 
 In order to use this tool within biopet, one should write an `extension` for the tool. (as we also do for normal executables like `bwa-mem`)
  
-The wrapper would look like this, basicly exposing the same commandline arguments to biopet in an OOP format.
+The wrapper would look like this, basically exposing the same command line arguments to biopet in an OOP format.
 Note: we also add some functionalities for getting summary data and passing on to biopet.
 
 The concept of having (extension)-wrappers is to create a black-box service model. One should only know how to interact with the tool without necessarily knowing the internals.
