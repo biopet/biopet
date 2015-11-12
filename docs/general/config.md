@@ -85,9 +85,10 @@ Global setting examples are:
 #### References
 Pipelines and tools that use references should now use the reference module.
 This gives a more fine-grained control over references and enables a user to curate the references in a structural way.
-E.g. pipelines and tools which uses FASTA references should now set value `"reference_fasta"`.
+E.g. pipelines and tools which use a FASTA references should now set value `"reference_fasta"`.
 Additionally, we can set `"reference_name"` for the name to be used (e.g. `"hg19"`). If unset, Biopet will default to `unknown`.
 It is also possible to set the `"species"` flag. Again, we will default to `unknown` if unset.
+
 #### Example settings config
 ``` json
 {
