@@ -1,7 +1,7 @@
 # Developer - Code style
 
 ## General rules
-- Variable names should always be in *camelCase* and does **not** start with a capital letter
+- Variable names should always be in *camelCase* and do **not** start with a capital letter
 
 ```scala
 // correct: 
