@@ -52,7 +52,7 @@ Specific configuration options additional to Basty are:
 ```json
 
 {
-    output_dir: </path/to/out_directory>,
+    "output_dir": </path/to/out_directory>,
     "shiva": {
         "variantcallers": ["freeBayes"]
     },

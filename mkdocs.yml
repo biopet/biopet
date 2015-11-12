@@ -46,7 +46,8 @@ pages:
     - Example tool: 'developer/example-tool.md'
     - Example pipeable: 'developer/example-pipeable.md'
     - Scala docs:
-      - 0.4.0: 'developer/code-style.md'
+      - 0.5.0: '/sasc/scaladocs/v0.5.0.0'
+      - 0.4.0: '/sasc/scaladocs/v0.4.0.0'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs
 repo_url: https://github.com/biopet/biopet

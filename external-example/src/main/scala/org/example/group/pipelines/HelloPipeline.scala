@@ -32,7 +32,6 @@ class HelloPipeline(val root: Configurable) extends QScript with SummaryQScript 
     fastqc.output = new File(outputDir, "fastqc.txt")
     add(fastqc)
 
-    // From here you can use the output files of shiva as input file of other jobs
   }
 }
 
