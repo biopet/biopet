@@ -26,7 +26,7 @@ As with other biopet pipelines, Gentrap relies on a JSON configuration file to r
 
 Samples are single experimental units whose expression you want to measure. They usually consist of a single sequencing library, but in some cases (for example when the experiment demands each sample have a minimum library depth) a single sample may contain multiple sequencing libraries as well. All this is can be configured using the correct JSON nesting, with the following pattern:
 
-~~~
+~~~ json
 {
   "samples": {
     "sample_A": {
@@ -43,7 +43,7 @@ Samples are single experimental units whose expression you want to measure. They
 
 In the example above, there is one sample (named `sample_A`) which contains one sequencing library (named `lib_01`). The library itself is paired end, with both `R1` and `R2` pointing to the location of the files in the file system. A more complicated example is the following:
 
-~~~
+~~~ json
 {
   "samples": {
     "sample_X": {
@@ -95,7 +95,7 @@ In addition to these, you must also remember to supply the alignment index requi
 
 Thus, an example settings configuration is as follows:
 
-~~~
+~~~ json
 {
   "output_dir": "/path/to/output/dir",
   "expression_measures": ["fragments_per_gene", "bases_per_gene"],
@@ -118,14 +118,14 @@ In most cases, it's practical to combine the samples and settings configuration 
 
 As with other pipelines in the Biopet suite, Gentrap can be run by specifying the pipeline after the `pipeline` subcommand:
 
-~~~
-$ java -jar </path/to/biopet.jar> pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+~~~ bash
+biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
-~~~
-$ module load biopet/v0.3.1
+~~~ bash
+$ module load biopet/v0.5.0
 $ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
@@ -137,5 +137,5 @@ The number and types of output files depend on your run configuration. What you 
 
 ## Getting Help
 
-If you have any questions on running Gentrap, suggestions on how to improve the overall flow, or requests for your favorite RNA-seq related program to be added, feel free to post an issue to our issue tracker at [https://git.lumc.nl/biopet/biopet/issues](https://git.lumc.nl/biopet/biopet/issues).
-
+If you have any questions on running Gentrap, suggestions on how to improve the overall flow, or requests for your favorite RNA-seq related program to be added,
+ feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

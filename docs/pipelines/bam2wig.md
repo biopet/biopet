@@ -33,12 +33,13 @@ Arguments for Bam2Wig:
 If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:
 
 ~~~bash
-$ module load biopet/v0.3.0
+$ module load biopet/v0.5.0
 $ biopet pipeline bam2wig
 
 ~~~
 
 To run the pipeline:
+
 ~~~bash
  biopet pipeline bam2wig -config </path/to/config.json> --bamfile </path/to/bam.bam> -qsub -jobParaEnv BWA -run
 ~~~
@@ -46,3 +47,8 @@ To run the pipeline:
 ## Output Files
 
 The pipeline generates three output track files: a bigWig file, a wiggle file, and a TDF file.
+
+## Getting Help
+
+If you have any questions on running Bam2Wig or suggestions on how to improve the overall flow, feel free to post an issue to our
+ issue tracker at [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto: SASC@lumc.nl)

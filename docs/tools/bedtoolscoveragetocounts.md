@@ -7,7 +7,7 @@ This tool enables a user to generate a count file, out of a coverage file.
 ## Example
 To get the help menu:
 ~~~bash
-java -jar Biopet-0.2.0.jar tool BedtoolsCoverageToCounts -h
+biopet tool BedtoolsCoverageToCounts -h
 Usage: BedtoolsCoverageToCounts [options]
 
   -l <value> | --log_level <value>
@@ -27,5 +27,5 @@ genes, ensemblIDs etc. etc.
 
 To run the tool:
 ~~~bash
-java -jar Biopet-0.2.0.jar tool BedtoolsCoverageToCounts
+biopet tool BedtoolsCoverageToCounts
 ~~~
