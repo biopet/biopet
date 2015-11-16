@@ -105,31 +105,65 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    * @return return vcf
    */
   def varda(vcf: File): File = {
+
+    //TODO: How to enforce use of gVCFs?
+
+    /**
+     * By default we only want to annotate variant calls
+     * not reference calls
+     * TODO: this does mean integration tests will have to take into account that not all records will be returned
+     */
+    val annotateJustVariants = config("annotate_only_variants", default = true, submodule = "manwe")
+    val useVcf = if (annotateJustVariants) {
+      val filter = new VcfFilter(this)
+      filter.inputVcf = vcf
+      filter.outputVcf = swapExt(outputDir, vcf, ".vcf.gz", ".calls.vcf.gz")
+      filter.filterRefCalls = true
+      add(filter)
+      filter.outputVcf
+    } else {
+      vcf
+    }
+
     //TODO: add groups!!! Need sample-specific group tags for this
     val splits = sampleIds.map(x => {
       val view = new BcftoolsView(this)
       view.input = vcf
       view.output = swapExt(outputDir, vcf, ".vcf.gz", s"$x.vcf.gz")
       view.samples = List(x)
-      view.minAC = Some(1)
+      view.minAC = Some(0)
       add(view)
       view
     })
 
-    val minGQ = config("minimumGenomeQuality", default = 20)
-    val annotationQueries: List[String] = config("annotationQueries", default = Nil)
-    val isPublic: Boolean = config("vardaIsPublic", default = true)
+    val minGQ = config("minimum_genome_quality", default = 20, submodule = "manwe")
+    val annotationQueries: List[String] = config("annotation_queries", default = Nil, submodule = "manwe")
+    val isPublic: Boolean = config("varda_is_public", default = true, submodule = "manwe")
 
-    val filteredVcfs = splits.map(x => {
+    val rawFilteredVcfs = splits.map(x => {
       val filter = new VcfFilter(this)
       filter.inputVcf = x.output
-      filter.outputVcf = swapExt(outputDir, x.output, ".vcf.gz", ".filtered.vcf.gz")
+      filter.outputVcf = swapExt(outputDir, x.output, ".vcf.gz", ".raw.filtered.vcf.gz")
       filter.minGenomeQuality = minGQ
       add(filter)
       filter
     })
 
-    val bedTracks = filteredVcfs.map(x => {
+    /**
+     * Bed tracks need to be created on the whole genome
+     * Only calls must be uploaded to varda in vcfs
+     */
+
+    val filteredVcfs = rawFilteredVcfs.map(x => {
+      val filter = new VcfFilter(this)
+      filter.inputVcf = x.outputVcf
+      filter.outputVcf = swapExt(outputDir, x.outputVcf, ".raw.filtered.vcf.gz", ".filtered.vcf.gz")
+      filter.filterRefCalls = true
+      add(filter)
+      filter
+    })
+
+    val bedTracks = rawFilteredVcfs.map(x => {
       val bed = new GvcfToBed(this)
       bed.inputVcf = x.outputVcf
       bed.outputBed = swapExt(outputDir, x.outputVcf, ".vcf.gz", ".bed")
@@ -147,7 +181,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     })
 
     val annotate = new ManweAnnotateVcf(this)
-    annotate.vcf = vcf
+    annotate.vcf = useVcf
     if (annotationQueries.nonEmpty) {
       annotate.queries = annotationQueries
     }
