@@ -402,9 +402,6 @@ class Gentrap(val root: Configurable) extends QScript
     /** Shortcut to qscript object */
     protected def pipeline: Gentrap = qscript
 
-    /** Sample output directory */
-    override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
-
     /** Summary stats of the sample */
     def summaryStats: Map[String, Any] = Map(
       "all_paired" -> allPaired,
