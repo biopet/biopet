@@ -17,9 +17,4 @@ trait ToolCommandFunction extends BiopetJavaCommandLineFunction with Version {
     javaMainClass = toolObject.getClass.getName.takeWhile(_ != '$')
     super.beforeGraph()
   }
-
-  override def freezeFieldValues(): Unit = {
-    javaMainClass = toolObject.getClass.getName.takeWhile(_ != '$')
-    super.freezeFieldValues()
-  }
 }
