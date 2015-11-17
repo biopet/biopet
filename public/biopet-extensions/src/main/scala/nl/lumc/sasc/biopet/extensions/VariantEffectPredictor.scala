@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -146,9 +147,9 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (!cache && !database) {
-      throw new IllegalArgumentException("Must supply either cache or database for VariantEffectPredictor")
+      Logging.addError("Must supply either cache or database for VariantEffectPredictor")
     } else if (cache && dir.isEmpty) {
-      throw new IllegalArgumentException("Must supply dir to cache for VariantEffectPredictor")
+      Logging.addError("Must supply dir to cache for VariantEffectPredictor")
     }
   }
 
