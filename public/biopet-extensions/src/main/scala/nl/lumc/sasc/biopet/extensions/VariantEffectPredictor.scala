@@ -41,8 +41,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   def versionCommand = executable + " " + vepScript + " --help"
 
   //Boolean vars
-  var v: Boolean = config("v", default = true)
-  var q: Boolean = config("q", default = false)
+  var v: Boolean = config("v", default = true, freeVar = false)
+  var q: Boolean = config("q", default = false, freeVar = false)
   var offline: Boolean = config("offline", default = false)
   var no_progress: Boolean = config("no_progress", default = false)
   var everything: Boolean = config("everything", default = false)
@@ -77,8 +77,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var old_map: Boolean = config("old_maf", default = false)
   var pubmed: Boolean = config("pubmed", default = false)
 
-  var vcf: Boolean = config("vcf", default = true)
-  var json: Boolean = config("json", default = false)
+  var vcf: Boolean = config("vcf", default = true, freeVar = false)
+  var json: Boolean = config("json", default = false, freeVar = false)
   var gvf: Boolean = config("gvf", default = false)
   var check_ref: Boolean = config("check_ref", default = false)
   var coding_only: Boolean = config("coding_only", default = false)
@@ -104,8 +104,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var skip_db_check: Boolean = config("skip_db_check", default = false)
 
   // Textual args
-  var vep_config: Option[String] = config("config")
-  var species: Option[String] = config("species")
+  var vep_config: Option[String] = config("config", freeVar = false)
+  var species: Option[String] = config("species", freeVar = false)
   var assembly: Option[String] = config("assembly")
   var format: Option[String] = config("format")
   var dir: Option[String] = config("dir")
