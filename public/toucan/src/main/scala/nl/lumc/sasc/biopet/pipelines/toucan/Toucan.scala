@@ -18,11 +18,12 @@ package nl.lumc.sasc.biopet.pipelines.toucan
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
+import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsIntersect
 import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.{ Ln, Gzip, VariantEffectPredictor }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Gzip, VariantEffectPredictor }
 import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.{ VcfUtils, ConfigUtils }
 import org.broadinstitute.gatk.queue.QScript
@@ -55,8 +56,15 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
   def biopetScript(): Unit = {
-    val doVarda = config("use_varda", default = false)
-    val useVcf: File = if (doVarda) varda(inputVCF) else inputVCF
+    val doVarda: Boolean = config("use_varda", default = false)
+    val useVcf: File = if (doVarda) {
+      val gVcfRoot: Option[File] = config("varda_gvcf")
+      val gVcf = gVcfRoot match {
+        case Some(s) => s
+        case _       => throw new IllegalArgumentException("You have not specified a GVCF file")
+      }
+      varda(inputVCF, gVcf)
+    } else inputVCF
     val vep = new VariantEffectPredictor(this)
     vep.input = useVcf
     vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
@@ -100,124 +108,94 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   }
 
   /**
-   * Perform varda analysis
-   * @param vcf input vcf
-   * @return return vcf
+   * Performs the varda import and activate for one sample
+   * @param sampleID the sampleID to be used
+   * @param inputVcf the input VCF
+   * @param gVCF the gVCF for coverage
+   * @param annotation: ManweDownloadAnnotateVcf object of annotated vcf
+   * @return
    */
-  def varda(vcf: File): File = {
+  def importAndActivateSample(sampleID: String, inputVcf: File,
+                              gVCF: File, annotation: ManweAnnotateVcf): ManweActivateAfterAnnotImport = {
 
-    //TODO: How to enforce use of gVCFs?
-
-    /**
-     * By default we only want to annotate variant calls
-     * not reference calls
-     * TODO: this does mean integration tests will have to take into account that not all records will be returned
-     */
-    val annotateJustVariants = config("annotate_only_variants", default = true, submodule = "manwe")
-    val useVcf = if (annotateJustVariants) {
-      val filter = new VcfFilter(this)
-      filter.inputVcf = vcf
-      filter.outputVcf = swapExt(outputDir, vcf, ".vcf.gz", ".calls.vcf.gz")
-      filter.filterRefCalls = true
-      add(filter)
-      filter.outputVcf
-    } else {
-      vcf
-    }
-
-    //TODO: add groups!!! Need sample-specific group tags for this
-    val splits = sampleIds.map(x => {
-      val view = new BcftoolsView(this)
-      view.input = vcf
-      view.output = swapExt(outputDir, vcf, ".vcf.gz", s"$x.vcf.gz")
-      view.samples = List(x)
-      view.minAC = Some(0)
-      add(view)
-      view
-    })
-
-    val minGQ = config("minimum_genome_quality", default = 20, submodule = "manwe")
-    val annotationQueries: List[String] = config("annotation_queries", default = Nil, submodule = "manwe")
+    val minGQ: Int = config("minimum_genome_quality", default = 20, submodule = "manwe")
     val isPublic: Boolean = config("varda_is_public", default = true, submodule = "manwe")
 
-    val rawFilteredVcfs = splits.map(x => {
-      val filter = new VcfFilter(this)
-      filter.inputVcf = x.output
-      filter.outputVcf = swapExt(outputDir, x.output, ".vcf.gz", ".raw.filtered.vcf.gz")
-      filter.minGenomeQuality = minGQ
-      add(filter)
-      filter
-    })
+    val bedTrack = new GvcfToBed(this)
+    bedTrack.inputVcf = gVCF
+    bedTrack.outputBed = swapExt(outputDir, gVCF, ".vcf.gz", s""".$sampleID.bed""")
+    bedTrack.minQuality = minGQ
+    bedTrack.isIntermediate = true
+    bedTrack.sample = Some(sampleID)
+    add(bedTrack)
 
-    /**
-     * Bed tracks need to be created on the whole genome
-     * Only calls must be uploaded to varda in vcfs
-     */
+    val bgzippedBed = new Bgzip(this)
+    bgzippedBed.input = List(bedTrack.outputBed)
+    bgzippedBed.output = swapExt(outputDir, bedTrack.outputBed, ".bed", ".bed.gz")
+    add(bgzippedBed)
 
-    val filteredVcfs = rawFilteredVcfs.map(x => {
-      val filter = new VcfFilter(this)
-      filter.inputVcf = x.outputVcf
-      filter.outputVcf = swapExt(outputDir, x.outputVcf, ".raw.filtered.vcf.gz", ".filtered.vcf.gz")
-      filter.filterRefCalls = true
-      add(filter)
-      filter
-    })
+    val singleVcf = new BcftoolsView(this)
+    singleVcf.input = inputVCF
+    singleVcf.output = swapExt(outputDir, inputVCF, ".vcf.gz", s""".$sampleID.vcf.gz""")
+    singleVcf.samples = List(sampleID)
+    singleVcf.minAC = Some(1)
+    singleVcf.isIntermediate = true
+    add(singleVcf)
 
-    val bedTracks = rawFilteredVcfs.map(x => {
-      val bed = new GvcfToBed(this)
-      bed.inputVcf = x.outputVcf
-      bed.outputBed = swapExt(outputDir, x.outputVcf, ".vcf.gz", ".bed")
-      bed.minQuality = minGQ
-      add(bed)
-      bed
-    })
+    val intersected = new BedtoolsIntersect(this)
+    intersected.input = singleVcf.output
+    intersected.intersectFile = bgzippedBed.output
+    intersected.output = swapExt(outputDir, singleVcf.output, ".vcf.gz", ".intersected.vcf.gz")
+    add(intersected)
 
-    val zippedBedTracks = bedTracks.map(x => {
-      val gzip = new Gzip(this)
-      gzip.input = List(x.outputBed)
-      gzip.output = swapExt(outputDir, x.outputBed, ".bed", ".bed.gz")
-      add(gzip)
-      gzip
-    })
+    val imported = new ManweSamplesImport(this)
+    imported.vcfs = List(intersected.output)
+    imported.beds = List(bgzippedBed.output)
+    imported.name = Some(sampleID)
+    imported.public = isPublic
+    imported.waitToComplete = false
+    imported.isIntermediate = true
+    imported.output = swapExt(outputDir, intersected.output, ".vcf.gz", ".manwe.import")
+    add(imported)
+
+    val active = new ManweActivateAfterAnnotImport(this, annotation, imported)
+    active.output = swapExt(outputDir, imported.output, ".import", ".activated")
+    add(active)
+    active
+
+  }
+
+  /**
+   * Perform varda analysis
+   * @param vcf input vcf
+   * @param gVcf The gVCF to be used for coverage calculations
+   * @return return vcf
+   */
+  def varda(vcf: File, gVcf: File): File = {
+
+    val annotationQueries: List[String] = config("annotation_queries", default = Nil, submodule = "manwe")
+    //TODO: add groups!!! Need sample-specific group tags for this
 
     val annotate = new ManweAnnotateVcf(this)
-    annotate.vcf = useVcf
+    annotate.vcf = vcf
     if (annotationQueries.nonEmpty) {
       annotate.queries = annotationQueries
     }
     annotate.waitToComplete = true
-    annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".tmp.annot")
+    annotate.output = swapExt(outputDir, vcf, ".vcf.gz", ".manwe.annot")
+    annotate.isIntermediate = true
     add(annotate)
 
     val annotatedVcf = new ManweDownloadAfterAnnotate(this, annotate)
-    annotatedVcf.output = swapExt(outputDir, annotate.output, ".tmp.annot", "tmp.annot.vcf.gz")
+    annotatedVcf.output = swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
     add(annotatedVcf)
 
-    val imports = for (
-      (sample: String, bed, vcf) <- (sampleIds, zippedBedTracks, filteredVcfs).zipped
-    ) yield {
-      val importing = new ManweSamplesImport(this)
-      importing.beds = List(bed.output)
-      importing.vcfs = List(vcf.outputVcf)
-      importing.name = Some(sample)
-      importing.waitToComplete = true
-      importing.output = swapExt(outputDir, vcf.outputVcf, ".vcf.gz", ".tmp.import")
-      importing.public = isPublic
-      add(importing)
-      importing
-    }
-
-    val activates = imports.map(x => {
-      val active = new ManweActivateAfterAnnotImport(this, annotate, x)
-      active.output = swapExt(outputDir, x.output, ".tmp.import", ".tmp.activated")
-      add(active)
-      active
-    })
+    val activates = sampleIds map { x => importAndActivateSample(x, vcf, gVcf, annotate) }
 
     val finalLn = new Ln(this)
     activates.foreach(x => finalLn.deps :+= x.output)
     finalLn.input = annotatedVcf.output
-    finalLn.output = swapExt(outputDir, annotatedVcf.output, "tmp.annot.vcf.gz", ".varda_annotated.vcf.gz")
+    finalLn.output = swapExt(outputDir, annotatedVcf.output, "manwe.annot.vcf.gz", ".varda_annotated.vcf.gz")
     finalLn.relative = true
     add(finalLn)
 

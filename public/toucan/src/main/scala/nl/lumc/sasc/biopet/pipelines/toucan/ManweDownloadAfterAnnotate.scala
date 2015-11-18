@@ -24,7 +24,7 @@ class ManweDownloadAfterAnnotate(root: Configurable,
 
     if (annotate.output.exists()) {
       val reader = Source.fromFile(annotate.output)
-      this.uri = reader.getLines().toList.head
+      this.uri = reader.getLines().toList.head.split(' ').last
       reader.close()
     } else {
       this.uri = ""

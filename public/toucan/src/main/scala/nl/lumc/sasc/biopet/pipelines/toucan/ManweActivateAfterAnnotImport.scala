@@ -26,7 +26,7 @@ class ManweActivateAfterAnnotImport(root: Configurable,
 
     if (imported.output.exists()) {
       val reader = Source.fromFile(imported.output)
-      this.uri = reader.getLines().toList.head
+      this.uri = reader.getLines().toList.head.split(' ').last
       reader.close()
     } else {
       this.uri = ""
