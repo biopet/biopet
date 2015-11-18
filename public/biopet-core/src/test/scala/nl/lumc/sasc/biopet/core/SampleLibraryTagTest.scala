@@ -1,13 +1,13 @@
 package nl.lumc.sasc.biopet.core
 
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 17/11/15.
-  */
+ * Created by pjvanthof on 17/11/15.
+ */
 class SampleLibraryTagTest extends TestNGSuite with Matchers {
   @Test
   def testDefault: Unit = {

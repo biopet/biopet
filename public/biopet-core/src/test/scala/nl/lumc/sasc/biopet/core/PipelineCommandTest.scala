@@ -6,8 +6,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 17/11/15.
-  */
+ * Created by pjvanthof on 17/11/15.
+ */
 class PipelineCommandTest extends TestNGSuite with Matchers {
   @Test
   def testPipelineCommand: Unit = {

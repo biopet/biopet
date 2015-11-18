@@ -6,8 +6,8 @@ import org.testng.annotations.Test
 import nl.lumc.sasc.biopet.FullVersion
 
 /**
-  * Created by pjvanthof on 16/11/15.
-  */
+ * Created by pjvanthof on 16/11/15.
+ */
 class ToolCommandTest extends TestNGSuite with Matchers {
   @Test
   def testToolCommand: Unit = {
