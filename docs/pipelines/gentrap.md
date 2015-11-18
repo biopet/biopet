@@ -59,7 +59,7 @@ In the example above, there is one sample (named `sample_A`) which contains one 
         "lib_one": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
-        }
+        },
         "lib_two": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
