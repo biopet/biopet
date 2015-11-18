@@ -43,10 +43,12 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
    * @return number of threads
    */
   private def getThreads(default: Int): Int = {
-    val maxThreads: Int = config("maxthreads", default = 24)
+    val maxThreads: Option[Int] = config("maxthreads")
     val threads: Int = config("threads", default = default)
-    if (maxThreads > threads) threads
-    else maxThreads
+    maxThreads match {
+      case Some(max) => if (max > threads) threads else max
+      case _         => threads
+    }
   }
 
   def setResources(): Unit = {
@@ -79,7 +81,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     if (vmem.isDefined) jobResourceRequests = jobResourceRequests.filterNot(_.contains("h_vmem="))
     if (retry > 0) logger.info("Auto raise memory on retry")
     retry += 1
-    this.freeze()
+    this.freezeFieldValues()
   }
 
   var threadsCorrection = 0
