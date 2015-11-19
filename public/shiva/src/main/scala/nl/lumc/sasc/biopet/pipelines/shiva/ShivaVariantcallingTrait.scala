@@ -20,10 +20,10 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.{ GenotypeConcordance, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
+import nl.lumc.sasc.biopet.extensions.{ Ln, Bgzip, Tabix }
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -37,6 +37,10 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   var inputBams: List[File] = Nil
+
+  var referenceVcf: Option[File] = config("reference_vcf")
+
+  var referenceVcfRegions: Option[File] = config("reference_vcf_regions")
 
   /** Name prefix, can override this methods if neeeded */
   def namePrefix: String = {
@@ -85,6 +89,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       vcfStats.setOutputDir(new File(caller.outputDir, "vcfstats"))
       add(vcfStats)
       addSummarizable(vcfStats, namePrefix + "-vcfstats-" + caller.name)
+
+      referenceVcf.foreach(referenceVcfFile => {
+        val gc = new GenotypeConcordance(this)
+        gc.evalFile = caller.outputFile
+        gc.compFile = referenceVcfFile
+        gc.outputFile = new File(caller.outputDir, s"$namePrefix-genotype_concordance.${caller.name}.txt")
+        referenceVcfRegions.foreach(gc.intervals ::= _)
+        add(gc)
+        addSummarizable(gc, s"$namePrefix-genotype_concordance-${caller.name}")
+      })
     }
     add(cv)
 
@@ -94,6 +108,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
     vcfStats.infoTags :+= cv.setKey
     add(vcfStats)
     addSummarizable(vcfStats, namePrefix + "-vcfstats-final")
+
+    referenceVcf.foreach(referenceVcfFile => {
+      val gc = new GenotypeConcordance(this)
+      gc.evalFile = finalFile
+      gc.compFile = referenceVcfFile
+      gc.outputFile = new File(outputDir, s"$namePrefix-genotype_concordance.final.txt")
+      referenceVcfRegions.foreach(gc.intervals ::= _)
+      add(gc)
+      addSummarizable(gc, s"$namePrefix-genotype_concordance-final")
+    })
 
     addSummaryJobs()
   }
@@ -200,11 +224,13 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
         bt.output
       }
 
-      val bcfmerge = new BcftoolsMerge(qscript)
-      bcfmerge.input = sampleVcfs
-      bcfmerge.output = outputFile
-      bcfmerge.O = Some("z")
-      add(bcfmerge)
+      if (sampleVcfs.size > 1) {
+        val bcfmerge = new BcftoolsMerge(qscript)
+        bcfmerge.input = sampleVcfs
+        bcfmerge.output = outputFile
+        bcfmerge.O = Some("z")
+        add(bcfmerge)
+      } else add(Ln.apply(qscript, sampleVcfs.head, outputFile))
       add(Tabix(qscript, outputFile))
     }
   }

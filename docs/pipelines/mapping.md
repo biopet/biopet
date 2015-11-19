@@ -91,7 +91,7 @@ Any supplied sample config will be ignored.
 
 For the help menu:
 ~~~
-java -jar </path/to/biopet.jar> pipeline mapping -h
+biopet pipeline mapping -h
 
 Arguments for Mapping:
  -R1,--input_r1 <input_r1>             R1 fastq file
@@ -107,7 +107,7 @@ Arguments for Mapping:
 
 To run the pipeline:
 ~~~
-java -jar </path/to/biopet.jar> pipeline mapping -run --config mySettings.json \
+biopet pipeline mapping -run --config mySettings.json \
 -R1 myReads1.fastq -R2 myReads2.fastq
 ~~~
 Note that removing -R2 causes the pipeline to assume single end `.fastq` files.
@@ -126,3 +126,9 @@ To perform a dry run simply remove `-run` from the commandline call.
     ├── metrics
     └── report
 ~~~
+
+## Getting Help
+
+If you have any questions on running Mapping, suggestions on how to improve the overall flow, or requests for your favorite aligner to be added, feel free to post an issue to our issue tracker at
+ [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)
+

@@ -180,7 +180,7 @@ trait BastyTrait extends MultiSampleQScript {
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
-    bastyGenerateFasta.inputVcf = shiva.variantCalling.get.finalFile
+    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile
     if (shiva.samples.contains(sampleName)) {
       bastyGenerateFasta.bamFile = shiva.samples(sampleName).preProcessBam.get
     }

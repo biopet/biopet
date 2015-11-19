@@ -331,6 +331,14 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   def versionRegex = """.* version (.*)""".r
   def versionCommand = executable + " --version"
 
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if ((!gunzip && !bunzip2) && input.forall(_.getName.endsWith(".gz"))) {
+      logger.info("Fastq with .gz extension found, enabled --gunzip option")
+      gunzip = true
+    }
+  }
+
   def cmdLine = {
     required(executable) +
       optional("--dir", dir) +

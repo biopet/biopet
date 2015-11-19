@@ -9,7 +9,7 @@ needed for the number of chunks specified. Note that this will be automatically 
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool FastqSplitter -h
+biopet tool FastqSplitter -h
 Usage: FastqSplitter [options]
 
   -l <value> | --log_level <value>
@@ -25,7 +25,7 @@ Usage: FastqSplitter [options]
 ~~~
 To run the tool:
 ~~~
-java -jar Biopet-0.2.0.jar tool FastqSplitter --inputFile myFastq.fastq \
+biopet tool FastqSplitter --inputFile myFastq.fastq \
 --output mySplittedFastq_1.fastq --output mySplittedFastq_2.fastq \
 --output mySplittedFastq_3.fastq
 ~~~

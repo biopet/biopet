@@ -5,12 +5,14 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import nl.lumc.sasc.biopet.core.{ Version, CommandLineResources, Reference, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.core._
 import org.broadinstitute.gatk.engine.phonehome.GATKRunReport
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
 trait GatkGeneral extends CommandLineGATK with CommandLineResources with Reference with Version {
   memoryLimit = Option(3)
+
+  var executable: String = config("java", default = "java", submodule = "java", freeVar = false)
 
   override def subPath = "gatk" :: super.subPath
 
@@ -20,6 +22,7 @@ trait GatkGeneral extends CommandLineGATK with CommandLineResources with Referen
 
   override def defaultCoreMemory = 4.0
   override def faiRequired = true
+  override def dictRequired = true
 
   if (config.contains("intervals")) intervals = config("intervals").asFileList
   if (config.contains("exclude_intervals")) excludeIntervals = config("exclude_intervals").asFileList
@@ -39,5 +42,8 @@ trait GatkGeneral extends CommandLineGATK with CommandLineResources with Referen
   override def versionExitcode = List(0, 1)
   def versionCommand = "java" + " -jar " + jarFile + " -version"
 
-  override def getVersion = super.getVersion.collect { case v => "Gatk " + v }
+  override def getVersion = {
+    BiopetCommandLineFunction.preProcessExecutable(executable).path.foreach(executable = _)
+    super.getVersion.collect { case v => "Gatk " + v }
+  }
 }

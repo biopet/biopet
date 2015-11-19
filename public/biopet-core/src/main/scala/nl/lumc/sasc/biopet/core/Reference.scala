@@ -118,22 +118,21 @@ object Reference {
   /**
    * Raise an exception when given fasta file has no fai file
    * @param fastaFile Fasta file
-   * @throws IllegalArgumentException
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
-    require(fai.exists(), "Reference is missing a fai file")
-    require(IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile),
-      "Index of reference cannot be loaded, reference: " + fastaFile)
+    if (fai.exists()) {
+      if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
+        Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
+    } else Logging.addError("Reference is missing a fai file")
   }
 
   /**
    * Raise an exception when given fasta file has no dict file
    * @param fastaFile Fasta file
-   * @throws IllegalArgumentException
    */
   def requireDict(fastaFile: File): Unit = {
     val dict = new File(fastaFile.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
-    require(dict.exists(), "Reference is missing a dict file")
+    if (!dict.exists()) Logging.addError("Reference is missing a dict file")
   }
 }

@@ -1,18 +1,19 @@
 # Flexiprep
 
 ## Introduction
-Flexiprep is our quality control pipeline. This pipeline checks for possible barcode contamination, clips reads, trims reads and runs
-the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank">Fastqc</a> tool.
-Adapter clipping is performed by <a href="https://github.com/marcelm/cutadapt" target="_blank">Cutadapt</a>.
-For quality trimming we use <a href="https://github.com/najoshi/sickle" target="_blank">Sickle</a>.
-Flexiprep works on `.fastq` files.
+Flexiprep is a quality control pipeline. This pipeline checks for possible barcode contamination, clips reads, trims reads and
+ runs [FASTQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/).
+Adapter clipping is performed by [Cutadapt](https://github.com/marcelm/cutadapt).
+For quality trimming we use [Sickle](https://github.com/najoshi/sickle).
+Flexiprep only works on `.fastq` files.
 
 
 ## Example
 
 To get the help menu:
-~~~
-java -jar </path/to/biopet.jar> pipeline Flexiprep -h
+
+``` bash
+biopet pipeline Flexiprep -h
 
 Arguments for Flexiprep:
  -R1,--input_r1 <input_r1>             R1 fastq file (gzipped allowed)
@@ -21,17 +22,18 @@ Arguments for Flexiprep:
  -library,--libid <libid>              Library ID
  -config,--config_file <config_file>   JSON config file(s)
  -DSC,--disablescatter                 Disable all scatters
-~~~
+```
 
 Note that the pipeline also works on unpaired reads where one should only provide R1.
 
 
 To start the pipeline (remove `-run` for a dry run):
-~~~bash
-java -jar Biopet-0.2.0.jar pipeline Flexiprep -run -outDir myDir \
+
+``` bash
+biopet pipeline Flexiprep -run -outDir myDir \
 -R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
 -library myLibname -config mySettings.json
-~~~
+```
 
 
 ## Configuration and flags
@@ -64,7 +66,7 @@ The pipeline also outputs 2 Fastqc runs one before and one after quality control
 
 ### Example output
 
-~~~
+~~~ bash
 .
 ├── mySample_01.qc.summary.json
 ├── mySample_01.qc.summary.json.out
@@ -143,3 +145,9 @@ The pipeline also outputs 2 Fastqc runs one before and one after quality control
 └── report
 
 ~~~
+
+## Getting Help
+
+If you have any questions on running Flexiprep, suggestions on how to improve the overall flow, or requests for your favorite 
+Quality Control (QC) related program to be added, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

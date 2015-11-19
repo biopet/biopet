@@ -8,7 +8,7 @@ It can be very useful to produce the right input needed for follow up tools, for
 To get the help menu:
 
 ~~~bash
-java -jar Biopet-0.2.0-DEV-801b72ed.jar tool BastyGenerateFasta -h
+biopet tool BastyGenerateFasta -h
 
 Usage: BastyGenerateFasta [options]
 

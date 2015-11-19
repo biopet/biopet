@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.utils
 
 import java.io.File
+import java.util
 
 import argonaut.Argonaut._
 import argonaut._
@@ -270,9 +271,10 @@ object ConfigUtils extends Logging {
   def any2set(any: Any): Set[Any] = {
     if (any == null) return null
     any match {
-      case s: Set[_]  => s.toSet
-      case l: List[_] => l.toSet
-      case _          => Set(any)
+      case s: Set[_]            => s.toSet
+      case l: List[_]           => l.toSet
+      case l: util.ArrayList[_] => l.toSet
+      case _                    => Set(any)
     }
   }
 

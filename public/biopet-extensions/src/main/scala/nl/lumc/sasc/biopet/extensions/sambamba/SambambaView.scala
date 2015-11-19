@@ -43,6 +43,6 @@ class SambambaView(val root: Configurable) extends Sambamba {
     optional("--format", format.get) +
     optional("--regions", regions) +
     optional("--compression-level", compression_level) +
-    required("--output" + output) +
+    required("--output-filename", output) +
     required(input)
 }
