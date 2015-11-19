@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class GearsReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = GearsReport
+  def builder = GearsReport
 }
 
 object GearsReport extends ReportBuilder {
