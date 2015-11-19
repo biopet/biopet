@@ -9,7 +9,7 @@ The tool is also very usefull to create test data sets.
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool ExtractAlignedFastq -h
+biopet tool ExtractAlignedFastq -h
 ExtractAlignedFastq - Select aligned FASTQ records
       
 Usage: ExtractAlignedFastq [options]
@@ -42,7 +42,7 @@ This tool creates FASTQ file(s) containing reads mapped to the given alignment i
 
 To run the tool:
 ~~~
-java -jar Biopet-0.2.0.jar tool ExtractAlignedFastq \
+biopet tool ExtractAlignedFastq \
 --input_file myBam.bam --in1 myFastq_R1.fastq --out1 myOutFastq_R1.fastq --interval myTarget.bed
 ~~~
 * Note that this tool works for single end and paired end data. The above example can be easily extended for paired end data.

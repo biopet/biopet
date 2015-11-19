@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.extensions.Md5sum
+import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
 
 import scala.collection.mutable
 
@@ -27,7 +27,7 @@ import scala.collection.mutable
  *
  * Created by pjvan_thof on 2/14/15.
  */
-trait SummaryQScript extends BiopetQScript {
+trait SummaryQScript extends BiopetQScript { qscript =>
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
@@ -96,30 +96,33 @@ trait SummaryQScript extends BiopetQScript {
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
-      if (writeSummary.md5sum && !SummaryQScript.md5sumCache.contains(file)) {
-        val md5sum = new Md5sum(this) {
-          override def configName = "md5sum"
-          override def cmdLine: String = super.cmdLine + " || " +
-            required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)
-        }
-        md5sum.input = file
-        md5sum.output = new File(file.getParentFile, file.getName + ".md5")
+      if (writeSummary.md5sum) {
+        if (!SummaryQScript.md5sumCache.contains(file)) {
+          val md5sum = new Md5sum(this) {
+            override def configName = "md5sum"
 
-        // Need to not write a md5 file outside the outputDir
-        if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
-          md5sum.output = new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+            override def cmdLine: String = super.cmdLine + " || " +
+              required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)
+          }
+          md5sum.input = file
+          md5sum.output = new File(file.getParentFile, file.getName + ".md5")
 
-        writeSummary.deps :+= md5sum.output
-        SummaryQScript.md5sumCache += file -> md5sum.output
-        add(md5sum)
+          // Need to not write a md5 file outside the outputDir
+          if (!file.getAbsolutePath.startsWith(outputDir.getAbsolutePath))
+            md5sum.output = new File(outputDir, ".md5" + file.getAbsolutePath + ".md5")
+
+          writeSummary.deps :+= md5sum.output
+          SummaryQScript.md5sumCache += file -> md5sum.output
+          add(md5sum)
+        } else writeSummary.deps :+= SummaryQScript.md5sumCache(file)
       }
       //TODO: add more checksums types
     }
 
     for ((_, summarizableList) <- summarizables; summarizable <- summarizableList) {
       summarizable match {
-        case f: BiopetCommandLineFunctionTrait => f.beforeGraph()
-        case _                                 =>
+        case f: BiopetCommandLineFunction => f.beforeGraph()
+        case _                            =>
       }
     }
 
@@ -132,10 +135,30 @@ trait SummaryQScript extends BiopetQScript {
       }
     }
 
+    for (inputFile <- inputFiles) {
+      inputFile.md5 match {
+        case Some(checksum) => {
+          val checkMd5 = new CheckChecksum
+          checkMd5.inputFile = inputFile.file
+          require(SummaryQScript.md5sumCache.contains(inputFile.file),
+            s"Md5 job is not executed, checksum file can't be found for: ${inputFile.file}")
+          checkMd5.checksumFile = SummaryQScript.md5sumCache(inputFile.file)
+          checkMd5.checksum = checksum
+          checkMd5.jobOutputFile = new File(checkMd5.checksumFile.getParentFile, checkMd5.checksumFile.getName + ".check.out")
+          add(checkMd5)
+        }
+        case _ =>
+      }
+    }
+
     for ((_, file) <- this.summaryFiles)
       addChecksum(file)
 
-    add(writeSummary)
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write summary is skipped because sample flag is used")
+      case _ => add(writeSummary)
+    }
   }
 }
 

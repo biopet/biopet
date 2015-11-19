@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -29,7 +29,7 @@ import scala.io.Source
  *
  * Created by pjvan_thof on 1/10/15.
  */
-class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summarizable with Reference {
+class VcfStats(val root: Configurable) extends ToolCommandFunction with Summarizable with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfStats
 
   @Input(doc = "Input fastq", shortName = "I", required = true)
@@ -69,7 +69,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFuntion with Summariza
   }
 
   /** Creates command to execute extension */
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", outputDir) +
     repeat("--infoTag", infoTags) +

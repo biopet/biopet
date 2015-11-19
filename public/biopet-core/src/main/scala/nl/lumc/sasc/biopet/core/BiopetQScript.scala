@@ -26,8 +26,6 @@ import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFun
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
-import scala.collection.mutable.ListBuffer
-
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging {
 
@@ -47,6 +45,10 @@ trait BiopetQScript extends Configurable with GatkLogging {
   var disableScatter: Boolean = false
 
   var outputFiles: Map[String, File] = Map()
+
+  type InputFile = BiopetQScript.InputFile
+
+  var inputFiles: List[InputFile] = Nil
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */
   var qSettings: QSettings
@@ -74,10 +76,18 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
+
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write report is skipped because sample flag is used")
+      case _ => reportClass.foreach(add(_))
+    }
+
     for (function <- functions) function match {
-      case f: BiopetCommandLineFunctionTrait =>
+      case f: BiopetCommandLineFunction =>
         f.preProcessExecutable()
         f.beforeGraph()
+        f.internalBeforeGraph()
         f.commandLine
       case _ =>
     }
@@ -86,7 +96,20 @@ trait BiopetQScript extends Configurable with GatkLogging {
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
 
-    reportClass.foreach(add(_))
+    inputFiles.foreach { i =>
+      if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
+      else if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
+    }
+
+    functions.filter(_.jobOutputFile == null).foreach(f => {
+      try {
+        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + configName + ".out")
+      } catch {
+        case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
+      }
+    })
+
+    if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
 
     Logging.checkErrors()
   }
@@ -102,4 +125,8 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+}
+
+object BiopetQScript {
+  case class InputFile(file: File, md5: Option[String] = None)
 }

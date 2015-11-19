@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** This trait creates a structured way of use multisample pipelines */
@@ -26,7 +26,7 @@ trait MultiSampleQScript extends SummaryQScript {
   qscript =>
 
   @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
-  private val onlySamples: List[String] = Nil
+  private[core] val onlySamples: List[String] = Nil
 
   require(globalConfig.map.contains("samples"), "No Samples found in config")
 
@@ -34,6 +34,9 @@ trait MultiSampleQScript extends SummaryQScript {
   abstract class AbstractSample(val sampleId: String) extends Summarizable {
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
+
+    /** Sample specific settings */
+    def summarySettings: Map[String, Any] = Map()
 
     /** Library class with basic functions build in */
     abstract class AbstractLibrary(val libId: String) extends Summarizable {
@@ -45,8 +48,13 @@ trait MultiSampleQScript extends SummaryQScript {
         qscript.addSummarizable(summarizable, name, Some(sampleId), Some(libId))
       }
 
+      /** Library specific settings */
+      def summarySettings: Map[String, Any] = Map()
+
       /** Adds the library jobs */
       final def addAndTrackJobs(): Unit = {
+        if (nameRegex.findFirstIn(libId) == None)
+          Logging.addError(s"Library '$libId' $nameError")
         currentSample = Some(sampleId)
         currentLib = Some(libId)
         addJobs()
@@ -90,6 +98,8 @@ trait MultiSampleQScript extends SummaryQScript {
 
     /** Adds sample jobs */
     final def addAndTrackJobs(): Unit = {
+      if (nameRegex.findFirstIn(sampleId) == None)
+        Logging.addError(s"Sample '$sampleId' $nameError")
       currentSample = Some(sampleId)
       addJobs()
       qscript.addSummarizable(this, "pipeline", Some(sampleId))
@@ -129,9 +139,15 @@ trait MultiSampleQScript extends SummaryQScript {
   /** Returns a list of all sampleIDs */
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
+  protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
+  protected lazy val nameError = " name invalid." +
+    "Name must have at least 3 characters," +
+    "must begin and end with an alphanumeric character, " +
+    "and must not have whitespace."
+
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
-    if (onlySamples.isEmpty) {
+    if (onlySamples.isEmpty || samples.forall(x => onlySamples.contains(x._1))) {
       samples.foreach { case (sampleId, sample) => sample.addAndTrackJobs() }
       addMultiSampleJobs()
     } else onlySamples.foreach(sampleId => samples.get(sampleId) match {

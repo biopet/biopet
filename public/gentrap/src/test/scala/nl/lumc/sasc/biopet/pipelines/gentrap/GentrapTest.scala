@@ -28,7 +28,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
-class GentrapTest extends TestNGSuite with Matchers {
+abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
@@ -43,8 +43,8 @@ class GentrapTest extends TestNGSuite with Matchers {
 
   /** Convenience method for making library config */
   private def makeLibConfig(idx: Int, paired: Boolean = true) = {
-    val files = Map("R1" -> "test_R1.fq")
-    if (paired) (s"lib_$idx", files ++ Map("R2" -> "test_R2.fq"))
+    val files = Map("R1" -> GentrapTest.inputTouch("test_R1.fq"))
+    if (paired) (s"lib_$idx", files ++ Map("R2" -> GentrapTest.inputTouch("test_R2.fq")))
     else (s"lib_$idx", files)
   }
 
@@ -70,7 +70,7 @@ class GentrapTest extends TestNGSuite with Matchers {
       .toMap
     )
 
-  private lazy val validExpressionMeasures = Set(
+  val validExpressionMeasures = Set(
     "fragments_per_gene", "fragments_per_exon", "bases_per_gene", "bases_per_exon",
     "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
 
@@ -96,7 +96,7 @@ class GentrapTest extends TestNGSuite with Matchers {
 
     for {
       sampleConfig <- sampleConfigs.toArray
-      expressionMeasure <- expressionMeasures
+      //expressionMeasure <- expressionMeasures
       strandProtocol <- strandProtocols
     } yield Array(sampleConfig, List(expressionMeasure), strandProtocol)
   }
@@ -117,8 +117,6 @@ class GentrapTest extends TestNGSuite with Matchers {
     gentrap.script()
     val functions = gentrap.functions.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
-
-    functions(classOf[Gsnap]).size should be >= 1
 
     if (expMeasures.contains("fragments_per_gene")) {
       gentrap.functions
@@ -177,8 +175,22 @@ class GentrapTest extends TestNGSuite with Matchers {
   }
 }
 
+class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene")
+class GentrapFragmentsPerExonTest extends GentrapTestAbstract("fragments_per_exon")
+class GentrapBasesPerGeneTest extends GentrapTestAbstract("bases_per_gene")
+class GentrapBasesPerExonTest extends GentrapTestAbstract("bases_per_exon")
+class GentrapCufflinksStrictTest extends GentrapTestAbstract("cufflinks_strict")
+class GentrapCufflinksGuidedTest extends GentrapTestAbstract("cufflinks_guided")
+class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind")
+
 object GentrapTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -192,12 +204,11 @@ object GentrapTest {
   copyFile("ref.fa.fai")
 
   val executables = Map(
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
-    "refFlat" -> "test",
-    "annotation_gtf" -> "test",
-    "annotation_bed" -> "test",
-    "annotation_refflat" -> "test",
+    "refFlat" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
+    "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test"
   ) ++ Seq(
       // fastqc executables

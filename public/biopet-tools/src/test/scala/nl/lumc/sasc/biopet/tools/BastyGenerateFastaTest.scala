@@ -31,28 +31,31 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
 
   @Test def testMainVcf = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--sampleName", "Child_7006504", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
     main(arguments)
   }
 
   @Test def testMainVcfAndBam = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Child_7006504", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
     main(arguments)
   }
 
   @Test def testMainVcfAndBamMore = {
     val tmp = File.createTempFile("basty_out", ".fa")
+    tmp.deleteOnExit()
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputConsensus", tmppath, "--outputConsensusVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Child_7006504", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQ_path, "--outputConsensus", tmppath, "--outputConsensusVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
     main(arguments)
   }
 
@@ -60,13 +63,13 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    val child = mock[Args]
-    when(child.sampleName) thenReturn "Child_7006504"
-    val father = mock[Args]
-    when(father.sampleName) thenReturn "Father_7006506"
+    val one = mock[Args]
+    when(one.sampleName) thenReturn "Sample_101"
+    val two = mock[Args]
+    when(two.sampleName) thenReturn "Sample_102"
 
-    getMaxAllele(record)(child) shouldBe "C-"
-    getMaxAllele(record)(father) shouldBe "CA"
+    getMaxAllele(record)(one) shouldBe "C-"
+    getMaxAllele(record)(two) shouldBe "CA"
 
   }
 

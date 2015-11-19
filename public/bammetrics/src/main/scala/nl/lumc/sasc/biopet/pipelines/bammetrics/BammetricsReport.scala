@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.utils.rscript.{ StackedBarPlot, LinePlot }
 
 class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = BammetricsReport
+  def builder = BammetricsReport
 }
 
 /**
@@ -156,14 +156,15 @@ object BammetricsReport extends ReportBuilder {
                      prefix: String,
                      summary: Summary,
                      libraryLevel: Boolean = false,
-                     sampleId: Option[String] = None): Unit = {
+                     sampleId: Option[String] = None,
+                     libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) {
       tsvWriter.println((for (
         sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample)
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
       ) yield s"$sample-$lib")
         .mkString("library\t", "\t", ""))
     } else {
@@ -198,7 +199,7 @@ object BammetricsReport extends ReportBuilder {
     if (libraryLevel) {
       for (
         sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample)
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
       ) fill(sample, Some(lib))
     } else if (sampleId.isDefined) fill(sampleId.get, None)
     else summary.samples.foreach(fill(_, None))
@@ -208,7 +209,7 @@ object BammetricsReport extends ReportBuilder {
       if (libraryLevel) {
         for (
           sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-          lib <- summary.libraries(sample)
+          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
         ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
       } else {
         for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
@@ -243,14 +244,15 @@ object BammetricsReport extends ReportBuilder {
                        prefix: String,
                        summary: Summary,
                        libraryLevel: Boolean = false,
-                       sampleId: Option[String] = None): Unit = {
+                       sampleId: Option[String] = None,
+                       libId: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
     if (libraryLevel) {
       tsvWriter.println((for (
         sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample)
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
       ) yield s"$sample-$lib")
         .mkString("library\t", "\t", ""))
     } else {
@@ -285,7 +287,7 @@ object BammetricsReport extends ReportBuilder {
     if (libraryLevel) {
       for (
         sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-        lib <- summary.libraries(sample)
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
       ) fill(sample, Some(lib))
     } else if (sampleId.isDefined) fill(sampleId.get, None)
     else summary.samples.foreach(fill(_, None))
@@ -295,8 +297,10 @@ object BammetricsReport extends ReportBuilder {
       if (libraryLevel) {
         for (
           sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
-          lib <- summary.libraries(sample)
-        ) tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
+          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
+        ) {
+          tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
+        }
       } else {
         for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
           tsvWriter.print("\t" + counts.getOrElse(sample, "0"))

@@ -189,6 +189,32 @@ class FastqSyncTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test(dataProvider = "mockProvider")
+  def testSeqSolexa(refMock: FastqReader, aMock: FastqReader, bMock: FastqReader,
+                    aOutMock: AsyncFastqWriter, bOutMock: AsyncFastqWriter) = {
+
+    when(refMock.iterator) thenReturn recordsOver(
+      "SOLEXA12_24:6:117:1388:2001/2",
+      "SOLEXA12_24:6:96:470:1965/2",
+      "SOLEXA12_24:6:35:1209:2037/2")
+    when(aMock.iterator) thenReturn recordsOver(
+      "SOLEXA12_24:6:96:470:1965/1",
+      "SOLEXA12_24:6:35:1209:2037/1")
+    when(bMock.iterator) thenReturn recordsOver(
+      "SOLEXA12_24:6:117:1388:2001/2",
+      "SOLEXA12_24:6:96:470:1965/2")
+    val obs = inOrd(aOutMock, bOutMock)
+
+    val (numDiscard1, numDiscard2, numKept) = syncFastq(refMock, aMock, bMock, aOutMock, bOutMock)
+
+    obs.verify(aOutMock).write(new FastqRecord("SOLEXA12_24:6:96:470:1965/1", "A", "", "H"))
+    obs.verify(bOutMock).write(new FastqRecord("SOLEXA12_24:6:96:470:1965/2", "A", "", "H"))
+
+    numDiscard1 shouldBe 1
+    numDiscard2 shouldBe 1
+    numKept shouldBe 1
+  }
+
+  @Test(dataProvider = "mockProvider")
   def testSeqABShorterPairMarkSlash(refMock: FastqReader, aMock: FastqReader, bMock: FastqReader,
                                     aOutMock: AsyncFastqWriter, bOutMock: AsyncFastqWriter) = {
 

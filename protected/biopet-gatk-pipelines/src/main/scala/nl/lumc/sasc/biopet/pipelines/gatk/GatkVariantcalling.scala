@@ -153,11 +153,11 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           scriptOutput.rawVcfFile = m2v.output
 
           val vcfFilter = new VcfFilter(this) {
-            override def defaults = ConfigUtils.mergeMaps(Map("min_sample_depth" -> 8,
+            override def defaults = Map("min_sample_depth" -> 8,
               "min_alternate_depth" -> 2,
               "min_samples_pass" -> 1,
               "filter_ref_calls" -> true
-            ), super.defaults)
+            )
           }
           vcfFilter.inputVcf = m2v.output
           vcfFilter.outputVcf = swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")

@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFuntion }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.JavaConversions._
 
-class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Reference {
+class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.MpileupToVcf
 
   @Input(doc = "Input mpileup file", shortName = "mpileup", required = false)
@@ -47,17 +47,14 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Refer
 
   override def defaultCoreMemory = 3.0
 
-  override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
-    super.defaults)
-
   override def beforeGraph() {
     super.beforeGraph()
-    reference = referenceFasta().getAbsolutePath
+    if (reference == null) reference = referenceFasta().getAbsolutePath
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
   override def beforeCmd(): Unit = {
-    if (sample == null && inputBam.exists()) {
+    if (sample == null && inputBam.exists() && inputBam.length() > 0) {
       val inputSam = SamReaderFactory.makeDefault.open(inputBam)
       val readGroups = inputSam.getFileHeader.getReadGroups
       val samples = readGroups.map(readGroup => readGroup.getSample).distinct
@@ -66,20 +63,12 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFuntion with Refer
     }
   }
 
-  override def commandLine = {
-    (if (inputMpileup == null) {
-      val samtoolsMpileup = new SamtoolsMpileup(this)
-      samtoolsMpileup.reference = referenceFasta()
-      samtoolsMpileup.input = List(inputBam)
-      samtoolsMpileup.cmdPipe + " | "
-    } else "") +
-      super.commandLine +
-      required("-o", output) +
-      optional("--minDP", minDP) +
-      optional("--minAP", minAP) +
-      optional("--homoFraction", homoFraction) +
-      optional("--ploidy", ploidy) +
-      required("--sample", sample) +
-      (if (inputBam == null) required("-I", inputMpileup) else "")
-  }
+  override def cmdLine = super.cmdLine +
+    required("-o", output) +
+    optional("--minDP", minDP) +
+    optional("--minAP", minAP) +
+    optional("--homoFraction", homoFraction) +
+    optional("--ploidy", ploidy) +
+    required("--sample", sample) +
+    (if (inputAsStdin) "" else required("-I", inputMpileup))
 }

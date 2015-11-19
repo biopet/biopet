@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Biopet extension for tool VcfWithVcf
  */
-class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
+class VcfWithVcf(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfWithVcf
 
   @Input(doc = "Input vcf file", shortName = "input", required = true)
@@ -50,7 +50,7 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFuntion {
     if (fields.isEmpty) throw new IllegalArgumentException("No fields found for VcfWithVcf")
   }
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", input) +
     required("-o", output) +
     required("-s", secondaryVcf) +

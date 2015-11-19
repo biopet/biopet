@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
+class VcfFilter(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfFilter
 
   @Input(doc = "Input vcf", shortName = "I", required = true)
@@ -38,7 +38,7 @@ class VcfFilter(val root: Configurable) extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 3.0
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", inputVcf) +
     required("-o", outputVcf) +
     optional("--minSampleDepth", minSampleDepth) +

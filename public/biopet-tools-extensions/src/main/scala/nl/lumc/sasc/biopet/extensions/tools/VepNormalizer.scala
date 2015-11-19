@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -31,7 +31,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  * Created by ahbbollen on 10/27/14.
  */
 
-class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
+class VepNormalizer(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.VepNormalizer
 
   @Input(doc = "Input VCF, may be indexed", shortName = "InputFile", required = true)
@@ -45,7 +45,7 @@ class VepNormalizer(val root: Configurable) extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 4.0
 
-  override def commandLine = super.commandLine +
+  override def cmdLine = super.cmdLine +
     required("-I", inputVCF) +
     required("-O", outputVcf) +
     required("-m", mode) +

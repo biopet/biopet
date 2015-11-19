@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  * Created by pjvanthof on 25/06/15.
  */
 class CarpReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = CarpReport
+  def builder = CarpReport
 }
 
 object CarpReport extends MultisampleReportBuilder {
@@ -76,7 +76,7 @@ object CarpReport extends MultisampleReportBuilder {
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
-      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true)),
+      "Merged" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true)),
       "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
     ), args)

@@ -18,38 +18,47 @@ package nl.lumc.sasc.biopet.core
 import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
 /** Biopet commandline class for java based programs */
-trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunctionTrait {
+trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunction {
   executable = config("java", default = "java", submodule = "java", freeVar = false)
 
-  javaGCThreads = config("java_gc_threads")
-  javaGCHeapFreeLimit = config("java_gc_heap_freelimit")
-  javaGCTimeLimit = config("java_gc_timelimit")
+  javaGCThreads = config("java_gc_threads", default = 4)
+  javaGCHeapFreeLimit = config("java_gc_heap_freelimit", default = 10)
+  javaGCTimeLimit = config("java_gc_timelimit", default = 50)
 
-  override protected def defaultVmemFactor: Double = 2.0
+  override def defaultVmemFactor: Double = 2.0
 
   /** Constructs java opts, this adds scala threads */
   override def javaOpts = super.javaOpts +
-    optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false, escape = false)
+    optional("-Dscala.concurrent.context.numThreads=", threads, spaceSeparated = false)
+
+  override def beforeGraph(): Unit = {
+    setResources()
+    if (javaMemoryLimit.isEmpty && memoryLimit.isDefined)
+      javaMemoryLimit = memoryLimit
+
+    if (javaMainClass != null && javaClasspath.isEmpty)
+      javaClasspath = JavaCommandLineFunction.currentClasspath
+  }
 
   /** Creates command to execute extension */
-  override def commandLine: String = {
+  def cmdLine: String = {
     preCmdInternal()
-    val cmd = super.commandLine
-    val finalCmd = executable + cmd.substring(cmd.indexOf(" "))
-    cmd
+    required(executable) +
+      javaOpts +
+      javaExecutable
   }
 
   def javaVersionCommand: String = executable + " -version"
 
   def getJavaVersion: Option[String] = {
-    if (!BiopetCommandLineFunctionTrait.executableCache.contains(executable))
+    if (!BiopetCommandLineFunction.executableCache.contains(executable))
       preProcessExecutable()
-    if (!BiopetCommandLineFunctionTrait.versionCache.contains(javaVersionCommand))
-      getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
-        case Some(version) => BiopetCommandLineFunctionTrait.versionCache += javaVersionCommand -> version
+    if (!Version.versionCache.contains(javaVersionCommand))
+      Version.getVersionInternal(javaVersionCommand, """java version "(.*)"""".r) match {
+        case Some(version) => Version.versionCache += javaVersionCommand -> version
         case _             =>
       }
-    BiopetCommandLineFunctionTrait.versionCache.get(javaVersionCommand)
+    Version.versionCache.get(javaVersionCommand)
   }
 
   override def setupRetry(): Unit = {

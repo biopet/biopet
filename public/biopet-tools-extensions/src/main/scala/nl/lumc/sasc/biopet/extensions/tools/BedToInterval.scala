@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFuntion
+import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * @deprecated Use picard.util.BedToIntervalList instead
  */
-class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
+class BedToInterval(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BedToInterval
 
   @Input(doc = "Input Bed file", required = true)
@@ -38,7 +38,7 @@ class BedToInterval(val root: Configurable) extends ToolCommandFuntion {
 
   override def defaultCoreMemory = 1.0
 
-  override def commandLine = super.commandLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
+  override def cmdLine = super.cmdLine + required("-I", input) + required("-b", bamFile) + required("-o", output)
 }
 
 object BedToInterval {

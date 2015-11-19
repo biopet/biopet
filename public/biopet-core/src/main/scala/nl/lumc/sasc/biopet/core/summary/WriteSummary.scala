@@ -18,9 +18,9 @@ package nl.lumc.sasc.biopet.core.summary
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetCommandLineFunctionTrait, BiopetJavaCommandLineFunction, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import nl.lumc.sasc.biopet.{ LastCommitHash, Version }
+import nl.lumc.sasc.biopet.LastCommitHash
 import org.broadinstitute.gatk.queue.function.{ InProcessFunction, QFunction }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -71,30 +71,57 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
       val files = parseFiles(qscript.summaryFiles)
       val settings = qscript.summarySettings
       val executables: Map[String, Any] = {
-        (for (f <- qscript.functions if f.isInstanceOf[BiopetCommandLineFunctionTrait]) yield {
-          f match {
-            case f: BiopetJavaCommandLineFunction =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "java_md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
-                "java_version" -> f.getJavaVersion,
-                "jar_path" -> f.jarFile)
-            case f: BiopetCommandLineFunction =>
-              f.configName -> Map("version" -> f.getVersion.getOrElse(None),
-                "md5" -> BiopetCommandLineFunctionTrait.executableMd5Cache.getOrElse(f.executable, None),
-                "path" -> f.executable)
-            case _ => throw new IllegalStateException("This should not be possible")
-          }
 
-        }).toMap
+        def fetchVersion(f: QFunction): Option[(String, Any)] = {
+          f match {
+            case f: BiopetJavaCommandLineFunction with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+                "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
+                "java_version" -> f.getJavaVersion,
+                "jar_path" -> f.jarFile))
+            case f: BiopetCommandLineFunction with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+                "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
+                "path" -> f.executable))
+            case f: Configurable with Version =>
+              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None)))
+            case _ => None
+          }
+        }
+
+        (
+          qscript.functions.flatMap(fetchVersion) ++
+          qscript.functions
+          .flatMap {
+            case f: BiopetCommandLineFunction => f.pipesJobs
+            case _                            => Nil
+          }.flatMap(fetchVersion(_))
+        ).toMap
       }
 
-      val map = Map(qscript.summaryName -> ((if (settings.isEmpty) Map[String, Any]() else Map("settings" -> settings)) ++
-        (if (files.isEmpty) Map[String, Any]() else Map("files" -> Map("pipeline" -> files))) ++
-        (if (executables.isEmpty) Map[String, Any]() else Map("executables" -> executables.toMap))))
+      val map = Map(qscript.summaryName -> Map(
+        "settings" -> settings,
+        "files" -> Map("pipeline" -> files),
+        "executables" -> executables.toMap)
+      )
 
       qscript match {
         case tag: SampleLibraryTag => prefixSampleLibrary(map, tag.sampleId, tag.libId)
-        case _                     => map
+        case q: MultiSampleQScript =>
+          ConfigUtils.mergeMaps(
+            Map("samples" -> q.samples.map {
+              case (sampleName, sample) =>
+                sampleName -> Map(
+                  qscript.summaryName -> Map("settings" -> sample.summarySettings),
+                  "libraries" -> sample.libraries.map {
+                    case (libName, lib) =>
+                      libName -> Map(
+                        qscript.summaryName -> Map("settings" -> lib.summarySettings)
+                      )
+                  }
+                )
+            }), map)
+        case _ => map
       }
     }
 
@@ -113,7 +140,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     }).foldRight(jobsMap)((a, b) => ConfigUtils.mergeMaps(a, b)) ++
       Map("meta" -> Map(
         "last_commit_hash" -> LastCommitHash,
-        "pipeline_version" -> Version,
+        "pipeline_version" -> nl.lumc.sasc.biopet.Version,
         "pipeline_name" -> qscript.summaryName,
         "output_dir" -> qscript.outputDir,
         "run_name" -> config("run_name", default = qSettings.runName).asString,
@@ -153,10 +180,11 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
   def parseFile(file: File): Map[String, Any] = {
     val map: mutable.Map[String, Any] = mutable.Map()
     map += "path" -> file.getAbsolutePath
-    if (md5sum) map += "md5" -> parseChecksum(SummaryQScript.md5sumCache(file))
+    if (md5sum) map += "md5" -> WriteSummary.parseChecksum(SummaryQScript.md5sumCache(file))
     map.toMap
   }
-
+}
+object WriteSummary {
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
     Source.fromFile(checksumFile).getLines().toList.head.split(" ")(0)

@@ -28,6 +28,7 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testMain() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
+    tmp.deleteOnExit()
     val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath)
 
     main(args)
@@ -36,6 +37,7 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def validateOutVcf() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
+    tmp.deleteOnExit()
     val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1", "--minAP", "1")
     main(args)
 
@@ -51,6 +53,7 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def extraValidateOutVcf() = {
     val tmp = File.createTempFile("mpileup", ".vcf")
+    tmp.deleteOnExit()
     val args = Array("-I", pileup, "--sample", "test", "-o", tmp.getAbsolutePath, "--minDP", "1", "--minAP", "1")
     main(args)
 

@@ -36,7 +36,7 @@
 #end
 
 #if (showPlot)
-    #{ BammetricsReport.wgsHistogramPlot(outputDir, "wgs", summary, !sampleLevel, sampleId = sampleId) }#
+    #{ BammetricsReport.wgsHistogramPlot(outputDir, "wgs", summary, !sampleLevel, sampleId = sampleId, libId = libId) }#
 
     <div class="panel-body">
     <img src="wgs.png" class="img-responsive" />

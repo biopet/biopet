@@ -28,7 +28,11 @@ trait Rscript extends Configurable {
     } else {
       val rScript: File = dir match {
         case Some(dir) => new File(dir, script.getName)
-        case _         => File.createTempFile(script.getName, ".R")
+        case _ => {
+          val file = File.createTempFile(script.getName, ".R")
+          file.deleteOnExit()
+          file
+        }
       }
       if (!rScript.getParentFile.exists) rScript.getParentFile.mkdirs
 

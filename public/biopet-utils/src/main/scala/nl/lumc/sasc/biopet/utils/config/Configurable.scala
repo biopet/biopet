@@ -15,11 +15,12 @@
  */
 package nl.lumc.sasc.biopet.utils.config
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
-  val root: Configurable
+  def root: Configurable
   def globalConfig: Config = if (root != null) root.globalConfig else Config.global
 
   /** suffix to the path */
@@ -35,9 +36,28 @@ trait Configurable extends ImplicitConversions {
   def configFullPath: List[String] = configPath ::: configName :: Nil
 
   /** Map to store defaults for config */
-  def defaults: Map[String, Any] = {
-    if (root != null) root.defaults
-    else globalConfig.defaults
+  def defaults: Map[String, Any] = Map()
+
+  /** This method merge defaults from the root to it's own */
+  protected[config] def internalDefaults: Map[String, Any] = {
+    (root != null, defaults.isEmpty) match {
+      case (true, true)   => root.internalDefaults
+      case (true, false)  => ConfigUtils.mergeMaps(defaults, root.internalDefaults)
+      case (false, true)  => globalConfig.defaults
+      case (false, false) => ConfigUtils.mergeMaps(defaults, globalConfig.defaults)
+    }
+  }
+
+  /** All values found in this map will be skipped from the user config */
+  def fixedValues: Map[String, Any] = Map()
+
+  /** This method merge fixedValues from the root to it's own */
+  protected def internalFixedValues: Map[String, Any] = {
+    (root != null, fixedValues.isEmpty) match {
+      case (true, true)  => root.internalFixedValues
+      case (true, false) => ConfigUtils.mergeMaps(fixedValues, root.internalFixedValues)
+      case _             => fixedValues
+    }
   }
 
   val config = new ConfigFunctions
@@ -90,11 +110,11 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
       val d = {
-        val value = Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar))
+        val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
       }
-      if (d == null) globalConfig(m, p, key, freeVar = freeVar)
-      else globalConfig(m, p, key, d, freeVar)
+      if (d == null) globalConfig(m, p, key, freeVar = freeVar, fixedValues = internalFixedValues)
+      else globalConfig(m, p, key, d, freeVar, fixedValues = internalFixedValues)
     }
 
     /**
@@ -117,7 +137,7 @@ trait Configurable extends ImplicitConversions {
       val m = if (submodule != null) submodule else configName
       val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
 
-      globalConfig.contains(m, p, key, freeVar) || Config.getValueFromMap(defaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
+      globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }
   }
 }
