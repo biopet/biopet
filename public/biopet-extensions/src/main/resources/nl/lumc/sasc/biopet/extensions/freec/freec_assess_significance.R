@@ -1,5 +1,7 @@
 library(rtracklayer)
 library('optparse')
+library(GenomicRanges);
+library(IRanges);
 # Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 option_list <- list(
