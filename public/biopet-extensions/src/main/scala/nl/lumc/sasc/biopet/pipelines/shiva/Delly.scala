@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
@@ -65,7 +65,6 @@ class Delly(val root: Configurable) extends QScript with Reference with SummaryQ
       "tra" -> tra
     )
   }
-
 
   def biopetScript() {
     // write the pipeline here

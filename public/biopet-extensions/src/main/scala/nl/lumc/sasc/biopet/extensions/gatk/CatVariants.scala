@@ -18,8 +18,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
-
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class CatVariants(val root: Configurable) extends Gatk {
   val analysisType = "CatVariants"
@@ -32,7 +31,7 @@ class CatVariants(val root: Configurable) extends Gatk {
 
   override def cmdLine = super.cmdLine +
     (for (file <- inputFiles) yield {
-        required("-V", file)
+      required("-V", file)
     }).mkString +
     required("-o", outputFile)
 
