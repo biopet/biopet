@@ -30,7 +30,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  * Created by pjvan_thof on 3/30/15.
  */
 class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = ShivaReport
+  def builder = ShivaReport
 }
 
 /** Object for report generation for Shiva pipeline */

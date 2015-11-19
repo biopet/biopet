@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
 import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 class FlexiprepReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = FlexiprepReport
+  def builder = FlexiprepReport
 }
 
 /**

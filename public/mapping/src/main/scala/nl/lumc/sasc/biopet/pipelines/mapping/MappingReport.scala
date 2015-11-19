@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 class MappingReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = MappingReport
+  def builder = MappingReport
 }
 
 /**

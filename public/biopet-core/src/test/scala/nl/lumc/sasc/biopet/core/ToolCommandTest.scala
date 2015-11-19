@@ -12,8 +12,8 @@ class ToolCommandTest extends TestNGSuite with Matchers {
   @Test
   def testToolCommand: Unit = {
     val tool = new ToolCommandFunction {
-      val root = null
-      val toolObject = ToolCommandTest
+      def root = null
+      def toolObject = ToolCommandTest
     }
 
     tool.versionCommand shouldBe empty

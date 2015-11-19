@@ -33,7 +33,7 @@ import scala.collection.mutable
 trait ReportBuilderExtension extends ToolCommandFunction {
 
   /** Report builder object */
-  val builder: ReportBuilder
+  def builder: ReportBuilder
 
   def toolObject = builder
 
