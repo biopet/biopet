@@ -35,6 +35,6 @@ class VtNormalize(val root: Configurable) extends Vt with Version with Reference
     required("-o", outputVcf) +
     optional("-w", windowSize) +
     optional("-I", intervalsFile) +
-    required("-r", reference)
+    required("-r", reference) +
     required(inputVcf)
 }
