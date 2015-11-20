@@ -354,19 +354,12 @@ trait ShivaTrait extends MultiSampleQScript with Reference { qscript: QScript =>
   def summaryFile = new File(outputDir, "Shiva.summary.json")
 
   /** Settings of pipeline for summary */
-  def summarySettings = {
-    val roiBedFiles: List[File] = config("regions_of_interest", Nil)
-    val ampliconBedFile: Option[File] = config("amplicon_bed")
-
-    Map(
+  def summarySettings = Map(
       "reference" -> referenceSummary,
-      "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-      "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed")),
       "annotation" -> annotation.isDefined,
       "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
       "sv_calling" -> svCalling.isDefined
     )
-  }
 
   /** Files for the summary */
   def summaryFiles = Map("referenceFasta" -> referenceFasta())

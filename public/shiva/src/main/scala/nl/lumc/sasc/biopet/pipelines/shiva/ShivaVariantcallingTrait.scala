@@ -15,23 +15,24 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
+import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers._
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
  * Common trait for ShivaVariantcalling
  *
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with Reference {
+trait ShivaVariantcallingTrait extends SummaryQScript
+  with SampleLibraryTag
+  with Reference
+  with TargetRegions {
   qscript: QScript =>
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
@@ -87,42 +88,43 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
       add(caller)
       cv.addInput(caller.outputFile, caller.name)
 
-      val vcfStats = new VcfStats(qscript)
-      vcfStats.input = caller.outputFile
-      vcfStats.setOutputDir(new File(caller.outputDir, "vcfstats"))
-      add(vcfStats)
-      addSummarizable(vcfStats, namePrefix + "-vcfstats-" + caller.name)
-
-      referenceVcf.foreach(referenceVcfFile => {
-        val gc = new GenotypeConcordance(this)
-        gc.evalFile = caller.outputFile
-        gc.compFile = referenceVcfFile
-        gc.outputFile = new File(caller.outputDir, s"$namePrefix-genotype_concordance.${caller.name}.txt")
-        referenceVcfRegions.foreach(gc.intervals ::= _)
-        add(gc)
-        addSummarizable(gc, s"$namePrefix-genotype_concordance-${caller.name}")
-      })
+      addStats(caller.outputFile, caller.name)
     }
     add(cv)
 
+    addStats(finalFile, "final")
+
+    addSummaryJobs()
+  }
+
+  protected def addStats(vcfFile: File, name: String): Unit = {
     val vcfStats = new VcfStats(qscript)
-    vcfStats.input = finalFile
-    vcfStats.setOutputDir(new File(outputDir, "vcfstats"))
-    vcfStats.infoTags :+= cv.setKey
+    vcfStats.input = vcfFile
+    vcfStats.setOutputDir(new File(vcfFile.getParentFile, "vcfstats"))
+    vcfStats.infoTags :+= "VariantCaller"
     add(vcfStats)
-    addSummarizable(vcfStats, namePrefix + "-vcfstats-final")
+    addSummarizable(vcfStats, s"$namePrefix-vcfstats-$name")
 
     referenceVcf.foreach(referenceVcfFile => {
       val gc = new GenotypeConcordance(this)
-      gc.evalFile = finalFile
+      gc.evalFile = vcfFile
       gc.compFile = referenceVcfFile
-      gc.outputFile = new File(outputDir, s"$namePrefix-genotype_concordance.final.txt")
+      gc.outputFile = new File(vcfFile.getParentFile, s"$namePrefix-genotype_concordance.$name.txt")
       referenceVcfRegions.foreach(gc.intervals ::= _)
       add(gc)
-      addSummarizable(gc, s"$namePrefix-genotype_concordance-final")
+      addSummarizable(gc, s"$namePrefix-genotype_concordance-$name")
     })
 
-    addSummaryJobs()
+    for (bedFile <- ampliconBedFile.toList ::: roiBedFiles) {
+      val regionName = bedFile.getName.stripSuffix(".bed")
+      val vcfStats = new VcfStats(qscript)
+      vcfStats.input = vcfFile
+      vcfStats.intervals = Some(bedFile)
+      vcfStats.setOutputDir(new File(vcfFile.getParentFile, s"vcfstats-$regionName"))
+      vcfStats.infoTags :+= "VariantCaller"
+      add(vcfStats)
+      addSummarizable(vcfStats, s"$namePrefix-vcfstats-$name-$regionName")
+    }
   }
 
   /** Will generate all available variantcallers */
@@ -132,7 +134,11 @@ trait ShivaVariantcallingTrait extends SummaryQScript with SampleLibraryTag with
   def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
 
   /** Settings for the summary */
-  def summarySettings = Map("variantcallers" -> configCallers.toList)
+  def summarySettings = Map(
+    "variantcallers" -> configCallers.toList,
+    "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
+    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+  )
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
