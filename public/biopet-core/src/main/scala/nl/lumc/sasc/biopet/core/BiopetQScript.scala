@@ -133,12 +133,11 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       case that: SummaryQScript =>
         that.init()
         that.biopetScript()
-        that.addSummaryJobs()
         this match {
           case s: SummaryQScript => s.addSummaryQScript(that)
           case _ =>
         }
-      case that:BiopetQScript =>
+      case that: BiopetQScript =>
         that.init()
         that.biopetScript()
       case _ => subPipeline.script

@@ -92,8 +92,11 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
     summaryQScripts :+= summaryQScript
   }
 
+  private var addedJobs = false
+
   /** Add jobs to qscript to execute summary, also add checksum jobs */
   def addSummaryJobs(): Unit = {
+    if (addedJobs) throw new IllegalStateException("Summary jobs for this QScript are already executed")
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
@@ -160,6 +163,8 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
     }
+
+    addedJobs = true
   }
 }
 
