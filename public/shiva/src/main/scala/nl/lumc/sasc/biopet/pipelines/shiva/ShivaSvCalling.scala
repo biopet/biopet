@@ -15,17 +15,14 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.Delly
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-
-import scala.collection.JavaConversions._
 
 /**
  * Common trait for ShivaVariantcalling
@@ -40,25 +37,11 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   protected var inputBamsArg: List[File] = Nil
 
-  protected var inputBams: Map[String, File] = Map()
-
-  def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
-    sampleId match {
-      case Some(sample)        => inputBams += sample -> file
-      case _ if !file.exists() => throw new IllegalArgumentException("Bam file does not exits: " + file)
-      case _ => {
-        val inputSam = SamReaderFactory.makeDefault.open(file)
-        val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
-        if (samples.size == 1) {
-          inputBams += samples.head -> file
-        } else throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
-      }
-    }
-  }
+  var inputBams: Map[String, File] = Map()
 
   /** Executed before script */
   def init(): Unit = {
-    inputBamsArg.foreach(addBamFile(_))
+    if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
   }
 
   /** Variantcallers requested by the config */

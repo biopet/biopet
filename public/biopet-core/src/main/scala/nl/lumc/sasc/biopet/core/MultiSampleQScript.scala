@@ -19,11 +19,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
+import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** This trait creates a structured way of use multisample pipelines */
-trait MultiSampleQScript extends SummaryQScript {
-  qscript =>
+trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
   @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
   private[core] val onlySamples: List[String] = Nil

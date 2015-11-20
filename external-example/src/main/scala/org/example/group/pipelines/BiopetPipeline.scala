@@ -31,6 +31,8 @@ class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript
 
     // Executing a biopet pipeline inside
     val shiva = new Shiva(this)
+    add(shiva)
+
     shiva.init()
     shiva.biopetScript()
     addAll(shiva.functions)

@@ -34,6 +34,8 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
   @Output(doc = "Delly result VCF")
   var outputVcf: File = _
 
+  this.inputFiles
+
   var outputName: String = _
 
   // select the analysis types DEL,DUP,INV,TRA

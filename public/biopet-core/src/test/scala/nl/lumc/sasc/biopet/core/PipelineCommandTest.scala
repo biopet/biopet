@@ -5,6 +5,8 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
+import scala.language.reflectiveCalls
+
 /**
  * Created by pjvanthof on 17/11/15.
  */

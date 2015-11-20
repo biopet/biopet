@@ -17,17 +17,18 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.queue.QSettings
+import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** Base for biopet pipeline */
-trait BiopetQScript extends Configurable with GatkLogging {
+trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
   @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
@@ -124,6 +125,25 @@ trait BiopetQScript extends Configurable with GatkLogging {
   def add(function: QFunction, isIntermediate: Boolean = false) {
     function.isIntermediate = isIntermediate
     add(function)
+  }
+
+  def add(subPipeline: QScript): Unit = {
+    subPipeline.qSettings = this.qSettings
+    subPipeline match {
+      case that: SummaryQScript =>
+        that.init()
+        that.biopetScript()
+        that.addSummaryJobs()
+        this match {
+          case s: SummaryQScript => s.addSummaryQScript(that)
+          case _ =>
+        }
+      case that:BiopetQScript =>
+        that.init()
+        that.biopetScript()
+      case _ => subPipeline.script
+    }
+    addAll(subPipeline.functions)
   }
 }
 
