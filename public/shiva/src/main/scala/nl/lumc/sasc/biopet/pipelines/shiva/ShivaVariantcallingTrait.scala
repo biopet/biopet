@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
+import nl.lumc.sasc.biopet.extensions.vt.VtNormalize
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers._
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
@@ -86,9 +87,15 @@ trait ShivaVariantcallingTrait extends SummaryQScript
     for (caller <- callers) {
       caller.inputBams = inputBams
       add(caller)
-      cv.addInput(caller.outputFile, caller.name)
-
       addStats(caller.outputFile, caller.name)
+      val normalize: Boolean = config("execute_vt_normalize", default = false)
+      if (normalize) {
+        val vt = new VtNormalize(this)
+        vt.inputVcf = caller.outputFile
+        vt.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
+        add(vt)
+        cv.addInput(vt.outputVcf, caller.name)
+      } else cv.addInput(caller.outputFile, caller.name)
     }
     add(cv)
 
