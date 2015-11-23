@@ -19,7 +19,7 @@ import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bammetrics.{TargetRegions, BamMetrics}
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.Logging
@@ -32,7 +32,7 @@ import scala.collection.JavaConversions._
  *
  * Created by pjvan_thof on 2/26/15.
  */
-trait ShivaTrait extends MultiSampleQScript with Reference { qscript: QScript =>
+trait ShivaTrait extends MultiSampleQScript with Reference with TargetRegions { qscript: QScript =>
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -355,11 +355,13 @@ trait ShivaTrait extends MultiSampleQScript with Reference { qscript: QScript =>
 
   /** Settings of pipeline for summary */
   def summarySettings = Map(
-      "reference" -> referenceSummary,
-      "annotation" -> annotation.isDefined,
-      "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
-      "sv_calling" -> svCalling.isDefined
-    )
+    "reference" -> referenceSummary,
+    "annotation" -> annotation.isDefined,
+    "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
+    "sv_calling" -> svCalling.isDefined,
+    "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
+    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+  )
 
   /** Files for the summary */
   def summaryFiles = Map("referenceFasta" -> referenceFasta())

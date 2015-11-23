@@ -107,14 +107,16 @@ object ShivaReport extends MultisampleReportBuilder {
     }
 
     if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
-      List(),
-      regionPages.map(p => p._1 -> ReportSection(
-        "/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp",
-        Map("target" -> p._1.stripSuffix(" (Amplicon)"))
+      regionPages.map(p => p._1 -> ReportPage(Nil,
+        List(
+          "Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
+          "Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")
+        ),
+        Map("target" -> Some(p._1.stripSuffix(" (Amplicon)")))
       )).toList.sortBy(_._1),
+      List(),
       Map())
-    )
-    else None
+    ) else None
   }
 
   /** Files page, can be used general or at sample level */
@@ -178,7 +180,9 @@ object ShivaReport extends MultisampleReportBuilder {
                          prefix: String,
                          summary: Summary,
                          libraryLevel: Boolean = false,
-                         sampleId: Option[String] = None): Unit = {
+                         sampleId: Option[String] = None,
+                         caller: String = "final",
+                         target: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -186,14 +190,14 @@ object ShivaReport extends MultisampleReportBuilder {
     tsvWriter.println("\tHomVar\tHet\tHomRef\tNoCall")
 
     def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
-      val homVar = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "HomVar"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val homRef = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "HomRef"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val noCall = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "NoCall"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val het = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "Het"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val path = target match {
+        case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype")
+        case _ => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "genotype")
+      }
+      val homVar = new SummaryValue(path :+ "HomVar", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val homRef = new SummaryValue(path :+ "HomRef", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val noCall = new SummaryValue(path :+ "NoCall", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val het = new SummaryValue(path :+ "Het", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
       val sb = new StringBuffer()
       if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
       sb.append(homVar + "\t")

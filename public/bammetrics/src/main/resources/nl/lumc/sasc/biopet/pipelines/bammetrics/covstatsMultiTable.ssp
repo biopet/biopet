@@ -10,7 +10,7 @@
 <%@ var rootPath: String %>
 <%@ var outputDir: File %>
 <%@ var metricsTag: String = "bammetrics" %>
-<%@ var target: String %>
+<%@ var target: Option[String] %>
 #{
     val samples = sampleId match {
         case Some(sample) => List(sample.toString)
@@ -46,7 +46,7 @@
             #if (libs.head != libId) <tr> #end
                 #if (!sampleLevel) <td><a href="${rootPath}Samples/${sample}/Libraries/${libId}/index.html">${libId}</a></td> #end
                 #{
-                    val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List(metricsTag, "stats", target + "_cov_stats", "coverage", "_all")
+                    val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List(metricsTag, "stats", target.get + "_cov_stats", "coverage", "_all")
                     val total = summary.getValue((prefixPath ::: List("biopet_flagstat", "All")):_*).getOrElse(0L).asInstanceOf[Long]
                     val mapped = summary.getValue((prefixPath ::: List("biopet_flagstat", "Mapped")):_*).getOrElse(0L).asInstanceOf[Long]
                     val duplicates = summary.getValue((prefixPath ::: List("biopet_flagstat", "Duplicates")):_*).getOrElse(0L).asInstanceOf[Long]
