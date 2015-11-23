@@ -86,6 +86,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
     cv.rodPriorityList = callers.map(_.name).mkString(",")
     for (caller <- callers) {
       caller.inputBams = inputBams
+      caller.namePrefix = namePrefix
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean = config("execute_vt_normalize", default = false, submodule = caller.configName)
