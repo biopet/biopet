@@ -98,6 +98,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
 
       if (normalize && decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
+        vtNormalize.isIntermediate = true
         add(vtNormalize)
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
