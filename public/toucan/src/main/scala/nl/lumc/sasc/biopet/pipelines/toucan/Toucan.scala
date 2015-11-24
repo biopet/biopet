@@ -85,6 +85,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         outputFile = vcfWithVcf.output
       case _ =>
     }
+
+    addSummaryJobs()
   }
 
   def summaryFile = new File(outputDir, "Toucan.summary.json")
