@@ -23,9 +23,6 @@ trait Variantcaller extends QScript with BiopetQScript with Reference {
   /** Prio from the config */
   lazy val prio: Int = config("prio_" + name, default = defaultPrio)
 
-  /** This should add the variantcaller jobs */
-  def script
-
   /** Final output file of this mode */
   def outputFile: File = new File(outputDir, namePrefix + s".$name.vcf.gz")
 }
