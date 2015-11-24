@@ -7,12 +7,12 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
-import nl.lumc.sasc.biopet.tools.{ MergeAlleles, MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeAlleles, MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -153,11 +153,11 @@ class GatkVariantcalling(val root: Configurable) extends QScript with BiopetQScr
           scriptOutput.rawVcfFile = m2v.output
 
           val vcfFilter = new VcfFilter(this) {
-            override def defaults = ConfigUtils.mergeMaps(Map("min_sample_depth" -> 8,
+            override def defaults = Map("min_sample_depth" -> 8,
               "min_alternate_depth" -> 2,
               "min_samples_pass" -> 1,
               "filter_ref_calls" -> true
-            ), super.defaults)
+            )
           }
           vcfFilter.inputVcf = m2v.output
           vcfFilter.outputVcf = swapExt(outputDir, m2v.output, ".vcf", ".filter.vcf.gz")

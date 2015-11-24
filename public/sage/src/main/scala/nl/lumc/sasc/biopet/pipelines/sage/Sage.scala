@@ -15,15 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.sage
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.scripts.SquishBed
-import nl.lumc.sasc.biopet.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
+import nl.lumc.sasc.biopet.extensions.tools.SquishBed
+import nl.lumc.sasc.biopet.extensions.tools.{ BedtoolsCoverageToCounts, PrefixFastq, SageCountFastq, SageCreateLibrary, SageCreateTagCounts }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -36,21 +36,22 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   var transcriptome: Option[File] = config("transcriptome")
   var tagsLibrary: Option[File] = config("tags_library")
 
-  override def defaults = ConfigUtils.mergeMaps(Map("bowtie" -> Map(
-    "m" -> 1,
-    "k" -> 1,
-    "best" -> true,
-    "strata" -> true,
-    "seedmms" -> 1
-  ), "mapping" -> Map(
-    "aligner" -> "bowtie",
-    "skip_flexiprep" -> true,
-    "skip_markduplicates" -> true
-  ), "flexiprep" -> Map(
-    "skip_clip" -> true,
-    "skip_trim" -> true
+  override def defaults = Map(
+    "bowtie" -> Map(
+      "m" -> 1,
+      "k" -> 1,
+      "best" -> true,
+      "strata" -> true,
+      "seedmms" -> 1
+    ), "mapping" -> Map(
+      "aligner" -> "bowtie",
+      "skip_flexiprep" -> true,
+      "skip_markduplicates" -> true
+    ), "flexiprep" -> Map(
+      "skip_clip" -> true,
+      "skip_trim" -> true
+    ), "strandSensitive" -> true
   )
-  ), super.defaults)
 
   def summaryFile: File = new File(outputDir, "Sage.summary.json")
 
@@ -88,6 +89,8 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
       mapping.sampleId = Some(sampleId)
 
       protected def addJobs(): Unit = {
+        inputFiles :+= new InputFile(inputFastq, config("R1_md5"))
+
         flexiprep.outputDir = new File(libDir, "flexiprep/")
         flexiprep.input_R1 = inputFastq
         flexiprep.init()
@@ -146,7 +149,9 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def biopetScript() {
-    val squishBed = SquishBed(this, countBed.get, outputDir)
+    val squishBed = new SquishBed(this)
+    squishBed.input = countBed.get
+    squishBed.output = new File(outputDir, countBed.get.getName.stripSuffix(".bed") + ".squish.bed")
     add(squishBed)
     squishedCountBed = squishBed.output
 
@@ -168,19 +173,22 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
   }
 
   def addBedtoolsCounts(bamFile: File, outputPrefix: String, outputDir: File) {
-    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.sense.coverage"),
+    val bedtoolsSense = BedtoolsCoverage(this, bamFile, squishedCountBed,
+      output = Some(new File(outputDir, outputPrefix + ".genome.sense.coverage")),
       depth = false, sameStrand = true, diffStrand = false)
     val countSense = new BedtoolsCoverageToCounts(this)
     countSense.input = bedtoolsSense.output
     countSense.output = new File(outputDir, outputPrefix + ".genome.sense.counts")
 
-    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.antisense.coverage"),
+    val bedtoolsAntisense = BedtoolsCoverage(this, bamFile, squishedCountBed,
+      output = Some(new File(outputDir, outputPrefix + ".genome.antisense.coverage")),
       depth = false, sameStrand = false, diffStrand = true)
     val countAntisense = new BedtoolsCoverageToCounts(this)
     countAntisense.input = bedtoolsAntisense.output
     countAntisense.output = new File(outputDir, outputPrefix + ".genome.antisense.counts")
 
-    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed, new File(outputDir, outputPrefix + ".genome.coverage"),
+    val bedtools = BedtoolsCoverage(this, bamFile, squishedCountBed,
+      output = Some(new File(outputDir, outputPrefix + ".genome.coverage")),
       depth = false, sameStrand = false, diffStrand = false)
     val count = new BedtoolsCoverageToCounts(this)
     count.input = bedtools.output

@@ -1,0 +1,31 @@
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(nl.lumc.sasc.biopet.core.report.ReportPage)
+<%@ var summary: Summary %>
+<%@ var rootPath: String %>
+<%@ var pipeline: String %>
+
+#{
+    val contigs = summary.getValue(pipeline, "settings", "reference", "contigs").get.asInstanceOf[Map[String, Map[String, Any]]]
+}#
+
+<table class="table">
+    <tbody>
+        <tr><th>Species</th><td>${summary.getValue(pipeline, "settings", "reference", "species")}</td></tr>
+        <tr><th>Name</th><td>${summary.getValue(pipeline, "settings", "reference", "name")}</td></tr>
+        <tr><th>File</th><td>${summary.getValue(pipeline, "files", "pipeline", "referenceFasta", "path")}</td></tr>
+        <tr><th>MD5</th><td>${summary.getValue(pipeline, "files", "pipeline", "referenceFasta", "md5")}</td></tr>
+    </tbody>
+</table>
+
+<br/>
+
+<table class="table sortable-theme-bootstrap" data-sortable>
+    <thead>
+        <tr><th>Contig Name</th><th data-sorted="true" data-sorted-direction="descending">Length</th><th>MD5</th></tr>
+    </thead>
+    <tbody>
+        #for (c <- contigs.toList.sortBy(_._2("length").asInstanceOf[Long]).reverse)
+            <tr><th>${c._1}</th><td>${c._2.get("length")}</td><td>${c._2.get("md5")}</td></tr>
+        #end
+    </tbody>
+</table>

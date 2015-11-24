@@ -8,11 +8,11 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
-import nl.lumc.sasc.biopet.tools.VcfStats
+import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -39,31 +39,27 @@ class ShivaTest extends TestNGSuite with Matchers {
     val bool = Array(true, false)
 
     for (
-      s1 <- bool; s2 <- bool; s3 <- bool; multi <- bool; single <- bool;
-      library <- bool; dbsnp <- bool; covariates <- bool; realign <- bool; baseRecalibration <- bool
-    ) yield Array("", s1, s2, s3, multi, single, library, dbsnp, covariates, realign, baseRecalibration)
+      s1 <- bool; s2 <- bool; multi <- bool;
+      dbsnp <- bool; realign <- bool; baseRecalibration <- bool
+    ) yield Array("", s1, s2, multi, dbsnp, realign, baseRecalibration)
   }
 
   @Test(dataProvider = "shivaOptions")
-  def testShiva(f: String, sample1: Boolean, sample2: Boolean, sample3: Boolean,
-                multi: Boolean, single: Boolean, library: Boolean, dbsnp: Boolean,
-                covariates: Boolean, realign: Boolean, baseRecalibration: Boolean): Unit = {
+  def testShiva(f: String, sample1: Boolean, sample2: Boolean,
+                multi: Boolean, dbsnp: Boolean,
+                realign: Boolean, baseRecalibration: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = ShivaTest.config
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
-      if (sample3) m = ConfigUtils.mergeMaps(ShivaTest.sample3, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m)
       ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
-        "single_sample_variantcalling" -> single,
-        "library_variantcalling" -> library,
-        "use_analyze_covariates" -> covariates,
         "use_indel_realigner" -> realign,
         "use_base_recalibration" -> baseRecalibration), m)
 
     }
 
-    if (!sample1 && !sample2 && !sample3) { // When no samples
+    if (!sample1 && !sample2) { // When no samples
       intercept[IllegalArgumentException] {
         initPipeline(map).script()
       }
@@ -71,28 +67,30 @@ class ShivaTest extends TestNGSuite with Matchers {
       val pipeline = initPipeline(map)
       pipeline.script()
 
-      val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 2 else 0)
-      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0) + (if (sample3) 1 else 0)
+      val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
+      val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
-      pipeline.functions.count(_.isInstanceOf[BwaMem]) shouldBe numberLibs
-      pipeline.functions.count(_.isInstanceOf[SortSam]) shouldBe numberLibs
-      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample3) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs + (if (sample2) 1 else 0))
 
       // Gatk preprocess
-      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs + (if (sample3) 1 else 0)) * (if (realign) 1 else 0)
-      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs + (if (sample3) 1 else 0)) * (if (realign) 1 else 0)
-      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0) * (if (covariates) 2 else 1)
-      pipeline.functions.count(_.isInstanceOf[AnalyzeCovariates]) shouldBe (if (dbsnp && covariates && baseRecalibration) numberLibs else 0)
+      pipeline.functions.count(_.isInstanceOf[IndelRealigner]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
+      pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0) +
-        (if (single) numberSamples * 2 else 0) + (if (library) numberLibs * 2 else 0)
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0)
     }
   }
 }
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): String = {
+    val file = new File(outputDir, "input" + File.separator + name)
+    Files.touch(file)
+    file.getAbsolutePath
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -107,8 +105,10 @@ object ShivaTest {
 
   val config = Map(
     "name_prefix" -> "test",
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "output_dir" -> outputDir,
-    "reference" -> (outputDir + File.separator + "ref.fa"),
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),
@@ -133,30 +133,21 @@ object ShivaTest {
   val sample1 = Map(
     "samples" -> Map("sample1" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "1_1_R1.fq",
-        "R2" -> "1_1_R2.fq"
+        "R1" -> inputTouch("1_1_R1.fq"),
+        "R2" -> inputTouch("1_1_R2.fq")
       )
     )
     )))
 
   val sample2 = Map(
-    "samples" -> Map("sample2" -> Map("libraries" -> Map(
-      "lib1" -> Map(
-        "R1" -> "2_1_R1.fq",
-        "R2" -> "2_1_R2.fq"
-      )
-    )
-    )))
-
-  val sample3 = Map(
     "samples" -> Map("sample3" -> Map("libraries" -> Map(
       "lib1" -> Map(
-        "R1" -> "3_1_R1.fq",
-        "R2" -> "3_1_R2.fq"
+        "R1" -> inputTouch("2_1_R1.fq"),
+        "R2" -> inputTouch("2_1_R2.fq")
       ),
       "lib2" -> Map(
-        "R1" -> "3_2_R1.fq",
-        "R2" -> "3_2_R2.fq"
+        "R1" -> inputTouch("2_2_R1.fq"),
+        "R2" -> inputTouch("2_2_R2.fq")
       )
     )
     )))

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  * Created by pjvanthof on 25/06/15.
  */
 class GentrapReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = GentrapReport
+  def builder = GentrapReport
 }
 
 object GentrapReport extends MultisampleReportBuilder {

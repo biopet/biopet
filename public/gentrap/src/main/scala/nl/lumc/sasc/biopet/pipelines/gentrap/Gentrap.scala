@@ -19,30 +19,30 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.config._
 import nl.lumc.sasc.biopet.core.summary._
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
 import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.tools.{ MergeTables, WipeReads }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.function.QFunction
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 import scala.language.reflectiveCalls
 import scalaz.Scalaz._
-import scalaz._
 
 /**
  * Gentrap pipeline
  * Generic transcriptome analysis pipeline
  *
+ * @author Peter van 't Hof <p.j.van_t_hof@lumc.nl>
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
 class Gentrap(val root: Configurable) extends QScript
@@ -62,13 +62,27 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Expression measurement modes */
   // see the enumeration below for valid modes
-  var expMeasures: Set[ExpMeasures.Value] = config("expression_measures")
-    .asStringList
-    .map { makeExpMeasure }
-    .toSet
+  var expMeasures: Set[ExpMeasures.Value] = {
+    if (config.contains("expression_measures"))
+      config("expression_measures")
+        .asStringList
+        .flatMap { makeExpMeasure }
+        .toSet
+    else {
+      Logging.addError("'expression_measures' is missing in the config")
+      Set()
+    }
+  }
 
   /** Strandedness modes */
-  var strandProtocol: StrandProtocol.Value = makeStrandProtocol(config("strand_protocol").asString)
+  var strandProtocol: StrandProtocol.Value = {
+    if (config.contains("strand_protocol"))
+      makeStrandProtocol(config("strand_protocol").asString).getOrElse(StrandProtocol.NonSpecific)
+    else {
+      Logging.addError("'strand_protocol' is missing in the config")
+      StrandProtocol.NonSpecific
+    }
+  }
 
   /** GTF reference file */
   var annotationGtf: Option[File] = config("annotation_gtf")
@@ -100,24 +114,23 @@ class Gentrap(val root: Configurable) extends QScript
     })
 
   /** Default pipeline config */
-  override def defaults = ConfigUtils.mergeMaps(
-    Map(
-      "gsnap" -> Map(
-        "novelsplicing" -> 1,
-        "batch" -> 4,
-        "format" -> "sam"
-      ),
-      "cutadapt" -> Map("minimum_length" -> 20),
-      // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
-      "picard" -> Map(
-        "programrecordid" -> "null"
-      ),
-      // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
-      "mapping" -> Map(
-        "skip_markduplicates" -> true,
-        "skip_metrics" -> true
-      )
-    ), super.defaults)
+  override def defaults = Map(
+    "gsnap" -> Map(
+      "novelsplicing" -> 1,
+      "batch" -> 4,
+      "format" -> "sam"
+    ),
+    "cutadapt" -> Map("minimum_length" -> 20),
+    // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
+    "picard" -> Map(
+      "programrecordid" -> "null"
+    ),
+    // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
+    "mapping" -> Map(
+      "skip_markduplicates" -> true,
+      "skip_metrics" -> true
+    )
+  )
 
   /** Adds output merge jobs for the given expression mode */
   // TODO: can we combine the enum with the file extension (to reduce duplication and potential errors)
@@ -330,24 +343,29 @@ class Gentrap(val root: Configurable) extends QScript
   def init(): Unit = {
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
-    if (expMeasures.contains(FragmentsPerGene))
-      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per gene")
+    if (expMeasures.contains(FragmentsPerGene) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for counting fragments per gene, config key: 'annotation_gtf'")
 
-    if (expMeasures.contains(FragmentsPerExon))
-      // TODO: validate that GTF file contains exon features
-      require(annotationGtf.isDefined, "GTF file must be defined for counting fragments per exon")
+    if (expMeasures.contains(FragmentsPerExon) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for counting fragments per exon, config key: 'annotation_gtf'")
+    // TODO: validate that GTF file contains exon features
 
-    if (expMeasures.contains(BasesPerGene))
-      require(annotationBed.isDefined, "BED file must be defined for counting bases per gene")
+    if (expMeasures.contains(BasesPerGene) && annotationBed.isEmpty)
+      Logging.addError("BED file must be defined for counting bases per gene, config key: 'annotation_bed'")
 
-    if (expMeasures.contains(BasesPerExon))
-      require(annotationBed.isDefined, "BED file must be defined for counting bases per exon")
+    if (expMeasures.contains(BasesPerExon) && annotationBed.isEmpty)
+      Logging.addError("BED file must be defined for counting bases per exon, config key: 'annotation_bed'")
 
-    if (expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict))
-      require(annotationGtf.isDefined, "GTF file must be defined for Cufflinks-based modes")
+    if ((expMeasures.contains(CufflinksBlind) || expMeasures.contains(CufflinksGuided) || expMeasures.contains(CufflinksStrict)) && annotationGtf.isEmpty)
+      Logging.addError("GTF file must be defined for Cufflinks-based modes, config key: 'annotation_gtf'")
 
-    if (removeRibosomalReads)
-      require(ribosomalRefFlat.isDefined, "rRNA intervals must be supplied if removeRibosomalReads is set")
+    if (removeRibosomalReads && ribosomalRefFlat.isEmpty)
+      Logging.addError("rRNA intervals must be supplied if removeRibosomalReads is set, config key: 'ribosome_refflat'")
+
+    annotationGtf.foreach(inputFiles :+= new InputFile(_))
+    annotationBed.foreach(inputFiles :+= new InputFile(_))
+    ribosomalRefFlat.foreach(inputFiles :+= new InputFile(_))
+    if (annotationRefFlat.getName.nonEmpty) inputFiles :+= new InputFile(annotationRefFlat)
   }
 
   /** Pipeline run for each sample */
@@ -383,9 +401,6 @@ class Gentrap(val root: Configurable) extends QScript
 
     /** Shortcut to qscript object */
     protected def pipeline: Gentrap = qscript
-
-    /** Sample output directory */
-    override def sampleDir: File = new File(outputDir, "sample_" + sampleId)
 
     /** Summary stats of the sample */
     def summaryStats: Map[String, Any] = Map(
@@ -495,7 +510,7 @@ class Gentrap(val root: Configurable) extends QScript
       .option {
         require(idSortingJob.nonEmpty)
         val job = new HtseqCount(qscript)
-        job.inputAnnotation = annotationGtf.get
+        annotationGtf.foreach(job.inputAnnotation = _)
         job.inputAlignment = idSortingJob.get.output
         job.output = createFile(".fragments_per_gene")
         job.format = Option("bam")
@@ -552,7 +567,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x40")
+            job.f = List("0x80")
             job.F = List("0x10")
             job.output = createFile(".r2.bam")
             job.isIntermediate = true
@@ -594,7 +609,7 @@ class Gentrap(val root: Configurable) extends QScript
             job.input = alnFile
             job.b = true
             job.h = true
-            job.f = List("0x80")
+            job.f = List("0x40")
             job.F = List("0x10")
             job.output = createFile(".r1.bam")
             job.isIntermediate = true
@@ -630,7 +645,7 @@ class Gentrap(val root: Configurable) extends QScript
           .option {
             val job = new RawBaseCounter(qscript)
             job.inputBoth = alnFile
-            job.annotationBed = annotationBed.get
+            annotationBed.foreach(job.annotationBed = _)
             job.output = createFile(".raw_base_count")
             job
           }
@@ -641,7 +656,7 @@ class Gentrap(val root: Configurable) extends QScript
             val job = new RawBaseCounter(qscript)
             job.inputPlus = alnFilePlusStrand.get
             job.inputMinus = alnFileMinusStrand.get
-            job.annotationBed = annotationBed.get
+            annotationBed.foreach(job.annotationBed = _)
             job.output = createFile(".raw_base_count")
             job
           }
@@ -698,10 +713,10 @@ class Gentrap(val root: Configurable) extends QScript
     /** Job for removing ribosomal reads */
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
-        require(ribosomalRefFlat.isDefined)
+        //require(ribosomalRefFlat.isDefined)
         val job = new WipeReads(qscript)
         job.inputBam = alnFileDirty
-        job.intervalFile = ribosomalRefFlat.get
+        ribosomalRefFlat.foreach(job.intervalFile = _)
         job.outputBam = createFile(".cleaned.bam")
         job.discardedBam = createFile(".rrna.bam")
         job
@@ -844,6 +859,8 @@ class Gentrap(val root: Configurable) extends QScript
       def addJobs(): Unit = {
         // create per-library alignment file
         addAll(mappingJob.functions)
+        // Input file checking
+        inputFiles :::= mappingJob.inputFiles
         // add bigwig track
         addAll(bam2wigModule.functions)
         qscript.addSummaryQScript(mappingJob)
@@ -880,22 +897,26 @@ object Gentrap extends PipelineCommand {
     .mkString("")
 
   /** Conversion from raw user-supplied expression measure string to enum value */
-  private def makeExpMeasure(rawName: String): ExpMeasures.Value = {
+  private def makeExpMeasure(rawName: String): Option[ExpMeasures.Value] = {
     try {
-      ExpMeasures.withName(camelize(rawName))
+      Some(ExpMeasures.withName(camelize(rawName)))
     } catch {
-      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid expression measure: " + rawName)
-      case e: Exception                => throw e
+      case nse: NoSuchElementException =>
+        Logging.addError(s"Invalid expression measure: $rawName")
+        None
+      case e: Exception => throw e
     }
   }
 
   /** Conversion from raw user-supplied expression measure string to enum value */
-  private def makeStrandProtocol(rawName: String): StrandProtocol.Value = {
+  private def makeStrandProtocol(rawName: String): Option[StrandProtocol.Value] = {
     try {
-      StrandProtocol.withName(camelize(rawName))
+      Some(StrandProtocol.withName(camelize(rawName)))
     } catch {
-      case nse: NoSuchElementException => throw new IllegalArgumentException("Invalid strand protocol: " + rawName)
-      case e: Exception                => throw e
+      case nse: NoSuchElementException =>
+        Logging.addError(s"Invalid strand protocol: $rawName")
+        None
+      case e: Exception => throw e
     }
   }
 }

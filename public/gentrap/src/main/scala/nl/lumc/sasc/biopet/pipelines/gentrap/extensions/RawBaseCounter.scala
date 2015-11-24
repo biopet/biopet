@@ -18,8 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
-import nl.lumc.sasc.biopet.extensions.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.language.reflectiveCalls
@@ -82,7 +83,7 @@ class RawBaseCounter(val root: Configurable) extends BiopetCommandLineFunction {
   }
 
   override def beforeGraph(): Unit = {
-    require(annotationBed != null, "Annotation BED must be supplied")
+    if (annotationBed == null) Logging.addError("Annotation BED must be supplied")
     require(output != null, "Output must be defined")
     require((mixedStrand && !distinctStrand) || (!mixedStrand && distinctStrand),
       "Invalid input BAM combinations for RawBaseCounter")

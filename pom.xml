@@ -9,12 +9,14 @@
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>Biopet</artifactId>
-        <version>0.4.0</version>
+        <version>0.5.0</version>
         <relativePath>public</relativePath>
     </parent>
     
     <modules>
         <module>public</module>
         <module>protected</module>
+        <module>external-example</module>
+        <!--<module>biopet-aggregate</module>-->
     </modules>
 </project>

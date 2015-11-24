@@ -7,7 +7,7 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 class BaseRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.BaseRecalibrator with GatkGeneral {
   if (config.contains("scattercount")) scatterCount = config("scattercount", default = 1)
@@ -20,7 +20,6 @@ object BaseRecalibrator {
     val br = new BaseRecalibrator(root)
     br.input_file :+= input
     br.out = output
-    br.beforeGraph()
     br
   }
 }

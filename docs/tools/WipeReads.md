@@ -8,8 +8,9 @@ to known ribosomal RNA regions (using a supplied BED file containing intervals f
 
 ## Example
 To open the help menu:
-~~~
-java -jar Biopet-0.2.0.jar tool WipeReads -h
+
+~~~ bash
+biopet tool WipeReads -h
 
 WipeReads - Region-based reads removal from an indexed BAM file
       
@@ -54,8 +55,9 @@ the given ones, they will also be removed.
 ~~~
 
 To run the tool:
-~~~
-java -jar Biopet-0.2.0.jar tool WipeReads --input_file myBam.bam \
+
+~~~ bash
+biopet tool WipeReads --input_file myBam.bam \
 --interval_file myRibosomal_regions.bed --output_file myFilteredBam.bam
 ~~~
 

@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
-import nl.lumc.sasc.biopet.tools.VepNormalizer
+import nl.lumc.sasc.biopet.extensions.tools.{ VcfWithVcf, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
 
@@ -27,19 +28,19 @@ import org.broadinstitute.gatk.queue.QScript
  *
  * Created by ahbbollen on 15-1-15.
  */
-class Toucan(val root: Configurable) extends QScript with BiopetQScript with Reference {
+class Toucan(val root: Configurable) extends QScript with BiopetQScript with SummaryQScript with Reference {
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
   var inputVCF: File = _
 
   def init(): Unit = {
-
+    inputFiles :+= new InputFile(inputVCF)
   }
 
-  override def defaults = ConfigUtils.mergeMaps(Map(
-    "varianteffectpredictor" -> Map("everything" -> true)
-  ), super.defaults)
+  override def defaults = Map(
+    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> 1, "allow_non_variant" -> true)
+  )
 
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
@@ -52,10 +53,47 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Ref
 
     val normalizer = new VepNormalizer(this)
     normalizer.inputVCF = vep.output
-    normalizer.outputVCF = swapExt(vep.output, ".vcf", ".normalized.vcf.gz")
+    normalizer.outputVcf = swapExt(outputDir, vep.output, ".vcf", ".normalized.vcf.gz")
     add(normalizer)
+
+    // Optional annotation steps, depend is some files existing in the config
+    val gonlVcfFile: Option[File] = config("gonl_vcf")
+    val exacVcfFile: Option[File] = config("exac_vcf")
+
+    var outputFile = normalizer.outputVcf
+
+    gonlVcfFile match {
+      case Some(gonlFile) =>
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = outputFile
+        vcfWithVcf.secondaryVcf = gonlFile
+        vcfWithVcf.output = swapExt(outputDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
+        vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
+        add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
+      case _ =>
+    }
+
+    exacVcfFile match {
+      case Some(exacFile) =>
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = outputFile
+        vcfWithVcf.secondaryVcf = exacFile
+        vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
+        vcfWithVcf.fields ::= ("AF", "AF_exac", None)
+        add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
+      case _ =>
+    }
+
+    addSummaryJobs()
   }
 
+  def summaryFile = new File(outputDir, "Toucan.summary.json")
+
+  def summaryFiles = Map()
+
+  def summarySettings = Map()
 }
 
 object Toucan extends PipelineCommand

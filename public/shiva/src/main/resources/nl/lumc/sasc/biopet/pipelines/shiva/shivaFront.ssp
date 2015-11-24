@@ -1,4 +1,4 @@
-#import(nl.lumc.sasc.biopet.core.summary.Summary)
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
 #import(nl.lumc.sasc.biopet.core.report.ReportPage)
 <%@ var summary: Summary %>
 <%@ var rootPath: String %>
@@ -11,10 +11,13 @@
     <tr><th>Output directory</th><td>${summary.getValue("meta", "output_dir")}</td></tr>
     <tr>
         <th>Variantcallers</th>
-        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").get.asInstanceOf[List[String]].mkString(", ")}</td>
+        <td>${summary.getValue("shivavariantcalling", "settings", "variantcallers").getOrElse(List("None")).asInstanceOf[List[String]].mkString(", ")}</td>
     </tr>
     <tr><th>Reference</th><td>${summary.getValue("shiva", "settings", "reference", "species")} - ${summary.getValue("shiva", "settings", "reference", "name")}</td></tr>
     <tr><th>Number of samples</th><td>${summary.samples.size}</td></tr>
+    <tr><th>Annotation</th><td>${summary.getValue("shiva", "settings", "annotation")}</td></tr>
+    <tr><th>Multisample variantcalling</th><td>${summary.getValue("shiva", "settings", "multisample_variantcalling")}</td></tr>
+    <tr><th>Sv calling</th><td>${summary.getValue("shiva", "settings", "sv_calling")}</td></tr>
 </tbody>
 </table>
 <br/>

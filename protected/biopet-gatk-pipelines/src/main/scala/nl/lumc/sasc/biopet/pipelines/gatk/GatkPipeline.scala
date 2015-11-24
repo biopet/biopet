@@ -7,7 +7,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CombineGVCFs, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, SamToFastq }

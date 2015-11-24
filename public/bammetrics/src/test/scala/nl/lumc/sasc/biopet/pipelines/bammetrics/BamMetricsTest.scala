@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.scripts.CoverageStats
-import nl.lumc.sasc.biopet.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -61,7 +61,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   }
 
   @Test(dataProvider = "bammetricsOptions")
-  def testFlexiprep(rois: Int, amplicon: Boolean, rna: Boolean) = {
+  def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir),
       Map(BamMetricsTest.executables.toSeq: _*)) ++
       (if (amplicon) Map("amplicon_bed" -> "amplicon.bed") else Map()) ++
@@ -69,7 +69,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
       Map("regions_of_interest" -> (1 to rois).map("roi_" + _ + ".bed").toList)
     val bammetrics: BamMetrics = initPipeline(map)
 
-    bammetrics.inputBam = new File("input.bam")
+    bammetrics.inputBam = BamMetricsTest.bam
     bammetrics.sampleId = Some("1")
     bammetrics.libId = Some("1")
     bammetrics.script()
@@ -81,12 +81,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
     bammetrics.functions.count(_.isInstanceOf[CollectMultipleMetrics]) shouldBe 1
     bammetrics.functions.count(_.isInstanceOf[CalculateHsMetrics]) shouldBe (if (amplicon) 1 else 0)
     bammetrics.functions.count(_.isInstanceOf[CollectTargetedPcrMetrics]) shouldBe (if (amplicon) 1 else 0)
-    bammetrics.functions.count(_.isInstanceOf[BiopetFlagstat]) shouldBe (1 + (regions * 2))
-    bammetrics.functions.count(_.isInstanceOf[SamtoolsFlagstat]) shouldBe (1 + (regions * 2))
-    bammetrics.functions.count(_.isInstanceOf[BedtoolsIntersect]) shouldBe (regions * 2)
-
-    bammetrics.functions.count(_.isInstanceOf[BedtoolsCoverage]) shouldBe regions
-    bammetrics.functions.count(_.isInstanceOf[CoverageStats]) shouldBe regions
+    bammetrics.functions.count(_.isInstanceOf[BiopetFlagstat]) shouldBe 1
   }
 
   // remove temporary run directory all tests in the class have been run
@@ -98,6 +93,10 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 
 object BamMetricsTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+
+  val bam = new File(outputDir, "input" + File.separator + "bla.bam")
+  Files.touch(bam)
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

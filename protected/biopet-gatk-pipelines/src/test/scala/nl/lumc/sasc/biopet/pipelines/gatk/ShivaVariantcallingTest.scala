@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.config.Config
+import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
-import nl.lumc.sasc.biopet.tools.{ MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -44,12 +44,13 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       bams <- 0 to 2;
       raw <- bool;
       bcftools <- bool;
+      bcftools_singlesample <- bool;
       haplotypeCallerGvcf <- bool;
       haplotypeCallerAllele <- bool;
       unifiedGenotyperAllele <- bool;
       unifiedGenotyper <- bool;
       haplotypeCaller <- bool
-    ) yield Array[Any](bams, raw, bcftools, unifiedGenotyper, haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele)
+    ) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper, haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele)
     ).toArray
   }
 
@@ -57,6 +58,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   def testShivaVariantcalling(bams: Int,
                               raw: Boolean,
                               bcftools: Boolean,
+                              bcftools_singlesample: Boolean,
                               unifiedGenotyper: Boolean,
                               haplotypeCaller: Boolean,
                               haplotypeCallerGvcf: Boolean,
@@ -65,6 +67,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
+    if (bcftools_singlesample) callers.append("bcftools_singlesample")
     if (unifiedGenotyper) callers.append("unifiedgenotyper")
     if (haplotypeCallerGvcf) callers.append("haplotypecaller_gvcf")
     if (haplotypeCallerAllele) callers.append("haplotypecaller_allele")
@@ -73,12 +76,13 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield new File("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
 
     val illegalArgumentException = pipeline.inputBams.isEmpty ||
       (!raw && !bcftools &&
         !haplotypeCaller && !unifiedGenotyper &&
-        !haplotypeCallerGvcf && !haplotypeCallerAllele && !unifiedGenotyperAllele)
+        !haplotypeCallerGvcf && !haplotypeCallerAllele && !unifiedGenotyperAllele &&
+        !bcftools_singlesample)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -90,7 +94,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe 1 + (if (raw) 1 else 0)
       //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
       //FIXME: Can not check for bcftools because of piping
-      pipeline.functions.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
+      //pipeline.functions.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[HaplotypeCaller]) shouldBe (if (haplotypeCaller) 1 else 0) +
         (if (haplotypeCallerAllele) 1 else 0) + (if (haplotypeCallerGvcf) bams else 0)
@@ -107,6 +111,12 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  new File(outputDir, "input").mkdirs()
+  def inputTouch(name: String): File = {
+    val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
+    Files.touch(file)
+    file
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -122,7 +132,9 @@ object ShivaVariantcallingTest {
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
-    "reference" -> (outputDir + File.separator + "ref.fa"),
+    "cache" -> true,
+    "dir" -> "test",
+    "vep_script" -> "test",
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "gatk_jar" -> "test",
     "samtools" -> Map("exe" -> "test"),

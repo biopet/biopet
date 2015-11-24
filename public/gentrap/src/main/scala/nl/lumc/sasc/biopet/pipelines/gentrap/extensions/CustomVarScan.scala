@@ -17,25 +17,23 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.config.Configurable
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.varscan.Mpileup2cns
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, PythonCommandLineFunction, Tabix }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /** Ad-hoc extension for VarScan variant calling that involves 6-command pipe */
 // FIXME: generalize piping instead of building something by hand like this!
 // Better to do everything quick and dirty here rather than something half-implemented with the objects
-class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { wrapper =>
+class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction with Reference { wrapper =>
 
   override def configName = "customvarscan"
 
   @Input(doc = "Input BAM file", required = true)
   var input: File = null
-
-  @Input(doc = "Reference FASTA file", required = true)
-  var reference: File = config("reference")
 
   @Output(doc = "Output VCF file", required = true)
   var output: File = null
@@ -48,9 +46,9 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
     this.input = List(wrapper.input)
     override def configName = wrapper.configName
     disableBaq = true
-    reference = config("reference")
     depth = Option(1000000)
     outputMappingQuality = true
+
   }
 
   private def fixMpileup = new PythonCommandLineFunction {
@@ -91,13 +89,14 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction { 
   }
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(output.toString.endsWith(".gz"), "Output must have a .gz file extension")
+    deps :+= referenceFasta()
   }
 
   def cmdLine: String = {
     // FIXME: manual trigger of commandLine for version retrieval
     mpileup.commandLine
-    mpileup.cmdPipe + " | " + fixMpileup.commandLine + " | " + removeEmptyPile().commandLine + " | " +
-      varscan.commandLine + " && " + compress.commandLine + " && " + index.commandLine
+    (mpileup | fixMpileup | removeEmptyPile() | varscan).commandLine + " && " + compress.commandLine + " && " + index.commandLine
   }
 }

@@ -22,22 +22,25 @@
     <parent>
         <artifactId>Biopet</artifactId>
         <groupId>nl.lumc.sasc</groupId>
-        <version>0.4.0</version>
+        <version>0.5.0</version>
+        <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <inceptionYear>2015</inceptionYear>
     <artifactId>Gears</artifactId>
+    <name>Gears</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetFramework</artifactId>
+            <artifactId>BiopetCore</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>Mapping</artifactId>
+            <artifactId>BiopetToolsExtensions</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

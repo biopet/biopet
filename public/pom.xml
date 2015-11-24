@@ -22,10 +22,10 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.4.0</version>
+    <version>0.5.0</version>
     
     <modules>
-        <module>biopet-framework</module>
+        <!--<module>biopet-framework</module>-->
         <module>biopet-public-package</module>
         <module>bammetrics</module>
         <module>flexiprep</module>
@@ -40,11 +40,18 @@
 	    <module>toucan</module>
         <module>shiva</module>
         <module>basty</module>
+        <module>biopet-core</module>
+        <module>biopet-utils</module>
+        <module>biopet-tools</module>
+        <module>biopet-tools-extensions</module>
+        <module>biopet-extensions</module>
+        <module>biopet-tools-package</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scoverage.plugin.version>1.0.4</scoverage.plugin.version>
+        <scoverage.plugin.version>1.1.1</scoverage.plugin.version>
+        <scalaVersion>2.10.4</scalaVersion>
     </properties>
     
     <build>
@@ -72,6 +79,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.18.1</version>
                 <configuration>
+                    <forkCount>1C</forkCount>
+                    <argLine>-Xmx300m</argLine>
                     <workingDirectory>${project.build.directory}</workingDirectory>
                 </configuration>
             </plugin>
@@ -153,6 +162,7 @@
                             <goal>format</goal>
                         </goals>
                         <configuration>
+                            <baseDir>${basedir}/src</baseDir>
                             <rewriteArrowSymbols>false</rewriteArrowSymbols>
                             <alignParameters>true</alignParameters>
                             <alignSingleLineCaseStatements_maxArrowIndent>40
@@ -235,10 +245,12 @@
               <artifactId>scoverage-maven-plugin</artifactId>
               <version>${scoverage.plugin.version}</version>
               <configuration>
-                  <scalaVersion>2.10.2</scalaVersion>
+                  <scalaVersion>${scalaVersion}</scalaVersion>
+                  <aggregate>true</aggregate>
+                  <highlighting>true</highlighting>
                   <!-- other parameters -->
               </configuration>
-            </plugin>
+          </plugin>
       </plugins>
     </build>
     <reporting>
@@ -247,6 +259,17 @@
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
                 <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <aggregate>true</aggregate> <!-- for aggregated report -->
+                    <highlighting>true</highlighting>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report> <!-- select only one report from: report, integration-report and report-only reporters -->
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
     </reporting>

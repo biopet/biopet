@@ -72,9 +72,9 @@ More information about clipping using cutadapt is available on the
                 Read 1 & ((( lib.flexiprep.stats.clipping_R1.num_reads_affected|nice_int )))
                 ((* for adapter, stat in lib.flexiprep.stats.clipping_R1.adapters.iteritems() *))
                 ((* if loop.first *))
-                    & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                    & ((( adapter ))) & ((( stat|nice_int )))\\
                 ((* else *))
-                    & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                    & & ((( adapter ))) & ((( stat|nice_int )))\\
                 ((* endif *))
                 ((* endfor *))
             ((* else *))
@@ -85,9 +85,9 @@ More information about clipping using cutadapt is available on the
                     Read 2 & ((( lib.flexiprep.stats.clipping_R2.num_reads_affected|nice_int )))
                     ((* for adapter, stat in lib.flexiprep.stats.clipping_R2.adapters.iteritems() *))
                     ((* if loop.first *))
-                        & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                        & ((( adapter ))) & ((( stat|nice_int )))\\
                     ((* else *))
-                        & & ((( adapter ))) & ((( stat[1]|nice_int )))\\
+                        & & ((( adapter ))) & ((( stat|nice_int )))\\
                     ((* endif *))
                     ((* endfor *))
                 ((* else *))
@@ -99,26 +99,6 @@ More information about clipping using cutadapt is available on the
 \end{center}
 \addtocounter{table}{-1}
 
-((* if lib.is_paired_end *))
-After clipping, all read pairs are then checked ('synced') for their
-completeness. Read pairs whose other half has been discarded during
-clipping, will also be discarded. The summary of this step is available in
-Table~\ref{tab:clipsync}.
-
-\begin{center}
-    \captionof{table}{Summary of Post-Clipping Sync Step}
-    \label{tab:clipsync}
-    \begin{tabular}{ l  r }
-        \hline
-        Parameter & Count\\ \hline \hline
-        Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.fastq_sync.num_reads_discarded_R1|nice_int )))\\
-        Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.fastq_sync.num_reads_discarded_R2|nice_int )))\\
-        \hline
-        Total kept FASTQ records & ((( lib.flexiprep.stats.fastq_sync.num_reads_kept|nice_int )))\\
-        \hline
-    \end{tabular}
-\end{center}
-((* endif *))
 ((* endif *))
 
 \vspace{2mm}
@@ -141,12 +121,8 @@ Table~\ref{tab:clipsync}.
         \begin{tabular}{ l  r }
             \hline
             Parameter & Count\\ \hline \hline
-            Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R1|nice_int )))\\
-            Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.trimming.num_reads_discarded_R2|nice_int )))\\
-            \hline
-            Discarded FASTQ records from both reads & ((( lib.flexiprep.stats.trimming.num_reads_discarded_both|nice_int )))\\
-            \hline
-            Total kept FASTQ reads & ((( lib.flexiprep.stats.trimming.num_reads_kept|nice_int )))\\
+            Discarded FASTQ records from read 1 & ((( lib.flexiprep.stats.trimming_R1.num_reads_discarded_total|nice_int )))\\
+            Discarded FASTQ records from read 2 & ((( lib.flexiprep.stats.trimming_R2.num_reads_discarded_total|nice_int )))\\
             \hline
         \end{tabular}
     \end{center}
