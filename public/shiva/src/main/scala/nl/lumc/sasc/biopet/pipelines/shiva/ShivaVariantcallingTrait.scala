@@ -87,6 +87,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
     for (caller <- callers) {
       caller.inputBams = inputBams
       caller.namePrefix = namePrefix
+      caller.outputDir = new File(outputDir, caller.name)
       add(caller)
       addStats(caller.outputFile, caller.name)
       val normalize: Boolean = config("execute_vt_normalize", default = false, submodule = caller.configName)

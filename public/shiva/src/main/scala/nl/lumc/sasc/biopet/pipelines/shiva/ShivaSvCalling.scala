@@ -57,7 +57,10 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
-    callers.foreach(add)
+    callers.foreach { caller =>
+      caller.outputDir = new File(outputDir, caller.name)
+      add(caller)
+    }
 
     addSummaryJobs()
   }
