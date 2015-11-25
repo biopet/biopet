@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.breakdancer.{BreakdancerVCF, BreakdancerCaller, BreakdancerConfig}
+import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerVCF, BreakdancerCaller, BreakdancerConfig }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Breakdancer */

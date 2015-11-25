@@ -116,7 +116,8 @@ object ShivaReport extends MultisampleReportBuilder {
       )).toList.sortBy(_._1),
       List(),
       Map())
-    ) else None
+    )
+    else None
   }
 
   /** Files page, can be used general or at sample level */
@@ -192,7 +193,7 @@ object ShivaReport extends MultisampleReportBuilder {
     def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
       val path = target match {
         case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype")
-        case _ => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "genotype")
+        case _       => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "genotype")
       }
       val homVar = new SummaryValue(path :+ "HomVar", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
       val homRef = new SummaryValue(path :+ "HomRef", summary, Some(sample), lib).value.getOrElse(0).toString.toLong

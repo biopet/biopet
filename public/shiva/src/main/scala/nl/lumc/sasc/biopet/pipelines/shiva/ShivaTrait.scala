@@ -19,7 +19,7 @@ import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, SamToFastq }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.{TargetRegions, BamMetrics}
+import nl.lumc.sasc.biopet.pipelines.bammetrics.{ TargetRegions, BamMetrics }
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.Logging

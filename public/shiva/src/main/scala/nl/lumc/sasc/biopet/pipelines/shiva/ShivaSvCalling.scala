@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{Delly, Breakdancer, Clever, SvCaller}
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Delly, Breakdancer, Clever, SvCaller }
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
