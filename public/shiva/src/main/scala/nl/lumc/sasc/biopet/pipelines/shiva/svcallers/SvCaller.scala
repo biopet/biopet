@@ -17,9 +17,3 @@ trait SvCaller extends QScript with BiopetQScript with Reference {
 
   def init() = {}
 }
-
-
-
-
-
-
