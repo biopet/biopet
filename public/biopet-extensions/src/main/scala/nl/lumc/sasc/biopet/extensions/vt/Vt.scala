@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.vt
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
 /**
- * General bwa extension
+ * General vt extension
  *
  * Created by pjvan_thof on 1/16/15.
  */
