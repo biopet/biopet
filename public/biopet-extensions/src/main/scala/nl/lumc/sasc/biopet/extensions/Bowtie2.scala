@@ -33,7 +33,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var bowtieIndex: String = config("bowtie_index")
 
   /* Input options */
-  var q: Boolean = config("q", default = true)
+  var q: Boolean = config("q", default = false)
   var qseq: Boolean = config("qseq", default = false)
   var f: Boolean = config("f", default = false)
   var r: Boolean = config("r", default = false)
@@ -106,7 +106,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var un_conc_bz2: Option[String] = config("un_conc_bz2")
   var al_conc_bz2: Option[String] = config("al_conc_bz2")
 
-  var quiet: Boolean = config("quiet", default = true)
+  var quiet: Boolean = config("quiet", default = false)
   var met_file: Option[String] = config("met_file")
   var met_stderr: Boolean = config("met_stderr", default = false)
   var met: Option[Int] = config("met")
@@ -122,7 +122,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
 
   /* Performance */
   var reorder: Boolean = config("reorder", default = false)
-  var mm: Boolean = config("mm", default = true)
+  var mm: Boolean = config("mm", default = false)
 
   /* Other */
   var qc_filter: Boolean = config("qc_filter", default = false)
@@ -150,7 +150,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     optional("--n-ceil", n_ceil) +
     optional("--dpad", dpad) +
     optional("--gbar", gbar) +
-    optional("--ignore-quals", ignore_quals) +
+    conditional(ignore_quals, "--ignore-quals") +
     conditional(nofw, "--nofw") +
     conditional(norc, "--norc") +
     conditional(no_1mm_upfront, "--no-1mm-upfront") +
@@ -206,8 +206,8 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     conditional(omit_sec_seq, "--omit-sec-seq") +
     /* Performance */
     optional("--threads", threads) +
-    optional("--reorder", reorder) +
-    optional("--mm", mm) +
+    conditional(reorder, "--reorder") +
+    conditional(mm, "--mm") +
     /* Other */
     conditional(qc_filter, "--qc-filter") +
     optional("--seed", seed) +
