@@ -10,8 +10,6 @@ import org.broadinstitute.gatk.engine.phonehome.GATKRunReport
 import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
 trait GatkGeneral extends CommandLineGATK with CommandLineResources with Reference with Version {
-  memoryLimit = Option(3)
-
   var executable: String = config("java", default = "java", submodule = "java", freeVar = false)
 
   override def subPath = "gatk" :: super.subPath

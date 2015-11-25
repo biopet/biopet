@@ -17,24 +17,32 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CatVariants(val root: Configurable) extends Gatk {
-  val analysisType = "CatVariants"
+class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
 
-  @Input(doc = "", required = true)
+  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getClass.getName
+
+  @Input(required = true)
   var inputFiles: List[File] = Nil
 
-  @Output(doc = "", required = true)
+  @Output(required = true)
   var outputFile: File = null
 
-  override def cmdLine = super.cmdLine +
-    (for (file <- inputFiles) yield {
-      required("-V", file)
-    }).mkString +
-    required("-o", outputFile)
+  @Input
+  var reference: File = null
 
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
+  }
+
+  override def cmdLine = super.cmdLine +
+    repeat("-V", inputFiles) +
+    required("-out", outputFile) +
+    required("-R", reference)
 }
 
 object CatVariants {

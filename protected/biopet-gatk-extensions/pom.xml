@@ -25,7 +25,7 @@
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetCore</artifactId>
+            <artifactId>BiopetExtensions</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
