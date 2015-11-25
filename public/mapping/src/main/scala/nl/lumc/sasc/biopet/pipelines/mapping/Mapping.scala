@@ -219,7 +219,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
         case "bowtie"     => addBowtie(R1, R2, outputBam)
-        case "bowtie2"     => addBowtie2(R1, R2, outputBam)
+        case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)

@@ -2,15 +2,15 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
-  * Extension for bowtie 2
-  *
-  * Based on version 2.2.6
-  */
+ * Extension for bowtie 2
+ *
+ * Based on version 2.2.6
+ */
 class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "Fastq file R1", shortName = "R1")
   var R1: File = null
@@ -33,18 +33,18 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var bowtieIndex: String = config("bowtie_index")
 
   /* Input options */
-  var q: Boolean = config("q", default=true)
-  var qseq: Boolean = config("qseq", default=false)
-  var f: Boolean = config("f", default=false)
-  var r: Boolean = config("r", default=false)
-  var c: Boolean = config("c", default=false)
+  var q: Boolean = config("q", default = true)
+  var qseq: Boolean = config("qseq", default = false)
+  var f: Boolean = config("f", default = false)
+  var r: Boolean = config("r", default = false)
+  var c: Boolean = config("c", default = false)
   var skip: Option[Int] = config("skip")
   var upto: Option[Int] = config("upto")
   var trim5: Option[Int] = config("trim5")
   var trim3: Option[Int] = config("trim3")
-  var phred33: Boolean = config("phred33", default=false)
-  var phred64: Boolean = config("phred64", default=false)
-  var int_quals: Boolean = config("int_quals", default=false)
+  var phred33: Boolean = config("phred33", default = false)
+  var phred64: Boolean = config("phred64", default = false)
+  var int_quals: Boolean = config("int_quals", default = false)
 
   /* Alignment options */
   var N: Option[Int] = config("N")
@@ -53,12 +53,12 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var n_ceil: Option[String] = config("n_ceil")
   var dpad: Option[Int] = config("dpad")
   var gbar: Option[Int] = config("gbar")
-  var ignore_quals: Boolean = config("ignore_quals", default=false)
-  var nofw: Boolean = config("nofw", default=false)
-  var norc: Boolean = config("norc", default=false)
-  var no_1mm_upfront: Boolean = config("no_1mm_upfront", default=false)
-  var end_to_end: Boolean = config("end_to_end", default=false)
-  var local: Boolean = config("local", default=false)
+  var ignore_quals: Boolean = config("ignore_quals", default = false)
+  var nofw: Boolean = config("nofw", default = false)
+  var norc: Boolean = config("norc", default = false)
+  var no_1mm_upfront: Boolean = config("no_1mm_upfront", default = false)
+  var end_to_end: Boolean = config("end_to_end", default = false)
+  var local: Boolean = config("local", default = false)
 
   /* Scoring */
   var ma: Option[Int] = config("ma")
@@ -79,17 +79,17 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   /* Paired-end */
   var minins: Option[Int] = config("minins")
   var maxins: Option[Int] = config("maxins")
-  var fr: Boolean = config("fr", default=false)
-  var rf: Boolean = config("rf", default=false)
-  var ff: Boolean = config("ff", default=false)
-  var no_mixed: Boolean = config("no_mixed", default=false)
-  var no_discordant: Boolean = config("no_discordant", default=false)
-  var no_dovetail: Boolean = config("no_dovetail", default=false)
-  var no_contain: Boolean = config("no_contain", default=false)
-  var no_overlap: Boolean = config("no_overlap", default=false)
+  var fr: Boolean = config("fr", default = false)
+  var rf: Boolean = config("rf", default = false)
+  var ff: Boolean = config("ff", default = false)
+  var no_mixed: Boolean = config("no_mixed", default = false)
+  var no_discordant: Boolean = config("no_discordant", default = false)
+  var no_dovetail: Boolean = config("no_dovetail", default = false)
+  var no_contain: Boolean = config("no_contain", default = false)
+  var no_overlap: Boolean = config("no_overlap", default = false)
 
   /* Output */
-  var time: Boolean = config("no_overlap", default=false)
+  var time: Boolean = config("no_overlap", default = false)
 
   var un: Option[String] = config("un")
   var al: Option[String] = config("al")
@@ -106,28 +106,28 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var un_conc_bz2: Option[String] = config("un_conc_bz2")
   var al_conc_bz2: Option[String] = config("al_conc_bz2")
 
-  var quiet: Boolean = config("quiet", default=true)
+  var quiet: Boolean = config("quiet", default = true)
   var met_file: Option[String] = config("met_file")
-  var met_stderr: Boolean = config("met_stderr", default=false)
+  var met_stderr: Boolean = config("met_stderr", default = false)
   var met: Option[Int] = config("met")
 
-  var no_unal: Boolean = config("no_unal", default=false)
-  var no_head: Boolean = config("no_head", default=false)
-  var no_sq: Boolean = config("no_sq", default=false)
+  var no_unal: Boolean = config("no_unal", default = false)
+  var no_head: Boolean = config("no_head", default = false)
+  var no_sq: Boolean = config("no_sq", default = false)
 
   var rg_id: Option[String] = config("rg_id")
   var rg: Option[String] = config("rg")
 
-  var omit_sec_seq: Boolean = config("omit_sec_seq", default=false)
+  var omit_sec_seq: Boolean = config("omit_sec_seq", default = false)
 
   /* Performance */
-  var reorder: Boolean = config("reorder", default=false)
-  var mm: Boolean = config("mm", default=true)
+  var reorder: Boolean = config("reorder", default = false)
+  var mm: Boolean = config("mm", default = true)
 
   /* Other */
-  var qc_filter: Boolean = config("qc_filter", default=false)
+  var qc_filter: Boolean = config("qc_filter", default = false)
   var seed: Option[Int] = config("seed")
-  var non_deterministic: Boolean = config("non_deterministic", default=false)
+  var non_deterministic: Boolean = config("non_deterministic", default = false)
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
