@@ -53,7 +53,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var n_ceil: Option[String] = config("n_ceil")
   var dpad: Option[Int] = config("dpad")
   var gbar: Option[Int] = config("gbar")
-  var ignore_quals: Boolean = config("ignore_quals")
+  var ignore_quals: Boolean = config("ignore_quals", default=false)
   var nofw: Boolean = config("nofw", default=false)
   var norc: Boolean = config("norc", default=false)
   var no_1mm_upfront: Boolean = config("no_1mm_upfront", default=false)
