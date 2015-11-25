@@ -13,17 +13,20 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.delly
+package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Ln
-import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.queue.extensions.gatk.CatVariants
+import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 
-class Delly(val root: Configurable) extends QScript with BiopetQScript with Reference {
+import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.QScript
+
+class Delly(val root: Configurable) extends QScript with Reference with SummaryQScript {
   def this() = this(null)
 
   @Input(doc = "Input file (bam)")
@@ -49,9 +52,27 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
     if (outputVcf == null) outputVcf = new File(workDir, outputName + ".delly.vcf")
   }
 
+  override def summaryFile: File = new File(workDir, "Delly.summary.json")
+
+  override def summaryFiles: Map[String, File] = Map.empty ++
+    Map("input" -> input) ++
+    Map("outputVCF" -> outputVcf)
+
+  override def summarySettings = {
+    Map(
+      "workDir" -> workDir,
+      "outputName" -> outputName,
+      "del" -> del,
+      "dup" -> dup,
+      "inv" -> inv,
+      "tra" -> tra
+    )
+  }
+
   def biopetScript() {
     // write the pipeline here
     logger.info("Configuring Delly pipeline")
+
     var outputFiles: Map[String, File] = Map()
     var vcfFiles: Map[String, File] = Map()
 
@@ -91,15 +112,13 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
     // we need to merge the vcf's
     val finalVCF = if (vcfFiles.size > 1) {
       // do merging
-      // CatVariants is a $org.broadinstitute.gatk.utils.commandline.CommandLineProgram$;
-      //TODO: convert to biopet extension
-      val variants = new CatVariants()
-      variants.variant = vcfFiles.values.toList
+      val variants = new CatVariants(this)
+      variants.inputFiles = vcfFiles.values.toList
       variants.outputFile = this.outputVcf
-      variants.reference = referenceFasta()
+      //      variants.reference = referenceFasta()
       // add the job
-      //add(variants)
-      Some(outputVcf)
+      add(variants)
+      Some(variants.outputFile)
     } else if (vcfFiles.size == 1) {
       // TODO: pretify this
       val ln = Ln(this, vcfFiles.head._2, this.outputVcf, relative = true)
@@ -112,8 +131,6 @@ class Delly(val root: Configurable) extends QScript with BiopetQScript with Refe
 }
 
 object Delly extends PipelineCommand {
-  override val pipeline = "/nl/lumc/sasc/biopet/extensions/svcallers/Delly/Delly.class"
-
   def apply(root: Configurable, input: File, workDir: File): Delly = {
     val dellyPipeline = new Delly(root)
     dellyPipeline.input = input
