@@ -42,9 +42,9 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var upto: Option[Int] = config("upto")
   var trim5: Option[Int] = config("trim5")
   var trim3: Option[Int] = config("trim3")
-  var phred33: Boolean = config("phred33")
-  var phred64: Boolean = config("phred64")
-  var int_quals: Boolean = config("int_quals")
+  var phred33: Boolean = config("phred33", default=false)
+  var phred64: Boolean = config("phred64", default=false)
+  var int_quals: Boolean = config("int_quals", default=false)
 
   /* Alignment options */
   var N: Option[Int] = config("N")
@@ -54,11 +54,11 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var dpad: Option[Int] = config("dpad")
   var gbar: Option[Int] = config("gbar")
   var ignore_quals: Boolean = config("ignore_quals")
-  var nofw: Boolean = config("nofw")
-  var norc: Boolean = config("norc")
-  var no_1mm_upfront: Boolean = config("no_1mm_upfront")
-  var end_to_end: Boolean = config("end_to_end")
-  var local: Boolean = config("local")
+  var nofw: Boolean = config("nofw", default=false)
+  var norc: Boolean = config("norc", default=false)
+  var no_1mm_upfront: Boolean = config("no_1mm_upfront", default=false)
+  var end_to_end: Boolean = config("end_to_end", default=false)
+  var local: Boolean = config("local", default=false)
 
   /* Scoring */
   var ma: Option[Int] = config("ma")
@@ -79,17 +79,17 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   /* Paired-end */
   var minins: Option[Int] = config("minins")
   var maxins: Option[Int] = config("maxins")
-  var fr: Boolean = config("fr")
-  var rf: Boolean = config("rf")
-  var ff: Boolean = config("ff")
-  var no_mixed: Boolean = config("no_mixed")
-  var no_discordant: Boolean = config("no_discordant")
-  var no_dovetail: Boolean = config("no_dovetail")
-  var no_contain: Boolean = config("no_contain")
-  var no_overlap: Boolean = config("no_overlap")
+  var fr: Boolean = config("fr", default=false)
+  var rf: Boolean = config("rf", default=false)
+  var ff: Boolean = config("ff", default=false)
+  var no_mixed: Boolean = config("no_mixed", default=false)
+  var no_discordant: Boolean = config("no_discordant", default=false)
+  var no_dovetail: Boolean = config("no_dovetail", default=false)
+  var no_contain: Boolean = config("no_contain", default=false)
+  var no_overlap: Boolean = config("no_overlap", default=false)
 
   /* Output */
-  var time: Boolean = config("no_overlap")
+  var time: Boolean = config("no_overlap", default=false)
 
   var un: Option[String] = config("un")
   var al: Option[String] = config("al")
@@ -106,28 +106,28 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var un_conc_bz2: Option[String] = config("un_conc_bz2")
   var al_conc_bz2: Option[String] = config("al_conc_bz2")
 
-  var quiet: Boolean = config("quiet")
+  var quiet: Boolean = config("quiet", default=true)
   var met_file: Option[String] = config("met_file")
-  var met_stderr: Boolean = config("met_stderr")
+  var met_stderr: Boolean = config("met_stderr", default=false)
   var met: Option[Int] = config("met")
 
-  var no_unal: Boolean = config("no_unal")
-  var no_head: Boolean = config("no_head")
-  var no_sq: Boolean = config("no_sq")
+  var no_unal: Boolean = config("no_unal", default=false)
+  var no_head: Boolean = config("no_head", default=false)
+  var no_sq: Boolean = config("no_sq", default=false)
 
   var rg_id: Option[String] = config("rg_id")
   var rg: Option[String] = config("rg")
 
-  var omit_sec_seq: Boolean = config("omit_sec_seq")
+  var omit_sec_seq: Boolean = config("omit_sec_seq", default=false)
 
   /* Performance */
-  var reorder: Boolean = config("reorder")
-  var mm: Boolean = config("mm")
+  var reorder: Boolean = config("reorder", default=false)
+  var mm: Boolean = config("mm", default=true)
 
   /* Other */
-  var qc_filter: Boolean = config("qc_filter")
+  var qc_filter: Boolean = config("qc_filter", default=false)
   var seed: Option[Int] = config("seed")
-  var non_deterministic: Boolean = config("non_deterministic")
+  var non_deterministic: Boolean = config("non_deterministic", default=false)
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
