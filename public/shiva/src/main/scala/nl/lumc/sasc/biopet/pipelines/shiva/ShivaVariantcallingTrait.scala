@@ -127,7 +127,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
     val vcfStats = new VcfStats(qscript)
     vcfStats.input = vcfFile
     vcfStats.setOutputDir(new File(vcfFile.getParentFile, "vcfstats"))
-    vcfStats.infoTags :+= "VariantCaller"
+    if (name == "final") vcfStats.infoTags :+= "VariantCaller"
     add(vcfStats)
     addSummarizable(vcfStats, s"$namePrefix-vcfstats-$name")
 
