@@ -116,7 +116,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var no_sq: Boolean = config("no_sq", default = false)
 
   var rg_id: Option[String] = config("rg_id")
-  var rg: Option[String] = config("rg")
+  var rg: List[String] = config("rg")
 
   var omit_sec_seq: Boolean = config("omit_sec_seq", default = false)
 
@@ -202,7 +202,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     conditional(no_head, "--no-head") +
     conditional(no_sq, "--no-sq") +
     optional("--rg-id", rg_id) +
-    optional("--rg", rg) +
+    repeat("--rg", rg)
     conditional(omit_sec_seq, "--omit-sec-seq") +
     /* Performance */
     optional("--threads", threads) +

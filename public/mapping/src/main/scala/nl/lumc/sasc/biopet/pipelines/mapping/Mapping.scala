@@ -441,6 +441,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** Add bowtie2 jobs **/
   def addBowtie2(R1: File, R2: Option[File], output: File): File = {
     val bowtie2 = new Bowtie2(this)
+    bowtie2.rg_id = Some(readgroupId)
+    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("PL:" + platform)
+    bowtie2.rg +:= ("PU:" + platformUnit)
+    bowtie2.rg +:= ("SM:" + sampleId.get)
     bowtie2.R1 = R1
     if (paired) bowtie2.R2 = Some(R2.get)
     val sortSam = new SortSam(this)
