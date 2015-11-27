@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -129,6 +130,15 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var seed: Option[Int] = config("seed")
   var non_deterministic: Boolean = config("non_deterministic", default = false)
 
+  override def beforeGraph() {
+    super.beforeGraph()
+    val indexDir = new File(bowtieIndex).getParentFile
+    val basename = bowtieIndex.stripPrefix(indexDir.getPath + File.separator)
+    if (indexDir.exists()) {
+      if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".bt2")))
+        Logging.addError(s"No index files found for bowtie2 in: $indexDir with basename: $basename")
+    }
+  }
   /** return commandline to execute */
   def cmdLine = required(executable) +
     conditional(q, "-q") +
@@ -203,7 +213,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     conditional(no_sq, "--no-sq") +
     optional("--rg-id", rg_id) +
     repeat("--rg", rg)
-    conditional(omit_sec_seq, "--omit-sec-seq") +
+  conditional(omit_sec_seq, "--omit-sec-seq") +
     /* Performance */
     optional("--threads", threads) +
     conditional(reorder, "--reorder") +
