@@ -67,15 +67,16 @@ trait ShivaVariantcallingTrait extends SummaryQScript
   /** Variantcallers requested by the config */
   protected val configCallers: Set[String] = config("variantcallers")
 
+  protected val callers: List[Variantcaller] = {
+    (for (name <- configCallers) yield {
+      if (!callersList.exists(_.name == name))
+        Logging.addError(s"variantcaller '$name' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
+      callersList.find(_.name == name)
+    }).flatten.toList.sortBy(_.prio)
+  }
+
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
-    for (cal <- configCallers) {
-      if (!callersList.exists(_.name == cal))
-        Logging.addError("variantcaller '" + cal + "' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
-    }
-
-    val callers = callersList.filter(x => configCallers.contains(x.name)).sortBy(_.prio)
-
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
@@ -168,7 +169,6 @@ trait ShivaVariantcallingTrait extends SummaryQScript
 
   /** Files for the summary */
   def summaryFiles: Map[String, File] = {
-    val callers: Set[String] = config("variantcallers")
-    callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
+    callers.map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
   }
 }
