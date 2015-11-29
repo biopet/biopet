@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
@@ -101,19 +102,19 @@ trait ShivaVariantcallingTrait extends SummaryQScript
       if (normalize && decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
         vtNormalize.isIntermediate = true
-        add(vtNormalize)
+        add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
-        add(vtDecompose)
+        add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         cv.addInput(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
-        add(vtNormalize)
+        add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         cv.addInput(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
         vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
-        add(vtDecompose)
+        add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         cv.addInput(vtDecompose.outputVcf, caller.name)
       } else cv.addInput(caller.outputFile, caller.name)
     }
