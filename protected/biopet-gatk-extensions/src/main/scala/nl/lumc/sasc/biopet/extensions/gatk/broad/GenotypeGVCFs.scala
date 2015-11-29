@@ -8,8 +8,13 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.Output
 
 class GenotypeGVCFs(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.GenotypeGVCFs with GatkGeneral {
+
+  @Output(required = false)
+  protected var vcfIndex: File = _
+
   annotation ++= config("annotation", default = Seq(), freeVar = false).asStringList
 
   if (config.contains("dbsnp")) dbsnp = config("dbsnp")
@@ -22,6 +27,11 @@ class GenotypeGVCFs(val root: Configurable) extends org.broadinstitute.gatk.queu
     stand_call_conf = config("stand_call_conf", default = 30)
     stand_emit_conf = config("stand_emit_conf", default = 0)
   }
+
+  override def freezeFieldValues(): Unit = {
+    super.freezeFieldValues()
+    if (out.getName.endsWith(".vcf.gz")) vcfIndex = new File(out.getAbsolutePath + ".tbi")
+  }
 }
 
 object GenotypeGVCFs {
@@ -29,6 +39,7 @@ object GenotypeGVCFs {
     val gg = new GenotypeGVCFs(root)
     gg.variant = gvcfFiles
     gg.out = output
+    if (gg.out.getName.endsWith(".vcf.gz")) gg.vcfIndex = new File(gg.out.getAbsolutePath + ".tbi")
     gg
   }
 }

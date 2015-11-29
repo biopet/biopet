@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk.variantcallers
 
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.Variantcaller
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.extensions.gatk.broad
 
 /** Default mode for the haplotypecaller */
 class HaplotypeCaller(val root: Configurable) extends Variantcaller {
@@ -9,9 +10,7 @@ class HaplotypeCaller(val root: Configurable) extends Variantcaller {
   protected def defaultPrio = 1
 
   def biopetScript() {
-    val hc = new nl.lumc.sasc.biopet.extensions.gatk.broad.HaplotypeCaller(this)
-    hc.input_file = inputBams.values.toList
-    hc.out = outputFile
+    val hc = broad.HaplotypeCaller(this, inputBams.values.toList, outputFile)
     add(hc)
   }
 }
