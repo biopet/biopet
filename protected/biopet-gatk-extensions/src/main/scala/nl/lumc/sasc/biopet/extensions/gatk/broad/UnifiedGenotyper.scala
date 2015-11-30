@@ -5,9 +5,17 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.Output
 
 class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.UnifiedGenotyper with GatkGeneral {
+
+  @Output(required = false)
+  protected var vcfIndex: File = _
+
+
   if (config.contains("scattercount")) scatterCount = config("scattercount")
   if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
   sample_ploidy = config("ploidy")
@@ -35,4 +43,15 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
     nct = Some(getThreads)
     memoryLimit = Option(nct.getOrElse(1) * memoryLimit.getOrElse(2.0))
   }
+}
+
+object UnifiedGenotyper {
+  def apply(root: Configurable, inputFiles: List[File], outputFile: File): UnifiedGenotyper = {
+    val ug = new UnifiedGenotyper(root)
+    ug.input_file = inputFiles
+    ug.out = outputFile
+    if (ug.out.getName.endsWith(".vcf.gz")) ug.vcfIndex = new File(ug.out.getAbsolutePath + ".tbi")
+    ug
+  }
+
 }
