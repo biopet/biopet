@@ -27,7 +27,7 @@ import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import nl.lumc.sasc.biopet.pipelines.gears.Gears
+import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -259,7 +259,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {
-      val gears = new Gears(this)
+      val gears = new GearsSingle(this)
       gears.bamFile = Some(finalBamFile)
       gears.outputDir = new File(outputDir, "gears")
       gears.init()

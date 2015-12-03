@@ -31,14 +31,14 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations._
 
 /**
- * Test class for [[Gears]]
+ * Test class for [[GearsSingle]]
  *
  * Created by wyleung on 10/22/15.
  */
 
-class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): Gears = {
-    new Gears {
+class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
+  def initPipeline(map: Map[String, Any]): GearsSingle = {
+    new GearsSingle {
       override def configName = "gears"
 
       override def globalConfig = new Config(map)
@@ -67,16 +67,16 @@ class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
   def testGears(testset: String, fromBam: Boolean, paired: Boolean,
                 hasOutputName: Boolean, hasFileExtension: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map(
-      "output_dir" -> GearsTest.outputDir
-    ), Map(GearsTest.executables.toSeq: _*))
+      "output_dir" -> GearsSingleTest.outputDir
+    ), Map(GearsSingleTest.executables.toSeq: _*))
 
-    val gears: Gears = initPipeline(map)
+    val gears: GearsSingle = initPipeline(map)
 
     if (fromBam) {
-      gears.bamFile = if (hasFileExtension) Some(GearsTest.bam) else Some(GearsTest.bam_noext)
+      gears.bamFile = if (hasFileExtension) Some(GearsSingleTest.bam) else Some(GearsSingleTest.bam_noext)
     } else {
-      gears.fastqR1 = if (hasFileExtension) Some(GearsTest.r1) else Some(GearsTest.r1_noext)
-      gears.fastqR2 = if (paired) if (hasFileExtension) Some(GearsTest.r2) else Some(GearsTest.r2_noext) else None
+      gears.fastqR1 = if (hasFileExtension) Some(GearsSingleTest.r1) else Some(GearsSingleTest.r1_noext)
+      gears.fastqR2 = if (paired) if (hasFileExtension) Some(GearsSingleTest.r2) else Some(GearsSingleTest.r2_noext) else None
     }
     if (hasOutputName)
       gears.outputName = "test"
@@ -106,11 +106,11 @@ class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(GearsTest.outputDir)
+    FileUtils.deleteDirectory(GearsSingleTest.outputDir)
   }
 }
 
-object GearsTest {
+object GearsSingleTest {
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
 

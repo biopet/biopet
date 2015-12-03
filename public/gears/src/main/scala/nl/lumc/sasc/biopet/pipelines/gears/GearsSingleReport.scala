@@ -18,11 +18,11 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
-class GearsReport(val root: Configurable) extends ReportBuilderExtension {
-  def builder = GearsReport
+class GearsSingleReport(val root: Configurable) extends ReportBuilderExtension {
+  def builder = GearsSingleReport
 }
 
-object GearsReport extends ReportBuilder {
+object GearsSingleReport extends ReportBuilder {
 
   // TODO: Add dustbin analysis (aggregated)
   // TODO: Add alignment stats per sample for the dustbin analysis

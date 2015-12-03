@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.queue.QScript
 /**
  * Created by wyleung
  */
-class Gears(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class GearsSingle(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
   @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
@@ -66,7 +66,7 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
   }
 
   override def reportClass = {
-    val gears = new GearsReport(this)
+    val gears = new GearsSingleReport(this)
     gears.outputDir = new File(outputDir, "report")
     gears.summaryFile = summaryFile
     sampleId.foreach(gears.args += "sampleId" -> _)
@@ -155,4 +155,4 @@ class Gears(val root: Configurable) extends QScript with SummaryQScript with Sam
 }
 
 /** This object give a default main method to the pipelines */
-object Gears extends PipelineCommand
+object GearsSingle extends PipelineCommand
