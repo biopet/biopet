@@ -149,7 +149,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
       vcfStats.input = vcfFile
       vcfStats.intervals = Some(bedFile)
       vcfStats.setOutputDir(new File(vcfFile.getParentFile, s"vcfstats-$regionName"))
-      vcfStats.infoTags :+= "VariantCaller"
+      if (name == "final") vcfStats.infoTags :+= "VariantCaller"
       add(vcfStats)
       addSummarizable(vcfStats, s"$namePrefix-vcfstats-$name-$regionName")
     }
