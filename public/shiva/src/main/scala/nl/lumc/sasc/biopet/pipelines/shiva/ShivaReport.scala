@@ -109,7 +109,7 @@ object ShivaReport extends MultisampleReportBuilder {
     if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
       regionPages.map(p => p._1 -> ReportPage(Nil,
         List(
-          "Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp"),
+          "Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", Map("showPlot" -> true)),
           "Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")
         ),
         Map("target" -> Some(p._1.stripSuffix(" (Amplicon)")))
