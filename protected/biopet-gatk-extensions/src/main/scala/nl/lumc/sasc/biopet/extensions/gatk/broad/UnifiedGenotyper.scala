@@ -15,7 +15,6 @@ class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.q
   @Output(required = false)
   protected var vcfIndex: File = _
 
-
   if (config.contains("scattercount")) scatterCount = config("scattercount")
   if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
   sample_ploidy = config("ploidy")

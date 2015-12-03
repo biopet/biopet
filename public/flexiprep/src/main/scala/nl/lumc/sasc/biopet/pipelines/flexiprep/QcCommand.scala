@@ -133,7 +133,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     outputCommand match {
       case gzip: Gzip => outputFile :<: gzip
-      case cat: Cat => cat.input = outputFile :: Nil
+      case cat: Cat   => cat.input = outputFile :: Nil
     }
 
     seqtk.beforeGraph()
