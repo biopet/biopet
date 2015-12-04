@@ -46,7 +46,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   var outputName: String = _
 
   var gearsUseKraken: Boolean = config("gears_use_kraken", default = true)
-  var gearsUserQiimeRtax: Boolean = config("gear_use_qiime_rtax", default = true)
+  var gearsUserQiimeRtax: Boolean = config("gear_use_qiime_rtax", default = false)
 
   /** Executed before running the script */
   def init(): Unit = {
