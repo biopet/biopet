@@ -28,7 +28,6 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
     */
   def addMultiSampleJobs(): Unit = {
-
   }
 
   /**
@@ -55,6 +54,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       lazy val gs = new GearsSingle(qscript)
       gs.sampleId = Some(sampleId)
       gs.libId = Some(libId)
+      gs.outputDir = libDir
       gs.fastqR1 = config("R1")
       gs.fastqR2 = config("R2")
       gs.bamFile = config("bam")

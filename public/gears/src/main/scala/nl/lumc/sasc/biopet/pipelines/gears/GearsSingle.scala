@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -44,6 +45,9 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   @Argument(required = false)
   var outputName: String = _
 
+  var gearsUseKraken: Boolean = config("gears_use_kraken", default = true)
+  var gearsUserQiimeRtax: Boolean = config("gear_use_qiime_rtax", default = true)
+
   /** Executed before running the script */
   def init(): Unit = {
     require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
@@ -61,9 +65,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (fastqR1.isDefined) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
-    } else {
-      inputFiles :+= InputFile(bamFile.get)
-    }
+    } else inputFiles :+= InputFile(bamFile.get)
   }
 
   override def reportClass = {
@@ -81,7 +83,9 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       case (Some(r1), r2, _) => (r1, r2)
       case (_, _, Some(bam)) =>
         val extract = new ExtractUnmappedReads(this)
+        extract.outputDir = outputDir
         extract.bamFile = bam
+        extract.outputName = outputName
         extract.init()
         extract.biopetScript()
         addAll(extract.functions)
@@ -89,13 +93,25 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       case _ => Logging.addError("Missing input files")
     }
 
-    val kraken = new GearsKraken(this)
-    kraken.fastqR1 = r1
-    kraken.fastqR2 = r2
-    kraken.init()
-    kraken.biopetScript()
-    addAll(kraken.functions)
-    addSummaryQScript(kraken)
+    lazy val fastqR1 = fastqToFasta(r1, outputName + ".R1")
+    lazy val fastqR2 = r2.map(fastqToFasta(_, outputName + ".R2"))
+
+    if (gearsUseKraken) {
+      val kraken = new GearsKraken(this)
+      kraken.outputDir = new File(outputDir, "kraken")
+      kraken.fastqR1 = r1
+      kraken.fastqR2 = r2
+      kraken.outputName = outputName
+      kraken.init()
+      kraken.biopetScript()
+      addAll(kraken.functions)
+      addSummaryQScript(kraken)
+    }
+
+    if (gearsUserQiimeRtax) {
+      val qiimeRatx = new GearsQiimeRatx(this)
+
+    }
 
     addSummaryJobs()
   }
@@ -111,6 +127,18 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
     (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
     outputFiles
+
+  def fastqToFasta(file: File, name: String): File = {
+    val seqtk = new SeqtkSeq(this) {
+      override def configName = "seqtkseq"
+      override def fixedValues = Map("A" -> true)
+    }
+    seqtk.input = file
+    seqtk.output = new File(outputDir, name + ".fasta")
+    seqtk.isIntermediate = true
+    add(seqtk)
+    seqtk.output
+  }
 }
 
 /** This object give a default main method to the pipelines */
