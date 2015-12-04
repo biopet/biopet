@@ -14,7 +14,18 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
 
   var fastaR2: Option[File] = None
 
-  override def fixedValues = Map("assigntaxonomy" -> Map("assignment_method" -> "rtax"))
+  override def fixedValues = Map(
+    "assigntaxonomy" -> Map(
+      "assignment_method" -> "rtax"
+    )
+  )
+
+  override def defaults = Map(
+    "pickotus" -> Map(
+      "otu_picking_method" -> "uclust_ref",
+      "suppress_new_clusters" -> true
+      )
+    )
 
   def init() = {
     require(fastaR1 != null)
