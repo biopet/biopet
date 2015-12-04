@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.BiopetQScript
-import nl.lumc.sasc.biopet.extensions.qiime.{AssignTaxonomy, PickRepSet, PickOtus}
+import nl.lumc.sasc.biopet.extensions.qiime.{ AssignTaxonomy, PickRepSet, PickOtus }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -24,8 +24,8 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     "pickotus" -> Map(
       "otu_picking_method" -> "uclust_ref",
       "suppress_new_clusters" -> true
-      )
     )
+  )
 
   def init() = {
     require(fastaR1 != null)
