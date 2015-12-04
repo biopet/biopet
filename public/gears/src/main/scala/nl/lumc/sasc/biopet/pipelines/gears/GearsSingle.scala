@@ -46,7 +46,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   /** Executed before running the script */
   def init(): Unit = {
     require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
-    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or la R1 file")
+    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or a R1/R2 file")
 
     if (outputName == null) {
       if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
