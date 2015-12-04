@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -74,69 +75,27 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     Some(gears)
   }
 
-  override def defaults = Map(
-    "samtofastq" -> Map(
-      "validationstringency" -> "LENIENT"
-    )
-  )
   /** Method to add jobs */
   def biopetScript(): Unit = {
-    val fastqFiles: List[File] = bamFile.map { bamfile =>
+    val (r1: File, r2: Option[File]) = (fastqR1, fastqR2, bamFile) match {
+      case (Some(r1), r2, _) => (r1, r2)
+      case (_, _, Some(bam)) =>
+        val extract = new ExtractUnmappedReads(this)
+        extract.bamFile = bam
+        extract.init()
+        extract.biopetScript()
+        addAll(extract.functions)
+        (extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
+      case _ => Logging.addError("Missing input files")
+    }
 
-      val samtoolsViewSelectUnmapped = new SamtoolsView(this)
-      samtoolsViewSelectUnmapped.input = bamfile
-      samtoolsViewSelectUnmapped.b = true
-      samtoolsViewSelectUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      samtoolsViewSelectUnmapped.f = List("12")
-      samtoolsViewSelectUnmapped.isIntermediate = true
-      add(samtoolsViewSelectUnmapped)
-
-      // start bam to fastq (only on unaligned reads) also extract the matesam
-      val samToFastq = new SamToFastq(this)
-      samToFastq.input = samtoolsViewSelectUnmapped.output
-      samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
-      samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
-      samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
-      samToFastq.isIntermediate = true
-      add(samToFastq)
-
-      List(samToFastq.fastqR1, samToFastq.fastqR2)
-    }.getOrElse(List(fastqR1, fastqR2).flatten)
-
-    // start kraken
-    val krakenAnalysis = new Kraken(this)
-    krakenAnalysis.input = fastqFiles
-    krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
-
-    krakenAnalysis.paired = fastqFiles.length == 2
-
-    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
-    add(krakenAnalysis)
-
-    outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
-
-    // create kraken summary file
-    val krakenReport = new KrakenReport(this)
-    krakenReport.input = krakenAnalysis.output
-    krakenReport.show_zeros = true
-    krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
-    add(krakenReport)
-
-    outputFiles += ("kraken_report_input" -> krakenReport.input)
-    outputFiles += ("kraken_report_output" -> krakenReport.output)
-
-    val krakenReportJSON = new KrakenReportToJson(this)
-    krakenReportJSON.inputReport = krakenReport.output
-    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
-    krakenReportJSON.skipNames = config("skipNames", default = false)
-    add(krakenReportJSON)
-    addSummarizable(krakenReportJSON, "krakenreport")
-
-    outputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
-    outputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)
+    val kraken = new GearsKraken(this)
+    kraken.fastqR1 = r1
+    kraken.fastqR2 = r2
+    kraken.init()
+    kraken.biopetScript()
+    addAll(kraken.functions)
+    addSummaryQScript(kraken)
 
     addSummaryJobs()
   }
