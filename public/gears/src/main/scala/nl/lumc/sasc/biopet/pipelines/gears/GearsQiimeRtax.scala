@@ -40,6 +40,7 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     val pickRepSet = new PickRepSet(this)
     val repSetOutputDir = new File(outputDir, "pick_rep_set")
     pickRepSet.inputFile = pickOtus.otusTxt
+    pickRepSet.fastaInput = Some(fastaR1)
     pickRepSet.outputFasta = Some(new File(repSetOutputDir, fastaR1.getName))
     pickRepSet.logFile = Some(new File(repSetOutputDir, fastaR1.getName
       .stripSuffix(".fasta").stripSuffix(".fa").stripSuffix(".fna") + ".log"))
