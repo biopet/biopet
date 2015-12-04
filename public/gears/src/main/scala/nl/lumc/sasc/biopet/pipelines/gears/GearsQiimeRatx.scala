@@ -1,12 +1,13 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.BiopetQScript
+import nl.lumc.sasc.biopet.extensions.qiime.PickOtus
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
-  * Created by pjvan_thof on 12/4/15.
-  */
+ * Created by pjvan_thof on 12/4/15.
+ */
 class GearsQiimeRatx(val root: Configurable) extends QScript with BiopetQScript {
 
   var fastaR1: File = _
@@ -18,6 +19,9 @@ class GearsQiimeRatx(val root: Configurable) extends QScript with BiopetQScript 
   }
 
   def biopetScript() = {
-
+    val pickOtus = new PickOtus(this)
+    pickOtus.inputFasta = fastaR1
+    pickOtus.outputDir = new File(outputDir, "pick_otus")
+    add(pickOtus)
   }
 }

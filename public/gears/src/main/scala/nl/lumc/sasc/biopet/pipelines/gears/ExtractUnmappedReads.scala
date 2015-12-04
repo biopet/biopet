@@ -7,8 +7,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
-  * Created by pjvanthof on 04/12/15.
-  */
+ * Created by pjvanthof on 04/12/15.
+ */
 class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQScript {
 
   var bamFile: File = _

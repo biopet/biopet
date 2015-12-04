@@ -79,8 +79,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
   /** Method to add jobs */
   def biopetScript(): Unit = {
-    val (r1: File, r2: Option[File]) = (fastqR1, fastqR2, bamFile) match {
-      case (Some(r1), r2, _) => (r1, r2)
+    val (r1, r2): (File, Option[File]) = (fastqR1, fastqR2, bamFile) match {
+      case (Some(r1), _, _) => (r1, fastqR2)
       case (_, _, Some(bam)) =>
         val extract = new ExtractUnmappedReads(this)
         extract.outputDir = outputDir
@@ -90,11 +90,11 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
         extract.biopetScript()
         addAll(extract.functions)
         (extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
-      case _ => Logging.addError("Missing input files")
+      case _ => throw new IllegalArgumentException("Missing input files")
     }
 
-    lazy val fastqR1 = fastqToFasta(r1, outputName + ".R1")
-    lazy val fastqR2 = r2.map(fastqToFasta(_, outputName + ".R2"))
+    lazy val fastaR1 = fastqToFasta(r1, outputName + ".R1")
+    lazy val fastaR2 = r2.map(fastqToFasta(_, outputName + ".R2"))
 
     if (gearsUseKraken) {
       val kraken = new GearsKraken(this)
@@ -110,7 +110,12 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
     if (gearsUserQiimeRtax) {
       val qiimeRatx = new GearsQiimeRatx(this)
-
+      qiimeRatx.outputDir = new File(outputDir, "qiime_ratx")
+      qiimeRatx.fastaR1 = fastaR1
+      qiimeRatx.fastqR2 = fastaR2
+      qiimeRatx.init()
+      qiimeRatx.biopetScript()
+      addAll(qiimeRatx.functions)
     }
 
     addSummaryJobs()
