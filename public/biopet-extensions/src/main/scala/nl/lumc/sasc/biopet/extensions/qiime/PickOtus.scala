@@ -144,7 +144,7 @@ class PickOtus(val root: Configurable) extends BiopetCommandLineFunction with Ve
     conditional(derep_fullseq, "--derep_fullseq") +
     optional("--non_chimeras_retention", non_chimeras_retention) +
     optional("--minlen", minlen) +
-    optional("--usearch_fast_cluster", usearch_fast_cluster) +
+    conditional(usearch_fast_cluster, "--usearch_fast_cluster") +
     optional("--usearch61_sort_method", usearch61_sort_method) +
     conditional(sizeorder, "--sizeorder") +
     optional("--threads", threads)
