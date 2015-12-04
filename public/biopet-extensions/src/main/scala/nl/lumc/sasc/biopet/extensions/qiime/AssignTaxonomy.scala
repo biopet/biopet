@@ -80,6 +80,7 @@ class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction w
     optional("--uclust_max_accepts", uclust_max_accepts) +
     optional("--rdp_max_memory", rdp_max_memory) +
     optional("--blast_e_value", blast_e_value) +
-    required("--output_dir", outputDir)
-
+    required("--output_dir", outputDir) +
+    conditional(single_ok, "--single_ok") +
+    conditional(no_single_ok_generic, "--no_single_ok_generic")
 }
