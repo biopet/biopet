@@ -109,10 +109,10 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     }
 
     if (gearsUserQiimeRtax) {
-      val qiimeRatx = new GearsQiimeRatx(this)
+      val qiimeRatx = new GearsQiimeRtax(this)
       qiimeRatx.outputDir = new File(outputDir, "qiime_ratx")
       qiimeRatx.fastaR1 = fastaR1
-      qiimeRatx.fastqR2 = fastaR2
+      qiimeRatx.fastaR2 = fastaR2
       qiimeRatx.init()
       qiimeRatx.biopetScript()
       addAll(qiimeRatx.functions)
