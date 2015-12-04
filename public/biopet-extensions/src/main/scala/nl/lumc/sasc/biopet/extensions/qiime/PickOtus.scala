@@ -2,14 +2,14 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class PickOtus(val root: Configurable) extends BiopetCommandLineFunction {
+class PickOtus(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "pick_otus.py")
 
   @Input(required = true)
@@ -18,8 +18,9 @@ class PickOtus(val root: Configurable) extends BiopetCommandLineFunction {
   var outputDir: File = null
 
   override def defaultThreads = 2
-
   override def defaultCoreMemory = 5.0
+  def versionCommand = executable + " --version"
+  def versionRegex = """Version: (.*)""".r
 
   var otu_picking_method: Option[String] = config("otu_picking_method")
   var clustering_algorithm: Option[String] = config("clustering_algorithm")
@@ -75,6 +76,19 @@ class PickOtus(val root: Configurable) extends BiopetCommandLineFunction {
   var usearch_fast_cluster: Boolean = config("usearch_fast_cluster", default = false)
   var usearch61_sort_method: Option[String] = config("usearch61_sort_method")
   var sizeorder: Boolean = config("sizeorder", default = false)
+
+  private lazy val name = inputFasta.getName.stripSuffix(".fasta").stripSuffix(".fa").stripSuffix(".fna")
+
+  def clustersFile = new File(outputDir, s"${name}_clusters.uc")
+  def logFile = new File(outputDir, s"${name}_otus.log")
+  def otusTxt = new File(outputDir, s"${name}_otus.txt")
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    outputFiles :+= clustersFile
+    outputFiles :+= logFile
+    outputFiles :+= otusTxt
+  }
 
   def cmdLine = executable +
     required("-i", inputFasta) +
