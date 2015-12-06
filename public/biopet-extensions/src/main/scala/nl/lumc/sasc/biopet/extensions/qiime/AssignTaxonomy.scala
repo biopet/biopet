@@ -59,7 +59,7 @@ class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction w
   }
 
   def cmdLine = executable +
-    required("-o", inputFasta) +
+    required("-i", inputFasta) +
     optional("--read_1_seqs_fp", read_1_seqs_fp) +
     optional("--read_2_seqs_fp", read_2_seqs_fp) +
     optional("-t", id_to_taxonomy_fp) +
