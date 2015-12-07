@@ -18,12 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
-import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
-import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
