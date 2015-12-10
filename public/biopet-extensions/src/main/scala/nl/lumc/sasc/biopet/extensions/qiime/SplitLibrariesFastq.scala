@@ -71,6 +71,9 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
     optional("--barcode_type", barcode_type) +
     optional("--max_barcode_errors", max_barcode_errors) +
     optional("--phred_offset", phred_offset) +
-    optional("-i", input) +
+    (input match {
+      case l: List[_] if l.nonEmpty => required("-i", l.mkString(","))
+      case _                        => ""
+    }) +
     optional("-o", outputDir)
 }
