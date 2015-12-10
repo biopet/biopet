@@ -23,7 +23,8 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
   override def defaults = Map(
     "pickotus" -> Map(
       "otu_picking_method" -> "uclust_ref",
-      "suppress_new_clusters" -> true
+      "suppress_new_clusters" -> true,
+      "enable_rev_strand_match" -> true
     )
   )
 
