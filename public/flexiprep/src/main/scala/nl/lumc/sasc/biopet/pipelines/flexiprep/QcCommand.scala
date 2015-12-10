@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction }
-import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
@@ -93,7 +93,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadapt = new Cutadapt(root)
+        val cutadapt = new Cutadapt(root, fastqc, read)
         cutadapt.fastq_input = seqtk.output
         cutadapt.fastq_output = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
