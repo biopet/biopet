@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.{SampleLibraryTag, BiopetQScript}
-import nl.lumc.sasc.biopet.extensions.qiime.{SplitLibrariesFastq, AssignTaxonomy, PickRepSet, PickOtus}
+import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript }
+import nl.lumc.sasc.biopet.extensions.qiime.{ SplitLibrariesFastq, AssignTaxonomy, PickRepSet, PickOtus }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 

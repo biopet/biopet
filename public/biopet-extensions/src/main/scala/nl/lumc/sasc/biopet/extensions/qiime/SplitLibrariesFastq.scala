@@ -2,13 +2,13 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
-  * Created by pjvan_thof on 12/10/15.
-  */
+ * Created by pjvan_thof on 12/10/15.
+ */
 class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "split_libraries_fastq.py")
 
@@ -55,7 +55,7 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
     conditional(store_qual_scores, "--store_qual_scores") +
     (sample_ids match {
       case l: List[_] if l.nonEmpty => optional("--sample_ids", l.mkString(","))
-      case _ => ""
+      case _                        => ""
     }) +
     conditional(store_demultiplexed_fastq, "--store_demultiplexed_fastq") +
     conditional(retain_unassigned_reads, "--retain_unassigned_reads") +
