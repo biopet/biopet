@@ -92,6 +92,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     val flexiprep = new Flexiprep(this)
     flexiprep.input_R1 = r1
     flexiprep.input_R2 = r2
+    flexiprep.outputDir = new File(outputDir, "flexiprep")
     flexiprep.init()
     flexiprep.biopetScript()
     addAll(flexiprep.functions)
