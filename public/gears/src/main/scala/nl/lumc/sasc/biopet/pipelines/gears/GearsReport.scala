@@ -4,6 +4,8 @@ import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, MultisampleR
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
+ * Report for Gears
+ *
  * Created by pjvan_thof on 12/10/15.
  */
 class GearsReport(val root: Configurable) extends ReportBuilderExtension {
@@ -51,10 +53,10 @@ object GearsReport extends MultisampleReportBuilder {
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
 
     ReportPage(
-      (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+      if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
         "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
         )), Map()))
-      else Nil), List(
+      else Nil, List(
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
       ), args)
