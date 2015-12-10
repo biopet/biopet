@@ -96,6 +96,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     flexiprep.init()
     flexiprep.biopetScript()
     addAll(flexiprep.functions)
+    addSummaryQScript(flexiprep)
 
     if (gearsUseKraken) {
       val kraken = new GearsKraken(this)
