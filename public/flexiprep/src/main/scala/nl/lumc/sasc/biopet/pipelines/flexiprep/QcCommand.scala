@@ -93,7 +93,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadapt = new Cutadapt(root, fastqc, read)
+        val cutadapt = new Cutadapt(root, fastqc)
         cutadapt.fastq_input = seqtk.output
         cutadapt.fastq_output = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")

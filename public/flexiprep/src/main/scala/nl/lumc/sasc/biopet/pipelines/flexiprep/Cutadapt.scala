@@ -28,7 +28,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  * @param root: Configurable object from which this wrapper is initialized.
  * @param fastqc: Fastqc wrapper that contains adapter information.
  */
-class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
+class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
 
   /** Clipped adapter names from FastQC */
   protected def seqToName = fastqc.foundAdapters
@@ -49,16 +49,16 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
                 // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
                 // sequences come from FastQC
                 case _ =>
-                  throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in 'clipping_$readName'.")
+                  throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in '$fastq_input'.")
               }
           }.toMap
         // FastQC found no adapters
         case otherwise =>
-          logger.info(s"No adapters found for summarizing in 'clipping_$readName'.")
+          logger.info(s"No adapters found for summarizing in '$fastq_input'.")
           Map.empty[String, Map[String, Any]]
       }
       // "adapters" key not found ~ something went wrong in our part
-      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry 'clipping_$readName'.")
+      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry '$fastq_input'.")
     }
     initStats.updated("adapters", adapterCounts)
   }
