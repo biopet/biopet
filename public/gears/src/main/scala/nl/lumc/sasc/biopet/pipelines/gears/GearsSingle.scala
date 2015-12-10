@@ -19,6 +19,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -88,14 +89,21 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       case _ => throw new IllegalArgumentException("Missing input files")
     }
 
-    lazy val fastaR1 = fastqToFasta(r1, outputName + ".R1")
-    lazy val fastaR2 = r2.map(fastqToFasta(_, outputName + ".R2"))
+    val flexiprep = new Flexiprep(this)
+    flexiprep.input_R1 = r1
+    flexiprep.input_R2 = r2
+    flexiprep.init()
+    flexiprep.biopetScript()
+    addAll(flexiprep.functions)
+
+    lazy val fastaR1 = fastqToFasta(flexiprep.fastqR1Qc, outputName + ".R1")
+    lazy val fastaR2 = flexiprep.fastqR2Qc.map(fastqToFasta(_, outputName + ".R2"))
 
     if (gearsUseKraken) {
       val kraken = new GearsKraken(this)
       kraken.outputDir = new File(outputDir, "kraken")
-      kraken.fastqR1 = r1
-      kraken.fastqR2 = r2
+      kraken.fastqR1 = flexiprep.fastqR1Qc
+      kraken.fastqR2 = flexiprep.fastqR2Qc
       kraken.outputName = outputName
       kraken.init()
       kraken.biopetScript()
