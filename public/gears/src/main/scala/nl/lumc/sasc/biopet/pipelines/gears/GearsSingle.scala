@@ -96,9 +96,6 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     flexiprep.biopetScript()
     addAll(flexiprep.functions)
 
-    lazy val fastaR1 = fastqToFasta(flexiprep.fastqR1Qc, outputName + ".R1")
-    lazy val fastaR2 = flexiprep.fastqR2Qc.map(fastqToFasta(_, outputName + ".R2"))
-
     if (gearsUseKraken) {
       val kraken = new GearsKraken(this)
       kraken.outputDir = new File(outputDir, "kraken")
@@ -114,8 +111,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (gearsUserQiimeRtax) {
       val qiimeRatx = new GearsQiimeRtax(this)
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
-      qiimeRatx.fastaR1 = fastaR1
-      qiimeRatx.fastaR2 = fastaR2
+      qiimeRatx.fastqR1 = flexiprep.fastqR1Qc
+      qiimeRatx.fastqR2 = flexiprep.fastqR2Qc
       qiimeRatx.init()
       qiimeRatx.biopetScript()
       addAll(qiimeRatx.functions)
@@ -135,18 +132,6 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
     (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
     outputFiles
-
-  def fastqToFasta(file: File, name: String): File = {
-    val seqtk = new SeqtkSeq(this) {
-      override def configName = "seqtkseq"
-      override def fixedValues = Map("A" -> true)
-    }
-    seqtk.input = file
-    seqtk.output = new File(outputDir, name + ".fasta")
-    seqtk.isIntermediate = true
-    add(seqtk)
-    seqtk.output
-  }
 }
 
 /** This object give a default main method to the pipelines */
