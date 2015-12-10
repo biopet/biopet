@@ -58,14 +58,13 @@ class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
     for (
       fromBam <- startFromBam;
       pair <- paired;
-      hasOutputName <- hasOutputNames;
-      hasFileExtension <- hasFileExtensions
-    ) yield Array(testset, fromBam, pair, hasOutputName, hasFileExtension)
+      hasOutputName <- hasOutputNames
+    ) yield Array(testset, fromBam, pair, hasOutputName)
   }
 
   @Test(dataProvider = "gearsOptions")
   def testGears(testset: String, fromBam: Boolean, paired: Boolean,
-                hasOutputName: Boolean, hasFileExtension: Boolean) = {
+                hasOutputName: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map(
       "output_dir" -> GearsSingleTest.outputDir
     ), Map(GearsSingleTest.executables.toSeq: _*))
@@ -73,10 +72,10 @@ class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
     val gears: GearsSingle = initPipeline(map)
 
     if (fromBam) {
-      gears.bamFile = if (hasFileExtension) Some(GearsSingleTest.bam) else Some(GearsSingleTest.bam_noext)
+      gears.bamFile = Some(GearsSingleTest.bam)
     } else {
-      gears.fastqR1 = if (hasFileExtension) Some(GearsSingleTest.r1) else Some(GearsSingleTest.r1_noext)
-      gears.fastqR2 = if (paired) if (hasFileExtension) Some(GearsSingleTest.r2) else Some(GearsSingleTest.r2_noext) else None
+      gears.fastqR1 = Some(GearsSingleTest.r1)
+      gears.fastqR2 = if (paired) Some(GearsSingleTest.r2) else None
     }
     if (hasOutputName)
       gears.outputName = "test"
@@ -87,12 +86,7 @@ class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
       gears.outputName shouldBe "test"
     } else {
       // in the following cases the filename should have been determined by the filename
-      if (hasFileExtension) {
-        gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
-      } else {
-        // no real use-case for this one, have this is for sanity check
-        gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
-      }
+      gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
     }
 
     // SamToFastq should have started if it was started from bam
@@ -121,17 +115,11 @@ object GearsSingleTest {
   val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
   Files.touch(bam)
 
-  val r1_noext = new File(outputDir, "input" + File.separator + "R1")
-  Files.touch(r1_noext)
-  val r2_noext = new File(outputDir, "input" + File.separator + "R2")
-  Files.touch(r2_noext)
-  val bam_noext = new File(outputDir, "input" + File.separator + "bamfile")
-  Files.touch(bam_noext)
-
   val executables = Map(
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
+    "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )
 }
