@@ -38,7 +38,7 @@ object GearsSingleReport extends ReportBuilder {
           ))), Map())
       ),
       List(
-        "Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsFront.ssp"),
+        "Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp"),
         "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp")
       ),
       pageArgs

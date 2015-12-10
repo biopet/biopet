@@ -54,7 +54,7 @@
     <script type="application/ecmascript">
 
     #{
-        val rawreport = Map("kraken" -> summary.getValue(sampleId, libId, "gears", "stats", "krakenreport"))
+        val rawreport = Map("kraken" -> summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport"))
         val jsonReport = ConfigUtils.mapToJson(rawreport)
     }#
 
