@@ -48,7 +48,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
                 case Some(n) => n -> Map("sequence" -> seq, "count" -> count)
                 // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
                 // sequences come from FastQC
-                case None =>
+                case _ =>
                   throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in 'clipping_$readName'.")
               }
           }.toMap
@@ -58,7 +58,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
           Map.empty[String, Map[String, Any]]
       }
       // "adapters" key not found ~ something went wrong in our part
-      case None => throw new RuntimeException(s"Required key 'adapters' not found in stats entry 'clipping_$readName'.")
+      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry 'clipping_$readName'.")
     }
     initStats.updated("adapters", adapterCounts)
   }
