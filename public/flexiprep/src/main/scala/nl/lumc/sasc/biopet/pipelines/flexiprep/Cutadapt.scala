@@ -37,7 +37,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
   override def summaryStats: Map[String, Any] = {
     val initStats = super.summaryStats
     // Map of adapter sequence and how many times it is found
-    val adapterCounts = initStats.get("adapters") match {
+    val adapterCounts: Map[String, Map[String, Any]] = initStats.get("adapters") match {
       // "adapters" key found in statistics
       case Some(v) => v match {
         case m: Map[String, Int] => m.toSeq
@@ -45,7 +45,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
             case (seq, count) =>
               seqToName.get(seq) match {
                 // adapter sequence is found by FastQC
-                case Some(n) => n -> (seq, count)
+                case Some(n) => n -> Map("sequence" -> seq, "count" -> count)
                 // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
                 // sequences come from FastQC
                 case None =>
@@ -55,7 +55,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc, readName: String) extends nl.
         // FastQC found no adapters
         case otherwise =>
           logger.info(s"No adapters found for summarizing in 'clipping_$readName'.")
-          Map.empty[String, (String, Int)]
+          Map.empty[String, Map[String, Any]]
       }
       // "adapters" key not found ~ something went wrong in our part
       case None => throw new RuntimeException(s"Required key 'adapters' not found in stats entry 'clipping_$readName'.")
