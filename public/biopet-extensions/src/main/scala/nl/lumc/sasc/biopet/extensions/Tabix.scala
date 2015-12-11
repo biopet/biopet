@@ -56,7 +56,7 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
   var l: Boolean = config("l", default = false)
   var f: Boolean = config("f", default = false)
 
-  executable = config("exe", default = "tabix")
+  executable = config("exe", default = "tabix", freeVar = false)
 
   def versionCommand = executable
   def versionRegex = """Version: (.*)""".r

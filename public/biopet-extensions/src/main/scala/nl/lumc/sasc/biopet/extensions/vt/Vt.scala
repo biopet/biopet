@@ -13,14 +13,16 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.bcftools
+package nl.lumc.sasc.biopet.extensions.vt
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
-abstract class Bcftools extends BiopetCommandLineFunction with Version {
-  override def subPath = "bcftools" :: super.subPath
-  executable = config("exe", default = "bcftools", submodule = "bcftools", freeVar = false)
-  def versionCommand = executable
-  def versionRegex = """Version: (.*)""".r
-  override def versionExitcode = List(0, 1)
+/**
+ * General vt extension
+ *
+ * Created by pjvan_thof on 1/16/15.
+ */
+abstract class Vt extends BiopetCommandLineFunction {
+  override def subPath = "vt" :: super.subPath
+  executable = config("exe", default = "vt")
 }

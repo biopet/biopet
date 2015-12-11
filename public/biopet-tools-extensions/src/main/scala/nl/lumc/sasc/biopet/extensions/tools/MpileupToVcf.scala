@@ -38,6 +38,9 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
+  @Output
+  private var outputIndex: File = _
+
   var minDP: Option[Int] = config("min_dp")
   var minAP: Option[Int] = config("min_ap")
   var homoFraction: Option[Double] = config("homoFraction")
@@ -50,6 +53,7 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   override def beforeGraph() {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta().getAbsolutePath
+    if (output.getName.endsWith(".vcf.gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
