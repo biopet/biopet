@@ -100,7 +100,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
       val vtDecompose = new VtDecompose(this)
 
       if (normalize && decompose) {
-        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
+        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         vtNormalize.isIntermediate = true
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         vtDecompose.inputVcf = vtNormalize.outputVcf
@@ -108,7 +108,7 @@ trait ShivaVariantcallingTrait extends SummaryQScript
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
         cv.addInput(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
-        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normaize.vcf.gz")
+        vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
         cv.addInput(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
