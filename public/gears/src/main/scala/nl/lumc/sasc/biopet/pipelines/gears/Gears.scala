@@ -1,7 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
-import nl.lumc.sasc.biopet.pipelines.shiva.ShivaReport
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
