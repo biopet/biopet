@@ -36,7 +36,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
   override def summaryStats: Map[String, Any] = {
     val initStats = super.summaryStats
     // Map of adapter sequence and how many times it is found
-    val adapterCounts: Map[String, Map[String, Any]] = initStats.get("adapters") match {
+    val adapterCounts: Map[String, Map[String, Any]] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(v) => v match {
         case m: Map[String, Int] => m.toSeq
@@ -59,6 +59,6 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
       // "adapters" key not found ~ something went wrong in our part
       case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry '$fastq_input'.")
     }
-    initStats.updated("adapters", adapterCounts)
+    initStats.updated(adaptersStatsName, adapterCounts)
   }
 }
