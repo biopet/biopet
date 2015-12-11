@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.extensions.vt
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 
 /**
  * General vt extension
