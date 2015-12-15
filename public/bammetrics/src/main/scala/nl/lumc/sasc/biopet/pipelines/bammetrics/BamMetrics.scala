@@ -30,18 +30,13 @@ import org.broadinstitute.gatk.queue.QScript
 class BamMetrics(val root: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
-  with Reference {
+  with Reference
+  with TargetRegions {
 
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
-
-  /** Bed files for region of interests */
-  var roiBedFiles: List[File] = config("regions_of_interest", Nil)
-
-  /** Bed of amplicon that is used */
-  var ampliconBedFile: Option[File] = config("amplicon_bed")
 
   /** Settings for CollectRnaSeqMetrics */
   var rnaMetricsSettings: Map[String, String] = Map()
@@ -145,7 +140,7 @@ class BamMetrics(val root: Configurable) extends QScript
         val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
           ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(pcrMetrics)
-        addSummarizable(chsMetrics, "targeted_pcr_metrics")
+        addSummarizable(pcrMetrics, "targeted_pcr_metrics")
 
         Intervals(bedFile, ampIntervals)
     }

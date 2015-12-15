@@ -54,6 +54,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
   var allInfoTags = false
   var allGenotypeTags = false
   var reference: File = _
+  var intervals: Option[File] = None
 
   override def beforeGraph(): Unit = {
     reference = referenceFasta()
@@ -76,7 +77,8 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     repeat("--genotypeTag", genotypeTags) +
     conditional(allInfoTags, "--allInfoTags") +
     conditional(allGenotypeTags, "--allGenotypeTags") +
-    required("-R", reference)
+    required("-R", reference) +
+    optional("--intervals", intervals)
 
   /** Returns general stats to the summary */
   def summaryStats: Map[String, Any] = {

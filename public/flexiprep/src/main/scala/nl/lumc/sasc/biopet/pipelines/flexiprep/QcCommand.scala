@@ -50,7 +50,15 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   val seqtk = new SeqtkSeq(root)
   var clip: Option[Cutadapt] = None
   var trim: Option[Sickle] = None
-  var outputCommand: BiopetCommandLineFunction = null
+  lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
+    val gzip = Gzip(root)
+    gzip.output = output
+    gzip
+  } else {
+    val cat = Cat(root)
+    cat.output = output
+    cat
+  }
 
   def jobs = (Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
 
@@ -123,16 +131,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       case _            => seqtk.output
     }
 
-    if (compress) outputCommand = {
-      val gzip = new Gzip(root)
-      gzip.output = output
-      outputFile :<: gzip
-    }
-    else outputCommand = {
-      val cat = new Cat(root)
-      cat.input = outputFile :: Nil
-      cat.output = output
-      cat
+    outputCommand match {
+      case gzip: Gzip => outputFile :<: gzip
+      case cat: Cat   => cat.input = outputFile :: Nil
     }
 
     seqtk.beforeGraph()

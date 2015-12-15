@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.extensions.{ CheckChecksum, Md5sum }
+import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
 
@@ -27,7 +28,7 @@ import scala.collection.mutable
  *
  * Created by pjvan_thof on 2/14/15.
  */
-trait SummaryQScript extends BiopetQScript { qscript =>
+trait SummaryQScript extends BiopetQScript { qscript: QScript =>
 
   /** Key is sample/library, None is sample or library is not applicable */
   private[summary] var summarizables: Map[(String, Option[String], Option[String]), List[Summarizable]] = Map()
@@ -91,8 +92,11 @@ trait SummaryQScript extends BiopetQScript { qscript =>
     summaryQScripts :+= summaryQScript
   }
 
+  private var addedJobs = false
+
   /** Add jobs to qscript to execute summary, also add checksum jobs */
   def addSummaryJobs(): Unit = {
+    if (addedJobs) throw new IllegalStateException("Summary jobs for this QScript are already executed")
     val writeSummary = new WriteSummary(this)
 
     def addChecksum(file: File): Unit = {
@@ -159,6 +163,8 @@ trait SummaryQScript extends BiopetQScript { qscript =>
         logger.info("Write summary is skipped because sample flag is used")
       case _ => add(writeSummary)
     }
+
+    addedJobs = true
   }
 }
 
