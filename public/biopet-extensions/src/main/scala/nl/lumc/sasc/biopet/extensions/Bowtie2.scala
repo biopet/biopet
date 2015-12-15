@@ -212,8 +212,8 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     conditional(no_head, "--no-head") +
     conditional(no_sq, "--no-sq") +
     optional("--rg-id", rg_id) +
-    repeat("--rg", rg)
-  conditional(omit_sec_seq, "--omit-sec-seq") +
+    repeat("--rg", rg) +
+    conditional(omit_sec_seq, "--omit-sec-seq") +
     /* Performance */
     optional("--threads", threads) +
     conditional(reorder, "--reorder") +
