@@ -140,7 +140,7 @@ class BamMetrics(val root: Configurable) extends QScript
         val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
           ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(pcrMetrics)
-        addSummarizable(chsMetrics, "targeted_pcr_metrics")
+        addSummarizable(pcrMetrics, "targeted_pcr_metrics")
 
         Intervals(bedFile, ampIntervals)
     }
