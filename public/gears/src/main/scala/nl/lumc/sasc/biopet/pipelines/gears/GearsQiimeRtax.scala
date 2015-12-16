@@ -28,6 +28,11 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     ),
     "splitlibrariesfastq" -> Map(
       "barcode_type" -> "not-barcoded"
+    ),
+    "assigntaxonomy" -> Map(
+      "amplicon_id_regex" -> """(\S+)\s+(\S+?)""",
+      "header_id_regex" -> """S+s+(S+?)""",
+      "read_id_regex" -> """S+s+(S+)"""
     )
   )
 
