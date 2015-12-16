@@ -18,7 +18,6 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
