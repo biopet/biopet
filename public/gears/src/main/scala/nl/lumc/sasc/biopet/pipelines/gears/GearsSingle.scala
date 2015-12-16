@@ -43,6 +43,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
   var gearsUseKraken: Boolean = config("gears_use_kraken", default = true)
   var gearsUserQiimeRtax: Boolean = config("gear_use_qiime_rtax", default = false)
+  var gearsUserQiimeClosed: Boolean = config("gear_use_qiime_closed", default = false)
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -118,6 +119,16 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeRatx.init()
       qiimeRatx.biopetScript()
       addAll(qiimeRatx.functions)
+    }
+
+    if (gearsUserQiimeClosed) {
+      val qiimeClosed = new GearsQiimeClosed(this)
+      qiimeClosed.outputDir = new File(outputDir, "qiime_rtax")
+      qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
+      qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
+      qiimeClosed.init()
+      qiimeClosed.biopetScript()
+      addAll(qiimeClosed.functions)
     }
 
     addSummaryJobs()

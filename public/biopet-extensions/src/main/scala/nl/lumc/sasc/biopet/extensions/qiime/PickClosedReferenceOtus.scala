@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -35,6 +35,11 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   var force: Boolean = config("force", default = false)
   var print_only: Boolean = config("print_only", default = false)
   var suppress_taxonomy_assignment: Boolean = config("suppress_taxonomy_assignment", default = false)
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    jobOutputFile = new File(outputDir, "std.log")
+  }
 
   def cmdLine = executable +
     required("-i", inputFasta) +

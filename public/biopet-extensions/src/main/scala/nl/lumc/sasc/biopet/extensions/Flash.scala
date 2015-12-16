@@ -2,15 +2,15 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Version, BiopetCommandLineFunction}
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 import scala.util.matching.Regex
 
 /**
-  * Created by pjvanthof on 16/12/15.
-  */
+ * Created by pjvanthof on 16/12/15.
+ */
 class Flash(val root: Configurable) extends BiopetCommandLineFunction with Version {
   executable = config("exe", default = "flash", freeVar = false)
 
@@ -47,7 +47,7 @@ class Flash(val root: Configurable) extends BiopetCommandLineFunction with Versi
   var compressProgArgs: Option[String] = config("compress_prog_args")
   var outputSuffix: Option[String] = config("output_suffix")
 
-  private def suffix = outputSuffix.getOrElse("fastq") + (if(compress) ".gz" else "")
+  private def suffix = outputSuffix.getOrElse("fastq") + (if (compress) ".gz" else "")
 
   def combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
   def notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
