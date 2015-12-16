@@ -112,7 +112,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
     if (gearsUserQiimeClosed) {
       val qiimeClosed = new GearsQiimeClosed(this)
-      qiimeClosed.outputDir = new File(outputDir, "qiime_rtax")
+      qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
       qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
       add(qiimeClosed)
