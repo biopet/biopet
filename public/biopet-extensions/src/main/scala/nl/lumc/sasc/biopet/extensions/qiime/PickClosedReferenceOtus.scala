@@ -41,7 +41,7 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
     jobOutputFile = new File(outputDir, "std.log")
   }
 
-  def cmdLine = executable +
+  def cmdLine = executable + required("-f") +
     required("-i", inputFasta) +
     required("-o", outputDir) +
     optional("--reference_fp", reference_fp) +
