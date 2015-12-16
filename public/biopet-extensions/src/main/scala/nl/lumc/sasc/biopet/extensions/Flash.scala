@@ -47,9 +47,18 @@ class Flash(val root: Configurable) extends BiopetCommandLineFunction with Versi
   var compressProgArgs: Option[String] = config("compress_prog_args")
   var outputSuffix: Option[String] = config("output_suffix")
 
+  private def suffix = outputSuffix.getOrElse("fastq") + (if(compress) ".gz" else "")
+
+  def combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
+  def notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
+  def notCombinedR2 = new File(outputDirectory, s"$outputPrefix.notCombined_2.$suffix")
+  def outputHistogramTable = new File(outputDirectory, s"$outputPrefix.hist")
+  def outputHistogram = new File(outputDirectory, s"$outputPrefix.histogram")
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    //FIXME: output files
+    outputFiles :::= combinedFastq :: notCombinedR1 ::
+      notCombinedR2 :: outputHistogramTable :: outputHistogram :: Nil
   }
 
   def cmdLine = executable +
