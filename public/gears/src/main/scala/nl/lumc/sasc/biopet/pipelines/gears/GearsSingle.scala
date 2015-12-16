@@ -83,9 +83,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
         extract.outputDir = outputDir
         extract.bamFile = bam
         extract.outputName = outputName
-        extract.init()
-        extract.biopetScript()
-        addAll(extract.functions)
+        add(extract)
         (extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
       case _ => throw new IllegalArgumentException("Missing input files")
     }
@@ -94,10 +92,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     flexiprep.input_R1 = r1
     flexiprep.input_R2 = r2
     flexiprep.outputDir = new File(outputDir, "flexiprep")
-    flexiprep.init()
-    flexiprep.biopetScript()
-    addAll(flexiprep.functions)
-    addSummaryQScript(flexiprep)
+    add(flexiprep)
 
     if (gearsUseKraken) {
       val kraken = new GearsKraken(this)
@@ -105,10 +100,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       kraken.fastqR1 = flexiprep.fastqR1Qc
       kraken.fastqR2 = flexiprep.fastqR2Qc
       kraken.outputName = outputName
-      kraken.init()
-      kraken.biopetScript()
-      addAll(kraken.functions)
-      addSummaryQScript(kraken)
+      add(kraken)
     }
 
     if (gearsUserQiimeRtax) {
@@ -116,9 +108,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
       qiimeRatx.fastqR1 = flexiprep.fastqR1Qc
       qiimeRatx.fastqR2 = flexiprep.fastqR2Qc
-      qiimeRatx.init()
-      qiimeRatx.biopetScript()
-      addAll(qiimeRatx.functions)
+      add(qiimeRatx)
     }
 
     if (gearsUserQiimeClosed) {
@@ -126,9 +116,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeClosed.outputDir = new File(outputDir, "qiime_rtax")
       qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
       qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
-      qiimeClosed.init()
-      qiimeClosed.biopetScript()
-      addAll(qiimeClosed.functions)
+      add(qiimeClosed)
     }
 
     addSummaryJobs()
