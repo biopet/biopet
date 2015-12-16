@@ -15,17 +15,12 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
-import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
-import nl.lumc.sasc.biopet.extensions.delly.Delly
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Delly, Breakdancer, Clever, SvCaller }
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-
-import scala.collection.JavaConversions._
 
 /**
  * Common trait for ShivaVariantcalling
@@ -40,25 +35,11 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   protected var inputBamsArg: List[File] = Nil
 
-  protected var inputBams: Map[String, File] = Map()
-
-  def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
-    sampleId match {
-      case Some(sample)        => inputBams += sample -> file
-      case _ if !file.exists() => throw new IllegalArgumentException("Bam file does not exits: " + file)
-      case _ => {
-        val inputSam = SamReaderFactory.makeDefault.open(file)
-        val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
-        if (samples.size == 1) {
-          inputBams += samples.head -> file
-        } else throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
-      }
-    }
-  }
+  var inputBams: Map[String, File] = Map()
 
   /** Executed before script */
   def init(): Unit = {
-    inputBamsArg.foreach(addBamFile(_))
+    if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
   }
 
   /** Variantcallers requested by the config */
@@ -76,68 +57,16 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     require(inputBams.nonEmpty, "No input bams found")
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
-    callers.foreach(_.addJobs())
+    callers.foreach { caller =>
+      caller.outputDir = new File(outputDir, caller.name)
+      add(caller)
+    }
 
     addSummaryJobs()
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[SvCaller] = List(new Breakdancer, new Clever, new Delly)
-
-  /** General trait for a variantcaller mode */
-  trait SvCaller {
-    /** Name of mode, this should also be used in the config */
-    val name: String
-
-    /** Output dir for this mode */
-    def outputDir = new File(qscript.outputDir, name)
-
-    /** This should add the variantcaller jobs */
-    def addJobs()
-  }
-
-  /** default mode of freebayes */
-  class Breakdancer extends SvCaller {
-    val name = "breakdancer"
-
-    def addJobs() {
-      //TODO: move minipipeline of breakdancer to here
-      for ((sample, bamFile) <- inputBams) {
-        val breakdancerDir = new File(outputDir, sample)
-        val breakdancer = Breakdancer(qscript, bamFile, breakdancerDir)
-        addAll(breakdancer.functions)
-      }
-    }
-  }
-
-  /** default mode of bcftools */
-  class Clever extends SvCaller {
-    val name = "clever"
-
-    def addJobs() {
-      //TODO: check double directories
-      for ((sample, bamFile) <- inputBams) {
-        val cleverDir = new File(outputDir, sample)
-        val clever = CleverCaller(qscript, bamFile, cleverDir)
-        add(clever)
-      }
-    }
-  }
-
-  /** Makes a vcf file from a mpileup without statistics */
-  class Delly extends SvCaller {
-    val name = "delly"
-
-    def addJobs() {
-      //TODO: Move mini delly pipeline to here
-      for ((sample, bamFile) <- inputBams) {
-        val dellyDir = new File(outputDir, sample)
-        val delly = Delly(qscript, bamFile, dellyDir)
-        delly.outputName = sample
-        addAll(delly.functions)
-      }
-    }
-  }
+  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this))
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")

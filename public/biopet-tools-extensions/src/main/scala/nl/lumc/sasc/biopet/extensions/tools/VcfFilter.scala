@@ -30,6 +30,9 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output vcf", shortName = "o", required = false)
   var outputVcf: File = _
 
+  @Output
+  var outputVcfIndex: File = _
+
   var minSampleDepth: Option[Int] = config("min_sample_depth")
   var minTotalDepth: Option[Int] = config("min_total_depth")
   var minAlternateDepth: Option[Int] = config("min_alternate_depth")
@@ -37,6 +40,11 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
   var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
   override def defaultCoreMemory = 3.0
+
+  override def beforeGraph(): Unit = {
+    super.beforeGraph()
+    if (outputVcf.getName.endsWith("vcf.gz")) outputVcfIndex = new File(outputVcf.getAbsolutePath + ".tbi")
+  }
 
   override def cmdLine = super.cmdLine +
     required("-I", inputVcf) +

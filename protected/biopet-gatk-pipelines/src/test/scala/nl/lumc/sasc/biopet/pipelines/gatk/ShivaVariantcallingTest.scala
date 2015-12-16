@@ -76,7 +76,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty ||
       (!raw && !bcftools &&

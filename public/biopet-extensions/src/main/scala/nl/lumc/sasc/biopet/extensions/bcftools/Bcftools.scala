@@ -19,7 +19,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 
 abstract class Bcftools extends BiopetCommandLineFunction with Version {
   override def subPath = "bcftools" :: super.subPath
-  executable = config("exe", default = "bcftools")
+  executable = config("exe", default = "bcftools", submodule = "bcftools", freeVar = false)
   def versionCommand = executable
   def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)

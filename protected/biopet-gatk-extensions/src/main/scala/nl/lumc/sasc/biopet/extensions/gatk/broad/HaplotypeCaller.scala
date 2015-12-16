@@ -5,10 +5,17 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{Gather, Output}
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.HaplotypeCaller with GatkGeneral {
+
+  @Gather(enabled = false)
+  @Output(required = false)
+  protected var vcfIndex: File = _
 
   override val defaultThreads = 1
 
@@ -40,6 +47,7 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
+    if (out.getName.endsWith(".vcf.gz")) vcfIndex = new File(out.getAbsolutePath + ".tbi")
     if (bamOutput != null && nct.getOrElse(1) > 1) {
       logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
       nCoresRequest = Some(1)
@@ -47,10 +55,22 @@ class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.qu
     nct = Some(getThreads)
     memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
   }
+}
 
-  def useGvcf() {
-    emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
-    variant_index_type = GATKVCFIndexType.LINEAR
-    variant_index_parameter = config("variant_index_parameter", default = 128000)
+object HaplotypeCaller {
+  def apply(root: Configurable, inputFiles: List[File], outputFile: File): HaplotypeCaller = {
+    val hc = new HaplotypeCaller(root)
+    hc.input_file = inputFiles
+    hc.out = outputFile
+    if (hc.out.getName.endsWith(".vcf.gz")) hc.vcfIndex = new File(hc.out.getAbsolutePath + ".tbi")
+    hc
+  }
+
+  def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
+    val hc = apply(root, List(inputFile), outputFile)
+    hc.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
+    hc.variant_index_type = GATKVCFIndexType.LINEAR
+    hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
+    hc
   }
 }

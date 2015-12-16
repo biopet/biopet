@@ -21,7 +21,7 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.Freebayes
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter }
+import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -72,7 +72,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
     val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftools_singlesample && !freebayes)
 
