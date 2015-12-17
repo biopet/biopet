@@ -40,9 +40,9 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   @Argument(required = false)
   var outputName: String = _
 
-  var gearsUseKraken: Boolean = config("gears_use_kraken", default = true)
-  var gearsUserQiimeRtax: Boolean = config("gear_use_qiime_rtax", default = false)
-  var gearsUserQiimeClosed: Boolean = config("gear_use_qiime_closed", default = false)
+  val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
+  val qiimeRatx = if (config("gear_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
+  val qiimeClosed = if (config("gear_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -93,8 +93,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     flexiprep.outputDir = new File(outputDir, "flexiprep")
     add(flexiprep)
 
-    if (gearsUseKraken) {
-      val kraken = new GearsKraken(this)
+    krakenScript foreach { kraken =>
       kraken.outputDir = new File(outputDir, "kraken")
       kraken.fastqR1 = flexiprep.fastqR1Qc
       kraken.fastqR2 = flexiprep.fastqR2Qc
@@ -102,16 +101,14 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       add(kraken)
     }
 
-    if (gearsUserQiimeRtax) {
-      val qiimeRatx = new GearsQiimeRtax(this)
+    qiimeRatx foreach { qiimeRatx =>
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
       qiimeRatx.fastqR1 = flexiprep.fastqR1Qc
       qiimeRatx.fastqR2 = flexiprep.fastqR2Qc
       add(qiimeRatx)
     }
 
-    if (gearsUserQiimeClosed) {
-      val qiimeClosed = new GearsQiimeClosed(this)
+    qiimeClosed foreach { qiimeClosed =>
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
       qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
