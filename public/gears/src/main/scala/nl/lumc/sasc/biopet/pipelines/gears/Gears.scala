@@ -1,7 +1,5 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
