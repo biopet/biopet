@@ -36,9 +36,14 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   var print_only: Boolean = config("print_only", default = false)
   var suppress_taxonomy_assignment: Boolean = config("suppress_taxonomy_assignment", default = false)
 
+  def otuTable = new File(outputDir, "otu_table.biom")
+  def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    jobOutputFile = new File(outputDir, "std.log")
+    jobOutputFile = new File(outputDir, ".std.out")
+    outputFiles ::= otuTable
+    outputFiles ::= otuMap
   }
 
   def cmdLine = executable + required("-f") +
