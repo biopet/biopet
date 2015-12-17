@@ -52,10 +52,10 @@ object Zcat {
     zcat
   }
 
-  def apply(root: Configurable, input: List[File], output: File): Zcat = {
+  def apply(root: Configurable, input: List[File], output: File = null): Zcat = {
     val zcat = new Zcat(root)
     zcat.input = input
-    zcat.output = output
+    if (output != null) zcat.output = output
     zcat
   }
 }

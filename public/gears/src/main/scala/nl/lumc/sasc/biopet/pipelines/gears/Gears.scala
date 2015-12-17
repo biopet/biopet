@@ -1,9 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
-import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.qiime.{MergeOtuMaps, MergeOtuTables}
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat, Ln}
+import nl.lumc.sasc.biopet.extensions.qiime.{ MergeOtuMaps, MergeOtuTables }
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -19,6 +19,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     gearsReport.summaryFile = summaryFile
     Some(gearsReport)
   }
+
+  override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
   /** Init for pipeline */
   def init(): Unit = {
@@ -37,8 +39,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
    * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
   def addMultiSampleJobs(): Unit = {
-    val closedOtuTables = samples.values.flatMap(_.closedOtuTable).toList
-    val closedOtuMaps = samples.values.flatMap(_.closedOtuMap).toList
+    val gss = samples.values.flatMap(_.gs.qiimeClosed).toList
+    val closedOtuTables = gss.map(_.otuTable)
+    val closedOtuMaps = gss.map(_.otuMap)
     require(closedOtuTables.size == closedOtuMaps.size)
     if (closedOtuTables.nonEmpty) {
       val closedDir = new File(outputDir, "qiime_closed_reference")
@@ -82,22 +85,26 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     def makeLibrary(id: String): Library = new Library(id)
 
     class Library(libId: String) extends AbstractLibrary(libId) {
+
+      val flexiprep = new Flexiprep(qscript)
+      flexiprep.input_R1 = config("R1")
+      flexiprep.input_R2 = config("R2")
+      flexiprep.outputDir = new File(libDir, "flexiprep")
+
       lazy val gs = new GearsSingle(qscript)
       gs.sampleId = Some(sampleId)
       gs.libId = Some(libId)
       gs.outputDir = libDir
-      gs.fastqR1 = config("R1")
-      gs.fastqR2 = config("R2")
-      gs.bamFile = config("bam")
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
+        add(flexiprep)
+
         if (gs.fastqR1.isDefined || gs.bamFile.isDefined) {
-          gs.init()
-          gs.biopetScript()
-          addAll(gs.functions)
-          addSummaryQScript(gs)
-        } else Logging.addError(s"Sample: '$sampleId',  library: '$libId', No input files found")
+          gs.fastqR1 = Some(flexiprep.fastqR1Qc)
+          gs.fastqR2 = flexiprep.fastqR2Qc
+          add(gs)
+        }
       }
 
       /** Must return files to store into summary */
@@ -107,40 +114,30 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       def summaryStats = Map()
     }
 
-    private var _closedOtuTable: Option[File] = _
-    def closedOtuTable = _closedOtuTable
-
-    private var _closedOtuMap: Option[File] = _
-    def closedOtuMap = _closedOtuMap
+    lazy val gs = new GearsSingle(qscript)
+    gs.sampleId = Some(sampleId)
+    gs.outputDir = sampleDir
 
     /** Function to add sample jobs */
     protected def addJobs(): Unit = {
       addPerLibJobs()
-      val qiimeClosed = libraries.values.flatMap(_.gs.qiimeClosed).toList
-      if (qiimeClosed.nonEmpty) {
-        _closedOtuTable = Some(new File(sampleDir, "closed.biom"))
-        _closedOtuMap = Some(new File(sampleDir, "closed.map.txt"))
-        if (qiimeClosed.size > 1) {
-          val mergeTables = new MergeOtuTables(qscript)
-          mergeTables.input = qiimeClosed.map(_.otuTable).toList
-          mergeTables.outputFile = _closedOtuTable.get
-          add(mergeTables)
 
-          val mergeMaps = new MergeOtuMaps(qscript)
-          mergeMaps.input = qiimeClosed.map(_.otuMap).toList
-          mergeMaps.outputFile = _closedOtuMap.get
-          add(mergeMaps)
+      val flexipreps = libraries.values.map(_.flexiprep).toList
 
-        } else {
-          add(Ln(qscript, qiimeClosed.head.otuMap, _closedOtuMap.get))
-          add(Ln(qscript, qiimeClosed.head.otuTable, _closedOtuTable.get))
-        }
+      val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
+      add(Zcat(qscript, flexipreps.map(_.fastqR1Qc)) | new Gzip(qscript) > mergeR1)
 
-        //TODO: Plots
-      } else {
-        _closedOtuTable = None
-        _closedOtuMap = None
+      val mergeR2 = if (flexipreps.exists(_.paired)) {
+        Some(new File(sampleDir, s"$sampleId.R2.fq.gz"))
+
+      } else None
+      mergeR2.foreach { file =>
+        add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
       }
+
+      gs.fastqR1 = Some(mergeR1)
+      gs.fastqR2 = mergeR2
+      add(gs)
     }
 
     /** Must return files to store into summary */

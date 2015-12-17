@@ -73,45 +73,50 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     Some(gears)
   }
 
+  protected def executeFlexiprep(r1: File, r2: Option[File]): (File, Option[File]) = {
+    if (config("skip_flexiprep", default = false)) {
+      val flexiprep = new Flexiprep(this)
+      flexiprep.input_R1 = r1
+      flexiprep.input_R2 = r2
+      flexiprep.outputDir = new File(outputDir, "flexiprep")
+      add(flexiprep)
+      (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
+    } else (r1, r2)
+  }
+
   /** Method to add jobs */
   def biopetScript(): Unit = {
     val (r1, r2): (File, Option[File]) = (fastqR1, fastqR2, bamFile) match {
-      case (Some(r1), _, _) => (r1, fastqR2)
+      case (Some(r1), _, _) => executeFlexiprep(r1, fastqR2)
       case (_, _, Some(bam)) =>
         val extract = new ExtractUnmappedReads(this)
         extract.outputDir = outputDir
         extract.bamFile = bam
         extract.outputName = outputName
         add(extract)
-        (extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
+        executeFlexiprep(extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
       case _ => throw new IllegalArgumentException("Missing input files")
     }
 
-    val flexiprep = new Flexiprep(this)
-    flexiprep.input_R1 = r1
-    flexiprep.input_R2 = r2
-    flexiprep.outputDir = new File(outputDir, "flexiprep")
-    add(flexiprep)
-
     krakenScript foreach { kraken =>
       kraken.outputDir = new File(outputDir, "kraken")
-      kraken.fastqR1 = flexiprep.fastqR1Qc
-      kraken.fastqR2 = flexiprep.fastqR2Qc
+      kraken.fastqR1 = r1
+      kraken.fastqR2 = r2
       kraken.outputName = outputName
       add(kraken)
     }
 
     qiimeRatx foreach { qiimeRatx =>
       qiimeRatx.outputDir = new File(outputDir, "qiime_rtax")
-      qiimeRatx.fastqR1 = flexiprep.fastqR1Qc
-      qiimeRatx.fastqR2 = flexiprep.fastqR2Qc
+      qiimeRatx.fastqR1 = r1
+      qiimeRatx.fastqR2 = r2
       add(qiimeRatx)
     }
 
     qiimeClosed foreach { qiimeClosed =>
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
-      qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
-      qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
+      qiimeClosed.fastqR1 = r1
+      qiimeClosed.fastqR2 = r2
       add(qiimeClosed)
 
       //TODO: Plots
