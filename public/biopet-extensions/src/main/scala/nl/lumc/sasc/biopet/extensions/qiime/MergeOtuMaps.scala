@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 12/10/15.

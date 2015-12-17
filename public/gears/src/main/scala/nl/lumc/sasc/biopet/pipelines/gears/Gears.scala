@@ -137,6 +137,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
           add(Ln(qscript, qiimeClosed.head.otuMap, _closedOtuMap.get))
           add(Ln(qscript, qiimeClosed.head.otuTable, _closedOtuTable.get))
         }
+
+        //TODO: Plots
       } else {
         _closedOtuTable = None
         _closedOtuMap = None

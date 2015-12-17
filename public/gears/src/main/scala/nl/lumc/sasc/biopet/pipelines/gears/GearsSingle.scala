@@ -113,6 +113,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeClosed.fastqR1 = flexiprep.fastqR1Qc
       qiimeClosed.fastqR2 = flexiprep.fastqR2Qc
       add(qiimeClosed)
+
+      //TODO: Plots
     }
 
     addSummaryJobs()
