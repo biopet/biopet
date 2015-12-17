@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
+import nl.lumc.sasc.biopet.extensions.qiime.{MergeOtuMaps, MergeOtuTables}
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -51,7 +51,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         mergeTables.outputFile = closedOtuTable
         add(mergeTables)
 
-        val mergeMaps = new MergeOtuTables(qscript)
+        val mergeMaps = new MergeOtuMaps(qscript)
         mergeMaps.input = closedOtuMaps
         mergeMaps.outputFile = closedOtuMap
         add(mergeMaps)
@@ -126,7 +126,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
           mergeTables.outputFile = _closedOtuTable.get
           add(mergeTables)
 
-          val mergeMaps = new MergeOtuTables(qscript)
+          val mergeMaps = new MergeOtuMaps(qscript)
           mergeMaps.input = qiimeClosed.map(_.otuMap).toList
           mergeMaps.outputFile = _closedOtuMap.get
           add(mergeMaps)
