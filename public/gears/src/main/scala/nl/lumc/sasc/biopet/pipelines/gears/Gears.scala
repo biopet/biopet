@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
-import nl.lumc.sasc.biopet.extensions.{Gzip, Zcat, Ln}
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat, Ln }
 import nl.lumc.sasc.biopet.extensions.qiime.{ MergeOtuMaps, MergeOtuTables }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -127,10 +127,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
       add(Zcat(qscript, flexipreps.map(_.fastqR1Qc)) | new Gzip(qscript) > mergeR1)
 
-      val mergeR2 = if (flexipreps.exists(_.paired)) {
-        Some(new File(sampleDir, s"$sampleId.R2.fq.gz"))
-
-      } else None
+      val mergeR2 = if (flexipreps.exists(_.paired)) Some(new File(sampleDir, s"$sampleId.R2.fq.gz")) else None
       mergeR2.foreach { file =>
         add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
       }
