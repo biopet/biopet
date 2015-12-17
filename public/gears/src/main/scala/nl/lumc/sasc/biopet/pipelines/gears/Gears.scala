@@ -1,6 +1,10 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
+import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -35,6 +39,33 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
    * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
   def addMultiSampleJobs(): Unit = {
+    val closedOtuTables = samples.values.flatMap(_.closedOtuTable).toList
+    val closedOtuMaps = samples.values.flatMap(_.closedOtuMap).toList
+    require(closedOtuTables.size == closedOtuMaps.size)
+    if (closedOtuTables.nonEmpty) {
+      val closedDir = new File(outputDir, "qiime_closed_reference")
+      val closedOtuTable = new File(closedDir, "closed.biom")
+      val closedOtuMap = new File(closedDir, "closed.map.txt")
+
+      if (closedOtuTables.size > 1) {
+        val mergeTables = new MergeOtuTables(qscript)
+        mergeTables.input = closedOtuTables
+        mergeTables.outputFile = closedOtuTable
+        add(mergeTables)
+
+        val mergeMaps = new MergeOtuTables(qscript)
+        mergeMaps.input = closedOtuMaps
+        mergeMaps.outputFile = closedOtuMap
+        add(mergeMaps)
+
+      } else {
+        add(Ln(qscript, closedOtuMaps.head, closedOtuMap))
+        add(Ln(qscript, closedOtuTables.head, closedOtuTable))
+      }
+
+      //TODO: Plots
+
+    }
   }
 
   /**
@@ -45,11 +76,6 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   def makeSample(id: String): Sample = new Sample(id)
 
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    /** Function to add sample jobs */
-    protected def addJobs(): Unit = {
-      addPerLibJobs()
-    }
-
     /**
      * Factory method for Library class
      * @param id SampleId
@@ -81,6 +107,40 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
       /** Must returns stats to store into summary */
       def summaryStats = Map()
+    }
+
+    private var _closedOtuTable: Option[File] = _
+    def closedOtuTable = _closedOtuTable
+
+    private var _closedOtuMap: Option[File] = _
+    def closedOtuMap = _closedOtuMap
+
+    /** Function to add sample jobs */
+    protected def addJobs(): Unit = {
+      addPerLibJobs()
+      val qiimeClosed = libraries.values.flatMap(_.gs.qiimeClosed).toList
+      if (qiimeClosed.nonEmpty) {
+        _closedOtuTable = Some(new File(sampleDir, "closed.biom"))
+        _closedOtuMap = Some(new File(sampleDir, "closed.map.txt"))
+        if (qiimeClosed.size > 1) {
+          val mergeTables = new MergeOtuTables(qscript)
+          mergeTables.input = qiimeClosed.map(_.otuTable).toList
+          mergeTables.outputFile = _closedOtuTable.get
+          add(mergeTables)
+
+          val mergeMaps = new MergeOtuTables(qscript)
+          mergeMaps.input = qiimeClosed.map(_.otuMap).toList
+          mergeMaps.outputFile = _closedOtuMap.get
+          add(mergeMaps)
+
+        } else {
+          add(Ln(qscript, qiimeClosed.head.otuMap, _closedOtuMap.get))
+          add(Ln(qscript, qiimeClosed.head.otuTable, _closedOtuTable.get))
+        }
+      } else {
+        _closedOtuTable = None
+        _closedOtuMap = None
+      }
     }
 
     /** Must return files to store into summary */
