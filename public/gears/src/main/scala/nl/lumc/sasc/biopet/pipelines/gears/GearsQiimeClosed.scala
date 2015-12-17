@@ -25,6 +25,12 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with BiopetQScrip
     require(fastqR1 != null)
   }
 
+  private var _otuMap: File = _
+  def otuMap = _otuMap
+
+  private var _otuTable: File = _
+  def otuTable = _otuTable
+
   def biopetScript() = {
 
     val fastqFile = fastqR2 match {
@@ -48,5 +54,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with BiopetQScrip
     closedReference.inputFasta = splitLib.outputSeqs
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
+    _otuMap = closedReference.otuMap
+    _otuTable = closedReference.otuTable
   }
 }
