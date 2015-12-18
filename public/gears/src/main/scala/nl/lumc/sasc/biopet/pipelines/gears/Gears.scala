@@ -102,11 +102,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       protected def addJobs(): Unit = {
         add(flexiprep)
 
-        if (gs.fastqR1.isDefined || gs.bamFile.isDefined) {
-          gs.fastqR1 = Some(flexiprep.fastqR1Qc)
-          gs.fastqR2 = flexiprep.fastqR2Qc
-          add(gs)
-        }
+        gs.fastqR1 = Some(flexiprep.fastqR1Qc)
+        gs.fastqR2 = flexiprep.fastqR2Qc
+        add(gs)
       }
 
       /** Must return files to store into summary */
