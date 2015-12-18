@@ -180,8 +180,8 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     optional("-D", D) +
     optional("-R", R) +
     /* Paired End */
-    optional("-minins", minins) +
-    optional("-maxins", maxins) +
+    optional("--minins", minins) +
+    optional("--maxins", maxins) +
     conditional(fr, "--fr") +
     conditional(rf, "--rf") +
     conditional(ff, "--ff") +
