@@ -447,7 +447,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     bowtie2.rg +:= ("PU:" + platformUnit)
     bowtie2.rg +:= ("SM:" + sampleId.get)
     bowtie2.R1 = R1
-    if (paired) bowtie2.R2 = Some(R2.get)
+    bowtie2.R2 = R2
     val sortSam = new SortSam(this)
     sortSam.output = output
     val pipe = bowtie2 | sortSam
