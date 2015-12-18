@@ -73,8 +73,10 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     Some(gears)
   }
 
+  protected var skipFlexiprep: Boolean = config("skip_flexiprep", default = false)
+
   protected def executeFlexiprep(r1: File, r2: Option[File]): (File, Option[File]) = {
-    if (!config("skip_flexiprep", default = false).asBoolean) {
+    if (!skipFlexiprep) {
       val flexiprep = new Flexiprep(this)
       flexiprep.input_R1 = r1
       flexiprep.input_R2 = r2
@@ -129,7 +131,12 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".gears.summary.json")
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty
+  def summarySettings: Map[String, Any] = Map(
+    "skip_flexiprep" -> skipFlexiprep,
+    "gears_use_kraken" -> krakenScript.isDefined,
+    "gear_use_qiime_rtax" -> qiimeRatx.isDefined,
+    "gear_use_qiime_closed" -> qiimeClosed.isDefined
+  )
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = Map.empty ++
