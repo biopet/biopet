@@ -442,10 +442,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   def addBowtie2(R1: File, R2: Option[File], output: File): File = {
     val bowtie2 = new Bowtie2(this)
     bowtie2.rg_id = Some(readgroupId)
-    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("LB:" + libId.getOrElse("x"))
     bowtie2.rg +:= ("PL:" + platform)
     bowtie2.rg +:= ("PU:" + platformUnit)
-    bowtie2.rg +:= ("SM:" + sampleId.get)
+    bowtie2.rg +:= ("SM:" + sampleId.getOrElse("x"))
     bowtie2.R1 = R1
     bowtie2.R2 = R2
     val sortSam = new SortSam(this)
