@@ -74,7 +74,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   }
 
   protected def executeFlexiprep(r1: File, r2: Option[File]): (File, Option[File]) = {
-    if (config("skip_flexiprep", default = false)) {
+    if (!config("skip_flexiprep", default = false).asBoolean) {
       val flexiprep = new Flexiprep(this)
       flexiprep.input_R1 = r1
       flexiprep.input_R2 = r2
