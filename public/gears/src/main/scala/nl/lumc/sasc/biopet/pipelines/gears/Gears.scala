@@ -86,7 +86,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
     class Library(libId: String) extends AbstractLibrary(libId) {
 
-      val flexiprep = new Flexiprep(qscript)
+      lazy val flexiprep = new Flexiprep(qscript)
+      flexiprep.sampleId = Some(sampleId)
+      flexiprep.libId = Some(libId)
       flexiprep.input_R1 = config("R1")
       flexiprep.input_R2 = config("R2")
       flexiprep.outputDir = new File(libDir, "flexiprep")
