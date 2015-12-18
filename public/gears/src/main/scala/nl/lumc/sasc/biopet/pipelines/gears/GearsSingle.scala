@@ -40,9 +40,9 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   @Argument(required = false)
   var outputName: String = _
 
-  val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
-  val qiimeRatx = if (config("gear_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
-  val qiimeClosed = if (config("gear_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
+  lazy val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
+  lazy val qiimeRatx = if (config("gear_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
+  lazy val qiimeClosed = if (config("gear_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
