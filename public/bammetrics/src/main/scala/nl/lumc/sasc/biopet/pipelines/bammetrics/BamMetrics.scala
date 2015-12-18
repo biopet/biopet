@@ -77,7 +77,7 @@ class BamMetrics(val root: Configurable) extends QScript
 
   /** Script to add jobs */
   def biopetScript() {
-    add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
+    add(SamtoolsFlagstat(this, inputBam, outputDir))
 
     val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)

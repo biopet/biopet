@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -219,6 +219,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
         case "bowtie"     => addBowtie(R1, R2, outputBam)
+        case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
@@ -435,6 +436,25 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -1
     add(pipe)
     ar._2
+  }
+
+  /** Add bowtie2 jobs **/
+  def addBowtie2(R1: File, R2: Option[File], output: File): File = {
+    val bowtie2 = new Bowtie2(this)
+    bowtie2.rg_id = Some(readgroupId)
+    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("PL:" + platform)
+    bowtie2.rg +:= ("PU:" + platformUnit)
+    bowtie2.rg +:= ("SM:" + sampleId.get)
+    bowtie2.R1 = R1
+    bowtie2.R2 = R2
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = bowtie2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = -1
+    add(pipe)
+    output
   }
 
   /** Adds Star jobs */
