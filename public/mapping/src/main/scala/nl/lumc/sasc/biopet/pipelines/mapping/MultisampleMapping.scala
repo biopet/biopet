@@ -35,7 +35,7 @@ class MultisampleMapping(val root: Configurable) extends QScript
   }
 
   def biopetScript: Unit = {
-    addSamplesJobs() // This executes jobs for all samples
+    addSamplesJobs()
     addSummaryJobs()
   }
 
@@ -47,14 +47,16 @@ class MultisampleMapping(val root: Configurable) extends QScript
 
   def summaryFiles: Map[String, File] = Map()
 
-  def summarySettings: Map[String, Any] = Map()
+  def summarySettings: Map[String, Any] = Map("merge_strategy" -> mergeStrategy.toString)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
-      def summaryFiles: Map[String, File] = Map()
+      def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
+          inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
+          preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
 
       def summaryStats: Map[String, Any] = Map()
 
@@ -145,7 +147,8 @@ class MultisampleMapping(val root: Configurable) extends QScript
       }
     }
 
-    def summaryFiles: Map[String, File] = Map()
+    def summaryFiles: Map[String, File] = (bamFile.map("output_bam" -> _) ::
+      preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
 
     def summaryStats: Map[String, Any] = Map()
 
