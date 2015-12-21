@@ -65,10 +65,10 @@ class MergeSamFiles(val root: Configurable) extends Picard {
 
 object MergeSamFiles {
   /** Returns default MergeSamFiles */
-  def apply(root: Configurable, input: List[File], outputDir: File, sortOrder: String = null): MergeSamFiles = {
+  def apply(root: Configurable, input: List[File], outputFile: File, sortOrder: String = null): MergeSamFiles = {
     val mergeSamFiles = new MergeSamFiles(root)
     mergeSamFiles.input = input
-    mergeSamFiles.output = new File(outputDir, input.head.getName.stripSuffix(".bam").stripSuffix(".sam") + ".merge.bam")
+    mergeSamFiles.output = outputFile
     if (sortOrder == null) mergeSamFiles.sortOrder = "coordinate"
     else mergeSamFiles.sortOrder = sortOrder
     mergeSamFiles

@@ -5,7 +5,7 @@ import java.io.File
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, MultiSampleQScript}
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.picard.{AddOrReplaceReadGroups, SamToFastq}
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -21,11 +21,20 @@ class MultisampleMapping(val root: Configurable) extends QScript
   with Reference { qscript =>
   def this() = this(null)
 
+  def mergeStrategy: MultisampleMapping.MergeStrategy.Value = {
+    val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
+    MultisampleMapping.MergeStrategy.values.find(_.toString.toLowerCase == value) match {
+      case Some(v) => v
+      case _ => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
+    }
+  }
+
   def init: Unit = {
   }
 
   def biopetScript: Unit = {
     addSamplesJobs() // This executes jobs for all samples
+    addSummaryJobs()
   }
 
   def addMultiSampleJobs: Unit = {
@@ -65,6 +74,8 @@ class MultisampleMapping(val root: Configurable) extends QScript
         case _ if inputBam.isDefined => Some(new File(libDir, s"$sampleId-$libId.bam"))
         case _ => None
       }
+
+      def preProcessBam = bamFile
 
       def addJobs: Unit = {
         if (inputR1.isDefined) {
@@ -139,8 +150,29 @@ class MultisampleMapping(val root: Configurable) extends QScript
 
     def summaryStats: Map[String, Any] = Map()
 
+    def executeSamplePreProcess: Boolean = libraries.flatMap(_._2.bamFile).size > 1
+
+    def bamFile = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
+      mergeStrategy != MultisampleMapping.MergeStrategy.None)
+      Some(new File(sampleDir, s"$sampleId.bam"))
+    else None
+
+    def preProcessBam = bamFile
+
     def addJobs: Unit = {
       addPerLibJobs() // This add jobs for each library
+
+      mergeStrategy match {
+        case MultisampleMapping.MergeStrategy.MergeSam =>
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
+        case MultisampleMapping.MergeStrategy.PreProcessMergeSam =>
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
+        case MultisampleMapping.MergeStrategy.MarkDuplicates =>
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
+        case MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates =>
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
+        case _ =>
+      }
     }
   }
 }
@@ -148,7 +180,7 @@ class MultisampleMapping(val root: Configurable) extends QScript
 object MultisampleMapping extends PipelineCommand {
 
   object MergeStrategy extends Enumeration {
-    val None, MergeSam, MarkDuplicates = Value
+    val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
   }
 
   def fileMustBeAbsulute(file: Option[File]): Option[File] = {
