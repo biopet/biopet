@@ -11,6 +11,8 @@ import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
+import MultisampleMapping.MergeStrategy
+
 import scala.collection.JavaConversions._
 
 /**
@@ -21,9 +23,9 @@ class MultisampleMapping(val root: Configurable) extends QScript
   with Reference { qscript =>
   def this() = this(null)
 
-  def mergeStrategy: MultisampleMapping.MergeStrategy.Value = {
+  def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
-    MultisampleMapping.MergeStrategy.values.find(_.toString.toLowerCase == value) match {
+    MergeStrategy.values.find(_.toString.toLowerCase == value) match {
       case Some(v) => v
       case _ => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
     }
@@ -137,10 +139,7 @@ class MultisampleMapping(val root: Configurable) extends QScript
             bamMetrics.libId = Some(libId)
             bamMetrics.inputBam = bamFile.get
             bamMetrics.outputDir = new File(libDir, "metrics")
-            bamMetrics.init()
-            bamMetrics.biopetScript()
-            addAll(bamMetrics.functions)
-            addSummaryQScript(bamMetrics)
+            add(bamMetrics)
           }
         } else logger.warn(s"Sample '$sampleId' does not have any input files")
       }
@@ -150,8 +149,6 @@ class MultisampleMapping(val root: Configurable) extends QScript
 
     def summaryStats: Map[String, Any] = Map()
 
-    def executeSamplePreProcess: Boolean = libraries.flatMap(_._2.bamFile).size > 1
-
     def bamFile = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
       mergeStrategy != MultisampleMapping.MergeStrategy.None)
       Some(new File(sampleDir, s"$sampleId.bam"))
@@ -159,19 +156,32 @@ class MultisampleMapping(val root: Configurable) extends QScript
 
     def preProcessBam = bamFile
 
-    def addJobs: Unit = {
+    def addJobs(): Unit = {
       addPerLibJobs() // This add jobs for each library
 
       mergeStrategy match {
-        case MultisampleMapping.MergeStrategy.MergeSam =>
+        case MergeStrategy.None =>
+        case (MergeStrategy.MergeSam | MergeStrategy.MarkDuplicates) if libraries.flatMap(_._2.bamFile).size == 1 =>
+          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get):_*)
+        case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
+          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get):_*)
+        case MergeStrategy.MergeSam =>
           add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
-        case MultisampleMapping.MergeStrategy.PreProcessMergeSam =>
+        case MergeStrategy.PreProcessMergeSam =>
           add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
-        case MultisampleMapping.MergeStrategy.MarkDuplicates =>
+        case MergeStrategy.MarkDuplicates =>
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
-        case MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates =>
+        case MergeStrategy.PreProcessMarkDuplicates =>
           add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
-        case _ =>
+        case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
+      }
+
+      if (mergeStrategy != None && libraries.flatMap(_._2.bamFile).nonEmpty) {
+        val bamMetrics = new BamMetrics(qscript)
+        bamMetrics.sampleId = Some(sampleId)
+        bamMetrics.inputBam = preProcessBam.get
+        bamMetrics.outputDir = new File(sampleDir, "metrics")
+        add(bamMetrics)
       }
     }
   }

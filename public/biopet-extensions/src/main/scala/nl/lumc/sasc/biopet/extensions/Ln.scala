@@ -132,4 +132,13 @@ object Ln {
     ln.relative = relative
     ln
   }
+
+  def linkBamFile(root: Configurable, input: File, output: File, index: Boolean = true, relative: Boolean = true): List[Ln] = {
+    val bamLn = Ln(root, input, output, relative)
+    bamLn :: (if (index) {
+      val inputIndex = new File(input.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      val outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      List(Ln(root, inputIndex, outputIndex, relative))
+    } else Nil)
+  }
 }
