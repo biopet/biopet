@@ -334,7 +334,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if ((!gunzip && !bunzip2) && input.forall(_.getName.endsWith(".gz"))) {
-      logger.info("Fastq with .gz extension found, enabled --gunzip option")
+      logger.debug("Fastq with .gz extension found, enabled --gunzip option")
       gunzip = true
     }
   }
