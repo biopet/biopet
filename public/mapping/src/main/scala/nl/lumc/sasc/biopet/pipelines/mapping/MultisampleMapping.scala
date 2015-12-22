@@ -8,7 +8,6 @@ import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.utils.Logging
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import MultisampleMapping.MergeStrategy
@@ -18,10 +17,10 @@ import scala.collection.JavaConversions._
 /**
   * Created by pjvanthof on 18/12/15.
   */
-class MultisampleMapping(val root: Configurable) extends QScript
+trait MultisampleMapping extends QScript
   with MultiSampleQScript
   with Reference { qscript =>
-  def this() = this(null)
+  //def this() = this(null)
 
   def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
@@ -31,23 +30,25 @@ class MultisampleMapping(val root: Configurable) extends QScript
     }
   }
 
-  def init: Unit = {
+  def init(): Unit = {
   }
 
-  def biopetScript: Unit = {
+  def biopetScript(): Unit = {
     addSamplesJobs()
     addSummaryJobs()
   }
 
-  def addMultiSampleJobs: Unit = {
+  def addMultiSampleJobs(): Unit = {
     // this code will be executed after all code of all samples is executed
   }
 
   def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 
-  def summaryFiles: Map[String, File] = Map()
+  def summaryFiles: Map[String, File] = Map("referenceFasta" -> referenceFasta())
 
-  def summarySettings: Map[String, Any] = Map("merge_strategy" -> mergeStrategy.toString)
+  def summarySettings: Map[String, Any] = Map(
+    "reference" -> referenceSummary,
+    "merge_strategy" -> mergeStrategy.toString)
 
   def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
@@ -81,7 +82,7 @@ class MultisampleMapping(val root: Configurable) extends QScript
 
       def preProcessBam = bamFile
 
-      def addJobs: Unit = {
+      def addJobs(): Unit = {
         if (inputR1.isDefined) {
           mapping.foreach { m =>
             m.input_R1 = inputR1.get
@@ -179,7 +180,7 @@ class MultisampleMapping(val root: Configurable) extends QScript
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 
-      if (mergeStrategy != None && libraries.flatMap(_._2.bamFile).nonEmpty) {
+      if (mergeStrategy != MergeStrategy.None && libraries.flatMap(_._2.bamFile).nonEmpty) {
         val bamMetrics = new BamMetrics(qscript)
         bamMetrics.sampleId = Some(sampleId)
         bamMetrics.inputBam = preProcessBam.get
