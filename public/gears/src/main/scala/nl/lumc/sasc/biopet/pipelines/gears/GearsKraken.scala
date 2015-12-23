@@ -85,10 +85,18 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 }
 
 object GearsKraken {
-  def convertKrakenJsonToKronaXml(files: Map[String, File], outputFile: File): Unit = {
 
-    val oriMap = files.map { case (k, v) => k -> ConfigUtils.fileToConfigMap(v) }
+  def convertKrakenJsonToKronaXml(files: Map[String, File], outputFile: File): Unit = {
+    val summaries = files.map { case (k, v) => k -> ConfigUtils.fileToConfigMap(v) }
+    convertKrakenSummariesToKronaXml(summaries, outputFile)
+  }
+
+  def convertKrakenSummariesToKronaXml(summaries: Map[String, Map[String, Any]], outputFile: File): Unit = {
+
+    val samples = summaries.keys.toList.sorted
+
     val taxs: mutable.Map[String, Any] = mutable.Map()
+
     def addTax(map: Map[String, Any], path: List[String] = Nil): Unit = {
       val name = map("name").toString
       val x = path.foldLeft(taxs)((a, b) => if (a.contains(b)) a(b).asInstanceOf[mutable.Map[String, Any]] else {
@@ -100,12 +108,11 @@ object GearsKraken {
 
       map("children").asInstanceOf[List[Any]].foreach(x => addTax(x.asInstanceOf[Map[String, Any]], path ::: name :: Nil))
     }
-    oriMap.foreach { x =>
-      addTax(x._2("classified").asInstanceOf[Map[String, Any]])
-    }
+
+    summaries.foreach { x => addTax(x._2("classified").asInstanceOf[Map[String, Any]]) }
 
     def getValue(sample: String, path: List[String], key: String) = {
-      path.foldLeft(oriMap(sample)("classified").asInstanceOf[Map[String, Any]]) { (b, a) =>
+      path.foldLeft(summaries(sample)("classified").asInstanceOf[Map[String, Any]]) { (b, a) =>
         b.getOrElse("children", List[Map[String, Any]]())
           .asInstanceOf[List[Map[String, Any]]]
           .find(_.getOrElse("name", "") == a).getOrElse(Map[String, Any]())
@@ -113,20 +120,23 @@ object GearsKraken {
     }
 
     def createNodes(map: mutable.Map[String, Any], path: List[String] = Nil): Seq[Node] = {
-      (map.map {
+      map.map {
         case (k, v) =>
-          val node = <node name={ k }></node>
-          val sizes = oriMap.keySet.toList.map { sample => <val>{ getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0) }</val> }
-          val size = <size>{ sizes }</size>
+          val node = <node name={k}></node>
+          val sizes = samples.map { sample => <val>
+            {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0)}
+          </val>
+          }
+          val size = <size>{sizes}</size>
           node.copy(child = size ++ createNodes(v.asInstanceOf[mutable.Map[String, Any]], path ::: k :: Nil))
-      }).toSeq
+      }.toSeq
     }
     val xml = <krona>
                 <attributes magnitude="size">
                   <attribute display="size">size</attribute>
                 </attributes>
                 <datasets>
-                  { oriMap.keySet.map { sample => <dataset>{ sample }</dataset> } }
+                  { samples.map { sample => <dataset>{ sample }</dataset> } }
                 </datasets>
               </krona>
 
