@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
-import scala.xml.Node
+import scala.xml.{PrettyPrinter, Node}
 
 /**
  * Created by pjvanthof on 04/12/15.
@@ -141,7 +141,8 @@ object GearsKraken {
               </krona>
 
     val writer = new PrintWriter(outputFile)
-    writer.println(xml.copy(child = xml.child ++ createNodes(taxs)).toString())
+    val prettyXml = new PrettyPrinter(80, 2)
+    writer.println(prettyXml.format(xml.copy(child = xml.child ++ createNodes(taxs))))
     writer.close()
   }
 }
