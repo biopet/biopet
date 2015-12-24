@@ -2,7 +2,8 @@ package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.SampleLibraryTag
 import nl.lumc.sasc.biopet.extensions.Flash
 import nl.lumc.sasc.biopet.extensions.qiime._
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -16,7 +17,7 @@ import scala.xml.{ PrettyPrinter, Elem }
 /**
  * Created by pjvan_thof on 12/4/15.
  */
-class GearsQiimeClosed(val root: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
+class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
 
@@ -64,6 +65,15 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with BiopetQScrip
     _otuMap = closedReference.otuMap
     _otuTable = closedReference.otuTable
   }
+
+  /** Must return a map with used settings for this pipeline */
+  def summarySettings: Map[String, Any] = Map()
+
+  /** File to put in the summary for thie pipeline */
+  def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable,"otu_map" -> otuMap)
+
+  /** Name of summary output file */
+  def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
 }
 
 object GearsQiimeClosed {
