@@ -27,7 +27,7 @@ object GearsSingleReport extends ReportBuilder {
   // TODO: Add dustbin analysis (aggregated)
   // TODO: Add alignment stats per sample for the dustbin analysis
 
-  override def extFiles = super.extFiles ++ List("js/gears.js")
+  override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
@@ -39,7 +39,7 @@ object GearsSingleReport extends ReportBuilder {
       ),
       List(
         "Gears intro" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSingleFront.ssp"),
-        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp")
+        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp")
       ),
       pageArgs
     )

@@ -16,7 +16,7 @@ object GearsReport extends MultisampleReportBuilder {
 
   def reportName = "Gears Report"
 
-  override def extFiles = super.extFiles ++ List("js/gears.js")
+  override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
@@ -54,7 +54,7 @@ object GearsReport extends MultisampleReportBuilder {
 
     ReportPage(
       if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
-        "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
+        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil, List(
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
