@@ -124,9 +124,16 @@ object GearsKraken {
         case (k, v) =>
           val node = <node name={ k }></node>
           val sizes = samples.map { sample =>
-            <val>
-              { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0) }
-            </val>
+            if (k == "root") {
+              val unclassified = summaries(sample)("unclassified").asInstanceOf[Map[String, Any]]("size").asInstanceOf[Long]
+              <val>
+                {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified}
+              </val>
+            } else {
+              <val>
+                {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0)}
+              </val>
+            }
           }
           val size = <size>{ sizes }</size>
           node.copy(child = size ++ createNodes(v.asInstanceOf[mutable.Map[String, Any]], path ::: k :: Nil))
