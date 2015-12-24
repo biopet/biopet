@@ -11,7 +11,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
-import scala.xml.{PrettyPrinter, Node}
+import scala.xml.{ PrettyPrinter, Node }
 
 /**
  * Created by pjvanthof on 04/12/15.
@@ -122,12 +122,13 @@ object GearsKraken {
     def createNodes(map: mutable.Map[String, Any], path: List[String] = Nil): Seq[Node] = {
       map.map {
         case (k, v) =>
-          val node = <node name={k}></node>
-          val sizes = samples.map { sample => <val>
-            {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0)}
-          </val>
+          val node = <node name={ k }></node>
+          val sizes = samples.map { sample =>
+            <val>
+              { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0) }
+            </val>
           }
-          val size = <size>{sizes}</size>
+          val size = <size>{ sizes }</size>
           node.copy(child = size ++ createNodes(v.asInstanceOf[mutable.Map[String, Any]], path ::: k :: Nil))
       }.toSeq
     }
