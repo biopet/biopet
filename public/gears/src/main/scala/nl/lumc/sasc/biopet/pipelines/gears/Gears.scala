@@ -46,8 +46,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     require(closedOtuTables.size == closedOtuMaps.size)
     if (closedOtuTables.nonEmpty) {
       val closedDir = new File(outputDir, "qiime_closed_reference")
-      val closedOtuTable = new File(closedDir, "closed.biom")
-      val closedOtuMap = new File(closedDir, "closed.map.txt")
+      val closedOtuTable = new File(closedDir, "otu_table.biom")
+      val closedOtuMap = new File(closedDir, "otu_map.txt")
 
       if (closedOtuTables.size > 1) {
         val mergeTables = new MergeOtuTables(qscript)
