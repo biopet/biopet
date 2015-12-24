@@ -35,7 +35,7 @@ Specific configuration values for the Sage pipeline are:
 As with other pipelines, you can run the Sage pipeline by invoking the `pipeline` subcommand. There is also a general help available which can be invoked using the `-h` flag:
 
 ~~~
-$ java -jar /path/to/biopet.jar pipeline sage -h
+$ biopet pipeline sage -h
 
 Arguments for Sage:
  -s,--sample <sample>                  Only Sample
@@ -49,14 +49,14 @@ Arguments for Sage:
 If you are on SHARK, you can also load the `biopet` module and execute `biopet pipeline` instead:
 
 ~~~
-$ module load biopet/v0.3.0
+$ module load biopet/v0.5.0
 $ biopet pipeline sage
 
 ~~~
 
 To run the pipeline:
 ~~~
- biopet pipeline sage -config /path/to/config.json -qsub -jobParaEnv BWA -run
+$ biopet pipeline sage -config /path/to/config.json -qsub -jobParaEnv BWA -run
 ~~~
 
 
@@ -123,3 +123,8 @@ Below is an example of the output files that you will get after running Sage. He
     ├── no_sense_genes.txt
     └── tag.lib
 ~~~
+
+## Getting Help
+
+If you have any questions on running SAGE or suggestions on how to improve the overall flow, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

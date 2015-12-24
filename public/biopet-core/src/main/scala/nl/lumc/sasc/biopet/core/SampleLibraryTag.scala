@@ -24,6 +24,9 @@ import org.broadinstitute.gatk.utils.commandline.Argument
  * @author Peter van 't Hof
  */
 trait SampleLibraryTag extends Configurable {
+
+  //FIXME: not possible to have required sample / lib
+
   @Argument(doc = "Sample ID", shortName = "sample", required = false)
   var sampleId: Option[String] = root match {
     case tag: SampleLibraryTag => tag.sampleId

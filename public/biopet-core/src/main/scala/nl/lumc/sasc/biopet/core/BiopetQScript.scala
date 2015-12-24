@@ -17,19 +17,18 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.queue.QSettings
+import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
 import org.broadinstitute.gatk.utils.commandline.Argument
 
-import scala.collection.mutable.ListBuffer
-
 /** Base for biopet pipeline */
-trait BiopetQScript extends Configurable with GatkLogging {
+trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
   @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
@@ -78,6 +77,13 @@ trait BiopetQScript extends Configurable with GatkLogging {
       case f: ScatterGatherableFunction => f.scatterCount = 1
       case _                            =>
     }
+
+    this match {
+      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
+        logger.info("Write report is skipped because sample flag is used")
+      case _ => reportClass.foreach(add(_))
+    }
+
     for (function <- functions) function match {
       case f: BiopetCommandLineFunction =>
         f.preProcessExecutable()
@@ -93,14 +99,18 @@ trait BiopetQScript extends Configurable with GatkLogging {
 
     inputFiles.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
-      else if (!i.file.canRead()) Logging.addError(s"Input file can not be read: ${i.file}")
+      else if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
     }
 
-    this match {
-      case q: MultiSampleQScript if q.onlySamples.nonEmpty && !q.samples.forall(x => q.onlySamples.contains(x._1)) =>
-        logger.info("Write report is skipped because sample flag is used")
-      case _ => reportClass.foreach(add(_))
-    }
+    functions.filter(_.jobOutputFile == null).foreach(f => {
+      try {
+        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + configName + ".out")
+      } catch {
+        case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
+      }
+    })
+
+    if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
 
     Logging.checkErrors()
   }
@@ -116,8 +126,26 @@ trait BiopetQScript extends Configurable with GatkLogging {
     function.isIntermediate = isIntermediate
     add(function)
   }
+
+  def add(subPipeline: QScript): Unit = {
+    subPipeline.qSettings = this.qSettings
+    subPipeline match {
+      case that: SummaryQScript =>
+        that.init()
+        that.biopetScript()
+        this match {
+          case s: SummaryQScript => s.addSummaryQScript(that)
+          case _                 =>
+        }
+      case that: BiopetQScript =>
+        that.init()
+        that.biopetScript()
+      case _ => subPipeline.script
+    }
+    addAll(subPipeline.functions)
+  }
 }
 
 object BiopetQScript {
-  protected case class InputFile(file: File, md5: Option[String] = None)
+  case class InputFile(file: File, md5: Option[String] = None)
 }

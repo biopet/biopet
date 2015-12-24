@@ -1,7 +1,6 @@
 package org.example.group.pipelines
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -32,6 +31,8 @@ class BiopetPipeline(val root: Configurable) extends QScript with SummaryQScript
 
     // Executing a biopet pipeline inside
     val shiva = new Shiva(this)
+    add(shiva)
+
     shiva.init()
     shiva.biopetScript()
     addAll(shiva.functions)

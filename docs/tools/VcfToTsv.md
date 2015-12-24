@@ -8,8 +8,9 @@ There is also a possibility to only select some specific fields from you vcf and
 
 ## Example
 To open the help menu:
-~~~
-java -jar Biopet-0.2.0.jar tool VcfToTsv -h
+
+~~~ bash
+biopet tool VcfToTsv -h
 Usage: VcfToTsv [options]
 
   -l <value> | --log_level <value>
@@ -36,8 +37,9 @@ Usage: VcfToTsv [options]
 ~~~
 
 To run the tool:
-~~~
-java -jar Biopet-0.2.0.jar tool VcfToTsv --inputFile myVCF.vcf \
+
+~~~ bash
+biopet tool VcfToTsv --inputFile myVCF.vcf \
 --outputFile my_tabDelimited_VCF.tsv --all_info
 ~~~
 

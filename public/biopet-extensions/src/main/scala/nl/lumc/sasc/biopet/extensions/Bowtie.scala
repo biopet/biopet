@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
@@ -32,9 +33,6 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
 
   @Input(doc = "Fastq file R2", shortName = "R2", required = false)
   var R2: Option[File] = None
-
-  @Input(doc = "The reference file for the bam files.", shortName = "R", required = true)
-  var reference: File = null
 
   @Output(doc = "Output file SAM", shortName = "output", required = true)
   var output: File = null
@@ -59,13 +57,20 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   var maqerr: Option[Int] = config("maqerr")
   var maxins: Option[Int] = config("maxins")
   var largeIndex: Boolean = config("large-index", default = false)
+  var bowtieIndex: String = config("bowtie_index")
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (reference == null) reference = referenceFasta()
-    val basename = reference.getName.stripSuffix(".fasta").stripSuffix(".fa")
-    if (reference.getParentFile.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwtl")))
-      largeIndex = config("large-index", default = true)
+    val indexDir = new File(bowtieIndex).getParentFile
+    val basename = bowtieIndex.stripPrefix(indexDir.getPath + File.separator)
+    if (indexDir.exists()) {
+      if (indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwtl")))
+        largeIndex = config("large-index", default = true)
+      else {
+        if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".ebwt")))
+          Logging.addError(s"No index files found for bowtie in: $indexDir with basename: $basename")
+      }
+    }
   }
 
   /** return commandline to execute */
@@ -83,7 +88,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
     optional("--maxbts", maxbts) +
     optional("--maqerr", maqerr) +
     optional("--maxins", maxins) +
-    required(reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")) +
+    required(bowtieIndex) +
     (R2 match {
       case Some(r2) =>
         required("-1", R1) +

@@ -195,6 +195,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
         override def beforeGraph(): Unit = {
           fqSync.beforeGraph()
+          commands = qcCmdR1.jobs ::: qcCmdR2.jobs ::: fqSync :: Nil
           super.beforeGraph()
         }
 

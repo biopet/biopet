@@ -1,10 +1,25 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetCommandLineFunction }
-import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle, Cutadapt }
+import nl.lumc.sasc.biopet.extensions.{ Cat, Gzip, Sickle }
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
@@ -35,7 +50,15 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   val seqtk = new SeqtkSeq(root)
   var clip: Option[Cutadapt] = None
   var trim: Option[Sickle] = None
-  var outputCommand: BiopetCommandLineFunction = null
+  lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
+    val gzip = Gzip(root)
+    gzip.output = output
+    gzip
+  } else {
+    val cat = Cat(root)
+    cat.output = output
+    cat
+  }
 
   def jobs = (Some(seqtk) :: clip :: trim :: Some(outputCommand) :: Nil).flatten
 
@@ -78,7 +101,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadapt = new Cutadapt(root)
+        val cutadapt = new Cutadapt(root, fastqc)
         cutadapt.fastq_input = seqtk.output
         cutadapt.fastq_output = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
@@ -108,16 +131,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       case _            => seqtk.output
     }
 
-    if (compress) outputCommand = {
-      val gzip = new Gzip(root)
-      gzip.output = output
-      outputFile :<: gzip
-    }
-    else outputCommand = {
-      val cat = new Cat(root)
-      cat.input = outputFile :: Nil
-      cat.output = output
-      cat
+    outputCommand match {
+      case gzip: Gzip => outputFile :<: gzip
+      case cat: Cat   => cat.input = outputFile :: Nil
     }
 
     seqtk.beforeGraph()

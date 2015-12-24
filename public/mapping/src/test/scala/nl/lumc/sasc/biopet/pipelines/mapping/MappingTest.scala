@@ -98,6 +98,7 @@ class MappingBwaAlnTest extends AbstractTestMapping("bwa-aln")
 class MappingStarTest extends AbstractTestMapping("star")
 class MappingStar2PassTest extends AbstractTestMapping("star-2pass")
 class MappingBowtieTest extends AbstractTestMapping("bowtie")
+class MappingBowtie2Test extends AbstractTestMapping("bowtie2")
 class MappingStampyTest extends AbstractTestMapping("stampy")
 class MappingGsnapTest extends AbstractTestMapping("gsnap")
 class MappingTophatTest extends AbstractTestMapping("tophat")
@@ -142,6 +143,7 @@ object MappingTest {
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
+    "bowtie2" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")

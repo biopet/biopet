@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.utils.ConfigUtils.ImplicitConversions
 
 trait Configurable extends ImplicitConversions {
   /** Should be object of parant object */
-  val root: Configurable
+  def root: Configurable
   def globalConfig: Config = if (root != null) root.globalConfig else Config.global
 
   /** suffix to the path */

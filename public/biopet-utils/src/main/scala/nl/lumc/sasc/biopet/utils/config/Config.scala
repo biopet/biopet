@@ -168,12 +168,12 @@ class Config(protected var _map: Map[String, Any],
    * @param freeVar Default true, if set false value must exist in module
    * @return Config value
    */
-  protected[config] def apply(module: String,
-                              path: List[String],
-                              key: String,
-                              default: Any = null,
-                              freeVar: Boolean = true,
-                              fixedValues: Map[String, Any] = Map()): ConfigValue = {
+  def apply(module: String,
+            path: List[String],
+            key: String,
+            default: Any = null,
+            freeVar: Boolean = true,
+            fixedValues: Map[String, Any] = Map()): ConfigValue = {
     val requestedIndex = ConfigValueIndex(module, path, key, freeVar)
     if (contains(requestedIndex, fixedValues)) {
       val fixedValue = fixedCache.get(requestedIndex)

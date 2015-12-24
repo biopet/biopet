@@ -51,7 +51,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   }
 
   override def defaults = Map(
-    "varianteffectpredictor" -> Map("everything" -> true)
+    "varianteffectpredictor" -> Map("everything" -> true, "failed" -> 1, "allow_non_variant" -> true)
   )
   //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
@@ -100,11 +100,13 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         vcfWithVcf.input = outputFile
         vcfWithVcf.secondaryVcf = exacFile
         vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
-        vcfWithVcf.fields ::= ("MAF", "MAF_exac", None)
+        vcfWithVcf.fields ::= ("AF", "AF_exac", None)
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
       case _ =>
     }
+
+    addSummaryJobs()
   }
 
   /**

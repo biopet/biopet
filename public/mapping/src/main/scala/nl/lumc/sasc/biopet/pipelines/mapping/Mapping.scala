@@ -19,17 +19,17 @@ import java.io.File
 import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
+import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.pipelines.gears.Gears
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
-import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.math._
@@ -219,6 +219,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
         case "bowtie"     => addBowtie(R1, R2, outputBam)
+        case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
@@ -257,6 +258,16 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(Ln(this, swapExt(outputDir, bamFile, ".bam", ".bai"), swapExt(outputDir, finalBamFile, ".bam", ".bai")))
     add(Ln(this, bamFile, finalBamFile))
     outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
+
+    if (config("unmapped_to_gears", default = false).asBoolean) {
+      val gears = new Gears(this)
+      gears.bamFile = Some(finalBamFile)
+      gears.outputDir = new File(outputDir, "gears")
+      gears.init()
+      gears.biopetScript()
+      addAll(gears.functions)
+      addSummaryQScript(gears)
+    }
 
     if (config("generate_wig", default = false).asBoolean)
       addAll(Bam2Wig(this, finalBamFile).functions)
@@ -324,10 +335,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   }
 
   def addGsnap(R1: File, R2: Option[File], output: File): File = {
-    val zcatR1 = extractIfNeeded(R1, output.getParentFile)
-    val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
     val gsnapCommand = new Gsnap(this)
-    gsnapCommand.input = if (paired) List(zcatR1._2, zcatR2.get._2) else List(zcatR1._2)
+    gsnapCommand.input = if (paired) List(R1, R2.get) else List(R1)
     gsnapCommand.output = swapExt(output.getParentFile, output, ".bam", ".sam")
 
     val reorderSam = new ReorderSam(this)
@@ -335,11 +344,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     reorderSam.output = swapExt(output.getParentFile, output, ".sorted.bam", ".reordered.bam")
 
     val ar = addAddOrReplaceReadGroups(reorderSam.output, output)
-    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
-      Some(gsnapCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
-    pipe.threadsCorrection = -1
-    zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
-    zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
+    val pipe = new BiopetFifoPipe(this, gsnapCommand :: ar._1 :: reorderSam :: Nil)
+    pipe.threadsCorrection = -2
     add(pipe)
     ar._2
   }
@@ -430,6 +436,25 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -1
     add(pipe)
     ar._2
+  }
+
+  /** Add bowtie2 jobs **/
+  def addBowtie2(R1: File, R2: Option[File], output: File): File = {
+    val bowtie2 = new Bowtie2(this)
+    bowtie2.rg_id = Some(readgroupId)
+    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("PL:" + platform)
+    bowtie2.rg +:= ("PU:" + platformUnit)
+    bowtie2.rg +:= ("SM:" + sampleId.get)
+    bowtie2.R1 = R1
+    bowtie2.R2 = R2
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = bowtie2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = -1
+    add(pipe)
+    output
   }
 
   /** Adds Star jobs */

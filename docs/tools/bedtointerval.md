@@ -7,7 +7,7 @@ Since the latest release of Picard tools (v 1.124) there is already a tool avail
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool BedToInterval -h
+biopet tool BedToInterval -h
 Usage: BedToInterval [options]
 
   -l <value> | --log_level <value>
@@ -25,7 +25,7 @@ Usage: BedToInterval [options]
 
 To run the tool:
 ~~~
-java -jar Biopet-0.2.0 tool BedToInterval -I myBed.bed -o myIntervals.txt -b myBam.bam
+biopet tool BedToInterval -I myBed.bed -o myIntervals.txt -b myBam.bam
 ~~~
 
 ## Results

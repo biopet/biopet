@@ -35,7 +35,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
   @Output(doc = "Output chart", required = false)
   var outputChart: File = _
 
-  @Output(doc = "Output summary", required = false)
+  @Output(doc = "Output summary", required = true)
   var outputSummary: File = _
 
   @Input(doc = "Reference file", required = false)
@@ -67,7 +67,7 @@ class CollectGcBiasMetrics(val root: Configurable) extends Picard with Summariza
     required("OUTPUT=", output, spaceSeparated = false) +
     optional("CHART_OUTPUT=", outputChart, spaceSeparated = false) +
     required("REFERENCE_SEQUENCE=", reference, spaceSeparated = false) +
-    optional("SUMMARY_OUTPUT=", outputSummary, spaceSeparated = false) +
+    required("SUMMARY_OUTPUT=", outputSummary, spaceSeparated = false) +
     optional("WINDOW_SIZE=", windowSize, spaceSeparated = false) +
     optional("MINIMUM_GENOME_FRACTION=", minGenomeFraction, spaceSeparated = false) +
     conditional(assumeSorted, "ASSUME_SORTED=TRUE") +
@@ -86,6 +86,7 @@ object CollectGcBiasMetrics {
     val collectGcBiasMetrics = new CollectGcBiasMetrics(root)
     collectGcBiasMetrics.input :+= input
     collectGcBiasMetrics.output = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics")
+    collectGcBiasMetrics.outputSummary = new File(outputDir, input.getName.stripSuffix(".bam") + ".gcbiasmetrics.summary")
     collectGcBiasMetrics
   }
 }

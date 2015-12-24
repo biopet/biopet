@@ -61,7 +61,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   }
 
   @Test(dataProvider = "bammetricsOptions")
-  def testFlexiprep(rois: Int, amplicon: Boolean, rna: Boolean) = {
+  def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir),
       Map(BamMetricsTest.executables.toSeq: _*)) ++
       (if (amplicon) Map("amplicon_bed" -> "amplicon.bed") else Map()) ++

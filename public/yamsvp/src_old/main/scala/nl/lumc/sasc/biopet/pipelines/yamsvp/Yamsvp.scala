@@ -21,15 +21,15 @@ package nl.lumc.sasc.biopet.pipelines.yamsvp
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.igvtools.IGVToolsCount
-import nl.lumc.sasc.biopet.extensions.sambamba.{ SambambaMarkdup, SambambaMerge }
+import nl.lumc.sasc.biopet.extensions.sambamba.{SambambaMarkdup, SambambaMerge}
+import nl.lumc.sasc.biopet.pipelines.shiva.Delly
+import nl.lumc.sasc.biopet.utils.config.Configurable
 //import nl.lumc.sasc.biopet.extensions.pindel.Pindel
-import nl.lumc.sasc.biopet.extensions.delly.Delly
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
 import org.broadinstitute.gatk.queue.QScript
