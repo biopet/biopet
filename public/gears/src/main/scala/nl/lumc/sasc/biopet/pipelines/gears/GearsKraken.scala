@@ -131,6 +131,7 @@ object GearsKraken {
           node.copy(child = size ++ createNodes(v.asInstanceOf[mutable.Map[String, Any]], path ::: k :: Nil))
       }.toSeq
     }
+
     val xml = <krona>
                 <attributes magnitude="size">
                   <attribute display="size">size</attribute>
