@@ -20,8 +20,13 @@ object GearsReport extends MultisampleReportBuilder {
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
   def indexPage = {
+    val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
+
     ReportPage(
-      List("Samples" -> generateSamplesPage(pageArgs)) ++
+      (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
+        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+        )), Map()))
+      else Nil) ::: List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map(
           "Versions" -> ReportPage(List(), List(
             "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")
@@ -41,7 +46,12 @@ object GearsReport extends MultisampleReportBuilder {
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
-    ReportPage(List(
+    val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
+
+    ReportPage((if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
+      "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+      )), Map()))
+    else Nil) ::: List(
       "Libraries" -> generateLibraryPage(args)
     ), List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
@@ -53,7 +63,7 @@ object GearsReport extends MultisampleReportBuilder {
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
 
     ReportPage(
-      if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
+      if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
         "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil, List(
