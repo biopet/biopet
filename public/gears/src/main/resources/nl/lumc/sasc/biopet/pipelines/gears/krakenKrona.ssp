@@ -12,13 +12,13 @@
 <%@ var outputDir: File %>
 
 <%
-    val bla = if (sampleId.isEmpty && libId.isEmpty) {
+    val summaries = if (sampleId.isEmpty && libId.isEmpty) {
         summary.getSampleValues("gearskraken", "stats", "krakenreport").map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
     } else summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()
-    GearsKraken.convertKrakenSummariesToKronaXml(bla, tempFile)
+    GearsKraken.convertKrakenSummariesToKronaXml(summaries, tempFile)
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/krona.ssp",
     args ++ Map("kronaXml" -> tempFile))
