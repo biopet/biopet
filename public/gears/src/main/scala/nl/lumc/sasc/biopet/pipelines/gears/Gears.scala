@@ -36,6 +36,16 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     addSummaryJobs()
   }
 
+  def qiimeClosedDir: Option[File] = {
+    if (samples.values.flatMap(_.gs.qiimeClosed).nonEmpty) {
+      Some(new File(outputDir, "qiime_closed_reference"))
+    } else None
+
+  }
+
+  def qiimeClosedOtuTable: Option[File] = qiimeClosedDir.map(new File(_, "otu_table.biom"))
+  def qiimeClosedOtuMap: Option[File] = qiimeClosedDir.map(new File(_, "otu_map.txt"))
+
   /**
    * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
@@ -45,24 +55,20 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     val closedOtuMaps = gss.map(_.otuMap)
     require(closedOtuTables.size == closedOtuMaps.size)
     if (closedOtuTables.nonEmpty) {
-      val closedDir = new File(outputDir, "qiime_closed_reference")
-      val closedOtuTable = new File(closedDir, "otu_table.biom")
-      val closedOtuMap = new File(closedDir, "otu_map.txt")
-
       if (closedOtuTables.size > 1) {
         val mergeTables = new MergeOtuTables(qscript)
         mergeTables.input = closedOtuTables
-        mergeTables.outputFile = closedOtuTable
+        mergeTables.outputFile = qiimeClosedOtuTable.get
         add(mergeTables)
 
         val mergeMaps = new MergeOtuMaps(qscript)
         mergeMaps.input = closedOtuMaps
-        mergeMaps.output = closedOtuMap
+        mergeMaps.output = qiimeClosedOtuMap.get
         add(mergeMaps)
 
       } else {
-        add(Ln(qscript, closedOtuMaps.head, closedOtuMap))
-        add(Ln(qscript, closedOtuTables.head, closedOtuTable))
+        add(Ln(qscript, closedOtuMaps.head, qiimeClosedOtuMap.get))
+        add(Ln(qscript, closedOtuTables.head, qiimeClosedOtuTable.get))
       }
 
       //TODO: Plots
@@ -149,7 +155,10 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   def summarySettings: Map[String, Any] = Map()
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = Map()
+  def summaryFiles: Map[String, File] = (
+      qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
+      qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
+    ).toMap
 }
 
 object Gears extends PipelineCommand
