@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, MultisampleReportBuilder, ReportBuilderExtension }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -21,11 +23,16 @@ object GearsReport extends MultisampleReportBuilder {
 
   def indexPage = {
     val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
+    val qiimeClosesOtuTable = summary.getValue("gears", "files", "pipeline", "qiime_closed_otu_table", "path")
+      .map(x => new File(x.toString))
 
     ReportPage(
-      (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
-        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+      (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
+        "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
+      else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
+        "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
       else Nil) ::: List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map(
           "Versions" -> ReportPage(List(), List(
@@ -47,10 +54,15 @@ object GearsReport extends MultisampleReportBuilder {
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
+    val qiimeClosesOtuTable = summary.getValue(Some(sampleId), None, "gearsqiimeclosed", "files", "pipeline", "otu_table", "path")
+      .map(x => new File(x.toString))
 
     ReportPage((if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
       "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
       )), Map()))
+    else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
+      "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+      )), Map("biomFile" -> qiimeClosesOtuTable.get)))
     else Nil) ::: List(
       "Libraries" -> generateLibraryPage(args)
     ), List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
@@ -61,12 +73,17 @@ object GearsReport extends MultisampleReportBuilder {
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
+    val qiimeClosesOtuTable = summary.getValue(Some(sampleId), Some(libId), "gearsqiimeclosed", "files", "pipeline", "otu_table", "path")
+      .map(x => new File(x.toString))
 
     ReportPage(
-      if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
+      (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
         "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
-      else Nil, List(
+      else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
+        "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/qiimeKrona.ssp"
+        )), Map("biomFile" -> qiimeClosesOtuTable.get)))
+      else Nil), List(
         "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
       ), args)
