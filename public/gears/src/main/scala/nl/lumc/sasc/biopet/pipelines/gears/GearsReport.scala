@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportPage, MultisampleReportBuilder, ReportBuilderExtension }
+import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
@@ -72,12 +73,14 @@ object GearsReport extends MultisampleReportBuilder {
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
+    val flexiprepExecuted = summary.getLibraryValue(sampleId, libId, "flexiprep").isDefined
     val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
     val qiimeClosesOtuTable = summary.getValue(Some(sampleId), Some(libId), "gearsqiimeclosed", "files", "pipeline", "otu_table", "path")
       .map(x => new File(x.toString))
 
     ReportPage(
-      (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
+      (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
+        ) ::: (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
         "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
