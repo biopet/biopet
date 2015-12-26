@@ -64,6 +64,8 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     add(closedReference)
     _otuMap = closedReference.otuMap
     _otuTable = closedReference.otuTable
+
+    addSummaryJobs()
   }
 
   /** Must return a map with used settings for this pipeline */
