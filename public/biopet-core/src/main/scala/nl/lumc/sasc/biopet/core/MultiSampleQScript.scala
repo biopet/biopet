@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.core
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
@@ -69,6 +69,8 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       /** Returns library directory */
       def libDir = new File(sampleDir, "lib_" + libId)
 
+      lazy val groups: List[String] = config("groups", sample = sampleId, library = libId)
+
       /** Function that add library jobs */
       protected def addJobs()
     }
@@ -78,6 +80,39 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
     /** Stores all libraries */
     val libraries: Map[String, Library] = libIds.map(id => id -> makeLibrary(id)).toMap
+
+    lazy val gender = {
+      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      g.map(_.toLowerCase) match {
+        case Some("male")   => Gender.Male
+        case Some("female") => Gender.Female
+        case _              => Gender.Unknown
+      }
+    }
+
+    lazy val father = {
+      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      g.foreach { father =>
+        if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
+        if (samples.contains(father)) if (samples(father).gender == Gender.Male)
+          Logging.addError(s"Father of $sampleId is not a female")
+        else logger.warn(s"For sample '$sampleId' is father '$father' not found in config")
+      }
+      g
+    }
+
+    lazy val mother = {
+      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      g.foreach { mother =>
+        if (sampleId != mother) Logging.addError(s"mother for $sampleId can not be itself")
+        if (samples.contains(mother)) if (samples(mother).gender == Gender.Female)
+          Logging.addError(s"Mother of $sampleId is not a female")
+        else logger.warn(s"For sample '$sampleId' is mother '$mother' not found in config")
+      }
+      g
+    }
+
+    lazy val groups: List[String] = config("groups", sample = sampleId, library = null)
 
     /**
      * Factory method for Library class
@@ -179,4 +214,11 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     }
     sample ::: lib ::: super.configFullPath
   }
+}
+
+object MultiSampleQScript {
+  object Gender extends Enumeration {
+    val Male, Female, Unknown = Value
+  }
+
 }
