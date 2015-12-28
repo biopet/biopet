@@ -3,9 +3,9 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, MultiSampleQScript}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq}
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -16,8 +16,8 @@ import MultisampleMapping.MergeStrategy
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvanthof on 18/12/15.
-  */
+ * Created by pjvanthof on 18/12/15.
+ */
 trait MultisampleMappingTrait extends MultiSampleQScript
   with Reference { qscript: QScript =>
 
@@ -25,7 +25,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
     MergeStrategy.values.find(_.toString.toLowerCase == value) match {
       case Some(v) => v
-      case _ => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
+      case _       => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
     }
   }
 
@@ -55,8 +55,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
       def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
-          inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
-          preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
+        inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
+        preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
 
       def summaryStats: Map[String, Any] = Map()
 
@@ -75,9 +75,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       } else None
 
       def bamFile = mapping match {
-        case Some(m) => Some(m.finalBamFile)
+        case Some(m)                 => Some(m.finalBamFile)
         case _ if inputBam.isDefined => Some(new File(libDir, s"$sampleId-$libId.bam"))
-        case _ => None
+        case _                       => None
       }
 
       def preProcessBam = bamFile
@@ -166,9 +166,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       mergeStrategy match {
         case MergeStrategy.None =>
         case (MergeStrategy.MergeSam | MergeStrategy.MarkDuplicates) if libraries.flatMap(_._2.bamFile).size == 1 =>
-          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get):_*)
+          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.bamFile).head, bamFile.get): _*)
         case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
-          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get):_*)
+          add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
         case MergeStrategy.MergeSam =>
           add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
         case MergeStrategy.PreProcessMergeSam =>

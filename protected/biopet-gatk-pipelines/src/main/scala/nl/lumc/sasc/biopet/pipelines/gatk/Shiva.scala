@@ -68,7 +68,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
           val file = addIndelRealign(bamFile.get, libDir, isIntermediate = true)
           addBaseRecalibrator(file, libDir, libraries.size > 1)
         } else if (useIndelRealigner) {
-          addIndelRealign(bamFile.get, libDir,  libraries.size > 1)
+          addIndelRealign(bamFile.get, libDir, libraries.size > 1)
         } else if (useBaseRecalibration) {
           addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1)
         }
@@ -87,7 +87,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       super.addJobs()
 
       if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
-        addIndelRealign(bamFile.get, sampleDir,  libraries.size > 1)
+        addIndelRealign(bamFile.get, sampleDir, libraries.size > 1)
       }
     }
   }

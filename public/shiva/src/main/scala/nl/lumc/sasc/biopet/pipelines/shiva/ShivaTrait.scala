@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.mapping.{MultisampleMappingTrait}
+import nl.lumc.sasc.biopet.pipelines.mapping.{ MultisampleMappingTrait }
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import org.broadinstitute.gatk.queue.QScript
 
@@ -85,7 +85,6 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
         })
       }
     }
-
 
     lazy val variantcalling = if (config("single_sample_variantcalling", default = false).asBoolean) {
       Some(makeVariantcalling(multisample = false))
