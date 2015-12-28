@@ -83,6 +83,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       def preProcessBam = bamFile
 
       def addJobs(): Unit = {
+        inputR1.foreach(inputFiles :+= new InputFile(_, config("R1_md5")))
+        inputR2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
+        inputBam.foreach(inputFiles :+= new InputFile(_, config("bam_md5")))
+
         if (inputR1.isDefined) {
           mapping.foreach { m =>
             m.input_R1 = inputR1.get
