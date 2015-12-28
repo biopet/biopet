@@ -70,6 +70,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         val m = new Mapping(qscript)
         m.sampleId = Some(sampleId)
         m.libId = Some(libId)
+        m.outputDir = libDir
         Some(m)
       } else None
 
