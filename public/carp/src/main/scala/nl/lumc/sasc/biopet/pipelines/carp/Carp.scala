@@ -39,9 +39,9 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
   override def defaults = Map(
     "mapping" -> Map(
       "skip_markduplicates" -> false,
-      "aligner" -> "bwa-mem",
-      "merge_strategy" -> "preprocessmergesam"
+      "aligner" -> "bwa-mem"
     ),
+    "merge_strategy" -> "preprocessmergesam",
     "samtoolsview" -> Map("q" -> 10)
   )
 
