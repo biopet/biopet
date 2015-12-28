@@ -165,7 +165,4 @@ trait ShivaTrait extends MultisampleMapping with Reference with TargetRegions { 
     "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
     "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
   )
-
-  /** Files for the summary */
-  override def summaryFiles = super.summaryFiles ++ Map("referenceFasta" -> referenceFasta())
 }
