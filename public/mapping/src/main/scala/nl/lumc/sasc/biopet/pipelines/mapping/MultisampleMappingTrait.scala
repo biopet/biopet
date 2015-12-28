@@ -160,6 +160,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
     def preProcessBam = bamFile
 
+    def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
+
     def addJobs(): Unit = {
       addPerLibJobs() // This add jobs for each library
 
@@ -170,13 +172,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
         case MergeStrategy.MergeSam =>
-          add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = keepMergedFiles))
         case MergeStrategy.PreProcessMergeSam =>
-          add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = keepMergedFiles))
         case MergeStrategy.MarkDuplicates =>
-          add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get))
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = keepMergedFiles))
         case MergeStrategy.PreProcessMarkDuplicates =>
-          add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get))
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = keepMergedFiles))
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 

@@ -75,6 +75,8 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
+    override def keepMergedFiles: Boolean = config("keep_merged_files", default = false)
+
     override def summarySettings = super.summarySettings + ("use_indel_realigner" -> useIndelRealigner)
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
@@ -87,7 +89,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       super.addJobs()
 
       if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
-        addIndelRealign(bamFile.get, sampleDir, libraries.size > 1)
+        addIndelRealign(bamFile.get, sampleDir, false)
       }
     }
   }
