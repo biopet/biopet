@@ -86,6 +86,9 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       g.map(_.toLowerCase) match {
         case Some("male")   => Gender.Male
         case Some("female") => Gender.Female
+        case Some(s) =>
+          logger.warn(s"Could not convert '$g' to a gender")
+          Gender.Unknown
         case _              => Gender.Unknown
       }
     }
