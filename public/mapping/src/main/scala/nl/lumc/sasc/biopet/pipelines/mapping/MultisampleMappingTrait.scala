@@ -196,6 +196,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     }
   }
 }
+
 class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
 }
