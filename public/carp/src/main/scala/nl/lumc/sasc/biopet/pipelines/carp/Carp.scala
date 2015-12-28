@@ -61,6 +61,8 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
 
     val controls: List[String] = config("control", default = Nil)
 
+    override def summarySettings = super.summarySettings ++ Map("controls" -> controls)
+
     override def addJobs(): Unit = {
       super.addJobs()
 
