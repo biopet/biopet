@@ -8,6 +8,7 @@ import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import MultisampleMapping.MergeStrategy
@@ -17,10 +18,8 @@ import scala.collection.JavaConversions._
 /**
   * Created by pjvanthof on 18/12/15.
   */
-trait MultisampleMapping extends QScript
-  with MultiSampleQScript
-  with Reference { qscript =>
-  //def this() = this(null)
+trait MultisampleMappingTrait extends MultiSampleQScript
+  with Reference { qscript: QScript =>
 
   def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
@@ -189,6 +188,9 @@ trait MultisampleMapping extends QScript
       }
     }
   }
+}
+class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
+  def this() = this(null)
 }
 
 object MultisampleMapping extends PipelineCommand {
