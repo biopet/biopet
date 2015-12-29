@@ -104,12 +104,12 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     lazy val combinedFastq = {
       r2 match {
         case Some(r2) =>
-          val flash = new Flash(this)
-          flash.outputDirectory = new File(outputDir, "combine_reads_flash")
-          flash.fastqR1 = r1
-          flash.fastqR2 = r2
-          add(flash)
-          flash.combinedFastq
+          val combineReads = new CombineReads(this)
+          combineReads.outputDir = new File(outputDir, "combine_reads")
+          combineReads.fastqR1 = r1
+          combineReads.fastqR2 = r2
+          add(combineReads)
+          combineReads.combinedFastq
         case _ => r1
       }
     }
