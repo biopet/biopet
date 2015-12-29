@@ -28,15 +28,15 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
   private lazy val forwardPrimers: List[String] = config("forward_primers", default = Nil)
   private lazy val reversePrimers: List[String] = config("reverse_primers", default = Nil)
 
-  def combinedFastq: File = if ((forwardPrimers :: reversePrimers).nonEmpty)
+  def combinedFastq: File = if ((forwardPrimers ::: reversePrimers).nonEmpty)
     swapExt(outputDir, flash.combinedFastq, ".fastq.gz", ".clip.fastq.gz")
   else flash.combinedFastq
 
-  def notCombinedR1Fastq: File = if ((forwardPrimers :: reversePrimers).nonEmpty)
+  def notCombinedR1Fastq: File = if ((forwardPrimers ::: reversePrimers).nonEmpty)
     swapExt(outputDir, flash.notCombinedR1, ".fastq.gz", ".clip.fastq.gz")
   else flash.notCombinedR1
 
-  def notCombinedR2Fastq: File = if ((forwardPrimers :: reversePrimers).nonEmpty)
+  def notCombinedR2Fastq: File = if ((forwardPrimers ::: reversePrimers).nonEmpty)
     swapExt(outputDir, flash.notCombinedR2, ".fastq.gz", ".clip.fastq.gz")
   else flash.notCombinedR2
 
