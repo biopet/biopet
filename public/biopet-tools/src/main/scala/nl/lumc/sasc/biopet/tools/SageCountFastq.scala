@@ -66,9 +66,7 @@ object SageCountFastq extends ToolCommand {
 
     logger.info("Writting outputfile: " + commandArgs.output)
     val writer = new PrintWriter(commandArgs.output)
-    for ((seq, count) <- sortedCounts) {
-      writer.println(seq + "\t" + count)
-    }
+    sortedCounts.foreach { case (seq, count) => writer.println(seq + "\t" + count) }
     writer.close()
   }
 }
