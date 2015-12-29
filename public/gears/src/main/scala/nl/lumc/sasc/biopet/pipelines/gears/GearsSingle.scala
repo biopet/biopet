@@ -44,6 +44,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   lazy val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
   lazy val qiimeRatx = if (config("gear_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
   lazy val qiimeClosed = if (config("gear_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
+  lazy val seqCount = if (config("gear_use_seq_count", default = false)) Some(new GearsSeqCount(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
@@ -135,6 +136,12 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       add(qiimeClosed)
 
       //TODO: Plots
+    }
+
+    seqCount.foreach { seqCount =>
+      seqCount.fastqInput = combinedFastq
+      seqCount.outputDir = new File(outputDir, "seq_count")
+      add(seqCount)
     }
 
     addSummaryJobs()
