@@ -2,14 +2,14 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 
 /**
  * Created by pjvan_thof on 8/11/15.
  */
-class TarExtract(val root: Configurable) extends BiopetCommandLineFunction {
+class TarExtract(val root: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(required = true)
   var inputTar: File = _
 
@@ -17,8 +17,8 @@ class TarExtract(val root: Configurable) extends BiopetCommandLineFunction {
   var outputDir: File = _
 
   executable = config("exe", default = "tar", freeVar = false)
-  override def versionCommand = executable + " --version"
-  override def versionRegex = """tar \(GNU tar\) (.*)""".r
+  def versionCommand = executable + " --version"
+  def versionRegex = """tar \(GNU tar\) (.*)""".r
 
   override def beforeGraph: Unit = {
     super.beforeGraph

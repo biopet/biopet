@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.gmap
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference}
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
@@ -25,7 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
  * Wrapper for the gsnap command line tool
  * Written based on gsnap version 2014-05-15
  */
-class GmapBuild(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class GmapBuild(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
   /** default executable */
   executable = config("exe", default = "gmap_build", freeVar = false)
@@ -42,8 +42,8 @@ class GmapBuild(val root: Configurable) extends BiopetCommandLineFunction with R
 
   override def defaultCoreMemory = 25.0
 
-  override def versionRegex = """.* version (.*)""".r
-  override def versionCommand = executable
+  def versionRegex = """.* version (.*)""".r
+  def versionCommand = executable
   override def versionExitcode = List(0, 1, 255)
 
   override def beforeGraph: Unit = {
