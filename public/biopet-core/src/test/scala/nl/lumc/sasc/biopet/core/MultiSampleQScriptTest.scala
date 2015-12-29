@@ -27,7 +27,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
     script.init()
     script.biopetScript()
 
-    script.functions.size shouldBe 4
+    script.functions.size shouldBe 5
 
     script.samples.foreach { case (sampleId, sample) =>
       sample.gender shouldBe Gender.Unknown
@@ -55,7 +55,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
     script.init()
     script.biopetScript()
 
-    script.functions.size shouldBe 4
+    script.functions.size shouldBe 5
 
     script.samples("child").gender shouldBe Gender.Male
     script.samples("father").gender shouldBe Gender.Male
@@ -70,7 +70,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
     script.init()
     script.biopetScript()
 
-    script.functions.size shouldBe 4
+    script.functions.size shouldBe 5
 
     script.samples("sample1").sampleGroups shouldBe List("1")
     script.samples("sample1").libraries("lib1").libGroups shouldBe List("1")
@@ -192,6 +192,7 @@ object MultiSampleQScriptTest {
       /** Pipeline itself */
       def biopetScript(): Unit = {
         addSamplesJobs()
+        addSummaryJobs()
       }
     }
   }
