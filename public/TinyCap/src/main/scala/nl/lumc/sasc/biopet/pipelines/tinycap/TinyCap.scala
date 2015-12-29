@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -22,6 +22,17 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "k" -> 5,
       "best" -> true)
   )
+
+  override def makeSample(id: String) = new Sample(id)
+
+  class Sample(sampleId: String) extends super.Sample(sampleId) {
+    override def addJobs(): Unit = {
+      super.addJobs()
+
+      bamFile // Merged bam file
+      //TODO: count job on small rna
+    }
+  }
 
   override def summaryFile = new File(outputDir, "tinycap.summary.json")
 }
