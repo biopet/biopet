@@ -55,6 +55,7 @@ object SageCountFastq extends ToolCommand {
       if (counts.contains(seq)) counts(seq) += 1
       else counts += (seq -> 1)
       count += 1
+      if (count % 1000000 == 0) logger.info(count + " sequences done")
     }
 
     reader.close()
