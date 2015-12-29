@@ -64,12 +64,12 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       }
 
       /** Creates a library file with given suffix */
-      def createFile(suffix: String): File = new File(libDir, sampleId + "-" + libId + suffix)
+      def createFile(suffix: String): File = new File(libDir, s"$sampleId-$libId.$suffix")
 
       /** Returns library directory */
       def libDir = new File(sampleDir, "lib_" + libId)
 
-      lazy val groups: List[String] = config("groups", sample = sampleId, library = libId)
+      lazy val libGroups: List[String] = config("groups", sample = sampleId, library = libId)
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -115,7 +115,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       g
     }
 
-    lazy val groups: List[String] = config("groups", sample = sampleId, library = null)
+    lazy val sampleGroups: List[String] = config("groups", sample = sampleId, library = null)
 
     /**
      * Factory method for Library class
@@ -155,7 +155,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     }
 
     /** Creates a sample file with given suffix */
-    def createFile(suffix: String) = new File(sampleDir, sampleId + suffix)
+    def createFile(suffix: String) = new File(sampleDir, s"$sampleId.$suffix")
 
     /** Returns sample directory */
     def sampleDir = new File(outputDir, "samples" + File.separator + sampleId)
