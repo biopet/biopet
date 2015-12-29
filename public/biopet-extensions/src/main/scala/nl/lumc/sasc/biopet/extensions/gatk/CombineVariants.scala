@@ -49,10 +49,13 @@ class CombineVariants(val root: Configurable) extends Gatk {
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
+    if (outputFile.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputFile.getAbsolutePath + ".tbi")
     genotypeMergeOptions match {
       case Some("UNIQUIFY") | Some("PRIORITIZE") | Some("UNSORTED") | Some("REQUIRE_UNIQUE") | None =>
       case _ => throw new IllegalArgumentException("Wrong option for genotypeMergeOptions")
     }
+    deps :::= inputFiles.filter(_.getName.endsWith("vcf.gz")).map(x => new File(x.getAbsolutePath + ".tbi"))
+    deps = deps.distinct
   }
 
   override def cmdLine = super.cmdLine +

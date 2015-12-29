@@ -43,6 +43,9 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   def versionCommand = executable + " --version"
   def versionRegex = """(.*)""".r
 
+  /** Name of the key containing clipped adapters information in the summary stats. */
+  def adaptersStatsName = "adapters"
+
   var default_clip_mode: String = config("default_clip_mode", default = "3")
   var opt_adapter: Set[String] = config("adapter", default = Nil)
   var opt_anywhere: Set[String] = config("anywhere", default = Nil)
@@ -89,7 +92,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     Map("num_reads_affected" -> stats("trimmed"),
       "num_reads_discarded_too_short" -> stats("tooshort"),
       "num_reads_discarded_too_long" -> stats("toolong"),
-      "adapters" -> adapter_stats.toMap
+      adaptersStatsName -> adapter_stats.toMap
     )
   }
 

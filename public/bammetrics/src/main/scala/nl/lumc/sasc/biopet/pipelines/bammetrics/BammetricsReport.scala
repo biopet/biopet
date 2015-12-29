@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 import nl.lumc.sasc.biopet.utils.rscript.{ StackedBarPlot, LinePlot }
 
 class BammetricsReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = BammetricsReport
+  def builder = BammetricsReport
 }
 
 /**
@@ -70,7 +70,7 @@ object BammetricsReport extends ReportBuilder {
       if (targets.isEmpty) List()
       else List("Targets" -> ReportPage(
         List(),
-        targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t))),
+        targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
         Map())),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),

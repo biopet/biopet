@@ -15,13 +15,13 @@ need.
 
 ## Contributors
 
-As of the 0.4.0 release, the following people (sorted by last name) have contributed to Biopet:
+As of the 0.5.0 release, the following people (sorted by last name) have contributed to Biopet:
 
 - Wibowo Arindrarto
 - Sander Bollen
 - Peter van 't Hof
-- Wai Yi Leung
 - Leon Mei
+- Wai Yi Leung
 - Sander van der Zeeuw
 
 
@@ -29,4 +29,4 @@ As of the 0.4.0 release, the following people (sorted by last name) have contrib
 
 Check our website at: [SASC](https://sasc.lumc.nl/)
 
-We are also reachable through email: [SASC mail](mailto:sasc@lumc.nl)
+Or send us an email: [SASC mail](mailto:sasc@lumc.nl)

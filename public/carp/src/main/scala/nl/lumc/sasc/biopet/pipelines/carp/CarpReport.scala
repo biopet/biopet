@@ -26,7 +26,7 @@ import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
  * Created by pjvanthof on 25/06/15.
  */
 class CarpReport(val root: Configurable) extends ReportBuilderExtension {
-  val builder = CarpReport
+  def builder = CarpReport
 }
 
 object CarpReport extends MultisampleReportBuilder {

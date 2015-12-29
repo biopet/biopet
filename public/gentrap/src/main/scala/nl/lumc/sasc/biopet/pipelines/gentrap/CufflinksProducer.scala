@@ -37,7 +37,7 @@ trait CufflinksProducer {
 
   /** Cufflink's terms for strand specificity */
   lazy val strandedness: String = {
-    require(pipeline.config.contains("strand_protocol"))
+    //require(pipeline.config.contains("strand_protocol"))
     pipeline.strandProtocol match {
       case NonSpecific => "fr-unstranded"
       case Dutp        => "fr-firststrand"

@@ -29,6 +29,8 @@ class WigToBigWig(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input wig file")
   var inputWigFile: File = _
 
+  override def defaultCoreMemory = 3.0
+
   @Input(doc = "Input chrom sizes file", required = true)
   var inputChromSizesFile: File = _
 

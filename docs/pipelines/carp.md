@@ -11,7 +11,7 @@ Carp is a pipeline for analyzing ChIP-seq NGS data. It uses the BWA MEM aligner 
 
 The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines, for example:
 
-~~~
+~~~ json
 {
   "samples": {
     "sample_X": {
@@ -39,7 +39,8 @@ The layout of the sample configuration for Carp is basically the same as with ou
 }
 ~~~
 
-What's important there is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
+What's important here is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually 
+ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
 
 ### Pipeline Settings Configuration
 
@@ -51,24 +52,163 @@ For the pipeline settings, there are some values that you need to specify while 
 While optional settings are:
 
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
-
+2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github
+.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: macs2_callpeak
 ## Running Carp
 
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:
 
-~~~
-java -jar </path/to/biopet.jar> pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
+~~~ bash
+biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
 If you already have the `biopet` environment module loaded, you can also simply call `biopet`:
 
-~~~
+~~~ bash
 biopet pipeline carp -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 
-It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 5`) so that cluster glitches do not interfere with your pipeline runs.
+It is also a good idea to specify retries (we recommend `-retry 4` up to `-retry 8`) so that cluster glitches do not interfere 
+with your pipeline runs.
+
+## Example output
+
+```bash
+.
+├── Carp.summary.json
+├── report
+│   ├── alignmentSummary.png
+│   ├── alignmentSummary.tsv
+│   ├── ext
+│   │   ├── css
+│   │   │   ├── bootstrap_dashboard.css
+│   │   │   ├── bootstrap.min.css
+│   │   │   ├── bootstrap-theme.min.css
+│   │   │   └── sortable-theme-bootstrap.css
+│   │   ├── fonts
+│   │   │   ├── glyphicons-halflings-regular.ttf
+│   │   │   ├── glyphicons-halflings-regular.woff
+│   │   │   └── glyphicons-halflings-regular.woff2
+│   │   └── js
+│   │       ├── bootstrap.min.js
+│   │       ├── jquery.min.js
+│   │       └── sortable.min.js
+│   ├── Files
+│   │   └── index.html
+│   ├── index.html
+│   ├── insertsize.png
+│   ├── insertsize.tsv
+│   ├── QC_Bases_R1.png
+│   ├── QC_Bases_R1.tsv
+│   ├── QC_Bases_R2.png
+│   ├── QC_Bases_R2.tsv
+│   ├── QC_Reads_R1.png
+│   ├── QC_Reads_R1.tsv
+│   ├── QC_Reads_R2.png
+│   ├── QC_Reads_R2.tsv
+│   ├── Samples
+│   │   ├── 10_Input_2
+│   │   │   ├── Alignment
+│   │   │   │   ├── index.html
+│   │   │   │   ├── insertsize.png
+│   │   │   │   ├── insertsize.tsv
+│   │   │   │   ├── wgs.png
+│   │   │   │   └── wgs.tsv
+│   │   │   ├── Files
+│   │   │   │   └── index.html
+│   │   │   ├── index.html
+│   │   │   └── Libraries
+│   │   │       ├── 3307
+│   │   │       │   ├── Alignment
+│   │   │       │   │   ├── index.html
+│   │   │       │   │   ├── insertsize.png
+│   │   │       │   │   ├── insertsize.tsv
+│   │   │       │   │   ├── wgs.png
+│   │   │       │   │   └── wgs.tsv
+│   │   │       │   ├── index.html
+│   │   │       │   └── QC
+│   │   │       │       ├── fastqc_R1_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_qc_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_sequence_length_distribution.png
+│   │   │       │       ├── fastqc_R1_sequence_length_distribution.png
+│   │   │       │       └── index.html
+│   │   │       └── index.html
+│   │   ├── 11_GR_2A
+│   │   │   ├── Alignment
+│   │   │   │   ├── index.html
+│   │   │   │   ├── insertsize.png
+│   │   │   │   ├── insertsize.tsv
+│   │   │   │   ├── wgs.png
+│   │   │   │   └── wgs.tsv
+│   │   │   ├── alignmentSummary.png
+│   │   │   ├── alignmentSummary.tsv
+│   │   │   ├── Files
+│   │   │   │   └── index.html
+│   │   │   ├── index.html
+│   │   │   └── Libraries
+│   │   │       ├── 3307
+│   │   │       │   ├── Alignment
+│   │   │       │   │   ├── index.html
+│   │   │       │   │   ├── insertsize.png
+│   │   │       │   │   ├── insertsize.tsv
+│   │   │       │   │   ├── wgs.png
+│   │   │       │   │   └── wgs.tsv
+│   │   │       │   ├── index.html
+│   │   │       │   └── QC
+│   │   │       │       ├── fastqc_R1_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_qc_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_sequence_length_distribution.png
+│   │   │       │       ├── fastqc_R1_sequence_length_distribution.png
+│   │   │       │       └── index.html
+│   │   │       ├── 3385
+│   │   │       │   ├── Alignment
+│   │   │       │   │   ├── index.html
+│   │   │       │   │   ├── insertsize.png
+│   │   │       │   │   ├── insertsize.tsv
+│   │   │       │   │   ├── wgs.png
+│   │   │       │   │   └── wgs.tsv
+│   │   │       │   ├── index.html
+│   │   │       │   └── QC
+│   │   │       │       ├── fastqc_R1_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_duplication_levels.png
+│   │   │       │       ├── fastqc_R1_qc_kmer_profiles.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_quality.png
+│   │   │       │       ├── fastqc_R1_qc_per_base_sequence_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_gc_content.png
+│   │   │       │       ├── fastqc_R1_qc_per_sequence_quality.png
+│   │   │       │       ├── fastqc_R1_qc_sequence_length_distribution.png
+│   │   │       │       ├── fastqc_R1_sequence_length_distribution.png
+│   │   │       │       └── index.html
+│   │   │       └── index.html
+```
 
 ## Getting Help
 
-If you have any questions on running Carp, suggestions on how to improve the overall flow, or requests for your favorite ChIP-seq related program to be added, feel free to post an issue to our issue tracker at [https://git.lumc.nl/biopet/biopet/issues](https://git.lumc.nl/biopet/biopet/issues).
+If you have any questions on running Carp, suggestions on how to improve the overall flow, or requests for your favorite ChIP-seq related program to be added, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet).
+Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)
 

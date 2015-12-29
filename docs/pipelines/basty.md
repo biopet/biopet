@@ -52,7 +52,7 @@ Specific configuration options additional to Basty are:
 ```json
 
 {
-    output_dir: </path/to/out_directory>,
+    "output_dir": </path/to/out_directory>,
     "shiva": {
         "variantcallers": ["freeBayes"]
     },
@@ -67,14 +67,14 @@ Specific configuration options additional to Basty are:
 
 ##### For the help screen:
 ~~~
-java -jar </path/to/biopet.jar> pipeline basty -h
+biopet pipeline basty -h
 ~~~
 
 ##### Run the pipeline:
 Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~
-java -jar </path/to/biopet/jar>  pipeline basty -run -config MySamples.json -config MySettings.json
+biopet pipeline basty -run -config MySamples.json -config MySettings.json
 ~~~
 
 ### Result files
@@ -152,3 +152,8 @@ The output files this pipeline produces are:
 
 
 ## References
+
+## Getting Help
+
+If you have any questions on running Basty, suggestions on how to improve the overall flow, or requests for your favorite 
+SNP typing algorithm, feel free to post an issue to our issue tracker at [GitHub](https://github.com/biopet/biopet). Or contact us directly via: [SASC email](mailto:SASC@lumc.nl)

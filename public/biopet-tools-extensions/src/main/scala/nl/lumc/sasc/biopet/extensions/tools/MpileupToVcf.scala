@@ -38,6 +38,9 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   @Output(doc = "Output tag library", shortName = "output", required = true)
   var output: File = _
 
+  @Output
+  private var outputIndex: File = _
+
   var minDP: Option[Int] = config("min_dp")
   var minAP: Option[Int] = config("min_ap")
   var homoFraction: Option[Double] = config("homoFraction")
@@ -47,12 +50,10 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
 
   override def defaultCoreMemory = 3.0
 
-  override def defaults = ConfigUtils.mergeMaps(Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1)),
-    super.defaults)
-
   override def beforeGraph() {
     super.beforeGraph()
-    reference = referenceFasta().getAbsolutePath
+    if (reference == null) reference = referenceFasta().getAbsolutePath
+    if (output.getName.endsWith(".vcf.gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     val samtoolsMpileup = new SamtoolsMpileup(this)
   }
 
@@ -66,20 +67,12 @@ class MpileupToVcf(val root: Configurable) extends ToolCommandFunction with Refe
     }
   }
 
-  override def cmdLine = {
-    (if (inputMpileup == null) {
-      val samtoolsMpileup = new SamtoolsMpileup(this)
-      samtoolsMpileup.reference = referenceFasta()
-      samtoolsMpileup.input = List(inputBam)
-      samtoolsMpileup.cmdPipe + " | "
-    } else "") +
-      super.cmdLine +
-      required("-o", output) +
-      optional("--minDP", minDP) +
-      optional("--minAP", minAP) +
-      optional("--homoFraction", homoFraction) +
-      optional("--ploidy", ploidy) +
-      required("--sample", sample) +
-      (if (inputBam == null) required("-I", inputMpileup) else "")
-  }
+  override def cmdLine = super.cmdLine +
+    required("-o", output) +
+    optional("--minDP", minDP) +
+    optional("--minAP", minAP) +
+    optional("--homoFraction", homoFraction) +
+    optional("--ploidy", ploidy) +
+    required("--sample", sample) +
+    (if (inputAsStdin) "" else required("-I", inputMpileup))
 }

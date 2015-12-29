@@ -8,7 +8,7 @@ package nl.lumc.sasc.biopet.pipelines.gatk
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
-import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaTrait, ShivaVariantcallingTrait }
+import nl.lumc.sasc.biopet.pipelines.shiva.{ ShivaVariantcallingTrait, ShivaTrait }
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -43,21 +43,25 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     /** Class will generate library jobs */
     class Library(libId: String) extends super.Library(libId) {
 
-      val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
-      val useBaseRecalibration: Boolean = config("use_base_recalibration", default = true)
-
-      /** Return true when baserecalibration is executed */
-      protected def doneBaseRecalibrator: Boolean = {
+      lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
+      lazy val useBaseRecalibration: Boolean = {
+        val c: Boolean = config("use_base_recalibration", default = true)
         val br = new BaseRecalibrator(qscript)
-        useBaseRecalibration && br.knownSites.nonEmpty
+        if (c && br.knownSites.isEmpty)
+          logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
+        c && br.knownSites.nonEmpty
       }
+
+      override def summarySettings = super.summarySettings +
+        ("use_indel_realigner" -> useIndelRealigner) +
+        ("use_base_recalibration" -> useBaseRecalibration)
 
       /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
       override def preProcess(input: File): Option[File] = {
-        if (!useIndelRealigner && !doneBaseRecalibrator) None
+        if (!useIndelRealigner && !useBaseRecalibration) None
         else {
           val indelRealignFile = useIndelRealigner match {
-            case true  => addIndelRealign(input, libDir, doneBaseRecalibrator || libraries.size > 1)
+            case true  => addIndelRealign(input, libDir, useBaseRecalibration || libraries.size > 1)
             case false => input
           }
 
@@ -69,12 +73,16 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
+    override def summarySettings = super.summarySettings + ("use_indel_realigner" -> useIndelRealigner)
+
+    lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
+
     /** This methods will add double preprocess steps, with GATK indel realignment */
     override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
       if (input.size <= 1) super.addDoublePreProcess(input)
-      else super.addDoublePreProcess(input, isIntermediate = true).collect {
+      else super.addDoublePreProcess(input, isIntermediate = useIndelRealigner).collect {
         case file =>
-          config("use_indel_realigner", default = true).asBoolean match {
+          useIndelRealigner match {
             case true  => addIndelRealign(file, sampleDir, isIntermediate = false)
             case false => file
           }
@@ -99,10 +107,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   def addBaseRecalibrator(inputBam: File, dir: File, isIntermediate: Boolean): File = {
     val baseRecalibrator = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal"))
 
-    if (baseRecalibrator.knownSites.isEmpty) {
-      logger.warn("No Known site found, skipping base recalibration, file: " + inputBam)
-      return inputBam
-    }
+    if (baseRecalibrator.knownSites.isEmpty) return inputBam
     add(baseRecalibrator)
 
     if (config("use_analyze_covariates", default = false).asBoolean) {

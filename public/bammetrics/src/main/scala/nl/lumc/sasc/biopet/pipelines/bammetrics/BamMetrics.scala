@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
@@ -27,17 +27,16 @@ import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
 import org.broadinstitute.gatk.queue.QScript
 
-class BamMetrics(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class BamMetrics(val root: Configurable) extends QScript
+  with SummaryQScript
+  with SampleLibraryTag
+  with Reference
+  with TargetRegions {
+
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
-
-  /** Bed files for region of interests */
-  var roiBedFiles: List[File] = config("regions_of_interest", Nil)
-
-  /** Bed of amplicon that is used */
-  var ampliconBedFile: Option[File] = config("amplicon_bed")
 
   /** Settings for CollectRnaSeqMetrics */
   var rnaMetricsSettings: Map[String, String] = Map()
@@ -51,7 +50,8 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
   }
 
   /** returns files to store in summary */
-  def summaryFiles = Map("input_bam" -> inputBam) ++
+  def summaryFiles = Map("reference" -> referenceFasta(),
+    "input_bam" -> inputBam) ++
     ampliconBedFile.map("amplicon" -> _).toMap ++
     ampliconBedFile.map(x => "roi_" + x.getName.stripSuffix(".bed") -> x).toMap
 
@@ -77,7 +77,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
 
   /** Script to add jobs */
   def biopetScript() {
-    add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
+    add(SamtoolsFlagstat(this, inputBam, outputDir))
 
     val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)
@@ -140,7 +140,7 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
         val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
           ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(pcrMetrics)
-        addSummarizable(chsMetrics, "targeted_pcr_metrics")
+        addSummarizable(pcrMetrics, "targeted_pcr_metrics")
 
         Intervals(bedFile, ampIntervals)
     }
@@ -151,33 +151,24 @@ class BamMetrics(val root: Configurable) extends QScript with SummaryQScript wit
       val targetDir = new File(outputDir, targetName)
 
       val biStrict = BedtoolsIntersect(this, inputBam, intervals.bed,
-        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.bam"),
+        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.strict.sam"),
         minOverlap = config("strict_intersect_overlap", default = 1.0))
-      biStrict.isIntermediate = true
-      add(biStrict)
-      add(SamtoolsFlagstat(this, biStrict.output, targetDir))
       val biopetFlagstatStrict = BiopetFlagstat(this, biStrict.output, targetDir)
-      add(biopetFlagstatStrict)
       addSummarizable(biopetFlagstatStrict, targetName + "_biopet_flagstat_strict")
+      add(new BiopetFifoPipe(this, List(biStrict, biopetFlagstatStrict)))
 
       val biLoose = BedtoolsIntersect(this, inputBam, intervals.bed,
-        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.bam"),
+        output = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".overlap.loose.sam"),
         minOverlap = config("loose_intersect_overlap", default = 0.01))
-      biLoose.isIntermediate = true
-      add(biLoose)
-      add(SamtoolsFlagstat(this, biLoose.output, targetDir))
       val biopetFlagstatLoose = BiopetFlagstat(this, biLoose.output, targetDir)
-      add(biopetFlagstatLoose)
       addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
+      add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val coverageFile = new File(targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
-
-      //FIXME:should use piping
-      add(BedtoolsCoverage(this, inputBam, intervals.bed, coverageFile, depth = true), isIntermediate = true)
-      val covStats = CoverageStats(this, coverageFile, targetDir)
-      covStats.title = Some("Coverage for " + targetName)
-      covStats.subTitle = Some(".")
-      add(covStats)
+      val bedCov = BedtoolsCoverage(this, intervals.bed, inputBam, depth = true)
+      val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
+      covStats.title = Some("Coverage Plot")
+      covStats.subTitle = Some(s"for file '$targetName.bed'")
+      add(bedCov | covStats)
       addSummarizable(covStats, targetName + "_cov_stats")
     }
 

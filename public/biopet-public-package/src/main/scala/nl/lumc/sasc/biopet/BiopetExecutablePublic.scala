@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet
 
+import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutablePublic extends BiopetExecutable {
@@ -27,12 +28,13 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
     nl.lumc.sasc.biopet.pipelines.toucan.Toucan,
-    nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling
+    nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling,
+    nl.lumc.sasc.biopet.pipelines.gears.Gears
   )
 
   def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
-    nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
+    ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty
   ) ::: publicPipelines
 
@@ -59,5 +61,6 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
-    nl.lumc.sasc.biopet.tools.VcfWithVcf)
+    nl.lumc.sasc.biopet.tools.VcfWithVcf,
+    nl.lumc.sasc.biopet.tools.KrakenReportToJson)
 }

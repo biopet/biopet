@@ -18,13 +18,13 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Extension for STAR
  */
-class Star(val root: Configurable) extends BiopetCommandLineFunction with Reference {
+class Star(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   @Input(doc = "The reference file for the bam files.", required = false)
   var reference: File = null
 
@@ -53,6 +53,9 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outputSAindex: File = _
 
   executable = config("exe", "STAR")
+
+  def versionCommand = executable + " --version"
+  def versionRegex = """(.*)""".r
 
   @Argument(doc = "Output Directory")
   var outputDir: File = _

@@ -27,9 +27,10 @@ import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
 import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.queue.QScript
 
 trait BastyTrait extends MultiSampleQScript {
-  qscript =>
+  qscript: QScript =>
 
   case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
 
@@ -180,7 +181,7 @@ trait BastyTrait extends MultiSampleQScript {
                        snpsOnly: Boolean = false): FastaOutput = {
     val bastyGenerateFasta = new BastyGenerateFasta(this)
     bastyGenerateFasta.outputName = if (outputName != null) outputName else sampleName
-    bastyGenerateFasta.inputVcf = shiva.variantCalling.get.finalFile
+    bastyGenerateFasta.inputVcf = shiva.multisampleVariantCalling.get.finalFile
     if (shiva.samples.contains(sampleName)) {
       bastyGenerateFasta.bamFile = shiva.samples(sampleName).preProcessBam.get
     }

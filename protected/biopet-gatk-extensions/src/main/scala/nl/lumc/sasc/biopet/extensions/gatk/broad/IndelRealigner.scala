@@ -8,8 +8,14 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.{ Gather, Output }
 
 class IndelRealigner(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.IndelRealigner with GatkGeneral {
+
+  @Gather(enabled = false)
+  @Output
+  protected var bamIndex: File = _
+
   if (config.contains("scattercount")) scatterCount = config("scattercount")
 }
 
@@ -19,6 +25,7 @@ object IndelRealigner {
     ir.input_file :+= input
     ir.targetIntervals = targetIntervals
     ir.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bam")
+    ir.bamIndex = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bai")
     ir
   }
 }

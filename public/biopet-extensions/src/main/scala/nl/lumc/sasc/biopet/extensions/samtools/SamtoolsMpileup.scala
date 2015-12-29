@@ -47,7 +47,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
     reference = referenceFasta()
   }
 
-  def cmdBase = required(executable) +
+  def cmdLine = required(executable) +
     required("mpileup") +
     optional("-f", reference) +
     optional("-l", intervalBed) +
@@ -56,12 +56,9 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
     optional("-d", depth) +
     conditional(outputMappingQuality, "-s") +
     conditional(disableBaq, "-B") +
-    conditional(u, "-u")
-  def cmdPipeInput = cmdBase + "-"
-  def cmdPipe = cmdBase + repeat(input)
-
-  /** Returns command to execute */
-  def cmdLine = cmdPipe + " > " + required(output)
+    conditional(u, "-u") +
+    (if (outputAsStsout) "" else required("-o", output)) +
+    (if (inputAsStdin) "-" else repeat(input))
 }
 
 object SamtoolsMpileup {

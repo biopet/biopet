@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.kraken
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -39,11 +39,6 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   var db: File = config("db")
 
-  var inputFastQ: Boolean = true
-  var compression: Boolean = false
-  var compressionGzip: Boolean = false
-  var compressionBzip: Boolean = false
-
   var quick: Boolean = false
   var minHits: Option[Int] = config("min_hits")
 
@@ -51,11 +46,15 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
   var paired: Boolean = config("paired", default = false)
 
   executable = config("exe", default = "kraken")
-  def versionRegex = """Kraken version ([\d\w\-\.]+)\n.*""".r
+
+  def versionRegex = """^Kraken version ([\d\w\-\.]+)""".r
+
   override def versionExitcode = List(0, 1)
+
   def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 8.0
+
   override def defaultThreads = 4
 
   /** Sets readgroup when not set yet */
@@ -66,16 +65,15 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
-    "--db" + required(db) +
+    required("--db", db) +
     optional("--threads", nCoresRequest) +
-    conditional(inputFastQ, "--fastq-input") +
-    conditional(!inputFastQ, "--fasta-input") +
     conditional(quick, "--quick") +
     optional("--min_hits", minHits) +
     optional("--unclassified-out ", unclassified_out.get) +
     optional("--classified-out ", classified_out.get) +
-    "--output" + required(output) +
+    required("--output", output) +
     conditional(preLoad, "--preload") +
     conditional(paired, "--paired") +
+    conditional(paired, "--check-names") +
     repeat(input)
 }

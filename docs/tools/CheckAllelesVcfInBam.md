@@ -6,7 +6,7 @@ This tool has been written to check the allele frequency in BAM files.
 ## Example
 To get the help menu:
 ~~~
-java -jar Biopet-0.2.0.jar tool CheckAllelesVcfInBam -h
+biopet tool CheckAllelesVcfInBam -h
 Usage: CheckAllelesVcfInBam [options]
 
   -l <value> | --log_level <value>
@@ -28,7 +28,7 @@ Usage: CheckAllelesVcfInBam [options]
 
 To run the tool:
 ~~~
-java -jar Biopet-0.2.0.jar tool CheckAllelesVcfInBam --inputFile myVCF.vcf \
+biopet tool CheckAllelesVcfInBam --inputFile myVCF.vcf \
 --bam myBam1.bam --sample bam_sample1 --outputFile myAlleles.vcf
 
 ~~~
@@ -37,7 +37,7 @@ The only thing one needs to make sure off is matching the `--bam` and `--sample`
 
 For multiple bam files:
 ~~~
-java -jar Biopet-0.2.0.jar tool CheckAllelesVcfInBam --inputFile myVCF.vcf \
+biopet tool CheckAllelesVcfInBam --inputFile myVCF.vcf \
 --bam myBam1.bam --sample bam_sample1 --bam myBam2.bam --sample bam_sample2 \
 --bam myBam3.bam --sample bam_sample3 --outputFile myAlleles.vcf
 ~~~
