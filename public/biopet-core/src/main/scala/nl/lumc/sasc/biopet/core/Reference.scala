@@ -132,7 +132,10 @@ object Reference {
    * @param fastaFile Fasta file
    */
   def requireDict(fastaFile: File): Unit = {
-    val dict = new File(fastaFile.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
+    val dict = new File(fastaFile.getAbsolutePath
+      .stripSuffix(".fna")
+      .stripSuffix(".fa")
+      .stripSuffix(".fasta") + ".dict")
     if (!dict.exists()) Logging.addError("Reference is missing a dict file")
   }
 }

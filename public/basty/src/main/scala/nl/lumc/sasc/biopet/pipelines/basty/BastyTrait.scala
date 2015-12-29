@@ -26,9 +26,12 @@ import nl.lumc.sasc.biopet.core.MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
 import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
+import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
+import nl.lumc.sasc.biopet.utils.ConfigUtils
+import org.broadinstitute.gatk.queue.QScript
 
 trait BastyTrait extends MultiSampleQScript {
-  qscript =>
+  qscript: QScript =>
 
   case class FastaOutput(variants: File, consensus: File, consensusVariants: File)
 
