@@ -19,9 +19,7 @@ import scala.xml.{ PrettyPrinter, Elem }
  */
 class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
-  var fastqR1: File = _
-
-  var fastqR2: Option[File] = None
+  var fastqInput: File = _
 
   override def defaults = Map(
     "splitlibrariesfastq" -> Map(
@@ -30,7 +28,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
   )
 
   def init() = {
-    require(fastqR1 != null)
+    require(fastqInput != null)
   }
 
   private var _otuMap: File = _
@@ -41,19 +39,8 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   def biopetScript() = {
 
-    val fastqFile = fastqR2 match {
-      case Some(r2) =>
-        val flash = new Flash(this)
-        flash.outputDirectory = new File(outputDir, "combine_reads_flash")
-        flash.fastqR1 = fastqR1
-        flash.fastqR2 = r2
-        add(flash)
-        flash.combinedFastq
-      case _ => fastqR1
-    }
-
     val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= fastqFile
+    splitLib.input :+= fastqInput
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
     sampleId.foreach(splitLib.sample_ids :+= _)
     add(splitLib)

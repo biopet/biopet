@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.Flash
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -100,6 +101,19 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       case _ => throw new IllegalArgumentException("Missing input files")
     }
 
+    lazy val combinedFastq = {
+      r2 match {
+        case Some(r2) =>
+          val flash = new Flash(this)
+          flash.outputDirectory = new File(outputDir, "combine_reads_flash")
+          flash.fastqR1 = r1
+          flash.fastqR2 = r2
+          add(flash)
+          flash.combinedFastq
+        case _ => r1
+      }
+    }
+
     krakenScript foreach { kraken =>
       kraken.outputDir = new File(outputDir, "kraken")
       kraken.fastqR1 = r1
@@ -117,8 +131,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
     qiimeClosed foreach { qiimeClosed =>
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
-      qiimeClosed.fastqR1 = r1
-      qiimeClosed.fastqR2 = r2
+      qiimeClosed.fastqInput = combinedFastq
       add(qiimeClosed)
 
       //TODO: Plots
