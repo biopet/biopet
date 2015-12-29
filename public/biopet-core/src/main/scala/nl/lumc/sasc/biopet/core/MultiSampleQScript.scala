@@ -94,7 +94,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     }
 
     lazy val father = {
-      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      val g: Option[String] = config("father", sample = sampleId, library = null)
       g.foreach { father =>
         if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
         if (samples.contains(father)) if (samples(father).gender == Gender.Male)
@@ -105,7 +105,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     }
 
     lazy val mother = {
-      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      val g: Option[String] = config("mother", sample = sampleId, library = null)
       g.foreach { mother =>
         if (sampleId != mother) Logging.addError(s"mother for $sampleId can not be itself")
         if (samples.contains(mother)) if (samples(mother).gender == Gender.Female)
