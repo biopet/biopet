@@ -18,7 +18,6 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.Flash
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -134,8 +133,6 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       qiimeClosed.outputDir = new File(outputDir, "qiime_closed")
       qiimeClosed.fastqInput = combinedFastq
       add(qiimeClosed)
-
-      //TODO: Plots
     }
 
     seqCount.foreach { seqCount =>
