@@ -59,7 +59,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
   def summarySettings: Map[String, Any] = Map()
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable,"otu_map" -> otuMap)
+  def summaryFiles: Map[String, File] = Map("otu_table" -> otuTable, "otu_map" -> otuMap)
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, "summary.closed_reference.json")

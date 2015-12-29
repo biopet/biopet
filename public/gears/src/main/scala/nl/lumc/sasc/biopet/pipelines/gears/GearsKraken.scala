@@ -127,11 +127,11 @@ object GearsKraken {
             if (k == "root") {
               val unclassified = summaries(sample)("unclassified").asInstanceOf[Map[String, Any]]("size").asInstanceOf[Long]
               <val>
-                {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified}
+                { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0).toString.toLong + unclassified }
               </val>
             } else {
               <val>
-                {getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0)}
+                { getValue(sample, (path ::: k :: Nil).tail, "size").getOrElse(0) }
               </val>
             }
           }

@@ -1,14 +1,14 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.{BiopetQScript, SampleLibraryTag}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.tools.SageCountFastq
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
-  * Created by pjvan_thof on 12/29/15.
-  */
+ * Created by pjvan_thof on 12/29/15.
+ */
 class GearsSeqCount(val root: Configurable) extends QScript with BiopetQScript with SampleLibraryTag {
 
   var fastqInput: File = _

@@ -156,9 +156,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = (
-      qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
-      qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
-    ).toMap
+    qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
+    qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
+  ).toMap
 }
 
 object Gears extends PipelineCommand

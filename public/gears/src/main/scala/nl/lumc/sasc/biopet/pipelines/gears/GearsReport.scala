@@ -80,7 +80,7 @@ object GearsReport extends MultisampleReportBuilder {
 
     ReportPage(
       (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
-        ) ::: (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
+      ) ::: (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
         "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ::: (if (qiimeClosesOtuTable.isDefined) List("Qiime closed reference analysis" -> ReportPage(List(), List(
