@@ -69,6 +69,8 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
     val notCombinedR2Fastqc = Fastqc(this, this.combinedFastq, new File(outputDir, "not_combined_R2_fastqc"))
     add(notCombinedR2Fastqc)
     addSummarizable(notCombinedR2Fastqc, "fastqc_not_combined_R2")
+
+    addSummaryJobs()
   }
 
   /** Must return a map with used settings for this pipeline */
