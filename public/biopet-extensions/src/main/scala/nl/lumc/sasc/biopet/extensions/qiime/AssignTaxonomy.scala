@@ -52,6 +52,7 @@ class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction w
 
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
