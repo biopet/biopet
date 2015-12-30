@@ -257,6 +257,7 @@ object ConfigUtils extends Logging {
     if (any == null) return null
     any match {
       case l: List[_] => l
+      case l: util.ArrayList[_] => l.toList
       case _          => List(any)
     }
   }
