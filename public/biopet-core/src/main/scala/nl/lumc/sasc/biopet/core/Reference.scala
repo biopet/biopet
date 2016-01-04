@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.core.summary.{SummaryQScript, Summarizable}
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -135,10 +135,10 @@ object Reference {
    * @param fastaFile Fasta file
    */
   def requireDict(fastaFile: File): Unit = {
-      val dict = new File(fastaFile.getAbsolutePath
-        .stripSuffix(".fna")
-        .stripSuffix(".fa")
-        .stripSuffix(".fasta") + ".dict")
+    val dict = new File(fastaFile.getAbsolutePath
+      .stripSuffix(".fna")
+      .stripSuffix(".fa")
+      .stripSuffix(".fasta") + ".dict")
     if (!checked.contains(dict)) {
       checked += dict
       if (!dict.exists()) Logging.addError("Reference is missing a dict file")

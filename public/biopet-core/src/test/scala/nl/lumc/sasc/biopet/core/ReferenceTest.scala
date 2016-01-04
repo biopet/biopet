@@ -2,8 +2,8 @@ package nl.lumc.sasc.biopet.core
 
 import java.nio.file.Paths
 
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
-import nl.lumc.sasc.biopet.utils.config.{Configurable, Config}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.config.{ Configurable, Config }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -11,8 +11,8 @@ import org.mockito.Mockito._
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 12/30/15.
-  */
+ * Created by pjvan_thof on 12/30/15.
+ */
 class ReferenceTest extends TestNGSuite with Matchers with MockitoSugar {
 
   import ReferenceTest._
@@ -71,7 +71,7 @@ object ReferenceTest {
            dict: Boolean = false) = new Reference {
     val root = r
     override def globalConfig = new Config(configs
-       .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b)} )
+      .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
     override def dictRequired = if (dict) true else super.dictRequired
     override def faiRequired = if (fai) true else super.faiRequired
   }
