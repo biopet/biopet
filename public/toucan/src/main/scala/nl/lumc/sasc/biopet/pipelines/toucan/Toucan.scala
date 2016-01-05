@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.toucan
 import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsIntersect
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsMerge, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
@@ -131,9 +131,15 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     bedTrack.sample = Some(sampleID)
     add(bedTrack)
 
+    val mergedBed = new BedtoolsMerge(this)
+    mergedBed.input = bedTrack.outputBed
+    mergedBed.dist = 5
+    mergedBed.output = swapExt(outputDir, bedTrack.outputBed, ".bed", ".merged.bed")
+    add(mergedBed)
+
     val bgzippedBed = new Bgzip(this)
-    bgzippedBed.input = List(bedTrack.outputBed)
-    bgzippedBed.output = swapExt(outputDir, bedTrack.outputBed, ".bed", ".bed.gz")
+    bgzippedBed.input = List(mergedBed.output)
+    bgzippedBed.output = swapExt(outputDir, mergedBed.output, ".bed", ".bed.gz")
     add(bgzippedBed)
 
     val singleVcf = new BcftoolsView(this)
@@ -147,11 +153,16 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val intersected = new BedtoolsIntersect(this)
     intersected.input = singleVcf.output
     intersected.intersectFile = bgzippedBed.output
-    intersected.output = swapExt(outputDir, singleVcf.output, ".vcf.gz", ".intersected.vcf.gz")
+    intersected.output = swapExt(outputDir, singleVcf.output, ".vcf.gz", ".intersected.vcf")
     add(intersected)
 
+    val bgzippedIntersect = new Bgzip(this)
+    bgzippedIntersect.input = List(intersected.output)
+    bgzippedIntersect.output = swapExt(outputDir, intersected.output, ".vcf", ".vcf.gz")
+    add(bgzippedIntersect)
+
     val imported = new ManweSamplesImport(this)
-    imported.vcfs = List(intersected.output)
+    imported.vcfs = List(bgzippedIntersect.output)
     imported.beds = List(bgzippedBed.output)
     imported.name = Some(sampleID)
     imported.public = isPublic
