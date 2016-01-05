@@ -22,13 +22,39 @@ class ManweDownloadAfterAnnotate(root: Configurable,
   override def beforeCmd: Unit = {
     super.beforeCmd
 
-    if (annotate.output.exists()) {
-      val reader = Source.fromFile(annotate.output)
-      this.uri = reader.getLines().toList.head.split(' ').last
-      reader.close()
+    this.uri = getUri
+  }
+
+  def getUriFromFile(f: File): String = {
+    val r = if (f.exists()) {
+      val reader = Source.fromFile(f)
+      val it = reader.getLines()
+      if (it.isEmpty) {
+        throw new IllegalArgumentException("Empty manwe stderr file")
+      }
+      it.filter(_.contains("Annotated VCF file")).toList.head.split(" ").last
     } else {
-      this.uri = ""
+      ""
     }
+    r
+  }
+
+  def getUri: String = {
+    val err: Option[File] = Some(annotate.jobOutputFile)
+    uri = err match {
+      case None => ""
+      case Some(s) => s match {
+        case null  => ""
+        case other => getUriFromFile(other)
+      }
+      case _ => ""
+    }
+
+    uri
+  }
+
+  override def subCommand = {
+    required("data-sources") + required("download") + getUri
   }
 
 }
