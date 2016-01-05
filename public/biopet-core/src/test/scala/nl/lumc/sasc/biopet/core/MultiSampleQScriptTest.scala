@@ -14,8 +14,8 @@ import org.testng.annotations.Test
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Created by pjvan_thof on 12/29/15.
-  */
+ * Created by pjvan_thof on 12/29/15.
+ */
 class MultiSampleQScriptTest extends TestNGSuite with Matchers {
   import MultiSampleQScriptTest._
 
@@ -29,23 +29,25 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
     script.functions.size shouldBe 5
 
-    script.samples.foreach { case (sampleId, sample) =>
-      sample.gender shouldBe Gender.Unknown
-      sample.father shouldBe None
-      sample.mother shouldBe None
-      sample.summaryFiles shouldBe Map()
-      sample.summaryStats shouldBe Map()
-      sample.summarySettings shouldBe Map()
-      sample.sampleDir shouldBe new File(script.outputDir, "samples" + File.separator + sampleId)
-      sample.createFile("bla.txt") shouldBe new File(sample.sampleDir, s"$sampleId.bla.txt")
+    script.samples.foreach {
+      case (sampleId, sample) =>
+        sample.gender shouldBe Gender.Unknown
+        sample.father shouldBe None
+        sample.mother shouldBe None
+        sample.summaryFiles shouldBe Map()
+        sample.summaryStats shouldBe Map()
+        sample.summarySettings shouldBe Map()
+        sample.sampleDir shouldBe new File(script.outputDir, "samples" + File.separator + sampleId)
+        sample.createFile("bla.txt") shouldBe new File(sample.sampleDir, s"$sampleId.bla.txt")
 
-      sample.libraries.foreach { case (libId, library) =>
-        library.libDir shouldBe new File(sample.sampleDir, s"lib_$libId")
-        library.createFile("bla.txt") shouldBe new File(library.libDir, s"$sampleId-$libId.bla.txt")
-        library.summaryFiles shouldBe Map()
-        library.summaryStats shouldBe Map()
-        library.summarySettings shouldBe Map()
-      }
+        sample.libraries.foreach {
+          case (libId, library) =>
+            library.libDir shouldBe new File(sample.sampleDir, s"lib_$libId")
+            library.createFile("bla.txt") shouldBe new File(library.libDir, s"$sampleId-$libId.bla.txt")
+            library.summaryFiles shouldBe Map()
+            library.summaryStats shouldBe Map()
+            library.summarySettings shouldBe Map()
+        }
     }
   }
 
@@ -73,7 +75,7 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
     script.functions.size shouldBe 5
 
     script.samples("sample1").sampleGroups shouldBe List("1")
-    script.samples("sample1").libraries("lib1").libGroups shouldBe List("1")
+    script.samples("sample1").libraries("lib1").libGroups should not be List("1")
     script.samples("sample2").sampleGroups shouldBe List("2")
     script.samples("sample2").libraries("lib1").libGroups shouldBe List("3")
 
@@ -92,17 +94,23 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
 object MultiSampleQScriptTest {
   val sample1 = Map("samples" -> Map("sample1" -> Map(
-    "gender" -> "blablablablabla",
-    "groups" -> List("1"),
+    "tags" -> Map(
+      "gender" -> "blablablablabla",
+      "groups" -> List("1")
+    ),
     "libraries" -> Map(
       "lib1" -> Map("test" -> "1-1")
     )))
   )
 
   val sample2 = Map("samples" -> Map("sample2" -> Map(
-    "groups" -> List("2"),
+    "tags" -> Map(
+      "groups" -> List("2")
+    ),
     "libraries" -> Map(
-      "lib1" -> Map("test" -> "2-1", "groups" -> List("3")),
+      "lib1" -> Map("test" -> "2-1", "tags" -> Map(
+        "groups" -> List("3")
+      )),
       "lib2" -> Map("test" -> "2-2")
     ))))
 
@@ -112,9 +120,10 @@ object MultiSampleQScriptTest {
     "lib3" -> Map("test" -> "3-3")
   ))))
 
-  val child = Map("samples" -> Map("child" -> Map("gender" -> "male", "father" -> "father", "mother" -> "mother")))
-  val father = Map("samples" -> Map("father" -> Map("gender" -> "male")))
-  val mother = Map("samples" -> Map("mother" -> Map("gender" -> "female")))
+  val child = Map("samples" -> Map("child" -> Map("tags" -> Map(
+    "gender" -> "male", "father" -> "father", "mother" -> "mother"))))
+  val father = Map("samples" -> Map("father" -> Map("tags" -> Map("gender" -> "male"))))
+  val mother = Map("samples" -> Map("mother" -> Map("tags" -> Map("gender" -> "female"))))
 
   def apply(configs: List[Map[String, Any]], only: List[String] = Nil) = {
     new QScript with MultiSampleQScript { qscript =>
@@ -124,7 +133,7 @@ object MultiSampleQScriptTest {
       var buffer = new ListBuffer[String]()
 
       override def globalConfig = new Config(configs
-        .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b)} )
+        .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
 
       val root = null
       class Sample(id: String) extends AbstractSample(id) {
@@ -142,10 +151,10 @@ object MultiSampleQScriptTest {
         }
 
         /**
-          * Factory method for Library class
-          * @param id SampleId
-          * @return Sample class
-          */
+         * Factory method for Library class
+         * @param id SampleId
+         * @return Sample class
+         */
         def makeLibrary(id: String): Library = new Library(id)
 
         /** Function to add sample jobs */
@@ -163,17 +172,17 @@ object MultiSampleQScriptTest {
       }
 
       /**
-        * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
-        */
+       * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+       */
       def addMultiSampleJobs(): Unit = {
         add(new Md5sum(qscript))
       }
 
       /**
-        * Factory method for Sample class
-        * @param id SampleId
-        * @return Sample class
-        */
+       * Factory method for Sample class
+       * @param id SampleId
+       * @return Sample class
+       */
       def makeSample(id: String): Sample = new Sample(id)
 
       /** Must return a map with used settings for this pipeline */

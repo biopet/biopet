@@ -31,7 +31,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
   require(globalConfig.map.contains("samples"), "No Samples found in config")
 
   /** Sample class with basic functions build in */
-  abstract class AbstractSample(val sampleId: String) extends Summarizable {
+  abstract class AbstractSample(val sampleId: String) extends Summarizable { sample =>
     /** Overrules config of qscript with default sample */
     val config = new ConfigFunctions(defaultSample = sampleId)
 
@@ -39,7 +39,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     def summarySettings: Map[String, Any] = Map()
 
     /** Library class with basic functions build in */
-    abstract class AbstractLibrary(val libId: String) extends Summarizable {
+    abstract class AbstractLibrary(val libId: String) extends Summarizable { lib =>
       /** Overrules config of qscript with default sample and default library */
       val config = new ConfigFunctions(defaultSample = sampleId, defaultLibrary = libId)
 
@@ -69,7 +69,16 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       /** Returns library directory */
       def libDir = new File(sampleDir, "lib_" + libId)
 
-      lazy val libGroups: List[String] = config("groups", sample = sampleId, library = libId)
+      lazy val libTags: Map[String, Any] =
+        config("tags", default = Map(), freeVar = false, submodule = libId, path = List("samples", sampleId, "libraries"))
+
+      def sampleId = sample.sampleId
+
+      lazy val libGroups: List[String] = libTags.get("groups") match {
+        case Some(g: List[_]) => g.map(_.toString)
+        case Some(g: String)  => List(g)
+        case _                => Nil
+      }
 
       /** Function that add library jobs */
       protected def addJobs()
@@ -81,20 +90,23 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     /** Stores all libraries */
     val libraries: Map[String, Library] = libIds.map(id => id -> makeLibrary(id)).toMap
 
+    lazy val sampleTags: Map[String, Any] =
+      config("tags", default = Map(), freeVar = false, submodule = sampleId, path = List("samples"))
+
     lazy val gender = {
-      val g: Option[String] = config("gender", sample = sampleId, library = null)
+      val g: Option[String] = sampleTags.get("gender").map(_.toString)
       g.map(_.toLowerCase) match {
         case Some("male")   => Gender.Male
         case Some("female") => Gender.Female
         case Some(s) =>
           logger.warn(s"Could not convert '$g' to a gender")
           Gender.Unknown
-        case _              => Gender.Unknown
+        case _ => Gender.Unknown
       }
     }
 
     lazy val father = {
-      val g: Option[String] = config("father", sample = sampleId, library = null)
+      val g: Option[String] = sampleTags.get("father").map(_.toString)
       g.foreach { father =>
         if (sampleId != father) Logging.addError(s"Father for $sampleId can not be itself")
         if (samples.contains(father)) if (samples(father).gender == Gender.Male)
@@ -105,7 +117,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     }
 
     lazy val mother = {
-      val g: Option[String] = config("mother", sample = sampleId, library = null)
+      val g: Option[String] = sampleTags.get("mother").map(_.toString)
       g.foreach { mother =>
         if (sampleId != mother) Logging.addError(s"mother for $sampleId can not be itself")
         if (samples.contains(mother)) if (samples(mother).gender == Gender.Female)
@@ -115,7 +127,11 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       g
     }
 
-    lazy val sampleGroups: List[String] = config("groups", sample = sampleId, library = null)
+    lazy val sampleGroups: List[String] = sampleTags.get("groups") match {
+      case Some(g: List[_]) => g.map(_.toString)
+      case Some(g: String)  => List(g)
+      case _                => Nil
+    }
 
     /**
      * Factory method for Library class
