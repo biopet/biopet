@@ -2,45 +2,42 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>BiopetRoot</artifactId>
-        <groupId>nl.lumc.sasc</groupId>
-        <version>0.6.0-SNAPSHOT</version>
-    </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>BiopetAggregate</artifactId>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>6.8</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.10</artifactId>
-            <version>2.2.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>nl.lumc.sasc</groupId>
-            <artifactId>BiopetProtectedPackage</artifactId>
-            <version>0.6.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-        </dependency>
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.6.0-SNAPSHOT</version>
+        <relativePath>../public</relativePath>
+    </parent>
 
-    </dependencies>
+    <modules>
+        <module>../public/biopet-core</module>
+        <module>../public/biopet-public-package</module>
+        <module>../public/bammetrics</module>
+        <module>../public/flexiprep</module>
+        <module>../public/gentrap</module>
+        <module>../public/mapping</module>
+        <module>../public/sage</module>
+        <module>../public/kopisu</module>
+        <module>../public/gears</module>
+        <module>../public/bam2wig</module>
+        <module>../public/carp</module>
+        <module>../public/toucan</module>
+        <module>../public/shiva</module>
+        <module>../public/basty</module>
+        <module>../public/biopet-utils</module>
+        <module>../public/biopet-tools</module>
+        <module>../public/biopet-tools-extensions</module>
+        <module>../public/biopet-extensions</module>
+        <module>../public/biopet-tools-package</module>
+        <module>../protected/biopet-gatk-extensions</module>
+        <module>../protected/biopet-gatk-pipelines</module>
+        <module>../protected/biopet-protected-package</module>
+    </modules>
 
 </project>

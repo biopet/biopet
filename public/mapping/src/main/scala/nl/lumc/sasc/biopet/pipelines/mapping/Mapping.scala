@@ -20,7 +20,9 @@ import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2, Bowtie}
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
