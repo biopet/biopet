@@ -58,9 +58,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
       def summaryStats: Map[String, Any] = Map()
 
-      lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsulute(config("R1"))
-      lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsulute(config("R2"))
-      lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsulute(if (inputR1.isEmpty) config("bam") else None)
+      lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
+      lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
+      lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
@@ -207,7 +207,7 @@ object MultisampleMapping extends PipelineCommand {
     val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
   }
 
-  def fileMustBeAbsulute(file: Option[File]): Option[File] = {
+  def fileMustBeAbsolute(file: Option[File]): Option[File] = {
     if (file.forall(_.isAbsolute)) file
     else {
       Logging.addError(s"$file should be a absolute file path")
