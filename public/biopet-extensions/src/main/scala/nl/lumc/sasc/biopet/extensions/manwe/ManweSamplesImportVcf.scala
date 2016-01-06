@@ -30,9 +30,11 @@ class ManweSamplesImportVcf(val root: Configurable) extends Manwe {
   var waitToComplete: Boolean = false
 
   def subCommand = {
-    required("samples") + required("import-vcf") +
+    required("samples") +
+      required("import-vcf") +
       required(uri) + required(vcf) +
-      conditional(alreadyUploaded, "-u") + conditional(preferLikelihoods, "-l") +
+      conditional(alreadyUploaded, "-u") +
+      conditional(preferLikelihoods, "-l") +
       conditional(waitToComplete, "--wait")
   }
 

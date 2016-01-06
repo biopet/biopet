@@ -17,10 +17,10 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var output: File = _
 
   @Argument(doc = "drop individual genotypes", required = false)
-  var dropGenotype: Boolean = false
+  var dropGenotype: Boolean = config("drop_genotype", default = false)
 
   @Argument(doc = "header only", required = false)
-  var headerOnly: Boolean = false
+  var headerOnly: Boolean = config("header_only", false)
 
   @Argument(doc = "Compression level", required = false)
   var compressionLevel: Int = 9
@@ -29,88 +29,88 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var outputType: String = "z"
 
   @Argument(doc = "regions", required = false)
-  var regions: String = _
+  var regions: Option[String] = config("r")
 
   @Argument(doc = "region file", required = false)
-  var regionFile: File = _
+  var regionFile: Option[File] = config("R")
 
   @Argument(doc = "targets", required = false)
-  var targets: String = _
+  var targets: Option[String] = config("t")
 
   @Argument(doc = "targets file", required = false)
-  var targetFile: File = _
+  var targetFile: Option[File] = config("T")
 
   @Argument(doc = "trim alt alleles", required = false)
-  var trimAltAlleles: Boolean = false
+  var trimAltAlleles: Boolean = config("trim_alt_allele", default = false)
 
   @Argument(doc = "no update", required = false)
-  var noUpdate: Boolean = false
+  var noUpdate: Boolean = config("no_update", default = false)
 
   @Argument(doc = "samples", required = false)
-  var samples: List[String] = Nil
+  var samples: List[String] = config("s", default = Nil)
 
   @Argument(doc = "samples file", required = false)
-  var sampleFile: File = _
+  var sampleFile: Option[File] = config("S")
 
   @Argument(doc = "minimum allele count", required = false)
-  var minAC: Option[Int] = _
+  var minAC: Option[Int] = config("c")
 
   @Argument(doc = "max allele count", required = false)
-  var maxAC: Option[Int] = _
+  var maxAC: Option[Int] = config("C")
 
   @Argument(doc = "exclude (expression)", required = false)
-  var exclude: String = _
+  var exclude: Option[String] = config("e")
 
   @Argument(doc = "apply filters", required = false)
-  var applyFilters: List[String] = Nil
+  var applyFilters: List[String] = config("F", default = Nil)
 
   @Argument(doc = "genotype", required = false)
-  var genotype: String = _
+  var genotype: Option[String] = config("g")
 
   @Argument(doc = "include (expression)", required = false)
-  var include: String = _
+  var include: Option[String] = config("i")
 
   @Argument(doc = "Known (ID field is not .) only", required = false)
-  var known: Boolean = false
+  var known: Boolean = config("k", default = false)
 
   @Argument(doc = "min alleles", required = false)
-  var minAlleles: Option[Int] = _
+  var minAlleles: Option[Int] = config("m")
 
   @Argument(doc = "max alleles", required = false)
-  var maxAlleles: Option[Int] = _
+  var maxAlleles: Option[Int] = config("M")
 
   @Argument(doc = "novel (ID field is .) only", required = false)
-  var novel: Boolean = false
+  var novel: Boolean = config("n", false)
 
   @Argument(doc = "phased only", required = false)
-  var phased: Boolean = false
+  var phased: Boolean = config("p", false)
 
   @Argument(doc = "exclude phased (only)", required = false)
-  var excludePhased: Boolean = false
+  var excludePhased: Boolean = config("P", false)
 
   @Argument(doc = "min allele frequency", required = false)
-  var minAF: Option[Int] = _
+  var minAF: Option[Int] = config("q")
 
   @Argument(doc = "max allele frequency", required = false)
-  var maxAF: Option[Int] = _
+  var maxAF: Option[Int] = config("Q")
 
   @Argument(doc = "uncalled only", required = false)
-  var uncalled: Boolean = false
+  var uncalled: Boolean = config("u", default = false)
 
   @Argument(doc = "exclude uncalled (only)", required = false)
-  var excludeUncalled: Boolean = false
+  var excludeUncalled: Boolean = config("U", default = false)
 
   @Argument(doc = "types", required = false)
-  var types: String = _
+  var types: Option[String] = config("v")
 
   @Argument(doc = "exclude types", required = false)
-  var excludeTypes: String = _
+  var excludeTypes: Option[String] = config("V")
 
   @Argument(doc = "private (requires samples)", required = false)
-  var onlyPrivate: Boolean = false
+  var onlyPrivate: Boolean = config("x", default = false)
 
   @Argument(doc = "Exclude privates", required = false)
-  var excludePrivate: Boolean = false
+  var excludePrivate: Boolean = config("X", default = false)
 
   override def beforeGraph() = {
     super.beforeGraph()
@@ -123,21 +123,39 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   }
 
   def baseCmd = {
-    executable + " view " + conditional(dropGenotype, "-G") + conditional(headerOnly, "-h") +
-      required("-l", compressionLevel) + required("-O", outputType) +
-      optional("-r", regions) + optional("-R", regionFile) +
-      optional("-t", targets) + optional("-T", targetFile) +
-      conditional(trimAltAlleles, "-a") + conditional(noUpdate, "-I") +
-      repeat("-s", samples) + optional("-S", sampleFile) +
-      optional("-c", minAC) + optional("-C", maxAC) +
-      optional("-e", exclude) + optional("-f", applyFilters) +
-      optional("-g", genotype) + optional("-i", include) +
-      conditional(known, "-k") + optional("-m", minAlleles) +
-      optional("-M", maxAlleles) + conditional(novel, "-n") +
-      conditional(phased, "-p") + conditional(excludePhased, "-P") +
-      optional("-q", minAF) + optional("-Q", maxAF) +
-      conditional(uncalled, "-u") + conditional(excludeUncalled, "-U") +
-      optional("-v", types) + conditional(onlyPrivate, "-x") +
+    executable +
+      required("view") +
+      conditional(dropGenotype, "-G") +
+      conditional(headerOnly, "-h") +
+      required("-l", compressionLevel) +
+      required("-O", outputType) +
+      optional("-r", regions) +
+      optional("-R", regionFile) +
+      optional("-t", targets) +
+      optional("-T", targetFile) +
+      conditional(trimAltAlleles, "-a") +
+      conditional(noUpdate, "-I") +
+      repeat("-s", samples) +
+      optional("-S", sampleFile) +
+      optional("-c", minAC) +
+      optional("-C", maxAC) +
+      optional("-e", exclude) +
+      optional("-f", applyFilters) +
+      optional("-g", genotype) +
+      optional("-i", include) +
+      conditional(known, "-k") +
+      optional("-m", minAlleles) +
+      optional("-M", maxAlleles) +
+      conditional(novel, "-n") +
+      conditional(phased, "-p") +
+      conditional(excludePhased, "-P") +
+      optional("-q", minAF) +
+      optional("-Q", maxAF) +
+      conditional(uncalled, "-u") +
+      conditional(excludeUncalled, "-U") +
+      optional("-v", types) +
+      optional("-V", excludeTypes) +
+      conditional(onlyPrivate, "-x") +
       conditional(excludePrivate, "-X")
   }
 

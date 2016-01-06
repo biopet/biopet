@@ -14,7 +14,9 @@ class ManweSamplesShow(val root: Configurable) extends Manwe {
   var uri: Option[String] = _
 
   def subCommand = {
-    required("samples") + required("show") + required(uri)
+    required("samples") +
+      required("show") +
+      required(uri)
   }
 
 }

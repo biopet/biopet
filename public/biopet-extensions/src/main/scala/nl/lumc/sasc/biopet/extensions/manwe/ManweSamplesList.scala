@@ -19,8 +19,11 @@ class ManweSamplesList(val root: Configurable) extends Manwe {
   var onlyPublic: Boolean = false
 
   def subCommand = {
-    required("samples") + required("list") + optional("-u", user) +
-      repeat("-g", group) + conditional(onlyPublic, "-p")
+    required("samples") +
+      required("list") +
+      optional("-u", user) +
+      repeat("-g", group) +
+      conditional(onlyPublic, "-p")
   }
 
 }

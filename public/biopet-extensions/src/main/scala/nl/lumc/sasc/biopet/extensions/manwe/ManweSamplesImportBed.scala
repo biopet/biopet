@@ -27,9 +27,12 @@ class ManweSamplesImportBed(val root: Configurable) extends Manwe {
   var waitToComplete: Boolean = false
 
   def subCommand = {
-    required("samples") + required("import-bed") +
-      required(uri) + required(bed) +
-      conditional(alreadyUploaded, "-u") + conditional(waitToComplete, "--wait")
+    required("samples") +
+      required("import-bed") +
+      required(uri) +
+      required(bed) +
+      conditional(alreadyUploaded, "-u") +
+      conditional(waitToComplete, "--wait")
   }
 
 }

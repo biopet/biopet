@@ -19,7 +19,8 @@ class ManweDataSourcesAnnotate(val root: Configurable) extends Manwe {
 
   def subCommand = {
     required("data-sources") + required("annotate") +
-      required(uri) + repeat("-q", queries) +
+      required(uri) +
+      repeat("-q", queries) +
       conditional(waitToComplete, "--wait")
   }
 

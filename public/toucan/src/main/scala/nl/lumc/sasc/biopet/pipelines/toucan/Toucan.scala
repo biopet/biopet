@@ -186,7 +186,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    */
   def varda(vcf: File, gVcf: File): File = {
 
-    val annotationQueries: List[String] = config("annotation_queries", default = Nil, submodule = "manwe")
+    val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), submodule = "manwe")
     //TODO: add groups!!! Need sample-specific group tags for this
 
     val annotate = new ManweAnnotateVcf(this)

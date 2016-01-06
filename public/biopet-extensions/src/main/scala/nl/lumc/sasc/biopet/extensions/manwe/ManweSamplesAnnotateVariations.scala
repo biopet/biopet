@@ -17,8 +17,10 @@ class ManweSamplesAnnotateVariations(val root: Configurable) extends Manwe {
   var queries: List[String] = Nil
 
   def subCommand = {
-    required("samples") + required("annotate-variations") +
-      required(uri) + repeat("-q", queries)
+    required("samples") +
+      required("annotate-variations") +
+      required(uri) +
+      repeat("-q", queries)
   }
 
 }

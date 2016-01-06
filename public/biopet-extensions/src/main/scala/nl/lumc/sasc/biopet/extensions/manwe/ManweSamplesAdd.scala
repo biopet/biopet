@@ -20,8 +20,11 @@ class ManweSamplesAdd(val root: Configurable) extends Manwe {
   var poolSize: Option[Int] = _
 
   def subCommand = {
-    required("samples") + required("add") + required(name) +
-      optional("-s", poolSize) + repeat("-g", group)
+    required("samples") +
+      required("add") +
+      required(name) +
+      optional("-s", poolSize) +
+      repeat("-g", group)
   }
 
 }

@@ -334,14 +334,17 @@ class ManweTest extends TestNGSuite with Matchers {
     }
 
     val file: File = manwe.createManweConfig(None)
-    val contents = Source.fromFile(file).getLines().mkString("\n")
+    val contents = Source.fromFile(file).getLines().toList
 
-    contents should equal("""API_ROOT = 'http://127.0.0.1:5000'
-        |TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'
-        |VERIFY_CERTIFICATE = True
-        |COLLECTION_CACHE_SIZE = 25
-        |DATA_BUFFER_SIZE = 200
-        |TASK_POLL_WAIT = 5""".stripMargin)
+    val supposedContent = List("API_ROOT = 'http://127.0.0.1:5000'",
+      "TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'",
+      "VERIFY_CERTIFICATE = True",
+      "COLLECTION_CACHE_SIZE = 25",
+      "DATA_BUFFER_SIZE = 200",
+      "TASK_POLL_WAIT = 5"
+    )
+
+    supposedContent.sorted should equal(contents.sorted)
 
     val manwe2 = new ManweAnnotateBed(null) {
       override def globalConfig = new Config(Map(
@@ -354,15 +357,16 @@ class ManweTest extends TestNGSuite with Matchers {
     }
 
     val file2: File = manwe2.createManweConfig(None)
-    val contents2 = Source.fromFile(file2).getLines().mkString("\n")
+    val contents2 = Source.fromFile(file2).getLines().toList
+    val supposedContent2 = List("API_ROOT = 'http://127.0.0.1:5000'",
+      "TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'",
+      "VERIFY_CERTIFICATE = '/a/b/c/d.crt'",
+      "COLLECTION_CACHE_SIZE = 25",
+      "DATA_BUFFER_SIZE = 200",
+      "TASK_POLL_WAIT = 5"
+    )
 
-    contents2 should equal("""API_ROOT = 'http://127.0.0.1:5000'
-                            |TOKEN = 'QWERTYUIOPASDFGHJKLZXCVBNM'
-                            |VERIFY_CERTIFICATE = '/a/b/c/d.crt'
-                            |COLLECTION_CACHE_SIZE = 25
-                            |DATA_BUFFER_SIZE = 200
-                            |TASK_POLL_WAIT = 5""".stripMargin)
-
+    supposedContent2.sorted should equal(contents2.sorted)
   }
 
 }

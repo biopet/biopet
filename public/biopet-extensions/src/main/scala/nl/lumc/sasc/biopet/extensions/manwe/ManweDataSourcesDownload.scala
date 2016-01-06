@@ -12,9 +12,8 @@ class ManweDataSourcesDownload(val root: Configurable) extends Manwe {
   var uri: String = _
 
   def subCommand = {
-    required("data-sources") + required("download") + required(uri)
+    required("data-sources") +
+      required("download") +
+      required(uri)
   }
-
-  this.deps
-
 }

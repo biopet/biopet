@@ -25,7 +25,8 @@ class ManweAnnotateVcf(val root: Configurable) extends Manwe {
   def subCommand = {
     required("annotate-vcf") + required(vcf) +
       conditional(alreadyUploaded, "-u") +
-      repeat("-q", queries) + conditional(waitToComplete, "--wait")
+      repeat("-q", queries) +
+      conditional(waitToComplete, "--wait")
   }
 
 }

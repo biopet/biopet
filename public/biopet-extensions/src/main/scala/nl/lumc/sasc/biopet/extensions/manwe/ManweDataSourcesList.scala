@@ -14,7 +14,8 @@ class ManweDataSourcesList(val root: Configurable) extends Manwe {
   var user: Option[String] = _
 
   def subCommand = {
-    required("data-sources") + required("list") +
+    required("data-sources") +
+      required("list") +
       optional("-u", user)
   }
 

@@ -13,9 +13,6 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Argument }
 abstract class Manwe extends BiopetCommandLineFunction {
   executable = config("exe", default = "manwe", submodule = "manwe")
 
-  override def defaultCoreMemory = 2.0
-  override def defaultThreads = 1
-
   var manweConfig: File = createManweConfig(None)
 
   @Output(doc = "the output file")
@@ -58,31 +55,28 @@ abstract class Manwe extends BiopetCommandLineFunction {
     val dataBufferSize: Option[Int] = config("varda_buffer_size", default = 1024 * 1024)
     val taskPollWait: Option[Int] = config("varda_task_poll_wait", default = 2)
 
-    val urlString = s"API_ROOT = '${url.toString}'"
-    val tokenString = s"TOKEN = '${token.toString}'"
-    val sslSettingString = sslSettings match {
-      case Some("true")  => "VERIFY_CERTIFICATE = True"
-      case Some("false") => "VERIFY_CERTIFICATE = False"
-      case Some(x)       => s"VERIFY_CERTIFICATE = '$x'"
-      case _             => "VERIFY_CERTIFICATE = True"
-    }
+    val settingsMap: Map[String, Any] = Map(
+      "API_ROOT" -> s"'$url'",
+      "TOKEN" -> s"'$token'",
+      "VERIFY_CERTIFICATE" -> (sslSettings match {
+        case Some("true")  => "True"
+        case Some("false") => "False"
+        case Some(x)       => s"'$x'"
+        case _             => "True"
+      }),
+      "COLLECTION_CACHE_SIZE" -> collectionCacheSize.getOrElse(20),
+      "DATA_BUFFER_SIZE" -> dataBufferSize.getOrElse(1048576),
+      "TASK_POLL_WAIT" -> taskPollWait.getOrElse(2)
+    )
 
-    val collectionString = s"COLLECTION_CACHE_SIZE = ${collectionCacheSize.getOrElse(20)}"
-    val dataString = s"DATA_BUFFER_SIZE = ${dataBufferSize.getOrElse(1048576)}"
-    val taskString = s"TASK_POLL_WAIT = ${taskPollWait.getOrElse(2)}"
     val file = directory match {
       case Some(dir) => File.createTempFile("manwe_config", ".py", dir)
       case None      => File.createTempFile("manwe_config", ".py")
     }
+
     file.deleteOnExit()
     val writer = new PrintWriter(file)
-    writer.println(urlString)
-    writer.println(tokenString)
-    writer.println(sslSettingString)
-    writer.println(collectionString)
-    writer.println(dataString)
-    writer.println(taskString)
-
+    settingsMap.foreach { case (key, value) => writer.println(s"$key = $value") }
     writer.close()
     file
   }

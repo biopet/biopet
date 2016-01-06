@@ -14,7 +14,8 @@ class ManweDataSourcesShow(val root: Configurable) extends Manwe {
   var uri: Option[String] = _
 
   def subCommand = {
-    required("data-sources") + required("show") +
+    required("data-sources") +
+      required("show") +
       required(uri)
   }
 

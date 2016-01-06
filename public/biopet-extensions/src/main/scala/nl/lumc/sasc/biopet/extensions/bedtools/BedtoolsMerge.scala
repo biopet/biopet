@@ -14,7 +14,7 @@ class BedtoolsMerge(val root: Configurable) extends Bedtools {
   var input: File = _
 
   @Argument(doc = "Distance")
-  var dist: Int = 1 //default of tool is 1
+  var dist: Option[Int] = config("dist") //default of tool is 1
 
   @Output(doc = "Output bed file")
   var output: File = _

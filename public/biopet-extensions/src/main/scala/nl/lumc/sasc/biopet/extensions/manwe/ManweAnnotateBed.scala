@@ -25,7 +25,8 @@ class ManweAnnotateBed(val root: Configurable) extends Manwe {
   def subCommand = {
     required("annotate-bed") + required(bed) +
       conditional(alreadyUploaded, "-u") +
-      repeat("-q", queries) + conditional(waitToComplete, "--wait")
+      repeat("-q", queries) +
+      conditional(waitToComplete, "--wait")
   }
 
 }
