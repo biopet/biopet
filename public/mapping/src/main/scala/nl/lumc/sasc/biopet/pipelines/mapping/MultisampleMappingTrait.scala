@@ -41,8 +41,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     // this code will be executed after all code of all samples is executed
   }
 
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
-
   def summaryFiles: Map[String, File] = Map("referenceFasta" -> referenceFasta())
 
   def summarySettings: Map[String, Any] = Map(
@@ -199,6 +197,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
 class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
+
+  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 }
 
 object MultisampleMapping extends PipelineCommand {

@@ -154,7 +154,7 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
   }
 
   /** Location of summary file */
-  override def summaryFile = new File(outputDir, "Shiva.summary.json")
+  def summaryFile = new File(outputDir, "Shiva.summary.json")
 
   /** Settings of pipeline for summary */
   override def summarySettings = super.summarySettings ++ Map(

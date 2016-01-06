@@ -52,7 +52,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     )
   )
 
-  override def summaryFile = new File(outputDir, "Carp.summary.json")
+  def summaryFile = new File(outputDir, "Carp.summary.json")
 
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
