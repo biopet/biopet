@@ -56,36 +56,40 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
         ("use_indel_realigner" -> useIndelRealigner) +
         ("use_base_recalibration" -> useBaseRecalibration)
 
-      /** This will adds preprocess steps, gatk indel realignment and base recalibration is included here */
-      override def preProcess(input: File): Option[File] = {
-        if (!useIndelRealigner && !useBaseRecalibration) None
-        else {
-          val indelRealignFile = useIndelRealigner match {
-            case true  => addIndelRealign(input, libDir, useBaseRecalibration || libraries.size > 1)
-            case false => input
-          }
+      override def preProcessBam = if (useIndelRealigner && useBaseRecalibration)
+        bamFile.map(swapExt(libDir, _, ".bam", ".realign.baserecal.bam"))
+      else if (useIndelRealigner) bamFile.map(swapExt(libDir, _, ".bam", ".realign.bam"))
+      else if (useBaseRecalibration) bamFile.map(swapExt(libDir, _, ".bam", ".baserecal.bam"))
+      else bamFile
 
-          useBaseRecalibration match {
-            case true  => Some(addBaseRecalibrator(indelRealignFile, libDir, libraries.size > 1))
-            case false => Some(indelRealignFile)
-          }
+      override def addJobs(): Unit = {
+        super.addJobs()
+        if (useIndelRealigner && useBaseRecalibration) {
+          val file = addIndelRealign(bamFile.get, libDir, isIntermediate = true)
+          addBaseRecalibrator(file, libDir, libraries.size > 1)
+        } else if (useIndelRealigner) {
+          addIndelRealign(bamFile.get, libDir, libraries.size > 1)
+        } else if (useBaseRecalibration) {
+          addBaseRecalibrator(bamFile.get, libDir, libraries.size > 1)
         }
       }
     }
+
+    override def keepMergedFiles: Boolean = config("keep_merged_files", default = false)
 
     override def summarySettings = super.summarySettings + ("use_indel_realigner" -> useIndelRealigner)
 
     lazy val useIndelRealigner: Boolean = config("use_indel_realigner", default = true)
 
-    /** This methods will add double preprocess steps, with GATK indel realignment */
-    override protected def addDoublePreProcess(input: List[File], isIntermediate: Boolean = false): Option[File] = {
-      if (input.size <= 1) super.addDoublePreProcess(input)
-      else super.addDoublePreProcess(input, isIntermediate = useIndelRealigner).collect {
-        case file =>
-          useIndelRealigner match {
-            case true  => addIndelRealign(file, sampleDir, isIntermediate = false)
-            case false => file
-          }
+    override def preProcessBam = if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
+      bamFile.map(swapExt(sampleDir, _, ".bam", ".realign.bam"))
+    } else bamFile
+
+    override def addJobs(): Unit = {
+      super.addJobs()
+
+      if (useIndelRealigner && libraries.values.flatMap(_.preProcessBam).size > 1) {
+        addIndelRealign(bamFile.get, sampleDir, false)
       }
     }
   }

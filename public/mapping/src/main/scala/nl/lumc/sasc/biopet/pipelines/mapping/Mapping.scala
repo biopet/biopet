@@ -246,7 +246,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       add(md)
       addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
+      val mergeSamFile = MergeSamFiles(this, bamFiles, new File(outputDir, outputName + ".merge.bam"))
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
