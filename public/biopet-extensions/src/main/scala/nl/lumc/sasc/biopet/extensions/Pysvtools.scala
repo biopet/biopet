@@ -8,19 +8,18 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 
 /**
-  * Created by wyleung on 8-1-16.
-  */
+ * Created by wyleung on 8-1-16.
+ */
 class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
 
   @Input(doc = "Input file", required = true)
   var input: List[File] = Nil
 
-  @Argument(doc="Set flanking amount")
+  @Argument(doc = "Set flanking amount")
   var flanking: Option[Int] = config("flanking")
 
   var exclusionRegions: List[File] = config("exclusion_regions")
   var translocationsOnly: Boolean = config("translocations_only")
-
 
   @Output(doc = "Unzipped file", required = true)
   var output: File = _
@@ -43,16 +42,15 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
 
     // redefine the tsv, bed and regions output
     val outputNamePrefix = output.getAbsolutePath.stripSuffix(".vcf")
-    tsvoutput = new File(outputNamePrefix+".tsv")
-    bedoutput = new File(outputNamePrefix+".bed")
-    regionsoutput = new File(outputNamePrefix+".regions.bed")
+    tsvoutput = new File(outputNamePrefix + ".tsv")
+    bedoutput = new File(outputNamePrefix + ".bed")
+    regionsoutput = new File(outputNamePrefix + ".regions.bed")
   }
-
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
     repeat("-c", input) +
-    optional( "-f", flanking ) +
+    optional("-f", flanking) +
     "-i " + repeat(input) +
     "-o " + required(tsvoutput) +
     "-b " + required(bedoutput) +

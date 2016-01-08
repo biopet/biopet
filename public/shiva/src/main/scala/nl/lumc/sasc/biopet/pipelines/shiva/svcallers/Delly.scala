@@ -20,7 +20,6 @@ class Delly(val root: Configurable) extends SvCaller {
       val catVariants = new CatVariants(this)
       catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf.gz")
 
-      /// start delly and then copy the vcf into the root directory "<sample>.delly/"
       if (del) {
         val delly = new DellyCaller(this)
         delly.input = bamFile
@@ -55,6 +54,8 @@ class Delly(val root: Configurable) extends SvCaller {
       }
 
       add(catVariants)
+
+      outputFiles += (sample -> catVariants.outputFile)
     }
   }
 }
