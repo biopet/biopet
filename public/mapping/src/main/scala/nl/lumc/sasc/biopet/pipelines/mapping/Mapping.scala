@@ -380,7 +380,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     // merge with mapped file
     val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
-      tophat.output_dir, "coordinate")
+      new File(tophat.output_dir, "fixed_merged.bam"), sortOrder = "coordinate")
     mergeSamFile.createIndex = true
     mergeSamFile.isIntermediate = true
     add(mergeSamFile)
