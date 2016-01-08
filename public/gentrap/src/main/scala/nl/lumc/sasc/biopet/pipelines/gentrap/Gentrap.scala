@@ -19,13 +19,13 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.picard.{MergeSamFiles, SortSam}
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.{MergeTables, WipeReads}
-import nl.lumc.sasc.biopet.extensions.{HtseqCount, Ln}
+import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
+import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{CustomVarScan, Pdflatex, RawBaseCounter}
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap}
+import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config._
@@ -98,17 +98,6 @@ class Gentrap(val root: Configurable) extends QScript
   /** Whether to do simple variant calling on RNA or not */
   var callVariants: Boolean = config("call_variants", default = false)
 
-  /** Settings for all Picard CollectRnaSeqMetrics runs */
-  private def collectRnaSeqMetricsSettings: Map[String, String] = Map(
-    "strand_specificity" -> (strandProtocol match {
-      case NonSpecific => StrandSpecificity.NONE.toString
-      case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
-      case otherwise   => throw new IllegalStateException(otherwise.toString)
-    })) ++ (ribosomalRefFlat match {
-      case Some(rbs) => Map("ribosomal_intervals" -> rbs.toString)
-      case None      => Map()
-    })
-
   /** Default pipeline config */
   override def defaults = Map(
     "merge_strategy" -> "preprocessmergesam",
@@ -116,6 +105,17 @@ class Gentrap(val root: Configurable) extends QScript
       "novelsplicing" -> 1,
       "batch" -> 4,
       "format" -> "sam"
+    ),
+    "bammetrics" -> Map(
+      "transcript_refflat" -> annotationRefFlat,
+      "collectrnaseqmetrics" -> ((if (strandProtocol != null) Map(
+        "strand_specificity" -> (strandProtocol match {
+          case NonSpecific => StrandSpecificity.NONE.toString
+          case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
+          case otherwise   => throw new IllegalStateException(otherwise.toString)
+        })
+      )
+      else Map()) ++ (if (ribosomalRefFlat != null) ribosomalRefFlat.map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
     ),
     "cutadapt" -> Map("minimum_length" -> 20),
     // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
