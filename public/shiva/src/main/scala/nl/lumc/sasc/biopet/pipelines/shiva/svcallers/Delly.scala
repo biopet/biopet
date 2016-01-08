@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
-/** Script for sv caler delly */
+/** Script for sv caller delly */
 class Delly(val root: Configurable) extends SvCaller {
   def name = "delly"
 
@@ -54,8 +54,7 @@ class Delly(val root: Configurable) extends SvCaller {
       }
 
       add(catVariants)
-
-      outputFiles += (sample -> catVariants.outputFile)
+      addVCF(sample, catVariants.outputFile)
     }
   }
 }

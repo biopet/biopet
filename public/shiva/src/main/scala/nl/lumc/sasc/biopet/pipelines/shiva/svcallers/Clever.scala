@@ -14,7 +14,7 @@ class Clever(val root: Configurable) extends SvCaller {
       val clever = CleverCaller(this, bamFile, cleverDir)
       add(clever)
 
-      outputFiles += (sample -> clever.outputvcf)
+      addVCF(sample, clever.outputvcf)
     }
   }
 }

@@ -19,7 +19,7 @@ class Breakdancer(val root: Configurable) extends SvCaller {
       val bdvcf = BreakdancerVCF(this, breakdancer.output, new File(breakdancerSampleDir, sample + ".breakdancer.vcf"))
       add(bdcfg, breakdancer, bdvcf)
 
-      outputFiles += (sample -> bdvcf.output)
+      addVCF(sample, bdvcf.output)
     }
   }
 }

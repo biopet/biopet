@@ -67,14 +67,19 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     for ((sample, bamFile) <- inputBams) {
       var sampleVcfs: List[File] = List()
       callers.foreach { caller =>
-        sampleVcfs :+= caller.outputFiles(sample)
+        sampleVcfs :+= caller.outputVCF(sample).get
       }
       val mergeSVcalls = new Pysvtools(this)
       mergeSVcalls.input = sampleVcfs
       mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
       add(mergeSVcalls)
-      outputFiles += (sample -> mergeSVcalls.output)
+      //      outputFiles += (sample -> mergeSVcalls.output)
     }
+
+    // merging the VCF calls by project
+    // basicly this will do all samples from this pipeline run
+    // group by "tags"
+    // sample tagging is however not available within this pipeline
 
     addSummaryJobs()
   }

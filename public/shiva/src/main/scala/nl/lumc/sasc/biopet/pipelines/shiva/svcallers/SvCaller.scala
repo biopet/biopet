@@ -15,5 +15,15 @@ trait SvCaller extends QScript with BiopetQScript with Reference {
 
   var inputBams: Map[String, File] = _
 
+  def outputVCF(sample: String): Option[File] = {
+    outputVcfs.get(sample)
+  }
+
+  protected var outputVcfs: Map[String, File] = _
+
+  protected def addVCF(sampleId: String, outputVCF: File) = {
+    outputVcfs += (sampleId -> outputVCF)
+  }
+
   def init() = {}
 }
