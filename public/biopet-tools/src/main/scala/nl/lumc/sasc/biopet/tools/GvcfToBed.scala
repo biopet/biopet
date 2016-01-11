@@ -4,7 +4,7 @@ import java.io.{ File, PrintWriter }
 
 import htsjdk.variant.variantcontext.VariantContext
 import htsjdk.variant.vcf.VCFFileReader
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ VcfUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.intervals.BedRecord
 
 import scala.collection.JavaConversions._
@@ -17,6 +17,7 @@ object GvcfToBed extends ToolCommand {
 
   case class Args(inputVcf: File = null,
                   outputBed: File = null,
+                  invertedOutputBed: Option[File] = None,
                   sample: Option[String] = None,
                   minGenomeQuality: Int = 0,
                   inverse: Boolean = false) extends AbstractArgs
@@ -28,15 +29,15 @@ object GvcfToBed extends ToolCommand {
     opt[File]('O', "outputBed") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputBed = x)
     } text "Output bed file"
+    opt[File]("invertedOutputBed") maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(invertedOutputBed = Some(x))
+    } text "Output bed file"
     opt[String]('S', "sample") unbounded () maxOccurs 1 valueName "<sample>" action { (x, c) =>
       c.copy(sample = Some(x))
     } text "Sample to consider. Will take first sample on alphabetical order by default"
     opt[Int]("minGenomeQuality") unbounded () maxOccurs 1 valueName "<int>" action { (x, c) =>
       c.copy(minGenomeQuality = x)
     } text "Minimum genome quality to consider"
-    opt[Boolean]("invert") unbounded () maxOccurs 1 valueName "<boolean>" action { (x, c) =>
-      c.copy(inverse = x)
-    } text "Invert filter (i.e. emit only records NOT passing filter)"
   }
 
   def main(args: Array[String]): Unit = {
@@ -47,54 +48,61 @@ object GvcfToBed extends ToolCommand {
     val reader = new VCFFileReader(cmdArgs.inputVcf, false)
     logger.debug("Opening writer")
     val writer = new PrintWriter(cmdArgs.outputBed)
+    val invertedWriter = cmdArgs.invertedOutputBed.collect {
+      case file =>
+        logger.debug("Opening inverted writer")
+        new PrintWriter(file)
+    }
 
-    var counter = 0
+    val sample = cmdArgs.sample.getOrElse(reader.getFileHeader.getSampleNamesInOrder.head)
 
+    val it = reader.iterator()
+    val firstRecord = it.next()
+    var contig = firstRecord.getContig
+    var start = firstRecord.getStart
+    var end = firstRecord.getEnd
+    var pass = VcfUtils.hasMinGenomeQuality(firstRecord, sample, cmdArgs.minGenomeQuality)
+
+    def writeResetCachedRecord(newRecord: VariantContext): Unit = {
+      writeCachedRecord()
+      contig = newRecord.getContig
+      start = newRecord.getStart
+      end = newRecord.getEnd
+      pass = VcfUtils.hasMinGenomeQuality(newRecord, sample, cmdArgs.minGenomeQuality)
+    }
+
+    def writeCachedRecord(): Unit = {
+      if (pass) writer.println(new BedRecord(contig, start - 1, end))
+      else invertedWriter.foreach(_.println(new BedRecord(contig, start - 1, end)))
+    }
+
+    var counter = 1
     logger.info("Start")
-    for (r <- reader) {
-      if (!hasMinGenomeQuality(r, cmdArgs.sample, cmdArgs.minGenomeQuality) && cmdArgs.inverse) {
-        writer.println(createBedRecord(r).toString)
-      } else if (hasMinGenomeQuality(r, cmdArgs.sample, cmdArgs.minGenomeQuality) && !cmdArgs.inverse) {
-        writer.println(createBedRecord(r).toString)
-      }
+    for (r <- it) {
+      if (contig == r.getContig) {
+        val p = VcfUtils.hasMinGenomeQuality(r, sample, cmdArgs.minGenomeQuality)
+        if (p != pass || r.getStart > (end + 1)) writeResetCachedRecord(r)
+        else end = r.getEnd
+      } else writeResetCachedRecord(r)
 
       counter += 1
       if (counter % 100000 == 0) {
         logger.info(s"Processed $counter records")
       }
     }
+    writeCachedRecord()
+
+    logger.info(s"Processed $counter records")
 
     logger.debug("Closing writer")
     writer.close()
+    invertedWriter.foreach { w =>
+      logger.debug("Closing inverted writer")
+      w.close()
+    }
     logger.debug("Closing reader")
     reader.close()
 
     logger.info("Finished!")
   }
-
-  /**
-   * Check whether record has minimum genome qality
-   * @param record variant context
-   * @param sample Option[String] with sample name
-   * @param minGQ minimum genome quality value
-   * @return
-   */
-  def hasMinGenomeQuality(record: VariantContext, sample: Option[String], minGQ: Int): Boolean = {
-    sample foreach { x =>
-      if (!record.getSampleNamesOrderedByName.contains(x))
-        throw new IllegalArgumentException("Sample does not exist")
-    }
-    val gt = record.getGenotype(sample.getOrElse(record.getSampleNamesOrderedByName.head))
-    gt.hasGQ && gt.getGQ >= minGQ
-  }
-
-  /**
-   * Create bed record from variantcontext
-   * @param record variant context
-   * @return BedRecord
-   */
-  def createBedRecord(record: VariantContext): BedRecord = {
-    new BedRecord(record.getContig, record.getStart, record.getEnd)
-  }
-
 }

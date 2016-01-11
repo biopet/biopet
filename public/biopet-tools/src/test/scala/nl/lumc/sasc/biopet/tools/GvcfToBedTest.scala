@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import htsjdk.variant.vcf.VCFFileReader
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
@@ -30,43 +31,12 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    hasMinGenomeQuality(record, None, 99) shouldBe true
-    hasMinGenomeQuality(record, Some("Sample_101"), 99) shouldBe true
+    VcfUtils.hasMinGenomeQuality(record, "Sample_101", 99) shouldBe true
 
     val reader2 = new VCFFileReader(unvepped, false)
     val record2 = reader2.iterator.next()
 
-    hasMinGenomeQuality(record2, None, 99) shouldBe false
-    hasMinGenomeQuality(record2, None, 0) shouldBe false
-    hasMinGenomeQuality(record2, Some("Sample_102"), 3) shouldBe true
-    hasMinGenomeQuality(record2, Some("Sample_102"), 99) shouldBe false
+    VcfUtils.hasMinGenomeQuality(record2, "Sample_102", 3) shouldBe true
+    VcfUtils.hasMinGenomeQuality(record2, "Sample_102", 99) shouldBe false
   }
-
-  @Test def wrongSample = {
-    val reader = new VCFFileReader(vepped, false)
-    val record = reader.iterator().next()
-
-    an[IllegalArgumentException] should be thrownBy hasMinGenomeQuality(record, Some("dummy"), 99)
-  }
-
-  @Test def testCreateBedRecord = {
-    val reader = new VCFFileReader(vepped, false)
-    val record = reader.iterator().next()
-
-    val bed = createBedRecord(record)
-    bed.chr shouldBe "chr1"
-    bed.start shouldBe 871042
-    bed.end shouldBe 871042
-
-    val reader2 = new VCFFileReader(unvepped, false)
-    val record2 = reader2.iterator.next()
-
-    val bed2 = createBedRecord(record2)
-    bed2.chr shouldBe "chr1"
-    bed2.start shouldBe 14599
-    bed2.end shouldBe 14599
-
-    //TODO: add GVCF-block vcf file to test
-  }
-
 }
