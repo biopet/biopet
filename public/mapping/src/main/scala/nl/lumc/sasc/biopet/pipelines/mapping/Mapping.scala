@@ -395,6 +395,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(ar._1)
     ar._2
   }
+
   /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File): File = {
 
