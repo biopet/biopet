@@ -377,8 +377,8 @@ class Gentrap(val root: Configurable) extends QScript
       geneFragmentsCountJob
     }
     // TODO: use proper notation
-    add(pdfTemplateJob)
-    add(pdfReportJob)
+    //add(pdfTemplateJob)
+    //add(pdfReportJob)
   }
 
   /** Returns a [[Sample]] object */
