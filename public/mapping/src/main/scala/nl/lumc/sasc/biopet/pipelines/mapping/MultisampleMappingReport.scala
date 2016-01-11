@@ -18,9 +18,8 @@ object MultisampleMappingReport extends MultisampleMappingReportTrait {
 }
 
 trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
-  //TODO: add front section
   /** Front section for the report */
-  def frontSection: ReportSection = ???
+  def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/multisampleMappingFront.ssp")
 
   /** Root page for the carp report */
   def indexPage = {
