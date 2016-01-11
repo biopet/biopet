@@ -52,14 +52,15 @@ object GvcfToBed extends ToolCommand {
 
     logger.info("Start")
     for (r <- reader) {
-      if (counter % 100000 == 0) {
-        logger.info(s"Processed $counter records")
-      }
-      counter += 1
       if (!hasMinGenomeQuality(r, cmdArgs.sample, cmdArgs.minGenomeQuality) && cmdArgs.inverse) {
         writer.println(createBedRecord(r).toString)
       } else if (hasMinGenomeQuality(r, cmdArgs.sample, cmdArgs.minGenomeQuality) && !cmdArgs.inverse) {
         writer.println(createBedRecord(r).toString)
+      }
+
+      counter += 1
+      if (counter % 100000 == 0) {
+        logger.info(s"Processed $counter records")
       }
     }
 
