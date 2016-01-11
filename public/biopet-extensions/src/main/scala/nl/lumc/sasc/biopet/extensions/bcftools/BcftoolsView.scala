@@ -23,7 +23,7 @@ class BcftoolsView(val root: Configurable) extends Bcftools {
   var headerOnly: Boolean = config("header_only", false)
 
   @Argument(doc = "Compression level", required = false)
-  var compressionLevel: Int = 9
+  var compressionLevel: Int = config("compression_level", default = 9)
 
   @Argument(doc = "output type", required = false)
   var outputType: String = "z"
