@@ -79,7 +79,6 @@ object ShivaReport extends MultisampleReportBuilder {
     )
   }
 
-  //TODO: Add variants per target
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
     val roi = summary.getValue("shiva", "settings", "regions_of_interest")
