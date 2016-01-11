@@ -18,12 +18,19 @@ object MultisampleMappingReport extends MultisampleMappingReportTrait {
 }
 
 trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
+  //TODO: add front section
+  /** Front section for the report */
+  def frontSection: ReportSection = ???
+
   /** Root page for the carp report */
   def indexPage = {
     //Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/pipelines/carp/carpFont.ssp")).foreach(print(_))
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
-        Map("Files" -> filesPage,
+        Map("Reference" -> ReportPage(List(), List(
+          "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> "shiva"))
+        ), Map()),
+          "Files" -> filesPage,
           "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
           )), Map())
         ),
@@ -49,10 +56,10 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   def filesPage: ReportPage = ReportPage(List(), List(
     "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
-    "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)) //,
-    //"Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-    //  Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))
-  ), Map())
+    "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
+    "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
+      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam")))
+    , Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
@@ -63,10 +70,10 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
-      "Merged" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true)),
-      "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-      "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-    ), args)
+      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
+      List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
+      ), args)
   }
 
   /** Library page */

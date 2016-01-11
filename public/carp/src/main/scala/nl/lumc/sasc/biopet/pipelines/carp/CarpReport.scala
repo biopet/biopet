@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
+import nl.lumc.sasc.biopet.core.report.{ReportSection, ReportBuilderExtension}
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -31,4 +31,5 @@ class CarpReport(val root: Configurable) extends ReportBuilderExtension {
 object CarpReport extends MultisampleMappingReportTrait {
   /** Name of the report */
   def reportName = "Carp Report"
+  override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp")
 }
