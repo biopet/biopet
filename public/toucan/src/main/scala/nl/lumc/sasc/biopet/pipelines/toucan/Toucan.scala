@@ -15,17 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.toucan
 
-import java.io.{ File, PrintWriter }
-
-import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsMerge, BedtoolsIntersect }
-import nl.lumc.sasc.biopet.extensions.manwe.{ ManweSamplesImport, ManweAnnotateVcf, ManweDataSourcesAnnotate }
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, Gzip, VariantEffectPredictor }
-import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfFilter, VcfWithVcf, VepNormalizer }
-import nl.lumc.sasc.biopet.utils.{ VcfUtils, ConfigUtils }
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge }
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesImport }
+import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfWithVcf, VepNormalizer }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, VariantEffectPredictor }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -38,6 +36,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
   var inputVCF: File = _
+
+  @Input(doc = "Input GVCF file", shortName = "Input", required = false)
+  var inputGvcf: Option[File] = None
 
   var sampleIds: List[String] = Nil
   def init(): Unit = {
@@ -53,17 +54,14 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   override def defaults = Map(
     "varianteffectpredictor" -> Map("everything" -> true, "failed" -> 1, "allow_non_variant" -> true)
   )
-  //defaults ++= Map("varianteffectpredictor" -> Map("everything" -> true))
 
   def biopetScript(): Unit = {
     val doVarda: Boolean = config("use_varda", default = false)
     val useVcf: File = if (doVarda) {
-      val gVcfRoot: Option[File] = config("varda_gvcf")
-      val gVcf = gVcfRoot match {
-        case Some(s) => s
+      inputGvcf match {
+        case Some(s) => varda(inputVCF, s)
         case _       => throw new IllegalArgumentException("You have not specified a GVCF file")
       }
-      varda(inputVCF, gVcf)
     } else inputVCF
     val vep = new VariantEffectPredictor(this)
     vep.input = useVcf
