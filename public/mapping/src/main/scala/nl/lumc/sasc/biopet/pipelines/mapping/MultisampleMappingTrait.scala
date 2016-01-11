@@ -37,6 +37,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     addSummaryJobs()
   }
 
+  override def reportClass = {
+    val report = new MultisampleMappingReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
+
   def addMultiSampleJobs(): Unit = {
     // this code will be executed after all code of all samples is executed
   }

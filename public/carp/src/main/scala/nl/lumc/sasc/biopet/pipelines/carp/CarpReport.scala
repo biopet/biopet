@@ -15,11 +15,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
-import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 
 /**
  * Class for report for CArp
