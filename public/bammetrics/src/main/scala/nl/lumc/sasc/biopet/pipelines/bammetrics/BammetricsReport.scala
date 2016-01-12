@@ -57,9 +57,13 @@ object BammetricsReport extends ReportBuilder {
                      sampleId: Option[String],
                      libId: Option[String],
                      metricsTag: String = "bammetrics") = {
+
+    val wgsExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "wgs").isDefined
+    val rnaExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "rna").isDefined
+
     val targets = (
-      summary.getValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
-      summary.getValue(sampleId, libId, "bammetrics", "settings", "roi_name")
+      summary.getValue(sampleId, libId, metricsTag, "settings", "amplicon_name"),
+      summary.getValue(sampleId, libId, metricsTag, "settings", "roi_name")
     ) match {
         case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
         case (_, Some(roi: List[_])) => roi.map(_.toString)
@@ -74,9 +78,11 @@ object BammetricsReport extends ReportBuilder {
         Map())),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
-        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp", Map("showPlot" -> true))
-      ),
+        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+      ) ++ ( if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+        Map("showPlot" -> true))) else Nil) ++
+        ( if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
+        Map("showPlot" -> true))) else Nil),
       Map("metricsTag" -> metricsTag)
     )
   }
