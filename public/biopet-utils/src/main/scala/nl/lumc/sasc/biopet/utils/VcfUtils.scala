@@ -15,9 +15,11 @@
  */
 package nl.lumc.sasc.biopet.utils
 
+import java.io.File
 import java.util
 
-import htsjdk.variant.variantcontext.VariantContext
+import htsjdk.variant.variantcontext.{ Genotype, VariantContext }
+import htsjdk.variant.vcf.{ VCFFileReader, VCFHeader, VCFFilterHeaderLine }
 
 import scala.collection.JavaConversions._
 
@@ -79,5 +81,50 @@ object VcfUtils {
       var1.getStart == var2.getStart &&
       var1.getEnd == var2.getEnd &&
       var1.getAttributes == var2.getAttributes
+  }
+
+  /**
+   * Return true if header is a block-type GVCF file
+   * @param header header of Vcf file
+   * @return boolean
+   */
+  def isBlockGVcf(header: VCFHeader): Boolean = {
+    header.getMetaDataLine("GVCFBlock") != null
+  }
+
+  /**
+   * Get sample IDs from vcf File
+   * @param vcf File object pointing to vcf
+   * @return list of strings with sample IDs
+   */
+  def getSampleIds(vcf: File): List[String] = {
+    val reader = new VCFFileReader(vcf, false)
+    val samples = reader.getFileHeader.getSampleNamesInOrder.toList
+    reader.close()
+    samples
+  }
+
+  /**
+   * Check whether record has minimum genome Quality
+   * @param record variant context
+   * @param sample sample name
+   * @param minGQ minimum genome quality value
+   * @return
+   */
+  def hasMinGenomeQuality(record: VariantContext, sample: String, minGQ: Int): Boolean = {
+    if (!record.getSampleNamesOrderedByName.contains(sample))
+      throw new IllegalArgumentException("Sample does not exist")
+    val gt = record.getGenotype(sample)
+    hasMinGenomeQuality(gt, minGQ)
+  }
+
+  /**
+   * Check whether genotype has minimum genome Quality
+   * @param gt Genotype
+   * @param minGQ minimum genome quality value
+   * @return
+   */
+  def hasMinGenomeQuality(gt: Genotype, minGQ: Int): Boolean = {
+    gt.hasGQ && gt.getGQ >= minGQ
   }
 }
