@@ -19,6 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
@@ -52,6 +53,13 @@ class Gentrap(val root: Configurable) extends QScript
 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
+
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val report = new GentrapReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
 
   /** Split aligner to use */
   var aligner: String = config("aligner", default = "gsnap")
