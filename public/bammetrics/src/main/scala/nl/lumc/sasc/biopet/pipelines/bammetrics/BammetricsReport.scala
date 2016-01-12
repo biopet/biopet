@@ -79,10 +79,12 @@ object BammetricsReport extends ReportBuilder {
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
-      ) ++ ( if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-        Map("showPlot" -> true))) else Nil) ++
-        ( if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
-        Map("showPlot" -> true))) else Nil),
+      ) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+          Map("showPlot" -> true)))
+        else Nil) ++
+        (if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
+          Map("showPlot" -> true)))
+        else Nil),
       Map("metricsTag" -> metricsTag)
     )
   }
@@ -329,13 +331,13 @@ object BammetricsReport extends ReportBuilder {
   }
 
   /**
-    * Generate a line plot for rna coverage
-    * @param outputDir OutputDir for the tsv and png file
-    * @param prefix Prefix of the tsv and png file
-    * @param summary Summary class
-    * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
-    * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
-    */
+   * Generate a line plot for rna coverage
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
   def rnaHistogramPlot(outputDir: File,
                        prefix: String,
                        summary: Summary,

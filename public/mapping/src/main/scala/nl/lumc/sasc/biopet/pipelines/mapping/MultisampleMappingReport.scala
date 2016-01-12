@@ -46,14 +46,16 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) ++
         (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) else Nil) ++
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
         (if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) else Nil) ++
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
         List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false)),
-        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-          Map("showPlot" -> true, "showTable" -> false))
-      ),
+          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
+            Map("showPlot" -> true, "showTable" -> false))
+        ),
       pageArgs
     )
   }
