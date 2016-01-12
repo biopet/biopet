@@ -10,7 +10,7 @@
 <%@ var metricsTag: String = "bammetrics" %>
 <%@ var sampleLevel: Boolean = false %>
 <%@ var outputDir: File %>
-<%@ var fields: List[String] = List()%>
+<%@ var fields: List[String] = List("PF_ALIGNED_BASES", "MEDIAN_5PRIME_BIAS", "MEDIAN_3PRIME_BIAS", "MEDIAN_5PRIME_TO_3PRIME_BIAS")%>
 <%@ var showPlot: Boolean = false %>
 <%@ var showTable: Boolean = true %>
 <%@ var showIntro: Boolean = true%>
