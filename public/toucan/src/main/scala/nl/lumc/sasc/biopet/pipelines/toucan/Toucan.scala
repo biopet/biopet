@@ -37,7 +37,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
   var inputVCF: File = _
 
-  @Input(doc = "Input GVCF file", shortName = "Input", required = false)
+  @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
   var sampleIds: List[String] = Nil
