@@ -22,7 +22,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /// Pindel is actually a mini pipeline executing binaries from the pindel package
-class Pindel(val root: Configurable) extends QScript with BiopetQScript {
+class PindelPipeline(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
   @Input(doc = "Input file (bam)")
@@ -60,7 +60,7 @@ class Pindel(val root: Configurable) extends QScript with BiopetQScript {
     add(cfg)
 
     val output: File = this.outputvcf
-    val pindel = PindelCaller(this, cfg.output, output)
+    val pindel = Pindel(this, cfg.output, output)
     add(pindel)
     outputFiles += ("pindel_tsv" -> pindel.output)
 
@@ -72,9 +72,9 @@ class Pindel(val root: Configurable) extends QScript with BiopetQScript {
   //  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".pindel.tsv"
 }
 
-object Pindel extends PipelineCommand {
-  def apply(root: Configurable, input: File, reference: File, runDir: String): Pindel = {
-    val pindel = new Pindel(root)
+object PindelPipeline extends PipelineCommand {
+  def apply(root: Configurable, input: File, reference: File, runDir: String): PindelPipeline = {
+    val pindel = new PindelPipeline(root)
     pindel.input = input
     pindel.reference = reference
     pindel.workdir = runDir

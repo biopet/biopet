@@ -17,7 +17,8 @@ package nl.lumc.sasc.biopet.extensions.pindel
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, ToolCommand }
+import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
@@ -80,6 +81,15 @@ object PindelConfig extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val input: File = commandArgs.inputbam
+
+    // the logic here is to pull the libraries stored in the bam file and output this to a pindel config file.
+    // see: http://gmt.genome.wustl.edu/packages/pindel/quick-start.html
+    // this is called bam-configuration file
+    /**
+     * filename<tab>avg insert size<tab>sample_label or name for reporting
+     * tumor_sample_1222.bam<tab>250<tab>TUMOR_1222
+     * somatic_sample_1222.bam<tab>250<tab>HEALTHY_1222
+     */
 
   }
 }
