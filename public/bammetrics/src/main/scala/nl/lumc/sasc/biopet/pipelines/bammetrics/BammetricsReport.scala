@@ -404,8 +404,8 @@ object BammetricsReport extends ReportBuilder {
     val plot = new LinePlot(null)
     plot.input = tsvFile
     plot.output = pngFile
-    plot.ylabel = Some("Reletive position")
-    plot.xlabel = Some("Coverage")
+    plot.xlabel = Some("Reletive position")
+    plot.ylabel = Some("Coverage")
     plot.width = Some(1200)
     plot.removeZero = true
     plot.title = Some("Rna coverage")
