@@ -144,6 +144,15 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     minAlternateDepth(record, 20, 2) shouldBe false
   }
 
+  @Test def testHasMinGQ() = {
+    val reader = new VCFFileReader(vepped, false)
+    val record = reader.iterator().next()
+
+    minGenomeQuality(record, 99, 1) shouldBe true
+    minGenomeQuality(record, 99, 2) shouldBe true
+    minGenomeQuality(record, 99, 3) shouldBe true
+  }
+
   @Test def testMustHaveVariant() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()

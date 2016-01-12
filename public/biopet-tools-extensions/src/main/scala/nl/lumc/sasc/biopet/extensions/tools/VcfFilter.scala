@@ -37,6 +37,7 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
   var minTotalDepth: Option[Int] = config("min_total_depth")
   var minAlternateDepth: Option[Int] = config("min_alternate_depth")
   var minSamplesPass: Option[Int] = config("min_samples_pass")
+  var minGenomeQuality: Option[Int] = config("min_genome_quality")
   var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
 
   override def defaultCoreMemory = 3.0
@@ -53,5 +54,6 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
     optional("--minTotalDepth", minTotalDepth) +
     optional("--minAlternateDepth", minAlternateDepth) +
     optional("--minSamplesPass", minSamplesPass) +
+    optional("--minGenomeQuality", minGenomeQuality) +
     conditional(filterRefCalls, "--filterRefCalls")
 }
