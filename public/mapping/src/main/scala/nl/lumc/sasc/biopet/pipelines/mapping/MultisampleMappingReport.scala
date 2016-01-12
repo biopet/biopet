@@ -25,6 +25,9 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Root page for the carp report */
   def indexPage = {
+
+    val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
+
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map("Reference" -> ReportPage(List(), List(
@@ -40,10 +43,10 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-        "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) ++
+        ( if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) else Nil) ++
+        List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false)),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false))
