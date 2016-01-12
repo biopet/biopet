@@ -42,6 +42,8 @@ object ShivaReport extends MultisampleMappingReportTrait {
 
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
 
+  override def pipelineName = "shiva"
+
   override def extFiles = super.extFiles ++ List("js/gears.js")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 

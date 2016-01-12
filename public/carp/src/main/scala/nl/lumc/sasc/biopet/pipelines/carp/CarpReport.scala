@@ -32,4 +32,6 @@ object CarpReport extends MultisampleMappingReportTrait {
   /** Name of the report */
   def reportName = "Carp Report"
   override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp")
+
+  override def pipelineName = "carp"
 }

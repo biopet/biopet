@@ -34,4 +34,6 @@ object GentrapReport extends MultisampleMappingReportTrait {
 
   /** Name of the report */
   def reportName = "Gentrap Report"
+
+  override def pipelineName = "gentrap"
 }

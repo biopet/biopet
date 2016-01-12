@@ -21,20 +21,21 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Front section for the report */
   def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/multisampleMappingFront.ssp")
 
+  def pipelineName = "multisamplemapping"
+
   /** Root page for the carp report */
   def indexPage = {
-    //Source.fromInputStream(getClass.getResourceAsStream("/nl/lumc/sasc/biopet/pipelines/carp/carpFont.ssp")).foreach(print(_))
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
         Map("Reference" -> ReportPage(List(), List(
-          "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> "shiva"))
+          "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
         ), Map()),
           "Files" -> filesPage,
           "Versions" -> ReportPage(List(), List("Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp"
           )), Map())
         ),
       List(
-        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/carp/carpFront.ssp"),
+        "Report" -> frontSection,
         "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         ),
@@ -57,7 +58,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
     "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))), Map())
+      Map("pipelineName" -> pipelineName, "fileTag" -> "preProcessBam"))), Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
