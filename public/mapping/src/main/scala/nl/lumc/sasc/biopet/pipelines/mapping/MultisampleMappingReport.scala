@@ -1,13 +1,13 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import nl.lumc.sasc.biopet.core.report.{ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder}
+import nl.lumc.sasc.biopet.core.report.{ ReportBuilderExtension, ReportSection, ReportPage, MultisampleReportBuilder }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
 import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
-  * Created by pjvanthof on 11/01/16.
-  */
+ * Created by pjvanthof on 11/01/16.
+ */
 class MultisampleMappingReport(val root: Configurable) extends ReportBuilderExtension {
   def builder = MultisampleMappingReport
 }
@@ -57,8 +57,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
     "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam")))
-    , Map())
+      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))), Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {

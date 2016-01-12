@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import nl.lumc.sasc.biopet.core.report.{ReportSection, ReportBuilderExtension}
+import nl.lumc.sasc.biopet.core.report.{ ReportSection, ReportBuilderExtension }
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 

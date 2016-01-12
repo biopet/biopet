@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
@@ -37,7 +38,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     addSummaryJobs()
   }
 
-  override def reportClass = {
+  override def reportClass: Option[ReportBuilderExtension] = {
     val report = new MultisampleMappingReport(this)
     report.outputDir = new File(outputDir, "report")
     report.summaryFile = summaryFile

@@ -15,13 +15,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.report._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
-import nl.lumc.sasc.biopet.utils.summary.{Summary, SummaryValue}
+import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 /**
  * With this extension the report is executed within a pipeline
@@ -100,7 +100,8 @@ object ShivaReport extends MultisampleMappingReportTrait {
   /** Files page, can be used general or at sample level */
   override def filesPage: ReportPage = {
     val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
-      Map("sampleId" -> None))) else Nil
+      Map("sampleId" -> None)))
+    else Nil
     val oldPage = super.filesPage
     oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
   }
