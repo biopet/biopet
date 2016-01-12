@@ -80,7 +80,7 @@ object WriteDependencies extends Logging with Configurable {
           "intermediate" -> isIntermediate,
           "output_jobs" -> outputJobNames,
           "input_jobs" -> inputJobNames,
-          "exist_at_start" -> fileExist,
+          "exists_at_start" -> fileExist,
           "pipeline_input" -> outputJobs.isEmpty
         )
       }
@@ -114,9 +114,9 @@ object WriteDependencies extends Logging with Configurable {
           case cmd: CommandLineFunction => cmd.commandLine
           case _                        => None
         }), "intermediate" -> f.isIntermediate,
-          "depens_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
-          "depens_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
-          "ouput_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
+          "depends_on_intermediate" -> f.inputs.exists(files(_).isIntermediate),
+          "depends_on_jobs" -> f.inputs.toList.flatMap(files(_).outputJobNames).distinct,
+          "output_used_by_jobs" -> outputFiles(f).toList.flatMap(files(_).inputJobNames).distinct,
           "outputs" -> outputFiles(f).toList,
           "inputs" -> f.inputs.toList,
           "done_at_start" -> f.isDone,
