@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
-import nl.lumc.sasc.biopet.extensions.pindel.{PindelCaller, PindelCaller$, PindelConfig}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelCaller$, PindelConfig }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -27,35 +27,12 @@ class Pindel(val root: Configurable) extends SvCaller {
   val name = "pindel"
 
   def this() = this(null)
-//
-//  @Input(doc = "Input file (bam)")
-//  var input: File = _
-//
-//  @Input(doc = "Reference Fasta file")
-//  var reference: File = _
-//
-//  @Argument(doc = "Work directory")
-//  var workdir: String = _
-//
-//  //  @Output(doc = "Pindel VCF output")
-//  //  lazy val outputvcf: File = {
-//  //    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".pindel.vcf")
-//  //  }
-//
-//  @Output(doc = "Pindel config")
-//  def configfile: File = {
-//    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".pindel.cfg")
-//  }
-//  @Output(doc = "Pindel raw output")
-//  def outputvcf: File = {
-//    new File(workdir + "/" + input.getName.substring(0, input.getName.lastIndexOf(".bam")) + ".pindel.vcf")
-//  }
 
   def biopetScript() {
     for ((sample, bamFile) <- inputBams) {
       val pindelDir = new File(outputDir, sample)
 
-      val config_file: File = new File( bamFile.getAbsolutePath + ".pindel.cfg" )
+      val config_file: File = new File(bamFile.getAbsolutePath + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
 

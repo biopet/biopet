@@ -14,8 +14,8 @@
  * license, please contact us to obtain a separate license.
  */
 package nl.lumc.sasc.biopet.extensions.pindel
-
-import java.io.{PrintWriter, File}
+import collection.JavaConversions._
+import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
@@ -70,16 +70,13 @@ object PindelConfig extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val input: File = commandArgs.inputbam
-    val output: File = commandArgs.output.getOrElse( new File(input.getAbsoluteFile + ".pindel.cfg") )
+    val output: File = commandArgs.output.getOrElse(new File(input.getAbsoluteFile + ".pindel.cfg"))
     val insertsize: Int = commandArgs.insertsize.getOrElse(0)
-
 
     val bamReader = SamReaderFactory.makeDefault().open(input)
     val writer = new PrintWriter(output)
-    var sampleName: String = ""
-    for( readgroup <- bamReader.getFileHeader.getReadGroups() ) {
-      val rg = bamReader.getFileHeader.getReadGroup( readgroup )
-      writer.write( s"${input.getAbsoluteFile}\t${insertsize}\t${rg.getSample}")
+    for (readgroup <- bamReader.getFileHeader.getReadGroups().toList) {
+      writer.write(s"${input.getAbsoluteFile}\t${insertsize}\t${readgroup.getSample}\n")
     }
     bamReader.close()
     writer.close()

@@ -166,7 +166,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     optional("--MIN_DD_CLUSTER_SIZE", MIN_DD_CLUSTER_SIZE) +
     optional("--MIN_DD_BREAKPOINT_SUPPORT", MIN_DD_BREAKPOINT_SUPPORT) +
     optional("--MIN_DD_MAP_DISTANCE", MIN_DD_MAP_DISTANCE) +
-    optional("--DD_REPORT_DUPLICATION_READS", DD_REPORT_DUPLICATION_READS) +
+    optional("--DD_REPORT_DUPLICATION_READS", DD_REPORT_DUPLICATION_READS)
 }
 
 object PindelCaller {
