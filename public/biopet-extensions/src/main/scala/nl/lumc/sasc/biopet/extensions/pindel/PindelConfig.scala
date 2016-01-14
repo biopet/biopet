@@ -15,8 +15,9 @@
  */
 package nl.lumc.sasc.biopet.extensions.pindel
 
-import java.io.File
+import java.io.{PrintWriter, File}
 
+import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -31,35 +32,20 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
   var output: File = _
 
   @Argument(doc = "Insertsize")
-  var insertsize: Option[Int] = _
+  var insertsize: Int = _
+
+  var sampleName: String = _
 
   override def cmdLine = super.cmdLine +
     "-i" + required(input) +
+    "-l" + required(sampleName) +
     "-s" + required(insertsize) +
     "-o" + required(output)
 }
 
 object PindelConfig extends ToolCommand {
-  def apply(root: Configurable, input: File, output: File): PindelConfig = {
-    val conf = new PindelConfig(root)
-    conf.input = input
-    conf.output = output
-    conf
-  }
-
-  def apply(root: Configurable, input: File, outputDir: String): PindelConfig = {
-    val dir = if (outputDir.endsWith("/")) outputDir else outputDir + "/"
-    val outputFile = new File(dir + swapExtension(input.getName))
-    apply(root, input, outputFile)
-  }
-
-  def apply(root: Configurable, input: File): PindelConfig = {
-    apply(root, input, new File(swapExtension(input.getAbsolutePath)))
-  }
-
-  private def swapExtension(inputFile: String) = inputFile.substring(0, inputFile.lastIndexOf(".bam")) + ".pindel.cfg"
-
-  case class Args(inputbam: File = null, samplelabel: Option[String] = None, insertsize: Option[Int] = None) extends AbstractArgs
+  case class Args(inputbam: File = null, samplelabel: Option[String] = None,
+                  insertsize: Option[Int] = None, output: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "inputbam") required () valueName "<bamfile/path>" action { (x, c) =>
@@ -71,6 +57,9 @@ object PindelConfig extends ToolCommand {
     opt[Int]('s', "insertsize") valueName "<insertsize>" action { (x, c) =>
       c.copy(insertsize = Some(x))
     } text "Insertsize is missing"
+    opt[Int]('o', "output") valueName "<output>" action { (x, c) =>
+      c.copy(insertsize = Some(x))
+    } text "Output path is missing"
   }
 
   /**
@@ -81,10 +70,26 @@ object PindelConfig extends ToolCommand {
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
     val input: File = commandArgs.inputbam
+    val output: File = commandArgs.output.getOrElse( new File(input.getAbsoluteFile + ".pindel.cfg") )
+    val insertsize: Int = commandArgs.insertsize.getOrElse(0)
+
+
+    val bamReader = SamReaderFactory.makeDefault().open(input)
+    val writer = new PrintWriter(output)
+    var sampleName: String = ""
+    for( readgroup <- bamReader.getFileHeader.getReadGroups() ) {
+      val rg = bamReader.getFileHeader.getReadGroup( readgroup )
+      writer.write( s"${input.getAbsoluteFile}\t${insertsize}\t${rg.getSample}")
+    }
+    bamReader.close()
+    writer.close()
 
     // the logic here is to pull the libraries stored in the bam file and output this to a pindel config file.
     // see: http://gmt.genome.wustl.edu/packages/pindel/quick-start.html
     // this is called bam-configuration file
+
+    // sampleLabel can be given from the commandline or read from the bam header
+
     /**
      * filename<tab>avg insert size<tab>sample_label or name for reporting
      * tumor_sample_1222.bam<tab>250<tab>TUMOR_1222

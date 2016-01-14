@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
  * Based on version 0.2.5b8
  */
 
-class Pindel(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "pindel", freeVar = false)
 
   override def defaultCoreMemory = 3.0
@@ -169,9 +169,9 @@ class Pindel(val root: Configurable) extends BiopetCommandLineFunction with Refe
     optional("--DD_REPORT_DUPLICATION_READS", DD_REPORT_DUPLICATION_READS) +
 }
 
-object Pindel {
-  def apply(root: Configurable, configFile: File, outputDir: File): Pindel = {
-    val caller = new Pindel(root)
+object PindelCaller {
+  def apply(root: Configurable, configFile: File, outputDir: File): PindelCaller = {
+    val caller = new PindelCaller(root)
     caller.config_file = Some(configFile)
     caller.output_prefix = outputDir
     caller

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Delly, Breakdancer, Clever, SvCaller }
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -43,7 +43,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
   /** Variantcallers requested by the config */
-  protected val configCallers: Set[String] = config("sv_callers", default = Set("breakdancer", "clever", "delly"))
+  protected val configCallers: Set[String] = config("sv_callers", default = Set("breakdancer", "clever", "delly", "pindel"))
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
@@ -66,7 +66,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this))
+  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")
