@@ -17,7 +17,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   @Test
   def testNoJobs: Unit = {
     SummaryQScript.md5sumCache.clear()
-    val script = make()
+    val script = makeQscript()
     script.addSummaryJobs()
     SummaryQScript.md5sumCache shouldBe empty
   }
@@ -26,7 +26,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   def testFiles: Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
-    val script = make(files = Map("file" -> file))
+    val script = makeQscript(files = Map("file" -> file))
     script.addSummaryJobs()
     SummaryQScript.md5sumCache should not be empty
     SummaryQScript.md5sumCache.toMap shouldBe Map(
@@ -38,7 +38,7 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
   def testDuplicateFiles: Unit = {
     SummaryQScript.md5sumCache.clear()
     val file = new File(s".${File.separator}bla")
-    val script = make(files = Map("file" -> file, "file2" -> file))
+    val script = makeQscript(files = Map("file" -> file, "file2" -> file))
     script.addSummaryJobs()
     SummaryQScript.md5sumCache should not be empty
     SummaryQScript.md5sumCache.toMap shouldBe Map(
@@ -46,12 +46,27 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     script.functions.size shouldBe 2
   }
 
+  @Test
+  def testAddSummarizable: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val file = new File(s".${File.separator}bla")
+    val script = makeQscript()
+    script.addSummarizable(makeSummarizable(files = Map("file" -> file, "file2" -> file)), "test")
+    script.summarizables.size shouldBe 1
+    script.addSummaryJobs()
+    SummaryQScript.md5sumCache should not be empty
+    SummaryQScript.md5sumCache.toMap shouldBe Map(
+      new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
+    script.functions.size shouldBe 2
+  }
+
+
 }
 
 object SummaryQScriptTest {
-  def make(settings: Map[String, Any] = Map(),
-           files: Map[String, File] = Map(),
-           c: Map[String, Any] = Map()) =
+  def makeQscript(settings: Map[String, Any] = Map(),
+                  files: Map[String, File] = Map(),
+                  c: Map[String, Any] = Map()) =
     new SummaryQScript with QScript {
       outputDir = new File(".")
       override def globalConfig = new Config(c)
@@ -64,4 +79,9 @@ object SummaryQScriptTest {
       def biopetScript(): Unit = ???
       def root: Configurable = null
     }
+
+  def makeSummarizable(files: Map[String, File] = Map(), stats: Map[String, Any] = Map()) = new Summarizable {
+    def summaryFiles: Map[String, File] = files
+    def summaryStats: Any = stats
+  }
 }
