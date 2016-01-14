@@ -2,6 +2,8 @@ package nl.lumc.sasc.biopet.core.summary
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
+import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 import org.broadinstitute.gatk.queue.{QScript, QSettings}
 import org.broadinstitute.gatk.queue.function.QFunction
@@ -32,6 +34,10 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
+    assert(script.functions
+      .filter(_.isInstanceOf[Md5sum])
+      .map(_.asInstanceOf[Md5sum])
+      .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -44,6 +50,10 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
+    assert(script.functions
+      .filter(_.isInstanceOf[Md5sum])
+      .map(_.asInstanceOf[Md5sum])
+      .exists(_.cmdLine.contains(" || ")))
   }
 
   @Test
@@ -58,9 +68,39 @@ class SummaryQScriptTest extends TestNGSuite with Matchers {
     SummaryQScript.md5sumCache.toMap shouldBe Map(
       new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
     script.functions.size shouldBe 2
+    assert(script.functions
+      .filter(_.isInstanceOf[Md5sum])
+      .map(_.asInstanceOf[Md5sum])
+      .exists(_.cmdLine.contains(" || ")))
   }
 
+  @Test
+  def testInputFile: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val file = new File(s".${File.separator}bla")
+    val script = makeQscript()
+    script.addSummarizable(makeSummarizable(files = Map("file" -> file, "file2" -> file)), "test")
+    script.summarizables.size shouldBe 1
+    script.inputFiles :+= InputFile(file, Some("md5sum"))
+    script.inputFiles :+= InputFile(file, None)
+    script.addSummaryJobs()
+    SummaryQScript.md5sumCache should not be empty
+    SummaryQScript.md5sumCache.toMap shouldBe Map(
+      new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
+    script.functions.size shouldBe 3
+    assert(script.functions
+      .filter(_.isInstanceOf[Md5sum])
+      .map(_.asInstanceOf[Md5sum])
+      .exists(_.cmdLine.contains(" || ")))
+  }
 
+  @Test
+  def testAddQscript: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val script = makeQscript()
+    script.addSummaryQScript(script)
+    script.summaryQScripts.head shouldBe script
+  }
 }
 
 object SummaryQScriptTest {
