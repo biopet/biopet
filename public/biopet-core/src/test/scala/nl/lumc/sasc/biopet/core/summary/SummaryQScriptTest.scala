@@ -1,0 +1,67 @@
+package nl.lumc.sasc.biopet.core.summary
+
+import java.io.File
+
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import org.broadinstitute.gatk.queue.{QScript, QSettings}
+import org.broadinstitute.gatk.queue.function.QFunction
+import org.scalatest.Matchers
+import org.scalatest.testng.TestNGSuite
+import org.testng.annotations.Test
+import SummaryQScriptTest._
+
+/**
+  * Created by pjvanthof on 14/01/16.
+  */
+class SummaryQScriptTest extends TestNGSuite with Matchers {
+  @Test
+  def testNoJobs: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val script = make()
+    script.addSummaryJobs()
+    SummaryQScript.md5sumCache shouldBe empty
+  }
+
+  @Test
+  def testFiles: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val file = new File(s".${File.separator}bla")
+    val script = make(files = Map("file" -> file))
+    script.addSummaryJobs()
+    SummaryQScript.md5sumCache should not be empty
+    SummaryQScript.md5sumCache.toMap shouldBe Map(
+      new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
+    script.functions.size shouldBe 2
+  }
+
+  @Test
+  def testDuplicateFiles: Unit = {
+    SummaryQScript.md5sumCache.clear()
+    val file = new File(s".${File.separator}bla")
+    val script = make(files = Map("file" -> file, "file2" -> file))
+    script.addSummaryJobs()
+    SummaryQScript.md5sumCache should not be empty
+    SummaryQScript.md5sumCache.toMap shouldBe Map(
+      new File(s".${File.separator}bla") -> new File(s".${File.separator}bla.md5"))
+    script.functions.size shouldBe 2
+  }
+
+}
+
+object SummaryQScriptTest {
+  def make(settings: Map[String, Any] = Map(),
+           files: Map[String, File] = Map(),
+           c: Map[String, Any] = Map()) =
+    new SummaryQScript with QScript {
+      outputDir = new File(".")
+      override def globalConfig = new Config(c)
+      def summarySettings: Map[String, Any] = settings
+      def summaryFiles: Map[String, File] = files
+      val tempFile = File.createTempFile("summary", ".json")
+      tempFile.deleteOnExit()
+      def summaryFile: File = tempFile
+      def init(): Unit = ???
+      def biopetScript(): Unit = ???
+      def root: Configurable = null
+    }
+}
