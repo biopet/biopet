@@ -38,7 +38,7 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
 
   override def cmdLine = super.cmdLine +
     "-i" + required(input) +
-    "-l" + required(sampleName) +
+    "-n" + required(sampleName) +
     "-s" + required(insertsize) +
     "-o" + required(output)
 }
@@ -51,7 +51,7 @@ object PindelConfig extends ToolCommand {
     opt[File]('i', "inputbam") required () valueName "<bamfile/path>" action { (x, c) =>
       c.copy(inputbam = x)
     } text "Please specify the input bam file"
-    opt[String]('l', "samplelabel") valueName "<sample label>" action { (x, c) =>
+    opt[String]('n', "samplelabel") valueName "<sample label>" action { (x, c) =>
       c.copy(samplelabel = Some(x))
     } text "Sample label is missing"
     opt[Int]('s', "insertsize") valueName "<insertsize>" action { (x, c) =>
