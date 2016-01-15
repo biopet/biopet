@@ -20,7 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
+import org.broadinstitute.gatk.utils.commandline._
 
 /**
  * Extension for pindel
@@ -29,7 +29,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
  */
 
 class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
-  executable = config("exe", default = "pindel", freeVar = false)
+  executable = config("exe", default = "pindel")
 
   override def defaultCoreMemory = 3.0
   override def defaultThreads = 4
@@ -46,14 +46,17 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Input(doc = "Input specification for Pindel to use")
   var input: File = _
 
-  @Argument(doc = "The pindel configuration file")
+  @Argument(doc = "The pindel configuration file", required = false)
   var pindel_file: Option[File] = None
 
-  @Argument(doc = "Configuration file with: bam-location/insert size/name")
+  @Argument(doc = "Configuration file with: bam-location/insert size/name", required = false)
   var config_file: Option[File] = None
 
   @Argument(doc = "Work directory")
   var output_prefix: File = _
+
+  @Output(doc = "Output file of pindel, pointing to the DEL file")
+  var output_file: File = _
 
   var RP: Option[Int] = config("RP")
   var min_distance_to_the_end: Option[Int] = config("min_distance_to_the_end")
@@ -66,16 +69,16 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var maximum_allowed_mismatch_rate: Option[Float] = config("maximum_allowed_mismatch_rate")
   var nm: Option[Int] = config("nm")
 
-  var report_inversions: Boolean = config("report_inversions")
-  var report_duplications: Boolean = config("report_duplications")
-  var report_long_insertions: Boolean = config("report_long_insertions")
-  var report_breakpoints: Boolean = config("report_breakpoints")
-  var report_close_mapped_reads: Boolean = config("report_close_mapped_reads")
-  var report_only_close_mapped_reads: Boolean = config("report_only_close_mapped_reads")
-  var report_interchromosomal_events: Boolean = config("report_interchromosomal_events")
+  var report_inversions: Boolean = config("report_inversions", default = false)
+  var report_duplications: Boolean = config("report_duplications", default = false)
+  var report_long_insertions: Boolean = config("report_long_insertions", default = false)
+  var report_breakpoints: Boolean = config("report_breakpoints", default = false)
+  var report_close_mapped_reads: Boolean = config("report_close_mapped_reads", default = false)
+  var report_only_close_mapped_reads: Boolean = config("report_only_close_mapped_reads", default = false)
+  var report_interchromosomal_events: Boolean = config("report_interchromosomal_events", default = false)
 
-  var IndelCorrection: Boolean = config("IndelCorrection")
-  var NormalSamples: Boolean = config("NormalSamples")
+  var IndelCorrection: Boolean = config("IndelCorrection", default = false)
+  var NormalSamples: Boolean = config("NormalSamples", default = false)
 
   var breakdancer: Option[File] = config("breakdancer")
   var include: Option[File] = config("include")
@@ -90,12 +93,12 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var minimum_support_for_event: Option[Int] = config("minimum_support_for_event")
   var input_SV_Calls_for_assembly: Option[File] = config("input_SV_Calls_for_assembly")
 
-  var genotyping: Boolean = config("genotyping")
+  var genotyping: Boolean = config("genotyping", default = false)
   var output_of_breakdancer_events: Option[File] = config("output_of_breakdancer_events")
   var name_of_logfile: Option[File] = config("name_of_logfile")
 
   var Ploidy: Option[File] = config("ploidy")
-  var detect_DD: Boolean = config("detect_DD")
+  var detect_DD: Boolean = config("detect_DD", default = false)
 
   var MAX_DD_BREAKPOINT_DISTANCE: Option[Int] = config("MAX_DD_BREAKPOINT_DISTANCE")
   var MAX_DISTANCE_CLUSTER_READS: Option[Int] = config("MAX_DISTANCE_CLUSTER_READS")
@@ -119,6 +122,9 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
         input = b.getAbsoluteFile
       }
     }
+
+    // set the output file
+    output_file = new File(output_prefix, "_D")
   }
 
   def cmdLine = required(executable) +

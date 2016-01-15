@@ -57,8 +57,8 @@ object PindelConfig extends ToolCommand {
     opt[Int]('s', "insertsize") valueName "<insertsize>" action { (x, c) =>
       c.copy(insertsize = Some(x))
     } text "Insertsize is missing"
-    opt[Int]('o', "output") valueName "<output>" action { (x, c) =>
-      c.copy(insertsize = Some(x))
+    opt[File]('o', "output") valueName "<output>" action { (x, c) =>
+      c.copy(output = Some(x))
     } text "Output path is missing"
   }
 
@@ -75,8 +75,8 @@ object PindelConfig extends ToolCommand {
 
     val bamReader = SamReaderFactory.makeDefault().open(input)
     val writer = new PrintWriter(output)
-    for (readgroup <- bamReader.getFileHeader.getReadGroups().toList) {
-      writer.write(s"${input.getAbsoluteFile}\t${insertsize}\t${readgroup.getSample}\n")
+    for (samplename <- bamReader.getFileHeader.getReadGroups.map(_.getSample).distinct) {
+      writer.write("%s\t%d\t%s\n".format(input.getAbsoluteFile, insertsize, samplename))
     }
     bamReader.close()
     writer.close()
