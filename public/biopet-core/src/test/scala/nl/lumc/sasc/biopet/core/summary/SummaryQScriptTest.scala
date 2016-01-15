@@ -5,8 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
 import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
-import org.broadinstitute.gatk.queue.{QScript, QSettings}
-import org.broadinstitute.gatk.queue.function.QFunction
+import org.broadinstitute.gatk.queue.QScript
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
