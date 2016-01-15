@@ -104,19 +104,19 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var MIN_DD_MAP_DISTANCE: Option[Int] = config("MIN_DD_MAP_DISTANCE")
   var DD_REPORT_DUPLICATION_READS: Option[Int] = config("DD_REPORT_DUPLICATION_READS")
 
-  override def beforeCmd(): Unit = {
+  override def beforeGraph: Unit = {
     // we should check whether the `pindel-config-file` is set or the `config-file` for the bam-list
     // at least one of them should be set.
     (pindel_file, config_file) match {
       case (None, None)       => Logging.addError("No pindel config is given")
       case (Some(a), Some(b)) => Logging.addError(s"Please specify either a pindel config or bam-config. Not both for Pindel: $a or $b")
       case (Some(a), None) => {
-        Logging.logger.info(s"Using $pindel_file as pindel config for Pindel")
-        input = a
+        Logging.logger.info(s"Using '${a}' as pindel config for Pindel")
+        input = a.getAbsoluteFile
       }
       case (None, Some(b)) => {
-        Logging.logger.info(s"Using $config_file as bam config for Pindel")
-        input = b
+        Logging.logger.info(s"Using '${b}' as bam config for Pindel")
+        input = b.getAbsoluteFile
       }
     }
   }
