@@ -124,7 +124,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     }
 
     // modify `output_prefix` to include samplename
-    output_prefix = new File(output_prefix + File.separator,  "sample" )
+    output_prefix = new File(output_prefix + File.separator, "sample")
 
     // set the output file
     output_file = new File(output_prefix, "_D")
