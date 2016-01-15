@@ -32,7 +32,7 @@ class Pindel(val root: Configurable) extends SvCaller {
     for ((sample, bamFile) <- inputBams) {
       val pindelDir = new File(outputDir, sample)
 
-      val config_file: File = new File(bamFile.getAbsolutePath + ".pindel.cfg")
+      val config_file: File = new File(outputDir + "." + sample + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
 

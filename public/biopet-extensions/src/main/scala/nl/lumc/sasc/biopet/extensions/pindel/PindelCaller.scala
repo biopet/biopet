@@ -20,7 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
 
 /**
  * Extension for pindel
@@ -47,10 +47,10 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var input: File = _
 
   @Argument(doc = "The pindel configuration file")
-  var pindel_file: Option[File] = _
+  var pindel_file: Option[File] = None
 
   @Argument(doc = "Configuration file with: bam-location/insert size/name")
-  var config_file: Option[File] = _
+  var config_file: Option[File] = None
 
   @Argument(doc = "Work directory")
   var output_prefix: File = _
