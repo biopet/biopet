@@ -7,8 +7,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 14/01/16.
-  */
+ * Created by pjvanthof on 14/01/16.
+ */
 class SummarizableTest extends TestNGSuite with Matchers {
   @Test
   def testDefaultMerge: Unit = {
