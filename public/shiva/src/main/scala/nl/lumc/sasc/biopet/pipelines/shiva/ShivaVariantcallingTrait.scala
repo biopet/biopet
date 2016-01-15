@@ -156,7 +156,12 @@ trait ShivaVariantcallingTrait extends SummaryQScript
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[Variantcaller] = List(new Freebayes(this), new RawVcf(this), new Bcftools(this), new BcftoolsSingleSample(this))
+  protected def callersList: List[Variantcaller] = List(
+    new Freebayes(this),
+    new RawVcf(this),
+    new Bcftools(this),
+    new BcftoolsSingleSample(this),
+    new VarscanCnsSingleSample(this))
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaVariantcalling.summary.json")
