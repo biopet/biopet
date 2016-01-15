@@ -36,6 +36,7 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       val sampleVcf = new File(outputDir, s"${name}_$sample.vcf.gz")
 
       val sampleFile = new File(outputDir, s"$sample.name.txt")
+      sampleFile.getParentFile.mkdirs()
       sampleFile.deleteOnExit()
       val writer = new PrintWriter(sampleFile)
       writer.println(sample)
