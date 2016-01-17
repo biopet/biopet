@@ -66,7 +66,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
     "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
     "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> pipelineName, "fileTag" -> "preProcessBam"))), Map())
+      Map("pipelineName" -> pipelineName, "fileTag" -> "output_bam_preprocess"))), Map())
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {

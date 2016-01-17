@@ -62,7 +62,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     class Library(libId: String) extends AbstractLibrary(libId) {
       def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
         inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
-        preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
+        preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
 
       def summaryStats: Map[String, Any] = Map()
 
@@ -159,7 +159,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     }
 
     def summaryFiles: Map[String, File] = (bamFile.map("output_bam" -> _) ::
-      preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
+      preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
 
     def summaryStats: Map[String, Any] = Map()
 
