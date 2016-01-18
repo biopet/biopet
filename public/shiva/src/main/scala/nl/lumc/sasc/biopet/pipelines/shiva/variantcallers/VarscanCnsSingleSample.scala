@@ -39,7 +39,7 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
 
       val sampleFile = new File(outputDir, s"$sample.name.txt")
       sampleFile.getParentFile.mkdirs()
-      //sampleFile.deleteOnExit()
+      sampleFile.deleteOnExit()
       val writer = new PrintWriter(sampleFile)
       writer.println(sample)
       writer.close()
