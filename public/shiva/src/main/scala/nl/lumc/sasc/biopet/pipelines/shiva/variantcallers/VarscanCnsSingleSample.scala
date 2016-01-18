@@ -39,7 +39,7 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
 
       val sampleFile = new File(outputDir, s"$sample.name.txt")
       sampleFile.getParentFile.mkdirs()
-      sampleFile.deleteOnExit()
+      //sampleFile.deleteOnExit()
       val writer = new PrintWriter(sampleFile)
       writer.println(sample)
       writer.close()
@@ -51,17 +51,10 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
         def cmdLine = getPythonCommand
       }
 
-      def removeEmptyPile() = new BiopetCommandLineFunction {
-        override val root: Configurable = this.root
-        override def configName = "remove_empty_pile"
-        executable = config("exe", default = "grep", freeVar = false)
-        override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
-      }
-
       val varscan = new VarscanMpileup2cns(this)
       varscan.vcfSampleList = Some(sampleVcf)
 
-      add(mpileup | fixMpileup | removeEmptyPile() | varscan | new Bgzip(this) > sampleVcf)
+      add(mpileup | fixMpileup | varscan | new Bgzip(this) > sampleVcf)
       add(Tabix(this, sampleVcf))
 
       sampleVcf
