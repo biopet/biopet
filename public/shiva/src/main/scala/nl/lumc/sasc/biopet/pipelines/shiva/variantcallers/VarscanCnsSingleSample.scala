@@ -2,6 +2,8 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import java.io.PrintWriter
 
+import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
+import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.{ Ln, Tabix, Bgzip }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
@@ -20,12 +22,12 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       "disable_baq" -> true,
       "depth" -> 1000000
     ),
-    "mpileup2cns" -> Map("strand_filter" -> 0)
+    "varscanmpileup2cns" -> Map("strand_filter" -> 0)
   )
 
   override def fixedValues = Map(
     "samtoolsmpileup" -> Map("output_mapping_quality" -> true),
-    "mpileup2cns" -> Map("output_vcf" -> 1)
+    "varscanmpileup2cns" -> Map("output_vcf" -> 1)
   )
 
   def biopetScript: Unit = {
@@ -42,10 +44,24 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       writer.println(sample)
       writer.close()
 
+      val fixMpileup = new PythonCommandLineFunction {
+        setPythonScript("fix_mpileup.py", "/nl/lumc/sasc/biopet/pipelines/shiva/scripts/")
+        override val root: Configurable = this.root
+        override def configName = "fix_mpileup"
+        def cmdLine = getPythonCommand
+      }
+
+      def removeEmptyPile() = new BiopetCommandLineFunction {
+        override val root: Configurable = this.root
+        override def configName = "remove_empty_pile"
+        executable = config("exe", default = "grep", freeVar = false)
+        override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
+      }
+
       val varscan = new VarscanMpileup2cns(this)
       varscan.vcfSampleList = Some(sampleVcf)
 
-      add(mpileup | varscan | new Bgzip(this) > sampleVcf)
+      add(mpileup | fixMpileup | removeEmptyPile() | varscan | new Bgzip(this) > sampleVcf)
       add(Tabix(this, sampleVcf))
 
       sampleVcf
