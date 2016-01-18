@@ -37,10 +37,10 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
   var sampleName: String = _
 
   override def cmdLine = super.cmdLine +
-    "-i" + required(input) +
-    "-n" + required(sampleName) +
-    "-s" + required(insertsize) +
-    "-o" + required(output)
+    required("-i", input) +
+    required("-n", sampleName) +
+    required("-s", insertsize) +
+    required("-o", output)
 }
 
 object PindelConfig extends ToolCommand {
