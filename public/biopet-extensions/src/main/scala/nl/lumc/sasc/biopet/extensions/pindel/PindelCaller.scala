@@ -31,7 +31,7 @@ import org.broadinstitute.gatk.utils.commandline._
 class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "pindel")
 
-  override def defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
 
   override def versionRegex = """Pindel version:? (.*)""".r
@@ -123,18 +123,16 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
       }
     }
 
-    // modify `output_prefix` to include samplename
-    output_prefix = new File(output_prefix + File.separator, "sample")
-
-    // set the output file
-    output_file = new File(output_prefix, "_D")
+    // set the output file, the DELetion call is always made
+    // TODO: add more outputs for the LI, SI, INV etc...
+    output_file = new File(output_prefix + File.separator, "sample_D")
   }
 
   def cmdLine = required(executable) +
     required("--fasta ", reference) +
     optional("--pindel-config-file", pindel_file) +
     optional("--config-file", config_file) +
-    required("--output-prefix ", output_prefix) +
+    required("--output-prefix ", new File(output_prefix + File.separator, "sample")) +
     optional("--RP", RP) +
     optional("--min_distance_to_the_end", min_distance_to_the_end) +
     optional("--number_of_threads", threads) +
@@ -167,7 +165,6 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     conditional(genotyping, "-g") +
     optional("--output_of_breakdancer_events", output_of_breakdancer_events) +
     optional("--name_of_logfile", name_of_logfile) +
-    optional("--number_of_threads", threads) +
     optional("--Ploidy", Ploidy) +
     conditional(detect_DD, "detect_DD") +
     optional("--MAX_DD_BREAKPOINT_DISTANCE", MAX_DD_BREAKPOINT_DISTANCE) +
