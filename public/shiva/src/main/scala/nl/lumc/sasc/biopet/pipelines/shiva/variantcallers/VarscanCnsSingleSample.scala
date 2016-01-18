@@ -60,14 +60,11 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       sampleVcf
     }
 
-    if (sampleVcfs.size > 1) {
-      val cv = new CombineVariants(this)
-      cv.inputFiles = sampleVcfs
-      cv.outputFile = outputFile
-      cv.setKey = "null"
-      cv.excludeNonVariants = true
-      add(cv)
-    } else add(Ln.apply(this, sampleVcfs.head, outputFile))
-    add(Tabix(this, outputFile))
+    val cv = new CombineVariants(this)
+    cv.inputFiles = sampleVcfs
+    cv.outputFile = outputFile
+    cv.setKey = "null"
+    cv.excludeNonVariants = true
+    add(cv)
   }
 }
