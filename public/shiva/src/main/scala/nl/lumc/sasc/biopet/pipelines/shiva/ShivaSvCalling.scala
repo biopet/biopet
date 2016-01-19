@@ -43,7 +43,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
   /** Variantcallers requested by the config */
-  protected val configCallers: Set[String] = config("sv_callers", default = Set("breakdancer", "clever", "delly", "pindel"))
+  protected val configCallers: Set[String] = config("sv_callers", default = Set("breakdancer", "clever", "delly"))
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
