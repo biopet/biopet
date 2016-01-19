@@ -133,6 +133,7 @@ object ShivaVariantcallingTest {
     "freebayes" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "varscan_jar" -> "test"
   )
 }
