@@ -26,19 +26,19 @@ import scala.collection.mutable
 import scala.io.Source
 
 /**
-  * Extension for cutadapt
-  * Started with version 1.5
-  * Updated to version 1.9 (18-01-2016 by wyleung)
-  * */
+ * Extension for cutadapt
+ * Started with version 1.5
+ * Updated to version 1.9 (18-01-2016 by wyleung)
+ */
 class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "Input fastq file")
-  var fastq_input: File = _
+  var fastqInput: File = _
 
   @Output
-  var fastq_output: File = _
+  var fastqOutput: File = _
 
   @Output(doc = "Output statistics file")
-  var stats_output: File = _
+  var statsOutput: File = _
 
   executable = config("exe", default = "cutadapt")
   def versionCommand = executable + " --version"
@@ -47,10 +47,10 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   /** Name of the key containing clipped adapters information in the summary stats. */
   def adaptersStatsName = "adapters"
 
-  var default_clip_mode: String = config("default_clip_mode", default = "3")
-  var opt_adapter: Set[String] = config("adapter", default = Nil)
-  var opt_anywhere: Set[String] = config("anywhere", default = Nil)
-  var opt_front: Set[String] = config("front", default = Nil)
+  var defaultClipMode: String = config("default_clip_mode", default = "3")
+  var adapter: Set[String] = config("adapter", default = Nil)
+  var anywhere: Set[String] = config("anywhere", default = Nil)
+  var front: Set[String] = config("front", default = Nil)
 
   var errorRate: Option[Double] = config("error_rate")
   var noIndels: Boolean = config("no_indels", default = false)
@@ -60,17 +60,17 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var noMatchAdapterWildcards: Boolean = config("no_match_adapter_wildcards", default = false) // specific for 1.9
 
   /** Options for filtering of processed reads */
-  var opt_discard: Boolean = config("discard", default = false)
-  var trimmed_only: Boolean = config("trimmed_only", default = false)
-  var opt_minimum_length: Int = config("minimum_length", 1)
-  var opt_maximum_length: Option[Int] = config("maximum_length")
+  var discard: Boolean = config("discard", default = false)
+  var trimmedOnly: Boolean = config("trimmed_only", default = false)
+  var minimumLength: Int = config("minimum_length", 1)
+  var maximumLength: Option[Int] = config("maximum_length")
   var noTrim: Boolean = config("no_trim", default = false)
   var maxN: Option[Int] = config("max_n") // specific for 1.9
   var maskAdapter: Boolean = config("mask_adapter", default = false)
 
   /** Options that influence what gets output to where */
   var quiet: Boolean = config("quiet", default = false)
-//  var output: File // see up @Output
+  //  var output: File // see up @Output
   var infoFile: Option[File] = config("info_file")
   var restFile: Option[File] = config("rest_file")
   var wildcardFile: Option[File] = config("wildcard_file")
@@ -89,31 +89,30 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var lengthTag: Option[String] = config("length_tag")
 
   /** Colorspace options */
-  var colorspace: Boolean = config("colorspace", default=false)
-  var doubleEncode: Boolean = config("double_encode", default=false)
-  var trimPrimer: Boolean = config("trim_primer", default=false)
-  var stripF3: Boolean = config("strip_f3", default=false)
-  var maq: Boolean = config("maq", default=false)
-  var bwa: Boolean = config("bwa", default=false)
-  var noZeroCap: Boolean = config("no_zero_cap", default= false)
-  var zeroCap: Boolean = config("zero_cap", default=false)
+  var colorspace: Boolean = config("colorspace", default = false)
+  var doubleEncode: Boolean = config("double_encode", default = false)
+  var trimPrimer: Boolean = config("trim_primer", default = false)
+  var stripF3: Boolean = config("strip_f3", default = false)
+  var maq: Boolean = config("maq", default = false)
+  var bwa: Boolean = config("bwa", default = false)
+  var noZeroCap: Boolean = config("no_zero_cap", default = false)
+  var zeroCap: Boolean = config("zero_cap", default = false)
 
   /** Paired end options */
   var peAdapter: Set[String] = config("pe_adapter", default = Nil)
   var peAdapterFront: Set[String] = config("pe_adapter_front", default = Nil)
   var peAdapterBoth: Set[String] = config("pe_adapter_both", default = Nil)
-  var peCut: Boolean = config("pe_cut", default=false)
+  var peCut: Boolean = config("pe_cut", default = false)
   var pairedOutput: Option[File] = config("paired_output")
-  var interleaved: Boolean = config("interleaved", default=false)
+  var interleaved: Boolean = config("interleaved", default = false)
   var untrimmedPairedOutput: Option[File] = config("untrimmed_paired_output")
-
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
     // Options that influence how the adapters are found
-    repeat("-a", opt_adapter) +
-    repeat("-b", opt_anywhere) +
-    repeat("-g", opt_front) +
+    repeat("-a", adapter) +
+    repeat("-b", anywhere) +
+    repeat("-g", front) +
     optional("--error-rate", errorRate) +
     conditional(noIndels, "--no-indels") +
     optional("--times", times) +
@@ -121,10 +120,10 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     conditional(matchReadWildcards, "--match-read-wildcards") +
     conditional(noMatchAdapterWildcards, "--no-match-adapter-wildcards") +
     // Options for filtering of processed reads
-    conditional(opt_discard, "--discard") +
-    conditional(trimmed_only, "--trimmed-only") +
-    optional("-m", opt_minimum_length) +
-    optional("-M", opt_maximum_length) +
+    conditional(discard, "--discard") +
+    conditional(trimmedOnly, "--trimmed-only") +
+    optional("-m", minimumLength) +
+    optional("-M", maximumLength) +
     conditional(noTrim, "--no-trim") +
     optional("--max-n", maxN) +
     conditional(maskAdapter, "--mask-adapter") +
@@ -160,9 +159,9 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     optional("--paired-output", pairedOutput) +
     optional("--untrimmed-paired-output", untrimmedPairedOutput) +
     // input / output
-    required(fastq_input) +
-    (if (outputAsStsout) "" else required("--output", fastq_output) +
-      " > " + required(stats_output))
+    required(fastqInput) +
+    (if (outputAsStsout) "" else required("--output", fastqOutput) +
+      " > " + required(statsOutput))
 
   /** Output summary stats */
   def summaryStats: Map[String, Any] = {
@@ -174,7 +173,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
     val adapter_stats: mutable.Map[String, Int] = mutable.Map()
 
-    if (stats_output.exists) for (line <- Source.fromFile(stats_output).getLines()) {
+    if (statsOutput.exists) for (line <- Source.fromFile(statsOutput).getLines()) {
       line match {
         case trimR(m)                 => stats += ("trimmed" -> m.toInt)
         case tooShortR(m)             => stats += ("tooshort" -> m.toInt)
