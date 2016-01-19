@@ -20,7 +20,9 @@ import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
@@ -105,7 +107,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   )
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+  def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> input_R1,
     "reference" -> referenceFasta()) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
@@ -378,7 +380,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     // merge with mapped file
     val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
-      tophat.output_dir, "coordinate")
+      new File(tophat.output_dir, "fixed_merged.bam"), sortOrder = "coordinate")
     mergeSamFile.createIndex = true
     mergeSamFile.isIntermediate = true
     add(mergeSamFile)
@@ -393,6 +395,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(ar._1)
     ar._2
   }
+
   /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File): File = {
 

@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.carp
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.BuildBamIndex
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
@@ -52,7 +53,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     )
   )
 
-  override def summaryFile = new File(outputDir, "Carp.summary.json")
+  def summaryFile = new File(outputDir, "Carp.summary.json")
 
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
@@ -95,7 +96,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     }
   }
 
-  override def reportClass = {
+  override def reportClass: Option[ReportBuilderExtension] = {
     val carp = new CarpReport(this)
     carp.outputDir = new File(outputDir, "report")
     carp.summaryFile = summaryFile

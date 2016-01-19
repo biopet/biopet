@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.extensions
+package nl.lumc.sasc.biopet.extensions.bowtie
 
 import java.io.File
 
@@ -139,6 +139,7 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
         Logging.addError(s"No index files found for bowtie2 in: $indexDir with basename: $basename")
     }
   }
+
   /** return commandline to execute */
   def cmdLine = required(executable) +
     conditional(q, "-q") +

@@ -132,6 +132,7 @@ object GearsTest {
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
+    "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )
 }

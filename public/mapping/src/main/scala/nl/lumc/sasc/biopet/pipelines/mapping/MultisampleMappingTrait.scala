@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
@@ -37,11 +38,16 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     addSummaryJobs()
   }
 
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val report = new MultisampleMappingReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
+
   def addMultiSampleJobs(): Unit = {
     // this code will be executed after all code of all samples is executed
   }
-
-  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 
   def summaryFiles: Map[String, File] = Map("referenceFasta" -> referenceFasta())
 
@@ -56,13 +62,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     class Library(libId: String) extends AbstractLibrary(libId) {
       def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
         inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
-        preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
+        preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
 
       def summaryStats: Map[String, Any] = Map()
 
-      lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsulute(config("R1"))
-      lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsulute(config("R2"))
-      lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsulute(if (inputR1.isEmpty) config("bam") else None)
+      lazy val inputR1: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R1"))
+      lazy val inputR2: Option[File] = MultisampleMapping.fileMustBeAbsolute(config("R2"))
+      lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
 
@@ -153,7 +159,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     }
 
     def summaryFiles: Map[String, File] = (bamFile.map("output_bam" -> _) ::
-      preProcessBam.map("output_preProcessBam" -> _) :: Nil).flatten.toMap
+      preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
 
     def summaryStats: Map[String, Any] = Map()
 
@@ -199,6 +205,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
 class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
+
+  def summaryFile: File = new File(outputDir, "MultisamplePipeline.summary.json")
 }
 
 object MultisampleMapping extends PipelineCommand {
@@ -207,7 +215,7 @@ object MultisampleMapping extends PipelineCommand {
     val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
   }
 
-  def fileMustBeAbsulute(file: Option[File]): Option[File] = {
+  def fileMustBeAbsolute(file: Option[File]): Option[File] = {
     if (file.forall(_.isAbsolute)) file
     else {
       Logging.addError(s"$file should be a absolute file path")

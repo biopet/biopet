@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -63,7 +64,7 @@ trait Reference extends Configurable {
   protected def faiRequired = false
 
   /** When set override this on true the pipeline with raise an exception when dict index is not found */
-  protected def dictRequired = false
+  protected def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
 
   /** Returns the fasta file */
   def referenceFasta(): File = {
@@ -101,12 +102,11 @@ trait Reference extends Configurable {
   def checkFasta(file: File): Unit = {
     if (!Reference.checked.contains(file)) {
       if (!file.exists()) Logging.addError(s"Reference not found: $file, species: $referenceSpecies, name: $referenceName, configValue: " + config("reference_fasta"))
-
-      if (dictRequired) Reference.requireDict(file)
-      if (faiRequired) Reference.requireFai(file)
-
       Reference.checked += file
     }
+
+    if (dictRequired) Reference.requireDict(file)
+    if (faiRequired) Reference.requireFai(file)
   }
 }
 
@@ -121,10 +121,13 @@ object Reference {
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
-    if (fai.exists()) {
-      if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
-        Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
-    } else Logging.addError("Reference is missing a fai file")
+    if (!checked.contains(fai)) {
+      checked += fai
+      if (fai.exists()) {
+        if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
+          Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
+      } else Logging.addError("Reference is missing a fai file")
+    }
   }
 
   /**
@@ -136,6 +139,9 @@ object Reference {
       .stripSuffix(".fna")
       .stripSuffix(".fa")
       .stripSuffix(".fasta") + ".dict")
-    if (!dict.exists()) Logging.addError("Reference is missing a dict file")
+    if (!checked.contains(dict)) {
+      checked += dict
+      if (!dict.exists()) Logging.addError("Reference is missing a dict file")
+    }
   }
 }

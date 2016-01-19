@@ -19,16 +19,15 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.FullVersion
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.summary._
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.{ MergeTables, WipeReads }
 import nl.lumc.sasc.biopet.extensions.{ HtseqCount, Ln }
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.{ CustomVarScan, Pdflatex, RawBaseCounter }
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{ AggrBaseCount, PdfReportTemplateWriter, PlotHeatmap }
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
+import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
@@ -46,9 +45,7 @@ import scalaz.Scalaz._
  * @author Wibowo Arindrarto <w.arindrarto@lumc.nl>
  */
 class Gentrap(val root: Configurable) extends QScript
-  with MultiSampleQScript
-  with SummaryQScript
-  with Reference { qscript =>
+  with MultisampleMappingTrait { qscript =>
 
   import Gentrap.ExpMeasures._
   import Gentrap.StrandProtocol._
@@ -56,6 +53,13 @@ class Gentrap(val root: Configurable) extends QScript
 
   // alternative constructor for initialization with empty configuration
   def this() = this(null)
+
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val report = new GentrapReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
 
   /** Split aligner to use */
   var aligner: String = config("aligner", default = "gsnap")
@@ -102,23 +106,24 @@ class Gentrap(val root: Configurable) extends QScript
   /** Whether to do simple variant calling on RNA or not */
   var callVariants: Boolean = config("call_variants", default = false)
 
-  /** Settings for all Picard CollectRnaSeqMetrics runs */
-  private def collectRnaSeqMetricsSettings: Map[String, String] = Map(
-    "strand_specificity" -> (strandProtocol match {
-      case NonSpecific => StrandSpecificity.NONE.toString
-      case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
-      case otherwise   => throw new IllegalStateException(otherwise.toString)
-    })) ++ (ribosomalRefFlat match {
-      case Some(rbs) => Map("ribosomal_intervals" -> rbs.toString)
-      case None      => Map()
-    })
-
   /** Default pipeline config */
   override def defaults = Map(
+    "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
       "novelsplicing" -> 1,
       "batch" -> 4,
       "format" -> "sam"
+    ),
+    "bammetrics" -> Map(
+      "transcript_refflat" -> annotationRefFlat,
+      "collectrnaseqmetrics" -> ((if (strandProtocol != null) Map(
+        "strand_specificity" -> (strandProtocol match {
+          case NonSpecific => StrandSpecificity.NONE.toString
+          case Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
+          case otherwise   => throw new IllegalStateException(otherwise.toString)
+        })
+      )
+      else Map()) ++ (if (ribosomalRefFlat != null) ribosomalRefFlat.map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
     ),
     "cutadapt" -> Map("minimum_length" -> 20),
     // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
@@ -127,8 +132,7 @@ class Gentrap(val root: Configurable) extends QScript
     ),
     // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
     "mapping" -> Map(
-      "skip_markduplicates" -> true,
-      "skip_metrics" -> true
+      "skip_markduplicates" -> true
     )
   )
 
@@ -297,8 +301,7 @@ class Gentrap(val root: Configurable) extends QScript
   def summaryFile: File = new File(outputDir, "gentrap.summary.json")
 
   /** Files that will be listed in the summary file */
-  def summaryFiles: Map[String, File] = Map(
-    "reference_fasta" -> referenceFasta(),
+  override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
     "annotation_refflat" -> annotationRefFlat
   ) ++ Map(
       "annotation_gtf" -> annotationGtf,
@@ -312,13 +315,12 @@ class Gentrap(val root: Configurable) extends QScript
   def summaryStats: Map[String, Any] = Map()
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map(
+  override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
     "aligner" -> aligner,
     "expression_measures" -> expMeasures.toList.map(_.toString),
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> callVariants,
     "remove_ribosomal_reads" -> removeRibosomalReads,
-    "reference" -> referenceSummary,
     "version" -> FullVersion
   )
 
@@ -340,7 +342,9 @@ class Gentrap(val root: Configurable) extends QScript
   }
 
   /** Steps to run before biopetScript */
-  def init(): Unit = {
+  override def init(): Unit = {
+    super.init()
+
     // TODO: validate that exons are flattened or not (depending on another option flag?)
     // validate required annotation files
     if (expMeasures.contains(FragmentsPerGene) && annotationGtf.isEmpty)
@@ -368,13 +372,9 @@ class Gentrap(val root: Configurable) extends QScript
     if (annotationRefFlat.getName.nonEmpty) inputFiles :+= new InputFile(annotationRefFlat)
   }
 
-  /** Pipeline run for each sample */
-  def biopetScript(): Unit = {
-    addSamplesJobs()
-  }
-
   /** Pipeline run for multiple samples */
-  def addMultiSampleJobs(): Unit = {
+  override def addMultiSampleJobs(): Unit = {
+    super.addMultiSampleJobs
     // merge expression tables
     mergeTableJobs.values.foreach { case maybeJob => maybeJob.foreach(add(_)) }
     // add heatmap jobs
@@ -384,32 +384,31 @@ class Gentrap(val root: Configurable) extends QScript
       geneFragmentsCountJob
     }
     // TODO: use proper notation
-    addSummaryJobs()
-    add(pdfTemplateJob)
-    add(pdfReportJob)
+    //add(pdfTemplateJob)
+    //add(pdfReportJob)
   }
 
   /** Returns a [[Sample]] object */
-  def makeSample(sampleId: String): Sample = new Sample(sampleId)
+  override def makeSample(sampleId: String): Sample = new Sample(sampleId)
 
   /**
    * Gentrap sample
    *
    * @param sampleId Unique identifier of the sample
    */
-  class Sample(sampleId: String) extends AbstractSample(sampleId) with CufflinksProducer {
+  class Sample(sampleId: String) extends super.Sample(sampleId) with CufflinksProducer {
 
     /** Shortcut to qscript object */
     protected def pipeline: Gentrap = qscript
 
     /** Summary stats of the sample */
-    def summaryStats: Map[String, Any] = Map(
+    override def summaryStats: Map[String, Any] = super.summaryStats ++ Map(
       "all_paired" -> allPaired,
       "all_single" -> allSingle
     )
 
     /** Summary files of the sample */
-    def summaryFiles: Map[String, File] = Map(
+    override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
       "alignment" -> alnFile
     ) ++ Map(
         "gene_fragments_count" -> geneFragmentsCount,
@@ -425,13 +424,10 @@ class Gentrap(val root: Configurable) extends QScript
         "variant_calls" -> variantCalls
       ).collect { case (key, Some(value)) => key -> value }
 
-    /** Per-sample alignment file, pre rRNA cleanup (if chosen) */
-    lazy val alnFileDirty: File = sampleAlnJobSet.alnJob.output
-
     /** Per-sample alignment file, post rRNA cleanup (if chosen) */
     lazy val alnFile: File = wipeJob match {
       case Some(j) => j.outputBam
-      case None    => alnFileDirty
+      case None    => preProcessBam.get
     }
 
     /** Read count per gene file */
@@ -698,24 +694,12 @@ class Gentrap(val root: Configurable) extends QScript
         job
       }
 
-    /** General metrics job, only when library > 1 */
-    private lazy val bamMetricsModule: Option[BamMetrics] = (libraries.size > 1)
-      .option {
-        val mod = new BamMetrics(qscript)
-        mod.inputBam = alnFile
-        mod.outputDir = new File(sampleDir, "metrics")
-        mod.sampleId = Option(sampleId)
-        mod.transcriptRefFlatFile = Option(annotationRefFlat)
-        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
-        mod
-      }
-
     /** Job for removing ribosomal reads */
     private def wipeJob: Option[WipeReads] = removeRibosomalReads
       .option {
         //require(ribosomalRefFlat.isDefined)
         val job = new WipeReads(qscript)
-        job.inputBam = alnFileDirty
+        job.inputBam = bamFile.get
         ribosomalRefFlat.foreach(job.intervalFile = _)
         job.outputBam = createFile(".cleaned.bam")
         job.discardedBam = createFile(".rrna.bam")
@@ -752,33 +736,19 @@ class Gentrap(val root: Configurable) extends QScript
       }
     }
 
-    /** Job for combining all library BAMs */
-    private def sampleAlnJobSet: CombineFileJobSet =
-      makeCombineJob(libraries.values.map(_.alnFile).toList, createFile(".bam"))
-
     /** Whether all libraries are paired or not */
-    def allPaired: Boolean = libraries.values.forall(_.paired)
+    def allPaired: Boolean = libraries.values.forall(_.mapping.forall(_.input_R2.isDefined))
 
     /** Whether all libraries are single or not */
-    def allSingle: Boolean = libraries.values.forall(!_.paired)
+    def allSingle: Boolean = libraries.values.forall(_.mapping.forall(_.input_R2.isEmpty))
 
     // TODO: add warnings or other messages for config values that are hard-coded by the pipeline
     /** Adds all jobs for the sample */
-    def addJobs(): Unit = {
+    override def addJobs(): Unit = {
+      super.addJobs()
       // TODO: this is our requirement since it's easier to calculate base counts when all libraries are either paired or single
       require(allPaired || allSingle, s"Sample $sampleId contains only single-end or paired-end libraries")
-      // add per-library jobs
-      addPerLibJobs()
       // merge or symlink per-library alignments
-      sampleAlnJobSet.addAll()
-      bamMetricsModule match {
-        case Some(m) =>
-          m.init()
-          m.biopetScript()
-          addAll(m.functions)
-          addSummaryQScript(m)
-        case None => ;
-      }
       // add bigwig output, also per-strand when possible
       addAll(Bam2Wig(qscript, alnFile).functions)
       alnFilePlusStrand.collect { case f => addAll(Bam2Wig(qscript, f).functions) }
@@ -801,75 +771,6 @@ class Gentrap(val root: Configurable) extends QScript
       cufflinksBlindJobSet.foreach(_.jobs.foreach(add(_)))
       // add variant calling job if requested
       varCallJob.foreach(add(_))
-    }
-
-    /** Returns a [[Library]] object */
-    def makeLibrary(libId: String): Library = new Library(libId)
-
-    /**
-     * Gentrap library
-     *
-     * @param libId Unique identifier of the library
-     */
-    class Library(libId: String) extends AbstractLibrary(libId) {
-
-      /** Summary stats of the library */
-      def summaryStats: Map[String, Any] = Map()
-
-      /** Summary files of the library */
-      def summaryFiles: Map[String, File] = Map(
-        "alignment" -> mappingJob.outputFiles("finalBamFile")
-      )
-
-      /** Convenience method to check whether the library is paired or not */
-      def paired: Boolean = config.contains("R2")
-
-      /** Alignment results of this library ~ can only be accessed after addJobs is run! */
-      def alnFile: File = mappingJob.outputFiles("finalBamFile")
-
-      /** Wiggle track job */
-      private lazy val bam2wigModule: Bam2Wig = Bam2Wig(qscript, alnFile)
-
-      /** Per-library mapping job */
-      def mappingJob: Mapping = {
-        val job = new Mapping(qscript)
-        job.sampleId = Option(sampleId)
-        job.libId = Option(libId)
-        job.outputDir = libDir
-        job.input_R1 = config("R1")
-        job.input_R2 = config("R2")
-        job.init()
-        job.biopetScript()
-        job
-      }
-
-      /** Library metrics job, since we don't have access to the underlying metrics */
-      private lazy val bamMetricsJob: BamMetrics = {
-        val mod = new BamMetrics(qscript)
-        mod.inputBam = alnFile
-        mod.outputDir = new File(libDir, "metrics")
-        mod.sampleId = Option(sampleId)
-        mod.libId = Option(libId)
-        mod.rnaMetricsSettings = collectRnaSeqMetricsSettings
-        mod.transcriptRefFlatFile = Option(annotationRefFlat)
-        mod
-      }
-
-      /** Adds all jobs for the library */
-      def addJobs(): Unit = {
-        // create per-library alignment file
-        addAll(mappingJob.functions)
-        // Input file checking
-        inputFiles :::= mappingJob.inputFiles
-        // add bigwig track
-        addAll(bam2wigModule.functions)
-        qscript.addSummaryQScript(mappingJob)
-        bamMetricsJob.init()
-        bamMetricsJob.biopetScript()
-        addAll(bamMetricsJob.functions)
-        qscript.addSummaryQScript(bamMetricsJob)
-      }
-
     }
   }
 }

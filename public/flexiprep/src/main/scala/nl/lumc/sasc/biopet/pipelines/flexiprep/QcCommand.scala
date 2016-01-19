@@ -102,12 +102,12 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
         val cutadapt = new Cutadapt(root, fastqc)
-        cutadapt.fastq_input = seqtk.output
-        cutadapt.fastq_output = new File(output.getParentFile, input.getName + ".cutadapt.fq")
-        cutadapt.stats_output = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
-        if (cutadapt.default_clip_mode == "3") cutadapt.opt_adapter ++= foundAdapters
-        else if (cutadapt.default_clip_mode == "5") cutadapt.opt_front ++= foundAdapters
-        else if (cutadapt.default_clip_mode == "both") cutadapt.opt_anywhere ++= foundAdapters
+        cutadapt.fastqInput = seqtk.output
+        cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
+        cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
+        if (cutadapt.defaultClipMode == "3") cutadapt.adapter ++= foundAdapters
+        else if (cutadapt.defaultClipMode == "5") cutadapt.front ++= foundAdapters
+        else if (cutadapt.defaultClipMode == "both") cutadapt.anywhere ++= foundAdapters
         addPipeJob(cutadapt)
         Some(cutadapt)
       } else None
@@ -117,7 +117,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       val sickle = new Sickle(root)
       sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
       sickle.input_R1 = clip match {
-        case Some(c) => c.fastq_output
+        case Some(c) => c.fastqOutput
         case _       => seqtk.output
       }
       sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
@@ -127,7 +127,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     val outputFile = (clip, trim) match {
       case (_, Some(t)) => t.output_R1
-      case (Some(c), _) => c.fastq_output
+      case (Some(c), _) => c.fastqOutput
       case _            => seqtk.output
     }
 

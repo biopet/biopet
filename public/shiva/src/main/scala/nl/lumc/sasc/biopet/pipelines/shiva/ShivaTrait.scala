@@ -16,8 +16,9 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.Reference
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.mapping.{ MultisampleMappingTrait }
+import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import org.broadinstitute.gatk.queue.QScript
 
@@ -28,7 +29,7 @@ import org.broadinstitute.gatk.queue.QScript
  */
 trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegions { qscript: QScript =>
 
-  override def reportClass = {
+  override def reportClass: Option[ReportBuilderExtension] = {
     val shiva = new ShivaReport(this)
     shiva.outputDir = new File(outputDir, "report")
     shiva.summaryFile = summaryFile
@@ -36,10 +37,10 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
   }
 
   /** Method to make the variantcalling submodule of shiva */
-  def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait = {
+  def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait with QScript = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
-      override def configName = "shivavariantcalling"
+      override def configName: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }
     else new ShivaVariantcalling(qscript) {
@@ -69,7 +70,7 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
       } else None
 
       /** This will add jobs for this library */
-      override def addJobs = {
+      override def addJobs() = {
         super.addJobs()
 
         variantcalling.foreach(vc => {
@@ -78,10 +79,7 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
           vc.outputDir = new File(libDir, "variantcalling")
           if (preProcessBam.isDefined) vc.inputBams = Map(sampleId -> preProcessBam.get)
           else vc.inputBams = Map(sampleId -> bamFile.get)
-          vc.init()
-          vc.biopetScript()
-          addAll(vc.functions)
-          addSummaryQScript(vc)
+          add(vc)
         })
       }
     }
@@ -99,10 +97,7 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
           vc.sampleId = Some(sampleId)
           vc.outputDir = new File(sampleDir, "variantcalling")
           vc.inputBams = Map(sampleId -> bam)
-          vc.init()
-          vc.biopetScript()
-          addAll(vc.functions)
-          addSummaryQScript(vc)
+          add(vc)
         })
       }
     }
@@ -122,39 +117,30 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
   } else None
 
   /** This will add the mutisample variantcalling */
-  override def addMultiSampleJobs = {
+  override def addMultiSampleJobs() = {
     super.addMultiSampleJobs()
 
     multisampleVariantCalling.foreach(vc => {
       vc.outputDir = new File(outputDir, "variantcalling")
       vc.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
-      vc.init()
-      vc.biopetScript()
-      addAll(vc.functions)
-      addSummaryQScript(vc)
+      add(vc)
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
         toucan.inputVCF = vc.finalFile
-        toucan.init()
-        toucan.biopetScript()
-        addAll(toucan.functions)
-        addSummaryQScript(toucan)
+        add(toucan)
       }
     })
 
     svCalling.foreach(sv => {
       sv.outputDir = new File(outputDir, "sv_calling")
       sv.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
-      sv.init()
-      sv.biopetScript()
-      addAll(sv.functions)
-      addSummaryQScript(sv)
+      add(sv)
     })
   }
 
   /** Location of summary file */
-  override def summaryFile = new File(outputDir, "Shiva.summary.json")
+  def summaryFile = new File(outputDir, "Shiva.summary.json")
 
   /** Settings of pipeline for summary */
   override def summarySettings = super.summarySettings ++ Map(
