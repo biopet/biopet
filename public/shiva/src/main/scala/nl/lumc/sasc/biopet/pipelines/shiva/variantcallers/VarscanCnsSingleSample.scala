@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.varscan.{ FixMpileup, VarscanMpileup2cns }
-import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix}
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**

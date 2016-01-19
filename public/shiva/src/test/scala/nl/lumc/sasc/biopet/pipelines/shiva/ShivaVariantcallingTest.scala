@@ -64,7 +64,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
                               raw: Boolean,
                               bcftools: Boolean,
                               bcftoolsSinglesample: Boolean,
-                              freebayes: Boolean, 
+                              freebayes: Boolean,
                               varscanCnsSinglesample: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
