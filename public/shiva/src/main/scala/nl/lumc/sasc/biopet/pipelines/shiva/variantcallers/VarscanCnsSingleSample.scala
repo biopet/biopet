@@ -2,12 +2,10 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import java.io.PrintWriter
 
-import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
-import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.{ Ln, Tabix, Bgzip }
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.extensions.varscan.VarscanMpileup2cns
+import nl.lumc.sasc.biopet.extensions.varscan.{ FixMpileup, VarscanMpileup2cns }
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Tabix}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
@@ -44,17 +42,10 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       writer.println(sample)
       writer.close()
 
-      val fixMpileup = new PythonCommandLineFunction {
-        setPythonScript("fix_mpileup.py", "/nl/lumc/sasc/biopet/pipelines/shiva/scripts/")
-        override val root: Configurable = this.root
-        override def configName = "fix_mpileup"
-        def cmdLine = getPythonCommand
-      }
-
       val varscan = new VarscanMpileup2cns(this)
       varscan.vcfSampleList = Some(sampleFile)
 
-      add(mpileup | fixMpileup | varscan | new Bgzip(this) > sampleVcf)
+      add(mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf)
       add(Tabix(this, sampleVcf))
 
       sampleVcf
