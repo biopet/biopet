@@ -34,48 +34,49 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 4
 
-  override def versionRegex = """Pindel version:? (.*)""".r
+  def versionRegex = """Pindel version:? (.*)""".r
   override def versionExitcode = List(1)
-  override def versionCommand = executable
+  def versionCommand = executable
 
   /**
    * Required parameters
    */
+  @Input
   var reference: File = referenceFasta
 
   @Input(doc = "Input specification for Pindel to use")
   var input: File = _
 
   @Argument(doc = "The pindel configuration file", required = false)
-  var pindel_file: Option[File] = None
+  var pindelFile: Option[File] = None
 
   @Argument(doc = "Configuration file with: bam-location/insert size/name", required = false)
-  var config_file: Option[File] = None
+  var configFile: Option[File] = None
 
   @Argument(doc = "Work directory")
-  var output_prefix: File = _
+  var outputPrefix: File = _
 
   @Output(doc = "Output file of pindel, pointing to the DEL file")
-  var output_file: File = _
+  var outputFile: File = _
 
   var RP: Option[Int] = config("RP")
-  var min_distance_to_the_end: Option[Int] = config("min_distance_to_the_end")
+  var minDistanceToTheEnd: Option[Int] = config("min_distance_to_the_end")
   // var threads
-  var max_range_index: Option[Int] = config("max_range_index")
-  var window_size: Option[Int] = config("window_size")
-  var sequencing_error_rate: Option[Float] = config("sequencing_error_rate")
+  var maxRangeIndex: Option[Int] = config("max_range_index")
+  var windowSize: Option[Int] = config("window_size")
+  var sequencingErrorRate: Option[Float] = config("sequencing_error_rate")
   var sensitivity: Option[Float] = config("sensitivity")
 
-  var maximum_allowed_mismatch_rate: Option[Float] = config("maximum_allowed_mismatch_rate")
+  var maximumAllowedMismatchRate: Option[Float] = config("maximum_allowed_mismatch_rate")
   var nm: Option[Int] = config("nm")
 
-  var report_inversions: Boolean = config("report_inversions", default = false)
-  var report_duplications: Boolean = config("report_duplications", default = false)
-  var report_long_insertions: Boolean = config("report_long_insertions", default = false)
-  var report_breakpoints: Boolean = config("report_breakpoints", default = false)
-  var report_close_mapped_reads: Boolean = config("report_close_mapped_reads", default = false)
-  var report_only_close_mapped_reads: Boolean = config("report_only_close_mapped_reads", default = false)
-  var report_interchromosomal_events: Boolean = config("report_interchromosomal_events", default = false)
+  var reportInversions: Boolean = config("report_inversions", default = false)
+  var reportDuplications: Boolean = config("report_duplications", default = false)
+  var reportLongInsertions: Boolean = config("report_long_insertions", default = false)
+  var reportBreakpoints: Boolean = config("report_breakpoints", default = false)
+  var reportCloseMappedReads: Boolean = config("report_close_mapped_reads", default = false)
+  var reportOnlyCloseMappedReads: Boolean = config("report_only_close_mapped_reads", default = false)
+  var reportInterchromosomalEvents: Boolean = config("report_interchromosomal_events", default = false)
 
   var IndelCorrection: Boolean = config("IndelCorrection", default = false)
   var NormalSamples: Boolean = config("NormalSamples", default = false)
@@ -84,21 +85,21 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var include: Option[File] = config("include")
   var exclude: Option[File] = config("exclude")
 
-  var additional_mismatch: Option[Int] = config("additional_mismatch")
-  var min_perfect_match_around_BP: Option[Int] = config("min_perfect_match_around_BP")
-  var min_inversion_size: Option[Int] = config("min_inversion_size")
-  var min_num_matched_bases: Option[Int] = config("min_num_matched_bases")
-  var balance_cutoff: Option[Int] = config("balance_cutoff")
-  var anchor_quality: Option[Int] = config("anchor_quality")
-  var minimum_support_for_event: Option[Int] = config("minimum_support_for_event")
-  var input_SV_Calls_for_assembly: Option[File] = config("input_SV_Calls_for_assembly")
+  var additionalMismatch: Option[Int] = config("additional_mismatch")
+  var minPerfectMatchAroundBP: Option[Int] = config("min_perfect_match_around_BP")
+  var minInversionSize: Option[Int] = config("min_inversion_size")
+  var minNumMatchedBases: Option[Int] = config("min_num_matched_bases")
+  var balanceCutoff: Option[Int] = config("balance_cutoff")
+  var anchorQuality: Option[Int] = config("anchor_quality")
+  var minimumSupportForEvent: Option[Int] = config("minimum_support_for_event")
+  var inputSVCallsForAssembly: Option[File] = config("input_SV_Calls_for_assembly")
 
   var genotyping: Boolean = config("genotyping", default = false)
-  var output_of_breakdancer_events: Option[File] = config("output_of_breakdancer_events")
-  var name_of_logfile: Option[File] = config("name_of_logfile")
+  var outputOfBreakdancerEvents: Option[File] = config("output_of_breakdancer_events")
+  var nameOfLogfile: Option[File] = config("name_of_logfile")
 
-  var Ploidy: Option[File] = config("ploidy")
-  var detect_DD: Boolean = config("detect_DD", default = false)
+  var ploidy: Option[File] = config("ploidy")
+  var detectDD: Boolean = config("detect_DD", default = false)
 
   var MAX_DD_BREAKPOINT_DISTANCE: Option[Int] = config("MAX_DD_BREAKPOINT_DISTANCE")
   var MAX_DISTANCE_CLUSTER_READS: Option[Int] = config("MAX_DISTANCE_CLUSTER_READS")
@@ -108,9 +109,11 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var DD_REPORT_DUPLICATION_READS: Option[Int] = config("DD_REPORT_DUPLICATION_READS")
 
   override def beforeGraph: Unit = {
+    if (reference == null) reference = referenceFasta()
+
     // we should check whether the `pindel-config-file` is set or the `config-file` for the bam-list
     // at least one of them should be set.
-    (pindel_file, config_file) match {
+    (pindelFile, configFile) match {
       case (None, None)       => Logging.addError("No pindel config is given")
       case (Some(a), Some(b)) => Logging.addError(s"Please specify either a pindel config or bam-config. Not both for Pindel: $a or $b")
       case (Some(a), None) => {
@@ -125,48 +128,48 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 
     // set the output file, the DELetion call is always made
     // TODO: add more outputs for the LI, SI, INV etc...
-    output_file = new File(output_prefix + File.separator, "sample_D")
+    outputFile = new File(outputPrefix + File.separator, "sample_D")
   }
 
   def cmdLine = required(executable) +
     required("--fasta ", reference) +
-    optional("--pindel-config-file", pindel_file) +
-    optional("--config-file", config_file) +
-    required("--output-prefix ", new File(output_prefix + File.separator, "sample")) +
+    optional("--pindel-config-file", pindelFile) +
+    optional("--config-file", configFile) +
+    required("--output-prefix ", new File(outputPrefix + File.separator, "sample")) +
     optional("--RP", RP) +
-    optional("--min_distance_to_the_end", min_distance_to_the_end) +
+    optional("--min_distance_to_the_end", minDistanceToTheEnd) +
     optional("--number_of_threads", threads) +
-    optional("--max_range_index", max_range_index) +
-    optional("--windows_size", window_size) +
-    optional("--sequencing_error_rate", sequencing_error_rate) +
+    optional("--max_range_index", maxRangeIndex) +
+    optional("--windows_size", windowSize) +
+    optional("--sequencing_error_rate", sequencingErrorRate) +
     optional("--sensitivity", sensitivity) +
-    optional("--maximum_allowed_mismatch_rate", maximum_allowed_mismatch_rate) +
+    optional("--maximum_allowed_mismatch_rate", maximumAllowedMismatchRate) +
     optional("--NM", nm) +
-    conditional(report_inversions, "--report_inversions") +
-    conditional(report_duplications, "--report_duplications") +
-    conditional(report_long_insertions, "--report_long_insertions") +
-    conditional(report_breakpoints, "--report_breakpoints") +
-    conditional(report_close_mapped_reads, "--report_close_mapped_reads") +
-    conditional(report_only_close_mapped_reads, "--report_only_close_mapped_reads") +
-    conditional(report_interchromosomal_events, "--report_interchromosomal_events") +
+    conditional(reportInversions, "--report_inversions") +
+    conditional(reportDuplications, "--report_duplications") +
+    conditional(reportLongInsertions, "--report_long_insertions") +
+    conditional(reportBreakpoints, "--report_breakpoints") +
+    conditional(reportCloseMappedReads, "--report_close_mapped_reads") +
+    conditional(reportOnlyCloseMappedReads, "--report_only_close_mapped_reads") +
+    conditional(reportInterchromosomalEvents, "--report_interchromosomal_events") +
     conditional(IndelCorrection, "--IndelCorrection") +
     conditional(NormalSamples, "--NormalSamples") +
     optional("--breakdancer", breakdancer) +
     optional("--include", include) +
     optional("--exclude", exclude) +
-    optional("--additional_mismatch", additional_mismatch) +
-    optional("--min_perfect_match_around_BP", min_perfect_match_around_BP) +
-    optional("--min_inversion_size", min_inversion_size) +
-    optional("--min_num_matched_bases", min_num_matched_bases) +
-    optional("--balance_cutoff", balance_cutoff) +
-    optional("--anchor_quality", anchor_quality) +
-    optional("--minimum_support_for_event", minimum_support_for_event) +
-    optional("--input_SV_Calls_for_assembly", input_SV_Calls_for_assembly) +
+    optional("--additional_mismatch", additionalMismatch) +
+    optional("--min_perfect_match_around_BP", minPerfectMatchAroundBP) +
+    optional("--min_inversion_size", minInversionSize) +
+    optional("--min_num_matched_bases", minNumMatchedBases) +
+    optional("--balance_cutoff", balanceCutoff) +
+    optional("--anchor_quality", anchorQuality) +
+    optional("--minimum_support_for_event", minimumSupportForEvent) +
+    optional("--input_SV_Calls_for_assembly", inputSVCallsForAssembly) +
     conditional(genotyping, "-g") +
-    optional("--output_of_breakdancer_events", output_of_breakdancer_events) +
-    optional("--name_of_logfile", name_of_logfile) +
-    optional("--Ploidy", Ploidy) +
-    conditional(detect_DD, "detect_DD") +
+    optional("--output_of_breakdancer_events", outputOfBreakdancerEvents) +
+    optional("--name_of_logfile", nameOfLogfile) +
+    optional("--Ploidy", ploidy) +
+    conditional(detectDD, "detect_DD") +
     optional("--MAX_DD_BREAKPOINT_DISTANCE", MAX_DD_BREAKPOINT_DISTANCE) +
     optional("--MAX_DISTANCE_CLUSTER_READS", MAX_DISTANCE_CLUSTER_READS) +
     optional("--MIN_DD_CLUSTER_SIZE", MIN_DD_CLUSTER_SIZE) +
@@ -178,8 +181,8 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
 object PindelCaller {
   def apply(root: Configurable, configFile: File, outputDir: File): PindelCaller = {
     val caller = new PindelCaller(root)
-    caller.config_file = Some(configFile)
-    caller.output_prefix = outputDir
+    caller.configFile = Some(configFile)
+    caller.outputPrefix = outputDir
     caller
   }
 }
