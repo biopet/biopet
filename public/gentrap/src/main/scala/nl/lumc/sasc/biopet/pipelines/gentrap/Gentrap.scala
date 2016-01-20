@@ -108,6 +108,11 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Default pipeline config */
   override def defaults = Map(
+    "htseqcount" -> Map("stranded" -> (strandProtocol match {
+      case NonSpecific => "no"
+      case Dutp        => "reverse"
+      case _           => null
+    }),
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
       "novelsplicing" -> 1,
