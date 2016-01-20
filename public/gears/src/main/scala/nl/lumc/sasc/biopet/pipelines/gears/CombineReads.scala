@@ -50,10 +50,10 @@ class CombineReads(val root: Configurable) extends QScript with SummaryQScript w
 
     if ((forwardPrimers ::: reversePrimers).nonEmpty) {
       val cutadapt = new Cutadapt(this)
-      cutadapt.fastq_input = flash.combinedFastq
-      cutadapt.fastq_output = this.combinedFastq
-      cutadapt.stats_output = swapExt(outputDir, cutadapt.fastq_output, ".fastq.gz", ".stats")
-      (forwardPrimers ::: reversePrimers).foreach(cutadapt.opt_anywhere += _)
+      cutadapt.fastqInput = flash.combinedFastq
+      cutadapt.fastqOutput = this.combinedFastq
+      cutadapt.statsOutput = swapExt(outputDir, cutadapt.fastqOutput, ".fastq.gz", ".stats")
+      (forwardPrimers ::: reversePrimers).foreach(cutadapt.anywhere += _)
       add(cutadapt)
       addSummarizable(cutadapt, "cutadapt")
     }
