@@ -36,9 +36,11 @@ trait AnnotationRefFlat extends BiopetQScript { qscript: QScript =>
 
 trait RibosomalRefFlat extends BiopetQScript { qscript: QScript =>
   /** GTF reference file */
-  lazy val ribosomalRefFlat: File = {
-    val file: File = config("ribosome_refflat", freeVar = true)
-    inputFiles :+ InputFile(file, config("ribosome_refflat_md5", freeVar = true))
+  lazy val ribosomalRefFlat: Option[File] = {
+    val file: Option[File] = config("ribosome_refflat", freeVar = true)
+    file match {
+      case Some(f) => inputFiles :+ InputFile(f, config("ribosome_refflat_md5", freeVar = true))
+    }
     file
   }
 }
