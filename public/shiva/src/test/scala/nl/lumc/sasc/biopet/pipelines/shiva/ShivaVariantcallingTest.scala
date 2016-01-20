@@ -77,7 +77,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftoolsSinglesample && !freebayes)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftoolsSinglesample && !freebayes && !varscanCnsSinglesample)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -86,7 +86,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     if (!illegalArgumentException) {
       pipeline.script()
 
-      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe 1 + (if (raw) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
       //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
       //FIXME: Can not check for bcftools because of piping
       pipeline.functions.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
@@ -133,6 +133,7 @@ object ShivaVariantcallingTest {
     "freebayes" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "varscan_jar" -> "test"
   )
 }
