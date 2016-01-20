@@ -71,6 +71,7 @@ trait CufflinksProducer {
       job.input = alnFile
       job.library_type = Option(strandedness)
       job.output_dir = new File(sampleDir, name)
+      /*
       job.GTF = cuffType match {
         case CufflinksStrict => pipeline.annotationGtf
         case otherwise       => None
@@ -79,6 +80,7 @@ trait CufflinksProducer {
         case CufflinksGuided => pipeline.annotationGtf
         case otherwise       => None
       }
+      */
       job
     }
 
