@@ -19,7 +19,6 @@ import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.annotations.{RibosomalRefFlat, AnnotationRefFlat}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.tools.WipeReads
-import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{StrandProtocol, ExpMeasures}
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
@@ -221,13 +220,10 @@ class Gentrap(val root: Configurable) extends QScript
       require(allPaired || allSingle, s"Sample $sampleId contains only single-end or paired-end libraries")
       // add bigwig output, also per-strand when possible
 
-      //TODO: add Bam2Wig to multisample mapping
       preProcessBam.foreach { file =>
-        add(Bam2Wig(qscript, file))
         executedMeasures.foreach(_.addBamfile(sampleId, file))
         shivaVariantcalling.foreach(_.inputBams += sampleId -> file)
       }
-
     }
   }
 }
