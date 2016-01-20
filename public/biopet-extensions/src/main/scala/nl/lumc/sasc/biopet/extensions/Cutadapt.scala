@@ -94,7 +94,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var trimPrimer: Boolean = config("trim_primer", default = false)
   var stripF3: Boolean = config("strip_f3", default = false)
   var maq: Boolean = config("maq", default = false)
-  var bwa: Boolean = config("bwa", default = false)
+  var bwa: Boolean = config("bwa", default = false, freeVar = false)
   var noZeroCap: Boolean = config("no_zero_cap", default = false)
   var zeroCap: Boolean = config("zero_cap", default = false)
 
