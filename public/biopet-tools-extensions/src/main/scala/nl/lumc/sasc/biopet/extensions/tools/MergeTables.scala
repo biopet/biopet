@@ -86,13 +86,13 @@ object MergeTables {
             valCol: Int,
             numHeaderLines: Int = 0,
             fallback: String = "-"): MergeTables = {
-        val job = new MergeTables(root)
-        job.inputTables = tables
-        job.output = outputFile
-        job.idColumnIndices = idCols.map(_.toString)
-        job.valueColumnIndex = valCol
-        job.fallbackString = Option(fallback)
-        job.numHeaderLines = Option(numHeaderLines)
-        job
-      }
+    val job = new MergeTables(root)
+    job.inputTables = tables
+    job.output = outputFile
+    job.idColumnIndices = idCols.map(_.toString)
+    job.valueColumnIndex = valCol
+    job.fallbackString = Option(fallback)
+    job.numHeaderLines = Option(numHeaderLines)
+    job
+  }
 }

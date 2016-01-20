@@ -15,10 +15,10 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
   protected var bamFiles: Map[String, File] = Map()
 
   /**
-    * Method to add a bamFile to the pipeline
-    * @param id Uniqe id used for this bam file, most likly to be a sampleName
-    * @param file Location of the bam file
-    */
+   * Method to add a bamFile to the pipeline
+   * @param id Uniqe id used for this bam file, most likly to be a sampleName
+   * @param file Location of the bam file
+   */
   def addBamfile(id: String, file: File): Unit = {
     require(!bamFiles.contains(id), s"'$id' already exist")
     bamFiles += id -> file
@@ -67,7 +67,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = Map("merged_table" -> mergedCountFile, "heatmap" -> heatpMap) ++
-    bamFiles.map { case (id, file) => s"input_bam_$id" -> file}
+    bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, s"$name.summary.json")

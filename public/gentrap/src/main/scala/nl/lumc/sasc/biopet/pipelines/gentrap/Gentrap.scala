@@ -111,7 +111,12 @@ class Gentrap(val root: Configurable) extends QScript
     "htseqcount" -> Map("stranded" -> (strandProtocol match {
       case NonSpecific => "no"
       case Dutp        => "reverse"
-      case _           => null
+      case otherwise   => throw new IllegalStateException(otherwise.toString)
+    })),
+    "cufflinks" -> Map("library_type" -> (strandProtocol match {
+      case NonSpecific => "fr-unstranded"
+      case Dutp        => "fr-firststrand"
+      case otherwise   => throw new IllegalStateException(otherwise.toString)
     })),
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
