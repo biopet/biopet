@@ -176,7 +176,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Pipeline run for multiple samples */
   override def addMultiSampleJobs(): Unit = {
-    super.addMultiSampleJobs
+    super.addMultiSampleJobs()
     // merge expression tables
     executedMeasures.foreach(add)
     shivaVariantcalling.foreach(add)
@@ -198,22 +198,15 @@ class Gentrap(val root: Configurable) extends QScript
       "all_single" -> allSingle
     )
 
-    /** Per-sample alignment file, post rRNA cleanup (if chosen) */
-    lazy val alnFile: File = wipeJob match {
-      case Some(j) => j.outputBam
-      case None    => preProcessBam.get
-    }
-
-    /** Job for removing ribosomal reads */
-    private def wipeJob: Option[WipeReads] = if (removeRibosomalReads) {
-        //require(ribosomalRefFlat.isDefined)
-        val job = new WipeReads(qscript)
-        job.inputBam = bamFile.get
-        ribosomalRefFlat.foreach(job.intervalFile = _)
-        job.outputBam = createFile(".cleaned.bam")
-        job.discardedBam = createFile(".rrna.bam")
-        Some(job)
-      } else None
+    override lazy val preProcessBam = if (removeRibosomalReads) {
+      val job = new WipeReads(qscript)
+      job.inputBam = bamFile.get
+      ribosomalRefFlat.foreach(job.intervalFile = _)
+      job.outputBam = createFile(".cleaned.bam")
+      job.discardedBam = createFile(".rrna.bam")
+      add(job)
+      Some(job.outputBam)
+    } else bamFile
 
     /** Whether all libraries are paired or not */
     def allPaired: Boolean = libraries.values.forall(_.mapping.forall(_.input_R2.isDefined))
@@ -229,8 +222,8 @@ class Gentrap(val root: Configurable) extends QScript
       // add bigwig output, also per-strand when possible
 
       //TODO: add Bam2Wig to multisample mapping
-      addAll(Bam2Wig(qscript, alnFile).functions)
       preProcessBam.foreach { file =>
+        add(Bam2Wig(qscript, file))
         executedMeasures.foreach(_.addBamfile(sampleId, file))
         shivaVariantcalling.foreach(_.inputBams += sampleId -> file)
       }
