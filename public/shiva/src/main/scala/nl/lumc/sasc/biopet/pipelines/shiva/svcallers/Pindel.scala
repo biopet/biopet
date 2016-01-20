@@ -16,11 +16,12 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelCaller$, PindelConfig }
+import nl.lumc.sasc.biopet.core.PipelineCommand
+import nl.lumc.sasc.biopet.extensions.pindel._
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.QScript
 
 /// Pindel is actually a mini pipeline executing binaries from the pindel package
 class Pindel(val root: Configurable) extends SvCaller {
@@ -32,7 +33,7 @@ class Pindel(val root: Configurable) extends SvCaller {
     for ((sample, bamFile) <- inputBams) {
       val pindelDir = new File(outputDir, sample)
 
-      val config_file: File = new File(outputDir + "." + sample + ".pindel.cfg")
+      val config_file: File = new File(pindelDir, sample + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
 
@@ -44,6 +45,16 @@ class Pindel(val root: Configurable) extends SvCaller {
 
       val pindel = PindelCaller(this, cfg.output, pindelDir)
       add(pindel)
+
+      // Current date
+      val today = Calendar.getInstance().getTime()
+      val todayformat = new SimpleDateFormat("yyyyMMdd")
+
+      val pindelVcf = new PindelVCF(this)
+      pindelVcf.pindelOutputRoot = Some(pindelDir)
+      pindelVcf.referenceDate = todayformat.format(today) // officially, we should enter the date of the genome here
+      pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
+      add(pindelVcf)
     }
 
   }
