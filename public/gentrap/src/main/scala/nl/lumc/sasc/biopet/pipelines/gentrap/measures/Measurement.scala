@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.tools.MergeTables
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -19,6 +20,15 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   lazy val countFiles: Map[String, File] = bamFiles.map { case (id, bamFile) => bamToCountFile(id, bamFile) }
 
+  def mergedCountFile = new File(outputDir, s"$name.merged.tsv")
+
+  case class MergeArgs(idCols: List[Int],
+                       valCol: Int,
+                       numHeaderLines: Int = 0,
+                       fallback: String = "-")
+
+  def mergeArgs: MergeArgs
+
   /** Init for pipeline */
   def init(): Unit = {
     require(bamFiles.nonEmpty)
@@ -26,7 +36,8 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    //TODO: Merging
+    add(MergeTables(this, countFiles.values.toList, mergedCountFile,
+      mergeArgs.idCols, mergeArgs.valCol, mergeArgs.numHeaderLines, mergeArgs.fallback))
 
     //TODO: Heatmap
   }
@@ -40,5 +51,5 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
   def summaryFiles: Map[String, File] = Map()
 
   /** Name of summary output file */
-  def summaryFile: File = new File(s"$name.summary.json")
+  def summaryFile: File = new File(outputDir, s"$name.summary.json")
 }

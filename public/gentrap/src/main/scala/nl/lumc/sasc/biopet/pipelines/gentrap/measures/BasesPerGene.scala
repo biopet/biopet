@@ -9,4 +9,6 @@ import org.broadinstitute.gatk.queue.QScript
 class BasesPerGene(val root: Configurable) extends QScript with Measurement {
   //TODO: splitting on strand if strandspecific
   def bamToCountFile(id: String, bamFile: File): (String, File) = ???
+
+  def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 1, fallback = "0")
 }

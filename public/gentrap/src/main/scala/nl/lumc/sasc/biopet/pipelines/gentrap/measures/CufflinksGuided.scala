@@ -8,4 +8,6 @@ import org.broadinstitute.gatk.queue.QScript
  */
 class CufflinksGuided(val root: Configurable) extends QScript with Measurement {
   def bamToCountFile(id: String, bamFile: File): (String, File) = ???
+
+  def mergeArgs = MergeArgs(List(1, 7), 10, numHeaderLines = 1, fallback = "0.0")
 }
