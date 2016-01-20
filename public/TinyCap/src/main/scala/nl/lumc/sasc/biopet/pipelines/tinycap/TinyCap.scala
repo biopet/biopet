@@ -16,6 +16,7 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
   def this() = this(null)
 
   var annotationGff: File = config("annotation_gff")
+  var annotateSam: Boolean = config("annotate_sam")
 
   override def defaults = Map(
     "merge_strategy" -> "preprocessmergesam",
@@ -25,7 +26,8 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "seedmms" -> 3,
       "seedlen" -> 25,
       "k" -> 5,
-      "best" -> true),
+      "best" -> true
+    ),
     "sickle" -> Map(
       "lengthThreshold" -> 15
     ),
@@ -34,6 +36,10 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "q" -> 30,
       "default_clip_mode" -> "both",
       "times" -> 2
+    ),
+    "htseqcount" -> Map(
+      "type" -> "miRNA",
+      "idattr" -> "Name"
     )
   )
 
@@ -50,6 +56,7 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       htseqCount.format = Option("bam")
       htseqCount.stranded = Option("yes")
       htseqCount.output = createFile(".exprcount.tsv")
+      if (annotateSam) htseqCount.samout = Option(createFile(".htseqannot.sam"))
       add(htseqCount)
     }
   }
