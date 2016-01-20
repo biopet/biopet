@@ -20,10 +20,12 @@ import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
@@ -105,7 +107,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   )
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+  def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> input_R1,
     "reference" -> referenceFasta()) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
@@ -219,6 +221,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
         case "bowtie"     => addBowtie(R1, R2, outputBam)
+        case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
@@ -243,7 +246,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       add(md)
       addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
+      val mergeSamFile = MergeSamFiles(this, bamFiles, new File(outputDir, outputName + ".merge.bam"))
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
@@ -377,7 +380,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
     // merge with mapped file
     val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
-      tophat.output_dir, "coordinate")
+      new File(tophat.output_dir, "fixed_merged.bam"), sortOrder = "coordinate")
     mergeSamFile.createIndex = true
     mergeSamFile.isIntermediate = true
     add(mergeSamFile)
@@ -392,6 +395,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(ar._1)
     ar._2
   }
+
   /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File): File = {
 
@@ -435,6 +439,25 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -1
     add(pipe)
     ar._2
+  }
+
+  /** Add bowtie2 jobs **/
+  def addBowtie2(R1: File, R2: Option[File], output: File): File = {
+    val bowtie2 = new Bowtie2(this)
+    bowtie2.rg_id = Some(readgroupId)
+    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("PL:" + platform)
+    bowtie2.rg +:= ("PU:" + platformUnit)
+    bowtie2.rg +:= ("SM:" + sampleId.get)
+    bowtie2.R1 = R1
+    bowtie2.R2 = R2
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = bowtie2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = -1
+    add(pipe)
+    output
   }
 
   /** Adds Star jobs */

@@ -8,10 +8,11 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Output
+import org.broadinstitute.gatk.utils.commandline.{ Gather, Output }
 
 class GenotypeGVCFs(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.GenotypeGVCFs with GatkGeneral {
 
+  @Gather(enabled = false)
   @Output(required = false)
   protected var vcfIndex: File = _
 

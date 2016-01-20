@@ -13,7 +13,7 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions
+package nl.lumc.sasc.biopet.extensions.gmap
 
 import java.io.File
 
@@ -334,7 +334,7 @@ class Gsnap(val root: Configurable) extends BiopetCommandLineFunction with Refer
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if ((!gunzip && !bunzip2) && input.forall(_.getName.endsWith(".gz"))) {
-      logger.info("Fastq with .gz extension found, enabled --gunzip option")
+      logger.debug("Fastq with .gz extension found, enabled --gunzip option")
       gunzip = true
     }
   }

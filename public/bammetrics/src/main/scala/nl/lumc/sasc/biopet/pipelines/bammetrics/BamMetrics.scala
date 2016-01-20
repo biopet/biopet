@@ -39,7 +39,6 @@ class BamMetrics(val root: Configurable) extends QScript
   var inputBam: File = _
 
   /** Settings for CollectRnaSeqMetrics */
-  var rnaMetricsSettings: Map[String, String] = Map()
   var transcriptRefFlatFile: Option[File] = config("transcript_refflat")
 
   /** return location of summary file */
@@ -77,7 +76,7 @@ class BamMetrics(val root: Configurable) extends QScript
 
   /** Script to add jobs */
   def biopetScript() {
-    add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
+    add(SamtoolsFlagstat(this, inputBam, outputDir))
 
     val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)
@@ -107,8 +106,6 @@ class BamMetrics(val root: Configurable) extends QScript
       rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
       rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
       rnaMetrics.refFlat = transcriptRefFlatFile.get
-      rnaMetrics.ribosomalIntervals = rnaMetricsSettings.get("ribosomal_intervals").collect { case n => new File(n) }
-      rnaMetrics.strandSpecificity = rnaMetricsSettings.get("strand_specificity")
       add(rnaMetrics)
       addSummarizable(rnaMetrics, "rna")
     }

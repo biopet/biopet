@@ -20,6 +20,7 @@ import java.io.{ File, FileOutputStream }
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
