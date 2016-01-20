@@ -66,7 +66,8 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
   def summarySettings: Map[String, Any] = Map()
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = Map()
+  def summaryFiles: Map[String, File] = Map("merged_table" -> mergedCountFile, "heatmap" -> heatpMap) ++
+    bamFiles.map { case (id, file) => s"input_bam_$id" -> file}
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, s"$name.summary.json")
