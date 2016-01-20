@@ -39,6 +39,8 @@ class Mpileup2cns(val root: Configurable) extends Varscan {
   var vcfSampleList: Option[File] = config("vcf_sample_list")
   var variants: Option[Int] = config("variants")
 
+  override def defaultCoreMemory = 6.0
+
   override def beforeGraph(): Unit = {
     val validValues: Set[Int] = Set(0, 1)
     // check for boolean vars that are passed as ints
