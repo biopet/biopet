@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.File
+import java.io.{PrintWriter, File}
 
 import htsjdk.samtools.{SAMRecord, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -16,17 +16,21 @@ object BaseCounter extends ToolCommand {
 
   case class Args(refFlat: File = null,
                   outputDir: File = null,
-                  bamFile: File = null) extends AbstractArgs
+                  bamFile: File = null,
+                  prefix: String = "output") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]("refFlat") required() valueName "<file>" action { (x, c) =>
+    opt[File]('r', "refFlat") required() valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
     }
-    opt[File]('o', "outputDir") required() valueName "<file>" action { (x, c) =>
+    opt[File]('o', "outputDir") required() valueName "<directory>" action { (x, c) =>
       c.copy(outputDir = x)
     }
     opt[File]('b', "bam") required() valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
+    }
+    opt[String]('p', "prefix") valueName "<prefix>" action { (x, c) =>
+      c.copy(prefix = x)
     }
   }
 
@@ -47,25 +51,98 @@ object BaseCounter extends ToolCommand {
     logger.info("Done reading RefFlat file")
 
     logger.info("Start reading bamFile")
-    val counts = for (gene <- geneReader.getAll.par) yield bamToGeneCount(cmdArgs.bamFile, gene)
+    val counts = (for (gene <- geneReader.getAll.par) yield bamToGeneCount(cmdArgs.bamFile, gene)).toList
     logger.info("Done reading bamFile")
+
+    writeGeneCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeMergeExonCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeMergeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
 
     //TODO: Write to files
     counts.foreach { geneCount =>
-      println(geneCount.exonCounts.head.start)
-      println(geneCount.gene.getName + "\t" + geneCount.counts.totalReads)
-      println(geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.totalReads).sum)
-      println(geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.totalReads).sum)
       geneCount.transcripts.foreach { transcriptCount =>
         println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.senseBases)
         transcriptCount.exons.zipWithIndex.foreach { exonCounts =>
           println(transcriptCount.transcript.name + "_exon_" + exonCounts._2 + "\t" + exonCounts._1.counts.senseBases)
         }
       }
-      geneCount.exonCounts.zipWithIndex.foreach { exonCounts =>
-        println(geneCount.gene.getName + "_exon_" + exonCounts._2 + "\t" + exonCounts._1.counts.senseBases)
+    }
+  }
+
+  def writeGeneCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val geneTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.counts"))
+    val geneTotalSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.sense.counts"))
+    val geneTotalAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.antisense.counts"))
+    val geneExonicWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.exonic.counts"))
+    val geneExonicSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.exonic.sense.counts"))
+    val geneExonicAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.exonic.antisense.counts"))
+    val geneIntronicWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.intronic.counts"))
+    val geneIntronicSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.intronic.sense.counts"))
+    val geneIntronicAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.intronic.antisense.counts"))
+
+    genes.sortBy(_.gene.getName).foreach { geneCount =>
+      geneTotalWriter.println(geneCount.gene.getName + "\t" + geneCount.counts.totalBases)
+      geneTotalSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.counts.senseBases)
+      geneTotalAntiSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.counts.antiSenseBases)
+      geneExonicWriter.println(geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.totalBases).sum)
+      geneExonicSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.senseBases).sum)
+      geneExonicAntiSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.antiSenseBases).sum)
+      geneIntronicWriter.println(geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.totalBases).sum)
+      geneIntronicSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.senseBases).sum)
+      geneIntronicAntiSenseWriter.println(geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.antiSenseBases).sum)
+    }
+
+    geneTotalWriter.close()
+    geneTotalSenseWriter.close()
+    geneTotalAntiSenseWriter.close()
+    geneExonicWriter.close()
+    geneExonicSenseWriter.close()
+    geneExonicAntiSenseWriter.close()
+    geneIntronicWriter.close()
+    geneIntronicSenseWriter.close()
+    geneIntronicAntiSenseWriter.close()
+  }
+
+  def writeMergeExonCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val exonWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.counts"))
+    val exonSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.sense.counts"))
+    val exonAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.antisense.counts"))
+
+    genes.sortBy(_.gene.getName).foreach { geneCount =>
+      geneCount.exonCounts.foreach { exonCount =>
+        exonWriter.println(geneCount.gene.getName + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.totalBases)
+        exonSenseWriter.println(geneCount.gene.getName + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.senseBases)
+        exonAntiSenseWriter.println(geneCount.gene.getName + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.antiSenseBases)
       }
     }
+
+    exonWriter.close()
+    exonSenseWriter.close()
+    exonAntiSenseWriter.close()
+  }
+
+  def writeMergeIntronCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val intronWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.counts"))
+    val intronSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.sense.counts"))
+    val intronAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.antisense.counts"))
+
+    genes.sortBy(_.gene.getName).foreach { geneCount =>
+      geneCount.intronCounts.foreach { intronCount =>
+        intronWriter.println(geneCount.gene.getName + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.totalBases)
+        intronSenseWriter.println(geneCount.gene.getName + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.senseBases)
+        intronAntiSenseWriter.println(geneCount.gene.getName + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.antiSenseBases)
+      }
+    }
+
+    intronWriter.close()
+    intronSenseWriter.close()
+    intronAntiSenseWriter.close()
+  }
+
+  def samRecordStrand(samRecord: SAMRecord, gene: Gene): Boolean = {
+    if (samRecord.getReadPairedFlag && samRecord.getSecondOfPairFlag)
+      samRecord.getReadNegativeStrandFlag != gene.isPositiveStrand
+    else samRecord.getReadNegativeStrandFlag == gene.isPositiveStrand
   }
 
   def bamToGeneCount(bamFile: File, gene: Gene): GeneCount = {
@@ -73,11 +150,7 @@ object BaseCounter extends ToolCommand {
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
 
     for (record <- bamReader.queryOverlapping(gene.getContig, gene.getStart, gene.getEnd) if !record.getNotPrimaryAlignmentFlag) {
-      //TODO: check if sense this is correct with normal paired end
-      val sense = if (record.getReadPairedFlag && record.getSecondOfPairFlag)
-        record.getReadNegativeStrandFlag != gene.isPositiveStrand
-      else record.getReadNegativeStrandFlag == gene.isPositiveStrand
-      counts.addRecord(record, sense)
+      counts.addRecord(record, samRecordStrand(record, gene))
     }
 
     bamReader.close()
