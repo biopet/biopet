@@ -4,6 +4,7 @@ import java.io.File
 
 import htsjdk.samtools.{SAMRecord, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecordList, BedRecord}
 import picard.annotation.{Gene, GeneAnnotationReader}
 
 import scala.collection.JavaConversions._
@@ -46,18 +47,22 @@ object BaseCounter extends ToolCommand {
     logger.info("Done reading RefFlat file")
 
     logger.info("Start reading bamFile")
-    val counts = for (gene <- geneReader.getAll.par if gene.getName == "Rpl19") yield bamToGeneCount(cmdArgs.bamFile, gene)
+    val counts = for (gene <- geneReader.getAll.par) yield bamToGeneCount(cmdArgs.bamFile, gene)
     logger.info("Done reading bamFile")
 
+    //TODO: Write to files
     counts.foreach { geneCount =>
-      println(geneCount.gene.getName + "\t" + geneCount.counts.senseBases)
+      println(geneCount.exonCounts.head.start)
+      println(geneCount.gene.getName + "\t" + geneCount.counts.totalReads)
+      println(geneCount.gene.getName + "\t" + geneCount.exonCounts.map(_.counts.totalReads).sum)
+      println(geneCount.gene.getName + "\t" + geneCount.intronCounts.map(_.counts.totalReads).sum)
       geneCount.transcripts.foreach { transcriptCount =>
         println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.senseBases)
         transcriptCount.exons.zipWithIndex.foreach { exonCounts =>
           println(transcriptCount.transcript.name + "_exon_" + exonCounts._2 + "\t" + exonCounts._1.counts.senseBases)
         }
       }
-      geneCount.exons.zipWithIndex.foreach { exonCounts =>
+      geneCount.exonCounts.zipWithIndex.foreach { exonCounts =>
         println(geneCount.gene.getName + "_exon_" + exonCounts._2 + "\t" + exonCounts._1.counts.senseBases)
       }
     }
@@ -67,7 +72,7 @@ object BaseCounter extends ToolCommand {
     val counts = new GeneCount(gene)
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
 
-    for (record <- bamReader.queryOverlapping(gene.getContig, gene.getStart, gene.getEnd)) {
+    for (record <- bamReader.queryOverlapping(gene.getContig, gene.getStart, gene.getEnd) if !record.getNotPrimaryAlignmentFlag) {
       //TODO: check if sense this is correct with normal paired end
       val sense = if (record.getReadPairedFlag && record.getSecondOfPairFlag)
         record.getReadNegativeStrandFlag != gene.isPositiveStrand
@@ -85,8 +90,8 @@ object BaseCounter extends ToolCommand {
       .map { block =>
         val blockStart = block.getReferenceStart
         val blockEnd = blockStart + block.getLength - 1
-        if (blockStart <= end && blockStart + blockEnd >= start) {
-          (if (end < blockEnd) end else blockEnd) - (if (start > blockStart) start else blockStart) + 1
+        if (start <= blockEnd && end >= blockStart) {
+          (if (end < blockEnd) end else blockEnd) - (if (start > blockStart) start else blockStart)
         } else 0
       }.sum
   }
@@ -117,40 +122,38 @@ object BaseCounter extends ToolCommand {
   class GeneCount(val gene: Gene) {
     val counts = new Counts
     val transcripts = gene.iterator().map(new TranscriptCount(_)).toList
-    val exons = {
-      val tempList = gene.iterator().flatMap(_.exons).toList.sortBy(_.start)
+    def exonRegions = BedRecordList.fromList(gene.iterator()
+      .flatMap(_.exons)
+      .map(e => BedRecord(gene.getContig, e.start - 1, e.end)))
+      .combineOverlap
+    def intronRegions = BedRecordList.fromList(BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: exonRegions.allRecords.toList)
+        .squishBed(false, false)
 
-      /** This function will remove duplicates exons when having multiple transcripts */
-      def dedupList(input: List[Gene#Transcript#Exon], output: List[Gene#Transcript#Exon] = Nil): List[Gene#Transcript#Exon] = {
-        if (input.isEmpty) output
-        else {
-          val value = if (output.isEmpty || input.head.start != output.head.start || input.head.end != output.head.end) Some(input.head)
-          else None
-          dedupList(input.tail, value.toList ::: output)
-        }
-      }
-      dedupList(tempList).map(new ExonCount(_))
-    }
+    val exonCounts = exonRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
+    val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
+
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
       bamRecordBasesOverlap(samRecord, gene.getStart, gene.getEnd, counts, sense)
       transcripts.foreach(_.addRecord(samRecord, sense))
-      exons.foreach(_.addRecord(samRecord, sense))
+      exonCounts.foreach(_.addRecord(samRecord, sense))
+      intronCounts.foreach(_.addRecord(samRecord, sense))
     }
   }
 
   class TranscriptCount(val transcript: Gene#Transcript) {
     val counts = new Counts
-    val exons = transcript.exons.map(new ExonCount(_))
+    val exons = transcript.exons.map(new RegionCount(_))
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
       bamRecordBasesOverlap(samRecord, transcript.start, transcript.end, counts, sense)
       exons.foreach(_.addRecord(samRecord, sense))
     }
   }
 
-  class ExonCount(val exon: Gene#Transcript#Exon) {
+  class RegionCount(val start: Int, val end: Int) {
+    def this(exon: Gene#Transcript#Exon) = this(exon.start, exon.end)
     val counts = new Counts
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
-      bamRecordBasesOverlap(samRecord, exon.start, exon.end, counts, sense)
+      bamRecordBasesOverlap(samRecord, start, end, counts, sense)
     }
   }
 }
