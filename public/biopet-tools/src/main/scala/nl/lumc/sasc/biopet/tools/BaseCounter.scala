@@ -59,6 +59,7 @@ object BaseCounter extends ToolCommand {
     writeMergeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
 
     //TODO: Write to files
+    /*
     counts.foreach { geneCount =>
       geneCount.transcripts.foreach { transcriptCount =>
         println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.senseBases)
@@ -67,8 +68,15 @@ object BaseCounter extends ToolCommand {
         }
       }
     }
+    */
   }
 
+  /**
+    * This function will write all counts that are concatenated on gene level. Each line is 1 gene.
+    * Exonic: then it's seen as an exon on 1 of the transcripts
+    * Intronic: then it's not seen as an exon on 1 of the transcripts
+    * Exonic + Intronic = Total
+    */
   def writeGeneCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val geneTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.counts"))
     val geneTotalSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.sense.counts"))
@@ -103,6 +111,10 @@ object BaseCounter extends ToolCommand {
     geneIntronicAntiSenseWriter.close()
   }
 
+  /**
+    * This function will print all counts that exist on exonic regions,
+    * each base withing the gene is only represented once but all regions are separated
+    */
   def writeMergeExonCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val exonWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.counts"))
     val exonSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.sense.counts"))
@@ -121,6 +133,10 @@ object BaseCounter extends ToolCommand {
     exonAntiSenseWriter.close()
   }
 
+  /**
+    * This function will print all counts that does *not* exist on exonic regions,
+    * each base withing the gene is only represented once but all regions are separated
+    */
   def writeMergeIntronCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val intronWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.counts"))
     val intronSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.sense.counts"))
