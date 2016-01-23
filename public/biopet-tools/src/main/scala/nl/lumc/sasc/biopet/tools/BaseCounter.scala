@@ -57,18 +57,87 @@ object BaseCounter extends ToolCommand {
     writeGeneCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
     writeMergeExonCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
     writeMergeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeTranscriptCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeExonCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
+  }
 
-    //TODO: Write to files
-    /*
-    counts.foreach { geneCount =>
-      geneCount.transcripts.foreach { transcriptCount =>
-        println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.senseBases)
-        transcriptCount.exons.zipWithIndex.foreach { exonCounts =>
-          println(transcriptCount.transcript.name + "_exon_" + exonCounts._2 + "\t" + exonCounts._1.counts.senseBases)
-        }
+  /**
+    * This function will write all counts that are concatenated on transcript level. Each line is 1 transcript.
+    * Exonic: then it's seen as an exon on 1 of the transcripts
+    * Intronic: then it's not seen as an exon on 1 of the transcripts
+    * Exonic + Intronic = Total
+    */
+  def writeTranscriptCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val transcriptTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.counts"))
+    val transcriptTotalSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.sense.counts"))
+    val transcriptTotalAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.antisense.counts"))
+    val transcriptExonicWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.exonic.counts"))
+    val transcriptExonicSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.exonic.sense.counts"))
+    val transcriptExonicAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.exonic.antisense.counts"))
+    val transcriptIntronicWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.intronic.counts"))
+    val transcriptIntronicSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.intronic.sense.counts"))
+    val transcriptIntronicAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.intronic.antisense.counts"))
+
+    genes.flatMap(_.transcripts).sortBy(_.transcript.name).foreach { transcriptCount =>
+      transcriptTotalWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.totalBases)
+      transcriptTotalSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.senseBases)
+      transcriptTotalAntiSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.counts.antiSenseBases)
+      transcriptExonicWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.exonCounts.map(_.counts.totalBases).sum)
+      transcriptExonicSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.exonCounts.map(_.counts.senseBases).sum)
+      transcriptExonicAntiSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.exonCounts.map(_.counts.antiSenseBases).sum)
+      transcriptIntronicWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.intronCounts.map(_.counts.totalBases).sum)
+      transcriptIntronicSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.intronCounts.map(_.counts.senseBases).sum)
+      transcriptIntronicAntiSenseWriter.println(transcriptCount.transcript.name + "\t" + transcriptCount.intronCounts.map(_.counts.antiSenseBases).sum)
+    }
+
+    transcriptTotalWriter.close()
+    transcriptTotalSenseWriter.close()
+    transcriptTotalAntiSenseWriter.close()
+    transcriptExonicWriter.close()
+    transcriptExonicSenseWriter.close()
+    transcriptExonicAntiSenseWriter.close()
+    transcriptIntronicWriter.close()
+    transcriptIntronicSenseWriter.close()
+    transcriptIntronicAntiSenseWriter.close()
+  }
+
+  /** This will write counts on each exon */
+  def writeExonCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val exonWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.counts"))
+    val exonSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.sense.counts"))
+    val exonAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.antisense.counts"))
+
+    genes.flatMap(_.transcripts).sortBy(_.transcript.name).foreach { transcriptCount =>
+      transcriptCount.exonCounts.foreach { exonCount =>
+        exonWriter.println(transcriptCount.transcript.name + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.totalBases)
+        exonSenseWriter.println(transcriptCount.transcript.name + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.senseBases)
+        exonAntiSenseWriter.println(transcriptCount.transcript.name + s"_exon:${exonCount.start}-${exonCount.end}\t" + exonCount.counts.antiSenseBases)
       }
     }
-    */
+
+    exonWriter.close()
+    exonSenseWriter.close()
+    exonAntiSenseWriter.close()
+  }
+
+  /** This will write counts on each intron */
+  def writeIntronCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
+    val intronWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.counts"))
+    val intronSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.sense.counts"))
+    val intronAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.antisense.counts"))
+
+    genes.flatMap(_.transcripts).sortBy(_.transcript.name).foreach { transcriptCount =>
+      transcriptCount.intronCounts.foreach { intronCount =>
+        intronWriter.println(transcriptCount.transcript.name + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.totalBases)
+        intronSenseWriter.println(transcriptCount.transcript.name + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.senseBases)
+        intronAntiSenseWriter.println(transcriptCount.transcript.name + s"_intron:${intronCount.start}-${intronCount.end}\t" + intronCount.counts.antiSenseBases)
+      }
+    }
+
+    intronWriter.close()
+    intronSenseWriter.close()
+    intronAntiSenseWriter.close()
   }
 
   /**
@@ -231,10 +300,17 @@ object BaseCounter extends ToolCommand {
 
   class TranscriptCount(val transcript: Gene#Transcript) {
     val counts = new Counts
-    val exons = transcript.exons.map(new RegionCount(_))
+    def intronRegions = BedRecordList.fromList(BedRecord(transcript.getGene.getContig, transcript.start() - 1, transcript.end()) ::
+      transcript.exons.map(e => BedRecord(transcript.getGene.getContig, e.start - 1, e.end)).toList)
+      .squishBed(false, false)
+
+    val exonCounts = transcript.exons.map(new RegionCount(_))
+    val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
+
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
       bamRecordBasesOverlap(samRecord, transcript.start, transcript.end, counts, sense)
-      exons.foreach(_.addRecord(samRecord, sense))
+      exonCounts.foreach(_.addRecord(samRecord, sense))
+      intronCounts.foreach(_.addRecord(samRecord, sense))
     }
   }
 
