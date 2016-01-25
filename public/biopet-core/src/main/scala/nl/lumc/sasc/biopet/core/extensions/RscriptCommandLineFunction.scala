@@ -15,12 +15,8 @@
  */
 package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{ File, FileOutputStream }
-
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.rscript.Rscript
-
-import scala.sys.process._
 
 /**
  * General rscript extension

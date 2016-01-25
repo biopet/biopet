@@ -46,16 +46,16 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
             // sequences come from FastQC
             case _ =>
-              throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in '$fastq_input'.")
+              throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in '$fastqInput'.")
           }
         // FastQC found no adapters
         case otherwise =>
           ;
-          logger.debug(s"No adapters found for summarizing in '$fastq_input'.")
+          logger.debug(s"No adapters found for summarizing in '$fastqInput'.")
           None
       }
       // "adapters" key not found ~ something went wrong in our part
-      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry '$fastq_input'.")
+      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry '$fastqInput'.")
     }
     initStats.updated(adaptersStatsName, adapterCounts)
   }

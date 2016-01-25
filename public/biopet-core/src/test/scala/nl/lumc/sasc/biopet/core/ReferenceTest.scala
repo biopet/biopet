@@ -19,6 +19,7 @@ class ReferenceTest extends TestNGSuite with Matchers with MockitoSugar {
 
   @Test
   def testDefault: Unit = {
+    Logging.errors.clear()
     make(config :: testReferenceNoIndex :: Nil).referenceFasta()
     Logging.checkErrors(true)
 

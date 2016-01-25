@@ -107,7 +107,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   )
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+  def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> input_R1,
     "reference" -> referenceFasta()) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 

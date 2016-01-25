@@ -184,6 +184,7 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
     map.toMap
   }
 }
+
 object WriteSummary {
   /** Retrive checksum from file */
   def parseChecksum(checksumFile: File): String = {
