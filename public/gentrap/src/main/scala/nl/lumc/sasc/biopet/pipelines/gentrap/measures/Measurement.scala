@@ -36,11 +36,15 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     require(bamFiles.nonEmpty)
   }
 
+  private var extraSummaryFiles: Map[String, File] = Map()
+
   def addMergeTableJob(countFiles: List[File],
                        outputFile: File,
+                       name: String,
                        args: MergeArgs = mergeArgs): Unit = {
     add(MergeTables(this, countFiles, outputFile,
       args.idCols, args.valCol, args.numHeaderLines, args.fallback))
+    extraSummaryFiles += s"${name}_table" -> outputFile
   }
 
   def addHeatmapJob(countTable: File, outputFile: File, name: String): Unit = {
@@ -49,13 +53,14 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     job.output = outputFile
     job.countType = Some(name)
     add(job)
+    extraSummaryFiles += s"${name}_heatmap" -> outputFile
   }
 
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any] = Map()
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = Map() ++ bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
+  def summaryFiles: Map[String, File] = extraSummaryFiles ++ bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, s"$name.summary.json")

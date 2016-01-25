@@ -28,7 +28,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
     id -> job
     }
 
-    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable)
+    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "fragments_per_gene")
     addHeatmapJob(mergedTable, heatmap, "fragments_per_gene")
   }
 

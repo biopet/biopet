@@ -22,8 +22,8 @@ trait CufflinksMeasurement extends QScript with Measurement {
       id -> cufflinks
     }
 
-    addMergeTableJob(jobs.values.map(_.outputGenesFpkm).toList, mergeGenesFpkmTable)
-    addMergeTableJob(jobs.values.map(_.outputIsoformsFpkm).toList, mergeIsoFormFpkmTable)
+    addMergeTableJob(jobs.values.map(_.outputGenesFpkm).toList, mergeGenesFpkmTable, "genes_fpkm")
+    addMergeTableJob(jobs.values.map(_.outputIsoformsFpkm).toList, mergeIsoFormFpkmTable, "iso_form")
 
     addHeatmapJob(mergeGenesFpkmTable, genesFpkmHeatmap, "genes_fpkm")
     addHeatmapJob(mergeIsoFormFpkmTable, isoFormFpkmHeatmap, "iso_form_fpkm")
