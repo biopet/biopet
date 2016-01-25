@@ -15,14 +15,14 @@
  */
 package nl.lumc.sasc.biopet.extensions.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
 import nl.lumc.sasc.biopet.core.ToolCommandFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
-  *
+ *
  */
 class BaseCounter(val root: Configurable) extends ToolCommandFunction {
   def toolObject = nl.lumc.sasc.biopet.tools.BaseCounter

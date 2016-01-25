@@ -1,17 +1,17 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{PrintWriter, File}
+import java.io.{ PrintWriter, File }
 
-import htsjdk.samtools.{SAMRecord, SamReaderFactory}
+import htsjdk.samtools.{ SAMRecord, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecordList, BedRecord}
-import picard.annotation.{Gene, GeneAnnotationReader}
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecordList, BedRecord }
+import picard.annotation.{ Gene, GeneAnnotationReader }
 
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvanthof on 22/01/16.
-  */
+ * Created by pjvanthof on 22/01/16.
+ */
 object BaseCounter extends ToolCommand {
 
   case class Args(refFlat: File = null,
@@ -20,13 +20,13 @@ object BaseCounter extends ToolCommand {
                   prefix: String = "output") extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('r', "refFlat") required() valueName "<file>" action { (x, c) =>
+    opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
     }
-    opt[File]('o', "outputDir") required() valueName "<directory>" action { (x, c) =>
+    opt[File]('o', "outputDir") required () valueName "<directory>" action { (x, c) =>
       c.copy(outputDir = x)
     }
-    opt[File]('b', "bam") required() valueName "<file>" action { (x, c) =>
+    opt[File]('b', "bam") required () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
     }
     opt[String]('p', "prefix") valueName "<prefix>" action { (x, c) =>
@@ -38,7 +38,7 @@ object BaseCounter extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) match {
       case Some(x) => x
-      case _ => throw new IllegalArgumentException
+      case _       => throw new IllegalArgumentException
     }
 
     //Sets picard logging level
@@ -63,11 +63,11 @@ object BaseCounter extends ToolCommand {
   }
 
   /**
-    * This function will write all counts that are concatenated on transcript level. Each line is 1 transcript.
-    * Exonic: then it's seen as an exon on 1 of the transcripts
-    * Intronic: then it's not seen as an exon on 1 of the transcripts
-    * Exonic + Intronic = Total
-    */
+   * This function will write all counts that are concatenated on transcript level. Each line is 1 transcript.
+   * Exonic: then it's seen as an exon on 1 of the transcripts
+   * Intronic: then it's not seen as an exon on 1 of the transcripts
+   * Exonic + Intronic = Total
+   */
   def writeTranscriptCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val transcriptTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.counts"))
     val transcriptTotalSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.transcript.sense.counts"))
@@ -141,11 +141,11 @@ object BaseCounter extends ToolCommand {
   }
 
   /**
-    * This function will write all counts that are concatenated on gene level. Each line is 1 gene.
-    * Exonic: then it's seen as an exon on 1 of the transcripts
-    * Intronic: then it's not seen as an exon on 1 of the transcripts
-    * Exonic + Intronic = Total
-    */
+   * This function will write all counts that are concatenated on gene level. Each line is 1 gene.
+   * Exonic: then it's seen as an exon on 1 of the transcripts
+   * Intronic: then it's not seen as an exon on 1 of the transcripts
+   * Exonic + Intronic = Total
+   */
   def writeGeneCounts(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val geneTotalWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.counts"))
     val geneTotalSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.gene.sense.counts"))
@@ -181,9 +181,9 @@ object BaseCounter extends ToolCommand {
   }
 
   /**
-    * This function will print all counts that exist on exonic regions,
-    * each base withing the gene is only represented once but all regions are separated
-    */
+   * This function will print all counts that exist on exonic regions,
+   * each base withing the gene is only represented once but all regions are separated
+   */
   def writeMergeExonCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val exonWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.counts"))
     val exonSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.exon.merge.sense.counts"))
@@ -203,9 +203,9 @@ object BaseCounter extends ToolCommand {
   }
 
   /**
-    * This function will print all counts that does *not* exist on exonic regions,
-    * each base withing the gene is only represented once but all regions are separated
-    */
+   * This function will print all counts that does *not* exist on exonic regions,
+   * each base withing the gene is only represented once but all regions are separated
+   */
   def writeMergeIntronCount(genes: List[GeneCount], outputDir: File, prefix: String): Unit = {
     val intronWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.counts"))
     val intronSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.intron.merge.sense.counts"))
@@ -285,7 +285,7 @@ object BaseCounter extends ToolCommand {
       .map(e => BedRecord(gene.getContig, e.start - 1, e.end)))
       .combineOverlap
     def intronRegions = BedRecordList.fromList(BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: exonRegions.allRecords.toList)
-        .squishBed(false, false)
+      .squishBed(false, false)
 
     val exonCounts = exonRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
     val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))

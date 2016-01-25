@@ -16,10 +16,10 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.core.annotations.{RibosomalRefFlat, AnnotationRefFlat}
+import nl.lumc.sasc.biopet.core.annotations.{ RibosomalRefFlat, AnnotationRefFlat }
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.tools.WipeReads
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{StrandProtocol, ExpMeasures}
+import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ StrandProtocol, ExpMeasures }
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
@@ -56,7 +56,7 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val expMeasures = config("expression_measures", default = Nil).asStringList.map(value =>
     ExpMeasures.values.find(x => Gentrap.camelize(x.toString) == value) match {
       case Some(v) => v
-      case _ => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
+      case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
     }
   ).toSet
 
@@ -65,7 +65,7 @@ class Gentrap(val root: Configurable) extends QScript
     val value: String = config("strand_protocol")
     StrandProtocol.values.find(x => Gentrap.camelize(x.toString) == value) match {
       case Some(v) => v
-      case other   =>
+      case other =>
         Logging.addError(s"'$other' is no strand_protocol or strand_protocol is not given")
         StrandProtocol.NonSpecific
     }
@@ -79,12 +79,12 @@ class Gentrap(val root: Configurable) extends QScript
     "htseqcount" -> Map("stranded" -> (strandProtocol match {
       case StrandProtocol.NonSpecific => "no"
       case StrandProtocol.Dutp        => "reverse"
-      case otherwise   => throw new IllegalStateException(otherwise.toString)
+      case otherwise                  => throw new IllegalStateException(otherwise.toString)
     })),
     "cufflinks" -> Map("library_type" -> (strandProtocol match {
       case StrandProtocol.NonSpecific => "fr-unstranded"
       case StrandProtocol.Dutp        => "fr-firststrand"
-      case otherwise   => throw new IllegalStateException(otherwise.toString)
+      case otherwise                  => throw new IllegalStateException(otherwise.toString)
     })),
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
@@ -99,7 +99,7 @@ class Gentrap(val root: Configurable) extends QScript
         "strand_specificity" -> (strandProtocol match {
           case StrandProtocol.NonSpecific => StrandSpecificity.NONE.toString
           case StrandProtocol.Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
-          case otherwise   => throw new IllegalStateException(otherwise.toString)
+          case otherwise                  => throw new IllegalStateException(otherwise.toString)
         })
       )
       else Map()) ++ (if (ribosomalRefFlat != null) ribosomalRefFlat.map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
