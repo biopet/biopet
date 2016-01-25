@@ -55,8 +55,8 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       htseqCount.inputAnnotation = annotationGff
       htseqCount.format = Option("bam")
       htseqCount.stranded = Option("yes")
-      htseqCount.output = createFile(".exprcount.tsv")
-      if (annotateSam) htseqCount.samout = Option(createFile(".htseqannot.sam"))
+      htseqCount.output = createFile("exprcount.tsv")
+      if (annotateSam) htseqCount.samout = Option(createFile("htseqannot.sam"))
       add(htseqCount)
     }
   }
