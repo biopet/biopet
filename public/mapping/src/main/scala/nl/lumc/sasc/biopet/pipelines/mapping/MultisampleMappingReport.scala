@@ -85,10 +85,11 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
-    ReportPage(List(
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
-      "QC" -> FlexiprepReport.flexiprepPage
-    ), List(
+    val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
+    ReportPage(
+      ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
+      (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil),
+      List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
       "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
       "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
