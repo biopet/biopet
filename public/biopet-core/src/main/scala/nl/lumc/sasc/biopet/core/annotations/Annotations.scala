@@ -40,6 +40,7 @@ trait RibosomalRefFlat extends BiopetQScript { qscript: QScript =>
     val file: Option[File] = config("ribosome_refflat", freeVar = true)
     file match {
       case Some(f) => inputFiles :+ InputFile(f, config("ribosome_refflat_md5", freeVar = true))
+      case _ =>
     }
     file
   }
