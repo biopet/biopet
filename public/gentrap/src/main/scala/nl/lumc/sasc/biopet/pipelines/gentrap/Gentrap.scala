@@ -54,16 +54,16 @@ class Gentrap(val root: Configurable) extends QScript
   /** Expression measurement modes */
   // see the enumeration below for valid modes
   lazy val expMeasures = config("expression_measures", default = Nil).asStringList.map(value =>
-    ExpMeasures.values.find(x => Gentrap.camelize(x.toString) == value) match {
+    ExpMeasures.values.find(_.toString == Gentrap.camelize(value)) match {
       case Some(v) => v
       case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
     }
   ).toSet
 
   /** Strandedness modes */
-  lazy val strandProtocol: StrandProtocol.Value = {
+  val strandProtocol: StrandProtocol.Value = {
     val value: String = config("strand_protocol")
-    StrandProtocol.values.find(x => Gentrap.camelize(x.toString) == value) match {
+    StrandProtocol.values.find(_.toString == Gentrap.camelize(value)) match {
       case Some(v) => v
       case other =>
         Logging.addError(s"'$other' is no strand_protocol or strand_protocol is not given")
@@ -122,7 +122,7 @@ class Gentrap(val root: Configurable) extends QScript
     Some(new FragmentsPerExon(this)) else None
 
   lazy val baseCounts = if (expMeasures.contains(ExpMeasures.BaseCounts))
-    Some(new FragmentsPerExon(this)) else None
+    Some(new BaseCounts(this)) else None
 
   lazy val cufflinksBlind = if (expMeasures.contains(ExpMeasures.CufflinksBlind))
     Some(new CufflinksBlind(this)) else None

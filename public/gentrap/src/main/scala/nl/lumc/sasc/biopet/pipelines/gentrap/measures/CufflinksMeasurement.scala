@@ -16,10 +16,11 @@ trait CufflinksMeasurement extends QScript with Measurement {
   }
 
   def biopetScript(): Unit = {
-    val jobs = bamFiles.map { case (id, file) =>
-      val cufflinks = makeCufflinksJob(id, file)
-      add(cufflinks)
-      id -> cufflinks
+    val jobs = bamFiles.map {
+      case (id, file) =>
+        val cufflinks = makeCufflinksJob(id, file)
+        add(cufflinks)
+        id -> cufflinks
     }
 
     addMergeTableJob(jobs.values.map(_.outputGenesFpkm).toList, mergeGenesFpkmTable, "genes_fpkm")

@@ -15,14 +15,15 @@ class BaseCounts(val root: Configurable) extends QScript with Measurement with A
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    val jobs = bamFiles.map { case (id, file) =>
-      val baseCounter = new BaseCounter(this)
-      baseCounter.bamFile = file
-      baseCounter.outputDir = new File(outputDir, id)
-      baseCounter.prefix = id
-      baseCounter.refFlat = annotationRefFlat
-      add(baseCounter)
-      id -> baseCounter
+    val jobs = bamFiles.map {
+      case (id, file) =>
+        val baseCounter = new BaseCounter(this)
+        baseCounter.bamFile = file
+        baseCounter.outputDir = new File(outputDir, id)
+        baseCounter.prefix = id
+        baseCounter.refFlat = annotationRefFlat
+        add(baseCounter)
+        id -> baseCounter
     }
 
     def addTableAndHeatmap(countFiles: List[File], outputName: String): Unit = {
