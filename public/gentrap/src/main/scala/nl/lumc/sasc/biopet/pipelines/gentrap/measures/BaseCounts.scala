@@ -25,6 +25,6 @@ class BaseCounts(val root: Configurable) extends QScript with Measurement with A
     }
 
     //TODO: merges
-    //TODO heatmaps
+    //TODO: heatmaps
   }
 }
