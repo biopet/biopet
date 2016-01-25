@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap.{ StrandProtocol, ExpMeasur
 import nl.lumc.sasc.biopet.pipelines.gentrap.measures._
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ LazyCheck, Logging }
 import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
@@ -53,15 +53,17 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Expression measurement modes */
   // see the enumeration below for valid modes
-  lazy val expMeasures = config("expression_measures", default = Nil).asStringList.map(value =>
-    ExpMeasures.values.find(_.toString == Gentrap.camelize(value)) match {
-      case Some(v) => v
-      case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
-    }
-  ).toSet
+  lazy val expMeasures = new LazyCheck({
+    config("expression_measures", default = Nil).asStringList.map(value =>
+      ExpMeasures.values.find(_.toString == Gentrap.camelize(value)) match {
+        case Some(v) => v
+        case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
+      }
+    ).toSet
+  })
 
   /** Strandedness modes */
-  val strandProtocol: StrandProtocol.Value = {
+  lazy val strandProtocol = new LazyCheck({
     val value: String = config("strand_protocol")
     StrandProtocol.values.find(_.toString == Gentrap.camelize(value)) match {
       case Some(v) => v
@@ -69,23 +71,25 @@ class Gentrap(val root: Configurable) extends QScript
         Logging.addError(s"'$other' is no strand_protocol or strand_protocol is not given")
         StrandProtocol.NonSpecific
     }
-  }
+  })
 
   /** Whether to remove rRNA regions or not */
   lazy val removeRibosomalReads: Boolean = config("remove_ribosomal_reads", default = false)
 
   /** Default pipeline config */
   override def defaults = Map(
-    "htseqcount" -> Map("stranded" -> (strandProtocol match {
+    "htseqcount" -> (if (strandProtocol.isSet) Map("stranded" -> (strandProtocol() match {
       case StrandProtocol.NonSpecific => "no"
       case StrandProtocol.Dutp        => "reverse"
       case otherwise                  => throw new IllegalStateException(otherwise.toString)
-    })),
-    "cufflinks" -> Map("library_type" -> (strandProtocol match {
+    }))
+    else Map()),
+    "cufflinks" -> (if (strandProtocol.isSet) Map("library_type" -> (strandProtocol() match {
       case StrandProtocol.NonSpecific => "fr-unstranded"
       case StrandProtocol.Dutp        => "fr-firststrand"
       case otherwise                  => throw new IllegalStateException(otherwise.toString)
-    })),
+    }))
+    else Map()),
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
       "novelsplicing" -> 1,
@@ -95,14 +99,14 @@ class Gentrap(val root: Configurable) extends QScript
     "shivavariantcalling" -> Map("variantcallers" -> List("varscan_cns_singlesample")),
     "bammetrics" -> Map(
       "transcript_refflat" -> annotationRefFlat,
-      "collectrnaseqmetrics" -> ((if (strandProtocol != null) Map(
-        "strand_specificity" -> (strandProtocol match {
+      "collectrnaseqmetrics" -> ((if (strandProtocol.isSet) Map(
+        "strand_specificity" -> (strandProtocol() match {
           case StrandProtocol.NonSpecific => StrandSpecificity.NONE.toString
           case StrandProtocol.Dutp        => StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
           case otherwise                  => throw new IllegalStateException(otherwise.toString)
         })
       )
-      else Map()) ++ (if (ribosomalRefFlat != null) ribosomalRefFlat.map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
+      else Map()) ++ (if (ribosomalRefFlat.isSet) ribosomalRefFlat().map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
     ),
     "cutadapt" -> Map("minimum_length" -> 20),
     // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail
@@ -115,22 +119,22 @@ class Gentrap(val root: Configurable) extends QScript
     )
   )
 
-  lazy val fragmentsPerGene = if (expMeasures.contains(ExpMeasures.FragmentsPerGene))
+  lazy val fragmentsPerGene = if (expMeasures().contains(ExpMeasures.FragmentsPerGene))
     Some(new FragmentsPerGene(this)) else None
 
-  lazy val fragmentsPerExon = if (expMeasures.contains(ExpMeasures.FragmentsPerExon))
+  lazy val fragmentsPerExon = if (expMeasures().contains(ExpMeasures.FragmentsPerExon))
     Some(new FragmentsPerExon(this)) else None
 
-  lazy val baseCounts = if (expMeasures.contains(ExpMeasures.BaseCounts))
+  lazy val baseCounts = if (expMeasures().contains(ExpMeasures.BaseCounts))
     Some(new BaseCounts(this)) else None
 
-  lazy val cufflinksBlind = if (expMeasures.contains(ExpMeasures.CufflinksBlind))
+  lazy val cufflinksBlind = if (expMeasures().contains(ExpMeasures.CufflinksBlind))
     Some(new CufflinksBlind(this)) else None
 
-  lazy val cufflinksGuided = if (expMeasures.contains(ExpMeasures.CufflinksGuided))
+  lazy val cufflinksGuided = if (expMeasures().contains(ExpMeasures.CufflinksGuided))
     Some(new CufflinksGuided(this)) else None
 
-  lazy val cufflinksStrict = if (expMeasures.contains(ExpMeasures.CufflinksStrict))
+  lazy val cufflinksStrict = if (expMeasures().contains(ExpMeasures.CufflinksStrict))
     Some(new CufflinksStrict(this)) else None
 
   def executedMeasures = (fragmentsPerGene :: fragmentsPerExon :: baseCounts :: cufflinksBlind ::
@@ -148,14 +152,14 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Files that will be listed in the summary file */
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
-    "annotation_refflat" -> annotationRefFlat
+    "annotation_refflat" -> annotationRefFlat()
   ) ++ Map(
-      "ribosome_refflat" -> ribosomalRefFlat
+      "ribosome_refflat" -> ribosomalRefFlat()
     ).collect { case (key, Some(value)) => key -> value }
 
   /** Pipeline settings shown in the summary file */
   override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
-    "expression_measures" -> expMeasures.toList.map(_.toString),
+    "expression_measures" -> expMeasures().toList.map(_.toString),
     "strand_protocol" -> strandProtocol.toString,
     "call_variants" -> shivaVariantcalling.isDefined,
     "remove_ribosomal_reads" -> removeRibosomalReads
@@ -165,7 +169,7 @@ class Gentrap(val root: Configurable) extends QScript
   override def init(): Unit = {
     super.init()
 
-    if (expMeasures.isEmpty) Logging.addError("'expression_measures' is missing in the config")
+    if (expMeasures().isEmpty) Logging.addError("'expression_measures' is missing in the config")
 
     executedMeasures.foreach(x => x.outputDir = new File(outputDir, "expresion_measures" + File.separator + x.name))
   }
@@ -197,7 +201,7 @@ class Gentrap(val root: Configurable) extends QScript
     override lazy val preProcessBam = if (removeRibosomalReads) {
       val job = new WipeReads(qscript)
       job.inputBam = bamFile.get
-      ribosomalRefFlat.foreach(job.intervalFile = _)
+      ribosomalRefFlat().foreach(job.intervalFile = _)
       job.outputBam = createFile(".cleaned.bam")
       job.discardedBam = createFile(".rrna.bam")
       add(job)

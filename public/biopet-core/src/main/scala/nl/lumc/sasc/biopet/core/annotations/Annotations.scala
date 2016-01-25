@@ -2,6 +2,7 @@ package nl.lumc.sasc.biopet.core.annotations
 
 import nl.lumc.sasc.biopet.core.BiopetQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
+import nl.lumc.sasc.biopet.utils.LazyCheck
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -27,21 +28,21 @@ trait AnnotationBed extends BiopetQScript { qscript: QScript =>
 
 trait AnnotationRefFlat extends BiopetQScript { qscript: QScript =>
   /** GTF reference file */
-  lazy val annotationRefFlat: File = {
+  lazy val annotationRefFlat = new LazyCheck({
     val file: File = config("annotation_refflat", freeVar = true)
     inputFiles :+ InputFile(file, config("annotation_refflat_md5", freeVar = true))
     file
-  }
+  })
 }
 
 trait RibosomalRefFlat extends BiopetQScript { qscript: QScript =>
   /** GTF reference file */
-  lazy val ribosomalRefFlat: Option[File] = {
+  lazy val ribosomalRefFlat = new LazyCheck({
     val file: Option[File] = config("ribosome_refflat", freeVar = true)
     file match {
       case Some(f) => inputFiles :+ InputFile(f, config("ribosome_refflat_md5", freeVar = true))
-      case _ =>
+      case _       =>
     }
     file
-  }
+  })
 }
