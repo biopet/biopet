@@ -22,6 +22,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         job.inputAlignment = file
         job.output = new File(outputDir, s"$name.$id.counts")
         job.format = Option("bam")
+        add(job)
         // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
         // to its buffer not being large enough.
         //TODO: ID sorting job
