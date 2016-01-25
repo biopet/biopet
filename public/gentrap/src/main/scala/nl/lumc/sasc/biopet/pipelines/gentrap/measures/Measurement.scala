@@ -1,7 +1,5 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.tools.MergeTables
@@ -27,15 +25,6 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
   /** Name of job, this is used as prefix for most of the files */
   def name: String = this.getClass.getSimpleName.toLowerCase
 
-  /** Locations of single bam count tables */
-  lazy val countFiles: Map[String, File] = bamFiles.map { case (id, bamFile) => bamToCountFile(id, bamFile) }
-
-  /** Location of merge count table */
-  def mergedCountFile = new File(outputDir, s"$name.merged.tsv")
-
-  /** Location of heatmap */
-  def heatpMap = new File(outputDir, s"$name.heatmap.png")
-
   /** Class to store args for MergeTables */
   case class MergeArgs(idCols: List[Int], valCol: Int, numHeaderLines: Int = 0, fallback: String = "-")
 
@@ -47,27 +36,26 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     require(bamFiles.nonEmpty)
   }
 
-  /** Pipeline itself */
-  def biopetScript(): Unit = {
-    add(MergeTables(this, countFiles.values.toList, mergedCountFile,
-      mergeArgs.idCols, mergeArgs.valCol, mergeArgs.numHeaderLines, mergeArgs.fallback))
+  def addMergeTableJob(countFiles: List[File],
+                       outputFile: File,
+                       args: MergeArgs = mergeArgs): Unit = {
+    add(MergeTables(this, countFiles, outputFile,
+      args.idCols, args.valCol, args.numHeaderLines, args.fallback))
+  }
 
+  def addHeatmapJob(countTable: File, outputFile: File, name: String): Unit = {
     val job = new PlotHeatmap(qscript)
-    job.input = mergedCountFile
-    job.output = heatpMap
+    job.input = countTable
+    job.output = outputFile
     job.countType = Some(name)
     add(job)
   }
-
-  /** This function should add the count table for each bamFile */
-  def bamToCountFile(id: String, bamFile: File): (String, File)
 
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any] = Map()
 
   /** File to put in the summary for thie pipeline */
-  def summaryFiles: Map[String, File] = Map("merged_table" -> mergedCountFile, "heatmap" -> heatpMap) ++
-    bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
+  def summaryFiles: Map[String, File] = Map() ++ bamFiles.map { case (id, file) => s"input_bam_$id" -> file }
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, s"$name.summary.json")

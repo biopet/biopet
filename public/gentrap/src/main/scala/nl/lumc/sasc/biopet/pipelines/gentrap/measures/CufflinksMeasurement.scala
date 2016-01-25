@@ -15,25 +15,25 @@ trait CufflinksMeasurement extends QScript with Measurement {
     cufflinks
   }
 
-  private var isoFormFiles: List[File] = Nil
+  def biopetScript(): Unit = {
+    val jobs = bamFiles.map { case (id, file) =>
+      val cufflinks = makeCufflinksJob(id, file)
+      add(cufflinks)
+      id -> cufflinks
+    }
 
-  def bamToCountFile(id: String, bamFile: File): (String, File) = {
-    val cufflinks = makeCufflinksJob(id, bamFile)
-    add(cufflinks)
+    addMergeTableJob(jobs.values.map(_.outputGenesFpkm).toList, mergeGenesFpkmTable)
+    addMergeTableJob(jobs.values.map(_.outputIsoformsFpkm).toList, mergeIsoFormFpkmTable)
 
-    isoFormFiles :+= cufflinks.outputIsoformsFpkm
-
-    id -> cufflinks.outputGenesFpkm
+    addHeatmapJob(mergeGenesFpkmTable, genesFpkmHeatmap, "genes_fpkm")
+    addHeatmapJob(mergeIsoFormFpkmTable, isoFormFpkmHeatmap, "iso_form_fpkm")
   }
 
-  override def biopetScript(): Unit = {
-    super.biopetScript()
+  def mergeGenesFpkmTable: File = new File(outputDir, s"$name.genes.fpkm.tsv")
+  def genesFpkmHeatmap: File = new File(outputDir, s"$name.genes.fpkm.png")
 
-    add(MergeTables(this, isoFormFiles, mergeIsoFormTable,
-      mergeArgs.idCols, mergeArgs.valCol, mergeArgs.numHeaderLines, mergeArgs.fallback))
-  }
-
-  def mergeIsoFormTable: File = new File(outputDir, s"$name.iso_form_table.tsv")
+  def mergeIsoFormFpkmTable: File = new File(outputDir, s"$name.iso_form.fpkm.tsv")
+  def isoFormFpkmHeatmap: File = new File(outputDir, s"$name.iso_form.fpkm.png")
 
   def mergeArgs = MergeArgs(List(1, 7), 10, numHeaderLines = 1, fallback = "0.0")
 
