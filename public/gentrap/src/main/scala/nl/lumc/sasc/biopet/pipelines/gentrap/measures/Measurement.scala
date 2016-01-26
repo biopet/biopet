@@ -47,11 +47,11 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     extraSummaryFiles += s"${name}_table" -> outputFile
   }
 
-  def addHeatmapJob(countTable: File, outputFile: File, name: String): Unit = {
+  def addHeatmapJob(countTable: File, outputFile: File, name: String, countType: Option[String] = None): Unit = {
     val job = new PlotHeatmap(qscript)
     job.input = countTable
     job.output = outputFile
-    job.countType = Some(name)
+    job.countType = countType
     add(job)
     extraSummaryFiles += s"${name}_heatmap" -> outputFile
   }
