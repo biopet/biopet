@@ -305,8 +305,9 @@ object BaseCounter extends ToolCommand {
       .squishBed(false, false)
 
     val exonCounts = transcript.exons.map(new RegionCount(_))
-    val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
-
+    val intronCounts = if (transcript.exons.size > 1)
+      intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end)).toList
+      else Nil
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
       bamRecordBasesOverlap(samRecord, transcript.start, transcript.end, counts, sense)
       exonCounts.foreach(_.addRecord(samRecord, sense))
