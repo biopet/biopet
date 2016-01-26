@@ -7,8 +7,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
-  * Created by wyleung on 20-1-16.
-  */
+ * Created by wyleung on 20-1-16.
+ */
 class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
   executable = config("exe", default = "pindel2vcf")
 
@@ -20,15 +20,15 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
   def versionCommand = executable + " -h"
 
   /**
-    * Required parameters
-    */
+   * Required parameters
+   */
   @Input
   var reference: File = referenceFasta
 
   @Output
   var outputVCF: File = _
 
-  var referenceDate: String = config("reference_date")
+  var referenceDate: String = config("reference_date", freeVar = false)
 
   override def beforeGraph: Unit = {
     if (reference == null) reference = referenceFasta()
@@ -54,10 +54,10 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
   var maxInternalRepeatLength: Option[Int] = config("max_internal_repeatlength")
   var maxPostindelRepeats: Option[Int] = config("max_postindel_repeat")
   var maxPostindelRepeatLength: Option[Int] = config("max_postindel_repeatlength")
-  var onlyBalancedSamples: Boolean = config("only_balanced_samples")
-  var somaticP: Boolean = config("somatic_p")
+  var onlyBalancedSamples: Boolean = config("only_balanced_samples", default = false)
+  var somaticP: Boolean = config("somatic_p", default = false)
   var minimumStrandSupport: Option[Int] = config("minimum_strand_support")
-  var gatkCompatible: Boolean = config("gatk_compatible")
+  var gatkCompatible: Boolean = config("gatk_compatible", default = false)
 
   def cmdLine = required(executable) +
     required("--reference_name", referenceSpecies) +

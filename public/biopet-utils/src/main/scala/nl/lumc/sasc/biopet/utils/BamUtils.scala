@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{SamReader, SamReaderFactory}
+import htsjdk.samtools.{ SAMSequenceRecord, SamReader, SamReaderFactory }
 
 import scala.collection.JavaConversions._
 
@@ -31,32 +31,37 @@ object BamUtils {
     temp.toMap
   }
 
+  def contigInsertSize(inputSam: SamReader, contig: SAMSequenceRecord): Int = {
+
+    val insertsizes: Iterator[Int] = for {
+      read <- inputSam.query(contig.getSequenceName, 1, contig.getSequenceLength, true) //.toStream.slice(0, 100).toList
+      insertsize = read.getInferredInsertSize
+      paired = read.getReadPairedFlag
+      bothMapped = (read.getReadUnmappedFlag == false) && (read.getMateUnmappedFlag == false)
+      if paired && bothMapped
+    } yield {
+      insertsize
+    }
+    val contigInsertSize = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+    (contigInsertSize._1 / contigInsertSize._2).toInt
+  }
+
   /**
-    * Estimate the insertsize for each bam file and return Map[<sampleName>, <insertSize>]
-    *
-    * @param bamFiles input bam files
-    * @return
-    */
-  def sampleBamInsertSize(bamFiles: List[File]): Map[File, Float] = bamFiles.map { file =>
-
+   * Estimate the insertsize for each bam file and return Map[<sampleName>, <insertSize>]
+   *
+   * @param bamFiles input bam files
+   * @return
+   */
+  def sampleBamInsertSize(bamFiles: List[File]): Map[File, Int] = bamFiles.map { file =>
     val inputSam: SamReader = SamReaderFactory.makeDefault.open(file)
-
     val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.map {
       contig =>
-        val insertsizes: Iterator[Int] = for {
-          read <- inputSam.query( contig.getSequenceName, 1, contig.getSequenceLength, true) //.toStream.slice(0, 100).toList
-          insertsize = read.getInferredInsertSize
-          paired = read.getReadPairedFlag
-          bothMapped = (read.getReadUnmappedFlag == false) && (read.getMateUnmappedFlag == false)
-          if paired && bothMapped
-        } yield {
-          insertsize
-        }
-        val contigInsertSize = insertsizes.foldLeft((0.0,0))((t, r) => (t._1 + r, t._2 +1))
-        contigInsertSize._1 / contigInsertSize._2
-    }.foldLeft((0.0,0))((t, r) => (t._1 + r, t._2 +1))
+        val insertSize = BamUtils.contigInsertSize(inputSam, contig)
 
-    file -> baminsertsizes._1 / baminsertsizes._2
-  }
+        Logging.logger.debug(s"Insertsize ${contig}: ${insertSize}")
+        insertSize
+    }
+    file -> (baminsertsizes.sum / baminsertsizes.size)
+  }.toMap
 
 }
