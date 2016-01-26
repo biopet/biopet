@@ -20,7 +20,10 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
 
   override def defaults = Map(
     "merge_strategy" -> "preprocessmergesam",
-    "mapping" -> Map("aligner" -> "bowtie"),
+    "mapping" -> Map(
+      "aligner" -> "bowtie",
+      "skip_markduplicates" -> true
+    ),
     "bowtie" -> Map(
       "chunkmbs" -> 256,
       "seedmms" -> 3,
