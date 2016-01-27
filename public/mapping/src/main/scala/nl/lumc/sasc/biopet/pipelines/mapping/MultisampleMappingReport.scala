@@ -28,6 +28,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
+    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
+      .exists { case ((sample, lib), value) => value.isDefined }
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
@@ -51,25 +53,35 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         (if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
         else Nil) ++
-        List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
+        (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
           Map("showPlot" -> true, "showTable" -> false)),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
             Map("showPlot" -> true, "showTable" -> false))
-        ),
+        )
+        else Nil),
       pageArgs
     )
   }
 
   /** Files page, can be used general or at sample level */
-  def filesPage: ReportPage = ReportPage(List(), List(
-    "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-    "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
-    "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
-    "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> pipelineName, "fileTag" -> "output_bam_preprocess"))), Map())
+  def filesPage: ReportPage = {
+    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
+      .exists { case ((sample, lib), value) => value.isDefined }
+
+    ReportPage(List(), (if (flexiprepExecuted) List(
+      "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
+      "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"))
+    else Nil) :::
+      List("Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
+        "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
+          Map("pipelineName" -> pipelineName, "fileTag" -> "output_bam_preprocess"))), Map())
+  }
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
+    val flexiprepExecuted = summary.getLibraryValues("flexiprep")
+      .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
+
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
@@ -78,20 +90,23 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
-      List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+      (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-      ), args)
+      )
+      else Nil), args)
   }
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
-    ReportPage(List(
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)),
-      "QC" -> FlexiprepReport.flexiprepPage
-    ), List(
-      "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-      "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-      "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-    ), args)
+    val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
+
+    ReportPage(
+      ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
+        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil),
+      "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
+        (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
+          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))
+        else Nil),
+      args)
   }
 }

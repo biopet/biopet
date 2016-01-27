@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.{ Reference, BiopetCommandLineFunction }
 import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.extensions.varscan.Mpileup2cns
+import nl.lumc.sasc.biopet.extensions.varscan.VarscanMpileup2cns
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
@@ -65,7 +65,7 @@ class CustomVarScan(val root: Configurable) extends BiopetCommandLineFunction wi
     override def cmdLine: String = required(executable) + required("-vP") + required("""\t\t""")
   }
 
-  private val varscan = new Mpileup2cns(wrapper.root) {
+  private val varscan = new VarscanMpileup2cns(wrapper.root) {
     override def configName = wrapper.configName
     strandFilter = Option(0)
     outputVcf = Option(1)
