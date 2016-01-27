@@ -50,8 +50,11 @@ object BaseCounter extends ToolCommand {
     bamReader.close()
     logger.info("Done reading RefFlat file")
 
+    logger.info("Finding overlapping genes")
+    val overlapGenes = groupGenesOnOverlap(geneReader.getAll)
+
     logger.info("Start reading bamFile")
-    val counts = (for (gene <- geneReader.getAll.par) yield bamToGeneCount(cmdArgs.bamFile, gene)).toList
+    val counts = (for (genes <- overlapGenes.values.flatten.par) yield bamToGeneCount(cmdArgs.bamFile, genes)).toList.flatten
     logger.info("Done reading bamFile")
 
     writeGeneCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
@@ -230,17 +233,33 @@ object BaseCounter extends ToolCommand {
     else samRecord.getReadNegativeStrandFlag == gene.isPositiveStrand
   }
 
-  def bamToGeneCount(bamFile: File, gene: Gene): GeneCount = {
-    val counts = new GeneCount(gene)
+  def bamToGeneCount(bamFile: File, genes: List[Gene]): List[GeneCount] = {
+    val counts = genes.map(gene => gene -> new GeneCount(gene)).toMap
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
 
-    for (record <- bamReader.queryOverlapping(gene.getContig, gene.getStart, gene.getEnd) if !record.getNotPrimaryAlignmentFlag) {
-      counts.addRecord(record, samRecordStrand(record, gene))
+    val start = genes.map(_.getStart).min
+    val end = genes.map(_.getEnd).max
+
+    for (record <- bamReader.queryOverlapping(genes.head.getContig, start, end) if !record.getNotPrimaryAlignmentFlag) {
+      counts.foreach { case (gene, count) => count.addRecord(record, samRecordStrand(record, gene)) }
     }
 
     bamReader.close()
-    logger.debug(s"Done gene '${gene.getName}'")
-    counts
+    counts.values.toList
+  }
+
+  //FIXME: This is not yet working
+  def createMetaExonCounts(genes: List[Gene]): List[String, RegionCount] = {
+    val regions = (for (gene <- genes; region <- generateMergedExonRegions(gene).allRecords)
+      yield gene.getName -> region).sortBy(_._2.start)
+
+    def mergeRegions(todo: List[(String, BedRecord)],
+                     inOverlap: List[(String, BedRecord)] = Nil,
+                     output: List[(String, RegionCount)] = Nil): List[(String, RegionCount)] = {
+      if (todo.head._2.overlapWith(todo.tail.head._2)) Nil
+      else Nil
+    }
+    Nil
   }
 
   def bamRecordBasesOverlap(samRecord: SAMRecord, start: Int, end: Int): Int = {
@@ -268,6 +287,17 @@ object BaseCounter extends ToolCommand {
     overlap
   }
 
+  def groupGenesOnOverlap(genes: Iterable[Gene]) = {
+    genes.groupBy(_.getContig)
+      .map { case (contig, genes) => contig -> genes.toList
+        .sortBy(_.getStart).foldLeft(List[List[Gene]]()) { (list, gene) =>
+        if (list.isEmpty) List(List(gene))
+        else if (list.head.exists(_.getEnd >= gene.getStart)) (gene :: list.head) :: list.tail
+        else List(gene) :: list
+      }
+      }
+  }
+
   class Counts {
     var senseBases = 0L
     var antiSenseBases = 0L
@@ -277,17 +307,20 @@ object BaseCounter extends ToolCommand {
     def totalReads = senseReads + antiSenseReads
   }
 
+  def generateMergedExonRegions(gene: Gene) = {
+    BedRecordList.fromList(gene.iterator()
+      .flatMap(_.exons)
+      .map(e => BedRecord(gene.getContig, e.start - 1, e.end, Some(gene.getName))))
+      .combineOverlap
+  }
+
   class GeneCount(val gene: Gene) {
     val counts = new Counts
     val transcripts = gene.iterator().map(new TranscriptCount(_)).toList
-    def exonRegions = BedRecordList.fromList(gene.iterator()
-      .flatMap(_.exons)
-      .map(e => BedRecord(gene.getContig, e.start - 1, e.end)))
-      .combineOverlap
-    def intronRegions = BedRecordList.fromList(BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: exonRegions.allRecords.toList)
+    def intronRegions = BedRecordList.fromList(BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: generateMergedExonRegions(gene).allRecords.toList)
       .squishBed(false, false)
 
-    val exonCounts = exonRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
+    val exonCounts = generateMergedExonRegions(gene).allRecords.map(e => new RegionCount(e.start + 1, e.end))
     val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
 
     def addRecord(samRecord: SAMRecord, sense: Boolean): Unit = {
