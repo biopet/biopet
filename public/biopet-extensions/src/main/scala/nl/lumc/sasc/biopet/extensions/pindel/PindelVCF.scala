@@ -15,8 +15,8 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
   override def defaultCoreMemory = 2.0
   override def defaultThreads = 1
 
-  def versionRegex = """Version:? (.*)""".r
-  override def versionExitcode = List(1)
+  def versionRegex = """Version:?[ ]+(.*)""".r
+  override def versionExitcode = List(0)
   def versionCommand = executable + " -h"
 
   /**
@@ -28,11 +28,14 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
   @Output
   var outputVCF: File = _
 
-  var referenceDate: String = config("reference_date", freeVar = false)
+  var rDate: String = config("rdate", freeVar = false)
 
   override def beforeGraph: Unit = {
     if (reference == null) reference = referenceFasta()
   }
+
+  @Input
+  var pindelOutputInputHolder: File = _
 
   var pindelOutput: Option[File] = config("pindel_output")
   var pindelOutputRoot: Option[File] = config("pindel_output_root")
@@ -60,8 +63,9 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
   var gatkCompatible: Boolean = config("gatk_compatible", default = false)
 
   def cmdLine = required(executable) +
+    required("--reference", reference) +
     required("--reference_name", referenceSpecies) +
-    required("--reference_date", referenceDate) +
+    required("--reference_date", rDate) +
     optional("--pindel_output", pindelOutput) +
     optional("--pindel_output_root", pindelOutputRoot) +
     required("--vcf", outputVCF) +

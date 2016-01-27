@@ -29,6 +29,11 @@ class Pindel(val root: Configurable) extends SvCaller {
 
   def this() = this(null)
 
+  /** Default pipeline config */
+  override def defaults = Map("pindelvcf" -> Map(
+    "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime())
+  ))
+
   def biopetScript() {
     for ((sample, bamFile) <- inputBams) {
       val pindelDir = new File(outputDir, sample)
@@ -51,8 +56,9 @@ class Pindel(val root: Configurable) extends SvCaller {
       val todayformat = new SimpleDateFormat("yyyyMMdd")
 
       val pindelVcf = new PindelVCF(this)
-      pindelVcf.pindelOutputRoot = Some(pindelDir)
-      pindelVcf.referenceDate = todayformat.format(today) // officially, we should enter the date of the genome here
+      pindelVcf.pindelOutputInputHolder = pindel.outputFile
+      pindelVcf.pindelOutputRoot = Some(new File(pindelDir, "sample"))
+      pindelVcf.rDate = todayformat.format(today) // officially, we should enter the date of the genome here
       pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
       add(pindelVcf)
     }

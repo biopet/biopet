@@ -59,6 +59,21 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Output(doc = "Output file of pindel, pointing to the DEL file")
   var outputFile: File = _
 
+  @Output(doc="", required=false)
+  var outputINV: File = _
+  @Output(doc="", required=false)
+  var outputTD: File = _
+  @Output(doc="", required=false)
+  var outputLI: File = _
+  @Output(doc="", required=false)
+  var outputBP: File = _
+  @Output(doc="", required=false)
+  var outputSI: File = _
+  @Output(doc="", required=false)
+  var outputRP: File = _
+  @Output(doc="", required=false)
+  var outputCloseEndMapped: File = _
+
   var RP: Option[Int] = config("RP")
   var minDistanceToTheEnd: Option[Int] = config("min_distance_to_the_end")
   // var threads
@@ -124,6 +139,23 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
         Logging.logger.info(s"Using '${b}' as bam config for Pindel")
         input = b.getAbsoluteFile
       }
+    }
+
+    /** setting the output files for the many outputfiles pindel has */
+
+    outputINV = new File(outputPrefix + File.separator, "sample_INV")
+    outputTD = new File(outputPrefix + File.separator, "sample_TD")
+    if (reportLongInsertions) {
+      outputLI = new File(outputPrefix + File.separator, "sample_LI")
+    }
+    if (reportBreakpoints){
+      outputBP = new File(outputPrefix + File.separator, "sample_BP")
+    }
+    outputSI = new File(outputPrefix + File.separator, "sample_SI")
+
+    outputRP = new File(outputPrefix + File.separator, "sample_RP")
+    if (reportCloseMappedReads) {
+      outputCloseEndMapped = new File(outputPrefix + File.separator, "sample_CloseEndMapped")
     }
 
     // set the output file, the DELetion call is always made
