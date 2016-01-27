@@ -10,6 +10,8 @@ import picard.annotation.{ Gene, GeneAnnotationReader }
 import scala.collection.JavaConversions._
 
 /**
+ * This tool will generate Base count based on a bam file and a refflat file
+ *
  * Created by pjvanthof on 22/01/16.
  */
 object BaseCounter extends ToolCommand {
@@ -261,7 +263,7 @@ object BaseCounter extends ToolCommand {
       else {
         val newEnd = posibleEnds.filter(_ > begin).min
         val record = BedRecord(chr, newBegin, newEnd)
-        val names = regions.filter(_._2.overlapWith(record).size > 0).map(_._1)
+        val names = regions.filter(_._2.overlapWith(record).nonEmpty).map(_._1)
         if (names.nonEmpty) mergeRegions(newEnd, (names.mkString(","), new RegionCount(record.start + 1, record.end)) :: output)
         else mergeRegions(newEnd, output)
       }
@@ -296,7 +298,7 @@ object BaseCounter extends ToolCommand {
 
   def groupGenesOnOverlap(genes: Iterable[Gene]) = {
     genes.groupBy(_.getContig)
-      .map { case (contig, genes) => contig -> genes.toList
+      .map { case (contig, g) => contig -> g.toList
         .sortBy(_.getStart).foldLeft(List[List[Gene]]()) { (list, gene) =>
         if (list.isEmpty) List(List(gene))
         else if (list.head.exists(_.getEnd >= gene.getStart)) (gene :: list.head) :: list.tail
@@ -325,7 +327,7 @@ object BaseCounter extends ToolCommand {
     val counts = new Counts
     val transcripts = gene.iterator().map(new TranscriptCount(_)).toList
     def intronRegions = BedRecordList.fromList(BedRecord(gene.getContig, gene.getStart - 1, gene.getEnd) :: generateMergedExonRegions(gene).allRecords.toList)
-      .squishBed(false, false)
+      .squishBed(strandSensitive = false, nameSensitive = false)
 
     val exonCounts = generateMergedExonRegions(gene).allRecords.map(e => new RegionCount(e.start + 1, e.end))
     val intronCounts = intronRegions.allRecords.map(e => new RegionCount(e.start + 1, e.end))
@@ -342,7 +344,7 @@ object BaseCounter extends ToolCommand {
     val counts = new Counts
     def intronRegions = BedRecordList.fromList(BedRecord(transcript.getGene.getContig, transcript.start() - 1, transcript.end()) ::
       transcript.exons.map(e => BedRecord(transcript.getGene.getContig, e.start - 1, e.end)).toList)
-      .squishBed(false, false)
+      .squishBed(strandSensitive = false, nameSensitive = false)
 
     val exonCounts = transcript.exons.map(new RegionCount(_))
     val intronCounts = if (transcript.exons.size > 1)
