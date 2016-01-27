@@ -117,13 +117,13 @@ class MergeTablesTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testPrepInputCustomExtension() = {
     // file content doesn't matter
     val inFiles = Seq(resourceFile("paired01.sam"), resourceFile("paired02.sam"))
-    prepInput(inFiles, ".sam").map(_.name) shouldBe Seq("paired01", "paired02")
+    prepInput(inFiles, ".sam", None).map(_.name) shouldBe Seq("paired01", "paired02")
   }
 
   @Test def testPrepInputDuplicate() = {
     val inFiles = Seq(new File("README.txt"), new File("README.txt"))
     val thrown = intercept[IllegalArgumentException] {
-      prepInput(inFiles)
+      prepInput(inFiles, "", None)
     }
     thrown.getMessage shouldBe "requirement failed: Duplicate samples exist in inputs"
   }
