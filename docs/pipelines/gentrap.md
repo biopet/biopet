@@ -6,8 +6,9 @@ Gentrap (*generic transcriptome analysis pipeline*) is a general data analysis p
 
 At the moment, Gentrap supports the following aligners:
 
-1. GSNAP
-2. TopHat
+1. [GSNAP](http://research-pub.gene.com/gmap/)
+2. [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml)
+3. [Star](https://github.com/alexdobin/STAR/releases)
 
 and the following quantification modes:
 
@@ -91,7 +92,7 @@ While optional settings are:
 4. `ribosomal_refflat`: contains path to a refFlat file of ribosomal gene coordinates, required when `remove_ribosomal_reads` is `true`.
 5. `call_variants`: whether to call variants on the RNA-seq data or not, defaults to `false`.
 
-In addition to these, you must also remember to supply the alignment index required by your aligner of choice. For `tophat` this is `bowtie_index`, while for `gsnap` it is `db` and `dir`.
+In addition to these, you must also remember to supply the alignment index required by your aligner of choice. For `tophat` this is `bowtie_index`, while for `gsnap` it is `db` and `dir`. `star` uses `genomedir`
 
 Thus, an example settings configuration is as follows:
 
@@ -100,7 +101,7 @@ Thus, an example settings configuration is as follows:
   "output_dir": "/path/to/output/dir",
   "expression_measures": ["fragments_per_gene", "bases_per_gene"],
   "strand_protocol": "dutp",
-  "reference_fasta": "/path/to/reference",
+  "reference_fasta": "/path/to/reference/fastafile",
   "annotation_gtf": "/path/to/gtf",
   "annotation_refflat": "/path/to/refflat",
   "gsnap": {
@@ -133,7 +134,7 @@ It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 
 
 ## Output Files
 
-The number and types of output files depend on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
+The numbers and types of output files depends on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
 
 ## Getting Help
 
