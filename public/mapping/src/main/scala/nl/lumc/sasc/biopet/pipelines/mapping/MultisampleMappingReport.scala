@@ -29,8 +29,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .filter(_._2.isDefined)
-      .nonEmpty
+      .exists { case ((sample, lib), value) => value.isDefined }
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
@@ -67,8 +66,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Files page, can be used general or at sample level */
   def filesPage: ReportPage = {
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .filter(_._2.isDefined)
-      .nonEmpty
+      .exists { case ((sample, lib), value) => value.isDefined }
 
     ReportPage(List(), (if (flexiprepExecuted) List(
       "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
@@ -82,9 +80,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
-      .filter(_._1._1 == sampleId)
-      .filter(_._2.isDefined)
-      .nonEmpty
+      .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
 
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
@@ -103,6 +99,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
     val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
+
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil),
