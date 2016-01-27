@@ -20,7 +20,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         val job = new HtseqCount(this)
         job.inputAnnotation = annotationGtf
         job.inputAlignment = file
-        job.output = new File(outputDir, s"$name.$id.counts")
+        job.output = new File(outputDir, s"$id.$name.counts")
         job.format = Option("bam")
         add(job)
         // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
@@ -30,7 +30,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         id -> job
     }
 
-    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "fragments_per_gene")
+    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "fragments_per_gene", s".$name.counts")
     addHeatmapJob(mergedTable, heatmap, "fragments_per_gene")
   }
 

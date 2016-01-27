@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
-import nl.lumc.sasc.biopet.extensions.Cufflinks
+import nl.lumc.sasc.biopet.extensions.{ Ln, Cufflinks }
 import nl.lumc.sasc.biopet.extensions.tools.MergeTables
 import org.broadinstitute.gatk.queue.QScript
 
@@ -23,8 +23,22 @@ trait CufflinksMeasurement extends QScript with Measurement {
         id -> cufflinks
     }
 
-    addMergeTableJob(jobs.values.map(_.outputGenesFpkm).toList, mergeGenesFpkmTable, "genes_fpkm")
-    addMergeTableJob(jobs.values.map(_.outputIsoformsFpkm).toList, mergeIsoFormFpkmTable, "iso_form")
+    val genesFpkmFiles = jobs.toList.map {
+      case (id, job) =>
+        val file = new File(job.output_dir, s"$id.genes_fpkm.counts")
+        add(Ln(this, job.outputGenesFpkm, file))
+        file
+    }
+
+    val isoFormFpkmFiles = jobs.toList.map {
+      case (id, job) =>
+        val file = new File(job.output_dir, s"$id.iso_form_fpkn.counts")
+        add(Ln(this, job.outputIsoformsFpkm, file))
+        file
+    }
+
+    addMergeTableJob(genesFpkmFiles, mergeGenesFpkmTable, "genes_fpkm", ".genes_fpkm.counts")
+    addMergeTableJob(isoFormFpkmFiles, mergeIsoFormFpkmTable, "iso_form_fpkn", ".iso_form_fpkn.counts")
 
     addHeatmapJob(mergeGenesFpkmTable, genesFpkmHeatmap, "genes_fpkm")
     addHeatmapJob(mergeIsoFormFpkmTable, isoFormFpkmHeatmap, "iso_form_fpkm")

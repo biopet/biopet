@@ -85,7 +85,8 @@ object MergeTables {
             idCols: List[Int],
             valCol: Int,
             numHeaderLines: Int = 0,
-            fallback: String = "-"): MergeTables = {
+            fallback: String = "-",
+            fileExtension: Option[String] = None): MergeTables = {
     val job = new MergeTables(root)
     job.inputTables = tables
     job.output = outputFile
@@ -93,6 +94,7 @@ object MergeTables {
     job.valueColumnIndex = valCol
     job.fallbackString = Option(fallback)
     job.numHeaderLines = Option(numHeaderLines)
+    job.fileExtension = fileExtension
     job
   }
 }

@@ -41,6 +41,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
   def addMergeTableJob(countFiles: List[File],
                        outputFile: File,
                        name: String,
+                       fileExtension: String,
                        args: MergeArgs = mergeArgs): Unit = {
     add(MergeTables(this, countFiles, outputFile,
       args.idCols, args.valCol, args.numHeaderLines, args.fallback))

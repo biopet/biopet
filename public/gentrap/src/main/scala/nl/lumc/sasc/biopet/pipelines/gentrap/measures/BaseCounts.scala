@@ -29,7 +29,7 @@ class BaseCounts(val root: Configurable) extends QScript with Measurement with A
     def addTableAndHeatmap(countFiles: List[File], outputName: String): Unit = {
       val mergedTable = new File(outputDir, s"$name.$outputName.tsv")
       val heatmapFile = new File(outputDir, s"$name.$outputName.png")
-      addMergeTableJob(countFiles, mergedTable, outputName)
+      addMergeTableJob(countFiles, mergedTable, outputName, countFiles.head.getName.stripPrefix(jobs.head._1))
       addHeatmapJob(mergedTable, heatmapFile, outputName)
     }
 
