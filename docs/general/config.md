@@ -117,6 +117,16 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
 }
 ```
 
+# More advanced use of config files.
+### 4 levels of configuring settings
+In biopet, a value for a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
+ * Level-1: As a fixed value hardcoded in biopet source code.
+ * Level-2: As a user specified value in the config file (provided as an argument when running biopet command)
+ * Level-3: As a system specified value in the global config file ()
+ * Level-4: As a default value provided in biopet source code.
+
+During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-1 to level-4. Hence, a value defined in the a higher level will overwrite the one define in a lower value.
+
 ### JSON validation
 
 To check if the created JSON file is correct their are several possibilities: the simplest way is using [this](http://jsonformatter.curiousconcept.com/)
