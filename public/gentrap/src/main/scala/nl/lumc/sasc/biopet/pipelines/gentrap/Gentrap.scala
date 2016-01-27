@@ -160,7 +160,7 @@ class Gentrap(val root: Configurable) extends QScript
   /** Pipeline settings shown in the summary file */
   override def summarySettings: Map[String, Any] = super.summarySettings ++ Map(
     "expression_measures" -> expMeasures().toList.map(_.toString),
-    "strand_protocol" -> strandProtocol.toString,
+    "strand_protocol" -> strandProtocol().toString,
     "call_variants" -> shivaVariantcalling.isDefined,
     "remove_ribosomal_reads" -> removeRibosomalReads
   )
@@ -170,6 +170,9 @@ class Gentrap(val root: Configurable) extends QScript
     super.init()
 
     if (expMeasures().isEmpty) Logging.addError("'expression_measures' is missing in the config")
+    require(Gentrap.StrandProtocol.values.contains(strandProtocol()))
+    if (removeRibosomalReads && ribosomalRefFlat().isEmpty)
+      Logging.addError("removeRibosomalReads is enabled but no ribosomalRefFlat is given")
 
     executedMeasures.foreach(x => x.outputDir = new File(outputDir, "expresion_measures" + File.separator + x.name))
   }
