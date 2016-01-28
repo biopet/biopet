@@ -139,7 +139,7 @@ It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 
 
 ## Output Files
 
-The numbers and types of output files depends on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
+The numbers and types of output files depend on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
 
 ## Getting Help
 
