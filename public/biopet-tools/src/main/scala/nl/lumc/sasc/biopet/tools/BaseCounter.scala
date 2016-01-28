@@ -56,15 +56,17 @@ object BaseCounter extends ToolCommand {
     val overlapGenes = groupGenesOnOverlap(geneReader.getAll)
 
     logger.info("Start reading bamFile")
-    val counts = (for (genes <- overlapGenes.values.flatten.par) yield bamToGeneCount(cmdArgs.bamFile, genes)).toList.flatten
+    val counts = (for (genes <- overlapGenes.values.flatten.par) yield bamToGeneCount(cmdArgs.bamFile, genes)).toList
     logger.info("Done reading bamFile")
 
-    writeGeneCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
-    writeMergeExonCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
-    writeMergeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
-    writeTranscriptCounts(counts, cmdArgs.outputDir, cmdArgs.prefix)
-    writeExonCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
-    writeIntronCount(counts, cmdArgs.outputDir, cmdArgs.prefix)
+    writeGeneCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeMergeExonCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeMergeIntronCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeTranscriptCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeExonCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeIntronCount(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeNonStrandedMetaExonsCount(counts.flatMap(_.nonStrandedMetaExonCounts), cmdArgs.outputDir, cmdArgs.prefix)
+    writeStrandedMetaExonsCount(counts.flatMap(_.strandedMetaExonCounts), cmdArgs.outputDir, cmdArgs.prefix)
   }
 
   /**
@@ -229,25 +231,74 @@ object BaseCounter extends ToolCommand {
     intronAntiSenseWriter.close()
   }
 
-  def samRecordStrand(samRecord: SAMRecord, gene: Gene): Boolean = {
-    if (samRecord.getReadPairedFlag && samRecord.getSecondOfPairFlag)
-      samRecord.getReadNegativeStrandFlag != gene.isPositiveStrand
-    else samRecord.getReadNegativeStrandFlag == gene.isPositiveStrand
+  /**
+    * This function will print all counts for meta exons
+    */
+  def writeNonStrandedMetaExonsCount(metaCounts: List[(String, RegionCount)],
+                                     outputDir: File, prefix: String): Unit = {
+    val nonStrandedWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.non_stranded.counts"))
+
+    metaCounts.foreach { case (name, counts) =>
+      nonStrandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
+    }
+
+    nonStrandedWriter.close()
   }
 
-  def bamToGeneCount(bamFile: File, genes: List[Gene]): List[GeneCount] = {
+  /**
+    * This function will print all counts for meta exons
+    */
+  def writeStrandedMetaExonsCount(metaCounts: List[(String, RegionCount)],
+                                  outputDir: File, prefix: String): Unit = {
+    val strandedWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.counts"))
+    val strandedSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.sense.counts"))
+    val strandedAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts"))
+
+    metaCounts.foreach { case (name, counts) =>
+      strandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
+      strandedSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.senseBases}")
+      strandedAntiSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.antiSenseBases}")
+    }
+
+    strandedWriter.close()
+    strandedSenseWriter.close()
+    strandedAntiSenseWriter.close()
+  }
+
+  def samRecordStrand(samRecord: SAMRecord, gene: Gene): Boolean = {
+    samRecordStrand(samRecord, gene.isPositiveStrand)
+  }
+
+  def samRecordStrand(samRecord: SAMRecord, strand: Boolean): Boolean = {
+    if (samRecord.getReadPairedFlag && samRecord.getSecondOfPairFlag)
+    samRecord.getReadNegativeStrandFlag != strand
+    else samRecord.getReadNegativeStrandFlag == strand
+  }
+
+  private case class ThreadOutput(geneCounts: List[GeneCount],
+                          nonStrandedMetaExonCounts: List[(String, RegionCount)],
+                          strandedMetaExonCounts: List[(String, RegionCount)])
+
+  def bamToGeneCount(bamFile: File, genes: List[Gene]): ThreadOutput = {
     val counts = genes.map(gene => gene -> new GeneCount(gene)).toMap
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
+
+    val metaExons = createMetaExonCounts(genes)
+    val plusMetaExons = createMetaExonCounts(genes.filter(_.isPositiveStrand))
+    val minMetaExons = createMetaExonCounts(genes.filter(_.isNegativeStrand))
 
     val start = genes.map(_.getStart).min
     val end = genes.map(_.getEnd).max
 
     for (record <- bamReader.queryOverlapping(genes.head.getContig, start, end) if !record.getNotPrimaryAlignmentFlag) {
       counts.foreach { case (gene, count) => count.addRecord(record, samRecordStrand(record, gene)) }
+      metaExons.foreach(_._2.addRecord(record, true))
+      plusMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, true)))
+      minMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, false)))
     }
 
     bamReader.close()
-    counts.values.toList
+    ThreadOutput(counts.values.toList, metaExons, plusMetaExons ::: minMetaExons)
   }
 
   def createMetaExonCounts(genes: List[Gene]): List[(String, RegionCount)] = {
@@ -298,12 +349,13 @@ object BaseCounter extends ToolCommand {
 
   def groupGenesOnOverlap(genes: Iterable[Gene]) = {
     genes.groupBy(_.getContig)
-      .map { case (contig, g) => contig -> g.toList
-        .sortBy(_.getStart).foldLeft(List[List[Gene]]()) { (list, gene) =>
-        if (list.isEmpty) List(List(gene))
-        else if (list.head.exists(_.getEnd >= gene.getStart)) (gene :: list.head) :: list.tail
-        else List(gene) :: list
-      }
+      .map {
+        case (contig, g) => contig -> g.toList
+          .sortBy(_.getStart).foldLeft(List[List[Gene]]()) { (list, gene) =>
+            if (list.isEmpty) List(List(gene))
+            else if (list.head.exists(_.getEnd >= gene.getStart)) (gene :: list.head) :: list.tail
+            else List(gene) :: list
+          }
       }
   }
 
