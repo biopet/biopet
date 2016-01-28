@@ -119,13 +119,13 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
 
 # More advanced use of config files.
 ### 4 levels of configuring settings
-In biopet, a value for a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
- * Level-1: As a fixed value hardcoded in biopet source code
- * Level-2: As a user specified value in the user config file
- * Level-3: As a system specified value in the global config files. On the LUMC's SHARK cluster, these global config files are located at /usr/local/sasc/config.
- * Level-4: As a default value provided in biopet source code.
+In biopet, a value of a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
+ * Level-4: As a fixed value hardcoded in biopet source code
+ * Level-3: As a user specified value in the user config file
+ * Level-2: As a system specified value in the global config files. On the LUMC's SHARK cluster, these global config files are located at /usr/local/sasc/config.
+ * Level-1: As a default value provided in biopet source code.
 
-During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-1 to level-4. Hence, a value defined in the a higher level will overwrite a value define in a lower value for the same ConfigNamespace.
+During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-4 to level-1. Hence, a value defined in the a higher level will overwrite a value define in a lower level for the same ConfigNamespace.
 
 ### JSON validation
 
