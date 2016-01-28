@@ -2,9 +2,10 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{ SAMSequenceRecord, SamReader, SamReaderFactory }
+import htsjdk.samtools.{ SamReader, SamReaderFactory }
 
 import scala.collection.JavaConversions._
+import scala.collection.parallel.immutable
 
 /**
  * Created by pjvan_thof on 11/19/15.
@@ -31,19 +32,31 @@ object BamUtils {
     temp.toMap
   }
 
-  def contigInsertSize(inputSam: SamReader, contig: SAMSequenceRecord): Int = {
-
-    val insertsizes: Iterator[Int] = for {
-      read <- inputSam.query(contig.getSequenceName, 1, contig.getSequenceLength, true) //.toStream.slice(0, 100).toList
-      insertsize = read.getInferredInsertSize
-      paired = read.getReadPairedFlag
-      bothMapped = (read.getReadUnmappedFlag == false) && (read.getMateUnmappedFlag == false)
-      if paired && bothMapped
+  /**
+   * Estimate the insertsize of fragments within the given contig.
+   * Uses the properly paired reads according to flags set by the aligner
+   *
+   * @param inputBam input bam file
+   * @param contig contig to scan for
+   * @param end postion to stop scanning
+   * @return Int with insertsize for this contig
+   */
+  def contigInsertSize(inputBam: File, contig: String, end: Int): Option[Int] = {
+    val inputSam: SamReader = SamReaderFactory.makeDefault.open(inputBam)
+    val samIterator = inputSam.query(contig, 1, end, true)
+    val insertsizes: List[Int] = (for {
+      read <- samIterator.toStream.takeWhile(rec => {
+        rec.getReadPairedFlag && ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false) && rec.getProperPairFlag)
+      }).take(100000)
     } yield {
-      insertsize
-    }
-    val contigInsertSize = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
-    (contigInsertSize._1 / contigInsertSize._2).toInt
+      read.getInferredInsertSize.asInstanceOf[Int].abs
+    })(collection.breakOut)
+    val cti = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+
+    samIterator.close()
+    inputSam.close()
+    val ret = if (cti._2 == 0) None else Some((cti._1 / cti._2).toInt)
+    ret
   }
 
   /**
@@ -52,16 +65,14 @@ object BamUtils {
    * @param bamFiles input bam files
    * @return
    */
-  def sampleBamInsertSize(bamFiles: List[File]): Map[File, Int] = bamFiles.map { file =>
-    val inputSam: SamReader = SamReaderFactory.makeDefault.open(file)
-    val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.map {
-      contig =>
-        val insertSize = BamUtils.contigInsertSize(inputSam, contig)
-
-        Logging.logger.debug(s"Insertsize ${contig}: ${insertSize}")
-        insertSize
-    }
-    file -> (baminsertsizes.sum / baminsertsizes.size)
+  def sampleBamInsertSize(bamFiles: List[File]): immutable.ParMap[File, Int] = bamFiles.par.map { bamFile =>
+    val inputSam: SamReader = SamReaderFactory.makeDefault.open(bamFile)
+    val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.par.map({
+      contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, contig.getSequenceLength)
+    }).toList
+    val sum = baminsertsizes.flatMap(x => x).reduceLeft(_ + _)
+    val n = baminsertsizes.flatMap(x => x).size
+    bamFile -> (sum / n).toInt
   }.toMap
 
 }
