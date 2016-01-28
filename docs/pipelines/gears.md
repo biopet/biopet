@@ -62,6 +62,10 @@ Command line flags for Gears are:
 
 If `-R2` is given, the pipeline will assume a paired-end setup. `-bam` is mutualy exclusive with the `-R1` and `-R2` flags. Either specify `-bam` or `-R1` and/or `-R2`.
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
 ### Config
 
 

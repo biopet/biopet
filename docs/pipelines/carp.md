@@ -4,6 +4,9 @@
 
 Carp is a pipeline for analyzing ChIP-seq NGS data. It uses the BWA MEM aligner and the MACS2 peak caller by default to align ChIP-seq data and call the peaks and allows you to run all your samples (control or otherwise) in one go.
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
 
 ## Configuration File
 
@@ -52,8 +55,9 @@ For the pipeline settings, there are some values that you need to specify while 
 While optional settings are:
 
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
-2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github
-.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: macs2_callpeak
+2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: `macs2_callpeak`
+
+
 ## Running Carp
 
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:

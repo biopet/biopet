@@ -19,10 +19,14 @@ and the following quantification modes:
 
 You can also provide a `.refFlat` file containing ribosomal sequence coordinates to measure how many of your libraries originate from ribosomal sequences. Then, you may optionally remove those regions as well.
 
+## Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
 ## Configuration File
 
 As with other biopet pipelines, Gentrap relies on a JSON configuration file to run its analyses. There are two important parts here, the configuration for the samples (to determine the sample layout of your experiment) and the configuration for the pipeline settings (to determine which analyses are run).
-
+To get help creating the appropriate [configs](../general/config.md) please refer to the config page in the general section.
 ### Sample Configuration
 
 Samples are single experimental units whose expression you want to measure. They usually consist of a single sequencing library, but in some cases (for example when the experiment demands each sample have a minimum library depth) a single sample may contain multiple sequencing libraries as well. All this is can be configured using the correct JSON nesting, with the following pattern:
@@ -72,6 +76,7 @@ In the example above, there is one sample (named `sample_A`) which contains one 
 ~~~
 
 In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has two different libraries (`lib_one` and `lib_two`). Notice that the names of the samples and libraries may change, but several keys such as `samples`, `libraries`, `R1`, and `R2` remain the same.
+
 
 ### Pipeline Settings Configuration
 
