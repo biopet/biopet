@@ -21,8 +21,6 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.AggrBaseCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
