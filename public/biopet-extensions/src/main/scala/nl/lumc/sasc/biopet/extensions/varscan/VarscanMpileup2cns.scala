@@ -20,7 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class Mpileup2cns(val root: Configurable) extends Varscan {
+class VarscanMpileup2cns(val root: Configurable) extends Varscan {
 
   @Input(doc = "Input mpileup file", required = false) // if not defined, input is stdin
   var input: Option[File] = None
@@ -49,22 +49,17 @@ class Mpileup2cns(val root: Configurable) extends Varscan {
     variants.foreach { case v => require(validValues.contains(v), "variants value must be either 0 or 1") }
   }
 
-  override def cmdLine = {
-    val baseCommand = super.cmdLine + required("mpileup2cns") +
-      required("", input) +
-      required("--min-coverage", minCoverage) +
-      required("--min-reads2", minReads2) +
-      required("--min-avg-qual", minAvgQual) +
-      required("--min-var-freq", minVarFreq) +
-      required("--min-freq-for-hom", minFreqForHom) +
-      required("--p-value", pValue) +
-      required("--strand-filter", strandFilter) +
-      required("--output-vcf", outputVcf) +
-      required("--vcf-sample-list", vcfSampleList) +
-      required("--variants", variants)
-
-    if (output.isDefined) baseCommand + " > " + required(output)
-    else baseCommand
-  }
-
+  override def cmdLine = super.cmdLine + required("mpileup2cns") +
+    required(input) +
+    optional("--min-coverage", minCoverage) +
+    optional("--min-reads2", minReads2) +
+    optional("--min-avg-qual", minAvgQual) +
+    optional("--min-var-freq", minVarFreq) +
+    optional("--min-freq-for-hom", minFreqForHom) +
+    optional("--p-value", pValue) +
+    optional("--strand-filter", strandFilter) +
+    optional("--output-vcf", outputVcf) +
+    optional("--vcf-sample-list", vcfSampleList) +
+    optional("--variants", variants) +
+    (if (outputAsStsout) "" else " > " + required(output))
 }
