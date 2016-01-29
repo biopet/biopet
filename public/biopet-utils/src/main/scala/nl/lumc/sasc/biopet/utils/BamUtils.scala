@@ -67,10 +67,10 @@ object BamUtils {
    * @param bamFile bamfile to estimate avg insertsize from
    * @return
    */
-  def sampleBamInsertSize(bamFile: File): Int = {
+  def sampleBamInsertSize(bamFile: File, samplingSize: Int = 100000): Int = {
     val inputSam: SamReader = SamReaderFactory.makeDefault.open(bamFile)
     val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.par.map({
-      contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength)
+      contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength, samplingSize)
     }).toList
     val counts = baminsertsizes.flatMap(x => x)
     val sum = counts.reduceLeft(_ + _)
@@ -84,8 +84,8 @@ object BamUtils {
    * @param bamFiles input bam files
    * @return
    */
-  def sampleBamInsertSize(bamFiles: List[File]): immutable.ParMap[File, Int] = bamFiles.par.map { bamFile =>
-    bamFile -> sampleBamInsertSize(bamFile)
+  def sampleBamsInsertSize(bamFiles: List[File], samplingSize: Int = 100000): immutable.ParMap[File, Int] = bamFiles.par.map { bamFile =>
+    bamFile -> sampleBamInsertSize(bamFile, samplingSize)
   }.toMap
 
 }

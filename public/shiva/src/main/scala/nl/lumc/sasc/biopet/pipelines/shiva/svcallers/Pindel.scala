@@ -15,11 +15,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.extensions.pindel._
 import nl.lumc.sasc.biopet.utils.BamUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -31,9 +29,10 @@ class Pindel(val root: Configurable) extends SvCaller {
   def this() = this(null)
 
   /** Default pipeline config */
-  override def defaults = Map("pindelvcf" -> Map(
-    "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime())
-  ))
+  override def defaults = Map(
+    "pindelvcf" -> Map(
+      "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime())
+    ))
 
   def biopetScript() {
     for ((sample, bamFile) <- inputBams) {
@@ -44,8 +43,6 @@ class Pindel(val root: Configurable) extends SvCaller {
       cfg.input = bamFile
 
       val insertSize: Int = BamUtils.sampleBamInsertSize(bamFile)
-
-      // FIXME: get the real insert size of the bam (from bammetrics?)
       cfg.insertsize = insertSize
       cfg.sampleName = sample
       cfg.output = config_file
@@ -66,15 +63,5 @@ class Pindel(val root: Configurable) extends SvCaller {
       add(pindelVcf)
     }
 
-  }
-}
-
-object Pindel extends PipelineCommand {
-  def apply(root: Configurable, input: File, reference: File, runDir: String): Pindel = {
-    val pindel = new Pindel(root)
-    // run the following for activating the pipeline steps
-    pindel.init()
-    pindel.biopetScript()
-    pindel
   }
 }
