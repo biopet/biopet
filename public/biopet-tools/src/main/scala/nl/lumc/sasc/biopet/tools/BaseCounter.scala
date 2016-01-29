@@ -294,9 +294,9 @@ object BaseCounter extends ToolCommand {
 
     for (record <- bamReader.queryOverlapping(genes.head.getContig, start, end) if !record.getNotPrimaryAlignmentFlag) {
       counts.foreach { case (gene, count) => count.addRecord(record, samRecordStrand(record, gene)) }
-      metaExons.foreach(_._2.addRecord(record, true))
-      plusMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, true)))
-      minMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, false)))
+      metaExons.foreach(_._2.addRecord(record, sense = true))
+      plusMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, strand = true)))
+      minMetaExons.foreach(_._2.addRecord(record, samRecordStrand(record, strand = false)))
     }
 
     bamReader.close()
