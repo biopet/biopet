@@ -19,6 +19,10 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
   var annotateSam: Boolean = config("annotate_sam", default = false)
 
   override def defaults = Map(
+    "igvtoolscount" -> Map(
+      "strands" -> "reads",
+      "includeDuplicates" -> true
+    ),
     "merge_strategy" -> "preprocessmergesam",
     "keep_merged_files" -> true,
     "mapping" -> Map(
@@ -34,7 +38,7 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "best" -> true
     ),
     "sickle" -> Map(
-      "lengthThreshold" -> 15
+      "lengthThreshold" -> 10
     ),
     "cutadapt" -> Map(
       "error_rate" -> 0.2,
