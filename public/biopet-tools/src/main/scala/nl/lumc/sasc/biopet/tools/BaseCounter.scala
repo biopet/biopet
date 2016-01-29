@@ -330,7 +330,7 @@ object BaseCounter extends ToolCommand {
         val blockStart = block.getReferenceStart
         val blockEnd = blockStart + block.getLength - 1
         if (start <= blockEnd && end >= blockStart) {
-          (if (end < blockEnd) end else blockEnd) - (if (start > blockStart) start else blockStart)
+          (if (end < blockEnd) end else blockEnd) - (if (start > blockStart) start else blockStart) + 1
         } else 0
       }.sum
   }
