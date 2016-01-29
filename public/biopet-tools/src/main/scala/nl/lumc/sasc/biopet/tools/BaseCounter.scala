@@ -232,32 +232,34 @@ object BaseCounter extends ToolCommand {
   }
 
   /**
-    * This function will print all counts for meta exons
-    */
+   * This function will print all counts for meta exons
+   */
   def writeNonStrandedMetaExonsCount(metaCounts: List[(String, RegionCount)],
                                      outputDir: File, prefix: String): Unit = {
     val nonStrandedWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.non_stranded.counts"))
 
-    metaCounts.foreach { case (name, counts) =>
-      nonStrandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
+    metaCounts.foreach {
+      case (name, counts) =>
+        nonStrandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
     }
 
     nonStrandedWriter.close()
   }
 
   /**
-    * This function will print all counts for meta exons
-    */
+   * This function will print all counts for meta exons
+   */
   def writeStrandedMetaExonsCount(metaCounts: List[(String, RegionCount)],
                                   outputDir: File, prefix: String): Unit = {
     val strandedWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.counts"))
     val strandedSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.sense.counts"))
     val strandedAntiSenseWriter = new PrintWriter(new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts"))
 
-    metaCounts.foreach { case (name, counts) =>
-      strandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
-      strandedSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.senseBases}")
-      strandedAntiSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.antiSenseBases}")
+    metaCounts.foreach {
+      case (name, counts) =>
+        strandedWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.totalBases}")
+        strandedSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.senseBases}")
+        strandedAntiSenseWriter.println(s"${name}_intron:${counts.start}-${counts.end}\t${counts.counts.antiSenseBases}")
     }
 
     strandedWriter.close()
@@ -271,13 +273,13 @@ object BaseCounter extends ToolCommand {
 
   def samRecordStrand(samRecord: SAMRecord, strand: Boolean): Boolean = {
     if (samRecord.getReadPairedFlag && samRecord.getSecondOfPairFlag)
-    samRecord.getReadNegativeStrandFlag != strand
+      samRecord.getReadNegativeStrandFlag != strand
     else samRecord.getReadNegativeStrandFlag == strand
   }
 
-  private case class ThreadOutput(geneCounts: List[GeneCount],
-                          nonStrandedMetaExonCounts: List[(String, RegionCount)],
-                          strandedMetaExonCounts: List[(String, RegionCount)])
+  private[tools] case class ThreadOutput(geneCounts: List[GeneCount],
+                                         nonStrandedMetaExonCounts: List[(String, RegionCount)],
+                                         strandedMetaExonCounts: List[(String, RegionCount)])
 
   def bamToGeneCount(bamFile: File, genes: List[Gene]): ThreadOutput = {
     val counts = genes.map(gene => gene -> new GeneCount(gene)).toMap
