@@ -31,7 +31,8 @@ class Pindel(val root: Configurable) extends SvCaller {
   /** Default pipeline config */
   override def defaults = Map(
     "pindelvcf" -> Map(
-      "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime())
+      "rdate" -> new SimpleDateFormat("yyyyMMdd").format(Calendar.getInstance().getTime()),
+      "compact_output_limit" -> 10
     ))
 
   def biopetScript() {
