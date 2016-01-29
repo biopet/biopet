@@ -370,12 +370,11 @@ object BaseCounter extends ToolCommand {
     def totalReads = senseReads + antiSenseReads
   }
 
-  def generateMergedExonRegions(gene: Gene) = {
+  def generateMergedExonRegions(gene: Gene) =
     BedRecordList.fromList(gene.iterator()
       .flatMap(_.exons)
-      .map(e => BedRecord(gene.getContig, e.start - 1, e.end, Some(gene.getName))))
-      .combineOverlap
-  }
+      .map(e => BedRecord(gene.getContig, e.start - 1, e.end))
+    ).combineOverlap
 
   class GeneCount(val gene: Gene) {
     val counts = new Counts
