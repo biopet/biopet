@@ -49,7 +49,7 @@ trait Rscript extends Configurable {
           file
         }
       }
-      if (!rScript.getParentFile.exists) rScript.getParentFile.mkdirs
+      if (!rScript.getAbsoluteFile.getParentFile.exists) rScript.getParentFile.mkdirs
 
       val is = getClass.getResourceAsStream(script.getPath)
       val os = new FileOutputStream(rScript)
