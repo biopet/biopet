@@ -71,6 +71,10 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
   def mergeIntronCounts = new File(outputDir, s"$prefix.base.intron.merge.counts")
   def mergeIntronSenseCounts = new File(outputDir, s"$prefix.base.intron.merge.sense.counts")
   def mergeIntronAntiSenseCounts = new File(outputDir, s"$prefix.base.intron.merge.antisense.counts")
+  def nonStrandedMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.non_stranded.counts")
+  def strandedMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.counts")
+  def strandedSenseMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.sense.counts")
+  def strandedAntiSenseMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts")
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -83,7 +87,9 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
       geneExonicCounts, geneExonicSenseCounts, geneExonicAntiSenseCounts,
       geneIntronicCounts, geneIntronicSenseCounts, geneIntronicAntiSenseCounts,
       mergeExonCounts, mergeExonSenseCounts, mergeExonAntiSenseCounts,
-      mergeIntronCounts, mergeIntronSenseCounts, mergeIntronAntiSenseCounts)
+      mergeIntronCounts, mergeIntronSenseCounts, mergeIntronAntiSenseCounts,
+      nonStrandedMetaExonCounts,
+      strandedMetaExonCounts, strandedSenseMetaExonCounts, strandedAntiSenseMetaExonCounts)
   }
 
   override def cmdLine = super.cmdLine +
