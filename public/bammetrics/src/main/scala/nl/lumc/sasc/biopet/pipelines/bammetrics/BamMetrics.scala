@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.annotations.{ RibosomalRefFlat, AnnotationRefFlat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
@@ -31,15 +32,14 @@ class BamMetrics(val root: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
   with Reference
-  with TargetRegions {
+  with TargetRegions
+  with AnnotationRefFlat
+  with RibosomalRefFlat {
 
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
-
-  /** Settings for CollectRnaSeqMetrics */
-  var transcriptRefFlatFile: Option[File] = config("transcript_refflat")
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
@@ -92,7 +92,7 @@ class BamMetrics(val root: Configurable) extends QScript
     add(gcBiasMetrics)
     addSummarizable(gcBiasMetrics, "gc_bias")
 
-    if (transcriptRefFlatFile.isEmpty) {
+    if (config("wgs_metrics", default = true)) {
       val wgsMetrics = new CollectWgsMetrics(this)
       wgsMetrics.input = inputBam
       wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
@@ -100,12 +100,13 @@ class BamMetrics(val root: Configurable) extends QScript
       addSummarizable(wgsMetrics, "wgs")
     }
 
-    if (transcriptRefFlatFile.isDefined) {
+    if (config("rna_metrics", default = false)) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
       rnaMetrics.input = inputBam
       rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
       rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
-      rnaMetrics.refFlat = transcriptRefFlatFile.get
+      rnaMetrics.refFlat = annotationRefFlat()
+      rnaMetrics.ribosomalIntervals = ribosomalRefFlat()
       add(rnaMetrics)
       addSummarizable(rnaMetrics, "rna")
     }

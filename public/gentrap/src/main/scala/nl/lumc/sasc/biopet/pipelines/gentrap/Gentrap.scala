@@ -93,12 +93,12 @@ class Gentrap(val root: Configurable) extends QScript
     "merge_strategy" -> "preprocessmergesam",
     "gsnap" -> Map(
       "novelsplicing" -> 1,
-      "batch" -> 4,
-      "format" -> "sam"
+      "batch" -> 4
     ),
     "shivavariantcalling" -> Map("variantcallers" -> List("varscan_cns_singlesample")),
     "bammetrics" -> Map(
-      "transcript_refflat" -> annotationRefFlat,
+      "wgs_metrics" -> false,
+      "rna_metrics" -> true,
       "collectrnaseqmetrics" -> ((if (strandProtocol.isSet) Map(
         "strand_specificity" -> (strandProtocol() match {
           case StrandProtocol.NonSpecific => StrandSpecificity.NONE.toString
@@ -106,7 +106,7 @@ class Gentrap(val root: Configurable) extends QScript
           case otherwise                  => throw new IllegalStateException(otherwise.toString)
         })
       )
-      else Map()) ++ (if (ribosomalRefFlat.isSet) ribosomalRefFlat().map("ribosomal_intervals" -> _.getAbsolutePath).toList else Nil))
+      else Map()))
     ),
     "cutadapt" -> Map("minimum_length" -> 20),
     // avoid conflicts when merging since the MarkDuplicate tags often cause merges to fail

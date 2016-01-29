@@ -43,7 +43,7 @@ class PlotHeatmap(val root: Configurable) extends RscriptCommandLineFunction {
     (if (useLog) Seq("-L") else Seq()) ++
     (countType match {
       case Some(t) => Seq("-C", t)
-      case _ => Seq()
+      case _       => Seq()
     }) ++
     Seq("-I", input.getAbsolutePath, "-O", output.getAbsolutePath)
 }
