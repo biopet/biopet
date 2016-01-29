@@ -16,13 +16,14 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
   def this() = this(null)
 
   var annotationGff: File = config("annotation_gff")
-  var annotateSam: Boolean = config("annotate_sam", default=false)
+  var annotateSam: Boolean = config("annotate_sam", default = false)
 
   override def defaults = Map(
     "merge_strategy" -> "preprocessmergesam",
     "keep_merged_files" -> true,
     "mapping" -> Map(
       "aligner" -> "bowtie",
+      "generate_wig" -> true,
       "skip_markduplicates" -> true
     ),
     "bowtie" -> Map(
@@ -36,7 +37,8 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "lengthThreshold" -> 15
     ),
     "cutadapt" -> Map(
-      "minimum_length" -> 15,
+      "error_rate" -> 0.2,
+      "minimum_length" -> 10,
       "q" -> 30,
       "default_clip_mode" -> "both",
       "times" -> 2
