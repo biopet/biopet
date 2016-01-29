@@ -59,19 +59,19 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Output(doc = "Output file of pindel, pointing to the DEL file")
   var outputFile: File = _
 
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputINV: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputTD: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputLI: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputBP: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputSI: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputRP: File = _
-  @Output(doc="", required=false)
+  @Output(doc = "", required = false)
   var outputCloseEndMapped: File = _
 
   var RP: Option[Int] = config("RP")
@@ -148,7 +148,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     if (reportLongInsertions) {
       outputLI = new File(outputPrefix + File.separator, "sample_LI")
     }
-    if (reportBreakpoints){
+    if (reportBreakpoints) {
       outputBP = new File(outputPrefix + File.separator, "sample_BP")
     }
     outputSI = new File(outputPrefix + File.separator, "sample_SI")
@@ -215,6 +215,7 @@ object PindelCaller {
     val caller = new PindelCaller(root)
     caller.configFile = Some(configFile)
     caller.outputPrefix = outputDir
+    caller.beforeGraph
     caller
   }
 }

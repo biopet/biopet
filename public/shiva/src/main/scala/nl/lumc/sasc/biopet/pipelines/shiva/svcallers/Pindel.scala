@@ -21,6 +21,7 @@ import java.util.Calendar
 
 import nl.lumc.sasc.biopet.core.PipelineCommand
 import nl.lumc.sasc.biopet.extensions.pindel._
+import nl.lumc.sasc.biopet.utils.BamUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /// Pindel is actually a mini pipeline executing binaries from the pindel package
@@ -42,8 +43,10 @@ class Pindel(val root: Configurable) extends SvCaller {
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
 
+      val insertSize: Int = BamUtils.sampleBamInsertSize(bamFile)
+
       // FIXME: get the real insert size of the bam (from bammetrics?)
-      cfg.insertsize = 500
+      cfg.insertsize = insertSize
       cfg.sampleName = sample
       cfg.output = config_file
       add(cfg)
