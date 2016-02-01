@@ -17,15 +17,6 @@ trait AnnotationGtf extends BiopetQScript { qscript: QScript =>
   }
 }
 
-trait AnnotationBed extends BiopetQScript { qscript: QScript =>
-  /** GTF reference file */
-  lazy val annotationBed: File = {
-    val file: File = config("annotation_bed", freeVar = true)
-    inputFiles :+ InputFile(file, config("annotation_bed_md5", freeVar = true))
-    file
-  }
-}
-
 trait AnnotationRefFlat extends BiopetQScript { qscript: QScript =>
   /** GTF reference file */
   lazy val annotationRefFlat = new LazyCheck({
