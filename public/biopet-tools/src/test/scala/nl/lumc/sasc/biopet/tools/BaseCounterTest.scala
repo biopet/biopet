@@ -1,5 +1,9 @@
 package nl.lumc.sasc.biopet.tools
 
+import java.io.File
+import java.nio.file.Paths
+
+import com.google.common.io.Files
 import htsjdk.samtools.{SAMReadGroupRecord, SAMSequenceRecord, SAMLineParser, SAMFileHeader}
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
@@ -163,6 +167,22 @@ class BaseCounterTest extends TestNGSuite with Matchers {
 
     assert(ab.exists(x => x._1 == "geneB" && x._2.start == 201 && x._2.end == 210))
     assert(ab.exists(x => x._1 == "geneB" && x._2.start == 221 && x._2.end == 250))
+  }
+
+  private def resourcePath(p: String): String = {
+    Paths.get(getClass.getResource(p).toURI).toString
+  }
+
+  @Test
+  def testMain: Unit = {
+    val outputDir = Files.createTempDir()
+    outputDir.deleteOnExit()
+    val prefix = "test"
+    val bamFile = new File(resourcePath("/empty.bam"))
+    val refflat = new File(resourcePath("/chrQ.refflat"))
+    main(Array("-o", outputDir.getAbsolutePath, "-p", prefix,
+      "-b", bamFile.getAbsolutePath, "-r", refflat.getAbsolutePath))
+    outputDir.list().size shouldBe 34
   }
 }
 

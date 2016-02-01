@@ -56,7 +56,7 @@ object BaseCounter extends ToolCommand {
     val overlapGenes = groupGenesOnOverlap(geneReader.getAll)
 
     logger.info("Start reading bamFile")
-    val counts = (for (genes <- overlapGenes.values.flatten.par) yield bamToGeneCount(cmdArgs.bamFile, genes)).toList
+    val counts = (for (genes <- overlapGenes.values.flatten.par) yield runThread(cmdArgs.bamFile, genes)).toList
     logger.info("Done reading bamFile")
 
     writeGeneCounts(counts.flatMap(_.geneCounts), cmdArgs.outputDir, cmdArgs.prefix)
@@ -281,7 +281,7 @@ object BaseCounter extends ToolCommand {
                                          nonStrandedMetaExonCounts: List[(String, RegionCount)],
                                          strandedMetaExonCounts: List[(String, RegionCount)])
 
-  def bamToGeneCount(bamFile: File, genes: List[Gene]): ThreadOutput = {
+  private[tools] def runThread(bamFile: File, genes: List[Gene]): ThreadOutput = {
     val counts = genes.map(gene => gene -> new GeneCount(gene)).toMap
     val bamReader = SamReaderFactory.makeDefault().open(bamFile)
 
@@ -304,25 +304,27 @@ object BaseCounter extends ToolCommand {
   }
 
   def createMetaExonCounts(genes: List[Gene]): List[(String, RegionCount)] = {
-    val regions = genes.map(gene => gene.getName -> generateMergedExonRegions(gene).sorted)
-    val chr = genes.head.getContig
-    val begin = regions.map(_._2.allRecords.head.start).min
-    val end = regions.map(_._2.allRecords.last.end).max
+    if (genes.nonEmpty) {
+      val regions = genes.map(gene => gene.getName -> generateMergedExonRegions(gene).sorted)
+      val chr = genes.head.getContig
+      val begin = regions.map(_._2.allRecords.head.start).min
+      val end = regions.map(_._2.allRecords.last.end).max
 
-    val posibleEnds = (regions.flatMap(_._2.allRecords.map(_.end)) ++ regions.flatMap(_._2.allRecords.map(_.start))).distinct.sorted
+      val posibleEnds = (regions.flatMap(_._2.allRecords.map(_.end)) ++ regions.flatMap(_._2.allRecords.map(_.start))).distinct.sorted
 
-    def mergeRegions(newBegin: Int, output: List[(String, RegionCount)] = Nil): List[(String, RegionCount)] = {
-      val newEnds = posibleEnds.filter(_ > newBegin)
-      if (newBegin > end || newEnds.isEmpty) output
-      else {
-        val newEnd = newEnds.min
-        val record = BedRecord(chr, newBegin, newEnd)
-        val names = regions.filter(_._2.overlapWith(record).nonEmpty).map(_._1)
-        if (names.nonEmpty) mergeRegions(newEnd, (names.mkString(","), new RegionCount(record.start + 1, record.end)) :: output)
-        else mergeRegions(newEnd, output)
+      def mergeRegions(newBegin: Int, output: List[(String, RegionCount)] = Nil): List[(String, RegionCount)] = {
+        val newEnds = posibleEnds.filter(_ > newBegin)
+        if (newBegin > end || newEnds.isEmpty) output
+        else {
+          val newEnd = newEnds.min
+          val record = BedRecord(chr, newBegin, newEnd)
+          val names = regions.filter(_._2.overlapWith(record).nonEmpty).map(_._1)
+          if (names.nonEmpty) mergeRegions(newEnd, (names.mkString(","), new RegionCount(record.start + 1, record.end)) :: output)
+          else mergeRegions(newEnd, output)
+        }
       }
-    }
-    mergeRegions(begin)
+      mergeRegions(begin)
+    } else Nil
   }
 
   def bamRecordBasesOverlap(samRecord: SAMRecord, start: Int, end: Int): Int = {
