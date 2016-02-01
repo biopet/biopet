@@ -4,10 +4,12 @@ Toucan
 Introduction
 -----------
 The Toucan pipeline is a VEP-based annotation pipeline. 
-Currently, it comprises just two steps:
+Currently, it comprises just two steps by default:
 
 * Variant Effect Predictor run
 * [VEP Normalizer on the VEP output](../tools/VepNormalizer.md)
+
+Additionally, annotation and data-sharing with [Varda](http://varda.readthedocs.org/en/latest/) is possible. 
 
 Example
 -----------
@@ -25,7 +27,7 @@ Configuration
 You can set all the usual [flags and options](http://www.ensembl.org/info/docs/tools/vep/script/vep_options.html) of the VEP in the configuration,
 with the same name used by native VEP, except those added after version 75.
 The naming scheme for flags an options is indentical to the one used by the VEP
-As some of these flags might conflict with other Biopet tools/pipelines, it is wise to put the VEP in its own namespace.
+As some of these flags might conflict with other Biopet tools/pipelines, it is wise to put the VEP in its own config namespace.
 
 You **MUST** set the following fields:
 
@@ -53,6 +55,34 @@ With that in mind, an example configuration using mode `standard` of the VepNorm
 }
 ~~~
 
+Varda
+-----
+Annotation with a [Varda](http://varda.readthedocs.org/en/latest/) database instance is possible.
+When annotation with Varda is enabled, data-sharing of your variants into Varda is taken care of as well. 
+Since Varda requires knowledge about well-covered regions, a gVCF file is additionally ***required*** when using Varda.
+This gVCF should contain the same samples as the input VCF.
+Toucan will use said gVCF file to generate a bed track of well-covered regions based on the genome quality.
+
+One can enable to use of Varda by setting the `use_varda` config value to `true`. 
+
+Varda requires some additional config values. The following config values are required:
+  
+  * `varda_root`: URL to Varda root. 
+  * `varda_token`: Your user token
+  
+The following config values are optional: 
+
+  * `varda_verify_certificate`: By default set to `true`. 
+  Determines whether the client will verify the SSL certificate. 
+  You can also set a path to a certificate file here; 
+  This is useful when your Varda instance has a self-signed certificate. 
+  * `varda_cache_size`: The size of the cache. Default = 20
+  * `varda_buffer_size`: The size of the buffer when sending large files. In bytes. Default = 1 Mib.
+  * `varda_task_poll_wait`: Wait time in seconds for Varda poller. Defaults to 2.
+     
+Annotation queries can be set by the `annotation_queries` config value in the `manwe` config namespace. 
+By default, a global query is returned. 
+
 Running the pipeline
 ---------------
 The command to run the pipeline is:
@@ -65,6 +95,12 @@ If one wishes to run it on a cluster, the command becomes:
 
 ~~~~ bash
 biopet pipeline Toucan -Input <input_vcf> -config <config_json> -run -qsub -jobParaEnv <PE>
+~~~~
+
+With Varda:
+
+~~~~ bash
+biopet pipeline Toucan -Input <input_vcf> -gvcf <gvcf file> -config <config_json> -run -qsub -jobParaEnv <PE> 
 ~~~~
 
 
