@@ -312,9 +312,10 @@ object BaseCounter extends ToolCommand {
     val posibleEnds = (regions.flatMap(_._2.allRecords.map(_.end)) ++ regions.flatMap(_._2.allRecords.map(_.start))).distinct.sorted
 
     def mergeRegions(newBegin: Int, output: List[(String, RegionCount)] = Nil): List[(String, RegionCount)] = {
-      if (newBegin > end) output
+      val newEnds = posibleEnds.filter(_ > newBegin)
+      if (newBegin > end || newEnds.isEmpty) output
       else {
-        val newEnd = posibleEnds.filter(_ > begin).min
+        val newEnd = newEnds.min
         val record = BedRecord(chr, newBegin, newEnd)
         val names = regions.filter(_._2.overlapWith(record).nonEmpty).map(_._1)
         if (names.nonEmpty) mergeRegions(newEnd, (names.mkString(","), new RegionCount(record.start + 1, record.end)) :: output)

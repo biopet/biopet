@@ -136,6 +136,34 @@ class BaseCounterTest extends TestNGSuite with Matchers {
     geneCount.exonCounts.map(_.counts.senseBases).sum shouldBe 10
     geneCount.exonCounts.map(_.counts.antiSenseBases).sum shouldBe 10
   }
+
+  @Test
+  def testGroupGenesOnOverlap: Unit = {
+    assert(groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneC)))
+    assert(groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneD)))
+    assert(!groupGenesOnOverlap(geneC :: geneD :: Nil)("chrQ").contains(List(geneD, geneC)))
+
+    assert(!groupGenesOnOverlap(geneC :: geneA :: Nil)("chrQ").contains(List(geneA)))
+    assert(!groupGenesOnOverlap(geneC :: geneA :: Nil)("chrQ").contains(List(geneC)))
+    assert(groupGenesOnOverlap(geneC :: geneA :: Nil)("chrQ").contains(List(geneA, geneC)))
+  }
+
+  @Test
+  def testCreateMetaExonCounts: Unit = {
+    val ab = createMetaExonCounts(geneA :: geneB :: Nil)
+    ab.size shouldBe 9
+    assert(ab.exists(x => x._1 == "geneA" && x._2.start == 101 && x._2.end == 120))
+    assert(ab.exists(x => x._1 == "geneA" && x._2.start == 131 && x._2.end == 140))
+
+    assert(ab.exists(x => x._1 == "geneA,geneB" && x._2.start == 151 && x._2.end == 160))
+    assert(ab.exists(x => x._1 == "geneB" && x._2.start == 161 && x._2.end == 170))
+    assert(ab.exists(x => x._1 == "geneA" && x._2.start == 171 && x._2.end == 180))
+    assert(ab.exists(x => x._1 == "geneA,geneB" && x._2.start == 181 && x._2.end == 190))
+    assert(ab.exists(x => x._1 == "geneA" && x._2.start == 191 && x._2.end == 200))
+
+    assert(ab.exists(x => x._1 == "geneB" && x._2.start == 201 && x._2.end == 210))
+    assert(ab.exists(x => x._1 == "geneB" && x._2.start == 221 && x._2.end == 250))
+  }
 }
 
 object BaseCounterTest {
@@ -169,14 +197,15 @@ object BaseCounterTest {
     for (transcript <- gene) {
       transcript.name match {
         case "A1" =>
-          transcript.addExon(161, 170)
+          transcript.addExon(151, 170)
           transcript.addExon(181, 190)
           transcript.addExon(201, 210)
-          transcript.addExon(221, 230)
+          transcript.addExon(221, 250)
       }
     }
     gene
   }
 
   val geneC = new Gene("chrQ", 101, 300, true, "geneC")
+  val geneD = new Gene("chrQ", 301, 500, true, "geneD")
 }
