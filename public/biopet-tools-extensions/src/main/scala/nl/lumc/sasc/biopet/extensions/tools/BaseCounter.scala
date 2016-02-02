@@ -77,7 +77,6 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
   def strandedAntiSenseMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts")
 
   override def beforeGraph(): Unit = {
-    super.beforeGraph()
     outputFiles ++= List(transcriptTotalCounts, transcriptTotalSenseCounts, transcriptTotalAntiSenseCounts,
       transcriptExonicCounts, transcriptExonicSenseCounts, transcriptExonicAntiSenseCounts,
       transcriptIntronicCounts, transcriptIntronicSenseCounts, transcriptIntronicAntiSenseCounts,
@@ -90,6 +89,9 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
       mergeIntronCounts, mergeIntronSenseCounts, mergeIntronAntiSenseCounts,
       nonStrandedMetaExonCounts,
       strandedMetaExonCounts, strandedSenseMetaExonCounts, strandedAntiSenseMetaExonCounts)
+    jobOutputFile = new File(outputDir, s".$prefix.basecounter.out")
+    super.beforeGraph()
+
   }
 
   override def cmdLine = super.cmdLine +
