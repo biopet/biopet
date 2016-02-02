@@ -33,7 +33,6 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
   @Input(doc = "Bam File", required = true)
   var bamFile: File = _
 
-  @Output(doc = "Output directory", required = true)
   var outputDir: File = _
 
   var prefix: String = "output"
