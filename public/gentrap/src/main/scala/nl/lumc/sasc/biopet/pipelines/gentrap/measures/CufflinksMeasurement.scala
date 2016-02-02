@@ -42,6 +42,8 @@ trait CufflinksMeasurement extends QScript with Measurement {
 
     addHeatmapJob(mergeGenesFpkmTable, genesFpkmHeatmap, "genes_fpkm")
     addHeatmapJob(mergeIsoFormFpkmTable, isoFormFpkmHeatmap, "iso_form_fpkm")
+
+    addSummaryJobs()
   }
 
   def mergeGenesFpkmTable: File = new File(outputDir, s"$name.genes.fpkm.tsv")

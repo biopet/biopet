@@ -32,6 +32,8 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
 
     addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "fragments_per_gene", s".$name.counts")
     addHeatmapJob(mergedTable, heatmap, "fragments_per_gene")
+
+    addSummaryJobs()
   }
 
   def mergedTable = new File(outputDir, s"$name.fragments_per_gene.tsv")

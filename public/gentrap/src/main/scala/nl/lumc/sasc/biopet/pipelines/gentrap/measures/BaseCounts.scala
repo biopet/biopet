@@ -67,5 +67,7 @@ class BaseCounts(val root: Configurable) extends QScript with Measurement with A
     addTableAndHeatmap(jobs.values.map(_.strandedMetaExonCounts).toList, "strandedMetaExonCounts")
     addTableAndHeatmap(jobs.values.map(_.strandedSenseMetaExonCounts).toList, "strandedSenseMetaExonCounts")
     addTableAndHeatmap(jobs.values.map(_.strandedAntiSenseMetaExonCounts).toList, "strandedAntiSenseMetaExonCounts")
+
+    addSummaryJobs()
   }
 }
