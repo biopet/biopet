@@ -16,6 +16,7 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
   def this() = this(null)
 
   var annotationGff: File = config("annotation_gff")
+  var annotationGtf: File = config("annotation_gtf")
   var annotateSam: Boolean = config("annotate_sam", default = false)
 
   override def defaults = Map(
@@ -38,18 +39,14 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       "best" -> true
     ),
     "sickle" -> Map(
-      "lengthThreshold" -> 10
+      "lengthThreshold" -> 8
     ),
     "cutadapt" -> Map(
       "error_rate" -> 0.2,
-      "minimum_length" -> 10,
+      "minimum_length" -> 8,
       "q" -> 30,
       "default_clip_mode" -> "both",
       "times" -> 2
-    ),
-    "htseqcount" -> Map(
-      "type" -> "miRNA",
-      "idattr" -> "Name"
     )
   )
 
@@ -65,9 +62,20 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
       htseqCount.inputAnnotation = annotationGff
       htseqCount.format = Option("bam")
       htseqCount.stranded = Option("yes")
-      htseqCount.output = createFile("exprcount.tsv")
-      if (annotateSam) htseqCount.samout = Option(createFile("htseqannot.sam"))
+      htseqCount.featuretype = Option("miRNA")
+      htseqCount.idattr = Option("Name")
+      htseqCount.output = createFile("exprcount.mirna.tsv")
+      if (annotateSam) htseqCount.samout = Option(createFile("htseqannot.mirna.sam"))
       add(htseqCount)
+
+      val htseqCountGTF = new HtseqCount(qscript)
+      htseqCountGTF.inputAlignment = bamFile.get
+      htseqCountGTF.inputAnnotation = annotationGtf
+      htseqCountGTF.format = Option("bam")
+      htseqCountGTF.stranded = Option("yes")
+      htseqCountGTF.output = createFile("exprcount.tsv")
+      if (annotateSam) htseqCountGTF.samout = Option(createFile("htseqannot.sam"))
+      add(htseqCountGTF)
     }
   }
 
