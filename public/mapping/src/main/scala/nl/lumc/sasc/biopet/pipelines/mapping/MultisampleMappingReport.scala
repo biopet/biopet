@@ -56,7 +56,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
             Map("showPlot" -> true, "showTable" -> false))
         ),
-      pageArgs
+      pageArgs ++ Map("pipeline" -> pipelineName)
     )
   }
 

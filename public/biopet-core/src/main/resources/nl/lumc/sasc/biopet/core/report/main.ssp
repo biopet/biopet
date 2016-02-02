@@ -15,7 +15,7 @@
             buffer.append("<ul class=\"dropdown-menu\">")
         }
 
-        for (subPage <- page.subPages) {
+        for (subPage <- page.subPages.sortBy(_._1)) {
             val href: String = {
                 if (path.isEmpty) rootPath + subPage._1 + "/index.html"
                 else rootPath + path.mkString("","/","/") + subPage._1 + "/index.html"
