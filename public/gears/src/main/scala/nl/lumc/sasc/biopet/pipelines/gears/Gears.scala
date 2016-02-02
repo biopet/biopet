@@ -1,5 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
+import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
 import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat, Ln }
@@ -107,6 +108,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
+        inputFiles :+= InputFile(flexiprep.input_R1, config("R1_md5"))
+        flexiprep.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
         add(flexiprep)
 
         gs.fastqR1 = Some(flexiprep.fastqR1Qc)
