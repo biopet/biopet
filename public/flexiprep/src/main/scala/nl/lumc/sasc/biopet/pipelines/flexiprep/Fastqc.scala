@@ -50,7 +50,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @throws IllegalStateException if the module lines have no content or mapping is empty.
    */
   def qcModules: Map[String, FastQCModule] = {
-    val fqModules = Source.fromFile(dataFile)
+    val fastQCLog = Source.fromFile(dataFile)
+    val fqModules: Map[String, FastQCModule] = fastQCLog
       // drop all the characters before the first module delimiter (i.e. '>>')
       .dropWhile(_ != '>')
       // pull everything into a string
@@ -76,6 +77,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       }
       .toMap
 
+    fastQCLog.close()
     if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
     else fqModules
   }
@@ -182,14 +184,17 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
           ) yield values(3)
       }
 
+      val adapterSet = getFastqcSeqs(adapters)
+      val contaminantSet = getFastqcSeqs(contaminants)
+
       // select full sequences from known adapters and contaminants
       // based on overrepresented sequences results
-      val fromKnownList: Set[AdapterSequence] = (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
+      val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
         .filter(x => found.exists(_.startsWith(x.name)))
 
       fastQCFoundSequences.filter(x => {
-        val n = (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants)).filter(y => y.name == x.name).size
-        n == 1
+        val n: Int = (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size
+        n equals 1
       })
 
       fromKnownList ++ fastQCFoundSequences
