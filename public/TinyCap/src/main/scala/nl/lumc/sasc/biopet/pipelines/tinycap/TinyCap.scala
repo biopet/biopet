@@ -1,6 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.extensions.HtseqCount
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -84,6 +85,13 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
   override def summaryFiles: Map[String, File] = super.summaryFiles ++ Map(
     "annotationGff" -> annotationGff
   )
+
+  override def reportClass: Option[ReportBuilderExtension] = {
+    val report = new TinyCapReport(this)
+    report.outputDir = new File(outputDir, "report")
+    report.summaryFile = summaryFile
+    Some(report)
+  }
 
   override def addMultiSampleJobs = {
     super.addMultiSampleJobs
