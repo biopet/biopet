@@ -103,12 +103,12 @@
         #for (sample <- samples.toList.sorted)
             #{
                 val libs = libId match {
-                case Some(libId) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                    case Some(libId) => List(libId.toString).sorted
+                    case _ => summary.libraries(sample).toList.sorted
                 }
                 val sampleRowspan = {
-                libs.size +
-                libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
+                    libs.size +
+                    libs.count(summary.getLibraryValue(sample, _, "flexiprep", "settings", "paired").getOrElse(false) == true)
                 }
             }#
             <tr><td rowspan="${sampleRowspan}">

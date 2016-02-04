@@ -5,7 +5,7 @@
 <table class="table sortable-theme-bootstrap" data-sortable>
     <thead><tr><th data-sorted="true" data-sorted-direction="ascending">Sample</th></tr></thead>
     <tbody>
-        #for (sample <- summary.samples)
+        #for (sample <- summary.samples.toList.sorted)
             <tr><td><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td></tr>
         #end
     </tbody>

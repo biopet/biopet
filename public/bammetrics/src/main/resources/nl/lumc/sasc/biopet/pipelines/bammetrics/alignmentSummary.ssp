@@ -46,16 +46,18 @@
     </div>
         <div class="panel-footer">
             #if (showTable)
-                <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">Hide table</button>
+                <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">
+                <i class="glyphicon glyphicon-eye-close"></i> Hide table</button>
             #else
-                <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">Show table</button>
+                <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#alignmentSummaryTable">
+                <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
             #end
-            <i class="glyphicon glyphicon-file"></i> <a href="alignmentSummary.tsv">tsv file</a>
+            <button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"> <a href="alignmentSummary.tsv">TSV file</a></i></button>
         </div>
 #end
 <div class="panel-body collapse #if (showTable)in#end" id="alignmentSummaryTable">
 <!-- Table -->
-<table class="table sortable-theme-bootstrap" data-sortable>
+<table class="table">
     <thead><tr>
         <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
         #if (!sampleLevel) <th>Library</th> #end
@@ -70,8 +72,8 @@
             #{
                 val libs = (libId, sampleLevel) match {
                 case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                case (Some(libId), _) => List(libId.toString).sorted
+                case _ => summary.libraries(sample).toList.sorted
                 }
             }#
             <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>
