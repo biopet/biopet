@@ -33,17 +33,21 @@ object CheckFastqPairs extends ToolCommand {
   }
 
   def main(args: Array[String]): Unit = {
+    //Start analyses of fastq files
     logger.info("Start")
 
+    //parse all possible options into OptParser
     val argsParser = new OptParser
     val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
+    //read in fastq file 1 and if present fastq file 2
     val readFq1 = new FastqReader(cmdArgs.input)
     val readFq2 = cmdArgs.input2.map(new FastqReader(_))
 
+    //define a counter to track the number of objects passing through the for loop
     var counter = 0
-    var countline = 0
 
+    //Iterate over the fastq file check for the length of both files if not correct, exit the tool and print error message
     for (recordR1 <- readFq1.iterator()) {
       if (readFq2.map(_.hasNext) == Some(false))
         throw new IllegalStateException("R2 has less reads then R1")
@@ -51,6 +55,7 @@ object CheckFastqPairs extends ToolCommand {
       //Getting R2 record, None if it's single end
       val recordR2 = readFq2.map(_.next())
 
+      //Here we check if the readnames of both files are concordant
       recordR2 match {
         case Some(recordR2) => // Paired End
           val readHeader = recordR1.getReadHeader
@@ -73,10 +78,12 @@ object CheckFastqPairs extends ToolCommand {
       counter += 1
     }
 
+    //if R2 is longer then R1 print an error code and exit the tool
     if (readFq2.map(_.hasNext) == Some(true))
       throw new IllegalStateException("R2 has more reads then R1")
 
     logger.info("Done processing the Fastq file(s) no errors found")
+    //close both iterators
     readFq1.close()
     readFq2.foreach(_.close())
   }
