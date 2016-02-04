@@ -264,11 +264,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (config("unmapped_to_gears", default = false).asBoolean) {
       val gears = new GearsSingle(this)
       gears.bamFile = Some(finalBamFile)
+      gears.sampleId = sampleId
+      gears.libId = libId
       gears.outputDir = new File(outputDir, "gears")
-      gears.init()
-      gears.biopetScript()
-      addAll(gears.functions)
-      addSummaryQScript(gears)
+      add(gears)
     }
 
     if (config("generate_wig", default = false).asBoolean)
