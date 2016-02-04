@@ -42,6 +42,9 @@ class TinyCap(val root: Configurable) extends QScript with MultisampleMappingTra
     "sickle" -> Map(
       "lengthThreshold" -> 8
     ),
+    "fastqc" -> Map(
+      "sensitiveAdapterSearch" -> true
+    ),
     "cutadapt" -> Map(
       "error_rate" -> 0.2,
       "minimum_length" -> 8,

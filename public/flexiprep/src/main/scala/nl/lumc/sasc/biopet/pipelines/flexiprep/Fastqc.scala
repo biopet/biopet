@@ -166,16 +166,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
           } yield AdapterSequence(values(0), values(1))).toSet
       }
 
-      val fastQCFoundSequences: Seq[AdapterSequence] = qcModules.get("Overrepresented sequences") match {
-        case None => Seq.empty
-        case Some(qcModule) =>
-          for (
-            line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
-            values = line.split("\t") if values.size >= 4
-          ) yield AdapterSequence(values(3), values(0))
-      }
+      val adapterSet = getFastqcSeqs(adapters)
+      val contaminantSet = getFastqcSeqs(contaminants)
 
-      val found: Seq[String] = qcModules.get("Overrepresented sequences") match {
+      val foundAdapterNames: Seq[String] = qcModules.get("Overrepresented sequences") match {
         case None => Seq.empty[String]
         case Some(qcModule) =>
           for (
@@ -184,18 +178,27 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
           ) yield values(3)
       }
 
-      val adapterSet = getFastqcSeqs(adapters)
-      val contaminantSet = getFastqcSeqs(contaminants)
-
       // select full sequences from known adapters and contaminants
       // based on overrepresented sequences results
       val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
-        .filter(x => found.exists(_.startsWith(x.name)))
+        .filter(x => foundAdapterNames.exists(_.startsWith(x.name)))
 
-      fastQCFoundSequences.filter(x => {
-        val n: Int = (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size
-        n equals 1
-      })
+      val fastQCFoundSequences: Seq[AdapterSequence] = if (sensitiveAdapterSearch) {
+        qcModules.get("Overrepresented sequences") match {
+          case None => Seq.empty
+          case Some(qcModule) =>
+            for (
+              line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+              values = line.split("\t") if values.size >= 4
+            ) yield AdapterSequence(values(3), values(0))
+        }
+
+        fastQCFoundSequences.filter(x => {
+          (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size == 1
+        })
+      } else {
+       Seq.empty
+      }
 
       fromKnownList ++ fastQCFoundSequences
     } else Set()

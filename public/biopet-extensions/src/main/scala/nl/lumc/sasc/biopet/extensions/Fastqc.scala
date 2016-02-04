@@ -47,6 +47,9 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Vers
   var nogroup: Boolean = config("nogroup", default = false)
   var extract: Boolean = config("extract", default = true)
 
+  // The following variable is specific for biopet
+  var sensitiveAdapterSearch: Boolean = config("sensitiveAdapterSearch", default = false)
+
   def versionRegex = """FastQC (.*)""".r
   def versionCommand = executable + " --version"
   override def defaultThreads = 4
