@@ -39,7 +39,7 @@ import org.testng.annotations._
 class GearsSingleTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GearsSingle = {
     new GearsSingle {
-      override def configName = "gears"
+      override def configName = "gearssingle"
 
       override def globalConfig = new Config(map)
 
@@ -121,10 +121,13 @@ object GearsSingleTest {
 
   val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
   Files.touch(r1)
+  r1.deleteOnExit()
   val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
   Files.touch(r2)
+  r2.deleteOnExit()
   val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
   Files.touch(bam)
+  bam.deleteOnExit()
 
   val executables = Map(
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
