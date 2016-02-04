@@ -76,8 +76,10 @@
         #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_BasesTable">Show table</button>
         #end
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Bases_R1.tsv">R1 reads stats</a> -
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Bases_R2.tsv">R2 reads stats</a>
+
+        <a href="QC_Bases_R1.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R1 base stats</button></a>
+        <a href="QC_Bases_R2.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R2 base stats</button></a>
+
     </div>
 #end
 

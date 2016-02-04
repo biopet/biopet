@@ -1,12 +1,12 @@
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
-import nl.lumc.sasc.biopet.core.report.{ReportPage, ReportSection, ReportBuilderExtension}
+import nl.lumc.sasc.biopet.core.report.{ ReportPage, ReportSection, ReportBuilderExtension }
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
-  * Created by wyleung on 4-2-16.
-  */
+ * Created by wyleung on 4-2-16.
+ */
 class TinyCapReport(val root: Configurable) extends ReportBuilderExtension {
   def builder = TinyCapReport
 
@@ -20,7 +20,6 @@ object TinyCapReport extends MultisampleMappingReportTrait {
   override def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/tinycap/tinycapFront.ssp")
 
   override def pipelineName = "tinycap"
-
 
   /** Root page for the carp report */
   override def indexPage = {
@@ -56,7 +55,5 @@ object TinyCapReport extends MultisampleMappingReportTrait {
       pageArgs ++ Map("pipeline" -> pipelineName)
     )
   }
-
-
 
 }

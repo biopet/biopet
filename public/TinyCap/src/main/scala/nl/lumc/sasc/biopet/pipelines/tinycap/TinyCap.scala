@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.tinycap
 
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.HtseqCount
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.utils.config.Configurable
