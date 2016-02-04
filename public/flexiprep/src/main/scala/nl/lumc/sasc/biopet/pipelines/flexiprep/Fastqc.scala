@@ -192,13 +192,13 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
               values = line.split("\t") if values.size >= 4
             ) yield AdapterSequence(values(3), values(0))
         }
-
-        fastQCFoundSequences.filter(x => {
-          (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size == 1
-        })
       } else {
-       Seq.empty
+        Seq.empty
       }
+
+      fastQCFoundSequences.filter(x => {
+        (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size == 1
+      })
 
       fromKnownList ++ fastQCFoundSequences
     } else Set()
