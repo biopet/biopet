@@ -36,7 +36,7 @@ import org.testng.annotations._
  * Created by wyleung on 10/22/15.
  */
 
-class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
+class GearsSingleTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GearsSingle = {
     new GearsSingle {
       override def configName = "gears"
@@ -50,22 +50,33 @@ class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
 
   @DataProvider(name = "gearsOptions")
   def gearsOptions = {
-    val startFromBam = Array(true, false)
-    val paired = Array(true, false)
-    val hasOutputNames = Array(true, false)
-    val hasFileExtensions = Array(true, false)
+    val bool = Array(true, false)
 
     for (
-      fromBam <- startFromBam;
-      pair <- paired;
-      hasOutputName <- hasOutputNames
-    ) yield Array(testset, fromBam, pair, hasOutputName)
+      fromBam <- bool;
+      pair <- bool;
+      hasOutputName <- bool;
+      kraken <- bool;
+      qiimeClosed <- bool;
+      qiimeRtax <- bool;
+      seqCount <- bool
+    ) yield Array("", fromBam, pair, hasOutputName, kraken, qiimeClosed, qiimeRtax, seqCount)
   }
 
   @Test(dataProvider = "gearsOptions")
-  def testGears(testset: String, fromBam: Boolean, paired: Boolean,
-                hasOutputName: Boolean) = {
+  def testGears(dummy: String,
+                fromBam: Boolean,
+                paired: Boolean,
+                hasOutputName: Boolean,
+                kraken: Boolean,
+                qiimeClosed: Boolean,
+                qiimeRtax: Boolean,
+                seqCount: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map(
+      "gears_use_kraken" -> kraken,
+      "gear_use_qiime_rtax" -> qiimeRtax,
+      "gear_use_qiime_closed" -> qiimeClosed,
+      "gear_use_seq_count" -> seqCount,
       "output_dir" -> GearsSingleTest.outputDir
     ), Map(GearsSingleTest.executables.toSeq: _*))
 
@@ -93,9 +104,9 @@ class GearsSingleTest(val testset: String) extends TestNGSuite with Matchers {
     gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (fromBam) 1 else 0)
     gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (fromBam) 1 else 0)
 
-    gears.functions.count(_.isInstanceOf[Kraken]) shouldBe 1
-    gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe 1
-    gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe 1
+    gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken) 1 else 0)
+    gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken) 1 else 0)
+    gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe (if (kraken) 1 else 0)
   }
 
   // remove temporary run directory all tests in the class have been run
@@ -120,6 +131,16 @@ object GearsSingleTest {
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
-    "md5sum" -> Map("exe" -> "test")
+    "md5sum" -> Map("exe" -> "test"),
+    "assigntaxonomy" -> Map("exe" -> "test"),
+    "pickclosedreferenceotus" -> Map("exe" -> "test"),
+    "pickotus" -> Map("exe" -> "test"),
+    "pickrepset" -> Map("exe" -> "test"),
+    "splitlibrariesfastq" -> Map("exe" -> "test"),
+    "flash" -> Map("exe" -> "test"),
+    "fastqc" -> Map("exe" -> "test"),
+    "seqtk" -> Map("exe" -> "test"),
+    "sickle" -> Map("exe" -> "test"),
+    "cutadapt" -> Map("exe" -> "test")
   )
 }
