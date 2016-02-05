@@ -9,11 +9,11 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test, AfterClass}
+import org.testng.annotations.{ DataProvider, Test, AfterClass }
 
 /**
-  * Created by pjvanthof on 04/02/16.
-  */
+ * Created by pjvanthof on 04/02/16.
+ */
 class GearsTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gears = {
     new Gears {
@@ -35,7 +35,6 @@ class GearsTest extends TestNGSuite with Matchers {
     ) yield Array("", s1, s2, qiimeClosed)
   }
 
-
   @Test(dataProvider = "gearsOptions")
   def testGears(dummy: String, sample1: Boolean, sample2: Boolean, qiimeCLosed: Boolean): Unit = {
     val map = {
@@ -52,7 +51,6 @@ class GearsTest extends TestNGSuite with Matchers {
     } else {
       val pipeline = initPipeline(map)
       pipeline.script()
-
 
     }
   }
