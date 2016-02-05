@@ -55,15 +55,30 @@ object CheckFastqPairs extends ToolCommand {
       //Getting R2 record, None if it's single end
       val recordR2 = readFq2.map(_.next())
 
-      //Here we check if the readnames of both files are concordant
+      //Here we check if the readnames of both files are concordant, and if the sequence content are correct DNA/RNA sequences
       recordR2 match {
         case Some(recordR2) => // Paired End
           val readHeader = recordR1.getReadHeader
           val readHeader2 = recordR2.getReadHeader
+          val readSeq = recordR1.getReadString
+          val readSeq2 = recordR2.getReadString
           val id1 = readHeader.takeWhile(_ != ' ')
           val id2 = readHeader2.takeWhile(_ != ' ')
 
-          if (counter % 1e5 == 0) logger.info(counter + " reads processed")
+          if (counter % 1e4 == 0) logger.info(counter + " reads processed")
+
+
+          val allowedBases = """([actgnACTGN+]+)""".r
+
+          val validBases: Boolean = readSeq match {
+            case allowedBases(m) => true
+            case _ => throw new IllegalStateException(s"Non IUPAC symbols identified '${(counter*4)-3}'")
+          }
+
+          val validBases2: Boolean = readSeq2 match {
+            case allowedBases(m) => true
+            case _ => throw new IllegalStateException(s"Non IUPAC symbols identified '${(counter*4)-3}'")
+          }
 
           if (id1 == id2){
 
