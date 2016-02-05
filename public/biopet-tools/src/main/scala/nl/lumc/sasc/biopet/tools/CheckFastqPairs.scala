@@ -65,7 +65,7 @@ object CheckFastqPairs extends ToolCommand {
           val id1 = readHeader.takeWhile(_ != ' ')
           val id2 = readHeader2.takeWhile(_ != ' ')
 
-          if (counter % 1e4 == 0) logger.info(counter + " reads processed")
+          if (counter % 1e5 == 0) logger.info(counter + " reads processed")
 
 
           val allowedBases = """([actgnACTGN+]+)""".r
@@ -98,6 +98,7 @@ object CheckFastqPairs extends ToolCommand {
       throw new IllegalStateException("R2 has more reads then R1")
 
     logger.info("Done processing the Fastq file(s) no errors found")
+    logger.info("total reads processed: " + counter)
     //close both iterators
     readFq1.close()
     readFq2.foreach(_.close())
