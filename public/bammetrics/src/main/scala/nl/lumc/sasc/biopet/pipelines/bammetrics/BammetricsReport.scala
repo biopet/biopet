@@ -78,7 +78,9 @@ object BammetricsReport extends ReportBuilder {
         Map())),
       List(
         "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
+        // FIXME: the insert size block, should only displayed when we have paired end data.
         "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+
       ) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
           Map("showPlot" -> true)))
         else Nil) ++

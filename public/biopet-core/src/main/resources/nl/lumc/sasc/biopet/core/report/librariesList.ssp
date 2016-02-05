@@ -6,7 +6,7 @@
 <table class="table">
 <thead><tr><th>Libraries</th></tr></thead>
 <tbody>
-#for (lib <- summary.libraries(sampleId.get))
+#for (lib <- summary.libraries(sampleId.get).toList.sorted)
     <tr><td><a href="${rootPath}Samples/${sampleId}/Libraries/${lib}/index.html">${lib}</a></td></tr>
 #end
 </tbody>

@@ -40,8 +40,8 @@
             #{
                 val libs = (libId, sampleLevel) match {
                 case (_, true) => List("")
-                case (Some(libId), _) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                case (Some(libId), _) => List(libId.toString).sorted
+                case _ => summary.libraries(sample).toList.sorted
                 }
             }#
             <tr><td rowspan="${libs.size}"><a href="${rootPath}Samples/${sample}/index.html">${sample}</a></td>

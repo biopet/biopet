@@ -18,9 +18,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.{ File, FileNotFoundException }
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import org.broadinstitute.gatk.utils.commandline.Output
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
 
@@ -51,7 +50,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
    * @throws IllegalStateException if the module lines have no content or mapping is empty.
    */
   def qcModules: Map[String, FastQCModule] = {
-    val fqModules = Source.fromFile(dataFile)
+    val fastQCLog = Source.fromFile(dataFile)
+    val fqModules: Map[String, FastQCModule] = fastQCLog
       // drop all the characters before the first module delimiter (i.e. '>>')
       .dropWhile(_ != '>')
       // pull everything into a string
@@ -77,6 +77,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       }
       .toMap
 
+    fastQCLog.close()
     if (fqModules.isEmpty) throw new IllegalStateException("Empty FastQC data file " + dataFile.toString)
     else fqModules
   }
@@ -165,7 +166,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
           } yield AdapterSequence(values(0), values(1))).toSet
       }
 
-      val found = qcModules.get("Overrepresented sequences") match {
+      val adapterSet = getFastqcSeqs(adapters)
+      val contaminantSet = getFastqcSeqs(contaminants)
+
+      val foundAdapterNames: Seq[String] = qcModules.get("Overrepresented sequences") match {
         case None => Seq.empty[String]
         case Some(qcModule) =>
           for (
@@ -176,8 +180,27 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
       // select full sequences from known adapters and contaminants
       // based on overrepresented sequences results
-      (getFastqcSeqs(adapters) ++ getFastqcSeqs(contaminants))
-        .filter(x => found.exists(_.startsWith(x.name)))
+      val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
+        .filter(x => foundAdapterNames.exists(_.startsWith(x.name)))
+
+      val fastQCFoundSequences: Seq[AdapterSequence] = if (sensitiveAdapterSearch) {
+        qcModules.get("Overrepresented sequences") match {
+          case None => Seq.empty
+          case Some(qcModule) =>
+            for (
+              line <- qcModule.lines if !(line.startsWith("#") || line.startsWith(">"));
+              values = line.split("\t") if values.size >= 4
+            ) yield AdapterSequence(values(3), values(0))
+        }
+      } else {
+        Seq.empty
+      }
+
+      fastQCFoundSequences.filter(x => {
+        (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size == 1
+      })
+
+      fromKnownList ++ fastQCFoundSequences
     } else Set()
   }
 
