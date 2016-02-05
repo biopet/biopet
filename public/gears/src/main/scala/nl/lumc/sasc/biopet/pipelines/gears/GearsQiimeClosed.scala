@@ -79,8 +79,6 @@ object GearsQiimeClosed {
       val counts: mutable.Map[String, Long] = mutable.Map()
       def totalCount(sample: String): Long = counts.getOrElse(sample, 0L) + childs.map(_.totalCount(sample)).sum
 
-      override def toString() = s"$level:$name:$counts"
-
       def node: Elem = {
         val sizes = sortedSamples.map { sample => <val>{ totalCount(sample) }</val> }
         val size = <size>{ sizes }</size>
