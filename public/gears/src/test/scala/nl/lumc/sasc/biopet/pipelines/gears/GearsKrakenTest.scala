@@ -8,8 +8,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 2/5/16.
-  */
+ * Created by pjvan_thof on 2/5/16.
+ */
 class GearsKrakenTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
