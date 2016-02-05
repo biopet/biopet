@@ -1,0 +1,135 @@
+{
+  "unclassified" : {
+    "children" : [
+      
+    ],
+    "name" : "unclassified",
+    "count" : 732,
+    "taxid" : 0,
+    "size" : 732,
+    "cladelevel" : 0,
+    "taxonrank" : "U"
+  },
+  "classified" : {
+    "children" : [
+      {
+        "children" : [
+          {
+            "children" : [
+              {
+                "children" : [
+                  {
+                    "children" : [
+                      {
+                        "children" : [
+                          {
+                            "children" : [
+                              {
+                                "children" : [
+                                  {
+                                    "children" : [
+                                      
+                                    ],
+                                    "name" : "Human herpesvirus 4 type 2",
+                                    "count" : 6,
+                                    "taxid" : 12509,
+                                    "size" : 6,
+                                    "cladelevel" : 8,
+                                    "taxonrank" : "-"
+                                  }
+                                ],
+                                "name" : "Human herpesvirus 4",
+                                "count" : 3902,
+                                "taxid" : 10376,
+                                "size" : 3908,
+                                "cladelevel" : 7,
+                                "taxonrank" : "S"
+                              }
+                            ],
+                            "name" : "Lymphocryptovirus",
+                            "count" : 0,
+                            "taxid" : 10375,
+                            "size" : 3908,
+                            "cladelevel" : 6,
+                            "taxonrank" : "G"
+                          }
+                        ],
+                        "name" : "Gammaherpesvirinae",
+                        "count" : 0,
+                        "taxid" : 10374,
+                        "size" : 3908,
+                        "cladelevel" : 5,
+                        "taxonrank" : "-"
+                      },
+                      {
+                        "children" : [
+                          {
+                            "children" : [
+                              {
+                                "children" : [
+                                  
+                                ],
+                                "name" : "Human herpesvirus 5",
+                                "count" : 5360,
+                                "taxid" : 10359,
+                                "size" : 5360,
+                                "cladelevel" : 7,
+                                "taxonrank" : "S"
+                              }
+                            ],
+                            "name" : "Cytomegalovirus",
+                            "count" : 0,
+                            "taxid" : 10358,
+                            "size" : 5360,
+                            "cladelevel" : 6,
+                            "taxonrank" : "G"
+                          }
+                        ],
+                        "name" : "Betaherpesvirinae",
+                        "count" : 0,
+                        "taxid" : 10357,
+                        "size" : 5360,
+                        "cladelevel" : 5,
+                        "taxonrank" : "-"
+                      }
+                    ],
+                    "name" : "Herpesviridae",
+                    "count" : 0,
+                    "taxid" : 10292,
+                    "size" : 9268,
+                    "cladelevel" : 4,
+                    "taxonrank" : "F"
+                  }
+                ],
+                "name" : "Herpesvirales",
+                "count" : 0,
+                "taxid" : 548681,
+                "size" : 9268,
+                "cladelevel" : 3,
+                "taxonrank" : "O"
+              }
+            ],
+            "name" : "dsDNA viruses, no RNA stage",
+            "count" : 0,
+            "taxid" : 35237,
+            "size" : 9268,
+            "cladelevel" : 2,
+            "taxonrank" : "-"
+          }
+        ],
+        "name" : "Viruses",
+        "count" : 0,
+        "taxid" : 10239,
+        "size" : 9268,
+        "cladelevel" : 1,
+        "taxonrank" : "D"
+      }
+    ],
+    "name" : "root",
+    "count" : 0,
+    "taxid" : 1,
+    "size" : 9268,
+    "cladelevel" : 0,
+    "taxonrank" : "-"
+  }
+}
