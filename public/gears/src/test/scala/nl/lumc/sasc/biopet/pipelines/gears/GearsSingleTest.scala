@@ -74,9 +74,9 @@ class GearsSingleTest extends TestNGSuite with Matchers {
                 seqCount: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map(
       "gears_use_kraken" -> kraken,
-      "gear_use_qiime_rtax" -> qiimeRtax,
-      "gear_use_qiime_closed" -> qiimeClosed,
-      "gear_use_seq_count" -> seqCount,
+      "gears_use_qiime_rtax" -> qiimeRtax,
+      "gears_use_qiime_closed" -> qiimeClosed,
+      "gears_use_seq_count" -> seqCount,
       "output_dir" -> GearsSingleTest.outputDir
     ), Map(GearsSingleTest.executables.toSeq: _*))
 
@@ -99,6 +99,11 @@ class GearsSingleTest extends TestNGSuite with Matchers {
       // in the following cases the filename should have been determined by the filename
       gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
     }
+
+    gears.krakenScript.isDefined shouldBe kraken
+    gears.qiimeClosed.isDefined shouldBe qiimeClosed
+    gears.qiimeRatx.isDefined shouldBe qiimeRtax
+    gears.seqCount.isDefined shouldBe seqCount
 
     // SamToFastq should have started if it was started from bam
     gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (fromBam) 1 else 0)
