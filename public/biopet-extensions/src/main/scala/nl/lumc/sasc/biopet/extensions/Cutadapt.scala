@@ -200,12 +200,12 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
         line match {
           case processedReads(m)        => stats("processed") = m.replaceAll(",", "").toInt
           case withAdapters(m)          => stats("withadapters") = m.replaceAll(",", "").toInt
-          case readsPassingFilters(m)   => stats("passingfilters")  =  m.replaceAll(",", "").toInt
-          case tooShortR(m)             => stats("tooshort" )  = m.replaceAll(",", "").toInt
-          case tooLongR(m)              => stats("toolong" )  = m.replaceAll(",", "").toInt
-          case tooManyN(m)              => stats("toomanyn" )  = m.replaceAll(",", "").toInt
-          case basePairsProcessed(m)    => stats("bpinput" )  = m.replaceAll(",", "").toInt
-          case basePairsWritten(m)      => stats("bpoutput" )  = m.replaceAll(",", "").toInt
+          case readsPassingFilters(m)   => stats("passingfilters") = m.replaceAll(",", "").toInt
+          case tooShortR(m)             => stats("tooshort") = m.replaceAll(",", "").toInt
+          case tooLongR(m)              => stats("toolong") = m.replaceAll(",", "").toInt
+          case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toInt
+          case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toInt
+          case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toInt
           case adapterR(adapter, count) => adapter_stats += (adapter -> count.toInt)
           case _                        =>
         }
