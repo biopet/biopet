@@ -1,6 +1,16 @@
 # Introduction
 
-``TinyCap`` is an analysis pipeline meant the process smallRNA captures. 
+``TinyCap`` is an analysis pipeline meant the process smallRNA captures. We use a fixed aligner in this pipeline: `bowtie` .
+By default, we allow one fragment to align up to 5 different locations on the genome. In most of the cases, the shorter the sequence, the less 'unique' the pattern is. Multiple "best" alignments is in these cases possible.
+To not create a 'first-occurence found and align-to' bias towards the reference genome, we allow the aligner to report more alignment positions.
+
+After alignment, `htseq-count` is responsible for the quantification of transcripts. One should supply 2 annotation-files for this to happen:
+
+- mirBase GFF3 file with all annotated and curated miRNA for the genome of interest. [visit mirBase](http://www.mirbase.org/ftp.shtml)
+- Ensembl (Gene sets) in GTF format. [visit Ensembl](http://www.ensembl.org/info/data/ftp/index.html) 
+
+Count tables are generated per sample and and aggregation per (run)project is created in the top level folder of the project.
+
 
 # Starting the pipeline
 
@@ -53,11 +63,13 @@ Example:
     )
 ```
 
-# Testcase A
-
 # Examine results
 
 ## Result files
+
+- `counttables_smallrna.tinycap.tsv`
+- `counttables_mirna.tinycap.tsv`
+
 
 ## Best practice
 
