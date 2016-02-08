@@ -63,8 +63,8 @@ object BammetricsReport extends ReportBuilder {
 
     val insertsizeMetrics = summary.getValue(sampleId, libId, metricsTag, "stats", "CollectInsertSizeMetrics", "metrics") match {
       case Some(None) => false
-      case Some(_) => true
-      case _ => false
+      case Some(_)    => true
+      case _          => false
     }
 
     val targets = (

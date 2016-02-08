@@ -44,7 +44,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
                        fileExtension: String,
                        args: MergeArgs = mergeArgs): Unit = {
     add(MergeTables(this, countFiles, outputFile,
-      args.idCols, args.valCol, args.numHeaderLines, args.fallback))
+      args.idCols, args.valCol, args.numHeaderLines, args.fallback, fileExtension = Some(fileExtension)))
     extraSummaryFiles += s"${name}_table" -> outputFile
   }
 
