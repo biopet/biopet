@@ -197,6 +197,8 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         Seq.empty
       }
 
+      // we only want to keep adapter sequences which are known by FastQC
+      // sequences such as "Adapter01 (100% over 12bp)" are valid because "Adapter01" is in FastQC
       fastQCFoundSequences.filter(x => {
         (adapterSet ++ contaminantSet).count(y => x.name.startsWith(y.name)) == 1
       })
