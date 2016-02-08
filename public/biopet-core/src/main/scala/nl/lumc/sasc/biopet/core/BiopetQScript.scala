@@ -23,9 +23,7 @@ import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
