@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import htsjdk.samtools.{SAMReadGroupRecord, SAMSequenceRecord, SAMLineParser, SAMFileHeader}
+import htsjdk.samtools.{ SAMReadGroupRecord, SAMSequenceRecord, SAMLineParser, SAMFileHeader }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -13,8 +13,8 @@ import picard.annotation.Gene
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvan_thof on 1/29/16.
-  */
+ * Created by pjvan_thof on 1/29/16.
+ */
 class BaseCounterTest extends TestNGSuite with Matchers {
 
   import BaseCounter._
@@ -55,7 +55,7 @@ class BaseCounterTest extends TestNGSuite with Matchers {
     bamRecordBasesOverlap(read, 60, 70) shouldBe 0
   }
 
-    @Test
+  @Test
   def testBamRecordBasesOverlap(): Unit = {
     val read = BaseCounterTest.lineParser.parseLine("r02\t0\tchrQ\t50\t60\t10M\t*\t0\t0\tTACGTACGTA\tEEFFGGHHII\tRG:Z:001")
     bamRecordBasesOverlap(read, 40, 70) shouldBe 10

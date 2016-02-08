@@ -28,7 +28,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
-    val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_.isDefined)
+    val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => value.isDefined }
 
@@ -47,7 +47,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         )) ++
         (if (insertsizeExecuted) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))else Nil) ++
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
         (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
         else Nil) ++
