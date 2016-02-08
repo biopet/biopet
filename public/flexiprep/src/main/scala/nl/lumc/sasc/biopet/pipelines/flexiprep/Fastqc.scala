@@ -183,6 +183,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
         .filter(x => foundAdapterNames.exists(_.startsWith(x.name)))
 
+      // list all sequences found by FastQC
       val fastQCFoundSequences: Seq[AdapterSequence] = if (sensitiveAdapterSearch) {
         qcModules.get("Overrepresented sequences") match {
           case None => Seq.empty
@@ -197,7 +198,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       }
 
       fastQCFoundSequences.filter(x => {
-        (adapterSet ++ contaminantSet).filter(y => y.name == x.name).size == 1
+        (adapterSet ++ contaminantSet).count(y => x.name.startsWith(y.name)) == 1
       })
 
       fromKnownList ++ fastQCFoundSequences
