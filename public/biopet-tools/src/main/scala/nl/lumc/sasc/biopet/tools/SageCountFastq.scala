@@ -15,10 +15,12 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ File, FileReader, PrintWriter }
+import java.io.{ File, PrintWriter }
 
+import htsjdk.samtools.fastq.FastqReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import org.biojava3.sequencing.io.fastq.{ Fastq, StreamListener, SangerFastqReader }
+
+import scala.collection.JavaConversions._
 
 import scala.collection.{ SortedMap, mutable }
 
@@ -44,19 +46,19 @@ object SageCountFastq extends ToolCommand {
     if (!commandArgs.input.exists) throw new IllegalStateException("Input file not found, file: " + commandArgs.input)
 
     val counts: mutable.Map[String, Long] = mutable.Map()
-    val reader = new SangerFastqReader
+    val reader: FastqReader = new FastqReader(commandArgs.input)
     var count = 0
     logger.info("Reading fastq file: " + commandArgs.input)
-    val fileReader = new FileReader(commandArgs.input)
-    reader.stream(fileReader, new StreamListener {
-      def fastq(fastq: Fastq) {
-        val seq = fastq.getSequence
-        if (counts.contains(seq)) counts(seq) += 1
-        else counts += (seq -> 1)
-        count += 1
-        if (count % 1000000 == 0) logger.info(count + " sequences done")
-      }
-    })
+
+    for (read <- reader.iterator()) {
+      val seq = read.getReadString
+      if (counts.contains(seq)) counts(seq) += 1
+      else counts += (seq -> 1)
+      count += 1
+      if (count % 1000000 == 0) logger.info(count + " sequences done")
+    }
+
+    reader.close()
     logger.info(count + " sequences done")
 
     logger.info("Sorting")
@@ -64,9 +66,7 @@ object SageCountFastq extends ToolCommand {
 
     logger.info("Writting outputfile: " + commandArgs.output)
     val writer = new PrintWriter(commandArgs.output)
-    for ((seq, count) <- sortedCounts) {
-      writer.println(seq + "\t" + count)
-    }
+    sortedCounts.foreach { case (s, c) => writer.println(s + "\t" + c) }
     writer.close()
   }
 }

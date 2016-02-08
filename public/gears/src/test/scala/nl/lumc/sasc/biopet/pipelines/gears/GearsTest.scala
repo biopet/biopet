@@ -1,42 +1,20 @@
-/**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations._
+import org.testng.annotations.{ DataProvider, Test, AfterClass }
 
 /**
- * Test class for [[Gears]]
- *
- * Created by wyleung on 10/22/15.
+ * Created by pjvanthof on 04/02/16.
  */
-
-class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
+class GearsTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gears = {
     new Gears {
       override def configName = "gears"
@@ -49,65 +27,39 @@ class GearsPipelineTest(val testset: String) extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "gearsOptions")
-  def gearsOptions = {
-    val startFromBam = Array(true, false)
-    val paired = Array(true, false)
-    val hasOutputNames = Array(true, false)
-    val hasFileExtensions = Array(true, false)
+  def shivaOptions = {
+    val bool = Array(true, false)
 
     for (
-      fromBam <- startFromBam;
-      pair <- paired;
-      hasOutputName <- hasOutputNames;
-      hasFileExtension <- hasFileExtensions
-    ) yield Array(testset, fromBam, pair, hasOutputName, hasFileExtension)
+      s1 <- bool; s2 <- bool; qiimeClosed <- bool
+    ) yield Array("", s1, s2, qiimeClosed)
   }
 
   @Test(dataProvider = "gearsOptions")
-  def testGears(testset: String, fromBam: Boolean, paired: Boolean,
-                hasOutputName: Boolean, hasFileExtension: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map(
-      "output_dir" -> GearsTest.outputDir
-    ), Map(GearsTest.executables.toSeq: _*))
-
-    val gears: Gears = initPipeline(map)
-
-    if (fromBam) {
-      gears.bamFile = if (hasFileExtension) Some(GearsTest.bam) else Some(GearsTest.bam_noext)
-    } else {
-      gears.fastqR1 = if (hasFileExtension) Some(GearsTest.r1) else Some(GearsTest.r1_noext)
-      gears.fastqR2 = if (paired) if (hasFileExtension) Some(GearsTest.r2) else Some(GearsTest.r2_noext) else None
+  def testGears(dummy: String, sample1: Boolean, sample2: Boolean, qiimeCLosed: Boolean): Unit = {
+    val map = {
+      var m: Map[String, Any] = GearsTest.config
+      if (sample1) m = ConfigUtils.mergeMaps(GearsTest.sample1, m)
+      if (sample2) m = ConfigUtils.mergeMaps(GearsTest.sample2, m)
+      ConfigUtils.mergeMaps(Map("gear_use_qiime_closed" -> qiimeCLosed), m)
     }
-    if (hasOutputName)
-      gears.outputName = "test"
 
-    gears.script()
-
-    if (hasOutputName) {
-      gears.outputName shouldBe "test"
-    } else {
-      // in the following cases the filename should have been determined by the filename
-      if (hasFileExtension) {
-        gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
-      } else {
-        // no real use-case for this one, have this is for sanity check
-        gears.outputName shouldBe (if (fromBam) "bamfile" else "R1")
+    if (!sample1 && !sample2) { // When no samples
+      intercept[IllegalArgumentException] {
+        initPipeline(map).script()
       }
+    } else {
+      val pipeline = initPipeline(map)
+      pipeline.script()
+
     }
-
-    // SamToFastq should have started if it was started from bam
-    gears.functions.count(_.isInstanceOf[SamtoolsView]) shouldBe (if (fromBam) 1 else 0)
-    gears.functions.count(_.isInstanceOf[SamToFastq]) shouldBe (if (fromBam) 1 else 0)
-
-    gears.functions.count(_.isInstanceOf[Kraken]) shouldBe 1
-    gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe 1
-    gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe 1
   }
 
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
     FileUtils.deleteDirectory(GearsTest.outputDir)
   }
+
 }
 
 object GearsTest {
@@ -121,18 +73,45 @@ object GearsTest {
   val bam = new File(outputDir, "input" + File.separator + "bamfile.bam")
   Files.touch(bam)
 
-  val r1_noext = new File(outputDir, "input" + File.separator + "R1")
-  Files.touch(r1_noext)
-  val r2_noext = new File(outputDir, "input" + File.separator + "R2")
-  Files.touch(r2_noext)
-  val bam_noext = new File(outputDir, "input" + File.separator + "bamfile")
-  Files.touch(bam_noext)
-
-  val executables = Map(
+  val config = Map(
+    "output_dir" -> outputDir,
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
+    "mergeotutables" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
-    "md5sum" -> Map("exe" -> "test")
+    "md5sum" -> Map("exe" -> "test"),
+    "assigntaxonomy" -> Map("exe" -> "test"),
+    "pickclosedreferenceotus" -> Map("exe" -> "test"),
+    "pickotus" -> Map("exe" -> "test"),
+    "pickrepset" -> Map("exe" -> "test"),
+    "splitlibrariesfastq" -> Map("exe" -> "test"),
+    "flash" -> Map("exe" -> "test"),
+    "fastqc" -> Map("exe" -> "test"),
+    "seqtk" -> Map("exe" -> "test"),
+    "sickle" -> Map("exe" -> "test"),
+    "cutadapt" -> Map("exe" -> "test")
   )
+
+  val sample1 = Map(
+    "samples" -> Map("sample1" -> Map("libraries" -> Map(
+      "lib1" -> Map(
+        "R1" -> r1.getAbsolutePath,
+        "R2" -> r2.getAbsolutePath
+      )
+    )
+    )))
+
+  val sample2 = Map(
+    "samples" -> Map("sample3" -> Map("libraries" -> Map(
+      "lib1" -> Map(
+        "R1" -> r1.getAbsolutePath,
+        "R2" -> r2.getAbsolutePath
+      ),
+      "lib2" -> Map(
+        "R1" -> r1.getAbsolutePath,
+        "R2" -> r2.getAbsolutePath
+      )
+    )
+    )))
 }

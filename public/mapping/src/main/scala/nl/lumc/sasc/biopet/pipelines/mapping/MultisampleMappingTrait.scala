@@ -8,6 +8,7 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -198,6 +199,14 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         bamMetrics.inputBam = preProcessBam.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         add(bamMetrics)
+      }
+
+      if (config("unmapped_to_gears", default = false) && libraries.flatMap(_._2.bamFile).nonEmpty) {
+        val gears = new GearsSingle(qscript)
+        gears.bamFile = preProcessBam
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        add(gears)
       }
     }
   }
