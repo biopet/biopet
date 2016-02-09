@@ -16,14 +16,13 @@
 </table>
 <br/>
 <div class="row">
-<div class="col-md-1"></div>
-<div class="col-md-6">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
     <p>
-        In this web document you can find your <em>${pipeline}</em> pipeline report.
+        In this web document you can find your <em><strong>${pipeline}</strong></em> pipeline report.
         Different categories of data can be found in the left-side menu.
         Statistics per sample and library can be accessed through the top-level menu.
-        Some statistics for target regions can be found in the regions tab.
-        Futhermore, you can view all versions of software tools used by selecting <em>Versions</em> from the top menu.
+        Futhermore, you can view all versions of software tools used by selecting <em><a href="./Versions/index.html">Versions</a></em> from the top menu.
     </p>
 
     <p>
@@ -33,5 +32,6 @@
         LUMC.
         </small>
     </p>
-</div>
+    </div>
+    <div class="col-md-1"></div>
 </div>

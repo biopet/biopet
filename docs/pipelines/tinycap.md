@@ -1,10 +1,13 @@
 # Introduction
 
 ``TinyCap`` is an analysis pipeline meant the process smallRNA captures. We use a fixed aligner in this pipeline: `bowtie` .
-By default, we allow one fragment to align up to 5 different locations on the genome. In most of the cases, the shorter the sequence, the less 'unique' the pattern is. Multiple "best" alignments is in these cases possible.
-To not create a 'first-occurence found and align-to' bias towards the reference genome, we allow the aligner to report more alignment positions.
+By default, we allow one fragment to align up to 5 different locations on the genome. In most of the cases, the shorter 
+the sequence, the less 'unique' the pattern is. Multiple "best" alignments is in these cases possible.
+To not create a 'first-occurence found and align-to' bias towards the reference genome, we allow the aligner 
+to report more alignment positions.
 
-After alignment, `htseq-count` is responsible for the quantification of transcripts. One should supply 2 annotation-files for this to happen:
+After alignment, `htseq-count` is responsible for the quantification of transcripts. 
+One should supply 2 annotation-files for this to happen:
 
 - mirBase GFF3 file with all annotated and curated miRNA for the genome of interest. [visit mirBase](http://www.mirbase.org/ftp.shtml)
 - Ensembl (Gene sets) in GTF format. [visit Ensembl](http://www.ensembl.org/info/data/ftp/index.html) 
@@ -21,7 +24,6 @@ biopet pipelines tinycap [options] \
 -qsub \
 -jobParaEnv BWA \
 -run
-
 
 # Example
 Note that one should first create the appropriate [configs](../general/config.md).
@@ -41,7 +43,7 @@ The pipeline specific (minimum) config looks like:
 
 One can specify other options such as: `bowtie` (alignment) options, clipping and trimming options `sickle` and `cutadapt`.
 
-Example:
+## Example config:
 
 ```
     "bowtie": {
@@ -60,8 +62,22 @@ Example:
       "q": 30,              # minimum quality over the read after the clipping in order to keep and report the read
       "default_clip_mode": "both",  # clip from: front/end/both (5'/3'/both). Depending on the protocol. Setting `both` makes clipping take more time, but is safest to do on short sequences such as smallRNA.
       "times": 2            # in cases of chimera reads/adapters, how many times should cutadapt try to remove am adapter-sequence
-    )
+    }
 ```
+
+The settings above is quite strict and aggressive on the clipping with `cutadapt`. By default the option `sensitiveAdapterSearch` is turned on in the TinyCap pipeline:
+
+```
+    "fastqc": {
+        "sensitiveAdapterSearch": true
+    }
+```
+
+This setting is turned on to enable aggressive adapter trimming. e.g. found (partial) adapters in `FastQC` 
+are all used in `Cutadapt`. Depending on the sequencing technique and sample preparation, e.g. short 
+sequences (76bp - 100bp). Turning of this option will still produce sensible results.
+
+
 
 # Examine results
 
@@ -74,3 +90,8 @@ Example:
 ## Best practice
 
 # References
+
+- [Cutadapt](https://github.com/marcelm/cutadapt)
+- [HTSeqCount](http://www-huber.embl.de/HTSeq/doc/overview.html)
+- [Bowtie1](http://bowtie-bio.sourceforge.net/index.shtml)
+
