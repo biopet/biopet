@@ -95,7 +95,10 @@ class Gentrap(val root: Configurable) extends QScript
       "novelsplicing" -> 1,
       "batch" -> 4
     ),
-    "shivavariantcalling" -> Map("variantcallers" -> List("varscan_cns_singlesample")),
+    "shivavariantcalling" -> Map(
+      "variantcallers" -> List("varscan_cns_singlesample"),
+      "name_prefix" -> "multisample"
+    ),
     "bammetrics" -> Map(
       "wgs_metrics" -> false,
       "rna_metrics" -> true,
