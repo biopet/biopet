@@ -2,10 +2,10 @@
 
 ## Introduction
 
-``TinyCap`` is an analysis pipeline meant the process smallRNA captures. We use a fixed aligner in this pipeline: `bowtie` .
+``TinyCap`` is an analysis pipeline meant to process smallRNA captures. We use a fixed aligner in this pipeline: `bowtie` .
 By default, we allow one fragment to align up to 5 different locations on the genome. In most of the cases, the shorter 
-the sequence, the less 'unique' the pattern is. Multiple "best" alignments is in these cases possible.
-To not create a 'first-occurence found and align-to' bias towards the reference genome, we allow the aligner 
+the sequence, the less 'unique' the pattern is. Multiple **"best"** alignments is in these cases possible.
+To avoid **'first-occurence found and align-to'** bias towards the reference genome, we allow the aligner 
 to report more alignment positions.
 
 After alignment, `htseq-count` is responsible for the quantification of transcripts. 
@@ -46,10 +46,10 @@ The pipeline specific (minimum) config looks like:
 }
 ```
 
+
+### Advanced config:
+
 One can specify other options such as: `bowtie` (alignment) options, clipping and trimming options `sickle` and `cutadapt`.
-
-### Example config:
-
 ```json
 "bowtie": {
   "chunkmbs": 256,  # this is a performance option, keep it high (256) as many alternative alignments are possible

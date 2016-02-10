@@ -12,7 +12,7 @@ The sample config should be in [__JSON__](http://www.json.org/) or [__YAML__](ht
 
 #### Example sample config
 
-###### yaml:
+###### YAML:
 
 ``` yaml
 output_dir: /home/user/myoutputdir
@@ -24,7 +24,7 @@ samples:
         R2: R2.fastq.gz
 ```
 
-###### json:
+###### JSON:
 
 ``` json
     {  
