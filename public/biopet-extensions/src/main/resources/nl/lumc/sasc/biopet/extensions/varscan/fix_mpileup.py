@@ -21,6 +21,9 @@ from __future__ import print_function
 __author__="Wai Yi Leung"
 
 import sys
+import re
+
+upacPatern = re.compile(r'[RYKMSWBDHV]')
 
 if __name__ == "__main__":
     """
@@ -46,4 +49,5 @@ if __name__ == "__main__":
         if new_size == 0:
             l[5] = ""
 
+        l[2] = upacPatern.sub("N", l[2])
         print("\t".join(map(str, l)))
