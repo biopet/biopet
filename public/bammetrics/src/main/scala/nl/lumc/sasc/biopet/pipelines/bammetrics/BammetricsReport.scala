@@ -61,6 +61,12 @@ object BammetricsReport extends ReportBuilder {
     val wgsExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "wgs").isDefined
     val rnaExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "rna").isDefined
 
+    val insertsizeMetrics = summary.getValue(sampleId, libId, metricsTag, "stats", "CollectInsertSizeMetrics", "metrics") match {
+      case Some(None) => false
+      case Some(_)    => true
+      case _          => false
+    }
+
     val targets = (
       summary.getValue(sampleId, libId, metricsTag, "settings", "amplicon_name"),
       summary.getValue(sampleId, libId, metricsTag, "settings", "roi_name")
@@ -77,11 +83,10 @@ object BammetricsReport extends ReportBuilder {
         targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
         Map())),
       List(
-        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        // FIXME: the insert size block, should only displayed when we have paired end data.
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
-
-      ) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp")) ++
+        (if (insertsizeMetrics) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+        )
+        else Nil) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
           Map("showPlot" -> true)))
         else Nil) ++
         (if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",

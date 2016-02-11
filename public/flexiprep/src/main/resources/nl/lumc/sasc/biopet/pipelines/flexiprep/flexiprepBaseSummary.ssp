@@ -56,17 +56,22 @@
 #end
 #if (showPlot)
     #{
+        val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
+            summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
+        else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
         FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R1","R1", summary, sampleId = sampleId)
-        FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
+        if (paired) FlexiprepReport.baseSummaryPlot(outputDir, "QC_Bases_R2","R2", summary, sampleId = sampleId)
     }#
     <div class="panel-body">
         <div class="row">
             <div class="col-sm-6 col-md-6">
                 <img src="QC_Bases_R1.png" class="img-responsive" />
             </div>
-            <div class="col-sm-6 col-md-6">
+            #if (paired)
+                <div class="col-sm-6 col-md-6">
                 <img src="QC_Bases_R2.png" class="img-responsive" />
-            </div>
+                </div>
+            #end
         </div>
 
     </div>
@@ -78,8 +83,9 @@
         #end
 
         <a href="QC_Bases_R1.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R1 base stats</button></a>
+        #if (paired)
         <a href="QC_Bases_R2.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R2 base stats</button></a>
-
+        #end
     </div>
 #end
 

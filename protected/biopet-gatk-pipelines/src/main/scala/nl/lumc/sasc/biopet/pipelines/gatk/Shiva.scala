@@ -75,7 +75,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
       }
     }
 
-    override def keepMergedFiles: Boolean = config("keep_merged_files", default = false)
+    override def keepMergedFiles: Boolean = config("keep_merged_files", default = !useIndelRealigner)
 
     override def summarySettings = super.summarySettings + ("use_indel_realigner" -> useIndelRealigner)
 
