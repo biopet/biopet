@@ -36,7 +36,7 @@ class CollectRnaSeqMetrics(val root: Configurable) extends Picard with Summariza
   var refFlat: File = null
 
   @Input(doc = "Location of rRNA sequences in interval list format", required = false)
-  var ribosomalIntervals: Option[File] = config("ribosomal_intervals")
+  var ribosomalIntervals: Option[File] = None
 
   @Output(doc = "Output metrics file", required = true)
   var output: File = null

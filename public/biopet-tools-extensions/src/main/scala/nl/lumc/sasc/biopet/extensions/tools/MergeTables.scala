@@ -77,3 +77,24 @@ class MergeTables(val root: Configurable) extends ToolCommandFunction {
       required("-o", output) +
       required("", repeat(inputTables), escape = false)
 }
+
+object MergeTables {
+  def apply(root: Configurable,
+            tables: List[File],
+            outputFile: File,
+            idCols: List[Int],
+            valCol: Int,
+            numHeaderLines: Int = 0,
+            fallback: String = "-",
+            fileExtension: Option[String] = None): MergeTables = {
+    val job = new MergeTables(root)
+    job.inputTables = tables
+    job.output = outputFile
+    job.idColumnIndices = idCols.map(_.toString)
+    job.valueColumnIndex = valCol
+    job.fallbackString = Option(fallback)
+    job.numHeaderLines = Option(numHeaderLines)
+    job.fileExtension = fileExtension
+    job
+  }
+}

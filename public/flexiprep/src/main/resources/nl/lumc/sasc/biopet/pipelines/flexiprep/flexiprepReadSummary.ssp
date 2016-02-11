@@ -62,17 +62,22 @@
 
 #if (showPlot)
     #{
+        val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
+            summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
+        else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
         FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
-        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
+        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
     }#
     <div class="panel-body">
         <div class="row">
             <div class="col-sm-6 col-md-6">
                 <img src="QC_Reads_R1.png" class="img-responsive">
             </div>
+        #if (paired)
             <div class="col-sm-6 col-md-6">
                 <img src="QC_Reads_R2.png" class="img-responsive">
             </div>
+        #end
         </div>
 
     </div>
@@ -82,8 +87,10 @@
         #else
             <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_ReadsTable">Show table</button>
         #end
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R1.tsv">R1 reads stats</a> -
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R2.tsv">R2 reads stats</a>
+        <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R1.tsv">R1 reads stats</a>
+        #if (paired)
+            - <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R2.tsv">R2 reads stats</a>
+        #end
     </div>
 #end
 

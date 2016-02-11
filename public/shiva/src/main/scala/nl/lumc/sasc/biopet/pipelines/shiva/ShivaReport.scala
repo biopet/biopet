@@ -56,7 +56,7 @@ object ShivaReport extends MultisampleMappingReportTrait {
     val regions = regionsPage
     val oldPage = super.indexPage
 
-    oldPage.copy(sections = variantcallingSection ++ oldPage.sections, subPages = oldPage.subPages ++ regionsPage)
+    oldPage.copy(sections = oldPage.sections.head :: variantcallingSection ::: oldPage.sections.tail, subPages = oldPage.subPages ++ regionsPage)
   }
 
   /** Generate a page with all target coverage stats */

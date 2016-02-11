@@ -103,7 +103,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
     functions.filter(_.jobOutputFile == null).foreach(f => {
       try {
-        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + configName + ".out")
+        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + f.getClass.getSimpleName + ".out")
       } catch {
         case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
       }
