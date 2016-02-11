@@ -10,6 +10,7 @@ import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.tinycap.measures.FragmentsPerSmallRna
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import picard.analysis.directed.RnaSeqMetricsCollector.StrandSpecificity
 
 /**
  * Created by pjvan_thof on 12/29/15.
@@ -41,7 +42,8 @@ class TinyCap(val root: Configurable) extends QScript
     ),
     "bammetrics" -> Map(
       "wgs_metrics" -> false,
-      "rna_metrics" -> true
+      "rna_metrics" -> true,
+      "collectrnaseqmetrics" -> StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
     ),
     "bowtie" -> Map(
       "chunkmbs" -> 256,
