@@ -47,16 +47,16 @@ object ShivaReport extends MultisampleMappingReportTrait {
   override def extFiles = super.extFiles ++ List("js/gears.js")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
+  override def additionalSections = super.additionalSections ++ (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+    Map("showPlot" -> true, "showTable" -> false)))
+  else Nil)
+
   /** Root page for the shiva report */
   override def indexPage = {
-    val variantcallingSection = (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-      Map("showPlot" -> true, "showTable" -> false)))
-    else Nil)
-
     val regions = regionsPage
     val oldPage = super.indexPage
 
-    oldPage.copy(sections = oldPage.sections.head :: variantcallingSection ::: oldPage.sections.tail, subPages = oldPage.subPages ++ regionsPage)
+    oldPage.copy(subPages = oldPage.subPages ++ regionsPage)
   }
 
   /** Generate a page with all target coverage stats */
