@@ -177,7 +177,7 @@ class Gentrap(val root: Configurable) extends QScript
     if (removeRibosomalReads && ribosomalRefFlat().isEmpty)
       Logging.addError("removeRibosomalReads is enabled but no ribosomalRefFlat is given")
 
-    executedMeasures.foreach(x => x.outputDir = new File(outputDir, "expresion_measures" + File.separator + x.name))
+    executedMeasures.foreach(x => x.outputDir = new File(outputDir, "expression_measures" + File.separator + x.name))
   }
 
   /** Pipeline run for multiple samples */
