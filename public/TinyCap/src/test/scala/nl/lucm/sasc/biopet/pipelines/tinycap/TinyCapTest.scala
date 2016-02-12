@@ -22,13 +22,14 @@ package nl.lumc.sasc.biopet.pipelines.tinycap
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.HtseqCount
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ Test, DataProvider, AfterClass }
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 class TinyCapTest extends TestNGSuite with Matchers {
 
@@ -64,10 +65,13 @@ class TinyCapTest extends TestNGSuite with Matchers {
       intercept[IllegalArgumentException] {
         initPipeline(map).script()
       }
-    } else {
-      val pipeline = initPipeline(map)
-      pipeline.script()
     }
+
+    val pipeline = initPipeline(map)
+    pipeline.script()
+    // expect 2 instances of HtSeqCount, one for mirna.gff other for transcripts.gtf
+    pipeline.functions.count(_.isInstanceOf[HtseqCount]) shouldBe 2
+
   }
 
   // remove temporary run directory all tests in the class have been run
