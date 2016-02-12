@@ -67,6 +67,18 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     main(arguments)
   }
 
+  @Test def testMustHaveGenotypes() = {
+    /**
+      * This should simply not raise an exception
+      */
+    val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
+    tmp.deleteOnExit()
+    val tmp_path = tmp.getAbsolutePath
+    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path,
+      "--mustHaveGenotype", "Sample_101:HET")
+    main(arguments)
+  }
+
   @Test def testHasGenotype() = {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()

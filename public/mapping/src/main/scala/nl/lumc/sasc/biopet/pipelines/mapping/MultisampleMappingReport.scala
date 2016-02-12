@@ -21,6 +21,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Front section for the report */
   def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/multisampleMappingFront.ssp")
 
+  def additionalSections: List[(String, ReportSection)] = Nil
+
   def pipelineName = "multisamplemapping"
 
   /** Root page for the carp report */
@@ -42,8 +44,9 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           )), Map())
         ),
       List(
-        "Report" -> frontSection,
-        "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
+        "Report" -> frontSection) ++
+        additionalSections ++
+        List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
         )) ++
         (if (insertsizeExecuted) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
