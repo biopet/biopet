@@ -24,18 +24,18 @@ class FragmentsPerSmallRna(val root: Configurable) extends QScript with Measurem
         job.stranded = Option("yes")
         job.featuretype = Option("miRNA")
         job.idattr = Option("Name")
-        job.output = new File(outputDir, s"$id.$name.mirna.counts.tsv")
+        job.output = new File(outputDir, s"$id.$name.counts")
         add(job)
 
         id -> job
     }
 
-    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "mirna.fragments_per_gene", s".$name.mirna.counts")
-    addHeatmapJob(mergedTable, heatmap, "mirna.fragments_per_gene")
+    addMergeTableJob(jobs.values.map(_.output).toList, mergedTable, "fragments_per_gene", s".$name.counts")
+    addHeatmapJob(mergedTable, heatmap, "fragments_per_gene")
 
     addSummaryJobs()
   }
 
-  def mergedTable = new File(outputDir, s"$name.mirna.fragments_per_gene.tsv")
-  def heatmap = new File(outputDir, s"$name.mirna.fragments_per_gene.png")
+  def mergedTable = new File(outputDir, s"$name.fragments_per_gene.tsv")
+  def heatmap = new File(outputDir, s"$name.fragments_per_gene.png")
 }
