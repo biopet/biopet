@@ -7,9 +7,9 @@ class LazyCheck[T](function: => T) {
   private var _isSet = false
   def isSet = _isSet
   lazy val value = {
-    val chache = function
+    val cache = function
     _isSet = true
-    chache
+    cache
   }
   def apply() = value
   def get = value
