@@ -208,8 +208,8 @@ class Gentrap(val root: Configurable) extends QScript
       val job = new WipeReads(qscript)
       job.inputBam = bamFile.get
       ribosomalRefFlat().foreach(job.intervalFile = _)
-      job.outputBam = createFile(".cleaned.bam")
-      job.discardedBam = createFile(".rrna.bam")
+      job.outputBam = createFile("cleaned.bam")
+      job.discardedBam = createFile("rrna.bam")
       add(job)
       Some(job.outputBam)
     } else bamFile
