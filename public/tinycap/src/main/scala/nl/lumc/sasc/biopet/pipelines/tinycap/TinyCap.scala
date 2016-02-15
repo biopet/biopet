@@ -42,7 +42,7 @@ class TinyCap(val root: Configurable) extends QScript
     ),
     "bammetrics" -> Map(
       "wgs_metrics" -> false,
-      "rna_metrics" -> true,
+      "rna_metrics" -> false,
       "collectrnaseqmetrics" -> Map(
         "strand_specificity" -> StrandSpecificity.SECOND_READ_TRANSCRIPTION_STRAND.toString
       )
