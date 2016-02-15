@@ -115,10 +115,10 @@ if (tmm.normalize) {
 
 if (nrow(in.data) > 20) {
     img.len <- 1200
-img.margin <- 8
+    img.margin <- 8
 } else {
     img.len <- 800
-img.margin <- min(16, max(sapply(rownames(in.data), nchar)))
+    img.margin <- min(16, max(sapply(rownames(in.data), nchar)))
 }
 
 png(out.name, height=img.len, width=img.len, res=100)

@@ -1,7 +1,24 @@
 #import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(org.apache.commons.io.FileUtils)
+#import(java.io.File)
 <%@ var summary: Summary %>
+<%@ var outputDir: File %>
 <%@ var pipelineName: String = "tinycap" %>
+#{
 
+def getPlot(path:Option[Any], targetPath:String) = {
+    path.collect {
+        case value =>
+            new File(targetPath).mkdirs()
+            val file = new File(value.toString)
+            val newFile = new File(outputDir, targetPath + File.separator + file.getName)
+
+            if (file.exists()) FileUtils.copyFile(file, newFile)
+            targetPath + File.separator + file.getName
+    }
+}
+
+}#
 <div class="panel-body">
 <!-- Table -->
 <table class="table">
@@ -10,7 +27,7 @@
 <tbody>
     <tr>
         <td>
-            <img src="${summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path")}" class="img-responsive"/>
+            <img src="${getPlot(summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path"), "measurements" )}" class="img-responsive" />
             </td>
         </tr>
     </tbody>
