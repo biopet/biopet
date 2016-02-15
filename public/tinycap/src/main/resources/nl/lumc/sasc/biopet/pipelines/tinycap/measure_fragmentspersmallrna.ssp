@@ -1,0 +1,19 @@
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+<%@ var summary: Summary %>
+<%@ var pipelineName: String = "tinycap" %>
+
+<div class="panel-body">
+<!-- Table -->
+<table class="table">
+<thead>
+</thead>
+<tbody>
+    <tr>
+        <td>
+            <img src="${summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path")}" class="img-responsive"/>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
