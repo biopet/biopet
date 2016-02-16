@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 /**
  * Created by sajvanderzeeuw on 2-2-16.
  */
-object CheckFastqPairs extends ToolCommand {
+object ValidateFastq extends ToolCommand {
   /**
    * Args for commandline program
    * @param input input first fastq file (R1) (can be zipped)
