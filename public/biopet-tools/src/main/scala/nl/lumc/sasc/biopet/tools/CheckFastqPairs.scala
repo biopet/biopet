@@ -6,6 +6,7 @@ import htsjdk.samtools.fastq.{ FastqRecord, FastqReader }
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created by sajvanderzeeuw on 2-2-16.
@@ -84,15 +85,58 @@ object CheckFastqPairs extends ToolCommand {
         logger.error(e.getMessage)
     }
 
+    logger.info(s"Possible quality encodings found: ${getPossibleEncodings.mkString(", ")}")
+
     //close both iterators
     readFq1.close()
     readFq2.foreach(_.close())
   }
 
+  private var minQual: Option[Char] = None
+  private var maxQual: Option[Char] = None
+
+  /**
+    *
+    * @param record
+    * @throws IllegalStateException
+    */
+  private[tools] def checkQualEncoding(record: FastqRecord): Unit = {
+    val min = record.getBaseQualityString.min
+    val max = record.getBaseQualityString.max
+    if (!minQual.exists(_ <= min)) {
+      minQual = Some(min)
+      getPossibleEncodings
+    }
+    if (!maxQual.exists(_ >= max)) {
+      maxQual = Some(max)
+      getPossibleEncodings
+    }
+  }
+
+  /**
+    *
+    * @return
+    * @throws IllegalStateException
+    */
+  private[tools] def getPossibleEncodings: List[String] = {
+    val buffer: ListBuffer[String] = ListBuffer()
+    (minQual, maxQual) match {
+      case (Some(min), Some(max)) =>
+        if (min >= '!' && max <= 'I') buffer += "Sanger"
+        if (min >= ';' && max <= 'h') buffer += "Solexa"
+        if (min >= '@' && max <= 'h') buffer += "Illumina 1.3+"
+        if (min >= 'C' && max <= 'h') buffer += "Illumina 1.5+"
+        if (min >= '!' && max <= 'J') buffer += "Illumina 1.8+"
+        if (buffer.isEmpty) throw new IllegalStateException("No possible quality encoding found")
+      case _ =>
+    }
+    buffer.toList
+  }
+
   val allowedBases = """([actgnACTGN+]+)""".r
 
   /**
-   *
+   * This function checks for duplicates.
    * @param current
    * @param before
    * @throws IllegalStateException
@@ -108,6 +152,7 @@ object CheckFastqPairs extends ToolCommand {
    * @throws IllegalStateException
    */
   def validFastqRecord(record: FastqRecord): Unit = {
+    checkQualEncoding(record)
     record.getReadString match {
       case allowedBases(m) =>
       case _               => throw new IllegalStateException(s"Non IUPAC symbols identified")
@@ -130,6 +175,4 @@ object CheckFastqPairs extends ToolCommand {
       id1.stripSuffix(".1") == id2.stripSuffix(".2")))
       throw new IllegalStateException(s"sequenceHeaders does not match. R1: '${r1.getReadHeader}', R2: '${r2.getReadHeader}'")
   }
-
-  //TODO: check duplicate read ideas in both R1 and R2
 }
