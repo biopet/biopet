@@ -21,6 +21,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
   /** Front section for the report */
   def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/multisampleMappingFront.ssp")
 
+  def additionalSections: List[(String, ReportSection)] = Nil
+
   def pipelineName = "multisamplemapping"
 
   /** Root page for the carp report */
@@ -28,6 +30,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
+    val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => value.isDefined }
 
@@ -41,12 +44,14 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
           )), Map())
         ),
       List(
-        "Report" -> frontSection,
-        "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
+        "Report" -> frontSection) ++
+        additionalSections ++
+        List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
-        ),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false))) ++
+        )) ++
+        (if (insertsizeExecuted) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
+          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
+        else Nil) ++
         (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
           Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)))
         else Nil) ++
@@ -88,7 +93,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
       "Files" -> filesPage
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
-        if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
+        Map("showPlot" -> true)),
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
       (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
         "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")

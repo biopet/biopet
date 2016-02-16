@@ -8,6 +8,8 @@ import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript
 import nl.lumc.sasc.biopet.extensions.Ln
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
+import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
+import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -22,6 +24,7 @@ import scala.collection.JavaConversions._
 trait MultisampleMappingTrait extends MultiSampleQScript
   with Reference { qscript: QScript =>
 
+  /** With this method the merge strategy for libraries to samples is defined. This can be overriden to fix the merge strategy. */
   def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
     MergeStrategy.values.find(_.toString.toLowerCase == value) match {
@@ -33,11 +36,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   def init(): Unit = {
   }
 
+  /** Is there are jobs that needs to be added before the rest of the jobs this methods can be overriden, to let the sample jobs this work the super call should be done also */
   def biopetScript(): Unit = {
     addSamplesJobs()
     addSummaryJobs()
   }
 
+  /** This is de default multisample mapping report, this can be extended by other pipelines */
   override def reportClass: Option[ReportBuilderExtension] = {
     val report = new MultisampleMappingReport(this)
     report.outputDir = new File(outputDir, "report")
@@ -45,12 +50,15 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     Some(report)
   }
 
+  /** In a default multisample mapping run there are no multsample jobs. This method can be overriden by other pipelines */
   def addMultiSampleJobs(): Unit = {
     // this code will be executed after all code of all samples is executed
   }
 
+  /** By default only the reference is put in the summary, when extending pippeline specific files can be added */
   def summaryFiles: Map[String, File] = Map("referenceFasta" -> referenceFasta())
 
+  /** By default only the reference is put in the summary, when extending pippeline specific settings can be added */
   def summarySettings: Map[String, Any] = Map(
     "reference" -> referenceSummary,
     "merge_strategy" -> mergeStrategy.toString)
@@ -60,6 +68,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
     def makeLibrary(id: String) = new Library(id)
     class Library(libId: String) extends AbstractLibrary(libId) {
+
+      /** By default the bams files are put in the summary, more files can be added here */
       def summaryFiles: Map[String, File] = (inputR1.map("input_R1" -> _) :: inputR2.map("input_R2" -> _) ::
         inputBam.map("input_bam" -> _) :: bamFile.map("output_bam" -> _) ::
         preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
@@ -86,8 +96,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         case _                       => None
       }
 
+      /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
       def preProcessBam = bamFile
 
+      /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
       def addJobs(): Unit = {
         inputR1.foreach(inputFiles :+= new InputFile(_, config("R1_md5")))
         inputR2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
@@ -153,25 +165,32 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             bamMetrics.inputBam = bamFile.get
             bamMetrics.outputDir = new File(libDir, "metrics")
             add(bamMetrics)
+
+            if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, bamFile.get))
           }
         } else logger.warn(s"Sample '$sampleId' does not have any input files")
       }
     }
 
+    /** By default the bams files are put in the summary, more files can be added here */
     def summaryFiles: Map[String, File] = (bamFile.map("output_bam" -> _) ::
       preProcessBam.map("output_bam_preprocess" -> _) :: Nil).flatten.toMap
 
     def summaryStats: Map[String, Any] = Map()
 
+    /** This is the merged bam file, None if the merged bam file is NA */
     def bamFile = if (libraries.flatMap(_._2.bamFile).nonEmpty &&
       mergeStrategy != MultisampleMapping.MergeStrategy.None)
       Some(new File(sampleDir, s"$sampleId.bam"))
     else None
 
+    /** By default the preProcessBam is the same as the normal bamFile. A pipeline can extend this is there are preprocess steps */
     def preProcessBam = bamFile
 
+    /** Default is set to keep the merged files, user can set this in the config. To change the default this method can be overriden */
     def keepMergedFiles: Boolean = config("keep_merged_files", default = true)
 
+    /** This method can be extended to add jobs to the pipeline, to do this the super call of this function must be called by the pipelines */
     def addJobs(): Unit = {
       addPerLibJobs() // This add jobs for each library
 
@@ -182,13 +201,13 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         case (MergeStrategy.PreProcessMergeSam | MergeStrategy.PreProcessMarkDuplicates) if libraries.flatMap(_._2.preProcessBam).size == 1 =>
           add(Ln.linkBamFile(qscript, libraries.flatMap(_._2.preProcessBam).head, bamFile.get): _*)
         case MergeStrategy.MergeSam =>
-          add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = keepMergedFiles))
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.PreProcessMergeSam =>
-          add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = keepMergedFiles))
+          add(MergeSamFiles(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.MarkDuplicates =>
-          add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = keepMergedFiles))
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.bamFile).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case MergeStrategy.PreProcessMarkDuplicates =>
-          add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = keepMergedFiles))
+          add(MarkDuplicates(qscript, libraries.flatMap(_._2.preProcessBam).toList, bamFile.get, isIntermediate = !keepMergedFiles))
         case _ => throw new IllegalStateException("This should not be possible, unimplemented MergeStrategy?")
       }
 
@@ -198,11 +217,22 @@ trait MultisampleMappingTrait extends MultiSampleQScript
         bamMetrics.inputBam = preProcessBam.get
         bamMetrics.outputDir = new File(sampleDir, "metrics")
         add(bamMetrics)
+
+        if (config("execute_bam2wig", default = true)) add(Bam2Wig(qscript, preProcessBam.get))
+      }
+
+      if (config("unmapped_to_gears", default = false) && libraries.flatMap(_._2.bamFile).nonEmpty) {
+        val gears = new GearsSingle(qscript)
+        gears.bamFile = preProcessBam
+        gears.sampleId = Some(sampleId)
+        gears.outputDir = new File(sampleDir, "gears")
+        add(gears)
       }
     }
   }
 }
 
+/** This class is the default implementation that can be used on the command line */
 class MultisampleMapping(val root: Configurable) extends QScript with MultisampleMappingTrait {
   def this() = this(null)
 
@@ -215,6 +245,7 @@ object MultisampleMapping extends PipelineCommand {
     val None, MergeSam, MarkDuplicates, PreProcessMergeSam, PreProcessMarkDuplicates = Value
   }
 
+  /** When file is not absolute an error is raise att the end of the script of a pipeline */
   def fileMustBeAbsolute(file: Option[File]): Option[File] = {
     if (file.forall(_.isAbsolute)) file
     else {

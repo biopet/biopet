@@ -103,7 +103,7 @@ object VcfFilter extends ToolCommand {
     opt[String]("mustHaveGenotype") unbounded () valueName "<sample:genotype>" action { (x, c) =>
       c.copy(mustHaveGenotype = (x.split(":")(0), GenotypeType.valueOf(x.split(":")(1))) :: c.mustHaveGenotype)
     } validate { x =>
-      if (x.split(":").length == 2 && GenotypeType.values().contains(x.split(":")(1))) success
+      if (x.split(":").length == 2 && GenotypeType.values().map(_.toString).contains(x.split(":")(1))) success
       else failure("--mustHaveGenotype should be in this format: sample:genotype")
     } text "Must have genotoype <genotype> for this sample. Genotype can be " + GenotypeType.values().mkString(", ")
     opt[String]("diffGenotype") unbounded () valueName "<sample:sample>" action { (x, c) =>
