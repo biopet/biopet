@@ -78,14 +78,14 @@ object ValidateFastq extends ToolCommand {
       if (readFq2.map(_.hasNext) == Some(true))
         throw new IllegalStateException("R2 has more reads then R1")
 
+      logger.info(s"Possible quality encodings found: ${getPossibleEncodings.mkString(", ")}")
+
       logger.info(s"Done processing ${counter} fastq records, no errors found")
     } catch {
       case e: IllegalStateException =>
         logger.error(s"Error found at readnumber: $counter, linenumber ${(counter * 4) - 3}")
         logger.error(e.getMessage)
     }
-
-    logger.info(s"Possible quality encodings found: ${getPossibleEncodings.mkString(", ")}")
 
     //close both iterators
     readFq1.close()
@@ -127,7 +127,8 @@ object ValidateFastq extends ToolCommand {
         if (min >= '@' && max <= 'h') buffer += "Illumina 1.3+"
         if (min >= 'C' && max <= 'h') buffer += "Illumina 1.5+"
         if (min >= '!' && max <= 'J') buffer += "Illumina 1.8+"
-        if (buffer.isEmpty) throw new IllegalStateException("No possible quality encoding found")
+        if (buffer.isEmpty)
+          throw new IllegalStateException(s"No possible quality encoding found.  minQual: '$min', maxQual: '$max'")
       case _ =>
     }
     buffer.toList
