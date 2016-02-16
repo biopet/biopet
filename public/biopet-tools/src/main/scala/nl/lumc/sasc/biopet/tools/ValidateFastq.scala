@@ -96,10 +96,10 @@ object ValidateFastq extends ToolCommand {
   private var maxQual: Option[Char] = None
 
   /**
-    *
-    * @param record
-    * @throws IllegalStateException
-    */
+   *
+   * @param record
+   * @throws IllegalStateException
+   */
   private[tools] def checkQualEncoding(record: FastqRecord): Unit = {
     val min = record.getBaseQualityString.min
     val max = record.getBaseQualityString.max
@@ -114,10 +114,10 @@ object ValidateFastq extends ToolCommand {
   }
 
   /**
-    *
-    * @return
-    * @throws IllegalStateException
-    */
+   *
+   * @return
+   * @throws IllegalStateException
+   */
   private[tools] def getPossibleEncodings: List[String] = {
     val buffer: ListBuffer[String] = ListBuffer()
     (minQual, maxQual) match {
