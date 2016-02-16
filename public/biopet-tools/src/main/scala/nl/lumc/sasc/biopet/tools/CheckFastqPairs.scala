@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.File
 
-import htsjdk.samtools.fastq.{FastqRecord, FastqReader}
+import htsjdk.samtools.fastq.{ FastqRecord, FastqReader }
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
@@ -46,6 +46,9 @@ object CheckFastqPairs extends ToolCommand {
 
     try {
       //Iterate over the fastq file check for the length of both files if not correct, exit the tool and print error message
+
+      var lastRecordR1: Option[FastqRecord] = None
+      var lastRecordR2: Option[FastqRecord] = None
       for (recordR1 <- readFq1.iterator()) {
         counter += 1
         if (readFq2.map(_.hasNext) == Some(false))
@@ -55,15 +58,19 @@ object CheckFastqPairs extends ToolCommand {
         val recordR2 = readFq2.map(_.next())
 
         validFastqRecord(recordR1)
+        duplicateCheck(recordR1, lastRecordR1)
 
         //Here we check if the readnames of both files are concordant, and if the sequence content are correct DNA/RNA sequences
         recordR2 match {
           case Some(recordR2) => // Paired End
             validFastqRecord(recordR2)
+            duplicateCheck(recordR2, lastRecordR2)
             checkMate(recordR1, recordR2)
           case _ => // Single end
         }
         if (counter % 1e5 == 0) logger.info(counter + " reads processed")
+        lastRecordR1 = Some(recordR1)
+        lastRecordR2 = recordR2
       }
 
       //if R2 is longer then R1 print an error code and exit the tool
@@ -72,8 +79,8 @@ object CheckFastqPairs extends ToolCommand {
 
       logger.info(s"Done processing ${counter} fastq records, no errors found")
     } catch {
-      case e:IllegalStateException =>
-        logger.error(s"Error found at readnumber: $counter, linenumber ${(counter*4)-3}")
+      case e: IllegalStateException =>
+        logger.error(s"Error found at readnumber: $counter, linenumber ${(counter * 4) - 3}")
         logger.error(e.getMessage)
     }
 
@@ -86,13 +93,24 @@ object CheckFastqPairs extends ToolCommand {
 
   /**
    *
+   * @param current
+   * @param before
+   * @throws IllegalStateException
+   */
+  def duplicateCheck(current: FastqRecord, before: Option[FastqRecord]): Unit = {
+    if (before.exists(_.getReadHeader == current.getReadHeader))
+      throw new IllegalStateException("Duplicate read ID found")
+  }
+
+  /**
+   *
    * @param record
    * @throws IllegalStateException
    */
   def validFastqRecord(record: FastqRecord): Unit = {
     record.getReadString match {
       case allowedBases(m) =>
-      case _ => throw new IllegalStateException(s"Non IUPAC symbols identified")
+      case _               => throw new IllegalStateException(s"Non IUPAC symbols identified")
     }
     if (record.getReadString.size != record.getBaseQualityString.size)
       throw new IllegalStateException(s"Sequence length do not match quality length")
