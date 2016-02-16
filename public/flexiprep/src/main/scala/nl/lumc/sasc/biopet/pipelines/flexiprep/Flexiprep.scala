@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibrary
 import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, FastqSync }
+import nl.lumc.sasc.biopet.extensions.tools.{ValidateFastq, SeqStat, FastqSync}
 
 import org.broadinstitute.gatk.queue.QScript
 
@@ -113,6 +113,12 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     add(fastqc_R1)
     addSummarizable(fastqc_R1, "fastqc_R1")
     outputFiles += ("fastqc_R1" -> fastqc_R1.output)
+
+    val validateFastq = new ValidateFastq(this)
+    validateFastq.r1Fastq = input_R1
+    validateFastq.r2Fastq = input_R2
+    validateFastq.jobOutputFile = new File(outputDir, ".validate_fastq.log.out")
+    add(validateFastq)
 
     if (paired) {
       fastqc_R2 = Fastqc(this, input_R2.get, new File(outputDir, R2_name + ".fastqc/"))
