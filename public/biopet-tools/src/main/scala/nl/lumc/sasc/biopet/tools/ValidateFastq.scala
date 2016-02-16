@@ -53,7 +53,7 @@ object ValidateFastq extends ToolCommand {
       for (recordR1 <- readFq1.iterator()) {
         counter += 1
         if (readFq2.map(_.hasNext) == Some(false))
-          throw new IllegalStateException("R2 has less reads then R1")
+          throw new IllegalStateException("R2 contains less reads then R1")
 
         //Getting R2 record, None if it's single end
         val recordR2 = readFq2.map(_.next())
@@ -76,7 +76,7 @@ object ValidateFastq extends ToolCommand {
 
       //if R2 is longer then R1 print an error code and exit the tool
       if (readFq2.map(_.hasNext) == Some(true))
-        throw new IllegalStateException("R2 has more reads then R1")
+        throw new IllegalStateException("R2 contains more reads then R1")
 
       logger.info(s"Possible quality encodings found: ${getPossibleEncodings.mkString(", ")}")
 
@@ -159,7 +159,7 @@ object ValidateFastq extends ToolCommand {
       case _               => throw new IllegalStateException(s"Non IUPAC symbols identified")
     }
     if (record.getReadString.size != record.getBaseQualityString.size)
-      throw new IllegalStateException(s"Sequence length do not match quality length")
+      throw new IllegalStateException(s"Sequence length does not match quality length")
   }
 
   /**
@@ -174,6 +174,6 @@ object ValidateFastq extends ToolCommand {
     if (!(id1 == id2 ||
       id1.stripSuffix("/1") == id2.stripSuffix("/2") ||
       id1.stripSuffix(".1") == id2.stripSuffix(".2")))
-      throw new IllegalStateException(s"sequenceHeaders does not match. R1: '${r1.getReadHeader}', R2: '${r2.getReadHeader}'")
+      throw new IllegalStateException(s"Sequence headers do not match. R1: '${r1.getReadHeader}', R2: '${r2.getReadHeader}'")
   }
 }
