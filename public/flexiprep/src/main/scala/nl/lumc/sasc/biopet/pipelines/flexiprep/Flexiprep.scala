@@ -265,6 +265,17 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       }
     }
 
+    val validateFastq = new ValidateFastq(this)
+    validateFastq.r1Fastq = fastqR1Qc
+    validateFastq.r2Fastq = fastqR2Qc
+    validateFastq.jobOutputFile = new File(outputDir, ".validate_fastq.qc.log.out")
+    add(validateFastq)
+
+    val checkValidateFastq = new CheckValidateFastq
+    checkValidateFastq.inputLogFile = validateFastq.jobOutputFile
+    checkValidateFastq.jobOutputFile = new File(outputDir, ".check.validate_fastq.qc.log.out")
+    add(checkValidateFastq)
+
     outputFiles += ("output_R1_gzip" -> fastqR1Qc)
     if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
 
