@@ -23,6 +23,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
 
+import htsjdk.samtools.util.SequenceUtil.reverseComplement
+
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
  *
@@ -183,6 +185,11 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
         .filter(x => foundAdapterNames.exists(_.startsWith(x.name)))
 
+      val fromKnownListRC: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
+        .filter(x => foundAdapterNames.exists(_.startsWith(x.name))).map {
+          x => AdapterSequence( x.name + "_RC", reverseComplement( x.seq) )
+      }
+
       // list all sequences found by FastQC
       val fastQCFoundSequences: Seq[AdapterSequence] = if (sensitiveAdapterSearch) {
         qcModules.get("Overrepresented sequences") match {
@@ -203,7 +210,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         (adapterSet ++ contaminantSet).count(y => x.name.startsWith(y.name)) == 1
       })
 
-      fromKnownList ++ fastQCFoundSequences
+      fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC
     } else Set()
   }
 
