@@ -92,8 +92,8 @@ object ValidateFastq extends ToolCommand {
     readFq2.foreach(_.close())
   }
 
-  private var minQual: Option[Char] = None
-  private var maxQual: Option[Char] = None
+  private[tools] var minQual: Option[Char] = None
+  private[tools] var maxQual: Option[Char] = None
 
   /**
    *
