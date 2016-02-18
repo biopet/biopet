@@ -14,23 +14,23 @@ def getPlot(path:Option[Any], targetPath:String) = {
             val newFile = new File(outputDir, targetPath + File.separator + file.getName)
 
             if (file.exists()) FileUtils.copyFile(file, newFile)
-                targetPath + File.separator + file.getName
-            }
+            targetPath + File.separator + file.getName
+    }
 }
 
 }#
 <div class="panel-body">
 <!-- Table -->
 <table class="table">
-    <thead>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-                <img src="${summary.getValue("fragmentspergene", "files", "pipeline", "fragments_per_gene_heatmap", "path")}" class="img-responsive"/>
-            </td>
-        </tr>
-    </tbody>
+<thead>
+</thead>
+<tbody>
+    <tr>
+        <td>
+            <img src="${getPlot(summary.getValue("fragmentspergene", "files", "pipeline", "fragments_per_gene_heatmap", "path"), "measurements" )}" class="img-responsive" />
+        </td>
+    </tr>
+</tbody>
 </table>
 
 </div>

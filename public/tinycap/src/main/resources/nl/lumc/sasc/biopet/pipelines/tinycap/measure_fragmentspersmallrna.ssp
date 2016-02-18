@@ -28,9 +28,9 @@ def getPlot(path:Option[Any], targetPath:String) = {
     <tr>
         <td>
             <img src="${getPlot(summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path"), "measurements" )}" class="img-responsive" />
-            </td>
-        </tr>
-    </tbody>
+        </td>
+    </tr>
+</tbody>
 </table>
 
 </div>
