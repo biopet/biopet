@@ -125,7 +125,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
 
       val bamFile: File = if (libraryBamfiles.size == 1) libraryBamfiles.head
       else if (libraryBamfiles.size > 1) {
-        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, sampleDir)
+        val mergeSamFiles = MergeSamFiles(qscript, libraryBamfiles, new File(sampleDir, s"$sampleId.bam"))
         qscript.add(mergeSamFiles)
         mergeSamFiles.output
       } else null

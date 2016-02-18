@@ -36,5 +36,5 @@ class Bgzip(val root: Configurable) extends BiopetCommandLineFunction {
   def cmdLine = required(executable) +
     conditional(f, "-f") +
     " -c " + repeat(input) +
-    " > " + required(output)
+    (if (outputAsStsout) "" else " > " + required(output))
 }

@@ -49,52 +49,32 @@ class Ln(val root: Configurable) extends InProcessFunction with Configurable {
 
   /** return commandline to execute */
   lazy val cmd: String = {
-    lazy val inCanonical: String = {
+    val inCanonical: String = {
       // need to remove "/~" to correctly expand path with tilde
       input.getAbsolutePath.replace("/~", "")
     }
 
-    lazy val outCanonical: String = output.getAbsolutePath.replace("/~", "")
-
-    lazy val inToks: Array[String] = inCanonical.split(File.separator)
-
-    lazy val outToks: Array[String] = outCanonical.split(File.separator)
-
-    lazy val commonPrefixLength: Int = {
-      val maxLength = scala.math.min(inToks.length, outToks.length)
-      var i: Int = 0
-      while (i < maxLength && inToks(i) == outToks(i)) i += 1
-      i
-    }
-
-    lazy val inUnique: String = {
-      inToks.slice(commonPrefixLength, inToks.length).mkString(File.separator)
-    }
-
-    lazy val outUnique: String = {
-      outToks.slice(commonPrefixLength, outToks.length).mkString(File.separator)
-    }
-
-    lazy val inRelative: String = {
-      // calculate 'distance' from output directory to input
-      // which is the number of directory walks required to get to the inUnique directory from outDir
-      val dist =
-        // relative path differs depending on which of the input or target is in the 'higher' directory
-        if (inToks.length > outToks.length)
-          scala.math.max(0, inUnique.split(File.separator).length - 1)
-        else
-          scala.math.max(0, outUnique.split(File.separator).length - 1)
-
-      val result =
-        if (dist == 0 || inToks.length > outToks.length)
-          inUnique
-        else
-          ((".." + File.separator) * dist) + inUnique
-
-      result
-    }
+    val outCanonical: String = output.getAbsolutePath.replace("/~", "")
 
     if (relative) {
+      val inToks: Array[String] = inCanonical.split(File.separator)
+
+      val outToks: Array[String] = outCanonical.split(File.separator)
+
+      val commonPrefixLength: Int = {
+        val maxLength = scala.math.min(inToks.length, outToks.length)
+        var i: Int = 0
+        while (i < maxLength && inToks(i) == outToks(i)) i += 1
+        i
+      }
+
+      val inUnique = inToks.slice(commonPrefixLength, inToks.length)
+
+      val outUnique = outToks.slice(commonPrefixLength, outToks.length)
+
+      val inRelative: String =
+        ((".." + File.separator) * (outUnique.length - 1)) + inUnique.mkString(File.separator)
+
       // workaround until we have `ln` that works with relative path (i.e. `ln -r`)
       "ln -s " + inRelative + " " + outCanonical
     } else {
@@ -131,5 +111,14 @@ object Ln {
     ln.output = output
     ln.relative = relative
     ln
+  }
+
+  def linkBamFile(root: Configurable, input: File, output: File, index: Boolean = true, relative: Boolean = true): List[Ln] = {
+    val bamLn = Ln(root, input, output, relative)
+    bamLn :: (if (index) {
+      val inputIndex = new File(input.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      val outputIndex = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+      List(Ln(root, inputIndex, outputIndex, relative))
+    } else Nil)
   }
 }

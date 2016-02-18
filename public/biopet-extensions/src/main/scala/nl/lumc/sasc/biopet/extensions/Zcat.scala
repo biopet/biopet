@@ -29,6 +29,8 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction with Versio
   @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
+  var appending = false
+
   executable = config("exe", default = "zcat")
 
   def versionRegex = """zcat \(gzip\) (.*)""".r
@@ -37,7 +39,7 @@ class Zcat(val root: Configurable) extends BiopetCommandLineFunction with Versio
   /** Returns command to execute */
   def cmdLine = required(executable) +
     (if (inputAsStdin) "" else repeat(input)) +
-    (if (outputAsStsout) "" else " > " + required(output))
+    (if (outputAsStsout) "" else (if (appending) " >> " else " > ") + required(output))
 }
 
 object Zcat {
@@ -52,10 +54,10 @@ object Zcat {
     zcat
   }
 
-  def apply(root: Configurable, input: List[File], output: File): Zcat = {
+  def apply(root: Configurable, input: List[File], output: File = null): Zcat = {
     val zcat = new Zcat(root)
     zcat.input = input
-    zcat.output = output
+    if (output != null) zcat.output = output
     zcat
   }
 }

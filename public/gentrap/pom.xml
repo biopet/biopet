@@ -35,6 +35,11 @@
     <dependencies>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Shiva</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>Mapping</artifactId>
             <version>${project.version}</version>
         </dependency>

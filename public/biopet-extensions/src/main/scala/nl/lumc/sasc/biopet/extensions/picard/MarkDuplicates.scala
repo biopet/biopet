@@ -105,11 +105,12 @@ class MarkDuplicates(val root: Configurable) extends Picard with Summarizable {
 }
 object MarkDuplicates {
   /** Returns default MarkDuplicates */
-  def apply(root: Configurable, input: List[File], output: File): MarkDuplicates = {
+  def apply(root: Configurable, input: List[File], output: File, isIntermediate: Boolean = false): MarkDuplicates = {
     val markDuplicates = new MarkDuplicates(root)
     markDuplicates.input = input
     markDuplicates.output = output
     markDuplicates.outputMetrics = new File(output.getParent, output.getName.stripSuffix(".bam") + ".metrics")
+    markDuplicates.isIntermediate = isIntermediate
     markDuplicates
   }
 }
