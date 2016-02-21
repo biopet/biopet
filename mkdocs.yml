@@ -4,6 +4,7 @@ pages:
 - General:
     - Config: 'general/config.md'
     - Requirements: 'general/requirements.md'
+    - Memory behavior: 'general/memory.md'
     - About: 'general/about.md'
     - License: 'general/license.md'
 - Pipelines:
