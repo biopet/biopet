@@ -148,7 +148,7 @@
                         ${name}
                     </h3>
                 </div>
-            ${unescape(section.render(args))}
+            ${unescape(section.render(args ++ Map("args" -> args)))}
             </div>
         #end
     </div>

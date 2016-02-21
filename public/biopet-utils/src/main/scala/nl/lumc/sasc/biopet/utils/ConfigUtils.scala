@@ -256,8 +256,9 @@ object ConfigUtils extends Logging {
   def any2list(any: Any): List[Any] = {
     if (any == null) return null
     any match {
-      case l: List[_] => l
-      case _          => List(any)
+      case l: List[_]           => l
+      case l: util.ArrayList[_] => l.toList
+      case _                    => List(any)
     }
   }
 

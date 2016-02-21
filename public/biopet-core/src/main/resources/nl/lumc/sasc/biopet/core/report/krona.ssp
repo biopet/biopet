@@ -1,0 +1,24 @@
+#import(java.io.File)
+#import(scala.io.Source)
+<%@ var rootPath: String %>
+<%@ var kronaXml: File %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta charset="utf-8"/>
+<link rel="shortcut icon" href="${rootPath}ext/img/krona/favicon.ico"/>
+<!--<script id="notfound">window.onload=function(){document.body.innerHTML="Could not get resources from \"http://krona.sourceforge.net\"."}</script>-->
+<script src="${rootPath}ext/js/krona-2.0.js"></script>
+</head>
+<body>
+<img id="hiddenImage" src="${rootPath}ext/img/krona/hidden.png" style="display:none"/>
+<img id="loadingImage" src="${rootPath}ext/img/krona/loading.gif" style="display:none"/>
+<noscript>Javascript must be enabled to view this page.</noscript>
+<div style="display:none">
+<%
+    val reader = Source.fromFile(kronaXml)
+    val xml = reader.getLines().mkString("\n")
+    reader.close()
+%>
+${unescape(xml)}
+</div></body></html>

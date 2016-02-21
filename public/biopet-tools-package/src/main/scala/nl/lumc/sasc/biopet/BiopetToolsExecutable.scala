@@ -44,5 +44,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.SeqStat,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
-    nl.lumc.sasc.biopet.tools.VcfWithVcf)
+    nl.lumc.sasc.biopet.tools.VcfWithVcf,
+    nl.lumc.sasc.biopet.tools.ValidateFastq,
+    nl.lumc.sasc.biopet.tools.KrakenReportToJson)
 }
