@@ -69,8 +69,8 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test def testMustHaveGenotypes() = {
     /**
-      * This should simply not raise an exception
-      */
+     * This should simply not raise an exception
+     */
     val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
     tmp.deleteOnExit()
     val tmp_path = tmp.getAbsolutePath
