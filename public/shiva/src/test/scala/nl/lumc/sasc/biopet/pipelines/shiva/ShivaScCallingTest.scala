@@ -61,10 +61,10 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
-  def testShivaSvCcalling(bams: Int,
-                          delly: Boolean,
-                          clever: Boolean,
-                          breakdancer: Boolean) = {
+  def testShivaSvCalling(bams: Int,
+                         delly: Boolean,
+                         clever: Boolean,
+                         breakdancer: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (delly) callers.append("delly")
     if (clever) callers.append("clever")
@@ -91,6 +91,40 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[CleverCaller]) shouldBe (if (clever) bams else 0)
       pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe (if (delly) (bams * 4) else 0)
 
+    }
+  }
+
+  @DataProvider(name = "dellyOptions")
+  def dellyOptions = {
+    val bool = Array(true, false)
+    (for (
+      del <- bool;
+      dup <- bool;
+      inv <- bool;
+      tra <- bool
+    ) yield Array(1, del, dup, inv, tra)).toArray
+  }
+
+  @Test(dataProvider = "dellyOptions")
+  def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, tra: Boolean): Unit = {
+
+    val map = Map("variantcallers" -> List("delly"), "delly" ->
+      Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra)
+    )
+    val pipeline = initPipeline(map)
+
+    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+
+    if (!del && !dup && !inv && !tra) intercept[IllegalArgumentException] {
+      pipeline.init()
+      pipeline.script()
+    }
+    else {
+      pipeline.init()
+      pipeline.script()
+
+      pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe
+        ((if (del) 1 else 0) + (if (dup) 1 else 0) + (if (inv) 1 else 0) + (if (tra) 1 else 0))
     }
   }
 
