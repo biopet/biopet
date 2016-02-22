@@ -57,6 +57,7 @@ class Pindel(val root: Configurable) extends SvCaller {
       val todayformat = new SimpleDateFormat("yyyyMMdd")
 
       val pindelVcf = new PindelVCF(this)
+      pindelVcf.deps ::= pindel.outputFile
       pindelVcf.pindelOutputInputHolder = pindel.outputFile
       pindelVcf.pindelOutputRoot = Some(new File(pindelDir, "sample"))
       pindelVcf.rDate = todayformat.format(today) // officially, we should enter the date of the genome here

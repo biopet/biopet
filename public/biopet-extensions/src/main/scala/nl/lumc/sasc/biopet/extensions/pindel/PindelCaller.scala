@@ -56,7 +56,7 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   @Argument(doc = "Work directory")
   var outputPrefix: File = _
 
-  @Output(doc = "Output file of pindel, pointing to the DEL file")
+  @Output(doc = "Output file of Pindel, pointing to the DEL file")
   var outputFile: File = _
 
   @Output(doc = "", required = false)
@@ -159,7 +159,6 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     }
 
     // set the output file, the DELetion call is always made
-    // TODO: add more outputs for the LI, SI, INV etc...
     outputFile = new File(outputPrefix + File.separator, "sample_D")
   }
 
