@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{ File, FileOutputStream }
+import java.nio.file.Paths
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerVCF, BreakdancerConfig, BreakdancerCaller }
@@ -147,6 +148,25 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
     }
+  }
+
+  private def resourcePath(p: String): String = {
+    Paths.get(getClass.getResource(p).toURI).toString
+  }
+
+  @Test
+  def testInputBamsArg(): Unit = {
+    val pipeline = initPipeline(Map())
+
+    pipeline.inputBamsArg :+= new File(resourcePath("/paired01.bam"))
+
+    pipeline.init()
+    pipeline.script()
+
+    val summaryCallers = pipeline.summarySettings("sv_callers")
+    assert(summaryCallers.contains("delly"))
+    assert(summaryCallers.contains("clever"))
+    assert(summaryCallers.contains("breakdancer"))
   }
 
   @AfterClass def removeTempOutputDir() = {

@@ -33,7 +33,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def this() = this(null)
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
-  protected var inputBamsArg: List[File] = Nil
+  protected[shiva] var inputBamsArg: List[File] = Nil
 
   var inputBams: Map[String, File] = Map()
 
