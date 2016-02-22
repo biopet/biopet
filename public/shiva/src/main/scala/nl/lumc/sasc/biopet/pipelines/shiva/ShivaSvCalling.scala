@@ -33,7 +33,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def this() = this(null)
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
-  protected var inputBamsArg: List[File] = Nil
+  protected[shiva] var inputBamsArg: List[File] = Nil
 
   var inputBams: Map[String, File] = Map()
 
@@ -58,6 +58,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
     callers.foreach { caller =>
+      caller.inputBams = inputBams
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
     }

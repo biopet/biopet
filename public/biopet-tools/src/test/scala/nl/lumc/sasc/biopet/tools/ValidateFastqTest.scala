@@ -1,20 +1,20 @@
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{OutputStream, PrintStream, ByteArrayOutputStream}
+import java.io.{ OutputStream, PrintStream, ByteArrayOutputStream }
 import java.nio.file.Paths
 
 import htsjdk.samtools.fastq.FastqRecord
 import nl.lumc.sasc.biopet.utils.Logging
-import org.apache.log4j.{FileAppender, Appender}
+import org.apache.log4j.{ FileAppender, Appender }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvan_thof on 2/17/16.
-  */
+ * Created by pjvan_thof on 2/17/16.
+ */
 class ValidateFastqTest extends TestNGSuite with Matchers {
 
   @Test
@@ -38,17 +38,17 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "providerGetPossibleEncodings")
   def providerGetPossibleEncodings = Array(
-      Array(None, None, Nil),
-      Array(Some('A'), None, Nil),
-      Array(None, Some('A'), Nil),
-      Array(Some('E'), Some('E'), List("Sanger", "Solexa", "Illumina 1.3+", "Illumina 1.5+", "Illumina 1.8+")),
-      Array(Some('+'), Some('+'), List("Sanger", "Illumina 1.8+")),
-      Array(Some('!'), Some('I'), List("Sanger", "Illumina 1.8+")),
-      Array(Some('!'), Some('J'), List("Illumina 1.8+")),
-      Array(Some(';'), Some('h'), List("Solexa")),
-      Array(Some('@'), Some('h'), List("Solexa", "Illumina 1.3+")),
-      Array(Some('C'), Some('h'), List("Solexa", "Illumina 1.3+", "Illumina 1.5+"))
-    )
+    Array(None, None, Nil),
+    Array(Some('A'), None, Nil),
+    Array(None, Some('A'), Nil),
+    Array(Some('E'), Some('E'), List("Sanger", "Solexa", "Illumina 1.3+", "Illumina 1.5+", "Illumina 1.8+")),
+    Array(Some('+'), Some('+'), List("Sanger", "Illumina 1.8+")),
+    Array(Some('!'), Some('I'), List("Sanger", "Illumina 1.8+")),
+    Array(Some('!'), Some('J'), List("Illumina 1.8+")),
+    Array(Some(';'), Some('h'), List("Solexa")),
+    Array(Some('@'), Some('h'), List("Solexa", "Illumina 1.3+")),
+    Array(Some('C'), Some('h'), List("Solexa", "Illumina 1.3+", "Illumina 1.5+"))
+  )
 
   @Test(dataProvider = "providerGetPossibleEncodings")
   def testGetPossibleEncodings(min: Option[Char], max: Option[Char], output: List[String]): Unit = {
