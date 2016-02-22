@@ -19,7 +19,7 @@ import java.io.{ PrintWriter, File }
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.utils.ToolCommand
+import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
@@ -71,7 +71,7 @@ object PindelConfig extends ToolCommand {
 
     val input: File = commandArgs.inputbam
     val output: File = commandArgs.output.getOrElse(new File(input.getAbsoluteFile + ".pindel.cfg"))
-    val insertsize: Int = commandArgs.insertsize.getOrElse(0)
+    val insertsize: Int = commandArgs.insertsize.getOrElse(BamUtils.sampleBamInsertSize(input))
 
     val bamReader = SamReaderFactory.makeDefault().open(input)
     val writer = new PrintWriter(output)
