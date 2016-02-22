@@ -48,7 +48,7 @@ object BamUtils {
     val insertsizes: List[Int] = (for {
       read <- samIterator.toStream.takeWhile(rec => {
         val paired = rec.getReadPairedFlag && rec.getProperPairFlag
-        val bothMapped = (rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)
+        val bothMapped = if (paired) ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)) else false
         paired && bothMapped
       }).take(samplingSize)
     } yield {
@@ -74,9 +74,12 @@ object BamUtils {
       contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength, samplingSize)
     }).toList
     val counts = baminsertsizes.flatMap(x => x)
-    val sum = counts.reduceLeft(_ + _)
-    val n = counts.size
-    sum / n
+
+    if (counts.size != 0) {
+      counts.reduceLeft(_ + _) / counts.size
+    } else {
+      0
+    }
   }
 
   /**
