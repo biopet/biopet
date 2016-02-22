@@ -85,6 +85,14 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
+      val summaryCallers = pipeline.summarySettings("sv_callers")
+      if (delly) assert(summaryCallers.contains("delly"))
+      else assert(!summaryCallers.contains("delly"))
+      if (clever) assert(summaryCallers.contains("clever"))
+      else assert(!summaryCallers.contains("clever"))
+      if (breakdancer) assert(summaryCallers.contains("breakdancer"))
+      else assert(!summaryCallers.contains("breakdancer"))
+
       pipeline.functions.count(_.isInstanceOf[BreakdancerCaller]) shouldBe (if (breakdancer) bams else 0)
       pipeline.functions.count(_.isInstanceOf[BreakdancerConfig]) shouldBe (if (breakdancer) bams else 0)
       pipeline.functions.count(_.isInstanceOf[BreakdancerVCF]) shouldBe (if (breakdancer) bams else 0)
@@ -108,7 +116,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   @Test(dataProvider = "dellyOptions")
   def testShivaDelly(bams: Int, del: Boolean, dup: Boolean, inv: Boolean, tra: Boolean): Unit = {
 
-    val map = Map("variantcallers" -> List("delly"), "delly" ->
+    val map = Map("sv_callers" -> List("delly"), "delly" ->
       Map("DEL" -> del, "DUP" -> dup, "INV" -> inv, "TRA" -> tra)
     )
     val pipeline = initPipeline(map)
