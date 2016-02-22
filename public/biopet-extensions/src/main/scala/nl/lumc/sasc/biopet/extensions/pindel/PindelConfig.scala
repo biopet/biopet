@@ -14,13 +14,12 @@
  * license, please contact us to obtain a separate license.
  */
 package nl.lumc.sasc.biopet.extensions.pindel
-import collection.JavaConversions._
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
-import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction {
@@ -32,30 +31,30 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
   var output: File = _
 
   @Argument(doc = "Insertsize")
-  var insertsize: Int = _
+  var insertSize: Int = _
 
   var sampleName: String = _
 
   override def cmdLine = super.cmdLine +
     required("-i", input) +
     required("-n", sampleName) +
-    required("-s", insertsize) +
+    required("-s", insertSize) +
     required("-o", output)
 }
 
 object PindelConfig extends ToolCommand {
-  case class Args(inputbam: File = null, samplelabel: Option[String] = None,
-                  insertsize: Option[Int] = None, output: Option[File] = None) extends AbstractArgs
+  case class Args(inputBam: File = null, sampleLabel: Option[String] = None,
+                  insertSize: Option[Int] = None, output: Option[File] = None) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('i', "inputbam") required () valueName "<bamfile/path>" action { (x, c) =>
-      c.copy(inputbam = x)
+      c.copy(inputBam = x)
     } text "Please specify the input bam file"
     opt[String]('n', "samplelabel") valueName "<sample label>" action { (x, c) =>
-      c.copy(samplelabel = Some(x))
+      c.copy(sampleLabel = Some(x))
     } text "Sample label is missing"
     opt[Int]('s', "insertsize") valueName "<insertsize>" action { (x, c) =>
-      c.copy(insertsize = Some(x))
+      c.copy(insertSize = Some(x))
     } text "Insertsize is missing"
     opt[File]('o', "output") valueName "<output>" action { (x, c) =>
       c.copy(output = Some(x))
@@ -69,14 +68,14 @@ object PindelConfig extends ToolCommand {
     val argsParser = new OptParser
     val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
 
-    val input: File = commandArgs.inputbam
+    val input: File = commandArgs.inputBam
     val output: File = commandArgs.output.getOrElse(new File(input.getAbsoluteFile + ".pindel.cfg"))
-    val insertsize: Int = commandArgs.insertsize.getOrElse(BamUtils.sampleBamInsertSize(input))
+    val insertSize: Int = commandArgs.insertSize.getOrElse(BamUtils.sampleBamInsertSize(input))
 
     val bamReader = SamReaderFactory.makeDefault().open(input)
     val writer = new PrintWriter(output)
-    for (samplename <- bamReader.getFileHeader.getReadGroups.map(_.getSample).distinct) {
-      writer.write("%s\t%d\t%s\n".format(input.getAbsoluteFile, insertsize, samplename))
+    for (sample <- BamUtils.sampleBamMap(List(input))) {
+      writer.write("%s\t%d\t%s\n".format(sample._2.getAbsoluteFile, insertSize, sample._1))
     }
     bamReader.close()
     writer.close()
