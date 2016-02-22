@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <inceptionYear>2016</inceptionYear>
     <artifactId>TinyCap</artifactId>
 
     <dependencies>
