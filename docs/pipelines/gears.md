@@ -4,49 +4,52 @@
 Gears is a metagenomics pipeline. (``GE``nome ``A``nnotation of ``R``esidual ``S``equences). One can use this pipeline to identify contamination in sequencing runs on either raw FastQ files or BAM files.
 In case of BAM file as input, it will extract the unaligned read(pair) sequences for analysis.
 
-Analysis result is reported in a sunburst graph, which is visible and navigatable in a webbrowser.
+Analysis result is reported in a krona graph, which is visible and navigatable in a webbrowser.
 
 Pipeline analysis components include:
  
- - Kraken, DerrickWood [GitHub](https://github.com/DerrickWood/kraken)
+ - [Kraken, DerrickWood](https://github.com/DerrickWood/kraken)
+ - [Qiime closed reference](http://qiime.org)
+ - [Qiime rtax](http://qiime.org) (**Experimental**)
+ - SeqCount (**Experimental**)
 
+## Gears
 
-## Example
+This pipeline is used to analyse a group of samples. This pipeline only accepts fastq files. The fastq files first get trimmed and clipped with [Flexiprep](Flexiprep). This can be disabled with the config flags of [Flexiprep](Flexiprep). The samples can be specified with a sample config file, see [Config](../general/Config)
 
-To get the help menu:
+### Config
 
-``` bash
-biopet pipeline Gears -h
+| Key | Type | default | Function |
+| --- | ---- | ------- | -------- |
+| gears_use_kraken | Boolean | true | Run fastq file with kraken |
+| gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
+| gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
+| gears_use_seq_count | Boolean | false | Produces raw count files |
 
-... default config ...
-
-Arguments for Gears:
- -R1,--fastqr1 <fastqr1>               R1 reads in FastQ format
- -R2,--fastqr2 <fastqr2>               R2 reads in FastQ format
- -bam,--bamfile <bamfile>              All unmapped reads will be extracted from this bam for analysis
- --outputname <outputname>             Undocumented option
- -sample,--sampleid <sampleid>         Sample ID
- -library,--libid <libid>              Library ID
- -config,--config_file <config_file>   JSON / YAML config file(s)
- -cv,--config_value <config_value>     Config values, value should be formatted like 'key=value' or 
-                                       'path:path:key=value'
- -DSC,--disablescatter                 Disable all scatters
-
-```
-
-Note that the pipeline also works on unpaired reads where one should only provide R1.
-
+### Example
 
 To start the pipeline (remove `-run` for a dry run):
 
 ``` bash
 biopet pipeline Gears -run  \
+-config mySettings.json -config samples.json
+```
+
+## GearsSingle
+
+This pipeline can be used to analyse a single sample, this can be fastq files or a bam file. When a bam file is given only the unmapped reads are extracted.
+
+### Example
+
+To start the pipeline (remove `-run` for a dry run):
+
+``` bash
+biopet pipeline GearsSingle -run  \
 -R1 myFirstReadPair -R2 mySecondReadPair -sample mySampleName \
 -library myLibname -config mySettings.json
 ```
 
-
-## Configuration and flags
+### Commandline flags
 For technical reasons, single sample pipelines, such as this pipeline do **not** take a sample config.
 Input files are in stead given on the command line as a flag.
 
@@ -58,17 +61,22 @@ Command line flags for Gears are:
 | -R2 | --input_r2 | Path (optional) | Path to second read pair fastq file. |
 | -bam | --bamfile | Path (optional) | Path to bam file. |
 | -sample | --sampleid | String (**required**) | Name of sample |
-| -library | --libid | String (**required**) | Name of library |
+| -library | --libid | String (optional) | Name of library |
 
 If `-R2` is given, the pipeline will assume a paired-end setup. `-bam` is mutualy exclusive with the `-R1` and `-R2` flags. Either specify `-bam` or `-R1` and/or `-R2`.
 
 ### Config
 
+| Key | Type | default | Function |
+| --- | ---- | ------- | -------- |
+| gears_use_kraken | Boolean | true | Run fastq file with kraken |
+| gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
+| gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
+| gears_use_seq_count | Boolean | false | Produces raw count files |
 
+### Result files
 
-## Result files
-
-The results of `Gears` are stored in the following files:
+The results of `GearsSingle` are stored in the following files:
 
 | File suffix | Application | Content | Description |
 | ----------- | ----------- | ------- | ----------- |

@@ -16,8 +16,9 @@
 package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.Reference
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.mapping.{ MultisampleMappingTrait }
+import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import org.broadinstitute.gatk.queue.QScript
 
@@ -28,7 +29,7 @@ import org.broadinstitute.gatk.queue.QScript
  */
 trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegions { qscript: QScript =>
 
-  override def reportClass = {
+  override def reportClass: Option[ReportBuilderExtension] = {
     val shiva = new ShivaReport(this)
     shiva.outputDir = new File(outputDir, "report")
     shiva.summaryFile = summaryFile

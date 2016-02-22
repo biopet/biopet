@@ -1,158 +1,167 @@
-/**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
-import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
+import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat, Ln }
+import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
+import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
- * Created by wyleung
+ * Created by pjvanthof on 03/12/15.
  */
-class Gears(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
+class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qscript =>
   def this() = this(null)
 
-  @Input(doc = "R1 reads in FastQ format", shortName = "R1", required = false)
-  var fastqR1: Option[File] = None
-
-  @Input(doc = "R2 reads in FastQ format", shortName = "R2", required = false)
-  var fastqR2: Option[File] = None
-
-  @Input(doc = "All unmapped reads will be extracted from this bam for analysis", shortName = "bam", required = false)
-  var bamFile: Option[File] = None
-
-  @Argument(required = false)
-  var outputName: String = _
-
-  /** Executed before running the script */
-  def init(): Unit = {
-    require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
-    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or la R1 file")
-
-    if (outputName == null) {
-      if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
-        .stripSuffix(".gz")
-        .stripSuffix(".fastq")
-        .stripSuffix(".fq"))
-        .getOrElse("noName")
-      else outputName = bamFile.map(_.getName.stripSuffix(".bam")).getOrElse("noName")
-    }
-
-    if (fastqR1.isDefined) {
-      fastqR1.foreach(inputFiles :+= InputFile(_))
-      fastqR2.foreach(inputFiles :+= InputFile(_))
-    } else {
-      inputFiles :+= InputFile(bamFile.get)
-    }
-  }
-
   override def reportClass = {
-    val gears = new GearsReport(this)
-    gears.outputDir = new File(outputDir, "report")
-    gears.summaryFile = summaryFile
-    sampleId.foreach(gears.args += "sampleId" -> _)
-    libId.foreach(gears.args += "libId" -> _)
-    Some(gears)
+    val gearsReport = new GearsReport(this)
+    gearsReport.outputDir = new File(outputDir, "report")
+    gearsReport.summaryFile = summaryFile
+    Some(gearsReport)
   }
 
-  override def defaults = Map(
-    "samtofastq" -> Map(
-      "validationstringency" -> "LENIENT"
-    )
-  )
-  /** Method to add jobs */
+  override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
+
+  /** Init for pipeline */
+  def init(): Unit = {
+  }
+
+  /** Name of summary output file */
+  def summaryFile: File = new File(outputDir, "gears.summary.json")
+
+  /** Pipeline itself */
   def biopetScript(): Unit = {
-    val fastqFiles: List[File] = bamFile.map { bamfile =>
-
-      val samtoolsViewSelectUnmapped = new SamtoolsView(this)
-      samtoolsViewSelectUnmapped.input = bamfile
-      samtoolsViewSelectUnmapped.b = true
-      samtoolsViewSelectUnmapped.output = new File(outputDir, s"$outputName.unmapped.bam")
-      samtoolsViewSelectUnmapped.f = List("12")
-      samtoolsViewSelectUnmapped.isIntermediate = true
-      add(samtoolsViewSelectUnmapped)
-
-      // start bam to fastq (only on unaligned reads) also extract the matesam
-      val samToFastq = new SamToFastq(this)
-      samToFastq.input = samtoolsViewSelectUnmapped.output
-      samToFastq.fastqR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
-      samToFastq.fastqR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
-      samToFastq.fastqUnpaired = new File(outputDir, s"$outputName.unmapped.singleton.fq.gz")
-      samToFastq.isIntermediate = true
-      add(samToFastq)
-
-      List(samToFastq.fastqR1, samToFastq.fastqR2)
-    }.getOrElse(List(fastqR1, fastqR2).flatten)
-
-    // start kraken
-    val krakenAnalysis = new Kraken(this)
-    krakenAnalysis.input = fastqFiles
-    krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
-
-    krakenAnalysis.paired = fastqFiles.length == 2
-
-    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
-    add(krakenAnalysis)
-
-    outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
-
-    // create kraken summary file
-    val krakenReport = new KrakenReport(this)
-    krakenReport.input = krakenAnalysis.output
-    krakenReport.show_zeros = true
-    krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
-    add(krakenReport)
-
-    outputFiles += ("kraken_report_input" -> krakenReport.input)
-    outputFiles += ("kraken_report_output" -> krakenReport.output)
-
-    val krakenReportJSON = new KrakenReportToJson(this)
-    krakenReportJSON.inputReport = krakenReport.output
-    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
-    krakenReportJSON.skipNames = config("skipNames", default = false)
-    add(krakenReportJSON)
-    addSummarizable(krakenReportJSON, "krakenreport")
-
-    outputFiles += ("kraken_report_json_input" -> krakenReportJSON.inputReport)
-    outputFiles += ("kraken_report_json_output" -> krakenReportJSON.output)
-
+    addSamplesJobs()
     addSummaryJobs()
   }
 
-  /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".gears.summary.json")
+  def qiimeClosedDir: Option[File] = {
+    if (samples.values.flatMap(_.gs.qiimeClosed).nonEmpty) {
+      Some(new File(outputDir, "qiime_closed_reference"))
+    } else None
 
-  /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty
+  }
 
-  /** Statistics shown in the summary file */
-  def summaryFiles: Map[String, File] = Map.empty ++
-    (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
-    (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
-    outputFiles
+  def qiimeClosedOtuTable: Option[File] = qiimeClosedDir.map(new File(_, "otu_table.biom"))
+  def qiimeClosedOtuMap: Option[File] = qiimeClosedDir.map(new File(_, "otu_map.txt"))
+
+  /**
+   * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
+   */
+  def addMultiSampleJobs(): Unit = {
+    val gss = samples.values.flatMap(_.gs.qiimeClosed).toList
+    val closedOtuTables = gss.map(_.otuTable)
+    val closedOtuMaps = gss.map(_.otuMap)
+    require(closedOtuTables.size == closedOtuMaps.size)
+    if (closedOtuTables.nonEmpty) {
+      if (closedOtuTables.size > 1) {
+        val mergeTables = new MergeOtuTables(qscript)
+        mergeTables.input = closedOtuTables
+        mergeTables.outputFile = qiimeClosedOtuTable.get
+        add(mergeTables)
+
+        val mergeMaps = new MergeOtuMaps(qscript)
+        mergeMaps.input = closedOtuMaps
+        mergeMaps.output = qiimeClosedOtuMap.get
+        add(mergeMaps)
+
+      } else {
+        add(Ln(qscript, closedOtuMaps.head, qiimeClosedOtuMap.get))
+        add(Ln(qscript, closedOtuTables.head, qiimeClosedOtuTable.get))
+      }
+
+      //TODO: Plots
+
+    }
+  }
+
+  /**
+   * Factory method for Sample class
+   * @param id SampleId
+   * @return Sample class
+   */
+  def makeSample(id: String): Sample = new Sample(id)
+
+  class Sample(sampleId: String) extends AbstractSample(sampleId) {
+    /**
+     * Factory method for Library class
+     * @param id SampleId
+     * @return Sample class
+     */
+    def makeLibrary(id: String): Library = new Library(id)
+
+    class Library(libId: String) extends AbstractLibrary(libId) {
+
+      lazy val flexiprep = new Flexiprep(qscript)
+      flexiprep.sampleId = Some(sampleId)
+      flexiprep.libId = Some(libId)
+      flexiprep.input_R1 = config("R1")
+      flexiprep.input_R2 = config("R2")
+      flexiprep.outputDir = new File(libDir, "flexiprep")
+
+      lazy val gs = new GearsSingle(qscript)
+      gs.sampleId = Some(sampleId)
+      gs.libId = Some(libId)
+      gs.outputDir = libDir
+
+      /** Function that add library jobs */
+      protected def addJobs(): Unit = {
+        inputFiles :+= InputFile(flexiprep.input_R1, config("R1_md5"))
+        flexiprep.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
+        add(flexiprep)
+
+        gs.fastqR1 = Some(flexiprep.fastqR1Qc)
+        gs.fastqR2 = flexiprep.fastqR2Qc
+        add(gs)
+      }
+
+      /** Must return files to store into summary */
+      def summaryFiles: Map[String, File] = Map()
+
+      /** Must returns stats to store into summary */
+      def summaryStats = Map()
+    }
+
+    lazy val gs = new GearsSingle(qscript)
+    gs.sampleId = Some(sampleId)
+    gs.outputDir = sampleDir
+
+    /** Function to add sample jobs */
+    protected def addJobs(): Unit = {
+      addPerLibJobs()
+
+      val flexipreps = libraries.values.map(_.flexiprep).toList
+
+      val mergeR1: File = new File(sampleDir, s"$sampleId.R1.fq.gz")
+      add(Zcat(qscript, flexipreps.map(_.fastqR1Qc)) | new Gzip(qscript) > mergeR1)
+
+      val mergeR2 = if (flexipreps.exists(_.paired)) Some(new File(sampleDir, s"$sampleId.R2.fq.gz")) else None
+      mergeR2.foreach { file =>
+        add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
+      }
+
+      gs.fastqR1 = Some(mergeR1)
+      gs.fastqR2 = mergeR2
+      add(gs)
+    }
+
+    /** Must return files to store into summary */
+    def summaryFiles: Map[String, File] = Map()
+
+    /** Must returns stats to store into summary */
+    def summaryStats: Any = Map()
+  }
+
+  /** Must return a map with used settings for this pipeline */
+  def summarySettings: Map[String, Any] = Map()
+
+  /** File to put in the summary for thie pipeline */
+  def summaryFiles: Map[String, File] = (
+    qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
+    qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
+  ).toMap
 }
 
-/** This object give a default main method to the pipelines */
 object Gears extends PipelineCommand

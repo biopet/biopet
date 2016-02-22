@@ -15,12 +15,10 @@
  */
 package nl.lumc.sasc.biopet.core.extensions
 
-import java.io.{ File, FileOutputStream }
+import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.rscript.Rscript
-
-import scala.sys.process._
 
 /**
  * General rscript extension
@@ -32,7 +30,7 @@ trait RscriptCommandLineFunction extends BiopetCommandLineFunction with Rscript 
   executable = rscriptExecutable
 
   override def beforeGraph(): Unit = {
-    checkScript(Some(jobTempDir))
+    checkScript(Some(new File(".queue" + File.separator + "tmp")))
   }
 
   def cmdLine: String = repeat(cmd)

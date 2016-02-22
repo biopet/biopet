@@ -53,37 +53,42 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       bams <- 0 to 3;
       raw <- bool;
       bcftools <- bool;
-      bcftools_singlesample <- bool;
-      freebayes <- bool
-    ) yield Array(bams, raw, bcftools, bcftools_singlesample, freebayes)).toArray
+      bcftoolsSinglesample <- bool;
+      freebayes <- bool;
+      varscanCnsSinglesample <- bool
+    ) yield Array(bams, raw, bcftools, bcftoolsSinglesample, freebayes, varscanCnsSinglesample)).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
   def testShivaVariantcalling(bams: Int,
                               raw: Boolean,
                               bcftools: Boolean,
-                              bcftools_singlesample: Boolean,
-                              freebayes: Boolean) = {
+                              bcftoolsSinglesample: Boolean,
+                              freebayes: Boolean,
+                              varscanCnsSinglesample: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
-    if (bcftools_singlesample) callers.append("bcftools_singlesample")
+    if (bcftoolsSinglesample) callers.append("bcftools_singlesample")
     if (freebayes) callers.append("freebayes")
+    if (varscanCnsSinglesample) callers.append("varscan_cns_singlesample")
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftools_singlesample && !freebayes)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftoolsSinglesample && !freebayes && !varscanCnsSinglesample)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
+      pipeline.init()
       pipeline.script()
     }
 
     if (!illegalArgumentException) {
+      pipeline.init()
       pipeline.script()
 
-      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe 1 + (if (raw) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
       //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
       //FIXME: Can not check for bcftools because of piping
       pipeline.functions.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
@@ -130,6 +135,7 @@ object ShivaVariantcallingTest {
     "freebayes" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "varscan_jar" -> "test"
   )
 }

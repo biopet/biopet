@@ -36,7 +36,7 @@ trait Logging {
 object Logging {
   val logger = Logger.getRootLogger
 
-  private val errors: ListBuffer[Exception] = ListBuffer()
+  private[biopet] val errors: ListBuffer[Exception] = ListBuffer()
 
   def addError(error: String, debug: String = null): Unit = {
     val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")

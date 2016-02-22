@@ -23,9 +23,7 @@ import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.{ QScript, QSettings }
 import org.broadinstitute.gatk.queue.function.QFunction
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.queue.util.{ Logging => GatkLogging }
-import org.broadinstitute.gatk.utils.commandline.Argument
 
 /** Base for biopet pipeline */
 trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
@@ -99,12 +97,13 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
     inputFiles.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
-      else if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
+      if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
+      if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absulute path: ${i.file}")
     }
 
     functions.filter(_.jobOutputFile == null).foreach(f => {
       try {
-        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + configName + ".out")
+        f.jobOutputFile = new File(f.firstOutput.getAbsoluteFile.getParent, "." + f.firstOutput.getName + "." + f.getClass.getSimpleName + ".out")
       } catch {
         case e: NullPointerException => logger.warn(s"Can't generate a jobOutputFile for $f")
       }

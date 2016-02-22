@@ -59,6 +59,42 @@ class LnTest extends TestNGSuite with Matchers {
     ln.cmd should ===("ln -s ../another_nested/target.txt /dir/nested/link.txt")
   }
 
+  @Test(description = "Target is a child of a directory multi level above link, relative set to true")
+  def testTargetMultiLevelAboveChildRelative1() {
+    val ln = new Ln(null)
+    ln.relative = true
+    ln.input = new File("/dir/another_nested/1/2/3/4/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
+    ln.cmd should ===("ln -s ../another_nested/1/2/3/4/target.txt /dir/nested/link.txt")
+  }
+
+  @Test(description = "Target is a child of a directory multi level above link, relative set to true")
+  def testTargetMultiLevelAboveChildRelative2() {
+    val ln = new Ln(null)
+    ln.relative = true
+    ln.input = new File("/dir/another_nested/1/2/3/4/target.txt")
+    ln.output = new File("/dir/nested/2/link.txt")
+    ln.cmd should ===("ln -s ../../another_nested/1/2/3/4/target.txt /dir/nested/2/link.txt")
+  }
+
+  @Test(description = "Source is a child of a directory multi level above link, relative set to true")
+  def testSourceMultiLevelAboveChildRelative() {
+    val ln = new Ln(null)
+    ln.relative = true
+    ln.output = new File("/dir/another_nested/1/2/3/4/link.txt")
+    ln.input = new File("/dir/nested/2/output.txt")
+    ln.cmd should ===("ln -s ../../../../../nested/2/output.txt /dir/another_nested/1/2/3/4/link.txt")
+  }
+
+  @Test(description = "Target is a child of a directory multi level above link, relative set to false")
+  def testTargetMultiLevelAboveChild() {
+    val ln = new Ln(null)
+    ln.relative = false
+    ln.input = new File("/dir/another_nested/1/2/3/4/target.txt")
+    ln.output = new File("/dir/nested/link.txt")
+    ln.cmd should ===("ln -s /dir/another_nested/1/2/3/4/target.txt /dir/nested/link.txt")
+  }
+
   @Test(description = "Target is one level below link, relative set to true")
   def testTargetOneLevelBelowRelative() {
     val ln = new Ln(null)

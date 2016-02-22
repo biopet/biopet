@@ -29,7 +29,7 @@ import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import nl.lumc.sasc.biopet.pipelines.gears.Gears
+import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -107,7 +107,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   )
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+  def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> input_R1,
     "reference" -> referenceFasta()) ++
     (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
 
@@ -262,13 +262,12 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {
-      val gears = new Gears(this)
+      val gears = new GearsSingle(this)
       gears.bamFile = Some(finalBamFile)
+      gears.sampleId = sampleId
+      gears.libId = libId
       gears.outputDir = new File(outputDir, "gears")
-      gears.init()
-      gears.biopetScript()
-      addAll(gears.functions)
-      addSummaryQScript(gears)
+      add(gears)
     }
 
     if (config("generate_wig", default = false).asBoolean)

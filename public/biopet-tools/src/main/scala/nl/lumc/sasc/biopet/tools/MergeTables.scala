@@ -108,6 +108,7 @@ object MergeTables extends ToolCommand {
                   idColumnIndices: Seq[Int] = Seq.empty[Int],
                   valueColumnIndex: Int = -1,
                   fileExtension: String = "",
+                  columnNames: Option[Seq[String]] = None,
                   numHeaderLines: Int = 0,
                   fallbackString: String = "-",
                   delimiter: Char = '\t',
@@ -144,6 +145,10 @@ object MergeTables extends ToolCommand {
 
     opt[String]('n', "id_column_name") optional () valueName "<name>" action { (x, c) =>
       c.copy(idColumnName = x)
+    } text "Name of feature ID column in the output merged file (default: feature)"
+
+    opt[String]('N', "column_names") optional () valueName "<name>" action { (x, c) =>
+      c.copy(columnNames = Some(x.split(",")))
     } text "Name of feature ID column in the output merged file (default: feature)"
 
     opt[String]('e', "strip_extension") optional () valueName "<ext>" action { (x, c) =>
@@ -186,10 +191,17 @@ object MergeTables extends ToolCommand {
     .getOrElse(sys.exit(1))
 
   /** Transforms the input file seq into a seq of [[InputTable]] objects */
-  def prepInput(inFiles: Seq[File], ext: String = ""): Seq[InputTable] = {
-    require(inFiles.map(_.getName.stripSuffix(ext)).distinct.size == inFiles.size, "Duplicate samples exist in inputs")
-    inFiles
-      .map(tableFile => InputTable(tableFile.getName.stripSuffix(ext), Source.fromFile(tableFile)))
+  def prepInput(inFiles: Seq[File], ext: String, columnNames: Option[Seq[String]]): Seq[InputTable] = {
+    (ext, columnNames) match {
+      case (_, Some(names)) =>
+        require(names.size == inFiles.size, "columnNames are not the same number as input Files")
+        names.zip(inFiles).map { case (name, tableFile) => InputTable(name, Source.fromFile(tableFile)) }
+      case _ =>
+        require(inFiles.map(_.getName.stripSuffix(ext)).distinct.size == inFiles.size,
+          "Duplicate samples exist in inputs")
+        inFiles
+          .map(tableFile => InputTable(tableFile.getName.stripSuffix(ext), Source.fromFile(tableFile)))
+    }
   }
 
   /** Creates the output writer object */
@@ -205,7 +217,7 @@ object MergeTables extends ToolCommand {
     import commandArgs._
 
     val outStream = prepOutput(out)
-    val merged = mergeTables(prepInput(inputTables, fileExtension),
+    val merged = mergeTables(prepInput(inputTables, fileExtension, columnNames),
       idColumnIndices, valueColumnIndex, numHeaderLines, delimiter)
     writeOutput(merged, outStream, fallbackString, idColumnName)
     outStream.close()

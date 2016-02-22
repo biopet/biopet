@@ -25,7 +25,8 @@ object BamUtils {
       val inputSam = SamReaderFactory.makeDefault.open(file)
       val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
       if (samples.size == 1) samples.head -> file
-      else throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
+      else if (samples.size > 1) throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
+      else throw new IllegalArgumentException("Bam does not contain sample ID or have no readgroups defined: " + file)
     }
     if (temp.map(_._1).distinct.size != temp.size) throw new IllegalArgumentException("Samples has been found twice")
     temp.toMap
