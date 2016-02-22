@@ -136,6 +136,19 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     }
   }
 
+  @Test
+  def testWrongCaller(): Unit = {
+    val map = Map("sv_callers" -> List("this is not a caller"))
+    val pipeline = initPipeline(map)
+
+    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+
+    intercept[IllegalArgumentException] {
+      pipeline.init()
+      pipeline.script()
+    }
+  }
+
   @AfterClass def removeTempOutputDir() = {
     FileUtils.deleteDirectory(ShivaSvCallingTest.outputDir)
   }
