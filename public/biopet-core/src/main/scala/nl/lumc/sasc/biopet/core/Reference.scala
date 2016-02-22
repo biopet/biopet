@@ -71,7 +71,7 @@ trait Reference extends Configurable {
     val file: File = config("reference_fasta")
     checkFasta(file)
 
-    val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
+    val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta").stripSuffix(".fna") + ".dict")
     val fai = new File(file.getAbsolutePath + ".fai")
 
     this match {

@@ -23,6 +23,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import scala.sys.process.{ Process, ProcessLogger }
 
 /**
+ * Trait for rscripts, can be used to execute rscripts locally
+ *
  * Created by pjvanthof on 13/09/15.
  */
 trait Rscript extends Configurable {
@@ -42,14 +44,13 @@ trait Rscript extends Configurable {
       script = script.getAbsoluteFile
     } else {
       val rScript: File = dir match {
-        case Some(dir) => new File(dir, script.getName)
-        case _ => {
+        case Some(d) => new File(d, script.getName)
+        case _ =>
           val file = File.createTempFile(script.getName, ".R")
           file.deleteOnExit()
           file
-        }
       }
-      if (!rScript.getParentFile.exists) rScript.getParentFile.mkdirs
+      if (!rScript.getAbsoluteFile.getParentFile.exists) rScript.getParentFile.mkdirs
 
       val is = getClass.getResourceAsStream(script.getPath)
       val os = new FileOutputStream(rScript)
