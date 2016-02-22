@@ -2,10 +2,16 @@
 
 ### Calculation
 
+#### Values per core
 - **Default memory per thread**: *core_memory* + (0.5 * *retries*)
-- **Memory limit** (used for java jobs): (*core_memory* + (0.5 * *retries*)) * *threads*
 - **Resident limit**: (*core_memory* + (0.5 * *retries*)) * *residentFactor*
 - **Vmem limit**: (*core_memory* + (0.5 * *retries*)) * (*vmemFactor* + (0.5 * *retries*))
+
+We asume here that the cluster will amplify those values by the number of threads. If this is not the case for your cluster please contact us.
+
+#### Total values
+- **Memory limit** (used for java jobs): (*core_memory* + (0.5 * *retries*)) * *threads*
+
 
 ### Defaults
 
