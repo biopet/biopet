@@ -26,7 +26,7 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 import scala.util.Random
-
+import scala.collection.JavaConversions._
 /**
  * Test class for [[VcfFilter]]
  *
@@ -69,14 +69,28 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test def testMustHaveGenotypes() = {
     /**
-      * This should simply not raise an exception
-      */
+     * This should simply not raise an exception
+     */
     val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
     tmp.deleteOnExit()
     val tmp_path = tmp.getAbsolutePath
     val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path,
       "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
+
+    val size = new VCFFileReader(new File(tmp_path), false).size
+    size shouldBe 1
+
+    val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
+    tmp2.deleteOnExit()
+    val tmp2_path = tmp2.getAbsolutePath
+    val arguments2: Array[String] = Array("-I", vepped_path, "-o", tmp2_path,
+      "--mustHaveGenotype", "Sample_101:HOM_VAR")
+    main(arguments2)
+
+    val size2 = new VCFFileReader(new File(tmp2_path), false).size
+    size2 shouldBe 0
+
   }
 
   @Test def testHasGenotype() = {
