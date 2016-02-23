@@ -151,11 +151,11 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
 
               val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
-              aorrg.RGID = s"$sampleId-$libId"
+              aorrg.RGID = config("rgid", default = s"$sampleId-$libId")
               aorrg.RGLB = libId
               aorrg.RGSM = sampleId
-              aorrg.RGPL = "unknown"
-              aorrg.RGPU = "na"
+              aorrg.RGPL = config("rgpl", default = "unknown")
+              aorrg.RGPU = config("rgpu", default = "na")
               aorrg.isIntermediate = true
 
               val reorder = new ReorderSam(qscript)
@@ -164,8 +164,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
               reorder.isIntermediate = true
 
               if (!readGroupOke && correctReadgroups && !dictOke && correctDict) {
-                logger.info("Correcting readgroups, file:" + inputBam.get)
-                logger.info("Correcting sequence dictionary, file:" + inputBam.get)
+                logger.info("Correcting readgroups and sequence dictionary, file:" + inputBam.get)
                 add(reorder | aorrg)
               } else if (!readGroupOke && correctReadgroups) {
                 logger.info("Correcting readgroups, file:" + inputBam.get)
@@ -174,9 +173,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 logger.info("Correcting sequence dictionary, file:" + inputBam.get)
                 add(reorder)
               }
-            } else {
-              add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get):_*)
-            }
+            } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get):_*)
 
             val bamMetrics = new BamMetrics(qscript)
             bamMetrics.sampleId = Some(sampleId)
