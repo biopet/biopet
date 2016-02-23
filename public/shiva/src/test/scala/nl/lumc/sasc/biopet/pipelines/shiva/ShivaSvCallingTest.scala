@@ -19,14 +19,12 @@ import java.io.{ File, FileOutputStream }
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerVCF, BreakdancerConfig, BreakdancerCaller }
+import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerCaller, BreakdancerConfig, BreakdancerVCF }
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions.Freebayes
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
+import nl.lumc.sasc.biopet.extensions.pindel.{ PindelVCF, PindelConfig, PindelCaller }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -57,25 +55,28 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       bams <- 0 to 3;
       delly <- bool;
       clever <- bool;
-      breakdancer <- bool
-    ) yield Array(bams, delly, clever, breakdancer)).toArray
+      breakdancer <- bool;
+      pindel <- bool
+    ) yield Array(bams, delly, clever, breakdancer, pindel)).toArray
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
   def testShivaSvCalling(bams: Int,
                          delly: Boolean,
                          clever: Boolean,
-                         breakdancer: Boolean) = {
+                         breakdancer: Boolean,
+                         pindel: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (delly) callers.append("delly")
     if (clever) callers.append("clever")
     if (breakdancer) callers.append("breakdancer")
+    if (pindel) callers.append("pindel")
     val map = Map("sv_callers" -> callers.toList)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaSvCallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!delly && !clever && !breakdancer)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!delly && !clever && !breakdancer && !pindel)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.init()
@@ -93,10 +94,17 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       else assert(!summaryCallers.contains("clever"))
       if (breakdancer) assert(summaryCallers.contains("breakdancer"))
       else assert(!summaryCallers.contains("breakdancer"))
+      if (pindel) assert(summaryCallers.contains("pindel"))
+      else assert(!summaryCallers.contains("pindel"))
 
-      pipeline.functions.count(_.isInstanceOf[BreakdancerCaller]) shouldBe (if (breakdancer) bams else 0)
       pipeline.functions.count(_.isInstanceOf[BreakdancerConfig]) shouldBe (if (breakdancer) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[BreakdancerCaller]) shouldBe (if (breakdancer) bams else 0)
       pipeline.functions.count(_.isInstanceOf[BreakdancerVCF]) shouldBe (if (breakdancer) bams else 0)
+
+      pipeline.functions.count(_.isInstanceOf[PindelConfig]) shouldBe (if (pindel) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[PindelCaller]) shouldBe (if (pindel) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[PindelVCF]) shouldBe (if (pindel) bams else 0)
+
       pipeline.functions.count(_.isInstanceOf[CleverCaller]) shouldBe (if (clever) bams else 0)
       pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe (if (delly) (bams * 4) else 0)
 
@@ -208,6 +216,9 @@ object ShivaSvCallingTest {
     "tabix" -> Map("exe" -> "test"),
     "breakdancerconfig" -> Map("exe" -> "test"),
     "breakdancercaller" -> Map("exe" -> "test"),
+    "pindelconfig" -> Map("exe" -> "test"),
+    "pindelcaller" -> Map("exe" -> "test"),
+    "pindelvcf" -> Map("exe" -> "test"),
     "clever" -> Map("exe" -> "test"),
     "delly" -> Map("exe" -> "test"),
     "varscan_jar" -> "test"
