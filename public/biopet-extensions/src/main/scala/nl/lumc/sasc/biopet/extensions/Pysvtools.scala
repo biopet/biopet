@@ -19,7 +19,7 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
   var flanking: Option[Int] = config("flanking")
 
   var exclusionRegions: List[File] = config("exclusion_regions")
-  var translocationsOnly: Boolean = config("translocations_only")
+  var translocationsOnly: Boolean = config("translocations_only", default = false)
 
   @Output(doc = "Unzipped file", required = true)
   var output: File = _

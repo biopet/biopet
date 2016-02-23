@@ -13,16 +13,19 @@ trait SvCaller extends QScript with BiopetQScript with Reference {
 
   var namePrefix: String = _
 
-  var inputBams: Map[String, File] = _
+  var inputBams: Map[String, File] = Map.empty
 
   def outputVCF(sample: String): Option[File] = {
-    outputVcfs.get(sample)
+    outputVCFs.get(sample) match {
+      case Some(file) => Some(file)
+      case _          => None
+    }
   }
 
-  protected var outputVcfs: Map[String, File] = _
+  protected var outputVCFs: Map[String, File] = Map.empty
 
   protected def addVCF(sampleId: String, outputVCF: File) = {
-    outputVcfs += (sampleId -> outputVCF)
+    outputVCFs += (sampleId -> outputVCF)
   }
 
   def init() = {}

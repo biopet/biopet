@@ -18,9 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.Pysvtools
-import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Breakdancer, Clever, Delly, SvCaller }
-import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
-import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Breakdancer, Clever, Delly, SvCaller, _ }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
@@ -68,12 +66,12 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
     // merge VCF by sample
     for ((sample, bamFile) <- inputBams) {
-      var sampleVcfs: List[File] = List()
+      var sampleVCFS: List[Option[File]] = List.empty
       callers.foreach { caller =>
-        sampleVcfs :+= caller.outputVCF(sample).get
+        sampleVCFS ::= caller.outputVCF(sample)
       }
       val mergeSVcalls = new Pysvtools(this)
-      mergeSVcalls.input = sampleVcfs
+      mergeSVcalls.input = sampleVCFS.flatten
       mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
       add(mergeSVcalls)
       //      outputFiles += (sample -> mergeSVcalls.output)
