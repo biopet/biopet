@@ -34,6 +34,9 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
   @Output(doc = "Output SAM or BAM file", required = true)
   var output: File = null
 
+  @Output(doc = "The output file to bam file to", required = true)
+  lazy val outputIndex: File = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+
   @Argument(doc = "Allow incomplete dict concordance", required = false)
   var allowIncompleteDictConcordance: Boolean = config("allow_incomplete_dict_concordance", default = false)
 
