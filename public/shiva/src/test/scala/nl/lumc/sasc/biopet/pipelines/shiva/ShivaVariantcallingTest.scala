@@ -80,10 +80,12 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftoolsSinglesample && !freebayes && !varscanCnsSinglesample)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
+      pipeline.init()
       pipeline.script()
     }
 
     if (!illegalArgumentException) {
+      pipeline.init()
       pipeline.script()
 
       pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
