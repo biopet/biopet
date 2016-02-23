@@ -55,14 +55,14 @@ class TinyCap(val root: Configurable) extends QScript
       "best" -> true
     ),
     "sickle" -> Map(
-      "lengthThreshold" -> 8
+      "lengthThreshold" -> 15
     ),
     "fastqc" -> Map(
       "sensitiveAdapterSearch" -> true
     ),
     "cutadapt" -> Map(
       "error_rate" -> 0.2,
-      "minimum_length" -> 8,
+      "minimum_length" -> 15,
       "q" -> 30,
       "default_clip_mode" -> "both",
       "times" -> 2
