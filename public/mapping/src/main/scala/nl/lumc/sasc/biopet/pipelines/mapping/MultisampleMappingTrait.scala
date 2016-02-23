@@ -165,7 +165,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
               if (!readGroupOke && correctReadgroups && !dictOke && correctDict) {
                 logger.info("Correcting readgroups and sequence dictionary, file:" + inputBam.get)
-                add(reorder | aorrg)
+                aorrg.output = swapExt(bamFile.get.getParentFile, bamFile.get, ".bam", ".aorrg.bam")
+                add(aorrg)
+                reorder.input = aorrg.output
+                add(reorder)
               } else if (!readGroupOke && correctReadgroups) {
                 logger.info("Correcting readgroups, file:" + inputBam.get)
                 qscript.add(aorrg)
