@@ -145,10 +145,10 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             if (!readGroupOke || !dictOke) {
               if (!readGroupOke && !correctReadgroups) Logging.addError(
                 "Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
-                "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
+                  "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
               if (!dictOke && !correctDict) Logging.addError(
                 "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile +
-                "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
+                  "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
 
               val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
               aorrg.RGID = config("rgid", default = s"$sampleId-$libId")
@@ -173,7 +173,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 logger.info("Correcting sequence dictionary, file:" + inputBam.get)
                 add(reorder)
               }
-            } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get):_*)
+            } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get): _*)
 
             val bamMetrics = new BamMetrics(qscript)
             bamMetrics.sampleId = Some(sampleId)
