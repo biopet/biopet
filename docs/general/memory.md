@@ -38,5 +38,5 @@ In the config there is the possibility to set the resources.
 
 ### Retry
 
-In Biopet the number of retries is set to 5. De first retry does not use an increased memory, starting from the 2nd 
-retry the memory will automatically increase according to the calculations mentioned in [Values per core](#Values per core).
+In Biopet the number of retries is set to 5 on default. The first retry does not use an increased memory, starting from the 2nd 
+retry the memory will automatically be increases, according to the calculations mentioned in [Values per core](#Values per core).
