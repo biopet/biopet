@@ -49,6 +49,8 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
     conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +
     conditional(allowContigLengthDiscordance, "ALLOW_CONTIG_LENGTH_DISCORDANCE=TRUE") +
     required("REFERENCE=", reference, spaceSeparated = false) +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false)
+    (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
+    else required("INPUT=", input, spaceSeparated = false)) +
+    (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+    else required("OUTPUT=", output, spaceSeparated = false))
 }

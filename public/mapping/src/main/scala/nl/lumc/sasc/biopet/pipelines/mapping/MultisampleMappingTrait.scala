@@ -3,10 +3,11 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.File
 
 import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, MultiSampleQScript }
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles, AddOrReplaceReadGroups, SamToFastq }
+import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
@@ -50,6 +51,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
     Some(report)
   }
 
+  override def defaults = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
+
   /** In a default multisample mapping run there are no multsample jobs. This method can be overriden by other pipelines */
   def addMultiSampleJobs(): Unit = {
     // this code will be executed after all code of all samples is executed
@@ -81,6 +84,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
+      lazy val correctDict: Boolean = config("correct_dict", default = false)
 
       lazy val mapping = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
         val m = new Mapping(qscript)
@@ -125,38 +129,53 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             })
           } else {
             val inputSam = SamReaderFactory.makeDefault.open(inputBam.get)
-            val readGroups = inputSam.getFileHeader.getReadGroups
+            val header = inputSam.getFileHeader
+            val readGroups = header.getReadGroups
+            val referenceFile = new FastaSequenceFile(referenceFasta(), true)
+            val dictOke = header.getSequenceDictionary == referenceFile.getSequenceDictionary
+            inputSam.close()
+            referenceFile.close()
 
             val readGroupOke = readGroups.forall(readGroup => {
               if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
               if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
               readGroup.getSample == sampleId && readGroup.getLibrary == libId
             })
-            inputSam.close()
 
-            if (!readGroupOke) {
-              if (correctReadgroups) {
-                logger.info("Correcting readgroups, file:" + inputBam.get)
-                val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
-                aorrg.RGID = s"$sampleId-$libId"
-                aorrg.RGLB = libId
-                aorrg.RGSM = sampleId
-                aorrg.RGPL = "unknown"
-                aorrg.RGPU = "na"
-                aorrg.isIntermediate = true
-                qscript.add(aorrg)
-              } else throw new IllegalStateException("Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
+            if (!readGroupOke || !dictOke) {
+              if (!readGroupOke && !correctReadgroups) Logging.addError(
+                "Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                 "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
-            } else {
-              val oldBamFile: File = inputBam.get
-              val oldIndex: File = new File(oldBamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-              val newIndex: File = new File(libDir, bamFile.get.getName.stripSuffix(".bam") + ".bai")
-              val baiLn = Ln(qscript, oldIndex, newIndex)
-              add(baiLn)
+              if (!dictOke && !correctDict) Logging.addError(
+                "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile +
+                "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
 
-              val bamLn = Ln(qscript, oldBamFile, bamFile.get)
-              bamLn.deps :+= baiLn.output
-              add(bamLn)
+              val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
+              aorrg.RGID = s"$sampleId-$libId"
+              aorrg.RGLB = libId
+              aorrg.RGSM = sampleId
+              aorrg.RGPL = "unknown"
+              aorrg.RGPU = "na"
+              aorrg.isIntermediate = true
+
+              val reorder = new ReorderSam(qscript)
+              reorder.input = inputBam.get
+              reorder.output = bamFile.get
+              reorder.isIntermediate = true
+
+              if (!readGroupOke && correctReadgroups && !dictOke && correctDict) {
+                logger.info("Correcting readgroups, file:" + inputBam.get)
+                logger.info("Correcting sequence dictionary, file:" + inputBam.get)
+                add(reorder | aorrg)
+              } else if (!readGroupOke && correctReadgroups) {
+                logger.info("Correcting readgroups, file:" + inputBam.get)
+                qscript.add(aorrg)
+              } else if (!dictOke && correctDict) {
+                logger.info("Correcting sequence dictionary, file:" + inputBam.get)
+                add(reorder)
+              }
+            } else {
+              add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get):_*)
             }
 
             val bamMetrics = new BamMetrics(qscript)

@@ -77,7 +77,7 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val removeRibosomalReads: Boolean = config("remove_ribosomal_reads", default = false)
 
   /** Default pipeline config */
-  override def defaults = Map(
+  override def defaults = super.defaults ++ Map(
     "htseqcount" -> (if (strandProtocol.isSet) Map("stranded" -> (strandProtocol() match {
       case StrandProtocol.NonSpecific => "no"
       case StrandProtocol.Dutp        => "reverse"
