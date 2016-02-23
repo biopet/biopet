@@ -18,7 +18,7 @@
 
 from __future__ import print_function
 
-__author__="Wai Yi Leung"
+__author__="Peter van 't Hof"
 
 import sys
 import re

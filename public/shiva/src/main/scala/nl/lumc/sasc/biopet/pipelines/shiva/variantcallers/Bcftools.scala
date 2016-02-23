@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import nl.lumc.sasc.biopet.extensions.Tabix
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsCall
-import nl.lumc.sasc.biopet.extensions.samtools.{FixMpileup, SamtoolsMpileup}
+import nl.lumc.sasc.biopet.extensions.samtools.{ FixMpileup, SamtoolsMpileup }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** default mode of bcftools */

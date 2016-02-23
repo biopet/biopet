@@ -1,10 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.extensions.{ Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsMerge, BcftoolsCall }
-import nl.lumc.sasc.biopet.extensions.samtools.{FixMpileup, SamtoolsMpileup}
+import nl.lumc.sasc.biopet.extensions.samtools.{ FixMpileup, SamtoolsMpileup }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** default mode of bcftools */
