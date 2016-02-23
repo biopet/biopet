@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 
 import htsjdk.samtools._
-import org.mockito.Mockito.{inOrder => inOrd}
+import org.mockito.Mockito.{ inOrder => inOrd }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{BeforeClass, Test}
+import org.testng.annotations.{ BeforeClass, Test }
 
 /**
  * Created by wyleung on 22-2-16.

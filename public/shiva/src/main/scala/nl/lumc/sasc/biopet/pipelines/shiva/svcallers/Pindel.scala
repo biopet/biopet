@@ -25,8 +25,6 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 class Pindel(val root: Configurable) extends SvCaller {
   val name = "pindel"
 
-  def this() = this(null)
-
   /** Default pipeline config */
   override def defaults = Map(
     "pindelvcf" -> Map(

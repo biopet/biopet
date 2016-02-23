@@ -76,7 +76,7 @@ object BamUtils {
     val counts = baminsertsizes.flatMap(x => x)
 
     if (counts.size != 0) {
-      counts.reduceLeft(_ + _) / counts.size
+      counts.sum / counts.size
     } else {
       0
     }
