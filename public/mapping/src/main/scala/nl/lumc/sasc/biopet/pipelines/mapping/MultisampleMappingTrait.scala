@@ -84,7 +84,6 @@ trait MultisampleMappingTrait extends MultiSampleQScript
       lazy val inputBam: Option[File] = MultisampleMapping.fileMustBeAbsolute(if (inputR1.isEmpty) config("bam") else None)
       lazy val bamToFastq: Boolean = config("bam_to_fastq", default = false)
       lazy val correctReadgroups: Boolean = config("correct_readgroups", default = false)
-      lazy val correctDict: Boolean = config("correct_dict", default = false)
 
       lazy val mapping = if (inputR1.isDefined || (inputBam.isDefined && bamToFastq)) {
         val m = new Mapping(qscript)
@@ -157,35 +156,20 @@ trait MultisampleMappingTrait extends MultiSampleQScript
               if (!readGroupOke && !correctReadgroups) Logging.addError(
                 "Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                   "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
-              if (!dictOke && !correctDict) Logging.addError(
+              if (!dictOke) Logging.addError(
                 "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile +
                   "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
 
-              val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
-              aorrg.RGID = config("rgid", default = s"$sampleId-$libId")
-              aorrg.RGLB = libId
-              aorrg.RGSM = sampleId
-              aorrg.RGPL = config("rgpl", default = "unknown")
-              aorrg.RGPU = config("rgpu", default = "na")
-              aorrg.isIntermediate = true
-
-              val reorder = new ReorderSam(qscript)
-              reorder.input = inputBam.get
-              reorder.output = bamFile.get
-              reorder.isIntermediate = true
-
-              if (!readGroupOke && correctReadgroups && !dictOke && correctDict) {
-                logger.info("Correcting readgroups and sequence dictionary, file:" + inputBam.get)
-                aorrg.output = swapExt(bamFile.get.getParentFile, bamFile.get, ".bam", ".aorrg.bam")
-                add(aorrg)
-                reorder.input = aorrg.output
-                add(reorder)
-              } else if (!readGroupOke && correctReadgroups) {
+              if (!readGroupOke && correctReadgroups) {
                 logger.info("Correcting readgroups, file:" + inputBam.get)
+                val aorrg = AddOrReplaceReadGroups(qscript, inputBam.get, bamFile.get)
+                aorrg.RGID = config("rgid", default = s"$sampleId-$libId")
+                aorrg.RGLB = libId
+                aorrg.RGSM = sampleId
+                aorrg.RGPL = config("rgpl", default = "unknown")
+                aorrg.RGPU = config("rgpu", default = "na")
+                aorrg.isIntermediate = true
                 qscript.add(aorrg)
-              } else if (!dictOke && correctDict) {
-                logger.info("Correcting sequence dictionary, file:" + inputBam.get)
-                add(reorder)
               }
             } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get): _*)
 
