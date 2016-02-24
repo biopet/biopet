@@ -132,7 +132,18 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             val header = inputSam.getFileHeader
             val readGroups = header.getReadGroups
             val referenceFile = new FastaSequenceFile(referenceFasta(), true)
-            val dictOke = header.getSequenceDictionary == referenceFile.getSequenceDictionary
+            val dictOke: Boolean = {
+              var oke = true
+              try {
+                header.getSequenceDictionary.assertSameDictionary(referenceFile.getSequenceDictionary)
+              } catch {
+                case e: AssertionError => {
+                  println(e.getMessage)
+                  oke = false
+                }
+              }
+              oke
+            }
             inputSam.close()
             referenceFile.close()
 
