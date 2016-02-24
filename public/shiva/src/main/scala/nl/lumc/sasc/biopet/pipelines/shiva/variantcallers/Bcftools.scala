@@ -14,6 +14,7 @@ class Bcftools(val root: Configurable) extends Variantcaller {
     val mp = new SamtoolsMpileup(this)
     mp.input = inputBams.values.toList
     mp.u = true
+    mp.v = true
     mp.reference = referenceFasta()
 
     val bt = new BcftoolsCall(this)

@@ -28,10 +28,7 @@ upacPatern = re.compile(r'[RYKMSWBDHV]')
 if __name__ == "__main__":
     for line in sys.stdin:
         l = line.strip().split("\t")
-        if l[3] == "0":
-            # no alignment to this position
-            print("\t".join(map(str, l)))
-            continue
+        if len(l) >= 3:
+            l[2] = upacPatern.sub("N", l[2])
 
-        l[2] = upacPatern.sub("N", l[2])
         print("\t".join(map(str, l)))
