@@ -119,7 +119,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             val samToFastq = SamToFastq(qscript, inputBam.get,
               new File(libDir, sampleId + "-" + libId + ".R1.fq.gz"),
               new File(libDir, sampleId + "-" + libId + ".R2.fq.gz"))
-            samToFastq.isIntermediate = true
+            samToFastq.isIntermediate = libraries.size > 1
             qscript.add(samToFastq)
             mapping.foreach(m => {
               m.input_R1 = samToFastq.fastqR1
