@@ -137,7 +137,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 header.getSequenceDictionary.assertSameDictionary(referenceFile.getSequenceDictionary)
               } catch {
                 case e: AssertionError => {
-                  println(e.getMessage)
+                  logger.error(e.getMessage)
                   oke = false
                 }
               }
