@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.MultiSampleQScript.Gender
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ Logging, ConfigUtils }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QScript
 import org.scalatest.Matchers
@@ -90,6 +90,20 @@ class MultiSampleQScriptTest extends TestNGSuite with Matchers {
 
     script.functions.size shouldBe 1
   }
+
+  @Test
+  def testInvalidSampleName: Unit = {
+    val script = MultiSampleQScriptTest(sample4 :: Nil)
+    script.init()
+    script.biopetScript()
+    val msg = script.getLastLogMessage
+    msg shouldBe "Sample 'Something.Invalid' has an invalid name. " +
+      "Sample names must have at least 3 characters, " +
+      "must begin and end with an alphanumeric character, " +
+      "and must not have whitespace and special characters. " +
+      "Dash (-) and underscore (_) are permitted."
+
+  }
 }
 
 object MultiSampleQScriptTest {
@@ -120,6 +134,10 @@ object MultiSampleQScriptTest {
     "lib3" -> Map("test" -> "3-3")
   ))))
 
+  val sample4 = Map("samples" -> Map("Something.Invalid" -> Map("libraries" -> Map(
+    "lib1" -> Map("test" -> "4-1")
+  ))))
+
   val child = Map("samples" -> Map("child" -> Map("tags" -> Map(
     "gender" -> "male", "father" -> "father", "mother" -> "mother"))))
   val father = Map("samples" -> Map("father" -> Map("tags" -> Map("gender" -> "male"))))
@@ -136,6 +154,11 @@ object MultiSampleQScriptTest {
         .foldLeft(Map[String, Any]()) { case (a, b) => ConfigUtils.mergeMaps(a, b) })
 
       val root = null
+
+      def getLastLogMessage: String = {
+        Logging.errors.toList.last.getMessage
+      }
+
       class Sample(id: String) extends AbstractSample(id) {
         class Library(id: String) extends AbstractLibrary(id) {
           /** Function that add library jobs */
