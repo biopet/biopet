@@ -11,6 +11,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
+import scala.language.reflectiveCalls
 import scala.collection.mutable.ListBuffer
 
 /**
