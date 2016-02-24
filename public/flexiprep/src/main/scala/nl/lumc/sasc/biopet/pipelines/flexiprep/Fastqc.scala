@@ -33,6 +33,9 @@ import htsjdk.samtools.util.SequenceUtil.reverseComplement
  */
 class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(root) with Summarizable {
 
+  /** Allow reporting of all found (potentially adapter) sequences in the FastQC */
+  var sensitiveAdapterSearch: Boolean = config("sensitiveAdapterSearch", default = false)
+
   /** Class for storing a single FastQC module result */
   protected case class FastQCModule(name: String, status: String, lines: Seq[String])
 

@@ -69,11 +69,11 @@ class TinyCap(val root: Configurable) extends QScript
     )
   )
 
-  lazy val fragmentsPerGene = Some(new FragmentsPerGene(this))
-  lazy val fragmentsPerSmallRna = Some(new FragmentsPerSmallRna(this))
-  lazy val baseCounts = Some(new BaseCounts(this))
+  lazy val fragmentsPerGene = new FragmentsPerGene(this)
+  lazy val fragmentsPerSmallRna = new FragmentsPerSmallRna(this)
+  lazy val baseCounts = new BaseCounts(this)
 
-  def executedMeasures = (fragmentsPerGene :: fragmentsPerSmallRna :: baseCounts :: Nil).flatten
+  def executedMeasures = (fragmentsPerGene :: fragmentsPerSmallRna :: baseCounts :: Nil)
 
   override def init = {
     super.init()
