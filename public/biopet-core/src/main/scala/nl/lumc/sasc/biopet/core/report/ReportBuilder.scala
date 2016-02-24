@@ -93,9 +93,9 @@ trait ReportBuilder extends ToolCommand {
   private var total = 0
 
   private var _sampleId: Option[String] = None
-  protected def sampleId = _sampleId
+  protected[report] def sampleId = _sampleId
   private var _libId: Option[String] = None
-  protected def libId = _libId
+  protected[report] def libId = _libId
 
   case class ExtFile(resourcePath: String, targetPath: String)
 
@@ -151,6 +151,8 @@ trait ReportBuilder extends ToolCommand {
 
     total = ReportBuilder.countPages(indexPage)
     logger.info(total + " pages to be generated")
+
+    done = 0
 
     logger.info("Generate pages")
     val jobs = generatePage(summary, indexPage, cmdArgs.outputDir,
