@@ -5,8 +5,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 24/02/16.
-  */
+ * Created by pjvanthof on 24/02/16.
+ */
 class ReportSectionTest extends TestNGSuite with Matchers {
 
   @Test

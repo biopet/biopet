@@ -6,11 +6,11 @@ import java.nio.file.Paths
 import com.google.common.io.Files
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
-  * Created by pjvanthof on 24/02/16.
-  */
+ * Created by pjvanthof on 24/02/16.
+ */
 class ReportBuilderTest extends TestNGSuite with Matchers {
 
   private def resourcePath(p: String): String = {

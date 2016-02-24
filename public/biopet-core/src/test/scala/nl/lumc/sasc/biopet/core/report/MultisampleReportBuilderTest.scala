@@ -9,8 +9,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 24/02/16.
-  */
+ * Created by pjvanthof on 24/02/16.
+ */
 class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
@@ -33,7 +33,14 @@ class MultisampleReportBuilderTest extends TestNGSuite with Matchers {
     val args = Array("-s", resourcePath("/empty_summary.json"), "-o", tempDir.getAbsolutePath)
     builder.main(args)
     builder.extFiles.foreach(x => new File(tempDir, "ext" + File.separator + x.targetPath) should exist)
-    new File(tempDir, "index.html") should exist
+
+    def createFile(path: String*) = new File(tempDir, path.mkString(File.separator))
+
+    createFile("index.html") should exist
+    createFile("Samples", "index.html") should exist
+    createFile("Samples", "sampleName", "index.html") should exist
+    createFile("Samples", "sampleName", "Libraries", "index.html") should exist
+    createFile("Samples", "sampleName", "Libraries", "libName", "index.html") should exist
   }
 
 }
