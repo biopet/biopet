@@ -30,6 +30,7 @@
         <module>../public/toucan</module>
         <module>../public/shiva</module>
         <module>../public/basty</module>
+        <module>../public/tinycap</module>
         <module>../public/biopet-utils</module>
         <module>../public/biopet-tools</module>
         <module>../public/biopet-tools-extensions</module>
