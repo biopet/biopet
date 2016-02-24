@@ -216,7 +216,7 @@ object ReportBuilder {
   protected val engine = new TemplateEngine()
 
   /** Cache of temp file for templates from the classpath / jar */
-  private var templateCache: Map[String, File] = Map()
+  private[report] var templateCache: Map[String, File] = Map()
 
   /** This will give the total number of pages including all nested pages */
   def countPages(page: ReportPage): Int = {
