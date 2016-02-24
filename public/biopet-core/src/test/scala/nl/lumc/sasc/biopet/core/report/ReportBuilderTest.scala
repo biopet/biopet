@@ -10,6 +10,23 @@ import org.testng.annotations.Test
 class ReportBuilderTest extends TestNGSuite with Matchers {
 
   @Test
+  def testCountPages: Unit = {
+    ReportBuilder.countPages(ReportPage(Nil, Nil, Map())) shouldBe 1
+    ReportBuilder.countPages(ReportPage(
+      "p1" -> ReportPage(Nil, Nil, Map()) :: Nil,
+      Nil, Map())) shouldBe 2
+    ReportBuilder.countPages(ReportPage(
+      "p1" -> ReportPage(Nil, Nil, Map()) :: "p2" -> ReportPage(Nil, Nil, Map()) :: Nil,
+      Nil, Map())) shouldBe 3
+    ReportBuilder.countPages(ReportPage(
+      "p1" -> ReportPage("p1" -> ReportPage(Nil, Nil, Map()) :: Nil, Nil, Map()) :: Nil,
+      Nil, Map())) shouldBe 3
+    ReportBuilder.countPages(ReportPage(
+      "p1" -> ReportPage(Nil, Nil, Map()) :: "p2" -> ReportPage("p1" -> ReportPage(Nil, Nil, Map()) :: Nil, Nil, Map()) :: Nil,
+      Nil, Map())) shouldBe 4
+  }
+
+  @Test
   def testRenderTemplate: Unit = {
     ReportBuilder.templateCache = Map()
     ReportBuilder.templateCache shouldBe empty
