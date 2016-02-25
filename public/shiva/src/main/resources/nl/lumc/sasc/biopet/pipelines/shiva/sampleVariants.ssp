@@ -52,7 +52,7 @@
 #end
 
 #if (showPlot)
-    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId) }#
+    #{ ShivaReport.variantSummaryPlot(outputDir, "variantSummary", summary, sampleId = sampleId, target = target) }#
     <div class="panel-body">
         <img src="variantSummary.png" class="img-responsive" />
     </div>

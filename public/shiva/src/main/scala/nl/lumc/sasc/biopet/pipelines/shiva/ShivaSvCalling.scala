@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.pipelines.shiva.svcallers.{ Delly, Breakdancer, Clever, SvCaller }
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -33,7 +33,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def this() = this(null)
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
-  protected var inputBamsArg: List[File] = Nil
+  protected[shiva] var inputBamsArg: List[File] = Nil
 
   var inputBams: Map[String, File] = Map()
 
@@ -58,6 +58,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
     callers.foreach { caller =>
+      caller.inputBams = inputBams
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
     }
@@ -66,7 +67,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this))
+  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")
