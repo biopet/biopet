@@ -221,7 +221,7 @@ object BamUtilsTest {
 
 
   var singleEndBam01WithDoubleSamples: File = File.createTempFile("bamutils", "single01ds.bam")
-//  singleEndBam01WithDoubleSamples.deleteOnExit()
+  singleEndBam01WithDoubleSamples.deleteOnExit()
   var pairedEndBam01WithDoubleSamples: File = File.createTempFile("bamutils", "paired01ds.bam")
   pairedEndBam01WithDoubleSamples.deleteOnExit()
 
