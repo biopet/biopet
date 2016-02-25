@@ -1,32 +1,35 @@
 /**
- * Biopet is built on top of GATK Queue for building bioinformatic
- * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
- * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
- * should also be able to execute Biopet tools and pipelines.
- *
- * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
- *
- * Contact us at: sasc@lumc.nl
- *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
- * license; For commercial users or users who do not want to follow the AGPL
- * license, please contact us to obtain a separate license.
- */
+  * Biopet is built on top of GATK Queue for building bioinformatic
+  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+  * should also be able to execute Biopet tools and pipelines.
+  *
+  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+  *
+  * Contact us at: sasc@lumc.nl
+  *
+  * A dual licensing mode is applied. The source code within this project that are
+  * not part of GATK Queue is freely available for non-commercial use under an AGPL
+  * license; For commercial users or users who do not want to follow the AGPL
+  * license, please contact us to obtain a separate license.
+  */
 package nl.lumc.sasc.biopet.extensions.freec
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline._
+
 
 class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
-  @Input(doc = "Pileup file", required = true)
-  var input: File = null
+  @Input(doc = "BAMfile", required = true)
+  var input: File = _
 
-  var outputPath: File = null
+  var inputFormat: Option[String] = config("inputFormat")
+
+  var outputPath: File = _
 
   @Output(doc = "Output", shortName = "out")
   protected var output: File = _
@@ -56,20 +59,70 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   def ratioBedGraph = new File(outputPath, input.getName + "_ratio.BedGraph")
 
   executable = config("exe", default = "freec")
+  var bedGraphOutput: Boolean = config("BedGraphOutput", default=false)
+  var bedtools: Option[String]= config("bedtools", default=config("exe", default="bedtools", submodule = "bedtools"), freeVar = false)
+  var breakPointThreshold: Option[Double] = config("breakPointThreshold")
+  var breakPointType: Option[Int] = config("breakPointType")
 
-  var chrFiles: String = config("chrFiles")
-  var chrLenFile: String = config("chrLenFile")
-  var gemMappabilityFile: String = config("gemMappabilityFile")
+  var chrFiles: File = config("chrFiles")
+  var chrLenFile: File = config("chrLenFile")
 
-  var ploidy: Option[Int] = config("ploidy", default = 2)
-  var telocentromeric: Option[Int] = config("telocentromeric", default = 50000)
-  // Default of 10k bins
-  var window: Option[Int] = config("window", default = 10000)
+  var coefficientOfVariation: Option[Double] = config("coefficientOfVariation")
+  var contamination: Option[Double] = config("contamination")
+  var contaminationAdjustment: Boolean = config("contaminationAdjustment", default=false)
+
+  var degree: Option[String] = config("degree")
+  var forceGCcontentNormalization: Option[Int] = config("forceGCcontentNormalization")
+
+  var gcContentProfile: Option[File] = config("GCcontentProfile")
+  var gemMappabilityFile: Option[String] = config("gemMappabilityFile")
+
+  var intercept: Option[Int] = config("intercept")
+  var minCNAlength: Option[Int] = config("minCNAlength")
+  var minMappabilityPerWindow: Option[Double] = config("minMappabilityPerWindow")
+  var minExpectedGC: Option[Double] = config("minExpectedGC")
+  var maxExpectedGC: Option[Double] = config("maxExpectedGC")
+  var minimalSubclonePresence: Option[Int] = config("minimalSubclonePresence")
+  var maxThreads: Int = getThreads
+
+  var noisyData: Boolean = config("noisyData", default=false)
+  //var outputDir: File
+  var ploidy: Option[String] = config("ploidy")
+  var printNA: Boolean = config("printNA", default=false)
+  var readCountThreshold: Option[Int] = config("readCountThreshold")
+
+  var sambamba: File = config("sambamba", default=config("exe", submodule = "sambamba", default="sambamba"), freeVar = false)
+  var sambambaThreads: Option[Int] = config("SambambaThreads")
+  var samtools: File = config("samtools", default=config("exe", submodule = "samtools", default="samtools"), freeVar = false)
+
+  var sex: Option[String] = config("sex")
+  var step: Option[Int] = config("step")
+  var telocentromeric: Option[Int] = config("telocentromeric")
+
+  var uniqueMatch: Boolean = config("uniqueMatch", default=false)
+  var window: Option[Int] = config("window")
+
+  /** [sample] options */
+  //  var mateFile: File = input
+  var mateCopyNumberFile: Option[File] = config("mateCopyNumberFile")
+//  var inputFormat: Option[String] = config("inputFormat")
+  var mateOrientation: Option[String] = config("mateOrientation")
+
+  /** [BAF] options */
   var snpFile: Option[String] = config("snpFile")
+  var minimalCoveragePerPosition: Option[Int] = config("minimalCoveragePerPosition")
+  var makePileup: Option[File] = config("makePileup")
+  var fastaFile: Option[File] = config("fastaFile")
+  var minimalQualityPerPosition: Option[Int] = config("minimalQualityPerPosition")
+  var shiftInQuality: Option[Int] = config("shiftInQuality")
 
-  var samtoolsExe: String = config(key = "exe", submodule = "samtools")
+  /** [target] */
+  var captureRegions: Option[File] = config("captureRegions")
 
-  //  FREEC v5.7(Control-FREEC v2.7) : calling copy number alterations and LOH regions using deep-sequencing data
+
+
+
+  // Control-FREEC v8.7 : calling copy number alterations and LOH regions using deep-sequencing data
   override def versionCommand = executable
   override def versionRegex = """Control-FREEC v(.*) :[.*]+""".r
   override def defaultThreads = 4
@@ -103,31 +156,56 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   protected def createConfigFile = {
     val writer = new PrintWriter(configFile)
 
-    // header
-    writer.println("[general]")
-    writer.println("BedGraphOutput=TRUE")
-    writer.println("chrFiles=" + chrFiles)
-    writer.println("chrLenFile=" + chrLenFile)
-    writer.println("gemMappabilityFile=" + gemMappabilityFile)
-    writer.println("maxThreads=" + nCoresRequest.getOrElse(defaultThreads))
-    writer.println("outputDir=" + outputPath.getAbsolutePath)
-    writer.println("ploidy=" + ploidy.getOrElse(2))
-    writer.println("samtools=" + samtoolsExe)
-    writer.println("telocentromeric=" + telocentromeric.getOrElse(50000))
-    writer.println("window=" + window.getOrElse(10000))
+    val conf: String = "[general]" + "\n" +
+      conditional( bedGraphOutput, "BedGraphOutput=TRUE", escape=false) + "\n"  +
+      required("bedtools=",bedtools, spaceSeparated=false, escape=false) + "\n" +
+      optional("breakPointThreshold=", breakPointThreshold, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("breakPointType=", breakPointType, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      required("chrFiles=",chrFiles, spaceSeparated=false, escape=false) + "\n" +
+      required("chrLenFile=",chrLenFile, spaceSeparated=false, escape=false) + "\n" +
+      optional("coefficientOfVariation=", coefficientOfVariation, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("contamination=", contamination, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      conditional( contaminationAdjustment, "contaminationAdjustment=TRUE", escape=false) + "\n" +
+      optional("degree=", degree, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("forceGCcontentNormalization=", forceGCcontentNormalization, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("GCcontentProfile=", gcContentProfile, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("gemMappabilityFile=", gemMappabilityFile, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("intercept=", intercept, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minCNAlength=", minCNAlength, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minMappabilityPerWindow=", minMappabilityPerWindow, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minExpectedGC=", minExpectedGC, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("maxExpectedGC=", maxExpectedGC, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minimalSubclonePresence=", minimalSubclonePresence, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("maxThreads=", getThreads, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      conditional( noisyData, "noisyData=TRUE", escape=false) + "\n" +
+      required("outputDir=", outputPath, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("ploidy=", ploidy, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      conditional( printNA, "printNA=TRUE", escape=false) + "\n" +
+      optional("readCountThreshold=", readCountThreshold, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      required("sambamba=", sambamba, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("SambambaThreads=", sambambaThreads, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      required("samtools=", samtools, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("sex=", sex, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("step=", step, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("telocentromeric=", telocentromeric, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      conditional(uniqueMatch, "uniqueMatch=TRUE", escape=false) + "\n" +
+      optional("window=", window, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      "[sample]" + "\n" +
+      required("mateFile=", input, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("mateCopyNumberFile=", mateCopyNumberFile, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      required("inputFormat=", inputFormat, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      required("mateOrientation=", mateOrientation, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      "[BAF]" + "\n" +
+      optional("SNPfile=", snpFile, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minimalCoveragePerPosition=", minimalCoveragePerPosition, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("makePileup=", makePileup, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("fastaFile=", fastaFile, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("minimalQualityPerPosition=", minimalQualityPerPosition, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      optional("shiftInQuality=", shiftInQuality, suffix="", spaceSeparated = false, escape=false) + "\n" +
+      "[target]" + "\n" +
+      optional("captureRegions=", captureRegions, suffix="", spaceSeparated = false, escape=false) + "\n"
 
-    writer.println("[sample]")
-    writer.println("mateFile=" + this.input + "")
-    writer.println("inputFormat=pileup")
-    // TODO: determine mateOrientation!
-    // FR = Paired End Illumina
-    // FF = SOLiD mate pairs
-    // RF = Illumina mate-pairs
-    // 0 = Single End
-    writer.println("mateOrientation=FR")
-    writer.println("[BAF]")
-    snpFile.foreach(x => writer.println("SNPfile=" + x))
-
+    writer.write(conf)
     writer.close()
   }
 
