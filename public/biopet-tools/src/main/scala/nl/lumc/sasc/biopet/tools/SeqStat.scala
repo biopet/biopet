@@ -15,10 +15,10 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
 import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import nl.lumc.sasc.biopet.utils.{ ToolCommand, ConfigUtils }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, ToolCommand }
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
@@ -26,7 +26,8 @@ import scala.collection.mutable
 import scala.language.postfixOps
 
 /**
- * Created by pjvanthof on 11/09/15.
+ * Created by wyleung on 01/12/14.
+ * Modified by pjvanthof and warindrarto on 27/06/2015
  */
 object SeqStat extends ToolCommand {
 
@@ -41,8 +42,8 @@ object SeqStat extends ToolCommand {
   var nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
 
   // generate the baseHistogram and readHistogram
-  var baseHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
-  var readHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+  var baseQualHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
+  var readQualHistogram: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer()
 
   var nucleotideHistoMap: mutable.Map[Char, Long] = mutable.Map()
   private var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
@@ -83,14 +84,14 @@ object SeqStat extends ToolCommand {
    */
   def detectPhredEncoding(quals: mutable.ArrayBuffer[Long]): Unit = {
     // substract 1 on high value, because we start from index 0
-    val l_qual = quals.takeWhile(_ == 0).length
-    val h_qual = quals.length - 1
+    val qual_low_boundery = quals.takeWhile(_ == 0).length
+    val qual_high_boundery = quals.length - 1
 
-    (l_qual < 59, h_qual > 74) match {
+    (qual_low_boundery < 59, qual_high_boundery > 74) match {
       case (false, true) => phredEncoding = Solexa
       // TODO: check this later on
       // complex case, we cannot tell wheter this is a sanger or solexa
-      // but since the h_qual exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
+      // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
       case (true, true)  => phredEncoding = Solexa
       // this is definite a sanger sequence, the lower end is sanger only
       case (true, false) => phredEncoding = Sanger
@@ -102,15 +103,17 @@ object SeqStat extends ToolCommand {
   // 'nuc' are the nucleotides 'ACTGN', the max ASCII value for this is T, pre-init the ArrayBuffer to this value
   // as we don't expect the have other 'higher' numbered Nucleotides for now.
   case class BaseStat(qual: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer(),
-                      nuc: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0))
+                      nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0))
 
   case class ReadStat(qual: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer(),
-                      nuc: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
+                      nucs: mutable.ArrayBuffer[Long] = mutable.ArrayBuffer.fill('T'.toInt + 1)(0),
                       var withN: Long = 0L,
                       lengths: mutable.ArrayBuffer[Int] = mutable.ArrayBuffer())
 
   val baseStats: mutable.ArrayBuffer[BaseStat] = mutable.ArrayBuffer()
   val readStats: ReadStat = new ReadStat()
+
+  var readLengthHistogram: mutable.Map[String, Long] = mutable.Map.empty
 
   /**
    * Compute the quality metric per read
@@ -130,7 +133,7 @@ object SeqStat extends ToolCommand {
       readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(0)
     }
 
-    val readQual = record.getBaseQualityString
+    val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString
 
     if (record.length >= readStats.lengths.size) // Extends array when length not yet possible
@@ -139,16 +142,16 @@ object SeqStat extends ToolCommand {
     readStats.lengths(record.length) += 1
 
     for (t <- 0 until record.length()) {
-      if (baseStats(t).qual.length <= readQual(t)) {
-        baseStats(t).qual ++= mutable.ArrayBuffer.fill(readQual(t).toInt - baseStats(t).qual.length + 1)(0)
+      if (baseStats(t).qual.length <= readQuality(t)) {
+        baseStats(t).qual ++= mutable.ArrayBuffer.fill(readQuality(t).toInt - baseStats(t).qual.length + 1)(0)
       }
-      baseStats(t).qual(readQual(t)) += 1
-      baseStats(t).nuc(readNucleotides(t)) += 1
-      readStats.nuc(readNucleotides(t)) += 1
+      baseStats(t).qual(readQuality(t)) += 1
+      baseStats(t).nucs(readNucleotides(t)) += 1
+      readStats.nucs(readNucleotides(t)) += 1
     }
 
     // implicit conversion to Int using foldLeft(0)
-    val avgQual: Int = readQual.sum / readQual.length
+    val avgQual: Int = readQuality.sum / readQuality.length
     if (readStats.qual.length <= avgQual) {
       readStats.qual ++= mutable.ArrayBuffer.fill(avgQual - readStats.qual.length + 1)(0)
     }
@@ -179,51 +182,64 @@ object SeqStat extends ToolCommand {
       if (quals.length <= baseStats(pos).qual.length) {
         quals ++= mutable.ArrayBuffer.fill(baseStats(pos).qual.length - quals.length)(0)
       }
-      if (nucs.length <= baseStats(pos).nuc.length) {
-        for (_ <- nucs.length until baseStats(pos).nuc.length) nucs.append(0)
+      if (nucs.length <= baseStats(pos).nucs.length) {
+        for (_ <- nucs.length until baseStats(pos).nucs.length) nucs.append(0)
       }
       // count into the quals
       baseStats(pos).qual.zipWithIndex foreach { case (value, index) => quals(index) += value }
       // count N into nucs
-      baseStats(pos).nuc.zipWithIndex foreach { case (value, index) => nucs(index) += value }
+      baseStats(pos).nucs.zipWithIndex foreach { case (value, index) => nucs(index) += value }
     }
     detectPhredEncoding(quals)
     logger.debug("Detected '" + phredEncoding.toString.toLowerCase + "' encoding in fastq file ...")
 
-    for (pos <- nucs.indices) {
-      // always export the N-nucleotide
-      if (nucs(pos) > 0 || pos.toChar == 'N') {
-        nucleotideHistoMap += (pos.toChar -> nucs(pos))
-      }
-    }
+    nucleotideHistoMap = nucs.toList
+      .foldLeft(mutable.Map[Char, Long]())(
+        (output, nucleotideCount) => output + (output.size.toChar -> nucleotideCount)
+      )
+      // ensure bases: `ACTGN` is always reported even having a zero count.
+      // Other chars might be counted also, these are also reported
+      .retain((nucleotide, count) => (count > 0 || "ACTGN".contains(nucleotide.toString)))
 
-    // init baseHistogram with the bounderies of the report values
-    for (pos <- 0 until reportValues.max + 1) {
-      baseHistogram.append(0)
-      readHistogram.append(0)
-    }
+    baseQualHistogram = quals.slice(phredEncoding.id, quals.size)
+    baseQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - baseQualHistogram.size)(0L)
 
-    for (pos <- quals.indices) {
-      val key: Int = pos - phredEncoding.id
-      if (key >= 0) {
-        baseHistogram(key) += quals(pos)
-      }
-    }
+    readQualHistogram = readStats.qual.slice(phredEncoding.id, readStats.qual.size)
+    readQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - readQualHistogram.size)(0L)
 
-    for (pos <- readStats.qual.indices) {
-      val key: Int = pos - phredEncoding.id
-      if (key > 0) {
-        // count till the max of baseHistogram.length
-        for (histokey <- 0 until key + 1) {
-          readHistogram(histokey) += readStats.qual(pos)
-        }
-      }
-    }
+    readQualHistoMap = readQualHistogram.toList
+      .foldLeft(mutable.Map[Int, Long]())((output, count) => output + (output.keys.size -> count))
+    readLengthHistogram = readStats.lengths.toList
+      .foldLeft(mutable.Map[String, Long]())((output, count) => output + (output.keys.size.toString -> count))
 
-    for (pos <- readHistogram.indices) {
-      readQualHistoMap += (pos -> readHistogram(pos))
-    }
+  }
 
+  def reportMap(fastqPath: File): Map[String, Any] = {
+    Map(
+      ("files",
+        Map(
+          ("fastq", Map(
+            ("path", fastqPath.getAbsolutePath))
+          )
+        )
+      ),
+      ("stats", Map(
+        ("bases", Map(
+          ("num_total", nucleotideHistoMap.values.sum),
+          ("num_qual", baseQualHistogram.toList),
+          ("nucleotides", nucleotideHistoMap.toMap)
+        )),
+        ("reads", Map(
+          ("num_with_n", readStats.withN),
+          ("num_total", readStats.qual.sum),
+          ("len_min", readStats.lengths.takeWhile(_ == 0).length),
+          ("len_max", readStats.lengths.length - 1),
+          ("num_avg_qual_gte", readQualHistoMap.toMap),
+          ("qual_encoding", phredEncoding.toString.toLowerCase),
+          ("len_histogram", readLengthHistogram.toMap)
+        ))
+      ))
+    )
   }
 
   def main(args: Array[String]): Unit = {
@@ -235,30 +251,7 @@ object SeqStat extends ToolCommand {
     summarize()
     logger.info("Seqstat done")
 
-    val report: Map[String, Any] = Map(
-      ("files",
-        Map(
-          ("fastq", Map(
-            ("path", commandArgs.fastq))
-          )
-        )
-      ),
-      ("stats", Map(
-        ("bases", Map(
-          ("num_total", nucleotideHistoMap.values.sum),
-          ("num_qual", baseHistogram.toList),
-          ("nucleotides", nucleotideHistoMap.toMap)
-        )),
-        ("reads", Map(
-          ("num_with_n", readStats.withN),
-          ("num_total", readStats.qual.sum),
-          ("len_min", readStats.lengths.takeWhile(_ == 0).length),
-          ("len_max", readStats.lengths.length - 1),
-          ("num_avg_qual_gte", readQualHistoMap.toMap),
-          ("qual_encoding", phredEncoding.toString.toLowerCase)
-        ))
-      ))
-    )
+    val report = reportMap(commandArgs.fastq)
 
     commandArgs.outputJson match {
       case Some(file) => {
