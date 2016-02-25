@@ -136,9 +136,6 @@ object SeqStat extends ToolCommand {
     val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString
 
-    if (record.length >= readStats.lengths.size) // Extends array when length not yet possible
-      (0 to (record.length - readStats.lengths.size)).foreach(_ => readStats.lengths.append(0))
-
     readStats.lengths(record.length) += 1
 
     for (t <- 0 until record.length()) {
@@ -183,7 +180,7 @@ object SeqStat extends ToolCommand {
         quals ++= mutable.ArrayBuffer.fill(baseStats(pos).qual.length - quals.length)(0)
       }
       if (nucs.length <= baseStats(pos).nucs.length) {
-        for (_ <- nucs.length until baseStats(pos).nucs.length) nucs.append(0)
+        nucs ++= mutable.ArrayBuffer.fill( baseStats(pos).nucs.length - nucs.length )(0)
       }
       // count into the quals
       baseStats(pos).qual.zipWithIndex foreach { case (value, index) => quals(index) += value }
