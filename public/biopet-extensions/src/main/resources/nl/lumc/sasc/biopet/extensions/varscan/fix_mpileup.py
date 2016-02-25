@@ -33,7 +33,9 @@ if __name__ == "__main__":
     """
     for line in sys.stdin:
         l = line.strip().split("\t")
-        if l[3] == "0":
+        l[2] = upacPatern.sub("N", l[2])
+
+        if len(l) < 4 or l[3] == "0":
             # no alignment to this position
             print("\t".join(map(str, l)))
             continue
@@ -49,5 +51,4 @@ if __name__ == "__main__":
         if new_size == 0:
             l[5] = ""
 
-        l[2] = upacPatern.sub("N", l[2])
         print("\t".join(map(str, l)))
