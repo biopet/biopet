@@ -69,5 +69,19 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
     optional("--minAlternateDepth", minAlternateDepth) +
     optional("--minSamplesPass", minSamplesPass) +
     optional("--minGenomeQuality", minGenomeQuality) +
-    conditional(filterRefCalls, "--filterRefCalls")
+    conditional(filterRefCalls, "--filterRefCalls") +
+    optional("--invertedOutputVcf", invertedOutputVcf) +
+    optional("--resToDom", resToDom) +
+    optional("--trioCompound", trioCompound) +
+    optional("--deNovoInSample", deNovoInSample) +
+    optional("--deNovoTrio", deNovoTrio) +
+    optional("--trioLossOfHet", trioLossOfHet) +
+    repeat("--mustHaveVariant", mustHaveVariant) +
+    repeat("--calledIn", calledIn) +
+    repeat("--mustHaveGenotype", mustHaveGenotype) +
+    repeat("--diffGenotype", diffGenotype) +
+    repeat("--filterHetVarToHomVar", filterHetVarToHomVar) +
+    optional("--minQualScore", minQualScore) +
+    repeat("--id", id) +
+    optional("--idFile", idFile)
 }
