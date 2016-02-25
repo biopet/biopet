@@ -207,10 +207,18 @@ object SeqStat extends ToolCommand {
     readQualHistogram = readStats.qual.slice(phredEncoding.id, readStats.qual.size)
     readQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - readQualHistogram.size)(0L)
 
-    readQualHistoMap = readQualHistogram.toList
-      .foldLeft(mutable.Map[Int, Long]())((output, count) => output + (output.keys.size -> count))
+    readQualHistoMap = readQualHistogram.indices
+      .foldLeft(mutable.Map[Int, Long]())(
+        (output, index) => {
+          output + (output.keys.size -> readQualHistogram.slice(index, readQualHistogram.size).sum)
+        }
+      )
+
     readLengthHistogram = readStats.lengths.toList
-      .foldLeft(mutable.Map[String, Long]())((output, count) => output + (output.keys.size.toString -> count))
+      .foldLeft(mutable.Map[String, Long]())(
+        (output, count) =>
+          output + (output.keys.size.toString -> count)
+      )
 
   }
 
