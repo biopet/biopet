@@ -15,13 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.extensions.freec.{FreeC, FreeCAssessSignificancePlot, FreeCBAFPlot, FreeCCNVPlot}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetQScript, PipelineCommand }
-
-import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCCNVPlot, FreeCBAFPlot, FreeCAssessSignificancePlot }
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import org.broadinstitute.gatk.queue.QScript
+
 import scala.language.reflectiveCalls
 
 class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Reference {
@@ -40,12 +38,9 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
   // This script is in fact FreeC only.
   def biopetScript() {
-    // This script starts from a BAM alignment file and creates the pileup file
-
-    // below is FreeC specific
-
     val freec = new FreeC(this)
     freec.input = bamFile
+    freec.inputFormat = Some("BAM")
     freec.outputPath = new File(outputDir, "cnv")
     add(freec)
 
