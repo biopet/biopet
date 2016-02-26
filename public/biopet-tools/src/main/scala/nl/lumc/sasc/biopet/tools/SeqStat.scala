@@ -168,6 +168,11 @@ object SeqStat extends ToolCommand {
       procesRead(read)
       numReads += 1
     }
+
+    if (numReads % 1000000 == 0) {
+      logger.info(s"Processed $numReads reads")
+    }
+
     numReads
   }
 
