@@ -72,7 +72,7 @@ class SamplesTsvToJsonTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test
   def testJson = {
     val tsv = new File(resourcePath("/sample.tsv"))
-    val json = stringFromInputs(List(tsv))
+    val json = stringFromInputs(List(tsv), Nil)
 
     json should equal(
       """|{
