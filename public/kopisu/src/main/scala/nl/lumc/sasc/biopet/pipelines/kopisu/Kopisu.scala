@@ -15,8 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.extensions.freec.{FreeC, FreeCAssessSignificancePlot, FreeCBAFPlot, FreeCCNVPlot}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCBAFPlot, FreeCCNVPlot }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
