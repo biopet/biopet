@@ -47,7 +47,7 @@ object SeqStat extends ToolCommand {
 
   var nucleotideHistoMap: mutable.Map[Char, Long] = mutable.Map()
   private var baseQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
-  private var readQualHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
+  private var readQualGTEHistoMap: mutable.Map[Int, Long] = mutable.Map(0 -> 0)
 
   case class Args(fastq: File = null, outputJson: Option[File] = None) extends AbstractArgs
 
@@ -89,9 +89,10 @@ object SeqStat extends ToolCommand {
 
     (qual_low_boundery < 59, qual_high_boundery > 74) match {
       case (false, true) => phredEncoding = Solexa
-      // TODO: check this later on
-      // complex case, we cannot tell wheter this is a sanger or solexa
-      // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
+        // TODO: check this later on
+        // complex case, we cannot tell wheter this is a sanger or solexa
+        // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
+        // New @ 2016/01/26: Illumina X ten samples can contain Phred=Q42 (qual_high_boundery==75/K)
       case (true, true)  => phredEncoding = Solexa
       // this is definite a sanger sequence, the lower end is sanger only
       case (true, false) => phredEncoding = Sanger
@@ -204,17 +205,11 @@ object SeqStat extends ToolCommand {
     readQualHistogram = readStats.qual.slice(phredEncoding.id, readStats.qual.size)
     readQualHistogram ++= mutable.ArrayBuffer.fill(reportValues.max + 1 - readQualHistogram.size)(0L)
 
-    readQualHistoMap = readQualHistogram.indices
+    readQualGTEHistoMap = readQualHistogram.indices
       .foldLeft(mutable.Map[Int, Long]())(
         (output, index) => {
           output + (output.keys.size -> readQualHistogram.slice(index, readQualHistogram.size).sum)
         }
-      )
-
-    readLengthHistogram = readStats.lengths.toList
-      .foldLeft(mutable.Map[String, Long]())(
-        (output, count) =>
-          output + (output.keys.size.toString -> count)
       )
 
   }
@@ -239,9 +234,9 @@ object SeqStat extends ToolCommand {
           ("num_total", readStats.qual.sum),
           ("len_min", readStats.lengths.takeWhile(_ == 0).length),
           ("len_max", readStats.lengths.length - 1),
-          ("num_avg_qual_gte", readQualHistoMap.toMap),
+          ("num_avg_qual_gte", readQualGTEHistoMap.toMap),
           ("qual_encoding", phredEncoding.toString.toLowerCase),
-          ("len_histogram", readLengthHistogram.toMap)
+          ("len_histogram", readStats.lengths.toList)
         ))
       ))
     )
