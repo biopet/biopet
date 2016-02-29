@@ -28,8 +28,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
   def this() = this(null)
 
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
-  protected[shiva] var inputBamsArg: List[File] = Nil
-
+  protected[kopisu] var inputBamsArg: List[File] = Nil
 
   var inputBams: Map[String, File] = Map()
 
@@ -39,7 +38,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
   // This script is in fact FreeC only.
   def biopetScript() {
-    inputBams.foreach( bam => {
+    inputBams.foreach(bam => {
       val bamFile = bam._2
       val outputName = bam._1
 
