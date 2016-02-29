@@ -168,7 +168,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 aorrg.RGSM = sampleId
                 aorrg.RGPL = config("rgpl", default = "unknown")
                 aorrg.RGPU = config("rgpu", default = "na")
-                aorrg.isIntermediate = true
+                aorrg.isIntermediate = libraries.size > 1
                 qscript.add(aorrg)
               }
             } else add(Ln.linkBamFile(qscript, inputBam.get, bamFile.get): _*)
