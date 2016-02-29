@@ -29,6 +29,6 @@ if __name__ == "__main__":
     for line in sys.stdin:
         l = line.strip().split("\t")
         if len(l) >= 3:
-            l[2] = upacPatern.sub("N", l[2])
+            l[3] = upacPatern.sub("N", l[3])
 
         print("\t".join(map(str, l)))
