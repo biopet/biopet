@@ -59,7 +59,8 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   executable = config("exe", default = "freec")
   var bedGraphOutput: Boolean = config("BedGraphOutput", default = false)
-  var bedtools: Option[String] = config("bedtools", default = config("exe", default = "bedtools", submodule = "bedtools"), freeVar = false)
+  var _bedtools: File = config("exe", default = "bedtools", submodule = "bedtools")
+  var bedtools: Option[String] = config("bedtools", default = _bedtools, freeVar = false)
   var breakPointThreshold: Option[Double] = config("breakPointThreshold")
   var breakPointType: Option[Int] = config("breakPointType")
 
@@ -90,9 +91,12 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var printNA: Boolean = config("printNA", default = false)
   var readCountThreshold: Option[Int] = config("readCountThreshold")
 
-  var sambamba: File = config("sambamba", default = config("exe", submodule = "sambamba", default = "sambamba"), freeVar = false)
+  var _sambamba: File = config("exe", submodule = "sambamba", default = "sambamba")
+
+  var sambamba: File = config("sambamba", default = _sambamba, freeVar = false)
   var sambambaThreads: Option[Int] = config("SambambaThreads")
-  var samtools: File = config("samtools", default = config("exe", submodule = "samtools", default = "samtools"), freeVar = false)
+  var _samtools: File = config("exe", submodule = "samtools", default = "samtools")
+  var samtools: File = config("samtools", default = _samtools, freeVar = false)
 
   var sex: Option[String] = config("sex")
   var step: Option[Int] = config("step")
@@ -120,7 +124,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   // Control-FREEC v8.7 : calling copy number alterations and LOH regions using deep-sequencing data
   override def versionCommand = executable
-  override def versionRegex = """Control-FREEC v(.*) :[.*]+""".r
+  override def versionRegex = """Control-FREEC v(.*) : [.*]+""".r
   override def defaultThreads = 4
   override def defaultCoreMemory = 4.0
 

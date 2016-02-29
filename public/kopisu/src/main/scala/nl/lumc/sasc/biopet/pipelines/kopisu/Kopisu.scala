@@ -42,10 +42,12 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
       val bamFile = bam._2
       val outputName = bam._1
 
+      val sampleOutputDir = new File(outputDir, outputName)
+
       val freec = new FreeC(this)
       freec.input = bamFile
       freec.inputFormat = Some("BAM")
-      freec.outputPath = new File(outputDir, "cnv")
+      freec.outputPath = new File(sampleOutputDir, "cnv")
       add(freec)
 
       /*
@@ -56,17 +58,17 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
       val fcAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
       fcAssessSignificancePlot.cnv = freec.cnvOutput
       fcAssessSignificancePlot.ratios = freec.ratioOutput
-      fcAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
+      fcAssessSignificancePlot.output = new File(sampleOutputDir, outputName + ".freec_significant_calls.txt")
       add(fcAssessSignificancePlot)
 
       val fcCnvPlot = new FreeCCNVPlot(this)
       fcCnvPlot.input = freec.ratioOutput
-      fcCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
+      fcCnvPlot.output = new File(sampleOutputDir, outputName + ".freec_cnv.png")
       add(fcCnvPlot)
 
       val fcBAFPlot = new FreeCBAFPlot(this)
       fcBAFPlot.input = freec.bafOutput
-      fcBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
+      fcBAFPlot.output = new File(sampleOutputDir, outputName + ".freec_baf.png")
       add(fcBAFPlot)
     })
   }
