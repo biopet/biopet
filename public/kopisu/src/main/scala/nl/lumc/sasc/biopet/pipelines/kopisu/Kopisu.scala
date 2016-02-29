@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCBAFPlot, FreeCCNVPlot }
+import nl.lumc.sasc.biopet.utils.BamUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -26,44 +27,49 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
   qscript =>
   def this() = this(null)
 
-  @Input(doc = "Input bam file", required = true)
-  var bamFile: File = _
+  @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
+  protected[shiva] var inputBamsArg: List[File] = Nil
 
-  @Argument(doc = "Prefix name of output file", required = false)
-  var outputName: String = _
+
+  var inputBams: Map[String, File] = Map()
 
   def init(): Unit = {
-    if (outputName == null) outputName = bamFile.getName.stripSuffix(".bam")
+    if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
   }
 
   // This script is in fact FreeC only.
   def biopetScript() {
-    val freec = new FreeC(this)
-    freec.input = bamFile
-    freec.inputFormat = Some("BAM")
-    freec.outputPath = new File(outputDir, "cnv")
-    add(freec)
+    inputBams.foreach( bam => {
+      val bamFile = bam._2
+      val outputName = bam._1
 
-    /*
-    * These scripts will wait for FreeC to Finish
-    *
-    * R-scripts to plot FreeC results
-    * */
-    val fcAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
-    fcAssessSignificancePlot.cnv = freec.cnvOutput
-    fcAssessSignificancePlot.ratios = freec.ratioOutput
-    fcAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
-    add(fcAssessSignificancePlot)
+      val freec = new FreeC(this)
+      freec.input = bamFile
+      freec.inputFormat = Some("BAM")
+      freec.outputPath = new File(outputDir, "cnv")
+      add(freec)
 
-    val fcCnvPlot = new FreeCCNVPlot(this)
-    fcCnvPlot.input = freec.ratioOutput
-    fcCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
-    add(fcCnvPlot)
+      /*
+      * These scripts will wait for FreeC to Finish
+      *
+      * R-scripts to plot FreeC results
+      * */
+      val fcAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
+      fcAssessSignificancePlot.cnv = freec.cnvOutput
+      fcAssessSignificancePlot.ratios = freec.ratioOutput
+      fcAssessSignificancePlot.output = new File(outputDir, outputName + ".freec_significant_calls.txt")
+      add(fcAssessSignificancePlot)
 
-    val fcBAFPlot = new FreeCBAFPlot(this)
-    fcBAFPlot.input = freec.bafOutput
-    fcBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
-    add(fcBAFPlot)
+      val fcCnvPlot = new FreeCCNVPlot(this)
+      fcCnvPlot.input = freec.ratioOutput
+      fcCnvPlot.output = new File(outputDir, outputName + ".freec_cnv.png")
+      add(fcCnvPlot)
+
+      val fcBAFPlot = new FreeCBAFPlot(this)
+      fcBAFPlot.input = freec.bafOutput
+      fcBAFPlot.output = new File(outputDir, outputName + ".freec_baf.png")
+      add(fcBAFPlot)
+    })
   }
 }
 
