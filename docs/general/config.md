@@ -64,7 +64,7 @@ Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md
 
 #### Tags
 
-In the `tags` key inside a sample or library users can supply tags die samples. This tags will we automaticly parsed inside the summary of a pipeline.
+In the `tags` key inside a sample or library users can supply tags that belong to samples/libraries. This tags will we automatically parsed inside the summary of a pipeline.
 
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
