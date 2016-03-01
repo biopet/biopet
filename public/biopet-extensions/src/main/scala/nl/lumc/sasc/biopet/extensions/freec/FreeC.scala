@@ -92,9 +92,9 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var readCountThreshold: Option[Int] = config("readCountThreshold")
 
   var _sambamba: File = config("exe", submodule = "sambamba", default = "sambamba")
-
   var sambamba: File = config("sambamba", default = _sambamba, freeVar = false)
   var sambambaThreads: Option[Int] = config("SambambaThreads")
+
   var _samtools: File = config("exe", submodule = "samtools", default = "samtools")
   var samtools: File = config("samtools", default = _samtools, freeVar = false)
 
