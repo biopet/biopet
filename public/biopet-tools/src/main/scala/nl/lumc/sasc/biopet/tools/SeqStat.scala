@@ -89,10 +89,10 @@ object SeqStat extends ToolCommand {
 
     (qual_low_boundery < 59, qual_high_boundery > 74) match {
       case (false, true) => phredEncoding = Solexa
-        // TODO: check this later on
-        // complex case, we cannot tell wheter this is a sanger or solexa
-        // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
-        // New @ 2016/01/26: Illumina X ten samples can contain Phred=Q42 (qual_high_boundery==75/K)
+      // TODO: check this later on
+      // complex case, we cannot tell wheter this is a sanger or solexa
+      // but since the qual_high_boundery exceeds any Sanger/Illumina1.8 quals, we can `assume` this is solexa
+      // New @ 2016/01/26: Illumina X ten samples can contain Phred=Q42 (qual_high_boundery==75/K)
       case (true, true)  => phredEncoding = Solexa
       // this is definite a sanger sequence, the lower end is sanger only
       case (true, false) => phredEncoding = Sanger
@@ -181,7 +181,7 @@ object SeqStat extends ToolCommand {
         quals ++= mutable.ArrayBuffer.fill(baseStats(pos).qual.length - quals.length)(0)
       }
       if (nucs.length <= baseStats(pos).nucs.length) {
-        nucs ++= mutable.ArrayBuffer.fill( baseStats(pos).nucs.length - nucs.length )(0)
+        nucs ++= mutable.ArrayBuffer.fill(baseStats(pos).nucs.length - nucs.length)(0)
       }
       // count into the quals
       baseStats(pos).qual.zipWithIndex foreach { case (value, index) => quals(index) += value }
