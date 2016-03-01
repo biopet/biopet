@@ -65,12 +65,12 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
       val fcCnvPlot = new FreeCCNVPlot(this)
       fcCnvPlot.input = freec.ratioOutput
-      fcCnvPlot.output = new File(sampleOutput, outputName + ".freec_cnv.png")
+      fcCnvPlot.output = new File(sampleOutput, outputName + ".freec_cnv")
       add(fcCnvPlot)
 
       val fcBAFPlot = new FreeCBAFPlot(this)
       fcBAFPlot.input = freec.bafOutput
-      fcBAFPlot.output = new File(sampleOutput, outputName + ".freec_baf.png")
+      fcBAFPlot.output = new File(sampleOutput, outputName + ".freec_baf")
       add(fcBAFPlot)
     })
   }
