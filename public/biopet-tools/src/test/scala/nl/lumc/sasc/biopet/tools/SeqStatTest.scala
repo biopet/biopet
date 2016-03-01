@@ -88,11 +88,25 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
   def testEncodingBaseHistogram(fqMock: FastqReader) = {
 
     val seqstat = SeqStat
-    baseHistogram(40) shouldEqual 5
-    baseHistogram(39) shouldEqual 5
-    baseHistogram(34) shouldEqual 5
-    baseHistogram(33) shouldEqual 5
-    baseHistogram.head shouldEqual 5
+    baseQualHistogram(40) shouldEqual 5
+    baseQualHistogram(39) shouldEqual 5
+    baseQualHistogram(34) shouldEqual 5
+    baseQualHistogram(33) shouldEqual 5
+    baseQualHistogram.head shouldEqual 5
+  }
+
+  @Test(dataProvider = "mockReaderProvider", groups = Array("report"), singleThreaded = true, dependsOnGroups = Array("basehistogram"))
+  def testReportOutputScheme(fqMock: FastqReader) = {
+    when(fqMock.getFile) thenReturn new File("/tmp/test.fq")
+    when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
+    val seqstat = SeqStat
+    seqstat.seqStat(fqMock)
+    seqstat.summarize()
+
+    val report = seqstat.reportMap(fqMock.getFile)
+    report should contain key "files"
+    report should contain key "stats"
+
   }
 
   @Test def testArgsMinimum() = {
