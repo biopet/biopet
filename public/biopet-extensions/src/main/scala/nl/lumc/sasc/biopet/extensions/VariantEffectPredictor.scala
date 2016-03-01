@@ -271,7 +271,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   def parseStatsFile(file: File): Map[String, Any] = {
     val contents = Source.fromFile(file).getLines().toList
     val headers = getHeadersFromStatsFile(contents)
-    headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x -> getBlockFromStatsFile(contents, x)))
+    headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
   }
 
   def getBlockFromStatsFile(contents: List[String], header: String): Map[String, Any] = {
@@ -281,16 +281,16 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
       val stripped = x.stripPrefix("[").stripSuffix("]")
       if (stripped == header) {
         inBlock = true
+      } else {
+        if (inBlock) {
+          val key = stripped.split('\t').head.replace(" ", "_")
+          val value = stripped.split('\t').last
+          theMap ++= Map(key -> value)
+
+        }
       }
       if (stripped == "") {
         inBlock = false
-      }
-
-      if (inBlock) {
-        val key = stripped.split('\t').head.replace(" ", "_")
-        val value = stripped.split('\t').last
-        theMap ++= Map(key -> value)
-
       }
     }
     theMap
