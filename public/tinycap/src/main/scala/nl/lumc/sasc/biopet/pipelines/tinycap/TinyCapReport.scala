@@ -20,10 +20,15 @@ object TinyCapReport extends MultisampleMappingReportTrait {
   override def frontSection: ReportSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/tinycap/tinycapFront.ssp")
 
   override def additionalSections = List(
-    "Fragments per gene" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gentrap/measure_fragmentspergene.ssp",
-      Map("pipelineName" -> pipelineName)),
-    "Fragments per microRNA" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/tinycap/measure_fragmentspersmallrna.ssp",
-      Map("pipelineName" -> pipelineName))
+    "Fragments per gene" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gentrap/measure_plotreport.ssp",
+      Map("pipelineName" -> pipelineName,
+        "plotName" -> "fragmentspergene",
+        "plotPath" -> summary.getValue("fragmentspergene", "files", "pipeline", "fragments_per_gene_heatmap", "path")
+      ) ),
+    "Fragments per microRNA" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gentrap/measure_plotreport.ssp",
+      Map("pipelineName" -> pipelineName,
+        "plotName" -> "fragmentspersmallrna",
+        "plotPath" -> summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path")))
   )
 
   override def pipelineName = "tinycap"

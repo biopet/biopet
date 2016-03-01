@@ -3,7 +3,8 @@
 #import(java.io.File)
 <%@ var summary: Summary %>
 <%@ var outputDir: File %>
-<%@ var pipelineName: String = "tinycap" %>
+<%@ var pipelineName: String %>
+<%@ var plotPath: Option[Any] %>
 #{
 
 def getPlot(path:Option[Any], targetPath:String) = {
@@ -27,7 +28,7 @@ def getPlot(path:Option[Any], targetPath:String) = {
 <tbody>
     <tr>
         <td>
-            <img src="${getPlot(summary.getValue("fragmentspersmallrna", "files", "pipeline", "fragments_per_gene_heatmap", "path"), "measurements" )}" class="img-responsive" />
+            <img src="${getPlot(plotPath, "measurements" )}" class="img-responsive center-block" />
         </td>
     </tr>
 </tbody>
