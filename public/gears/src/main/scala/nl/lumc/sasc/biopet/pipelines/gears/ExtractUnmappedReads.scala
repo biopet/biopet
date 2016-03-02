@@ -36,6 +36,7 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     val samtoolsViewSelectUnmapped = new SamtoolsView(this)
     samtoolsViewSelectUnmapped.input = bamFile
     samtoolsViewSelectUnmapped.b = true
+    samtoolsViewSelectUnmapped.h = true
     samtoolsViewSelectUnmapped.output = swapExt(outputDir, bamFile, ".bam", "unmapped.bam")
     if (paired) samtoolsViewSelectUnmapped.f = List("12")
     else samtoolsViewSelectUnmapped.f = List("4")
