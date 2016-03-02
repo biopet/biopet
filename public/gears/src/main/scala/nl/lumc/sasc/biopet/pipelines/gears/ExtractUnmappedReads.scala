@@ -21,6 +21,8 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     )
   )
 
+  lazy val paired: Boolean = config("paired_bam", default = true)
+
   def init(): Unit = {
     require(bamFile != null)
     if (outputName == null) outputName = bamFile.getName.stripSuffix(".bam")
@@ -35,7 +37,8 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     samtoolsViewSelectUnmapped.input = bamFile
     samtoolsViewSelectUnmapped.b = true
     samtoolsViewSelectUnmapped.output = swapExt(outputDir, bamFile, ".bam", "unmapped.bam")
-    samtoolsViewSelectUnmapped.f = List("12")
+    if (paired) samtoolsViewSelectUnmapped.f = List("12")
+    else samtoolsViewSelectUnmapped.f = List("4")
     samtoolsViewSelectUnmapped.isIntermediate = true
     add(samtoolsViewSelectUnmapped)
 
@@ -43,9 +46,11 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     val samToFastq = new SamToFastq(this)
     samToFastq.input = samtoolsViewSelectUnmapped.output
     samToFastq.fastqR1 = fastqUnmappedR1
-    samToFastq.fastqR2 = fastqUnmappedR2
-    samToFastq.fastqUnpaired = fastqUnmappedSingletons
-    samToFastq.isIntermediate = true
+    if (paired) {
+      samToFastq.fastqR2 = fastqUnmappedR2
+      samToFastq.fastqUnpaired = fastqUnmappedSingletons
+    }
+    samToFastq.isIntermediate = !config("keep_unmapped_fastq", default = false).asBoolean
     add(samToFastq)
   }
 }
