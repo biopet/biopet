@@ -182,7 +182,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val basePairsProcessed = """Total basepairs processed: *([,\d]+) bp""".r
     val basePairsWritten = """Total written \(filtered\): *([,\d]+) bp .*""".r
 
-    val stats: mutable.Map[String, Int] = mutable.Map(
+    val stats: mutable.Map[String, Long] = mutable.Map(
       "processed" -> 0,
       "withadapters" -> 0,
       "passingfilters" -> 0,
@@ -192,21 +192,21 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "bpoutput" -> 0,
       "toomanyn" -> 0
     )
-    val adapter_stats: mutable.Map[String, Int] = mutable.Map()
+    val adapter_stats: mutable.Map[String, Long] = mutable.Map()
 
     if (statsOutput.exists) {
       val statsFile = Source.fromFile(statsOutput)
       for (line <- statsFile.getLines()) {
         line match {
-          case processedReads(m)        => stats("processed") = m.replaceAll(",", "").toInt
-          case withAdapters(m)          => stats("withadapters") = m.replaceAll(",", "").toInt
-          case readsPassingFilters(m)   => stats("passingfilters") = m.replaceAll(",", "").toInt
-          case tooShortR(m)             => stats("tooshort") = m.replaceAll(",", "").toInt
-          case tooLongR(m)              => stats("toolong") = m.replaceAll(",", "").toInt
-          case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toInt
-          case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toInt
-          case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toInt
-          case adapterR(adapter, count) => adapter_stats += (adapter -> count.toInt)
+          case processedReads(m)        => stats("processed") = m.replaceAll(",", "").toLong
+          case withAdapters(m)          => stats("withadapters") = m.replaceAll(",", "").toLong
+          case readsPassingFilters(m)   => stats("passingfilters") = m.replaceAll(",", "").toLong
+          case tooShortR(m)             => stats("tooshort") = m.replaceAll(",", "").toLong
+          case tooLongR(m)              => stats("toolong") = m.replaceAll(",", "").toLong
+          case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toLong
+          case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toLong
+          case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toLong
+          case adapterR(adapter, count) => adapter_stats += (adapter -> count.toLong)
           case _                        =>
         }
       }
