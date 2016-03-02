@@ -229,7 +229,7 @@ Suppose, that our tool simply creates a file that lists the amount of lines in t
  ```scala
  
  def summaryStats: Map[String, Any] = {
-    "count" -> Source.fromFile(output).getLines.head.toInt
+    Map("count" -> Source.fromFile(output).getLines.head.toInt)
  }
  
  ```
