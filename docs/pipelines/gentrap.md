@@ -85,19 +85,17 @@ For the pipeline settings, there are some values that you need to specify while 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
 2. `aligner`: which aligner to use (`gsnap` or `tophat`)
 3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
-4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `bases_per_gene`, `bases_per_exon`, `cufflinks_strict`, `cufflinks_guided`, and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
+4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.
 6. `annotation_refflat`: contains the path to an annotation refFlat file of the entire genome
 
 While optional settings are:
 
 1. `annotation_gtf`: contains path to an annotation GTF file, only required when `expression_measures` contain `fragments_per_gene`, `cufflinks_strict`, and/or `cufflinks_guided`.
-2. `annotation_bed`: contains path to a flattened BED file (no overlaps), only required when `expression_measures` contain `bases_per_gene` and/or `bases_per_exon`.
+2. `annotation_bed`: contains path to a flattened BED file (no overlaps), only required when `expression_measures` contain `base_counts`.
 3. `remove_ribosomal_reads`: whether to remove reads mapping to ribosomal genes or not, defaults to `false`.
 4. `ribosomal_refflat`: contains path to a refFlat file of ribosomal gene coordinates, required when `remove_ribosomal_reads` is `true`.
 5. `call_variants`: whether to call variants on the RNA-seq data or not, defaults to `false`.
-
-In addition to these, you must also remember to supply the alignment index required by your aligner of choice. For `tophat` this is `bowtie_index`, while for `gsnap` it is `db` and `dir`. `star` uses `genomedir`
 
 Thus, an example settings configuration is as follows:
 
@@ -109,10 +107,6 @@ Thus, an example settings configuration is as follows:
   "reference_fasta": "/path/to/reference/fastafile",
   "annotation_gtf": "/path/to/gtf",
   "annotation_refflat": "/path/to/refflat",
-  "gsnap": {
-    "dir": "/path/to/gsnap/db/dir",
-    "db": "gsnap_db_name"
-  }
 }
 ~~~
 
