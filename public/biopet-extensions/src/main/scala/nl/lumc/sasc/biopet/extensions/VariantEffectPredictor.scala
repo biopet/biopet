@@ -21,6 +21,7 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
@@ -285,8 +286,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
         if (inBlock) {
           val key = stripped.split('\t').head.replace(" ", "_")
           val value = stripped.split('\t').last
-          theMap ++= Map(key -> value)
-
+          theMap ++= Map(key -> tryToParseNumber(value, fallBack = true).getOrElse(value))
         }
       }
       if (stripped == "") {
