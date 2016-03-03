@@ -97,7 +97,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1) ++ (fastqR2 match {
-    case Some(file) => Map("input_R1" -> file)
+    case Some(file) => Map("input_R2" -> file)
     case _          => Map()
   })
 }

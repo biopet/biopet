@@ -29,7 +29,8 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
   }
 
   def fastqUnmappedR1 = new File(outputDir, s"$outputName.unmapped.R1.fq.gz")
-  def fastqUnmappedR2 = new File(outputDir, s"$outputName.unmapped.R2.fq.gz")
+  def fastqUnmappedR2 = if (paired) Some(new File(outputDir, s"$outputName.unmapped.R2.fq.gz"))
+  else None
   def fastqUnmappedSingletons = new File(outputDir, s"$outputName.unmapped.singletons.fq.gz")
 
   def biopetScript(): Unit = {
@@ -48,7 +49,7 @@ class ExtractUnmappedReads(val root: Configurable) extends QScript with BiopetQS
     samToFastq.input = samtoolsViewSelectUnmapped.output
     samToFastq.fastqR1 = fastqUnmappedR1
     if (paired) {
-      samToFastq.fastqR2 = fastqUnmappedR2
+      samToFastq.fastqR2 = fastqUnmappedR2.get
       samToFastq.fastqUnpaired = fastqUnmappedSingletons
     }
     samToFastq.isIntermediate = !config("keep_unmapped_fastq", default = false).asBoolean
