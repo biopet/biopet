@@ -3,7 +3,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.Test
+import org.testng.annotations.{DataProvider, Test}
 
 
 /**
@@ -15,8 +15,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     s.replace("'", "").replace("  ", " ").trim
   }
 
-  @Test
-  def testVcfFilterCmdLine = {
+  def createFilterer = {
     val filterer = new VcfFilter(null)
 
     val iVcf = File.createTempFile("vcfFilter", ".vcf.gz")
@@ -26,386 +25,150 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     filterer.inputVcf = iVcf
     filterer.outputVcf = oVcf
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath}")
+    filterer
+  }
 
+  @DataProvider(name = "intArguments")
+  def intArguments = {
+    Array(
+      Array("minSampleDepth", Some(50)),
+      Array("minTotalDepth", Some(50)),
+      Array("minAlternateDepth", Some(50)),
+      Array("minSamplesPass", Some(5)),
+      Array("minGenomeQuality", Some(100))
+    )
+  }
 
-    filterer.minSampleDepth = Some(50)
+  @DataProvider(name = "stringArguments")
+  def stringArguments  = {
+    Array(
+      Array("resToDom", Some("dummy")),
+      Array("trioCompound", Some("dummy")),
+      Array("deNovoInSample", Some("dummy")),
+      Array("deNovoTrio", Some("dummy")),
+      Array("trioLossOfHet", Some("dummy"))
+    )
+  }
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50")
+  @DataProvider(name = "listArguments")
+  def listArguments = {
+    Array(
+      Array("mustHaveVariant", List("sample1", "sample2")),
+      Array("calledIn", List("sample1", "sample2")),
+      Array("mustHaveGenotype", List("sample1:HET", "sample2:HET")),
+      Array("diffGenotype", List("sample1:sample2", "sample2:sample3")),
+      Array("filterHetVarToHomVar", List("sample1:sample2", "sample2:sample3")),
+      Array("id", List("rs01", "rs02"))
+    )
+  }
 
-    filterer.minTotalDepth = Some(50)
+  @DataProvider(name = "fileArguments")
+  def fileArguments = {
+    val invFile = File.createTempFile("vcfFilter", ".vcf")
+    val idFile = File.createTempFile("vcfFilter", ".txt")
+    invFile.deleteOnExit()
+    idFile.deleteOnExit()
+    Array(
+      Array("invertedOutputVcf", Some(invFile)),
+      Array("idFile", Some(idFile))
+    )
+  }
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50")
+  @Test(dataProvider = "intArguments")
+  def testIntArguments(attr: String, value: Option[Int]) = {
+    val filterer = createFilterer
 
-    filterer.minAlternateDepth = Some(50)
+    attr match {
+      case "minSampleDepth" => filterer.minSampleDepth = value
+      case "minTotalDepth" => filterer.minTotalDepth = value
+      case "minAlternateDepth" => filterer.minAlternateDepth = value
+      case "minSamplesPass" => filterer.minSamplesPass = value
+      case "minGenomeQuality" => filterer.minGenomeQuality = value
+      case _ => throw new IllegalArgumentException
+    }
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50")
+    val cmdString = "--" + attr + " " + (value match {
+      case Some(v) => v.toString
+      case _ => throw new IllegalArgumentException
+    })
 
-    filterer.minSamplesPass = Some(5)
+    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+  }
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5")
+  @Test(dataProvider = "stringArguments")
+  def testStringArguments(attr: String, value: Option[String]) = {
+    val filterer = createFilterer
 
-    filterer.minGenomeQuality = Some(100)
+    attr match {
+      case "resToDom" => filterer.resToDom = value
+      case "trioCompound" => filterer.trioCompound = value
+      case "deNovoInSample" => filterer.deNovoInSample = value
+      case "deNovoTrio" => filterer.deNovoTrio = value
+      case "trioLossOfHet" =>  filterer.trioLossOfHet = value
+      case _ => throw new IllegalArgumentException
+    }
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100")
+    val cmdString = "--" + attr + " " + (value match {
+      case Some(v) => v
+      case _ => throw new IllegalArgumentException
+    })
 
+    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+  }
+
+  @Test(dataProvider = "listArguments")
+  def testListArguments(attr: String, value: List[String]) = {
+    val filterer = createFilterer
+
+    attr match {
+      case "mustHaveVariant" => filterer.mustHaveVariant = value
+      case "mustHaveGenotype" => filterer.mustHaveGenotype = value
+      case "calledIn" => filterer.calledIn = value
+      case "diffGenotype" => filterer.diffGenotype = value
+      case "filterHetVarToHomVar" => filterer.filterHetVarToHomVar = value
+      case "id" => filterer.id = value
+      case _ => throw new IllegalArgumentException
+    }
+
+    val cmdString = value.foldLeft("")((acc, x) => acc + "--" + attr + " " + x + " ").stripSuffix(" ")
+    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+  }
+
+  @Test(dataProvider = "fileArguments")
+  def testFileArguments(attr: String, value: Option[File])  = {
+    val filterer = createFilterer
+
+    attr match {
+      case "invertedOutputVcf" => filterer.invertedOutputVcf = value
+      case "idFile" => filterer.idFile = value
+      case _ => throw new IllegalArgumentException
+    }
+
+    val cmdString = "--" + attr + " " + (value match {
+      case Some(v) => v.getAbsolutePath
+      case _ => throw new IllegalArgumentException
+    })
+
+    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+  }
+
+  /**
+    * The following two tests are for arguments with a so-far unique type
+    */
+  @Test
+  def testMinQual = {
+    val filterer = createFilterer
+    filterer.minQualScore = Option(50)
+
+    cmd(filterer.cmdLine).endsWith("--minQualScore 50.0") shouldBe true
+  }
+
+  @Test
+  def testFilterRefCalls = {
+    val filterer = createFilterer
     filterer.filterRefCalls = true
 
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls")
-
-    val invVcf = File.createTempFile("VcfFilter", ".vcf.gz")
-    invVcf.deleteOnExit()
-    filterer.invertedOutputVcf = Some(invVcf)
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath}")
-
-    filterer.resToDom = Some("dummy")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy")
-
-    filterer.trioCompound = Some("dummy")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy")
-
-    filterer.deNovoInSample = Some("dummy")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy")
-
-    filterer.deNovoTrio = Some("dummy")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy")
-
-    filterer.trioLossOfHet = Some("dummy")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy")
-
-    filterer.mustHaveVariant = List("sample1", "sample2")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2")
-
-    filterer.calledIn  = List("sample1", "sample2")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2")
-
-    filterer.mustHaveGenotype = List("sample1:HET", "sample2:HET")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET")
-
-    filterer.diffGenotype = List("sample1:sample2", "sample2:sample3")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET " +
-      s"--diffGenotype sample1:sample2 --diffGenotype sample2:sample3")
-
-    filterer.filterHetVarToHomVar = List("sample1:sample2", "sample2:sample3")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET " +
-      s"--diffGenotype sample1:sample2 --diffGenotype sample2:sample3 " +
-      s"--filterHetVarToHomVar sample1:sample2 --filterHetVarToHomVar sample2:sample3")
-
-    filterer.minQualScore = Some(50)
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET " +
-      s"--diffGenotype sample1:sample2 --diffGenotype sample2:sample3 " +
-      s"--filterHetVarToHomVar sample1:sample2 --filterHetVarToHomVar sample2:sample3 " +
-      s"--minQualScore 50.0")
-
-    filterer.id = List("rs01", "rs02")
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET " +
-      s"--diffGenotype sample1:sample2 --diffGenotype sample2:sample3 " +
-      s"--filterHetVarToHomVar sample1:sample2 --filterHetVarToHomVar sample2:sample3 " +
-      s"--minQualScore 50.0 " +
-      s"--id rs01 --id rs02")
-
-    val idFile = File.createTempFile("vcfFilter", ".txt")
-    idFile.deleteOnExit()
-    filterer.idFile = Some(idFile)
-
-    cmd(filterer.cmdLine) should equal(s"/usr/bin/java -XX:+UseParallelOldGC " +
-      s"-XX:ParallelGCThreads=4 -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 " +
-      s" -Dscala.concurrent.context.numThreads=1 -cp nl.lumc.sasc.biopet.tools.VcfFilter " +
-      s"-I ${iVcf.getAbsolutePath} " +
-      s"-o ${oVcf.getAbsolutePath} " +
-      s"--minSampleDepth 50 " +
-      s"--minTotalDepth 50 " +
-      s"--minAlternateDepth 50 " +
-      s"--minSamplesPass 5 " +
-      s"--minGenomeQuality 100 " +
-      s"--filterRefCalls " +
-      s"--invertedOutputVcf ${invVcf.getAbsolutePath} " +
-      s"--resToDom dummy " +
-      s"--trioCompound dummy " +
-      s"--deNovoInSample dummy " +
-      s"--deNovoTrio dummy " +
-      s"--trioLossOfHet dummy " +
-      s"--mustHaveVariant sample1 --mustHaveVariant sample2 " +
-      s"--calledIn sample1 --calledIn sample2 " +
-      s"--mustHaveGenotype sample1:HET --mustHaveGenotype sample2:HET " +
-      s"--diffGenotype sample1:sample2 --diffGenotype sample2:sample3 " +
-      s"--filterHetVarToHomVar sample1:sample2 --filterHetVarToHomVar sample2:sample3 " +
-      s"--minQualScore 50.0 " +
-      s"--id rs01 --id rs02 " +
-      s"--idFile ${idFile.getAbsolutePath}")
+    cmd(filterer.cmdLine).endsWith("--filterRefCalls") shouldBe true
   }
 
   @Test
