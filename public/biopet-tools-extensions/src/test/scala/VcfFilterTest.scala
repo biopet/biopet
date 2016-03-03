@@ -92,7 +92,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
       case _ => throw new IllegalArgumentException
     })
 
-    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+    cmd(filterer.cmdLine).contains(cmdString) shouldBe true
   }
 
   @Test(dataProvider = "stringArguments")
@@ -113,7 +113,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
       case _ => throw new IllegalArgumentException
     })
 
-    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+    cmd(filterer.cmdLine).contains(cmdString) shouldBe true
   }
 
   @Test(dataProvider = "listArguments")
@@ -130,8 +130,10 @@ class VcfFilterTest extends TestNGSuite with Matchers {
       case _ => throw new IllegalArgumentException
     }
 
-    val cmdString = value.foldLeft("")((acc, x) => acc + "--" + attr + " " + x + " ").stripSuffix(" ")
-    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+    value.foreach { x =>
+      val cmdString = "--" + attr + " " + x
+      cmd(filterer.cmdLine).contains(cmdString) shouldBe true
+    }
   }
 
   @Test(dataProvider = "fileArguments")
@@ -149,7 +151,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
       case _ => throw new IllegalArgumentException
     })
 
-    cmd(filterer.cmdLine).endsWith(cmdString) shouldBe true
+    cmd(filterer.cmdLine).contains(cmdString) shouldBe true
   }
 
   /**
@@ -160,7 +162,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     val filterer = createFilterer
     filterer.minQualScore = Option(50)
 
-    cmd(filterer.cmdLine).endsWith("--minQualScore 50.0") shouldBe true
+    cmd(filterer.cmdLine).contains("--minQualScore 50.0") shouldBe true
   }
 
   @Test
@@ -168,7 +170,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     val filterer = createFilterer
     filterer.filterRefCalls = true
 
-    cmd(filterer.cmdLine).endsWith("--filterRefCalls") shouldBe true
+    cmd(filterer.cmdLine).contains("--filterRefCalls") shouldBe true
   }
 
   @Test
