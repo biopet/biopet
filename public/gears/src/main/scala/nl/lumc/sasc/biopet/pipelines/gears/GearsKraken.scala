@@ -5,6 +5,7 @@ import java.io.{ File, PrintWriter }
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -32,10 +33,27 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
       .stripSuffix(".fastq")
   }
 
+  lazy val krakenConvertToFasta: Boolean = config("kraken_discard_quality", default = false)
+
+  protected def fastqToFasta(input: File): File = {
+    val seqtk = new SeqtkSeq(this)
+    seqtk.input = input
+    seqtk.output = new File(outputDir, input.getName + ".fasta")
+    seqtk.A = true
+    seqtk.isIntermediate = true
+    add(seqtk)
+    seqtk.output
+  }
+
   def biopetScript(): Unit = {
     // start kraken
+
+    val (fqR1, fqR2) = if (krakenConvertToFasta)
+      (fastqToFasta(fastqR1), fastqR2.map(fastqToFasta))
+    else (fastqR1, fastqR2)
+
     val krakenAnalysis = new Kraken(this)
-    krakenAnalysis.input = fastqR1 :: fastqR2.toList
+    krakenAnalysis.input = fqR1 :: fqR2.toList
     krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
 
     krakenAnalysis.paired = fastqR2.isDefined
