@@ -69,8 +69,8 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
     optional("--threads", nCoresRequest) +
     conditional(quick, "--quick") +
     optional("--min_hits", minHits) +
-    optional("--unclassified-out ", unclassified_out.get) +
-    optional("--classified-out ", classified_out.get) +
+    optional("--unclassified-out ", unclassified_out) +
+    optional("--classified-out ", classified_out) +
     required("--output", output) +
     conditional(preLoad, "--preload") +
     conditional(paired, "--paired") +
