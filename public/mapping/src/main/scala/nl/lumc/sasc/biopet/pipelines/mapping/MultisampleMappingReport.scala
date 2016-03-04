@@ -104,7 +104,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
         )), Map()))
       else Nil) ++
       List("Files" -> filesPage
-    ), List(
+      ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),
       "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
@@ -122,10 +122,10 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
-          (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
-            "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-            )), Map()))
-          else Nil),
+        (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+          "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+          )), Map()))
+        else Nil),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))
