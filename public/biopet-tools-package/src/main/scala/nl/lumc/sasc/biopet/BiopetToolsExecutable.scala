@@ -31,6 +31,7 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfFilter,
     nl.lumc.sasc.biopet.tools.VcfStats,
+    nl.lumc.sasc.biopet.tools.BaseCounter,
     nl.lumc.sasc.biopet.tools.FindRepeatsPacBio,
     nl.lumc.sasc.biopet.tools.MpileupToVcf,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
