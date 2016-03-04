@@ -187,4 +187,64 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     filterer.outputVcfIndex.getAbsolutePath shouldBe oVcf.getAbsolutePath + ".tbi"
   }
 
+  @DataProvider(name = "functions")
+  def functions = {
+    Array(
+      () => testCommand(minSampleDepth = Some(2)),
+      () => testCommand(minTotalDepth = Some(2)),
+      () => testCommand(minSampleDepth = Some(2), minTotalDepth = Some(2))
+    ).map(Array(_))
+  }
+
+  @Test(dataProvider = "functions")
+  def executer(function0: Function0[Unit]): Unit = function0()
+
+  protected def testCommand(
+    minSampleDepth: Option[Int] = None,
+    minTotalDepth: Option[Int] = None,
+    minAlternateDepth: Option[Int] = None,
+    minSamplesPass: Option[Int] = None,
+    minGenomeQuality: Option[Int] = None,
+    filterRefCalls: Boolean = false,
+    invertedOutputVcf: Option[File] = None,
+    resToDom: Option[String] = None,
+    trioCompound: Option[String] = None,
+    deNovoInSample: Option[String] = None,
+    deNovoTrio: Option[String] = None,
+    trioLossOfHet: Option[String] = None,
+    mustHaveVariant: List[String] = Nil,
+    calledIn: List[String] = Nil,
+    mustHaveGenotype: List[String] = Nil,
+    diffGenotype: List[String] = Nil,
+    filterHetVarToHomVar: List[String] = Nil,
+    minQualScore: Option[Double] = None,
+    id: List[String] = Nil,
+    idFile: Option[File] = None
+  ): Unit = {
+    val vcfFilter = new VcfFilter(null)
+    vcfFilter.minSampleDepth = minSampleDepth
+    vcfFilter.minTotalDepth = minTotalDepth
+    vcfFilter.minAlternateDepth = minAlternateDepth
+    vcfFilter.minSamplesPass = minSamplesPass
+    vcfFilter.minGenomeQuality = minGenomeQuality
+    vcfFilter.filterRefCalls = filterRefCalls
+    vcfFilter.invertedOutputVcf = invertedOutputVcf
+    vcfFilter.resToDom = resToDom
+    vcfFilter.trioCompound = trioCompound
+    vcfFilter.deNovoInSample = deNovoInSample
+    vcfFilter.deNovoTrio = deNovoTrio
+    vcfFilter.trioLossOfHet = trioLossOfHet
+    vcfFilter.mustHaveVariant = mustHaveVariant
+    vcfFilter.calledIn = calledIn
+    vcfFilter.mustHaveGenotype = mustHaveGenotype
+    vcfFilter.diffGenotype = diffGenotype
+    vcfFilter.filterHetVarToHomVar = filterHetVarToHomVar
+    vcfFilter.minQualScore = minQualScore
+    vcfFilter.id = id
+    vcfFilter.idFile = idFile
+    val command = vcfFilter.commandLine
+
+    //TODO: add test on command test
+  }
+
 }
