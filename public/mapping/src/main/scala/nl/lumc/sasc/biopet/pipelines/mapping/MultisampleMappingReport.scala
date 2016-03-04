@@ -25,6 +25,9 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   def pipelineName = "multisamplemapping"
 
+  override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
+    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+
   /** Root page for the carp report */
   def indexPage = {
 
@@ -96,8 +99,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
       "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
-      (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
-        "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+      (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+        "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
       else Nil) ++
       List("Files" -> filesPage
@@ -119,8 +122,8 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
         (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
-          (if (krakenExecuted) List("Kraken" -> ReportPage(List(), List(
-            "Kraken analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+          (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+            "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
             )), Map()))
           else Nil),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
