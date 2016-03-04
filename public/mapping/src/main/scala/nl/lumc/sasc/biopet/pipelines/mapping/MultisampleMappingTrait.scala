@@ -150,7 +150,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
               if (readGroup.getSample != sampleId) logger.warn("Sample ID readgroup in bam file is not the same")
               if (readGroup.getLibrary != libId) logger.warn("Library ID readgroup in bam file is not the same")
               readGroup.getSample == sampleId && readGroup.getLibrary == libId
-            })
+            }) && readGroups.nonEmpty
 
             if (!readGroupOke || !dictOke) {
               if (!readGroupOke && !correctReadgroups) Logging.addError(
