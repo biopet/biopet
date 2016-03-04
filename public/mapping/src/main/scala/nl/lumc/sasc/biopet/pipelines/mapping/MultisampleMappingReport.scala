@@ -25,9 +25,13 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   def pipelineName = "multisamplemapping"
 
+  override def extFiles = super.extFiles ++ List("js/gears.js", "js/krona-2.0.js", "img/krona/loading.gif", "img/krona/hidden.png", "img/krona/favicon.ico")
+    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
+
   /** Root page for the carp report */
   def indexPage = {
 
+    val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
     val wgsExecuted = summary.getSampleValues("bammetrics", "stats", "wgs").values.exists(_.isDefined)
     val rnaExecuted = summary.getSampleValues("bammetrics", "stats", "rna").values.exists(_.isDefined)
     val insertsizeExecuted = summary.getSampleValues("bammetrics", "stats", "CollectInsertSizeMetrics", "metrics").values.exists(_ != Some(None))
@@ -36,7 +40,11 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
     ReportPage(
       List("Samples" -> generateSamplesPage(pageArgs)) ++
-        Map("Reference" -> ReportPage(List(), List(
+        (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+          "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+          )), Map()))
+        else Nil) ++
+        List("Reference" -> ReportPage(List(), List(
           "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> pipelineName))
         ), Map()),
           "Files" -> filesPage,
@@ -84,13 +92,18 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Single sample page */
   def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
+    val krakenExecuted = summary.getValue(Some(sampleId), None, "gearskraken", "stats", "krakenreport").isDefined
     val flexiprepExecuted = summary.getLibraryValues("flexiprep")
       .exists { case ((sample, lib), value) => sample == sampleId && value.isDefined }
 
     ReportPage(List(
       "Libraries" -> generateLibraryPage(args),
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
-      "Files" -> filesPage
+      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None)) ++
+      (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+        "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+        )), Map()))
+      else Nil) ++
+      List("Files" -> filesPage
     ), List(
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
         Map("showPlot" -> true)),
@@ -103,11 +116,16 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
 
   /** Library page */
   def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
+    val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gearskraken", "stats", "krakenreport").isDefined
     val flexiprepExecuted = summary.getValue(Some(sampleId), Some(libId), "flexiprep").isDefined
 
     ReportPage(
       ("Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId))) ::
-        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil),
+        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil) :::
+          (if (krakenExecuted) List("Dustbin analysis" -> ReportPage(List(), List(
+            "Krona Plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
+            )), Map()))
+          else Nil),
       "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
         (if (flexiprepExecuted) List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
           "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp"))
