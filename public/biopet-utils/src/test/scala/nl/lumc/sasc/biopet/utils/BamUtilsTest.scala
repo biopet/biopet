@@ -3,11 +3,11 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 
 import htsjdk.samtools._
-import org.mockito.Mockito.{inOrder => inOrd}
+import org.mockito.Mockito.{ inOrder => inOrd }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{BeforeClass, Test}
+import org.testng.annotations.{ BeforeClass, Test }
 
 /**
  * Created by wyleung on 22-2-16.
@@ -44,7 +44,6 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
     samh.addReadGroup(readGroup2)
     new SAMLineParser(samh)
   }
-
 
   private val samHeaderTemplateErrornousNoReadgroup: SAMLineParser = {
     val samh = new SAMFileHeader
@@ -178,29 +177,28 @@ class BamUtilsTest extends TestNGSuite with MockitoSugar with Matchers {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.singleEndBam01WithDoubleSamples))
     }
-    thrown.getMessage should ===("Bam contains multiple sample IDs: "+BamUtilsTest.singleEndBam01WithDoubleSamples)
+    thrown.getMessage should ===("Bam contains multiple sample IDs: " + BamUtilsTest.singleEndBam01WithDoubleSamples)
   }
-
 
   @Test def testSampleBamNamesMultipleSamplesPE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.pairedEndBam01WithDoubleSamples))
     }
-    thrown.getMessage should ===("Bam contains multiple sample IDs: "+BamUtilsTest.pairedEndBam01WithDoubleSamples)
+    thrown.getMessage should ===("Bam contains multiple sample IDs: " + BamUtilsTest.pairedEndBam01WithDoubleSamples)
   }
 
   @Test def testSampleBamNamesNoRGSE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.singleEndBam01NoRG))
     }
-    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: "+BamUtilsTest.singleEndBam01NoRG)
+    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.singleEndBam01NoRG)
   }
 
   @Test def testSampleBamNamesNoRGPE = {
     val thrown = intercept[IllegalArgumentException] {
       sampleBamMap(List(BamUtilsTest.pairedEndBam01NoRG))
     }
-    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: "+BamUtilsTest.pairedEndBam01NoRG)
+    thrown.getMessage should ===("Bam does not contain sample ID or have no readgroups defined: " + BamUtilsTest.pairedEndBam01NoRG)
   }
 
   @Test def testSampleFoundTwice = {
@@ -219,7 +217,6 @@ object BamUtilsTest {
   var pairedEndBam02: File = File.createTempFile("bamutils", "paired02.bam")
   singleEndBam01.deleteOnExit()
 
-
   var singleEndBam01WithDoubleSamples: File = File.createTempFile("bamutils", "single01ds.bam")
   singleEndBam01WithDoubleSamples.deleteOnExit()
   var pairedEndBam01WithDoubleSamples: File = File.createTempFile("bamutils", "paired01ds.bam")
@@ -229,6 +226,4 @@ object BamUtilsTest {
   singleEndBam01NoRG.deleteOnExit()
   var pairedEndBam01NoRG: File = File.createTempFile("bamutils", "paired01norg.bam")
   singleEndBam01NoRG.deleteOnExit()
-
-
 }
