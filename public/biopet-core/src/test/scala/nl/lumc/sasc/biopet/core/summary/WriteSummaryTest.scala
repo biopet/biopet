@@ -197,7 +197,7 @@ class WriteSummaryTest extends TestNGSuite with Matchers {
 
 object WriteSummaryTest {
   def makeWriter(root: Configurable, c: Map[String, Any] = Map()) = new WriteSummary(root) {
-    override def globalConfig = new Config(c)
+    override def globalConfig = new Config(c + ("exe" -> "test"))
     override def outputs = Seq()
     override def inputs = Seq()
     qSettings = new QSettings {
@@ -238,7 +238,7 @@ object WriteSummaryTest {
       libId = l
       summaryName = "test"
       outputDir = new File(".").getAbsoluteFile
-      override def globalConfig = new Config(c)
+      override def globalConfig = new Config(c + ("exe" -> "test"))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
       val tempFile = File.createTempFile("summary", ".json")
@@ -256,7 +256,7 @@ object WriteSummaryTest {
     new MultiSampleQScript with QScript {
       summaryName = "test"
       outputDir = new File(".").getAbsoluteFile
-      override def globalConfig = new Config(c)
+      override def globalConfig = new Config(c + ("exe" -> "test"))
       def summarySettings: Map[String, Any] = settings
       def summaryFiles: Map[String, File] = files
       val tempFile = File.createTempFile("summary", ".json")
