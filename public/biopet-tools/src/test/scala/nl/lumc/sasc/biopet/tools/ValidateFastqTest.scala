@@ -59,11 +59,9 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
 
   @Test
   def testGetPossibleEncodingsFail: Unit = {
-    intercept[IllegalStateException] {
-      ValidateFastq.minQual = Some('!')
-      ValidateFastq.maxQual = Some('h')
-      ValidateFastq.getPossibleEncodings
-    }
+    ValidateFastq.minQual = Some('!')
+    ValidateFastq.maxQual = Some('h')
+    ValidateFastq.getPossibleEncodings shouldBe Nil
   }
 
   @Test
@@ -71,20 +69,25 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
     ValidateFastq.minQual = None
     ValidateFastq.maxQual = None
     ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "AAAA"))
+    ValidateFastq.getPossibleEncodings should not be Nil
+
+    ValidateFastq.minQual = None
+    ValidateFastq.maxQual = None
+
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "A!hA"))
+    ValidateFastq.getPossibleEncodings shouldBe Nil
+
+    ValidateFastq.minQual = None
+    ValidateFastq.maxQual = None
+
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "hhhh"))
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!!!!"))
+    ValidateFastq.getPossibleEncodings shouldBe Nil
 
     intercept[IllegalStateException] {
       ValidateFastq.minQual = None
       ValidateFastq.maxQual = None
-
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "A!hA"))
-    }
-
-    intercept[IllegalStateException] {
-      ValidateFastq.minQual = None
-      ValidateFastq.maxQual = None
-
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "hhhh"))
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!!!!"))
+      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!! !!"))
     }
   }
 
