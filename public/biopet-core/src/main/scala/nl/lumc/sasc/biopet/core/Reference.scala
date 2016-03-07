@@ -19,8 +19,8 @@ import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 
 import scala.collection.JavaConversions._
 
@@ -77,14 +77,16 @@ trait Reference extends Configurable {
 
       this match {
         case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
-        case _ =>
+        case _                            =>
       }
     } else {
       val defaults = ConfigUtils.mergeMaps(this.defaults, this.internalDefaults)
+
       def getReferences(map: Map[String, Any]): Set[(String, String)] = (for (
         (species, species_content: Map[String, Any]) <- map.getOrElse("references", Map[String, Any]()).asInstanceOf[Map[String, Any]].toList;
         (reference_name, _) <- species_content.toList
       ) yield (species, reference_name)).toSet
+
       val references = getReferences(defaults) ++ getReferences(Config.global.map)
       if (!references.contains((referenceSpecies, referenceName))) {
         val buffer = new StringBuilder()
@@ -139,8 +141,8 @@ object Reference {
 
   /**
    * Raise an exception when given fasta file has no fai file
-    *
-    * @param fastaFile Fasta file
+   *
+   * @param fastaFile Fasta file
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
@@ -155,8 +157,8 @@ object Reference {
 
   /**
    * Raise an exception when given fasta file has no dict file
-    *
-    * @param fastaFile Fasta file
+   *
+   * @param fastaFile Fasta file
    */
   def requireDict(fastaFile: File): Unit = {
     val dict = new File(fastaFile.getAbsolutePath
