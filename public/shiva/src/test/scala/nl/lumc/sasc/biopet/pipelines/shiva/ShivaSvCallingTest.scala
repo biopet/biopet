@@ -129,7 +129,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     )
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+    pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
     if (!del && !dup && !inv && !tra) intercept[IllegalArgumentException] {
       pipeline.init()
@@ -149,7 +149,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     val map = Map("sv_callers" -> List("this is not a caller"))
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+    pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
     intercept[IllegalArgumentException] {
       pipeline.init()
@@ -181,7 +181,7 @@ object ShivaSvCallingTest {
   val outputDir = Files.createTempDir()
   outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
-  def inputTouch(name: String): File = {
+  private def inputTouch(name: String): File = {
     val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
     Files.touch(file)
     file
