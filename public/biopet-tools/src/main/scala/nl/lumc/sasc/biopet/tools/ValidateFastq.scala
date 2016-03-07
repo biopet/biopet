@@ -69,7 +69,7 @@ object ValidateFastq extends ToolCommand {
             checkMate(recordR1, recordR2)
           case _ => // Single end
         }
-        if (counter % 1e5 == 0) logger.info(counter + " reads processed")
+        if (counter % 1e5 == 0) logger.info(counter + (if (recordR2.isDefined) " pairs" else " reads") + " processed")
         lastRecordR1 = Some(recordR1)
         lastRecordR2 = recordR2
       }
@@ -78,7 +78,10 @@ object ValidateFastq extends ToolCommand {
       if (readFq2.map(_.hasNext) == Some(true))
         throw new IllegalStateException("R2 contains more reads then R1")
 
-      logger.info(s"Possible quality encodings found: ${getPossibleEncodings.mkString(", ")}")
+      getPossibleEncodings match {
+        case l if l.nonEmpty => logger.info(s"Possible quality encodings found: ${l.mkString(", ")}")
+        case _               => logger.warn(s"No possible quality encodings found")
+      }
 
       logger.info(s"Done processing ${counter} fastq records, no errors found")
     } catch {
@@ -122,13 +125,13 @@ object ValidateFastq extends ToolCommand {
     val buffer: ListBuffer[String] = ListBuffer()
     (minQual, maxQual) match {
       case (Some(min), Some(max)) =>
+        if (min < '!' || max > '~')
+          throw new IllegalStateException(s"Quality is out of ascii range 33-126.  minQual: '$min', maxQual: '$max'")
         if (min >= '!' && max <= 'I') buffer += "Sanger"
         if (min >= ';' && max <= 'h') buffer += "Solexa"
         if (min >= '@' && max <= 'h') buffer += "Illumina 1.3+"
         if (min >= 'C' && max <= 'h') buffer += "Illumina 1.5+"
         if (min >= '!' && max <= 'J') buffer += "Illumina 1.8+"
-        if (buffer.isEmpty)
-          throw new IllegalStateException(s"No possible quality encoding found.  minQual: '$min', maxQual: '$max'")
       case _ =>
     }
     buffer.toList
