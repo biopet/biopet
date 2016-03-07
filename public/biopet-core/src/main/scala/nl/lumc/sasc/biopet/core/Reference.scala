@@ -19,8 +19,8 @@ import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
-import nl.lumc.sasc.biopet.utils.Logging
-import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
 
 import scala.collection.JavaConversions._
 
@@ -69,16 +69,38 @@ trait Reference extends Configurable {
   /** Returns the fasta file */
   def referenceFasta(): File = {
     val file: File = config("reference_fasta")
-    checkFasta(file)
+    if (config.contains("reference_fasta")) {
+      checkFasta(file)
 
-    val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta").stripSuffix(".fna") + ".dict")
-    val fai = new File(file.getAbsolutePath + ".fai")
+      val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta").stripSuffix(".fna") + ".dict")
+      val fai = new File(file.getAbsolutePath + ".fai")
 
-    this match {
-      case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
-      case _                            =>
+      this match {
+        case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
+        case _ =>
+      }
+    } else {
+      val defaults = ConfigUtils.mergeMaps(this.defaults, this.internalDefaults)
+      def getReferences(map: Map[String, Any]): Set[(String, String)] = (for (
+        (species, species_content: Map[String, Any]) <- map.getOrElse("references", Map[String, Any]()).asInstanceOf[Map[String, Any]].toList;
+        (reference_name, _) <- species_content.toList
+      ) yield (species, reference_name)).toSet
+      val references = getReferences(defaults) ++ getReferences(Config.global.map)
+      if (!references.contains((referenceSpecies, referenceName))) {
+        val buffer = new StringBuilder()
+        if (references.exists(_._1 == referenceSpecies)) {
+          buffer.append(s"Reference: '$referenceName' does not exist in config for species: '$referenceSpecies'")
+          buffer.append(s"\nRefrences found for species '$referenceSpecies':")
+          references.filter(_._1 == referenceSpecies).foreach(x => buffer.append("\n - " + x._2))
+        } else {
+          buffer.append(s"Species: '$referenceSpecies' does not exist in config")
+          if (references.nonEmpty) buffer.append("\n    References available in config (species -> reference_name):")
+          else buffer.append("\n    No references found in user or global config")
+          references.toList.sorted.foreach(x => buffer.append(s"\n     - ${x._1} -> ${x._2}"))
+        }
+        Logging.addError(buffer.toString)
+      }
     }
-
     file
   }
 
@@ -117,7 +139,8 @@ object Reference {
 
   /**
    * Raise an exception when given fasta file has no fai file
-   * @param fastaFile Fasta file
+    *
+    * @param fastaFile Fasta file
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
@@ -132,7 +155,8 @@ object Reference {
 
   /**
    * Raise an exception when given fasta file has no dict file
-   * @param fastaFile Fasta file
+    *
+    * @param fastaFile Fasta file
    */
   def requireDict(fastaFile: File): Unit = {
     val dict = new File(fastaFile.getAbsolutePath
