@@ -10,6 +10,7 @@ import scala.collection.mutable.ListBuffer
 
 /**
  * Created by sajvanderzeeuw on 2-2-16.
+ * Modified by pjvan_thof
  */
 object ValidateFastq extends ToolCommand {
   /**
@@ -63,10 +64,10 @@ object ValidateFastq extends ToolCommand {
 
         //Here we check if the readnames of both files are concordant, and if the sequence content are correct DNA/RNA sequences
         recordR2 match {
-          case Some(recordR2) => // Paired End
-            validFastqRecord(recordR2)
-            duplicateCheck(recordR2, lastRecordR2)
-            checkMate(recordR1, recordR2)
+          case Some(r2) => // Paired End
+            validFastqRecord(r2)
+            duplicateCheck(r2, lastRecordR2)
+            checkMate(recordR1, r2)
           case _ => // Single end
         }
         if (counter % 1e5 == 0) logger.info(counter + (if (recordR2.isDefined) " pairs" else " reads") + " processed")
@@ -83,7 +84,7 @@ object ValidateFastq extends ToolCommand {
         case _               => logger.warn(s"No possible quality encodings found")
       }
 
-      logger.info(s"Done processing ${counter} fastq records, no errors found")
+      logger.info(s"Done processing $counter fastq records, no errors found")
     } catch {
       case e: IllegalStateException =>
         logger.error(s"Error found at readnumber: $counter, linenumber ${(counter * 4) - 3}")
@@ -99,9 +100,9 @@ object ValidateFastq extends ToolCommand {
   private[tools] var maxQual: Option[Char] = None
 
   /**
-   *
-   * @param record
-   * @throws IllegalStateException
+   * This method checks if the encoding in a fastq record is correct
+   * @param record The fastq record to check
+   * @throws IllegalStateException Throws this when an error is ofund during checking
    */
   private[tools] def checkQualEncoding(record: FastqRecord): Unit = {
     val min = record.getBaseQualityString.min
@@ -117,9 +118,9 @@ object ValidateFastq extends ToolCommand {
   }
 
   /**
-   *
-   * @return
-   * @throws IllegalStateException
+   * This method returns the possible encodings till now
+   * @return List of possible encodings
+   * @throws IllegalStateException Throws this when an error is ofund during checking
    */
   private[tools] def getPossibleEncodings: List[String] = {
     val buffer: ListBuffer[String] = ListBuffer()
@@ -141,9 +142,9 @@ object ValidateFastq extends ToolCommand {
 
   /**
    * This function checks for duplicates.
-   * @param current
-   * @param before
-   * @throws IllegalStateException
+   * @param current currect fastq record
+   * @param before fastq record before the current record
+   * @throws IllegalStateException Throws this when an error is ofund during checking
    */
   def duplicateCheck(current: FastqRecord, before: Option[FastqRecord]): Unit = {
     if (before.exists(_.getReadHeader == current.getReadHeader))
@@ -151,9 +152,9 @@ object ValidateFastq extends ToolCommand {
   }
 
   /**
-   *
-   * @param record
-   * @throws IllegalStateException
+   * This method will check if fastq record is correct
+   * @param record Fastq record to check
+   * @throws IllegalStateException Throws this when an error is ofund during checking
    */
   def validFastqRecord(record: FastqRecord): Unit = {
     checkQualEncoding(record)
@@ -161,15 +162,15 @@ object ValidateFastq extends ToolCommand {
       case allowedBases(m) =>
       case _               => throw new IllegalStateException(s"Non IUPAC symbols identified")
     }
-    if (record.getReadString.size != record.getBaseQualityString.size)
+    if (record.getReadString.length != record.getBaseQualityString.length)
       throw new IllegalStateException(s"Sequence length does not match quality length")
   }
 
   /**
-   *
-   * @param r1
-   * @param r2
-   * @throws IllegalStateException
+   * This method checks if the pair is the same ID
+   * @param r1 R1 fastq record
+   * @param r2 R2 fastq record
+   * @throws IllegalStateException Throws this when an error is ofund during checking
    */
   def checkMate(r1: FastqRecord, r2: FastqRecord): Unit = {
     val id1 = r1.getReadHeader.takeWhile(_ != ' ')
