@@ -3,12 +3,11 @@ import java.io.File
 import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
-
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
-  * Created by ahbbollen on 2-3-16.
-  */
+ * Created by ahbbollen on 2-3-16.
+ */
 class VcfFilterTest extends TestNGSuite with Matchers {
 
   def cmd(s: String) = {
@@ -112,7 +111,7 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     }
 
     if (minAlternateDepth.isDefined) {
-     cmdString = "--minAlternateDepth " + minAlternateDepth.getOrElse("") :: cmdString
+      cmdString = "--minAlternateDepth " + minAlternateDepth.getOrElse("") :: cmdString
     }
 
     if (minSamplesPass.isDefined) {
@@ -182,7 +181,6 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     if (minQualScore.isDefined) {
       cmdString = "--minQualScore " + minQualScore.getOrElse("") :: cmdString
     }
-
 
     cmdString.foreach(x => command.contains(x) shouldBe true)
   }
