@@ -30,12 +30,13 @@
     <div class="col-md-6">
         <p>
         #if (sampleId.isDefined && libId.isDefined)
-            something
+            This plot shows the insert size distribution for all libraries combined in sample <b>${sampleId}</b>.
         #elseif(sampleId.isDefined)
-            This plot shows the insert size distribution for the libraries of sample <b>${sampleId}</b>. <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
+            This plot shows the insert size distribution for the libraries of sample <b>${sampleId}</b>.
         #else
-            This plot shows the insert size distribution for each of the <b>${samples.size}</b> samples. <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
+            This plot shows the insert size distribution for each of the <b>${samples.size}</b> samples.
         #end
+        <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
         </p>
     </div>
     </div>
