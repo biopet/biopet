@@ -133,6 +133,8 @@ object ShivaVariantcallingTest {
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
+    "rscript" -> Map("exe" -> "test"),
+    "exe" -> "test",
     "varscan_jar" -> "test"
   )
 }

@@ -30,7 +30,7 @@ import scala.sys.process.{ Process, ProcessLogger }
 trait Rscript extends Configurable {
   protected var script: File
 
-  def rscriptExecutable: String = config("exe", default = "Rscript", submodule = "Rscript")
+  def rscriptExecutable: String = config("exe", default = "Rscript", submodule = "rscript")
 
   /** This is the defaul implementation, to add arguments override this */
   def cmd: Seq[String] = Seq(rscriptExecutable, script.getAbsolutePath)
