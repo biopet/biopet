@@ -24,6 +24,12 @@ The pipeline accepts ```.fastq & .bam``` files as input.
 
 Note that one should first create the appropriate [configs](../general/config.md).
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
+Shiva is a special pipeline in the sense that it can also start directly from `bam` files. Note that one should alter the sample config field from `R1` into `bam`.
+
 ### Full pipeline
 
 The full pipeline can start from fastq or from bam file. This pipeline will include pre-process steps for the bam files.

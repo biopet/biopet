@@ -6,8 +6,9 @@ Gentrap (*generic transcriptome analysis pipeline*) is a general data analysis p
 
 At the moment, Gentrap supports the following aligners:
 
-1. GSNAP
-2. TopHat
+1. [GSNAP](http://research-pub.gene.com/gmap/)
+2. [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml)
+3. [Star](https://github.com/alexdobin/STAR/releases)
 
 and the following quantification modes:
 
@@ -18,10 +19,14 @@ and the following quantification modes:
 
 You can also provide a `.refFlat` file containing ribosomal sequence coordinates to measure how many of your libraries originate from ribosomal sequences. Then, you may optionally remove those regions as well.
 
+## Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
 ## Configuration File
 
 As with other biopet pipelines, Gentrap relies on a JSON configuration file to run its analyses. There are two important parts here, the configuration for the samples (to determine the sample layout of your experiment) and the configuration for the pipeline settings (to determine which analyses are run).
-
+To get help creating the appropriate [configs](../general/config.md) please refer to the config page in the general section.
 ### Sample Configuration
 
 Samples are single experimental units whose expression you want to measure. They usually consist of a single sequencing library, but in some cases (for example when the experiment demands each sample have a minimum library depth) a single sample may contain multiple sequencing libraries as well. All this is can be configured using the correct JSON nesting, with the following pattern:
@@ -72,6 +77,7 @@ In the example above, there is one sample (named `sample_A`) which contains one 
 
 In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has two different libraries (`lib_one` and `lib_two`). Notice that the names of the samples and libraries may change, but several keys such as `samples`, `libraries`, `R1`, and `R2` remain the same.
 
+
 ### Pipeline Settings Configuration
 
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
@@ -79,19 +85,17 @@ For the pipeline settings, there are some values that you need to specify while 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
 2. `aligner`: which aligner to use (`gsnap` or `tophat`)
 3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
-4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `bases_per_gene`, `bases_per_exon`, `cufflinks_strict`, `cufflinks_guided`, and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
+4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.
 6. `annotation_refflat`: contains the path to an annotation refFlat file of the entire genome
 
 While optional settings are:
 
 1. `annotation_gtf`: contains path to an annotation GTF file, only required when `expression_measures` contain `fragments_per_gene`, `cufflinks_strict`, and/or `cufflinks_guided`.
-2. `annotation_bed`: contains path to a flattened BED file (no overlaps), only required when `expression_measures` contain `bases_per_gene` and/or `bases_per_exon`.
+2. `annotation_bed`: contains path to a flattened BED file (no overlaps), only required when `expression_measures` contain `base_counts`.
 3. `remove_ribosomal_reads`: whether to remove reads mapping to ribosomal genes or not, defaults to `false`.
 4. `ribosomal_refflat`: contains path to a refFlat file of ribosomal gene coordinates, required when `remove_ribosomal_reads` is `true`.
 5. `call_variants`: whether to call variants on the RNA-seq data or not, defaults to `false`.
-
-In addition to these, you must also remember to supply the alignment index required by your aligner of choice. For `tophat` this is `bowtie_index`, while for `gsnap` it is `db` and `dir`.
 
 Thus, an example settings configuration is as follows:
 
@@ -100,13 +104,9 @@ Thus, an example settings configuration is as follows:
   "output_dir": "/path/to/output/dir",
   "expression_measures": ["fragments_per_gene", "bases_per_gene"],
   "strand_protocol": "dutp",
-  "reference_fasta": "/path/to/reference",
+  "reference_fasta": "/path/to/reference/fastafile",
   "annotation_gtf": "/path/to/gtf",
   "annotation_refflat": "/path/to/refflat",
-  "gsnap": {
-    "dir": "/path/to/gsnap/db/dir",
-    "db": "gsnap_db_name"
-  }
 }
 ~~~
 
@@ -133,7 +133,7 @@ It is also a good idea to specify retries (we recomend `-retry 3` up to `-retry 
 
 ## Output Files
 
-The number and types of output files depend on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
+The numbers and types of output files depend on your run configuration. What you can always expect, however, is that there will be a summary JSON file of your run called `gentrap.summary.json` and a PDF report in a `report` folder called `gentrap_report.pdf`. The summary file contains files and statistics specific to the current run, which is meant for cases when you wish to do further processing with your Gentrap run (for example, plotting some figures), while the PDF report provides a quick overview of your run results.
 
 ## Getting Help
 
