@@ -48,7 +48,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def defaultThreads = 3
 
   val seqtk = new SeqtkSeq(root)
-  var clip: Option[Cutadapt] = None
+  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(root, fastqc)) else None
   var trim: Option[Sickle] = None
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
     val gzip = Gzip(root)
@@ -101,7 +101,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadapt = new Cutadapt(root, fastqc)
+        val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
         cutadapt.fastqInput = seqtk.output
         cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
