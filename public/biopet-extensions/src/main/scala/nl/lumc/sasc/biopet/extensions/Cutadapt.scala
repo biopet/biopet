@@ -85,7 +85,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var trimN: Boolean = config("trim_n", default = false)
   var prefix: Option[String] = config("prefix")
   var suffix: Option[String] = config("suffix")
-  var stripSuffix: Set[String] = config("strip_suffix")
+  var stripSuffix: Set[String] = config("strip_suffix", default = Nil)
   var lengthTag: Option[String] = config("length_tag")
 
   /** Colorspace options */
