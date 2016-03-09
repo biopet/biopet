@@ -114,7 +114,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var fasta: Option[String] = config("fasta")
   var sift: Option[String] = config("sift")
   var polyphen: Option[String] = config("polyphen")
-  var custom: Option[String] = config("custom")
+  var custom: List[String] = config("custom", default = Nil)
   var plugin: List[String] = config("plugin", default = Nil)
   var individual: Option[String] = config("individual")
   var fields: Option[String] = config("fields")
@@ -227,7 +227,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     optional("--fasta", fasta) +
     optional("--sift", sift) +
     optional("--polyphen", polyphen) +
-    optional("--custom", custom) +
+    repeat("--custom", custom) +
     repeat("--plugin", plugin) +
     optional("--individual", individual) +
     optional("--fields", fields) +

@@ -47,16 +47,24 @@ For BAM files as input one should use a config like this:
 ``` yaml
 samples:
   Sample_ID_1:
+    tags:
+      gender: male
+      father: sampleNameFather
+      mother: sampleNameMother
     libraries:  
       Lib_ID_1:
+        tags:
+          key: value
         bam: MyFirst.bam
       Lib_ID_2:
         bam: MySecond.bam
 ```
 
-
 Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
 
+#### Tags
+
+In the `tags` key inside a sample or library users can supply tags that belong to samples/libraries. These tags will we automatically parsed inside the summary of a pipeline.
 
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Biopet is built on top of GATK Queue for building bioinformatic
 # pipelines. It is mainly intended to support LUMC SHARK cluster which is running
@@ -14,12 +15,20 @@
 # license, please contact us to obtain a separate license.
 #
 
-# Set root logger level to DEBUG and its only appender to A1.
-log4j.rootLogger=ERROR, A1
 
-# A1 is set to be a ConsoleAppender.
-log4j.appender.A1=org.apache.log4j.ConsoleAppender
+from __future__ import print_function
 
-# A1 uses PatternLayout.
-log4j.appender.A1.layout=org.apache.log4j.PatternLayout
-log4j.appender.A1.layout.ConversionPattern=%-5p [%d] [%C{1}] - %m%n
+__author__="Peter van 't Hof"
+
+import sys
+import re
+
+upacPatern = re.compile(r'[RYKMSWBDHV]')
+
+if __name__ == "__main__":
+    for line in sys.stdin:
+        l = line.strip().split("\t")
+        if len(l) >= 3:
+            l[3] = upacPatern.sub("N", l[3])
+
+        print("\t".join(map(str, l)))
