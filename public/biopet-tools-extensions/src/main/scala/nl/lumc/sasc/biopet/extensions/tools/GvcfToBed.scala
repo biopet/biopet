@@ -25,7 +25,7 @@ class GvcfToBed(val root: Configurable) extends ToolCommandFunction {
   var minQuality: Int = 0
 
   @Argument(doc = "inverse", required = false)
-  var inverse: Boolean = false
+  var inverse: Option[File] = None
 
   override def defaultCoreMemory = 4.0
 
@@ -35,7 +35,7 @@ class GvcfToBed(val root: Configurable) extends ToolCommandFunction {
       required("-O", outputBed) +
       optional("-S", sample) +
       optional("--minGenomeQuality", minQuality) +
-      conditional(inverse, "--inverted")
+      optional("--invertedOutputBed", inverse)
   }
 
 }

@@ -194,10 +194,11 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
   protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
 
   protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
-  protected lazy val nameError = " name invalid." +
-    "Name must have at least 3 characters," +
+  protected lazy val nameError = "has an invalid name. " +
+    "Sample names must have at least 3 characters, " +
     "must begin and end with an alphanumeric character, " +
-    "and must not have whitespace."
+    "and must not have whitespace and special characters. " +
+    "Dash (-) and underscore (_) are permitted."
 
   /** Runs addAndTrackJobs method for each sample */
   final def addSamplesJobs() {
