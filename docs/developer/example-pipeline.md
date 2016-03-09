@@ -155,4 +155,46 @@ Since our pipeline is called `HelloPipeline`, the root of the configoptions will
 
 ### Summary output
 
+Any pipeline that mixes in `SummaryQscript` will produce a summary json. 
+This summary json usually contains statistics and some output results. 
+
+By mixing in `SummaryQscript`, the new pipeline needs to implement three functions:
+
+1. `summaryFile: File`
+2. `summaryFiles: Map[String, File]`
+3. `summarySettings: Map[String, Any]`
+
+Of those three, `summaryFile` is the most important one, and should point to the file where the summary will be written to.
+The `summaryFiles` function should contain any extra files one would like to add to the summary. 
+ Files are listed in a separate `files` JSON object, and will by default include any executables used in the pipelines.
+The `summarySettings` function should contain any extra settings one would like to add to the summary.
+  Settings are listed in a separate `settings` JSON object. 
+  
+ 
+Apart from these fields, the summary JSON will be populated with statistics from tool extensions that mix in `Summarizable`. 
+To populate these statistics, one has to call `addSummarizable` on the tool.
+   
+   For instance, let's go back to the `fastqc` example. The original declaration was:
+   
+ 
+```scala
+    val fastqc = new Fastqc(this)
+    fastqc.fastqfile = config("fastqc_input")
+    fastqc.output = new File(outputDir, "fastqc.txt")
+    
+    // change kmers settings to 9, wrap with `Some()` because `fastqc.kmers` is a `Option` value.
+    fastqc.kmers = Some(9)
+    
+    add(fastqc)
+```   
+
+To add the fastqc summary to our summary JSON all we have to do is write the following line afterwards:
+
+```scala
+    addSummarizable(fastqc)
+```    
+ 
+Summary statistics for fastqc will then end up in a `stats` JSON object in the summary. 
+See the [tool tutorial](example-tool.md) for how to make a tool extension produce any summary output.
+
 ### Reporting output (optional)
