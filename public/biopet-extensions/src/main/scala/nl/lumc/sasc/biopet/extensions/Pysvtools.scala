@@ -28,7 +28,7 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
   var bedoutput: File = _
   var regionsoutput: File = _
 
-  executable = config("exe", default = "mergevcf")
+  executable = config("exe", default = "vcf_merge_sv_events")
 
   def versionRegex = """PySVtools (.*)""".r
   def versionCommand = executable + " --version"

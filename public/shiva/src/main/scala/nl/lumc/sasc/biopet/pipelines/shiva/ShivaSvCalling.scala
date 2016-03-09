@@ -33,6 +33,9 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   def this() = this(null)
 
+  var outputMergedVCFbySample: Map[String, File] = Map()
+  var outputMergedVCF: File = _
+
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   protected[shiva] var inputBamsArg: List[File] = Nil
 
@@ -41,6 +44,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    outputMergedVCF = new File(outputDir, "allsamples.merged.vcf")
   }
 
   /** Variantcallers requested by the config */
@@ -56,7 +60,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     val callers = callersList.filter(x => configCallers.contains(x.name))
 
     require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
+    require(callers.nonEmpty, "Please select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
     callers.foreach { caller =>
       caller.inputBams = inputBams
@@ -74,8 +78,14 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
       mergeSVcalls.input = sampleVCFS.flatten
       mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
       add(mergeSVcalls)
-      //      outputFiles += (sample -> mergeSVcalls.output)
+      outputMergedVCFbySample += (sample -> mergeSVcalls.output)
     }
+
+    // merge all files from all samples in project
+    val mergeSVcallsProject = new Pysvtools(this)
+    mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
+    mergeSVcallsProject.output = outputMergedVCF
+    add(mergeSVcallsProject)
 
     // merging the VCF calls by project
     // basicly this will do all samples from this pipeline run
@@ -98,7 +108,10 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = configCallers
     //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
-    Map()
+    Map(
+      "final_mergedvcf" -> outputMergedVCF
+
+    )
   }
 }
 
