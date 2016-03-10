@@ -18,10 +18,9 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Sickle, Zcat }
-import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat }
+import nl.lumc.sasc.biopet.extensions.tools.{ ValidateFastq, SeqStat }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -50,20 +49,24 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     val skipTrims = Array(true, false)
     val skipClips = Array(true, false)
     val zipped = Array(true, false)
+    val abortOnCorruptFastqs = Array(true, false)
 
     for (
       pair <- paired;
       skipTrim <- skipTrims;
       skipClip <- skipClips;
-      zip <- zipped
-    ) yield Array("", pair, skipTrim, skipClip, zip)
+      zip <- zipped;
+      abortOnCorruptFastq <- abortOnCorruptFastqs
+    ) yield Array("", pair, skipTrim, skipClip, zip, abortOnCorruptFastq)
   }
 
   @Test(dataProvider = "flexiprepOptions")
-  def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean, zipped: Boolean) = {
+  def testFlexiprep(f: String, paired: Boolean, skipTrim: Boolean, skipClip: Boolean,
+                    zipped: Boolean, abortOnCorruptFastq: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> FlexiprepTest.outputDir,
       "skip_trim" -> skipTrim,
-      "skip_clip" -> skipClip
+      "skip_clip" -> skipClip,
+      "abort_on_corrupt_fastq" -> abortOnCorruptFastq
     ), Map(FlexiprepTest.executables.toSeq: _*))
     val flexiprep: Flexiprep = initPipeline(map)
 
@@ -75,6 +78,10 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
     flexiprep.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (paired) 4 else 2)
     flexiprep.functions.count(_.isInstanceOf[SeqStat]) shouldBe (if (paired) 4 else 2)
+
+    flexiprep.functions.count(_.isInstanceOf[ValidateFastq]) shouldBe 2
+    flexiprep.functions.count(_.isInstanceOf[CheckValidateFastq]) shouldBe (if (abortOnCorruptFastq) 2 else 0)
+
   }
 
   // remove temporary run directory all tests in the class have been run

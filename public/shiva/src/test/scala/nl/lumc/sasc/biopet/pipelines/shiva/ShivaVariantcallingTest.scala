@@ -96,16 +96,13 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
     }
   }
-
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
-  }
 }
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
-  def inputTouch(name: String): File = {
+  private def inputTouch(name: String): File = {
     val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
     Files.touch(file)
     file
@@ -136,6 +133,8 @@ object ShivaVariantcallingTest {
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
+    "rscript" -> Map("exe" -> "test"),
+    "exe" -> "test",
     "varscan_jar" -> "test"
   )
 }

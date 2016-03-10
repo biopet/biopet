@@ -1,10 +1,8 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.extensions.{ Ln, Tabix }
 import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsMerge, BcftoolsCall }
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
+import nl.lumc.sasc.biopet.extensions.samtools.{ FixMpileup, SamtoolsMpileup }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** default mode of bcftools */
@@ -17,6 +15,7 @@ class BcftoolsSingleSample(val root: Configurable) extends Variantcaller {
       val mp = new SamtoolsMpileup(this)
       mp.input :+= inputBam
       mp.u = true
+      mp.v = true
       mp.reference = referenceFasta()
 
       val bt = new BcftoolsCall(this)
@@ -25,7 +24,7 @@ class BcftoolsSingleSample(val root: Configurable) extends Variantcaller {
       bt.c = true
       bt.output = new File(outputDir, sample + ".vcf.gz")
 
-      add(mp | bt)
+      add(mp | new FixMpileup(this) | bt)
       add(Tabix(this, bt.output))
       bt.output
     }
