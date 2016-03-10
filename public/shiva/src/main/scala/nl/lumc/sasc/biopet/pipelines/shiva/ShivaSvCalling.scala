@@ -17,9 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.Pysvtools
 import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
-import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -32,6 +33,9 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   def this() = this(null)
 
+  var outputMergedVCFbySample: Map[String, File] = Map()
+  var outputMergedVCF: File = _
+
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
   protected[shiva] var inputBamsArg: List[File] = Nil
 
@@ -40,6 +44,7 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   /** Executed before script */
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    outputMergedVCF = new File(outputDir, "allsamples.merged.vcf")
   }
 
   /** Variantcallers requested by the config */
@@ -55,13 +60,37 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     val callers = callersList.filter(x => configCallers.contains(x.name))
 
     require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
+    require(callers.nonEmpty, "Please select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
     callers.foreach { caller =>
       caller.inputBams = inputBams
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
     }
+
+    // merge VCF by sample
+    for ((sample, bamFile) <- inputBams) {
+      var sampleVCFS: List[Option[File]] = List.empty
+      callers.foreach { caller =>
+        sampleVCFS ::= caller.outputVCF(sample)
+      }
+      val mergeSVcalls = new Pysvtools(this)
+      mergeSVcalls.input = sampleVCFS.flatten
+      mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
+      add(mergeSVcalls)
+      outputMergedVCFbySample += (sample -> mergeSVcalls.output)
+    }
+
+    // merge all files from all samples in project
+    val mergeSVcallsProject = new Pysvtools(this)
+    mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
+    mergeSVcallsProject.output = outputMergedVCF
+    add(mergeSVcallsProject)
+
+    // merging the VCF calls by project
+    // basicly this will do all samples from this pipeline run
+    // group by "tags"
+    // sample tagging is however not available within this pipeline
 
     addSummaryJobs()
   }
@@ -79,7 +108,10 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = configCallers
     //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
-    Map()
+    Map(
+      "final_mergedvcf" -> outputMergedVCF
+
+    )
   }
 }
 

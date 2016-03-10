@@ -4,7 +4,7 @@ import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
 import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
-/** Script for sv caler delly */
+/** Script for sv caller delly */
 class Delly(val root: Configurable) extends SvCaller {
   def name = "delly"
 
@@ -20,7 +20,6 @@ class Delly(val root: Configurable) extends SvCaller {
       val catVariants = new CatVariants(this)
       catVariants.outputFile = new File(dellyDir, sample + ".delly.vcf.gz")
 
-      /// start delly and then copy the vcf into the root directory "<sample>.delly/"
       if (del) {
         val delly = new DellyCaller(this)
         delly.input = bamFile
@@ -57,6 +56,7 @@ class Delly(val root: Configurable) extends SvCaller {
       require(catVariants.inputFiles.nonEmpty, "Must atleast 1 SV-type be selected for Delly")
 
       add(catVariants)
+      addVCF(sample, catVariants.outputFile)
     }
   }
 }
