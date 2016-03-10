@@ -23,7 +23,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
  * Created by sajvanderzeeuw on 12/19/14.
  */
 abstract class Macs2 extends BiopetCommandLineFunction with Version {
-  executable = config("exe", default = "macs2", submodule = "macs2", freeVar = false)
+  executable = config("exe", default = "macs2", configNamespace = "macs2", freeVar = false)
   def versionCommand = executable + " --version"
   def versionRegex = """macs2 (.*)""".r
   override def versionExitcode = List(0, 1)

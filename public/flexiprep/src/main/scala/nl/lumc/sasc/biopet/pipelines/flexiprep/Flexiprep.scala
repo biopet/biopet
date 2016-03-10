@@ -204,7 +204,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       fqSync.outputStats = new File(outDir, s"${sampleId.getOrElse("x")}-${libId.getOrElse("x")}.sync.stats")
 
       val pipe = new BiopetFifoPipe(this, fqSync :: Nil) {
-        override def configName = "qc-cmd"
+        override def configNamespace = "qc-cmd"
 
         override def beforeGraph(): Unit = {
           fqSync.beforeGraph()

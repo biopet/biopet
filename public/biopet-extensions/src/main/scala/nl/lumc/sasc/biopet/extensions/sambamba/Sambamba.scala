@@ -24,7 +24,7 @@ abstract class Sambamba extends BiopetCommandLineFunction with Version {
 
   override def subPath = "sambamba" :: super.subPath
 
-  executable = config("exe", default = "sambamba", submodule = "sambamba", freeVar = false)
+  executable = config("exe", default = "sambamba", configNamespace = "sambamba", freeVar = false)
   def versionCommand = executable
   def versionRegex = """sambamba v(.*)""".r
   override def versionExitcode = List(0, 1)

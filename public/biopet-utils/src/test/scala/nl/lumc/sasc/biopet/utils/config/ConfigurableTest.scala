@@ -52,7 +52,7 @@ class ConfigurableTest extends TestNGSuite with Matchers {
 
   @Test def testConfigurable(): Unit = {
     val classC = new ClassC {
-      override def configName = "classc"
+      override def configNamespace = "classc"
       override val globalConfig = new Config(ConfigurableTest.map)
       override val fixedValues = Map("fixed" -> "fixed")
     }

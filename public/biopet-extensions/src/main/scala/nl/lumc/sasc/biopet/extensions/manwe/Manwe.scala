@@ -11,7 +11,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Argument }
  * manwe [subcommand]
  */
 abstract class Manwe extends BiopetCommandLineFunction {
-  executable = config("exe", default = "manwe", submodule = "manwe")
+  executable = config("exe", default = "manwe", configNamespace = "manwe")
 
   var manweConfig: File = createManweConfig(None)
 

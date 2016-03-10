@@ -295,7 +295,7 @@ object WriteSummaryTest {
                       stats: Map[String, Any] = Map(),
                       c: Map[String, Any] = Map()) = new BiopetJavaCommandLineFunction with Summarizable with Version {
     override def globalConfig = new Config(c)
-    override def configName = "java_command"
+    override def configNamespace = "java_command"
     def root: Configurable = null
     def summaryStats: Map[String, Any] = stats
     def summaryFiles: Map[String, File] = files
@@ -320,7 +320,7 @@ object WriteSummaryTest {
                               c: Map[String, Any] = Map()) =
     new CommandLineFunction with Configurable with Summarizable with Version {
       override def globalConfig = new Config(c)
-      override def configName = "version_command"
+      override def configNamespace = "version_command"
       def root: Configurable = null
 
       def summaryFiles: Map[String, File] = files

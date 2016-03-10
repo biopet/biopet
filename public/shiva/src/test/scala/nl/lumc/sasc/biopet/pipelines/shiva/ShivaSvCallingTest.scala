@@ -40,7 +40,7 @@ import scala.collection.mutable.ListBuffer
 class ShivaSvCallingTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): ShivaSvCalling = {
     new ShivaSvCalling {
-      override def configName = "shivasvcalling"
+      override def configNamespace = "shivasvcalling"
       override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaSvCallingTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"

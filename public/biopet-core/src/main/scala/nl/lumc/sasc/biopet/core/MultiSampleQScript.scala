@@ -70,7 +70,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
       def libDir = new File(sampleDir, "lib_" + libId)
 
       lazy val libTags: Map[String, Any] =
-        config("tags", default = Map(), freeVar = false, submodule = libId, path = List("samples", sampleId, "libraries"))
+        config("tags", default = Map(), freeVar = false, configNamespace = libId, path = List("samples", sampleId, "libraries"))
 
       def sampleId = sample.sampleId
 
@@ -91,7 +91,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     val libraries: Map[String, Library] = libIds.map(id => id -> makeLibrary(id)).toMap
 
     lazy val sampleTags: Map[String, Any] =
-      config("tags", default = Map(), freeVar = false, submodule = sampleId, path = List("samples"))
+      config("tags", default = Map(), freeVar = false, configNamespace = sampleId, path = List("samples"))
 
     lazy val gender = {
       val g: Option[String] = sampleTags.get("gender").map(_.toString)

@@ -17,7 +17,7 @@ import org.testng.annotations.{ DataProvider, Test, AfterClass }
 class GearsTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gears = {
     new Gears {
-      override def configName = "gears"
+      override def configNamespace = "gears"
 
       override def globalConfig = new Config(map)
 

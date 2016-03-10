@@ -28,7 +28,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
 
-  executable = config("exe", submodule = "perl", default = "perl")
+  executable = config("exe", configNamespace = "perl", default = "perl")
   var vepScript: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)
