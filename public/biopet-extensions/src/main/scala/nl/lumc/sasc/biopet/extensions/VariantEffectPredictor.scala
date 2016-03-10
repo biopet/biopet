@@ -17,16 +17,20 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+
+import scala.io.Source
 
 /**
  * Extension for VariantEffectPredictor
  * Created by ahbbollen on 15-1-15.
  */
-class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version {
+class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
 
   executable = config("exe", submodule = "perl", default = "perl")
   var vepScript: String = config("vep_script")
@@ -48,7 +52,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   var everything: Boolean = config("everything", default = false)
   var force: Boolean = config("force", default = false)
   var no_stats: Boolean = config("no_stats", default = false)
-  var stats_text: Boolean = config("stats_text", default = false)
+  var stats_text: Boolean = config("stats_text", default = true)
   var html: Boolean = config("html", default = false)
   var cache: Boolean = config("cache", default = false)
   var humdiv: Boolean = config("humdiv", default = false)
@@ -253,5 +257,48 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     optional("--db_version", db_version) +
     optional("--buffer_size", buffer_size) +
     optional("--failed", failed)
+
+  def summaryFiles: Map[String, File] = Map()
+
+  def summaryStats: Map[String, Any] = {
+    if (stats_text) {
+      val stats_file: File = new File(output.getAbsolutePath + "_summary.txt")
+      parseStatsFile(stats_file)
+    } else {
+      Map()
+    }
+  }
+
+  def parseStatsFile(file: File): Map[String, Any] = {
+    val contents = Source.fromFile(file).getLines().toList
+    val headers = getHeadersFromStatsFile(contents)
+    headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
+  }
+
+  def getBlockFromStatsFile(contents: List[String], header: String): Map[String, Any] = {
+    var inBlock = false
+    var theMap: Map[String, Any] = Map()
+    for (x <- contents) {
+      val stripped = x.stripPrefix("[").stripSuffix("]")
+      if (stripped == header) {
+        inBlock = true
+      } else {
+        if (inBlock) {
+          val key = stripped.split('\t').head.replace(" ", "_")
+          val value = stripped.split('\t').last
+          theMap ++= Map(key -> tryToParseNumber(value, fallBack = true).getOrElse(value))
+        }
+      }
+      if (stripped == "") {
+        inBlock = false
+      }
+    }
+    theMap
+  }
+
+  def getHeadersFromStatsFile(contents: List[String]): List[String] = {
+    // block headers are of format '[block]'
+    contents.filter(_.startsWith("[")).filter(_.endsWith("]")).map(_.stripPrefix("[")).map(_.stripSuffix("]"))
+  }
 
 }
