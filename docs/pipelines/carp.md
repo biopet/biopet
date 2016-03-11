@@ -33,7 +33,7 @@ Below we show two examples for ```json``` and ```yaml```. One should appreciate 
         "lib_one": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
-        }
+        },
         "lib_two": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
