@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
-import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
-import org.mockito.Mockito.{ inOrder => inOrd, when }
+import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
+import org.mockito.Mockito.{inOrder => inOrd, when}
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 import scala.collection.JavaConverters._
 
@@ -108,6 +108,23 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     report should contain key "stats"
 
   }
+
+  @Test(dataProvider = "mockReaderProvider", groups = Array("check_readstats"), singleThreaded = true, dependsOnGroups = Array("report"))
+  def testReadStatsObject(fqMock: FastqReader) = {
+    when(fqMock.getFile) thenReturn new File("/tmp/test.fq")
+    when(fqMock.iterator) thenReturn recordsOver("1", "2", "3", "4", "5")
+    val seqstat = SeqStat
+
+    // the histogram should store the lenght==0 value also, for example sequence length 5 is size 6.
+    // please note that we already loaded the dataset twice in seqstat. (seqstat.Seqstat is called 2 times in previous steps)
+    seqstat.readStats.lengths(5) shouldBe 10
+    seqstat.readStats.lengths.length shouldBe 6
+
+    seqstat.readStats.nucs.sum shouldBe 50
+    seqstat.readStats.withN shouldBe 10
+  }
+
+
 
   @Test def testArgsMinimum() = {
     val args = Array(
