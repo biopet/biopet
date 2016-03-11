@@ -4,12 +4,17 @@
 
 Carp is a pipeline for analyzing ChIP-seq NGS data. It uses the BWA MEM aligner and the MACS2 peak caller by default to align ChIP-seq data and call the peaks and allows you to run all your samples (control or otherwise) in one go.
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
 
 ## Configuration File
 
 ### Sample Configuration
 
-The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines, for example:
+The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines it may be either ```json``` or ```yaml``` formatted.
+Below we show two examples for ```json``` and ```yaml```. One should appreciate that multiple libraries can be used if a sample is sequenced on multiple lanes. This is noted with library id in the config file.
+
 
 ~~~ json
 {
@@ -28,7 +33,7 @@ The layout of the sample configuration for Carp is basically the same as with ou
         "lib_one": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
-        }
+        },
         "lib_two": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
@@ -39,8 +44,50 @@ The layout of the sample configuration for Carp is basically the same as with ou
 }
 ~~~
 
+~~~ yaml
+samples:
+  sample_X
+    control:
+      - sample_Y
+    libraries:
+      lib_one:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+  sample_Y:
+    libraries:
+      lib_one:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+      lib_two:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+~~~
+
 What's important here is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually 
 ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
+**Please notice** that the control is given in the form of a ```list```. This is because sometimes one wants to use multiple control samples, this can be achieved to pass the sampleNames of the control samples in a list to the field **control** in the config file.
+In ```json``` this will become: 
+
+~~~ json
+{
+  "samples": {
+    "sample_X": {
+      "control": ["sample_Y","sample_Z"]
+      }
+    }
+ }
+ ~~~
+
+In ```yaml``` this is a bit different and will look like this:
+
+~~~ yaml
+samples:
+    sample_X:
+      control:
+        - sample_Y
+        - sample_Z
+~~~
+
 
 ### Pipeline Settings Configuration
 
@@ -52,8 +99,9 @@ For the pipeline settings, there are some values that you need to specify while 
 While optional settings are:
 
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
-2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github
-.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: macs2_callpeak
+2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: `macs2_callpeak`
+
+
 ## Running Carp
 
 As with other pipelines in the Biopet suite, Carp can be run by specifying the pipeline after the `pipeline` subcommand:

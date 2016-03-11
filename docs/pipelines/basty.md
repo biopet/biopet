@@ -27,6 +27,11 @@ To run Basty, please create the proper [Config](../general/config.md) files.
 
 Batsy uses the [Shiva](shiva.md) pipeline internally. Please check the documentation for this pipeline for the options.
 
+#### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
+
 #### Required configuration values
 
 | Submodule | Name | Type | Default | Function |
@@ -63,14 +68,14 @@ Specific configuration options additional to Basty are:
 
 ```
 
-### Example
+### Examples
 
-##### For the help screen:
+#### For the help screen:
 ~~~
 biopet pipeline basty -h
 ~~~
 
-##### Run the pipeline:
+#### Run the pipeline:
 Note that one should first create the appropriate [configs](../general/config.md).
 
 ~~~

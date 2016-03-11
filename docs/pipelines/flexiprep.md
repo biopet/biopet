@@ -51,6 +51,10 @@ Command line flags for Flexiprep are:
 
 If `-R2` is given, the pipeline will assume a paired-end setup.
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
 ### Config
 
 All other values should be provided in the config. Specific config values towards the mapping pipeline are:

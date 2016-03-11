@@ -84,7 +84,7 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     }
 
     val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
-    logger.addAppender(a)
+    Logging.logger.addAppender(a)
 
     var argv: Array[String] = Array()
     argv ++= Array("-S", pipeline)

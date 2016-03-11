@@ -122,7 +122,7 @@ object SeqStat extends ToolCommand {
    *
    * @param record FastqRecord
    */
-  def procesRead(record: FastqRecord): Unit = {
+  def processRead(record: FastqRecord): Unit = {
 
     // Adjust/expand the length of baseStat case classes to the size of current
     // read if the current list is not long enough to store the data
@@ -130,9 +130,8 @@ object SeqStat extends ToolCommand {
       baseStats ++= mutable.ArrayBuffer.fill(record.length - baseStats.length)(BaseStat())
     }
 
-    if (readStats.lengths.length < record.length + 1) {
-      readStats.lengths ++= mutable.ArrayBuffer.fill((record.length + 1) - readStats.lengths.length)(0)
-    }
+    if (readStats.lengths.length <= record.length) {
+      readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(0)
 
     val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString
@@ -166,7 +165,7 @@ object SeqStat extends ToolCommand {
   def seqStat(fqreader: FastqReader): Long = {
     var numReads: Long = 0
     for (read <- fqreader.iterator.asScala) {
-      procesRead(read)
+      processRead(read)
       numReads += 1
     }
 
