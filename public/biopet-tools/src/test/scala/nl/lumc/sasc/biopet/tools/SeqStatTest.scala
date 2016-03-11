@@ -124,8 +124,6 @@ class SeqStatTest extends TestNGSuite with MockitoSugar with Matchers {
     seqstat.readStats.withN shouldBe 10
   }
 
-
-
   @Test def testArgsMinimum() = {
     val args = Array(
       "-i", resourcePath("/paired01a.fq"))
