@@ -18,12 +18,12 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.nio.file.Paths
 
-import htsjdk.samtools.fastq.{FastqReader, FastqRecord}
-import org.mockito.Mockito.{inOrder => inOrd, when}
+import htsjdk.samtools.fastq.{ FastqReader, FastqRecord }
+import org.mockito.Mockito.{ inOrder => inOrd, when }
 import org.scalatest.Matchers
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.JavaConverters._
 
