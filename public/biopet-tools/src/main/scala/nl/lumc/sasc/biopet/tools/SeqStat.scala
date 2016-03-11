@@ -122,7 +122,7 @@ object SeqStat extends ToolCommand {
    *
    * @param record FastqRecord
    */
-  def procesRead(record: FastqRecord): Unit = {
+  def processRead(record: FastqRecord): Unit = {
 
     // Adjust/expand the length of baseStat case classes to the size of current
     // read if the current list is not long enough to store the data
@@ -166,7 +166,7 @@ object SeqStat extends ToolCommand {
   def seqStat(fqreader: FastqReader): Long = {
     var numReads: Long = 0
     for (read <- fqreader.iterator.asScala) {
-      procesRead(read)
+      processRead(read)
       numReads += 1
     }
 
