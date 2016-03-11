@@ -12,7 +12,9 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 
 ### Sample Configuration
 
-The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines, for example:
+The layout of the sample configuration for Carp is basically the same as with our other multi sample pipelines it may be either ```json``` or ```yaml``` formatted.
+Below we show two examples for ```json``` and ```yaml```. One should appreciate that multiple libraries can be used if a sample is sequenced on multiple lanes. This is noted with library id in the config file.
+
 
 ~~~ json
 {
@@ -31,7 +33,7 @@ The layout of the sample configuration for Carp is basically the same as with ou
         "lib_one": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
-        }
+        },
         "lib_two": {
           "R1": "/absolute/path/to/first/read/pair.fq",
           "R2": "/absolute/path/to/second/read/pair.fq"
@@ -42,8 +44,50 @@ The layout of the sample configuration for Carp is basically the same as with ou
 }
 ~~~
 
+~~~ yaml
+samples:
+  sample_X
+    control:
+      - sample_Y
+    libraries:
+      lib_one:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+  sample_Y:
+    libraries:
+      lib_one:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+      lib_two:
+        R1: /absolute/path/to/first/read/pair.fq
+        R2: /absolute/path/to/second/read/pair.fq
+~~~
+
 What's important here is that you can specify the control ChIP-seq experiment(s) for a given sample. These controls are usually 
 ChIP-seq runs from input DNA and/or from treatment with nonspecific binding proteins such as IgG. In the example above, we are specifying `sample_Y` as the control for `sample_X`.
+**Please notice** that the control is given in the form of a ```list```. This is because sometimes one wants to use multiple control samples, this can be achieved to pass the sampleNames of the control samples in a list to the field **control** in the config file.
+In ```json``` this will become: 
+
+~~~ json
+{
+  "samples": {
+    "sample_X": {
+      "control": ["sample_Y","sample_Z"]
+      }
+    }
+ }
+ ~~~
+
+In ```yaml``` this is a bit different and will look like this:
+
+~~~ yaml
+samples:
+    sample_X:
+      control:
+        - sample_Y
+        - sample_Z
+~~~
+
 
 ### Pipeline Settings Configuration
 
