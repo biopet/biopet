@@ -8,10 +8,9 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by ahbbollen on 3-3-16.
-  */
+ * Created by ahbbollen on 3-3-16.
+ */
 class VariantEffectPredictorTest extends TestNGSuite with Matchers {
-
 
   @Test
   def testSummaryStats = {
@@ -30,7 +29,6 @@ class VariantEffectPredictorTest extends TestNGSuite with Matchers {
     stats.contains("Variants_by_chromosome") shouldBe true
     stats.contains("Distribution_of_variants_on_chromosome_1") shouldBe true
     stats.contains("Position_in_protein") shouldBe true
-
 
   }
 

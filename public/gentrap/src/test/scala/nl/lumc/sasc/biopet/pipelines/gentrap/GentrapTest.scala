@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions._
@@ -25,7 +25,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNGSuite with Matchers {
 
