@@ -31,20 +31,24 @@
 </div>
 <div class="row">
     <div class="col-md-1"><b>R1</b></div>
-    <div class="col-md-5"><img class="img-responsive" src="${getPlot("fastqc_R1")}" /></div>
+    <div class="col-md-5">
+        <img class="img-responsive" src="${getPlot("fastqc_R1")}" />
+    </div>
     #if (!skipTrim || !skipClip)
     <div class="col-md-5">
-    <img class="img-responsive" src="${getPlot("fastqc_R1_qc")}" />
+        <img class="img-responsive" src="${getPlot("fastqc_R1_qc")}" />
     </div>
      #end
 </div>
 #if (paired)
     <div class="row">
         <div class="col-md-1"><b>R2</b></div>
-        <div class="col-md-5"><img class="img-responsive" src="${getPlot("fastqc_R2")}" /></div>
+        <div class="col-md-5">
+            <img class="img-responsive" src="${getPlot("fastqc_R2")}" />
+        </div>
         #if (!skipTrim || !skipClip)
         <div class="col-md-5">
-        <img class="img-responsive" src="${getPlot("fastqc_R2_qc")}" />
+            <img class="img-responsive" src="${getPlot("fastqc_R2_qc")}" />
         </div>
          #end
     </div>

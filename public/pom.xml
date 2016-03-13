@@ -27,20 +27,20 @@
     <modules>
         <!--<module>biopet-framework</module>-->
         <module>biopet-public-package</module>
+        <module>bam2wig</module>
         <module>bammetrics</module>
+        <module>basty</module>
+        <module>carp</module>
         <module>flexiprep</module>
+        <module>gears</module>
+        <module>generate-indexes</module>
         <module>gentrap</module>
+        <module>kopisu</module>
         <module>mapping</module>
         <module>sage</module>
-        <module>kopisu</module>
-        <!-- <module>yamsvp</module> -->
-        <module>gears</module>
-        <module>bam2wig</module>
-        <module>carp</module>
-	    <module>toucan</module>
         <module>shiva</module>
-        <module>basty</module>
-        <module>generate-indexes</module>
+        <module>tinycap</module>
+        <module>toucan</module>
         <module>biopet-core</module>
         <module>biopet-utils</module>
         <module>biopet-tools</module>

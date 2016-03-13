@@ -14,7 +14,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   /**
    * Method to add a bamFile to the pipeline
-   * @param id Uniqe id used for this bam file, most likly to be a sampleName
+   * @param id Unique id used for this bam file, most likely to be a sampleName
    * @param file Location of the bam file
    */
   def addBamfile(id: String, file: File): Unit = {

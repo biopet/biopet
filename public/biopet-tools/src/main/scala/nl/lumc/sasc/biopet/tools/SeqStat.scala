@@ -132,7 +132,6 @@ object SeqStat extends ToolCommand {
 
     if (readStats.lengths.length <= record.length) {
       readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(0)
-    }
 
     val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString

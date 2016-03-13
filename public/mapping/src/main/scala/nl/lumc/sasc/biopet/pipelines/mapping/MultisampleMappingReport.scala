@@ -72,7 +72,7 @@ trait MultisampleMappingReportTrait extends MultisampleReportBuilder {
             Map("showPlot" -> true, "showTable" -> false))
         )
         else Nil),
-      pageArgs
+      pageArgs ++ Map("pipeline" -> pipelineName)
     )
   }
 

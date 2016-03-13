@@ -27,7 +27,7 @@ class GearsTest extends TestNGSuite with Matchers {
   }
 
   @DataProvider(name = "gearsOptions")
-  def shivaOptions = {
+  def gearsOptions = {
     val bool = Array(true, false)
 
     for (

@@ -2,7 +2,6 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationRefFlat
 import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
-import nl.lumc.sasc.biopet.pipelines.gentrap.Gentrap
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 

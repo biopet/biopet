@@ -30,12 +30,13 @@
     <div class="col-md-6">
         <p>
         #if (sampleId.isDefined && libId.isDefined)
-            something
+            This plot shows the insert size distribution for all libraries combined in sample <b>${sampleId}</b>.
         #elseif(sampleId.isDefined)
-            This plot shows the insert size distribution for the libraries of sample ${sampleId}. <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
+            This plot shows the insert size distribution for the libraries of sample <b>${sampleId}</b>.
         #else
-            This plot shows the insert size distribution for each of the ${samples.size} samples. <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
+            This plot shows the insert size distribution for each of the <b>${samples.size}</b> samples.
         #end
+        <a href="http://thegenomefactory.blogspot.nl/2013/08/paired-end-read-confusion-library.html">Insert size</a> denotes the size of the so-called <em>insert</em> between two read pairs in a paired-end sequencing run. This should correspond to the length of the sequence between the sequencing adaptors. The provided table shows mean and median insert size for each sample, together with the standard deviation.
         </p>
     </div>
     </div>
@@ -49,17 +50,20 @@
     </div>
     <div class="panel-footer">
         #if (showTable)
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">Hide table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">
+                <i class="glyphicon glyphicon-eye-close"></i> Hide table</button>
         #else
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">Show table</button>
+            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#insertsizeTable">
+            <i class="glyphicon glyphicon-eye-open"></i> Show table</button>
         #end
-        <i class="glyphicon glyphicon-file"></i> <a href="insertsize.tsv">tsv file</a>
+        <button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"> <a href="insertsize.tsv">tsv file</a></i></button>
+
     </div>
 #end
 
 <div class="panel-body collapse #if (showTable)in#end" id="insertsizeTable">
 <!-- Table -->
-<table class="table sortable-theme-bootstrap" data-sortable>
+<table class="table">
     <thead><tr>
         <th data-sorted="true" data-sorted-direction="ascending">Sample</th>
         #if (!sampleLevel) <th>Library</th> #end
@@ -84,7 +88,7 @@
                         val prefixPath = List("samples", sample) ::: (if (libId.isEmpty) Nil else List("libraries", libId)) ::: List("bammetrics", "stats")
 
                         val fieldValues = for (field <- fields) yield {
-                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse(prefixPath ::: metricsTag :: Nil)
+                            summary.getValue((prefixPath ::: List("CollectInsertSizeMetrics", "metrics", field.toUpperCase)):_*).getOrElse("N/A")
                         }
                     }#
                     #for (value <- fieldValues)
