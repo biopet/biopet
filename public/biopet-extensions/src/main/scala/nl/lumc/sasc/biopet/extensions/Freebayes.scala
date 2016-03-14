@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for freebayes
