@@ -155,6 +155,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     } else if (cache && dir.isEmpty) {
       Logging.addError("Must supply dir to cache for VariantEffectPredictor")
     }
+    if (stats_text) outputFiles :+= new File(output.getAbsolutePath + "_summary.txt")
   }
 
   /** Returns command to execute */
