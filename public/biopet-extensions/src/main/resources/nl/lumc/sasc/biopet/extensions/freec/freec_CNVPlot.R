@@ -28,7 +28,7 @@ label_positions <- c(2,0.5,0)
 maxLevelToPlot <- 3
 for (i in c(1:length(ratio$Ratio))) {
 	if (ratio$Ratio[i]>maxLevelToPlot) {
-		ratio$Ratio[i]=maxLevelToPl
+		ratio$Ratio[i]=maxLevelToPlot
 	}
 }
 
