@@ -24,10 +24,7 @@
     }
 
     def plotAvailable(read:String) = {
-        summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "files", read, plot, "md5").collect {
-            case md5 if md5 != "error_on_capture" => true
-            case otherwise => false
-        }.getOrElse(false)
+        new File(summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "files", read, plot, "path").get.toString).exists()
     }
 
 }#
