@@ -149,7 +149,6 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
     optional("--contamination-estimates", contamination_estimates) +
     optional("--variant-input", variant_input) +
     optional("--haplotype-basis-alleles", haplotype_basis_alleles) +
-    optional("--vcf", outputVcf) +
     optional("--pvar", pvar) +
     optional("--theta", theta) +
     optional("--ploidy", ploidy) +
@@ -202,5 +201,7 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
     conditional(harmonic_indel_quality, "--harmonic-indel-quality") +
     conditional(genotype_qualities, "--genotype-qualities") +
     conditional(debug, "--debug") +
-    optional("--haplotype-length", haplotypeLength)
+    optional("--haplotype-length", haplotypeLength) +
+    (if (inputAsStdin) required("--stdin") else "") +
+    (if (outputAsStsout) "" else optional("--vcf", outputVcf))
 }
