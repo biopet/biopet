@@ -21,11 +21,17 @@ Usage: SamplesTsvToJson [options]
         Print version
   -i <file> | --inputFiles <file>
         Input must be a tsv file, first line is seen as header and must at least have a 'sample' column, 'library' column is optional, multiple files allowed
+  -t <file> | --tagFiles <file>
+
+  -o <file> | --outputFile <file>
+
 ~~~
 
 The tool is designed in such a way that a user can provide a TAB seperated file (TSV) with sample specific properties and even those will be parsed by the tool.
 For example: a user wants to have certain properties e.g. which treatment a sample got than the user should provide a extra columns called treatment and then the 
 JSON file is parsed with those properties inside it as well. The order of columns does not matter.
+
+The tag files works the same only the value are prefixed in the key `tags`.
 
 #### Example
 

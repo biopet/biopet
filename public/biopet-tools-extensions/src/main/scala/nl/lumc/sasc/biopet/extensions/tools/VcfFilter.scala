@@ -39,6 +39,20 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
   var minSamplesPass: Option[Int] = config("min_samples_pass")
   var minGenomeQuality: Option[Int] = config("min_genome_quality")
   var filterRefCalls: Boolean = config("filter_ref_calls", default = false)
+  var invertedOutputVcf: Option[File] = None
+  var resToDom: Option[String] = None
+  var trioCompound: Option[String] = None
+  var deNovoInSample: Option[String] = None
+  var deNovoTrio: Option[String] = None
+  var trioLossOfHet: Option[String] = None
+  var mustHaveVariant: List[String] = Nil
+  var calledIn: List[String] = Nil
+  var mustHaveGenotype: List[String] = Nil
+  var diffGenotype: List[String] = Nil
+  var filterHetVarToHomVar: List[String] = Nil
+  var minQualScore: Option[Double] = None
+  var id: List[String] = Nil
+  var idFile: Option[File] = None
 
   override def defaultCoreMemory = 3.0
 
@@ -55,5 +69,19 @@ class VcfFilter(val root: Configurable) extends ToolCommandFunction {
     optional("--minAlternateDepth", minAlternateDepth) +
     optional("--minSamplesPass", minSamplesPass) +
     optional("--minGenomeQuality", minGenomeQuality) +
-    conditional(filterRefCalls, "--filterRefCalls")
+    conditional(filterRefCalls, "--filterRefCalls") +
+    optional("--invertedOutputVcf", invertedOutputVcf) +
+    optional("--resToDom", resToDom) +
+    optional("--trioCompound", trioCompound) +
+    optional("--deNovoInSample", deNovoInSample) +
+    optional("--deNovoTrio", deNovoTrio) +
+    optional("--trioLossOfHet", trioLossOfHet) +
+    repeat("--mustHaveVariant", mustHaveVariant) +
+    repeat("--calledIn", calledIn) +
+    repeat("--mustHaveGenotype", mustHaveGenotype) +
+    repeat("--diffGenotype", diffGenotype) +
+    repeat("--filterHetVarToHomVar", filterHetVarToHomVar) +
+    optional("--minQualScore", minQualScore) +
+    repeat("--id", id) +
+    optional("--idFile", idFile)
 }

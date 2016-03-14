@@ -35,6 +35,11 @@ Command line flags for the mapping pipeline are:
 
 If `-R2` is given, the pipeline will assume a paired-end setup.
 
+### Sample input extensions
+
+It is a good idea to check the format of your input files before starting any pipeline. Since the pipeline expects a specific format based on the file extensions.
+So for example if one inputs files with a `fastq | fq` extension the pipeline expects an unzipped `fastq` file. When the extension ends with `fastq.gz | fq.gz` the pipeline expects a bgzipped or gzipped `fastq` file.
+
 ### Config
 
 All other values should be provided in the config. Specific config values towards the mapping pipeline are:

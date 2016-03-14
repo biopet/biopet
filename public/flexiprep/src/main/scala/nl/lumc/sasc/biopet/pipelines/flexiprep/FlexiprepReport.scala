@@ -62,7 +62,7 @@ object FlexiprepReport extends ReportBuilder {
       fastqcPlotSection("Sequence quality", "plot_per_sequence_quality"),
       fastqcPlotSection("Base GC content", "plot_per_base_gc_content"),
       fastqcPlotSection("Sequence GC content", "plot_per_sequence_gc_content"),
-      fastqcPlotSection("Base seqeunce content", "plot_per_base_sequence_content"),
+      fastqcPlotSection("Base sequence content", "plot_per_base_sequence_content"),
       fastqcPlotSection("Duplication", "plot_duplication_levels"),
       fastqcPlotSection("Kmers", "plot_kmer_profiles"),
       fastqcPlotSection("Length distribution", "plot_sequence_length_distribution")
@@ -71,7 +71,7 @@ object FlexiprepReport extends ReportBuilder {
   )
 
   protected def fastqcPlotSection(name: String, tag: String) = {
-    name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastaqcPlot.ssp", Map("plot" -> tag))
+    name -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepFastQcPlot.ssp", Map("plot" -> tag))
   }
 
   /**

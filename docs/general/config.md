@@ -12,7 +12,7 @@ The sample config should be in [__JSON__](http://www.json.org/) or [__YAML__](ht
 
 #### Example sample config
 
-###### yaml:
+###### YAML:
 
 ``` yaml
 output_dir: /home/user/myoutputdir
@@ -24,7 +24,7 @@ samples:
         R2: R2.fastq.gz
 ```
 
-###### json:
+###### JSON:
 
 ``` json
     {  
@@ -47,16 +47,24 @@ For BAM files as input one should use a config like this:
 ``` yaml
 samples:
   Sample_ID_1:
+    tags:
+      gender: male
+      father: sampleNameFather
+      mother: sampleNameMother
     libraries:  
       Lib_ID_1:
+        tags:
+          key: value
         bam: MyFirst.bam
       Lib_ID_2:
         bam: MySecond.bam
 ```
 
-
 Note that there is a tool called [SamplesTsvToJson](../tools/SamplesTsvToJson.md) this enables a user to get the sample config without any chance of creating a wrongly formatted JSON file.
 
+#### Tags
+
+In the `tags` key inside a sample or library users can supply tags that belong to samples/libraries. These tags will we automatically parsed inside the summary of a pipeline.
 
 ### The settings config
 The settings config enables a user to alter the settings for almost all settings available in the tools used for a given pipeline.
@@ -116,6 +124,16 @@ It is also possible to set the `"species"` flag. Again, we will default to `unkn
         "haplotypecaller": { "scattercount": 1000 }
 }
 ```
+
+# More advanced use of config files.
+### 4 levels of configuring settings
+In biopet, a value of a ConfigNamespace (e.g., "reference_fasta") for a tool or a pipeline can be defined in 4 different levels.
+ * Level-4: As a fixed value hardcoded in biopet source code
+ * Level-3: As a user specified value in the user config file
+ * Level-2: As a system specified value in the global config files. On the LUMC's SHARK cluster, these global config files are located at /usr/local/sasc/config.
+ * Level-1: As a default value provided in biopet source code.
+
+During execution, biopet framework will resolve the value for each ConfigNamespace following the order from level-4 to level-1. Hence, a value defined in the a higher level will overwrite a value define in a lower level for the same ConfigNamespace.
 
 ### JSON validation
 

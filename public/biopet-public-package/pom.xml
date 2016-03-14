@@ -66,6 +66,11 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>TinyCap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>Sage</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.Summarizable
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
@@ -85,7 +85,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
   var trimN: Boolean = config("trim_n", default = false)
   var prefix: Option[String] = config("prefix")
   var suffix: Option[String] = config("suffix")
-  var stripSuffix: Set[String] = config("strip_suffix")
+  var stripSuffix: Set[String] = config("strip_suffix", default = Nil)
   var lengthTag: Option[String] = config("length_tag")
 
   /** Colorspace options */
@@ -165,27 +165,65 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
 
   /** Output summary stats */
   def summaryStats: Map[String, Any] = {
-    val trimR = """.*Trimmed reads: *(\d*) .*""".r
-    val tooShortR = """.*Too short reads: *(\d*) .*""".r
-    val tooLongR = """.*Too long reads: *(\d*) .*""".r
-    val adapterR = """Adapter '([C|T|A|G]*)'.*trimmed (\d*) times.""".r
+    /**
+     * The following regex is specific for Cutadapt 1.7+
+     */
 
-    val stats: mutable.Map[String, Int] = mutable.Map("trimmed" -> 0, "tooshort" -> 0, "toolong" -> 0)
-    val adapter_stats: mutable.Map[String, Int] = mutable.Map()
+    val processedReads = """Total reads processed: *([,\d]+).*""".r
+    val withAdapters = """.* with adapters: *([,\d]+) .*""".r
+    val readsPassingFilters = """.* written \(passing filters\): *([,\d]+) .*""".r
 
-    if (statsOutput.exists) for (line <- Source.fromFile(statsOutput).getLines()) {
-      line match {
-        case trimR(m)                 => stats += ("trimmed" -> m.toInt)
-        case tooShortR(m)             => stats += ("tooshort" -> m.toInt)
-        case tooLongR(m)              => stats += ("toolong" -> m.toInt)
-        case adapterR(adapter, count) => adapter_stats += (adapter -> count.toInt)
-        case _                        =>
+    val tooShortR = """.* that were too short: *([,\d]+) .*""".r
+    val tooLongR = """.* that were too long: *([,\d]+) .*""".r
+
+    val tooManyN = """.* with too many N: *([,\d]+) .*""".r
+    val adapterR = """Sequence ([C|T|A|G]*);.*Trimmed: ([,\d]+) times.""".r
+
+    val basePairsProcessed = """Total basepairs processed: *([,\d]+) bp""".r
+    val basePairsWritten = """Total written \(filtered\): *([,\d]+) bp .*""".r
+
+    val stats: mutable.Map[String, Long] = mutable.Map(
+      "processed" -> 0,
+      "withadapters" -> 0,
+      "passingfilters" -> 0,
+      "tooshort" -> 0,
+      "toolong" -> 0,
+      "bpinput" -> 0,
+      "bpoutput" -> 0,
+      "toomanyn" -> 0
+    )
+    val adapter_stats: mutable.Map[String, Long] = mutable.Map()
+
+    if (statsOutput.exists) {
+      val statsFile = Source.fromFile(statsOutput)
+      for (line <- statsFile.getLines()) {
+        line match {
+          case processedReads(m)        => stats("processed") = m.replaceAll(",", "").toLong
+          case withAdapters(m)          => stats("withadapters") = m.replaceAll(",", "").toLong
+          case readsPassingFilters(m)   => stats("passingfilters") = m.replaceAll(",", "").toLong
+          case tooShortR(m)             => stats("tooshort") = m.replaceAll(",", "").toLong
+          case tooLongR(m)              => stats("toolong") = m.replaceAll(",", "").toLong
+          case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toLong
+          case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toLong
+          case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toLong
+          case adapterR(adapter, count) => adapter_stats += (adapter -> count.toLong)
+          case _                        =>
+        }
       }
     }
 
-    Map("num_reads_affected" -> stats("trimmed"),
+    val cleanReads = stats("processed") - stats("withadapters")
+    val trimmed = stats("passingfilters") - cleanReads
+
+    Map("num_reads_affected" -> trimmed,
+      "num_reads_input" -> stats("processed"),
+      "num_reads_with_adapters" -> stats("withadapters"),
+      "num_reads_output" -> stats("passingfilters"),
       "num_reads_discarded_too_short" -> stats("tooshort"),
       "num_reads_discarded_too_long" -> stats("toolong"),
+      "num_reads_discarded_many_n" -> stats("toomanyn"),
+      "num_bases_input" -> stats("bpinput"),
+      "num_based_output" -> stats("bpoutput"),
       adaptersStatsName -> adapter_stats.toMap
     )
   }

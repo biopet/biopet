@@ -10,9 +10,9 @@ The required configuration file for Bam2Wig is really minimal, only a single JSO
 ~~~
 {"output_dir": "/path/to/output/dir"}
 ~~~
-For technical reasons, single sample pipelines, such as this mapping pipeline do **not** take a sample config.
+For technical reasons, single sample pipelines, such as this pipeline do **not** take a sample config.
 Input files are in stead given on the command line as a flag.
-Bam2wig requires a one to set the `--bamfile` command line argument to point to the to-be-converted BAM file.
+Bam2wig requires one to set the `--bamfile` command line argument to point to the to-be-converted BAM file.
 
 ## Running Bam2Wig
 

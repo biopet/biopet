@@ -57,6 +57,8 @@ class Pindel(val root: Configurable) extends SvCaller {
       pindelVcf.rDate = todayformat.format(today) // officially, we should enter the date of the genome here
       pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
       add(pindelVcf)
+
+      addVCF(sample, pindelVcf.outputVCF)
     }
 
   }
