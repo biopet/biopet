@@ -38,7 +38,7 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var outputVcf: File = null
 
   @Input(required = false)
-  var bam_list: Option[File] = config("bam_list")
+  var bamList: Option[File] = config("bam_list")
 
   @Input(required = false)
   var targets: Option[File] = config("targets")
@@ -50,77 +50,77 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var populations: Option[File] = config("populations")
 
   @Input(required = false)
-  var cnv_map: Option[File] = config("cnv_map")
+  var cnvMap: Option[File] = config("cnv_map")
 
   @Input(required = false)
   var trace: Option[File] = config("trace")
 
   @Input(required = false)
-  var failed_alleles: Option[File] = config("failed_alleles")
+  var failedAlleles: Option[File] = config("failed_alleles")
 
   @Input(required = false)
-  var observation_bias: Option[File] = config("observation_bias")
+  var observationBias: Option[File] = config("observation_bias")
 
   @Input(required = false)
-  var contamination_estimates: Option[File] = config("contamination_estimates")
+  var contaminationEstimates: Option[File] = config("contamination_estimates")
 
   @Input(required = false)
-  var variant_input: Option[File] = config("variant_input")
+  var variantInput: Option[File] = config("variant_input")
 
   @Input(required = false)
-  var haplotype_basis_alleles: Option[File] = config("haplotype_basis_alleles")
+  var haplotypeBasisAlleles: Option[File] = config("haplotype_basis_alleles")
 
   var pvar: Option[Int] = config("pvar")
   var theta: Option[Int] = config("theta")
   var ploidy: Option[Int] = config("ploidy")
-  var use_best_n_alleles: Option[Int] = config("use_best_n_alleles")
-  var max_complex_gap: Option[Int] = config("max_complex_gap")
-  var min_repeat_size: Option[Int] = config("min_repeat_size")
-  var min_repeat_entropy: Option[Int] = config("min_repeat_entropy")
-  var read_mismatch_limit: Option[Int] = config("read_mismatch_limit")
-  var read_max_mismatch_fraction: Option[Int] = config("read_max_mismatch_fraction")
-  var read_snp_limit: Option[Int] = config("read_snp_limit")
-  var read_indel_limit: Option[Int] = config("read_indel_limit")
-  var min_alternate_fraction: Option[Double] = config("min_alternate_fraction")
-  var min_alternate_count: Option[Int] = config("min_alternate_count")
-  var min_alternate_qsum: Option[Int] = config("min_alternate_qsum")
-  var min_alternate_total: Option[Int] = config("min_alternate_total")
-  var min_coverage: Option[Int] = config("min_coverage")
-  var genotyping_max_iterations: Option[Int] = config("genotyping_max_iterations")
-  var genotyping_max_banddepth: Option[Int] = config("genotyping_max_banddepth")
-  var genotype_variant_threshold: Option[Int] = config("genotype_variant_threshold")
-  var read_dependence_factor: Option[Int] = config("read_dependence_factor")
-  var min_mapping_quality: Option[Double] = config("min_mapping_quality")
-  var min_base_quality: Option[Double] = config("min_base_quality")
-  var min_supporting_allele_qsum: Option[Double] = config("min_supporting_allele_qsum")
-  var min_supporting_mapping_qsum: Option[Double] = config("min_supporting_mapping_qsum")
-  var mismatch_base_quality_threshold: Option[Double] = config("mismatch_base_quality_threshold")
-  var base_quality_cap: Option[Double] = config("base_quality_cap")
-  var prob_contamination: Option[Double] = config("prob_contamination")
-  var only_use_input_alleles: Boolean = config("only_use_input_alleles", default = false)
-  var report_all_haplotype_alleles: Boolean = config("report_all_haplotype_alleles", default = false)
-  var report_monomorphic: Boolean = config("report_monomorphic", default = false)
-  var pooled_discrete: Boolean = config("pooled_discrete", default = false)
-  var pooled_continuous: Boolean = config("pooled_continuous", default = false)
-  var use_reference_allele: Boolean = config("use_reference_allele", default = false)
-  var no_snps: Boolean = config("no_snps", default = false)
-  var no_indels: Boolean = config("no_indels", default = false)
-  var no_mnps: Boolean = config("no_mnps", default = false)
-  var no_complex: Boolean = config("no_complex", default = false)
-  var no_partial_observations: Boolean = config("no_partial_observations", default = false)
-  var dont_left_align_indels: Boolean = config("dont_left_align_indels", default = false)
-  var use_duplicate_reads: Boolean = config("use_duplicate_reads", default = false)
-  var standard_filters: Boolean = config("standard_filters", default = false)
-  var no_population_priors: Boolean = config("no_population_priors", default = false)
-  var hwe_priors_off: Boolean = config("hwe_priors_off", default = false)
-  var binomial_obs_priors_off: Boolean = config("binomial_obs_priors_off", default = false)
-  var allele_balance_priors_off: Boolean = config("allele_balance_priors_off", default = false)
-  var legacy_gls: Boolean = config("legacy_gls", default = false)
-  var report_genotype_likelihood_max: Boolean = config("report_genotype_likelihood_max", default = false)
-  var exclude_unobserved_genotypes: Boolean = config("exclude_unobserved_genotypes", default = false)
-  var use_mapping_quality: Boolean = config("use_mapping_quality", default = false)
-  var harmonic_indel_quality: Boolean = config("harmonic_indel_quality", default = false)
-  var genotype_qualities: Boolean = config("genotype_qualities", default = false)
+  var useBestNAlleles: Option[Int] = config("use_best_n_alleles")
+  var maxComplexGap: Option[Int] = config("max_complex_gap")
+  var minRepeatSize: Option[Int] = config("min_repeat_size")
+  var minRepeatEntropy: Option[Int] = config("min_repeat_entropy")
+  var readMismatchLimit: Option[Int] = config("read_mismatch_limit")
+  var readMaxMismatchFraction: Option[Int] = config("read_max_mismatch_fraction")
+  var readSnpLimit: Option[Int] = config("read_snp_limit")
+  var readIndelLimit: Option[Int] = config("read_indel_limit")
+  var minAlternateFraction: Option[Double] = config("min_alternate_fraction")
+  var minAlternateCount: Option[Int] = config("min_alternate_count")
+  var minAlternateQsum: Option[Int] = config("min_alternate_qsum")
+  var minAlternateTotal: Option[Int] = config("min_alternate_total")
+  var minCoverage: Option[Int] = config("min_coverage")
+  var genotypingMaxIterations: Option[Int] = config("genotyping_max_iterations")
+  var genotypingMaxBanddepth: Option[Int] = config("genotyping_max_banddepth")
+  var genotypeVariantThreshold: Option[Int] = config("genotype_variant_threshold")
+  var readDependenceFactor: Option[Int] = config("read_dependence_factor")
+  var minMappingQuality: Option[Double] = config("min_mapping_quality")
+  var minBaseQuality: Option[Double] = config("min_base_quality")
+  var minSupportingAlleleQsum: Option[Double] = config("min_supporting_allele_qsum")
+  var minSupportingMappingQsum: Option[Double] = config("min_supporting_mapping_qsum")
+  var mismatchBaseQualityThreshold: Option[Double] = config("mismatch_base_quality_threshold")
+  var baseQualityCap: Option[Double] = config("base_quality_cap")
+  var probContamination: Option[Double] = config("prob_contamination")
+  var onlyUseInputAlleles: Boolean = config("only_use_input_alleles", default = false)
+  var reportAllHaplotypeAlleles: Boolean = config("report_all_haplotype_alleles", default = false)
+  var reportMonomorphic: Boolean = config("report_monomorphic", default = false)
+  var pooledDiscrete: Boolean = config("pooled_discrete", default = false)
+  var pooledContinuous: Boolean = config("pooled_continuous", default = false)
+  var useReferenceAllele: Boolean = config("use_reference_allele", default = false)
+  var noSnps: Boolean = config("no_snps", default = false)
+  var noIndels: Boolean = config("no_indels", default = false)
+  var noMnps: Boolean = config("no_mnps", default = false)
+  var noComplex: Boolean = config("no_complex", default = false)
+  var noPartialObservations: Boolean = config("no_partial_observations", default = false)
+  var dontLeftAlignIndels: Boolean = config("dont_left_align_indels", default = false)
+  var useDuplicateReads: Boolean = config("use_duplicate_reads", default = false)
+  var standardFilters: Boolean = config("standard_filters", default = false)
+  var noPopulationPriors: Boolean = config("no_population_priors", default = false)
+  var hwePriorsOff: Boolean = config("hwe_priors_off", default = false)
+  var binomialObsPriorsOff: Boolean = config("binomial_obs_priors_off", default = false)
+  var alleleBalancePriorsOff: Boolean = config("allele_balance_priors_off", default = false)
+  var legacyGls: Boolean = config("legacy_gls", default = false)
+  var reportGenotypeLikelihoodMax: Boolean = config("report_genotype_likelihood_max", default = false)
+  var excludeUnobservedGenotypes: Boolean = config("exclude_unobserved_genotypes", default = false)
+  var useMappingQuality: Boolean = config("use_mapping_quality", default = false)
+  var harmonicIndelQuality: Boolean = config("harmonic_indel_quality", default = false)
+  var genotypeQualities: Boolean = config("genotype_qualities", default = false)
   var debug: Boolean = config("debug", default = logger.isDebugEnabled)
 
   var haplotypeLength: Option[Int] = config("haplotype_length")
@@ -137,68 +137,68 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   def cmdLine = executable +
     required("--fasta-reference", reference) +
     repeat("--bam", bamfiles) +
-    optional("--bam-list", bam_list) +
+    optional("--bam-list", bamList) +
     optional("--targets", targets) +
     optional("--samples", samples) +
     optional("--populations", populations) +
-    optional("--cnv-map", cnv_map) +
+    optional("--cnv-map", cnvMap) +
     optional("--trace", trace) +
-    optional("--failed-alleles", failed_alleles) +
-    optional("--observation-bias", observation_bias) +
-    optional("--contamination-estimates", contamination_estimates) +
-    optional("--variant-input", variant_input) +
-    optional("--haplotype-basis-alleles", haplotype_basis_alleles) +
+    optional("--failed-alleles", failedAlleles) +
+    optional("--observation-bias", observationBias) +
+    optional("--contamination-estimates", contaminationEstimates) +
+    optional("--variant-input", variantInput) +
+    optional("--haplotype-basis-alleles", haplotypeBasisAlleles) +
     optional("--pvar", pvar) +
     optional("--theta", theta) +
     optional("--ploidy", ploidy) +
-    optional("--use-best-n-alleles", use_best_n_alleles) +
-    optional("--max-complex-gap", max_complex_gap) +
-    optional("--min-repeat-size", min_repeat_size) +
-    optional("--min-repeat-entropy", min_repeat_entropy) +
-    optional("--read-mismatch-limit", read_mismatch_limit) +
-    optional("--read-max-mismatch-fraction", read_max_mismatch_fraction) +
-    optional("--read-snp-limit", read_snp_limit) +
-    optional("--read-indel-limit", read_indel_limit) +
-    optional("--min-alternate-fraction", min_alternate_fraction) +
-    optional("--min-alternate-count", min_alternate_count) +
-    optional("--min-alternate-qsum", min_alternate_qsum) +
-    optional("--min-alternate-total", min_alternate_total) +
-    optional("--min-coverage", min_coverage) +
-    optional("--genotyping-max-iterations", genotyping_max_iterations) +
-    optional("--genotyping-max-banddepth", genotyping_max_banddepth) +
-    optional("--genotype-variant-threshold", genotype_variant_threshold) +
-    optional("--read-dependence-factor", read_dependence_factor) +
-    optional("--min-mapping-quality", min_mapping_quality) +
-    optional("--min-base-quality", min_base_quality) +
-    optional("--min-supporting-allele-qsum", min_supporting_allele_qsum) +
-    optional("--min-supporting-mapping-qsum", min_supporting_mapping_qsum) +
-    optional("--mismatch-base-quality-threshold", mismatch_base_quality_threshold) +
-    optional("--base-quality-cap", base_quality_cap) +
-    optional("--prob-contamination", prob_contamination) +
-    conditional(only_use_input_alleles, "--only-use-input-alleles") +
-    conditional(report_all_haplotype_alleles, "--report-all-haplotype-alleles") +
-    conditional(report_monomorphic, "--report-monomorphic") +
-    conditional(pooled_discrete, "--pooled-discrete") +
-    conditional(pooled_continuous, "--pooled-continuous") +
-    conditional(use_reference_allele, "--use-reference-allele") +
-    conditional(no_snps, "--no-snps") +
-    conditional(no_indels, "--no-indels") +
-    conditional(no_mnps, "--no-mnps") +
-    conditional(no_complex, "--no-complex") +
-    conditional(no_partial_observations, "--no-partial-observations") +
-    conditional(dont_left_align_indels, "--dont-left-align-indels") +
-    conditional(use_duplicate_reads, "--use-duplicate-reads") +
-    conditional(standard_filters, "--standard-filters") +
-    conditional(no_population_priors, "--no-population-priors") +
-    conditional(hwe_priors_off, "--hwe-priors-off") +
-    conditional(binomial_obs_priors_off, "--binomial-obs-priors-off") +
-    conditional(allele_balance_priors_off, "--allele-balance-priors-off") +
-    conditional(legacy_gls, "--legacy-gls") +
-    conditional(report_genotype_likelihood_max, "--report-genotype-likelihood-max") +
-    conditional(exclude_unobserved_genotypes, "--exclude-unobserved-genotypes") +
-    conditional(use_mapping_quality, "--use-mapping-quality") +
-    conditional(harmonic_indel_quality, "--harmonic-indel-quality") +
-    conditional(genotype_qualities, "--genotype-qualities") +
+    optional("--use-best-n-alleles", useBestNAlleles) +
+    optional("--max-complex-gap", maxComplexGap) +
+    optional("--min-repeat-size", minRepeatSize) +
+    optional("--min-repeat-entropy", minRepeatEntropy) +
+    optional("--read-mismatch-limit", readMismatchLimit) +
+    optional("--read-max-mismatch-fraction", readMaxMismatchFraction) +
+    optional("--read-snp-limit", readSnpLimit) +
+    optional("--read-indel-limit", readIndelLimit) +
+    optional("--min-alternate-fraction", minAlternateFraction) +
+    optional("--min-alternate-count", minAlternateCount) +
+    optional("--min-alternate-qsum", minAlternateQsum) +
+    optional("--min-alternate-total", minAlternateTotal) +
+    optional("--min-coverage", minCoverage) +
+    optional("--genotyping-max-iterations", genotypingMaxIterations) +
+    optional("--genotyping-max-banddepth", genotypingMaxBanddepth) +
+    optional("--genotype-variant-threshold", genotypeVariantThreshold) +
+    optional("--read-dependence-factor", readDependenceFactor) +
+    optional("--min-mapping-quality", minMappingQuality) +
+    optional("--min-base-quality", minBaseQuality) +
+    optional("--min-supporting-allele-qsum", minSupportingAlleleQsum) +
+    optional("--min-supporting-mapping-qsum", minSupportingMappingQsum) +
+    optional("--mismatch-base-quality-threshold", mismatchBaseQualityThreshold) +
+    optional("--base-quality-cap", baseQualityCap) +
+    optional("--prob-contamination", probContamination) +
+    conditional(onlyUseInputAlleles, "--only-use-input-alleles") +
+    conditional(reportAllHaplotypeAlleles, "--report-all-haplotype-alleles") +
+    conditional(reportMonomorphic, "--report-monomorphic") +
+    conditional(pooledDiscrete, "--pooled-discrete") +
+    conditional(pooledContinuous, "--pooled-continuous") +
+    conditional(useReferenceAllele, "--use-reference-allele") +
+    conditional(noSnps, "--no-snps") +
+    conditional(noIndels, "--no-indels") +
+    conditional(noMnps, "--no-mnps") +
+    conditional(noComplex, "--no-complex") +
+    conditional(noPartialObservations, "--no-partial-observations") +
+    conditional(dontLeftAlignIndels, "--dont-left-align-indels") +
+    conditional(useDuplicateReads, "--use-duplicate-reads") +
+    conditional(standardFilters, "--standard-filters") +
+    conditional(noPopulationPriors, "--no-population-priors") +
+    conditional(hwePriorsOff, "--hwe-priors-off") +
+    conditional(binomialObsPriorsOff, "--binomial-obs-priors-off") +
+    conditional(alleleBalancePriorsOff, "--allele-balance-priors-off") +
+    conditional(legacyGls, "--legacy-gls") +
+    conditional(reportGenotypeLikelihoodMax, "--report-genotype-likelihood-max") +
+    conditional(excludeUnobservedGenotypes, "--exclude-unobserved-genotypes") +
+    conditional(useMappingQuality, "--use-mapping-quality") +
+    conditional(harmonicIndelQuality, "--harmonic-indel-quality") +
+    conditional(genotypeQualities, "--genotype-qualities") +
     conditional(debug, "--debug") +
     optional("--haplotype-length", haplotypeLength) +
     (if (inputAsStdin) required("--stdin") else "") +
