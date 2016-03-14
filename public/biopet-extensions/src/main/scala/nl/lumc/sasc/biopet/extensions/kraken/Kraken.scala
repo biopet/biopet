@@ -53,7 +53,7 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   def versionCommand = executable + " --version"
 
-  override def defaultCoreMemory = 15.0
+  override def defaultCoreMemory = 17.0
 
   override def defaultThreads = 4
 

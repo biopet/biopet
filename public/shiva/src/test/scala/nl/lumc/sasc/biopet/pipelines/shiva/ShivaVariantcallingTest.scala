@@ -18,16 +18,17 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.config.Config
+import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
+import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.apache.commons.io.FileUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -88,11 +89,13 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       pipeline.init()
       pipeline.script()
 
+      val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+
       pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
-      //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
-      //FIXME: Can not check for bcftools because of piping
-      pipeline.functions.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
-      //pipeline.functions.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
+      pipesJobs.count(_.isInstanceOf[BcftoolsCall]) shouldBe (if (bcftools) 1 else 0) + (if (bcftoolsSinglesample) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[BcftoolsMerge]) shouldBe (if (bcftoolsSinglesample && bams > 1) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
     }
   }
