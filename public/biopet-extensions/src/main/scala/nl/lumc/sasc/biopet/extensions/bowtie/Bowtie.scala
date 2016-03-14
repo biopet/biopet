@@ -46,7 +46,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
   override def defaultThreads = 8
 
   var sam: Boolean = config("sam", default = false)
-  var sam_RG: Option[String] = config("sam-RG")
+  var samRg: Option[String] = config("sam-RG")
   var seedlen: Option[Int] = config("seedlen")
   var seedmms: Option[Int] = config("seedmms")
   var k: Option[Int] = config("k")
@@ -80,7 +80,7 @@ class Bowtie(val root: Configurable) extends BiopetCommandLineFunction with Refe
     conditional(largeIndex, "--large-index") +
     conditional(best, "--best") +
     conditional(strata, "--strata") +
-    optional("--sam-RG", sam_RG) +
+    optional("--sam-RG", samRg) +
     optional("--seedlen", seedlen) +
     optional("--seedmms", seedmms) +
     optional("-k", k) +

@@ -92,7 +92,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         inputFiles :+= new InputFile(inputFastq, config("R1_md5"))
 
         flexiprep.outputDir = new File(libDir, "flexiprep/")
-        flexiprep.input_R1 = inputFastq
+        flexiprep.inputR1 = inputFastq
         flexiprep.init()
         flexiprep.biopetScript()
         qscript.addAll(flexiprep.functions)
@@ -105,7 +105,7 @@ class Sage(val root: Configurable) extends QScript with MultiSampleQScript {
         pf.deps +:= flexiprep.outputFiles("fastq_input_R1")
         qscript.add(pf)
 
-        mapping.input_R1 = pf.outputFastq
+        mapping.inputR1 = pf.outputFastq
         mapping.outputDir = libDir
         mapping.init()
         mapping.biopetScript()

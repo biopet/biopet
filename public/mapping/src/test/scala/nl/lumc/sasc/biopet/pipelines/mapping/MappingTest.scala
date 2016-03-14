@@ -73,11 +73,11 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     val mapping: Mapping = initPipeline(map)
 
     if (zipped) {
-      mapping.input_R1 = r1Zipped
-      if (paired) mapping.input_R2 = Some(r2Zipped)
+      mapping.inputR1 = r1Zipped
+      if (paired) mapping.inputR2 = Some(r2Zipped)
     } else {
-      mapping.input_R1 = r1
-      if (paired) mapping.input_R2 = Some(r2)
+      mapping.inputR1 = r1
+      if (paired) mapping.inputR2 = Some(r2)
     }
     mapping.sampleId = Some("1")
     mapping.libId = Some("1")

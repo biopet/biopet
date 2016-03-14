@@ -21,7 +21,7 @@ class MergeOtuMaps(val root: Configurable) extends BiopetCommandLineFunction wit
   @Output(required = true)
   var outputFile: File = _
 
-  var failures_fp: Option[File] = None
+  var failuresFp: Option[File] = None
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
@@ -35,5 +35,5 @@ class MergeOtuMaps(val root: Configurable) extends BiopetCommandLineFunction wit
       case _                        => ""
     }) +
     required("-o", outputFile) +
-    optional("--failures_fp", failures_fp)
+    optional("--failures_fp", failuresFp)
 }

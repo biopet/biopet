@@ -97,7 +97,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       lazy val flexiprep = new Flexiprep(qscript)
       flexiprep.sampleId = Some(sampleId)
       flexiprep.libId = Some(libId)
-      flexiprep.input_R1 = config("R1")
+      flexiprep.inputR1 = config("R1")
       flexiprep.input_R2 = config("R2")
       flexiprep.outputDir = new File(libDir, "flexiprep")
 
@@ -108,7 +108,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
-        inputFiles :+= InputFile(flexiprep.input_R1, config("R1_md5"))
+        inputFiles :+= InputFile(flexiprep.inputR1, config("R1_md5"))
         flexiprep.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
         add(flexiprep)
 

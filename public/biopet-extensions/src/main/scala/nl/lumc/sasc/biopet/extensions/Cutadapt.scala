@@ -192,7 +192,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "bpoutput" -> 0,
       "toomanyn" -> 0
     )
-    val adapter_stats: mutable.Map[String, Long] = mutable.Map()
+    val adapterStats: mutable.Map[String, Long] = mutable.Map()
 
     if (statsOutput.exists) {
       val statsFile = Source.fromFile(statsOutput)
@@ -206,7 +206,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
           case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toLong
           case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toLong
           case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toLong
-          case adapterR(adapter, count) => adapter_stats += (adapter -> count.toLong)
+          case adapterR(adapter, count) => adapterStats += (adapter -> count.toLong)
           case _                        =>
         }
       }
@@ -224,7 +224,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "num_reads_discarded_many_n" -> stats("toomanyn"),
       "num_bases_input" -> stats("bpinput"),
       "num_based_output" -> stats("bpoutput"),
-      adaptersStatsName -> adapter_stats.toMap
+      adaptersStatsName -> adapterStats.toMap
     )
   }
 

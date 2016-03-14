@@ -22,7 +22,7 @@ class PickRepSet(val root: Configurable) extends BiopetCommandLineFunction with 
   var logFile: Option[File] = None
 
   @Input(required = false)
-  var reference_seqs_fp: Option[File] = config("reference_seqs_fp")
+  var referenceSeqsFp: Option[File] = config("reference_seqs_fp")
 
   @Input(required = false)
   var fastaInput: Option[File] = None
@@ -32,14 +32,14 @@ class PickRepSet(val root: Configurable) extends BiopetCommandLineFunction with 
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 
-  var rep_set_picking_method: Option[String] = config("rep_set_picking_method")
+  var repSetPickingMethod: Option[String] = config("rep_set_picking_method")
 
   def cmdLine = executable +
     required("-i", inputFile) +
     required("-o", outputFasta) +
-    optional("-m", rep_set_picking_method) +
+    optional("-m", repSetPickingMethod) +
     optional("-f", fastaInput) +
     optional("-l", logFile) +
     optional("-s", sortBy) +
-    optional("-r", reference_seqs_fp)
+    optional("-r", referenceSeqsFp)
 }
