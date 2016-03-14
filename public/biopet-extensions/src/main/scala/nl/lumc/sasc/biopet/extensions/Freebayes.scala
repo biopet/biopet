@@ -41,22 +41,22 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var bamList: Option[File] = config("bam_list")
 
   @Input(required = false)
-  var targets: Option[File] = config("targets")
+  var targets: Option[File] = config("targets", freeVar = false)
 
   @Input(required = false)
-  var samples: Option[File] = config("samples")
+  var samples: Option[File] = config("samples", freeVar = false)
 
   @Input(required = false)
-  var populations: Option[File] = config("populations")
+  var populations: Option[File] = config("populations", freeVar = false)
 
   @Input(required = false)
-  var cnvMap: Option[File] = config("cnv_map")
+  var cnvMap: Option[File] = config("cnv_map", freeVar = false)
 
   @Input(required = false)
-  var trace: Option[File] = config("trace")
+  var trace: Option[File] = config("trace", freeVar = false)
 
   @Input(required = false)
-  var failedAlleles: Option[File] = config("failed_alleles")
+  var failedAlleles: Option[File] = config("failed_alleles", freeVar = false)
 
   @Input(required = false)
   var observationBias: Option[File] = config("observation_bias")
@@ -65,14 +65,14 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var contaminationEstimates: Option[File] = config("contamination_estimates")
 
   @Input(required = false)
-  var variantInput: Option[File] = config("variant_input")
+  var variantInput: Option[File] = config("variant_input", freeVar = false)
 
   @Input(required = false)
-  var haplotypeBasisAlleles: Option[File] = config("haplotype_basis_alleles")
+  var haplotypeBasisAlleles: Option[File] = config("haplotype_basis_alleles", freeVar = false)
 
-  var pvar: Option[Int] = config("pvar")
-  var theta: Option[Int] = config("theta")
-  var ploidy: Option[Int] = config("ploidy")
+  var pvar: Option[Int] = config("pvar", freeVar = false)
+  var theta: Option[Int] = config("theta", freeVar = false)
+  var ploidy: Option[Int] = config("ploidy", freeVar = false)
   var useBestNAlleles: Option[Int] = config("use_best_n_alleles")
   var maxComplexGap: Option[Int] = config("max_complex_gap")
   var minRepeatSize: Option[Int] = config("min_repeat_size")
