@@ -110,8 +110,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
         if (inputR1.isDefined) {
           mapping.foreach { m =>
-            m.input_R1 = inputR1.get
-            m.input_R2 = inputR2
+            m.inputR1 = inputR1.get
+            m.inputR2 = inputR2
             add(m)
           }
         } else if (inputBam.isDefined) {
@@ -122,8 +122,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             samToFastq.isIntermediate = libraries.size > 1
             qscript.add(samToFastq)
             mapping.foreach(m => {
-              m.input_R1 = samToFastq.fastqR1
-              m.input_R2 = Some(samToFastq.fastqR2)
+              m.inputR1 = samToFastq.fastqR1
+              m.inputR2 = Some(samToFastq.fastqR2)
               add(m)
             })
           } else {

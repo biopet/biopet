@@ -36,11 +36,11 @@ class Pindel(val root: Configurable) extends SvCaller {
     for ((sample, bamFile) <- inputBams) {
       val pindelDir = new File(outputDir, sample)
 
-      val config_file: File = new File(pindelDir, sample + ".pindel.cfg")
+      val configFile: File = new File(pindelDir, sample + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
       cfg.sampleName = sample
-      cfg.output = config_file
+      cfg.output = configFile
       add(cfg)
 
       val pindel = PindelCaller(this, cfg.output, pindelDir)

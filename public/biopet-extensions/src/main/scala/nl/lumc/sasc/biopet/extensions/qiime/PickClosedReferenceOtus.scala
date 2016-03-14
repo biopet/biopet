@@ -23,18 +23,18 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   def versionRegex = """Version: (.*)""".r
 
   @Input(required = false)
-  var parameter_fp: Option[File] = config("parameter_fp")
+  var parameterFp: Option[File] = config("parameter_fp")
 
   @Input(required = false)
-  var reference_fp: Option[File] = config("reference_fp")
+  var referenceFp: Option[File] = config("reference_fp")
 
   @Input(required = false)
-  var taxonomy_fp: Option[File] = config("taxonomy_fp")
+  var taxonomyFp: Option[File] = config("taxonomy_fp")
 
-  var assign_taxonomy: Boolean = config("assign_taxonomy", default = false)
+  var assignTaxonomy: Boolean = config("assign_taxonomy", default = false)
   var force: Boolean = config("force", default = false)
-  var print_only: Boolean = config("print_only", default = false)
-  var suppress_taxonomy_assignment: Boolean = config("suppress_taxonomy_assignment", default = false)
+  var printOnly: Boolean = config("print_only", default = false)
+  var suppressTaxonomyAssignment: Boolean = config("suppress_taxonomy_assignment", default = false)
 
   def otuTable = new File(outputDir, "otu_table.biom")
   def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
@@ -49,13 +49,13 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   def cmdLine = executable + required("-f") +
     required("-i", inputFasta) +
     required("-o", outputDir) +
-    optional("--reference_fp", reference_fp) +
-    optional("--parameter_fp", parameter_fp) +
-    optional("--taxonomy_fp", taxonomy_fp) +
-    conditional(assign_taxonomy, "--assign_taxonomy") +
+    optional("--reference_fp", referenceFp) +
+    optional("--parameter_fp", parameterFp) +
+    optional("--taxonomy_fp", taxonomyFp) +
+    conditional(assignTaxonomy, "--assign_taxonomy") +
     conditional(force, "--force") +
-    conditional(print_only, "--print_only") +
-    conditional(suppress_taxonomy_assignment, "--suppress_taxonomy_assignment") +
+    conditional(printOnly, "--print_only") +
+    conditional(suppressTaxonomyAssignment, "--suppress_taxonomy_assignment") +
     (if (threads > 1) required("-a") + required("-O", threads) else "")
 
 }

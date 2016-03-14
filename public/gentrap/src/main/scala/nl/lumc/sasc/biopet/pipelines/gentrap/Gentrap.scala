@@ -215,10 +215,10 @@ class Gentrap(val root: Configurable) extends QScript
     } else bamFile
 
     /** Whether all libraries are paired or not */
-    def allPaired: Boolean = libraries.values.forall(_.mapping.forall(_.input_R2.isDefined))
+    def allPaired: Boolean = libraries.values.forall(_.mapping.forall(_.inputR2.isDefined))
 
     /** Whether all libraries are single or not */
-    def allSingle: Boolean = libraries.values.forall(_.mapping.forall(_.input_R2.isEmpty))
+    def allSingle: Boolean = libraries.values.forall(_.mapping.forall(_.inputR2.isEmpty))
 
     /** Adds all jobs for the sample */
     override def addJobs(): Unit = {

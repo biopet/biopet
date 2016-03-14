@@ -115,18 +115,18 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     trim = if (!flexiprep.skipTrim) {
       val sickle = new Sickle(root)
-      sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-      sickle.input_R1 = clip match {
+      sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+      sickle.inputR1 = clip match {
         case Some(c) => c.fastqOutput
         case _       => seqtk.output
       }
-      sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
+      sickle.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
       addPipeJob(sickle)
       Some(sickle)
     } else None
 
     val outputFile = (clip, trim) match {
-      case (_, Some(t)) => t.output_R1
+      case (_, Some(t)) => t.outputR1
       case (Some(c), _) => c.fastqOutput
       case _            => seqtk.output
     }

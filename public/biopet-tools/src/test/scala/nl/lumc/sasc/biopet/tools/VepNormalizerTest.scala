@@ -42,49 +42,49 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   val vepped = new File(resourcePath("/VEP_oneline.vcf"))
   val unvepped = new File(resourcePath("/unvepped.vcf"))
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf")
+  val veppedPath = resourcePath("/VEP_oneline.vcf")
 
   val rand = new Random()
 
   @Test def testGzOutputExplode(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "explode")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "explode")
     main(arguments)
   }
 
   @Test def testVcfOutputExplode(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".vcf")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "explode")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "explode")
     main(arguments)
   }
 
   @Test def testBcfOutputExplode(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".bcf")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "explode")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "explode")
     main(arguments)
   }
 
   @Test def testGzOutputStandard(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "standard")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "standard")
     main(arguments)
   }
 
   @Test def testVcfOutputStandard(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".vcf")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "standard")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "standard")
     main(arguments)
   }
 
   @Test def testBcfOutputStandard(): Unit = {
     val tmpFile = File.createTempFile("VepNormalizer_", ".bcf")
     tmpFile.deleteOnExit()
-    val arguments: Array[String] = Array("-I", vepped_path, "-O", tmpFile.getAbsolutePath, "-m", "standard")
+    val arguments: Array[String] = Array("-I", veppedPath, "-O", tmpFile.getAbsolutePath, "-m", "standard")
     main(arguments)
   }
 
@@ -97,22 +97,22 @@ class VepNormalizerTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testExplodeVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parseCsq(header)
-    explodeTranscripts(reader.iterator().next(), new_infos, removeCsq = true).length should be(11)
+    val newInfos = parseCsq(header)
+    explodeTranscripts(reader.iterator().next(), newInfos, removeCsq = true).length should be(11)
   }
 
   @Test def testStandardVEPLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parseCsq(header)
-    Array(standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)).length should be(1)
+    val newInfos = parseCsq(header)
+    Array(standardTranscripts(reader.iterator().next(), newInfos, removeCsq = true)).length should be(1)
   }
 
   @Test def testStandardVEPAttributeLength() = {
     val reader = new VCFFileReader(vepped, false)
     val header = reader.getFileHeader
-    val new_infos = parseCsq(header)
-    val record = standardTranscripts(reader.iterator().next(), new_infos, removeCsq = true)
+    val newInfos = parseCsq(header)
+    val record = standardTranscripts(reader.iterator().next(), newInfos, removeCsq = true)
     def checkItems(items: Array[String]) = {
       items.foreach { check }
     }

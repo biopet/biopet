@@ -51,24 +51,24 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testOutputTypeVcf() = {
     val tmp = File.createTempFile("MergeAlleles", ".vcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
     val tmp = File.createTempFile("MergeAlleles", ".vcf.gz")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
     val tmp = File.createTempFile("MergeAlleles", ".bcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmp_path, "-R", reference)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 }

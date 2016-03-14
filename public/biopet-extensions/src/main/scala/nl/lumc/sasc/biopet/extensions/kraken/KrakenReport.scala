@@ -39,7 +39,7 @@ class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction wit
   }
 
   var db: File = config("db")
-  var show_zeros: Boolean = config("show_zeros", default = false)
+  var showZeros: Boolean = config("show_zeros", default = false)
 
   @Input(doc = "Input raw kraken analysis")
   var input: File = _
@@ -49,7 +49,7 @@ class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction wit
 
   def cmdLine: String = required(executable) +
     required("--db", db) +
-    conditional(show_zeros, "--show-zeros") +
+    conditional(showZeros, "--show-zeros") +
     required(input) +
     " > " + required(output)
 }

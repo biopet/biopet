@@ -116,12 +116,12 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
   var ploidy: Option[File] = config("ploidy")
   var detectDD: Boolean = config("detect_DD", default = false)
 
-  var MAX_DD_BREAKPOINT_DISTANCE: Option[Int] = config("MAX_DD_BREAKPOINT_DISTANCE")
-  var MAX_DISTANCE_CLUSTER_READS: Option[Int] = config("MAX_DISTANCE_CLUSTER_READS")
-  var MIN_DD_CLUSTER_SIZE: Option[Int] = config("MIN_DD_CLUSTER_SIZE")
-  var MIN_DD_BREAKPOINT_SUPPORT: Option[Int] = config("MIN_DD_BREAKPOINT_SUPPORT")
-  var MIN_DD_MAP_DISTANCE: Option[Int] = config("MIN_DD_MAP_DISTANCE")
-  var DD_REPORT_DUPLICATION_READS: Option[Int] = config("DD_REPORT_DUPLICATION_READS")
+  var maxDdBreakpointDistance: Option[Int] = config("max_dd_breakpoint_distance")
+  var maxDistanceClusterReads: Option[Int] = config("max_distance_cluster_reads")
+  var minDdClusterSize: Option[Int] = config("min_dd_cluster_size")
+  var minDdBreakpointSupport: Option[Int] = config("min_dd_Breakpoint_support")
+  var minDdMapDistance: Option[Int] = config("min_dd_map_distance")
+  var ddReportDuplicationReads: Option[Int] = config("dd_report_duplication_reads")
 
   override def beforeGraph: Unit = {
     if (reference == null) reference = referenceFasta()
@@ -201,12 +201,12 @@ class PindelCaller(val root: Configurable) extends BiopetCommandLineFunction wit
     optional("--name_of_logfile", nameOfLogfile) +
     optional("--Ploidy", ploidy) +
     conditional(detectDD, "detect_DD") +
-    optional("--MAX_DD_BREAKPOINT_DISTANCE", MAX_DD_BREAKPOINT_DISTANCE) +
-    optional("--MAX_DISTANCE_CLUSTER_READS", MAX_DISTANCE_CLUSTER_READS) +
-    optional("--MIN_DD_CLUSTER_SIZE", MIN_DD_CLUSTER_SIZE) +
-    optional("--MIN_DD_BREAKPOINT_SUPPORT", MIN_DD_BREAKPOINT_SUPPORT) +
-    optional("--MIN_DD_MAP_DISTANCE", MIN_DD_MAP_DISTANCE) +
-    optional("--DD_REPORT_DUPLICATION_READS", DD_REPORT_DUPLICATION_READS)
+    optional("--MAX_DD_BREAKPOINT_DISTANCE", maxDdBreakpointDistance) +
+    optional("--MAX_DISTANCE_CLUSTER_READS", maxDistanceClusterReads) +
+    optional("--MIN_DD_CLUSTER_SIZE", minDdClusterSize) +
+    optional("--MIN_DD_BREAKPOINT_SUPPORT", minDdBreakpointSupport) +
+    optional("--MIN_DD_MAP_DISTANCE", minDdMapDistance) +
+    optional("--DD_REPORT_DUPLICATION_READS", ddReportDuplicationReads)
 }
 
 object PindelCaller {

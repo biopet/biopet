@@ -22,22 +22,22 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
   var v: Option[String] = config("v")
   var m: Option[String] = config("m")
   var b: Option[String] = config("b")
-  var store_qual_scores: Boolean = config("store_qual_scores", default = false)
-  var sample_ids: List[String] = Nil
-  var store_demultiplexed_fastq: Boolean = config("store_demultiplexed_fastq", default = false)
-  var retain_unassigned_reads: Boolean = config("retain_unassigned_reads", default = false)
+  var storeQualScores: Boolean = config("store_qual_scores", default = false)
+  var sampleIds: List[String] = Nil
+  var storeDemultiplexedFastq: Boolean = config("store_demultiplexed_fastq", default = false)
+  var retainUnassignedReads: Boolean = config("retain_unassigned_reads", default = false)
   var r: Option[Int] = config("r")
   var p: Option[Double] = config("p")
   var n: Option[Int] = config("n")
   var s: Option[Int] = config("s")
-  var rev_comp_barcode: Boolean = config("rev_comp_barcode", default = false)
-  var rev_comp_mapping_barcodes: Boolean = config("rev_comp_mapping_barcodes", default = false)
-  var rev_comp: Boolean = config("rev_comp", default = false)
+  var revCompBarcode: Boolean = config("rev_comp_barcode", default = false)
+  var revCompMappingBarcodes: Boolean = config("rev_comp_mapping_barcodes", default = false)
+  var revComp: Boolean = config("rev_comp", default = false)
   var q: Option[Int] = config("q")
-  var last_bad_quality_char: Option[String] = config("last_bad_quality_char")
-  var barcode_type: Option[String] = config("barcode_type")
-  var max_barcode_errors: Option[Double] = config("max_barcode_errors")
-  var phred_offset: Option[String] = config("phred_offset")
+  var lastBadQualityChar: Option[String] = config("last_bad_quality_char")
+  var barcodeType: Option[String] = config("barcode_type")
+  var maxBarcodeErrors: Option[Double] = config("max_barcode_errors")
+  var phredOffset: Option[String] = config("phred_offset")
 
   def outputSeqs = new File(outputDir, "seqs.fna")
 
@@ -52,25 +52,25 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
     optional("-v", v) +
     optional("-m", m) +
     optional("-b", b) +
-    conditional(store_qual_scores, "--store_qual_scores") +
-    (sample_ids match {
+    conditional(storeQualScores, "--store_qual_scores") +
+    (sampleIds match {
       case l: List[_] if l.nonEmpty => optional("--sample_ids", l.mkString(","))
       case _                        => ""
     }) +
-    conditional(store_demultiplexed_fastq, "--store_demultiplexed_fastq") +
-    conditional(retain_unassigned_reads, "--retain_unassigned_reads") +
+    conditional(storeDemultiplexedFastq, "--store_demultiplexed_fastq") +
+    conditional(retainUnassignedReads, "--retain_unassigned_reads") +
     optional("-r", r) +
     optional("-p", p) +
     optional("-n", n) +
     optional("-s", s) +
-    conditional(rev_comp_barcode, "--rev_comp_barcode") +
-    conditional(rev_comp_mapping_barcodes, "--rev_comp_mapping_barcodes") +
-    conditional(rev_comp, "--rev_comp") +
+    conditional(revCompBarcode, "--rev_comp_barcode") +
+    conditional(revCompMappingBarcodes, "--rev_comp_mapping_barcodes") +
+    conditional(revComp, "--rev_comp") +
     optional("-q", q) +
-    optional("--last_bad_quality_char", last_bad_quality_char) +
-    optional("--barcode_type", barcode_type) +
-    optional("--max_barcode_errors", max_barcode_errors) +
-    optional("--phred_offset", phred_offset) +
+    optional("--last_bad_quality_char", lastBadQualityChar) +
+    optional("--barcode_type", barcodeType) +
+    optional("--max_barcode_errors", maxBarcodeErrors) +
+    optional("--phred_offset", phredOffset) +
     (input match {
       case l: List[_] if l.nonEmpty => required("-i", l.mkString(","))
       case _                        => ""
