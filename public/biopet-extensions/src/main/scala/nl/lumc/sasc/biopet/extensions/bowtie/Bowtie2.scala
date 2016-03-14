@@ -135,7 +135,12 @@ class Bowtie2(val root: Configurable) extends BiopetCommandLineFunction with Ref
     val indexDir = new File(bowtieIndex).getParentFile
     val basename = bowtieIndex.stripPrefix(indexDir.getPath + File.separator)
     if (indexDir.exists()) {
-      if (!indexDir.list().toList.filter(_.startsWith(basename)).exists(_.endsWith(".bt2")))
+      if (!indexDir.list()
+        .toList
+        .filter(_.startsWith(basename))
+        .exists({ p =>
+          p.endsWith(".bt2") || p.endsWith(".bt2l")
+        }))
         Logging.addError(s"No index files found for bowtie2 in: $indexDir with basename: $basename")
     }
   }

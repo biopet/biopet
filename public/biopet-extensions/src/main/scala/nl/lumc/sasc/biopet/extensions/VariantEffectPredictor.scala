@@ -148,6 +148,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   // ought to be a flag, but is BUG in VEP; becomes numeric ("1" is true)
   var failed: Option[Int] = config("failed")
 
+  override def defaultCoreMemory = 4.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (!cache && !database) {
@@ -155,6 +157,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     } else if (cache && dir.isEmpty) {
       Logging.addError("Must supply dir to cache for VariantEffectPredictor")
     }
+    if (stats_text) outputFiles :+= new File(output.getAbsolutePath + "_summary.txt")
   }
 
   /** Returns command to execute */

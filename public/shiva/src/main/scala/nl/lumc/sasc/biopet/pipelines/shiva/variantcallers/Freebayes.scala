@@ -14,15 +14,8 @@ class Freebayes(val root: Configurable) extends Variantcaller {
     val fb = new nl.lumc.sasc.biopet.extensions.Freebayes(this)
     fb.bamfiles = inputBams.values.toList
     fb.outputVcf = new File(outputDir, namePrefix + ".freebayes.vcf")
-    fb.isIntermediate = true
-    add(fb)
+    add(fb | new Bgzip(this) > outputFile)
 
-    //TODO: need piping for this, see also issue #114
-    val bz = new Bgzip(this)
-    bz.input = List(fb.outputVcf)
-    bz.output = outputFile
-    add(bz)
-
-    add(Tabix.apply(this, bz.output))
+    add(Tabix.apply(this, outputFile))
   }
 }
