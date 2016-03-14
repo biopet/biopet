@@ -81,7 +81,7 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var read_max_mismatch_fraction: Option[Int] = config("read_max_mismatch_fraction")
   var read_snp_limit: Option[Int] = config("read_snp_limit")
   var read_indel_limit: Option[Int] = config("read_indel_limit")
-  var min_alternate_fraction: Option[Int] = config("min_alternate_fraction")
+  var min_alternate_fraction: Option[Double] = config("min_alternate_fraction")
   var min_alternate_count: Option[Int] = config("min_alternate_count")
   var min_alternate_qsum: Option[Int] = config("min_alternate_qsum")
   var min_alternate_total: Option[Int] = config("min_alternate_total")
