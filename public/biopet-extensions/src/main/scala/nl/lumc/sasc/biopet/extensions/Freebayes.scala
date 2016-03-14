@@ -97,7 +97,6 @@ class Freebayes(val root: Configurable) extends BiopetCommandLineFunction with R
   var mismatch_base_quality_threshold: Option[Double] = config("mismatch_base_quality_threshold")
   var base_quality_cap: Option[Double] = config("base_quality_cap")
   var prob_contamination: Option[Double] = config("prob_contamination")
-  var stdin: Boolean = config("stdin", default = false)
   var only_use_input_alleles: Boolean = config("only_use_input_alleles", default = false)
   var report_all_haplotype_alleles: Boolean = config("report_all_haplotype_alleles", default = false)
   var report_monomorphic: Boolean = config("report_monomorphic", default = false)
