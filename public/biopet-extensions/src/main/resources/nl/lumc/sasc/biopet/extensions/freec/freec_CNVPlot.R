@@ -86,7 +86,7 @@ for (i in chromosomes) {
 
 
 
-png(filename = opt$output, width = 16 * ppi, height = 10 * ppi,
+png(filename = paste(opt$output, ".png",sep=""), width = 16 * ppi, height = 10 * ppi,
     res=ppi, bg = "white")
 par(mfrow = c(6,4))
 par(mar=plot_margins)

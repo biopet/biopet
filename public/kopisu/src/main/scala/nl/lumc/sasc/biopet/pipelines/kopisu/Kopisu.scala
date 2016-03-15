@@ -32,7 +32,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
   var inputBams: Map[String, File] = Map()
 
-  @Argument(doc="Provide optional reference SNP file to call B-allele frequencies [exome]", required = false)
+  @Argument(doc = "Provide optional reference SNP file to call B-allele frequencies [exome]", required = false)
   var snpFile: Option[File] = None
 
   def init(): Unit = {
