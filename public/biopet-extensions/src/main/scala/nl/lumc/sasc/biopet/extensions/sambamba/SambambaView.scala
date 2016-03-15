@@ -33,7 +33,7 @@ class SambambaView(val root: Configurable) extends Sambamba {
   var filter: Option[String] = _
   val format: Option[String] = config("format", default = "bam")
   val regions: Option[File] = config("regions")
-  val compression_level: Option[Int] = config("compression_level", default = 6)
+  val compressionLevel: Option[Int] = config("compression_level", default = 6)
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
@@ -42,7 +42,7 @@ class SambambaView(val root: Configurable) extends Sambamba {
     optional("--nthreads", nCoresRequest) +
     optional("--format", format.get) +
     optional("--regions", regions) +
-    optional("--compression-level", compression_level) +
+    optional("--compression-level", compressionLevel) +
     required("--output-filename", output) +
     required(input)
 }

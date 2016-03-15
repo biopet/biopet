@@ -28,7 +28,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def this() = this(null)
 
   @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
-  var input_R1: File = _
+  var inputR1: File = _
 
   @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
   var input_R2: Option[File] = None
@@ -47,7 +47,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
-    Map("input_R1" -> input_R1, "output_R1" -> fastqR1Qc) ++
+    Map("input_R1" -> inputR1, "output_R1" -> fastqR1Qc) ++
       (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> fastqR2Qc.get) else Map())
   }
 
@@ -55,13 +55,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
   var paired: Boolean = input_R2.isDefined
-  var R1_name: String = _
-  var R2_name: String = _
+  var R1Name: String = _
+  var R2Name: String = _
 
-  var fastqc_R1: Fastqc = _
-  var fastqc_R2: Fastqc = _
-  var fastqc_R1_after: Fastqc = _
-  var fastqc_R2_after: Fastqc = _
+  var fastqcR1: Fastqc = _
+  var fastqcR2: Fastqc = _
+  var fastqcR1After: Fastqc = _
+  var fastqcR2After: Fastqc = _
 
   override def reportClass = {
     val flexiprepReport = new FlexiprepReport(this)
@@ -76,19 +76,19 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Function that's need to be executed before the script is accessed */
   def init() {
     require(outputDir != null, "Missing output directory on flexiprep module")
-    require(input_R1 != null, "Missing input R1 on flexiprep module")
+    require(inputR1 != null, "Missing input R1 on flexiprep module")
     require(sampleId != null, "Missing sample ID on flexiprep module")
     require(libId != null, "Missing library ID on flexiprep module")
 
     paired = input_R2.isDefined
 
-    inputFiles :+= new InputFile(input_R1)
+    inputFiles :+= new InputFile(inputR1)
     input_R2.foreach(inputFiles :+= new InputFile(_))
 
-    R1_name = getUncompressedFileName(input_R1)
+    R1Name = getUncompressedFileName(inputR1)
     input_R2.foreach { fileR2 =>
       paired = true
-      R2_name = getUncompressedFileName(fileR2)
+      R2Name = getUncompressedFileName(fileR2)
     }
   }
 
@@ -96,26 +96,26 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def biopetScript() {
     runInitialJobs()
 
-    if (paired) runTrimClip(input_R1, input_R2, outputDir)
-    else runTrimClip(input_R1, outputDir)
+    if (paired) runTrimClip(inputR1, input_R2, outputDir)
+    else runTrimClip(inputR1, outputDir)
 
-    val R1_files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
-    val R2_files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
-    runFinalize(R1_files.toList, R2_files.toList)
+    val R1Files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
+    val R2Files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
+    runFinalize(R1Files.toList, R2Files.toList)
   }
 
   /** Add init non chunkable jobs */
   def runInitialJobs() {
-    outputFiles += ("fastq_input_R1" -> input_R1)
+    outputFiles += ("fastq_input_R1" -> inputR1)
     if (paired) outputFiles += ("fastq_input_R2" -> input_R2.get)
 
-    fastqc_R1 = Fastqc(this, input_R1, new File(outputDir, R1_name + ".fastqc/"))
-    add(fastqc_R1)
-    addSummarizable(fastqc_R1, "fastqc_R1")
-    outputFiles += ("fastqc_R1" -> fastqc_R1.output)
+    fastqcR1 = Fastqc(this, inputR1, new File(outputDir, R1Name + ".fastqc/"))
+    add(fastqcR1)
+    addSummarizable(fastqcR1, "fastqc_R1")
+    outputFiles += ("fastqc_R1" -> fastqcR1.output)
 
     val validateFastq = new ValidateFastq(this)
-    validateFastq.r1Fastq = input_R1
+    validateFastq.r1Fastq = inputR1
     validateFastq.r2Fastq = input_R2
     validateFastq.jobOutputFile = new File(outputDir, ".validate_fastq.log.out")
     add(validateFastq)
@@ -128,22 +128,22 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
 
     if (paired) {
-      fastqc_R2 = Fastqc(this, input_R2.get, new File(outputDir, R2_name + ".fastqc/"))
-      add(fastqc_R2)
-      addSummarizable(fastqc_R2, "fastqc_R2")
-      outputFiles += ("fastqc_R2" -> fastqc_R2.output)
+      fastqcR2 = Fastqc(this, input_R2.get, new File(outputDir, R2Name + ".fastqc/"))
+      add(fastqcR2)
+      addSummarizable(fastqcR2, "fastqc_R2")
+      outputFiles += ("fastqc_R2" -> fastqcR2.output)
     }
 
-    val seqstat_R1 = SeqStat(this, input_R1, outputDir)
-    seqstat_R1.isIntermediate = true
-    add(seqstat_R1)
-    addSummarizable(seqstat_R1, "seqstat_R1")
+    val seqstatR1 = SeqStat(this, inputR1, outputDir)
+    seqstatR1.isIntermediate = true
+    add(seqstatR1)
+    addSummarizable(seqstatR1, "seqstat_R1")
 
     if (paired) {
-      val seqstat_R2 = SeqStat(this, input_R2.get, outputDir)
-      seqstat_R2.isIntermediate = true
-      add(seqstat_R2)
-      addSummarizable(seqstat_R2, "seqstat_R2")
+      val seqstatR2 = SeqStat(this, input_R2.get, outputDir)
+      seqstatR2.isIntermediate = true
+      add(seqstatR2)
+      addSummarizable(seqstatR2, "seqstat_R2")
     }
   }
 
@@ -176,17 +176,17 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     var R1 = R1_in
     var R2 = R2_in
 
-    val qcCmdR1 = new QcCommand(this, fastqc_R1)
+    val qcCmdR1 = new QcCommand(this, fastqcR1)
     qcCmdR1.input = R1_in
     qcCmdR1.read = "R1"
     qcCmdR1.output = if (paired) new File(outDir, fastqR1Qc.getName.stripSuffix(".gz"))
     else fastqR1Qc
-    qcCmdR1.deps :+= fastqc_R1.output
+    qcCmdR1.deps :+= fastqcR1.output
     qcCmdR1.isIntermediate = paired || !keepQcFastqFiles
     addSummarizable(qcCmdR1, "qc_command_R1")
 
     if (paired) {
-      val qcCmdR2 = new QcCommand(this, fastqc_R2)
+      val qcCmdR2 = new QcCommand(this, fastqcR2)
       qcCmdR2.input = R2_in.get
       qcCmdR2.output = new File(outDir, fastqR2Qc.get.getName.stripSuffix(".gz"))
       qcCmdR2.read = "R2"
@@ -222,8 +222,8 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
         }
       }
 
-      pipe.deps ::= fastqc_R1.output
-      pipe.deps ::= fastqc_R2.output
+      pipe.deps ::= fastqcR1.output
+      pipe.deps ::= fastqcR2.output
       pipe.isIntermediate = !keepQcFastqFiles
       add(pipe)
 
@@ -236,14 +236,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
       R1 = qcCmdR1.output
     }
 
-    val seqstat_R1_after = SeqStat(this, R1, outDir)
-    add(seqstat_R1_after)
-    addSummarizable(seqstat_R1_after, "seqstat_R1_qc")
+    val seqstatR1After = SeqStat(this, R1, outDir)
+    add(seqstatR1After)
+    addSummarizable(seqstatR1After, "seqstat_R1_qc")
 
     if (paired) {
-      val seqstat_R2_after = SeqStat(this, R2.get, outDir)
-      add(seqstat_R2_after)
-      addSummarizable(seqstat_R2_after, "seqstat_R2_qc")
+      val seqstatR2After = SeqStat(this, R2.get, outDir)
+      add(seqstatR2After)
+      addSummarizable(seqstatR2After, "seqstat_R2_qc")
     }
 
     outputFiles += (chunk + "output_R1" -> R1)
@@ -283,14 +283,14 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     outputFiles += ("output_R1_gzip" -> fastqR1Qc)
     if (paired) outputFiles += ("output_R2_gzip" -> fastqR2Qc.get)
 
-    fastqc_R1_after = Fastqc(this, fastqR1Qc, new File(outputDir, R1_name + ".qc.fastqc/"))
-    add(fastqc_R1_after)
-    addSummarizable(fastqc_R1_after, "fastqc_R1_qc")
+    fastqcR1After = Fastqc(this, fastqR1Qc, new File(outputDir, R1Name + ".qc.fastqc/"))
+    add(fastqcR1After)
+    addSummarizable(fastqcR1After, "fastqc_R1_qc")
 
     if (paired) {
-      fastqc_R2_after = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2_name + ".qc.fastqc/"))
-      add(fastqc_R2_after)
-      addSummarizable(fastqc_R2_after, "fastqc_R2_qc")
+      fastqcR2After = Fastqc(this, fastqR2Qc.get, new File(outputDir, R2Name + ".qc.fastqc/"))
+      add(fastqcR2After)
+      addSummarizable(fastqcR2After, "fastqc_R2_qc")
     }
 
     addSummaryJobs()

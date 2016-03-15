@@ -24,7 +24,7 @@ abstract class Conifer extends PythonCommandLineFunction with Version {
   setPythonScript(config("script", default = "conifer"))
   def versionRegex = """(.*)""".r
   override def versionExitcode = List(0)
-  def versionCommand = executable + " " + python_script + " --version"
+  def versionCommand = executable + " " + pythonScript + " --version"
 
   override def defaultCoreMemory = 5.0
   override def defaultThreads = 1

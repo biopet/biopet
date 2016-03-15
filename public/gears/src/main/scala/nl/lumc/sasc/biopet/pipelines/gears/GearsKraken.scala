@@ -58,18 +58,18 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
     krakenAnalysis.paired = fastqR2.isDefined
 
-    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
+    krakenAnalysis.classifiedOut = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
+    krakenAnalysis.unclassifiedOut = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
     outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
+    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classifiedOut.getOrElse(""))
+    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassifiedOut.getOrElse(""))
 
     // create kraken summary file
     val krakenReport = new KrakenReport(this)
     krakenReport.input = krakenAnalysis.output
-    krakenReport.show_zeros = true
+    krakenReport.showZeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 

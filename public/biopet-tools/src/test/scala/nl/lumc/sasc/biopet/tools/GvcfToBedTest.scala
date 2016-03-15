@@ -27,7 +27,7 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
   val vepped = new File(resourcePath("/VEP_oneline.vcf"))
   val unvepped = new File(resourcePath("/unvepped.vcf"))
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf")
+  val veppedPath = resourcePath("/VEP_oneline.vcf")
 
   @Test def testMinQuality = {
     val reader = new VCFFileReader(vepped, false)
@@ -64,23 +64,23 @@ class GvcfToBedTest extends TestNGSuite with Matchers with MockitoSugar {
   @Test
   def testGvcfToBedInvertedOutput = {
     val tmp = File.createTempFile("gvcf2bedtest", ".bed")
-    val tmp_inv = File.createTempFile("gvcf2bedtest", ".bed")
+    val tmpInv = File.createTempFile("gvcf2bedtest", ".bed")
     tmp.deleteOnExit()
-    tmp_inv.deleteOnExit()
+    tmpInv.deleteOnExit()
     val args: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp.getAbsolutePath, "-S", "Sample_101",
-      "--minGenomeQuality", "99", "--invertedOutputBed", tmp_inv.getAbsolutePath)
+      "--minGenomeQuality", "99", "--invertedOutputBed", tmpInv.getAbsolutePath)
     main(args)
 
-    Source.fromFile(tmp_inv).getLines().size shouldBe 1
+    Source.fromFile(tmpInv).getLines().size shouldBe 1
 
     val tmp2 = File.createTempFile("gvcf2bedtest", ".bed")
-    val tmp2_inv = File.createTempFile("gvcf2bedtest", ".bed")
+    val tmp2Inv = File.createTempFile("gvcf2bedtest", ".bed")
     tmp2.deleteOnExit()
-    tmp2_inv.deleteOnExit()
+    tmp2Inv.deleteOnExit()
     val args2: Array[String] = Array("-I", unvepped.getAbsolutePath, "-O", tmp.getAbsolutePath, "-S", "Sample_102",
-      "--minGenomeQuality", "3", "--invertedOutputBed", tmp2_inv.getAbsolutePath)
+      "--minGenomeQuality", "3", "--invertedOutputBed", tmp2Inv.getAbsolutePath)
     main(args2)
 
-    Source.fromFile(tmp2_inv).getLines().size shouldBe 0
+    Source.fromFile(tmp2Inv).getLines().size shouldBe 0
   }
 }

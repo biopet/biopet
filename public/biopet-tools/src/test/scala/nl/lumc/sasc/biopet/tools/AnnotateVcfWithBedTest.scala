@@ -39,20 +39,20 @@ class AnnotateVcfWithBedTest extends TestNGSuite with MockitoSugar with Matchers
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf"
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path, "-B", bed, "-f", "testing")
+    val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmpPath, "-B", bed, "-f", "testing")
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".bcf"
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path, "-B", bed, "-f", "testing")
+    val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".bcf"
+    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmpPath, "-B", bed, "-f", "testing")
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
-    val tmp_path = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path, "-B", bed, "-f", "testing")
+    val tmpPath = "/tmp/VcfFilter_" + rand.nextString(10) + ".vcf.gz"
+    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmpPath, "-B", bed, "-f", "testing")
     main(arguments)
   }
 

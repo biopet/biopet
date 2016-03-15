@@ -105,7 +105,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   @Test
   def testFieldMap = {
-    val unvep_record = new VCFFileReader(new File(unveppedPath)).iterator().next()
+    val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
 
     var fields = List(new Fields("FG", "FG"))
     fields :::= List(new Fields("FD", "FD"))
@@ -133,7 +133,7 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     fields :::= List(new Fields("VQSLOD", "VQSLOD"))
     fields :::= List(new Fields("culprit", "culprit"))
 
-    val fieldMap = createFieldMap(fields, List(unvep_record))
+    val fieldMap = createFieldMap(fields, List(unvepRecord))
 
     fieldMap("FG") shouldBe List("intron")
     fieldMap("FD") shouldBe List("unknown")
@@ -163,26 +163,26 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
   }
 
   @Test def testGetSecondaryRecords = {
-    val unvep_record = new VCFFileReader(new File(unveppedPath)).iterator().next()
-    val vep_reader = new VCFFileReader(new File(veppedPath))
-    val vep_record = vep_reader.iterator().next()
+    val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
+    val vepReader = new VCFFileReader(new File(veppedPath))
+    val vepRecord = vepReader.iterator().next()
 
-    val secRec = getSecondaryRecords(vep_reader, unvep_record, false)
+    val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
 
-    secRec.foreach(x => identicalVariantContext(x, vep_record) shouldBe true)
+    secRec.foreach(x => identicalVariantContext(x, vepRecord) shouldBe true)
   }
 
   @Test def testCreateRecord = {
-    val unvep_record = new VCFFileReader(new File(unveppedPath)).iterator().next()
-    val vep_reader = new VCFFileReader(new File(veppedPath))
-    val header = vep_reader.getFileHeader
-    val vep_record = vep_reader.iterator().next()
+    val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
+    val vepReader = new VCFFileReader(new File(veppedPath))
+    val header = vepReader.getFileHeader
+    val vepRecord = vepReader.iterator().next()
 
-    val secRec = getSecondaryRecords(vep_reader, unvep_record, false)
+    val secRec = getSecondaryRecords(vepReader, unvepRecord, false)
 
     val fieldMap = createFieldMap(List(new Fields("CSQ", "CSQ")), secRec)
-    val created_record = createRecord(fieldMap, unvep_record, List(new Fields("CSQ", "CSQ")), header)
-    identicalVariantContext(created_record, vep_record) shouldBe true
+    val createdRecord = createRecord(fieldMap, unvepRecord, List(new Fields("CSQ", "CSQ")), header)
+    identicalVariantContext(createdRecord, vepRecord) shouldBe true
   }
 
 }

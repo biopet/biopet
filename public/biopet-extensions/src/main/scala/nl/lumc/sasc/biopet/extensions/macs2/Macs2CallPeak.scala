@@ -29,22 +29,22 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   var control: File = _
 
   @Output(doc = "Output file NARROWPEAKS")
-  private var output_narrow: File = _
+  private var outputNarrow: File = _
 
   @Output(doc = "Output file BROADPEAKS")
-  private var output_broad: File = _
+  private var outputBroad: File = _
 
   @Output(doc = "Output in Excel format")
-  private var output_xls: File = _
+  private var outputXls: File = _
 
   @Output(doc = "R script with Bimodal model")
-  private var output_r: File = _
+  private var outputR: File = _
 
   @Output(doc = "Output file Bedgraph")
-  private var output_bdg: File = _
+  private var outputBdg: File = _
 
   @Output(doc = "Output file gappedPeak")
-  private var output_gapped: File = _
+  private var outputGapped: File = _
 
   var fileformat: Option[String] = config("fileformat")
   var gsize: Option[Float] = config("gsize")
@@ -77,12 +77,12 @@ class Macs2CallPeak(val root: Configurable) extends Macs2 {
   override def beforeGraph(): Unit = {
     if (name.isEmpty) throw new IllegalArgumentException("Name is not defined")
     if (outputdir == null) throw new IllegalArgumentException("Outputdir is not defined")
-    output_narrow = new File(outputdir + name.get + ".narrowPeak")
-    output_broad = new File(outputdir + name.get + ".broadPeak")
-    output_xls = new File(outputdir + name.get + ".xls")
-    output_bdg = new File(outputdir + name.get + ".bdg")
-    output_r = new File(outputdir + name.get + ".r")
-    output_gapped = new File(outputdir + name.get + ".gappedPeak")
+    outputNarrow = new File(outputdir + name.get + ".narrowPeak")
+    outputBroad = new File(outputdir + name.get + ".broadPeak")
+    outputXls = new File(outputdir + name.get + ".xls")
+    outputBdg = new File(outputdir + name.get + ".bdg")
+    outputR = new File(outputdir + name.get + ".r")
+    outputGapped = new File(outputdir + name.get + ".gappedPeak")
   }
 
   /** Returns command to execute */

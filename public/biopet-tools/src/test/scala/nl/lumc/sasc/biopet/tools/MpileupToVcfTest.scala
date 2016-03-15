@@ -81,14 +81,14 @@ class MpileupToVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
     for (record <- vcfReader) {
       val alleles = record.getAlleles.toSet
-      var ref_alleles = alleles -- record.getAlternateAlleles.toSet
+      var refAlleles = alleles -- record.getAlternateAlleles.toSet
 
-      ref_alleles.size should be >= 1
+      refAlleles.size should be >= 1
 
       val realRef = Allele.create(sequenceFile.getSubsequenceAt(record.getContig,
         record.getStart, record.getEnd).getBases, true)
 
-      for (ref <- ref_alleles) {
+      for (ref <- refAlleles) {
         record.extraStrictValidation(ref, realRef, Set(""))
       }
     }

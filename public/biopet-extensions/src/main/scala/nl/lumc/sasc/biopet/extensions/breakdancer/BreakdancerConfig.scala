@@ -30,26 +30,26 @@ class BreakdancerConfig(val root: Configurable) extends BiopetCommandLineFunctio
   @Output(doc = "Output File")
   var output: File = _
 
-  var min_mq: Option[Int] = config("min_mq", default = 20) // minimum of MQ to consider for taking read into histogram
-  var use_mq: Boolean = config("use_mq", default = false)
-  var min_insertsize: Option[Int] = config("min_insertsize")
-  var solid_data: Boolean = config("solid", default = false)
-  var sd_cutoff: Option[Int] = config("sd_cutoff") // Cutoff in unit of standard deviation [4]
+  var minMq: Option[Int] = config("min_mq", default = 20) // minimum of MQ to consider for taking read into histogram
+  var useMq: Boolean = config("use_mq", default = false)
+  var minInsertsize: Option[Int] = config("min_insertsize")
+  var solidData: Boolean = config("solid", default = false)
+  var sdCutoff: Option[Int] = config("sd_cutoff") // Cutoff in unit of standard deviation [4]
 
   // we set this to a higher number to avoid biases in small numbers in sorted bams
-  var min_observations: Option[Int] = config("min_observations") //  Number of observation required to estimate mean and s.d. insert size [10_000]
-  var coefvar_cutoff: Option[Int] = config("coef_cutoff") // Cutoff on coefficients of variation [1]
-  var histogram_bins: Option[Int] = config("histogram_bins") // Number of bins in the histogram [50]
+  var minObservations: Option[Int] = config("min_observations") //  Number of observation required to estimate mean and s.d. insert size [10_000]
+  var coefvarCutoff: Option[Int] = config("coef_cutoff") // Cutoff on coefficients of variation [1]
+  var histogramBins: Option[Int] = config("histogram_bins") // Number of bins in the histogram [50]
 
   def cmdLine = required(executable) +
-    optional("-q", min_mq) +
-    conditional(use_mq, "-m") +
-    optional("-s", min_insertsize) +
-    conditional(solid_data, "-s") +
-    optional("-c", sd_cutoff) +
-    optional("-n", min_observations) +
-    optional("-v", coefvar_cutoff) +
-    optional("-b", histogram_bins) +
+    optional("-q", minMq) +
+    conditional(useMq, "-m") +
+    optional("-s", minInsertsize) +
+    conditional(solidData, "-s") +
+    optional("-c", sdCutoff) +
+    optional("-n", minObservations) +
+    optional("-v", coefvarCutoff) +
+    optional("-b", histogramBins) +
     required(input) + " 1> " + required(output)
 }
 

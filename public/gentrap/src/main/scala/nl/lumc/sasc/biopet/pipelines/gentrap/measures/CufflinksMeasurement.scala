@@ -11,7 +11,7 @@ trait CufflinksMeasurement extends QScript with Measurement {
   def makeCufflinksJob(id: String, bamFile: File) = {
     val cufflinks = new Cufflinks(this)
     cufflinks.input = bamFile
-    cufflinks.output_dir = new File(outputDir, id)
+    cufflinks.outputDir = new File(outputDir, id)
     cufflinks
   }
 
@@ -25,14 +25,14 @@ trait CufflinksMeasurement extends QScript with Measurement {
 
     val genesFpkmFiles = jobs.toList.map {
       case (id, job) =>
-        val file = new File(job.output_dir, s"$id.genes_fpkm.counts")
+        val file = new File(job.outputDir, s"$id.genes_fpkm.counts")
         add(Ln(this, job.outputGenesFpkm, file))
         file
     }
 
     val isoFormFpkmFiles = jobs.toList.map {
       case (id, job) =>
-        val file = new File(job.output_dir, s"$id.iso_form_fpkn.counts")
+        val file = new File(job.outputDir, s"$id.iso_form_fpkn.counts")
         add(Ln(this, job.outputIsoformsFpkm, file))
         file
     }
