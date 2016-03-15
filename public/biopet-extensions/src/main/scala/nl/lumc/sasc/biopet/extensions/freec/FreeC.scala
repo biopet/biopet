@@ -124,7 +124,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   // Control-FREEC v8.7 : calling copy number alterations and LOH regions using deep-sequencing data
   override def versionCommand = executable
-  override def versionRegex = """Control-FREEC v(.*) : [.*]+""".r
+  override def versionRegex = """Control-FREEC v([0-9\.]+) : .*""".r
   override def defaultThreads = 4
   override def defaultCoreMemory = 4.0
 
