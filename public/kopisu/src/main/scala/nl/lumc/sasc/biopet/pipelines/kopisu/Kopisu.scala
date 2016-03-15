@@ -32,6 +32,9 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
   var inputBams: Map[String, File] = Map()
 
+  @Argument(doc="Provide optional reference SNP file to call B-allele frequencies [exome]", required = false)
+  var snpFile: Option[File] = None
+
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
   }
@@ -50,6 +53,7 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
       freec.input = bamFile
       freec.inputFormat = Some("BAM")
       freec.outputPath = sampleOutput
+      freec.snpFile = snpFile
       add(freec)
 
       /*
@@ -68,10 +72,12 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
       fcCnvPlot.output = new File(sampleOutput, outputName + ".freec_cnv")
       add(fcCnvPlot)
 
-      val fcBAFPlot = new FreeCBAFPlot(this)
-      fcBAFPlot.input = freec.bafOutput
-      fcBAFPlot.output = new File(sampleOutput, outputName + ".freec_baf")
-      add(fcBAFPlot)
+      snpFile.foreach(x => {
+        val fcBAFPlot = new FreeCBAFPlot(this)
+        fcBAFPlot.input = freec.bafOutput
+        fcBAFPlot.output = new File(sampleOutput, outputName + ".freec_baf")
+        add(fcBAFPlot)
+      })
     })
   }
 }

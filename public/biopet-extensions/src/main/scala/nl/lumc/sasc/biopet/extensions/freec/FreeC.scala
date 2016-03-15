@@ -112,7 +112,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var mateOrientation: Option[String] = config("mateOrientation")
 
   /** [BAF] options */
-  var snpFile: Option[String] = config("snpFile")
+  var snpFile: Option[File] = config("snpFile")
   var minimalCoveragePerPosition: Option[Int] = config("minimalCoveragePerPosition")
   var makePileup: Option[File] = config("makePileup")
   var fastaFile: Option[File] = config("fastaFile")
