@@ -9,7 +9,7 @@ import org.broadinstitute.gatk.queue.QScript
  * Created by pjvan_thof on 1/12/16.
  */
 class FragmentsPerGene(val root: Configurable) extends QScript with Measurement with AnnotationGtf {
-  def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 1, fallback = "0")
+  def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, numHeaderLines = 0, fallback = "0")
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
