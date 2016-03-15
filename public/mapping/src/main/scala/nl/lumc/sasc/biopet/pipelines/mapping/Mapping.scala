@@ -167,7 +167,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     if (!skipFlexiprep) {
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       flexiprep.inputR1 = inputR1
-      flexiprep.input_R2 = inputR2
+      flexiprep.inputR2 = inputR2
       flexiprep.sampleId = this.sampleId
       flexiprep.libId = this.libId
       flexiprep.init()
@@ -184,7 +184,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
           if (paired) Some(new File(chunkDir, inputR2.get.getName)) else None)
       }).toMap
       else if (skipFlexiprep) Map(outputDir -> (inputR1, if (paired) inputR2 else None))
-      else Map(outputDir -> (flexiprep.inputR1, flexiprep.input_R2))
+      else Map(outputDir -> (flexiprep.inputR1, flexiprep.inputR2))
     }
 
     if (chunking) {

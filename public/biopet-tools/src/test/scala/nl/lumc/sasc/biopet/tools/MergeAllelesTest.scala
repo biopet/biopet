@@ -37,7 +37,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vepped_path = resourcePath("/chrQ.vcf.gz")
+  val veppedPath = resourcePath("/chrQ.vcf.gz")
   val reference = resourcePath("/fake_chrQ.fa")
 
   // These two have to created
@@ -52,7 +52,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     val tmp = File.createTempFile("MergeAlleles", ".vcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
+    val arguments = Array("-I", veppedPath, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 
@@ -60,7 +60,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     val tmp = File.createTempFile("MergeAlleles", ".vcf.gz")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
+    val arguments = Array("-I", veppedPath, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 
@@ -68,7 +68,7 @@ class MergeAllelesTest extends TestNGSuite with MockitoSugar with Matchers {
     val tmp = File.createTempFile("MergeAlleles", ".bcf")
     tmp.deleteOnExit()
     val tmpPath = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped_path, "-o", tmpPath, "-R", reference)
+    val arguments = Array("-I", veppedPath, "-o", tmpPath, "-R", reference)
     main(arguments)
   }
 }
