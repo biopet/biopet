@@ -71,7 +71,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     val flexiprep: Flexiprep = initPipeline(map)
 
     flexiprep.inputR1 = (if (zipped) FlexiprepTest.r1Zipped else FlexiprepTest.r1)
-    if (paired) flexiprep.input_R2 = Some((if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2))
+    if (paired) flexiprep.inputR2 = Some((if (zipped) FlexiprepTest.r2Zipped else FlexiprepTest.r2))
     flexiprep.sampleId = Some("1")
     flexiprep.libId = Some("1")
     flexiprep.script()

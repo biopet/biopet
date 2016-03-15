@@ -27,11 +27,11 @@ import org.broadinstitute.gatk.queue.QScript
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
-  @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
+  @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", fullName = "inputR1", required = true)
   var inputR1: File = _
 
-  @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
-  var input_R2: Option[File] = None
+  @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", fullName = "inputR2", required = false)
+  var inputR2: Option[File] = None
 
   /** Skip Trim fastq files */
   var skipTrim: Boolean = config("skip_trim", default = false)
@@ -48,13 +48,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Returns files to store in summary */
   def summaryFiles: Map[String, File] = {
     Map("input_R1" -> inputR1, "output_R1" -> fastqR1Qc) ++
-      (if (paired) Map("input_R2" -> input_R2.get, "output_R2" -> fastqR2Qc.get) else Map())
+      (if (paired) Map("input_R2" -> inputR2.get, "output_R2" -> fastqR2Qc.get) else Map())
   }
 
   /** returns settings to store in summary */
   def summarySettings = Map("skip_trim" -> skipTrim, "skip_clip" -> skipClip, "paired" -> paired)
 
-  var paired: Boolean = input_R2.isDefined
+  var paired: Boolean = inputR2.isDefined
   var R1Name: String = _
   var R2Name: String = _
 
@@ -80,13 +80,13 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     require(sampleId != null, "Missing sample ID on flexiprep module")
     require(libId != null, "Missing library ID on flexiprep module")
 
-    paired = input_R2.isDefined
+    paired = inputR2.isDefined
 
     inputFiles :+= new InputFile(inputR1)
-    input_R2.foreach(inputFiles :+= new InputFile(_))
+    inputR2.foreach(inputFiles :+= new InputFile(_))
 
     R1Name = getUncompressedFileName(inputR1)
-    input_R2.foreach { fileR2 =>
+    inputR2.foreach { fileR2 =>
       paired = true
       R2Name = getUncompressedFileName(fileR2)
     }
@@ -96,7 +96,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   def biopetScript() {
     runInitialJobs()
 
-    if (paired) runTrimClip(inputR1, input_R2, outputDir)
+    if (paired) runTrimClip(inputR1, inputR2, outputDir)
     else runTrimClip(inputR1, outputDir)
 
     val R1Files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
@@ -107,7 +107,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
   /** Add init non chunkable jobs */
   def runInitialJobs() {
     outputFiles += ("fastq_input_R1" -> inputR1)
-    if (paired) outputFiles += ("fastq_input_R2" -> input_R2.get)
+    if (paired) outputFiles += ("fastq_input_R2" -> inputR2.get)
 
     fastqcR1 = Fastqc(this, inputR1, new File(outputDir, R1Name + ".fastqc/"))
     add(fastqcR1)
@@ -116,7 +116,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
     val validateFastq = new ValidateFastq(this)
     validateFastq.r1Fastq = inputR1
-    validateFastq.r2Fastq = input_R2
+    validateFastq.r2Fastq = inputR2
     validateFastq.jobOutputFile = new File(outputDir, ".validate_fastq.log.out")
     add(validateFastq)
 
@@ -128,7 +128,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     }
 
     if (paired) {
-      fastqcR2 = Fastqc(this, input_R2.get, new File(outputDir, R2Name + ".fastqc/"))
+      fastqcR2 = Fastqc(this, inputR2.get, new File(outputDir, R2Name + ".fastqc/"))
       add(fastqcR2)
       addSummarizable(fastqcR2, "fastqc_R2")
       outputFiles += ("fastqc_R2" -> fastqcR2.output)
@@ -140,7 +140,7 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
     addSummarizable(seqstatR1, "seqstat_R1")
 
     if (paired) {
-      val seqstatR2 = SeqStat(this, input_R2.get, outputDir)
+      val seqstatR2 = SeqStat(this, inputR2.get, outputDir)
       seqstatR2.isIntermediate = true
       add(seqstatR2)
       addSummarizable(seqstatR2, "seqstat_R2")

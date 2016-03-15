@@ -80,7 +80,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (!skipFlexiprep) {
       val flexiprep = new Flexiprep(this)
       flexiprep.inputR1 = r1
-      flexiprep.input_R2 = r2
+      flexiprep.inputR2 = r2
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       add(flexiprep)
       (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)

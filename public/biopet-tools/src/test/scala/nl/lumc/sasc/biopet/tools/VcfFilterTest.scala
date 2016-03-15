@@ -39,31 +39,31 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf")
-  val vepped = new File(vepped_path)
+  val veppedPath = resourcePath("/VEP_oneline.vcf")
+  val vepped = new File(veppedPath)
   val rand = new Random()
 
   @Test def testOutputTypeVcf() = {
     val tmp = File.createTempFile("VcfFilter", ".vcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
     val tmp = File.createTempFile("VcfFilter", ".bcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
     val tmp = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath)
     main(arguments)
   }
 
@@ -73,22 +73,22 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
      */
     val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", vepped_path, "-o", tmp_path,
+    val tmpPath = tmp.getAbsolutePath
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath,
       "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
 
-    val size = new VCFFileReader(new File(tmp_path), false).size
+    val size = new VCFFileReader(new File(tmpPath), false).size
     size shouldBe 1
 
     val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp2.deleteOnExit()
-    val tmp2_path = tmp2.getAbsolutePath
-    val arguments2: Array[String] = Array("-I", vepped_path, "-o", tmp2_path,
+    val tmpPath2 = tmp2.getAbsolutePath
+    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmpPath2,
       "--mustHaveGenotype", "Sample_101:HOM_VAR")
     main(arguments2)
 
-    val size2 = new VCFFileReader(new File(tmp2_path), false).size
+    val size2 = new VCFFileReader(new File(tmpPath2), false).size
     size2 shouldBe 0
 
   }
