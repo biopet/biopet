@@ -27,10 +27,10 @@ import org.broadinstitute.gatk.queue.QScript
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
   def this() = this(null)
 
-  @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", required = true)
+  @Input(doc = "R1 fastq file (gzipped allowed)", shortName = "R1", fullName = "inputR1", required = true)
   var inputR1: File = _
 
-  @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", required = false)
+  @Input(doc = "R2 fastq file (gzipped allowed)", shortName = "R2", fullName = "inputR2", required = false)
   var inputR2: Option[File] = None
 
   /** Skip Trim fastq files */
