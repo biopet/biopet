@@ -20,6 +20,14 @@
 * Added trimming of reverse complement adapters (flexiprep does this automatic)
 * Added [Tinycap](../pipelines/tinycap.md) for smallRNA analysis
 * [Gentrap](../pipelines/gentrap.md): Refactoring changed the "expression_measures" options
+* Fixed biopet logging
+* Added sample tagging
+* Seqstat now reports histogram of read lengths
+* Fixed bug in seqstat when having multiple sizes exists in the fastq file
+* Added variant plots for targets to report of Shiva
+* Adapter feed to cutadapt now use only that parts that are reported by fastqc and not the full sequence
+* Added a reference selector when fasta file can't be found. User now get a list of available species and genomes in the config
+* Fixed bcftools with IUPAC symbols
 
 ## Infrastructure changes
 
