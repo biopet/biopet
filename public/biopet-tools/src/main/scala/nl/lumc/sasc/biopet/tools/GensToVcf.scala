@@ -4,7 +4,7 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.variant.variantcontext.{ GenotypeBuilder, VariantContextBuilder}
+import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ VariantContextWriterBuilder, AsyncVariantContextWriter }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -53,7 +53,9 @@ object GensToVcf extends ToolCommand {
     val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").head)
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
-    metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ""))
+    metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
+    metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
+    metaLines.add(new VCFFormatHeaderLine("PL", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ""))
 
     val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
     require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
@@ -73,18 +75,32 @@ object GensToVcf extends ToolCommand {
 
     for (genotypeLine <- genotypeIt) {
       val genotypeValues = genotypeLine.split(" ")
+      val ref = Allele.create(genotypeValues(3), true)
+      val alt = Allele.create(genotypeValues(4))
       val start = genotypeValues(2).toInt
-      val end = genotypeValues(3).length - 1 + start
+      val end = ref.length - 1 + start
       val genotypes = samples.toList.zipWithIndex.map { case (sampleName, index) =>
+        val gps = Array(
+          genotypeValues(5 + (index * 3)),
+          genotypeValues(5 + (index * 3) + 1),
+          genotypeValues(5 + (index * 3) + 2)
+        ).map(_.toDouble)
+        val alleles = gps.indexOf(gps.max) match {
+          case 0 => List(ref, ref)
+          case 1 => List(ref, alt)
+          case 2 => List(alt, alt)
+        }
         new GenotypeBuilder()
           .name(sampleName)
-          .attribute("GP", Array(genotypeValues(5 + (index * 3)), genotypeValues(5 + (index * 3) + 1), genotypeValues(5 + (index * 3) + 2)).map(_.toDouble))
+          .alleles(alleles)
+          .attribute("GP", gps)
+          .PL(gps)
           .make()
       }
 
       val builder = (new VariantContextBuilder)
         .chr(cmdArgs.contig)
-        .alleles(genotypeValues(3), genotypeValues(4))
+        .alleles(List(ref, alt))
         .start(start)
         .stop(end)
         .genotypes(genotypes)
