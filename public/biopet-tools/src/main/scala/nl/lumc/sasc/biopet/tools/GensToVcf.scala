@@ -3,6 +3,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{GenotypeBuilder, Allele, VariantContextBuilder}
 import htsjdk.variant.variantcontext.writer.{Options, VariantContextWriterBuilder, AsyncVariantContextWriter}
 import htsjdk.variant.vcf._
@@ -21,7 +22,7 @@ object GensToVcf extends ToolCommand {
                   inputInfo: Option[File] = None,
                   outputVcf: File = null,
                   sampleFile: File = null,
-                  referenceFasta: Option[File] = None,
+                  referenceFasta: File = null,
                   contig: String = null) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
@@ -37,8 +38,8 @@ object GensToVcf extends ToolCommand {
     opt[File]('s', "samplesFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(sampleFile = x)
     } text "Samples file"
-    opt[File]('R', "referenceFasta") maxOccurs 1 valueName "<file>" action { (x, c) =>
-      c.copy(referenceFasta = Some(x))
+    opt[File]('R', "referenceFasta") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(referenceFasta = x)
     } text "reference fasta file"
     opt[String]('c', "contig") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(contig = x)
@@ -49,22 +50,25 @@ object GensToVcf extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs = argsParser.parse(args, Args()).getOrElse(throw new IllegalArgumentException)
 
-    val samples = new util.HashSet[String]()
-    Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").head).foreach(samples.add(_))
+    val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").head)
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
     metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, ""))
 
-    //TODO: Add reference dict
-    val header = new VCFHeader(metaLines, samples)
+    val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
+    require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
+      s"contig '${cmdArgs.contig}' not found on reference")
+
+    val header = new VCFHeader(metaLines, samples.toList)
+    header.setSequenceDictionary(reference.getSequenceDictionary)
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
       .setOutputFile(cmdArgs.outputVcf)
-      .unsetOption(Options.INDEX_ON_THE_FLY)
-      //.setReferenceDictionary(header.getSequenceDictionary)
+      .setReferenceDictionary(header.getSequenceDictionary)
       .build)
     writer.writeHeader(header)
 
     val genotypeIt = Source.fromFile(cmdArgs.inputGenotypes).getLines()
+    //TODO: Add info fields
     val infoIt = cmdArgs.inputInfo.map(Source.fromFile(_).getLines())
 
     for (genotypeLine <- genotypeIt) {
