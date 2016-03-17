@@ -62,21 +62,21 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     val snpTests = BedRecordList.fromReference(referenceFasta())
       .scatter(config("bin_size", default = 10^6))
       .allRecords.map { region =>
-      val bedFile = new File(outputDir, "snptest"  + File.separator + region.chr + File.separator +
-        s"${region.chr}-${region.start + 1}-${region.end}.bed")
-      bedFile.getParentFile.mkdirs()
+      val regionDir = new File(outputDir, "snptest"  + File.separator + region.chr)
+      regionDir.mkdirs()
+      val bedFile = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.bed")
       BedRecordList.fromList(List(region)).writeToFile(bedFile)
+      bedFile.deleteOnExit()
 
       val sv = new SelectVariants(this)
       sv.inputFiles :+= vcfFile
-      sv.outputFile = new File(outputDir, "snptest"  + File.separator + region.chr + File.separator +
-        s"${region.chr}-${region.start + 1}-${region.end}.vcf.gz")
+      sv.outputFile = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.vcf.gz")
       sv.intervals :+= bedFile
       sv.isIntermediate = true
       add(sv)
 
       //TODO: snptest
-      Map()
+      (region -> "")
     }
   }
 }
