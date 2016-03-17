@@ -109,7 +109,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** File to add to the summary */
   def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> inputR1,
     "reference" -> referenceFasta()) ++
-    (if (inputR2.isDefined) Map("input_R2" -> inputR2.get) else Map())
+    (if (inputR2.isDefined) Map("input_R2" -> inputR2.get) else Map()) ++
+    (bam2wig match {
+      case Some(b) => Map(
+        "output_wigle" -> b.outputWigleFile,
+        "output_tdf" -> b.outputTdfFile,
+        "output_bigwig" -> b.outputBwFile)
+      case _ => Map()
+    })
 
   /** Settings to add to summary */
   def summarySettings = Map(
@@ -270,11 +277,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       add(gears)
     }
 
-    if (config("generate_wig", default = false).asBoolean)
-      addAll(Bam2Wig(this, finalBamFile).functions)
+    bam2wig.foreach(add(_))
 
     addSummaryJobs()
   }
+
+  protected lazy val bam2wig = if (config("generate_wig", default = false)) {
+    Some(Bam2Wig(this, finalBamFile))
+  } else None
 
   /** Add bwa aln jobs */
   def addBwaAln(R1: File, R2: Option[File], output: File): File = {
