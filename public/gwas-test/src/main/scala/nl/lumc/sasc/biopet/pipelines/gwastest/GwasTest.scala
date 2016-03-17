@@ -4,6 +4,7 @@ import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, BiopetQScript}
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -55,7 +56,14 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
       cv.outputFile
     }
 
-    //TODO: snptest
+    val snpTests = BedRecordList.fromReference(referenceFasta())
+      .scatter(config("bin_size", default = 10^6))
+      .allRecords.map { region =>
+      //TODO: bcftools view
+
+      //TODO: snptest
+      Map()
+    }
   }
 }
 
