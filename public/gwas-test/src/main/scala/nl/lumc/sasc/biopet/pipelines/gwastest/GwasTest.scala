@@ -1,7 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gwastest
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, BiopetQScript}
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.{SelectVariants, CombineVariants}
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
@@ -49,6 +51,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         gensToVcf.contig = gen.contig
         gensToVcf.samplesFile = phenotypeFile
         gensToVcf.outputVcf = new File(outputDirGens, gen.genotypes.getName + ".vcf.gz")
+        gensToVcf.isIntermediate = true
         add(gensToVcf)
         cv.inputFiles :+= gensToVcf.outputVcf
       }
@@ -59,7 +62,18 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     val snpTests = BedRecordList.fromReference(referenceFasta())
       .scatter(config("bin_size", default = 10^6))
       .allRecords.map { region =>
-      //TODO: bcftools view
+      val bedFile = new File(outputDir, "snptest"  + File.separator + region.chr + File.separator +
+        s"${region.chr}-${region.start + 1}-${region.end}.bed")
+      bedFile.getParentFile.mkdirs()
+      BedRecordList.fromList(List(region)).writeToFile(bedFile)
+
+      val sv = new SelectVariants(this)
+      sv.inputFiles :+= vcfFile
+      sv.outputFile = new File(outputDir, "snptest"  + File.separator + region.chr + File.separator +
+        s"${region.chr}-${region.start + 1}-${region.end}.vcf.gz")
+      sv.intervals :+= bedFile
+      sv.isIntermediate = true
+      add(sv)
 
       //TODO: snptest
       Map()
