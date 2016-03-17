@@ -14,6 +14,8 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
 
   lazy val inputVcf: Option[File] = config("input_vcf")
 
+  lazy val phenotypeFile: File = config("phenotype_file")
+
   case class GensInput(genotypes: File, info: Option[File], contig: String)
   lazy val inputGens: Option[List[GensInput]] = if (inputVcf.isDefined) None
   else {
@@ -44,6 +46,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         gensToVcf.inputGens = gen.genotypes
         gensToVcf.inputInfo = gen.info
         gensToVcf.contig = gen.contig
+        gensToVcf.samplesFile = phenotypeFile
         gensToVcf.outputVcf = new File(outputDirGens, gen.genotypes.getName + ".vcf.gz")
         add(gensToVcf)
         cv.inputFiles :+= gensToVcf.outputVcf
