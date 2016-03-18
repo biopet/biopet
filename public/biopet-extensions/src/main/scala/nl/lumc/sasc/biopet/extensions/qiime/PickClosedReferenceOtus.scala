@@ -33,7 +33,7 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   var outputDir: File = null
 
   override def defaultThreads = 3
-  override def defaultCoreMemory = 12.0
+  override def defaultCoreMemory = 16.0
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 

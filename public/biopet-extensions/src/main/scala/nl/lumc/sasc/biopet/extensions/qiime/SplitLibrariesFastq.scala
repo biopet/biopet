@@ -56,6 +56,8 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
 
   def outputSeqs = new File(outputDir, "seqs.fna")
 
+  override def defaultCoreMemory = 4.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(input.nonEmpty)
