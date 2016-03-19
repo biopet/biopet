@@ -38,7 +38,7 @@ class MergeOtuMaps(val root: Configurable) extends BiopetCommandLineFunction wit
 
   var failuresFp: Option[File] = None
 
-  override def defaultCoreMemory = 8.0
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

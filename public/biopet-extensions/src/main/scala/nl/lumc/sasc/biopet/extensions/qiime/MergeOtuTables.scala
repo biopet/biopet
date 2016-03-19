@@ -36,6 +36,8 @@ class MergeOtuTables(val root: Configurable) extends BiopetCommandLineFunction w
   @Output(required = true)
   var outputFile: File = _
 
+  override def defaultCoreMemory = 4.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(input.nonEmpty)
