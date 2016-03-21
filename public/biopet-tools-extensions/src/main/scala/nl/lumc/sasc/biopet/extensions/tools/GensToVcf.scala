@@ -17,10 +17,10 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Output, Input}
+import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
 
 /**
  *

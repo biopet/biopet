@@ -14,8 +14,8 @@ import scala.collection.JavaConversions._
 import scala.io.Source
 
 /**
-  * Created by pjvanthof on 15/03/16.
-  */
+ * Created by pjvanthof on 15/03/16.
+ */
 object GensToVcf extends ToolCommand {
 
   case class Args(inputGenotypes: File = null,
@@ -79,23 +79,24 @@ object GensToVcf extends ToolCommand {
       val alt = Allele.create(genotypeValues(4))
       val start = genotypeValues(2).toInt
       val end = ref.length - 1 + start
-      val genotypes = samples.toList.zipWithIndex.map { case (sampleName, index) =>
-        val gps = Array(
-          genotypeValues(5 + (index * 3)),
-          genotypeValues(5 + (index * 3) + 1),
-          genotypeValues(5 + (index * 3) + 2)
-        ).map(_.toDouble)
-        val alleles = gps.indexOf(gps.max) match {
-          case 0 => List(ref, ref)
-          case 1 => List(ref, alt)
-          case 2 => List(alt, alt)
-        }
-        new GenotypeBuilder()
-          .name(sampleName)
-          .alleles(alleles)
-          .attribute("GP", gps)
-          .PL(gps)
-          .make()
+      val genotypes = samples.toList.zipWithIndex.map {
+        case (sampleName, index) =>
+          val gps = Array(
+            genotypeValues(5 + (index * 3)),
+            genotypeValues(5 + (index * 3) + 1),
+            genotypeValues(5 + (index * 3) + 2)
+          ).map(_.toDouble)
+          val alleles = gps.indexOf(gps.max) match {
+            case 0 => List(ref, ref)
+            case 1 => List(ref, alt)
+            case 2 => List(alt, alt)
+          }
+          new GenotypeBuilder()
+            .name(sampleName)
+            .alleles(alleles)
+            .attribute("GP", gps)
+            .PL(gps)
+            .make()
       }
 
       val builder = (new VariantContextBuilder)

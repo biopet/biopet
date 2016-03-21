@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.gatk
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Extension for CombineVariants from GATK
