@@ -37,6 +37,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
 
   var disableBaq: Boolean = config("disable_baq", default = false)
   var u: Boolean = config("u", default = false)
+  var v: Boolean = config("u", default = false)
   var minMapQuality: Option[Int] = config("min_map_quality")
   var minBaseQuality: Option[Int] = config("min_base_quality")
   var depth: Option[Int] = config("depth")
@@ -57,6 +58,7 @@ class SamtoolsMpileup(val root: Configurable) extends Samtools with Reference {
     conditional(outputMappingQuality, "-s") +
     conditional(disableBaq, "-B") +
     conditional(u, "-u") +
+    conditional(v, "-v") +
     (if (outputAsStsout) "" else required("-o", output)) +
     (if (inputAsStdin) "-" else repeat(input))
 }

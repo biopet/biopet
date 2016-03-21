@@ -84,7 +84,7 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     }
 
     val a = new WriterAppender(new PatternLayout("%-5p [%d] [%C{1}] - %m%n"), new PrintWriter(logFile))
-    logger.addAppender(a)
+    Logging.logger.addAppender(a)
 
     var argv: Array[String] = Array()
     argv ++= Array("-S", pipeline)
@@ -94,7 +94,7 @@ trait PipelineCommand extends MainCommand with GatkLogging with ImplicitConversi
     }
     if (!args.contains("-retry") && !args.contains("--retry_failed")) {
       val retry: Int = globalConfig(pipelineName, Nil, "retry", default = 5)
-      logger.info("No retry flag found, ")
+      logger.info(s"No retry flag found, set to default value of '$retry'")
       argv ++= List("-retry", retry.toString)
     }
     BiopetQCommandLine.main(argv)

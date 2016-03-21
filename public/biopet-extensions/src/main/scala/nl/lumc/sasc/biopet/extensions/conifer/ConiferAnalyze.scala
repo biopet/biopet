@@ -36,7 +36,7 @@ class ConiferAnalyze(val root: Configurable) extends Conifer {
   var svd: Option[Int] = config("svd", default = 1)
 
   @Argument(doc = "Minimum population median RPKM per probe", required = false)
-  var min_rpkm: Option[Double] = config("min_rpkm")
+  var minRpkm: Option[Double] = config("min_rpkm")
 
   override def cmdLine = super.cmdLine +
     " analyze " +
@@ -44,5 +44,5 @@ class ConiferAnalyze(val root: Configurable) extends Conifer {
     " --rpkm_dir" + required(rpkmDir) +
     " --output" + required(output) +
     optional("--svd", svd) +
-    optional("--min_rpkm", min_rpkm)
+    optional("--min_rpkm", minRpkm)
 }

@@ -36,25 +36,26 @@ trait Logging {
 object Logging {
   val logger = Logger.getRootLogger
 
-  private val errors: ListBuffer[Exception] = ListBuffer()
+  private[biopet] val errors: ListBuffer[Exception] = ListBuffer()
 
   def addError(error: String, debug: String = null): Unit = {
     val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
     errors.append(new Exception(msg))
   }
 
-  def checkErrors(): Unit = {
+  def checkErrors(debug: Boolean = false): Unit = {
     if (errors.nonEmpty) {
       logger.error("*************************")
       logger.error("Biopet found some errors:")
-      if (logger.isDebugEnabled) {
+      if (debug || logger.isDebugEnabled) {
         for (e <- errors) {
           logger.error(e.getMessage)
-          logger.debug(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
+          logger.error(e.getStackTrace.mkString("Stack trace:\n", "\n", "\n"))
         }
       } else {
         errors.map(_.getMessage).sorted.distinct.foreach(logger.error(_))
       }
+      errors.clear()
       throw new IllegalStateException("Biopet found errors")
     }
   }

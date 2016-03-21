@@ -32,10 +32,14 @@ class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction wit
   override def defaultCoreMemory = 4.0
   override def defaultThreads = 1
 
-  def versionCommand = new File(new File(executable).getParent, "kraken").getAbsolutePath + " --version"
+  def versionCommand = {
+    val exe = new File(new File(executable).getParent, "kraken")
+    if (exe.exists()) exe.getAbsolutePath + " --version"
+    else executable + " --version"
+  }
 
   var db: File = config("db")
-  var show_zeros: Boolean = config("show_zeros", default = false)
+  var showZeros: Boolean = config("show_zeros", default = false)
 
   @Input(doc = "Input raw kraken analysis")
   var input: File = _
@@ -43,10 +47,9 @@ class KrakenReport(val root: Configurable) extends BiopetCommandLineFunction wit
   @Output(doc = "Output path kraken report")
   var output: File = _
 
-  def cmdLine: String = {
-    val cmd: String = required(executable) + "--db " + required(db) +
-      conditional(show_zeros, "--show-zeros") +
-      required(input.getAbsolutePath) + " > " + required(output.getAbsolutePath)
-    cmd
-  }
+  def cmdLine: String = required(executable) +
+    required("--db", db) +
+    conditional(showZeros, "--show-zeros") +
+    required(input) +
+    " > " + required(output)
 }

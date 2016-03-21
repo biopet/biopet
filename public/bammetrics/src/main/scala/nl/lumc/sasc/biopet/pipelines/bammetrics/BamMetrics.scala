@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.annotations.{ RibosomalRefFlat, AnnotationRefFlat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
@@ -30,22 +31,15 @@ import org.broadinstitute.gatk.queue.QScript
 class BamMetrics(val root: Configurable) extends QScript
   with SummaryQScript
   with SampleLibraryTag
-  with Reference {
+  with Reference
+  with TargetRegions
+  with AnnotationRefFlat
+  with RibosomalRefFlat {
 
   def this() = this(null)
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
-
-  /** Bed files for region of interests */
-  var roiBedFiles: List[File] = config("regions_of_interest", Nil)
-
-  /** Bed of amplicon that is used */
-  var ampliconBedFile: Option[File] = config("amplicon_bed")
-
-  /** Settings for CollectRnaSeqMetrics */
-  var rnaMetricsSettings: Map[String, String] = Map()
-  var transcriptRefFlatFile: Option[File] = config("transcript_refflat")
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
@@ -82,7 +76,7 @@ class BamMetrics(val root: Configurable) extends QScript
 
   /** Script to add jobs */
   def biopetScript() {
-    add(SamtoolsFlagstat(this, inputBam, swapExt(outputDir, inputBam, ".bam", ".flagstat")))
+    add(SamtoolsFlagstat(this, inputBam, outputDir))
 
     val biopetFlagstat = BiopetFlagstat(this, inputBam, outputDir)
     add(biopetFlagstat)
@@ -98,7 +92,7 @@ class BamMetrics(val root: Configurable) extends QScript
     add(gcBiasMetrics)
     addSummarizable(gcBiasMetrics, "gc_bias")
 
-    if (transcriptRefFlatFile.isEmpty) {
+    if (config("wgs_metrics", default = true)) {
       val wgsMetrics = new CollectWgsMetrics(this)
       wgsMetrics.input = inputBam
       wgsMetrics.output = swapExt(outputDir, inputBam, ".bam", ".wgs.metrics")
@@ -106,14 +100,13 @@ class BamMetrics(val root: Configurable) extends QScript
       addSummarizable(wgsMetrics, "wgs")
     }
 
-    if (transcriptRefFlatFile.isDefined) {
+    if (config("rna_metrics", default = false)) {
       val rnaMetrics = new CollectRnaSeqMetrics(this)
       rnaMetrics.input = inputBam
       rnaMetrics.output = swapExt(outputDir, inputBam, ".bam", ".rna.metrics")
       rnaMetrics.chartOutput = Some(swapExt(outputDir, inputBam, ".bam", ".rna.metrics.pdf"))
-      rnaMetrics.refFlat = transcriptRefFlatFile.get
-      rnaMetrics.ribosomalIntervals = rnaMetricsSettings.get("ribosomal_intervals").collect { case n => new File(n) }
-      rnaMetrics.strandSpecificity = rnaMetricsSettings.get("strand_specificity")
+      rnaMetrics.refFlat = annotationRefFlat()
+      rnaMetrics.ribosomalIntervals = ribosomalRefFlat()
       add(rnaMetrics)
       addSummarizable(rnaMetrics, "rna")
     }
@@ -145,7 +138,7 @@ class BamMetrics(val root: Configurable) extends QScript
         val pcrMetrics = CollectTargetedPcrMetrics(this, inputBam,
           ampIntervals, ampIntervals :: roiIntervals.map(_.intervals), outputDir)
         add(pcrMetrics)
-        addSummarizable(chsMetrics, "targeted_pcr_metrics")
+        addSummarizable(pcrMetrics, "targeted_pcr_metrics")
 
         Intervals(bedFile, ampIntervals)
     }

@@ -28,12 +28,17 @@ Command line flags for the mapping pipeline are:
 
 | Flag  (short)| Flag (long) | Type | Function |
 | ------------ | ----------- | ---- | -------- |
-| -R1 | --input_r1 | Path (**required**) | Path to input fastq file |
-| -R2 | --input_r2 | Path (optional) | Path to second read pair fastq file. |
+| -R1 | --inputR1 | Path (**required**) | Path to input fastq file |
+| -R2 | --inputR2 | Path (optional) | Path to second read pair fastq file. |
 | -sample | --sampleid | String (**required**) | Name of sample |
 | -library | --libid | String (**required**) | Name of library |
 
 If `-R2` is given, the pipeline will assume a paired-end setup.
+
+### Sample input extensions
+
+It is a good idea to check the format of your input files before starting any pipeline. Since the pipeline expects a specific format based on the file extensions.
+So for example if one inputs files with a `fastq | fq` extension the pipeline expects an unzipped `fastq` file. When the extension ends with `fastq.gz | fq.gz` the pipeline expects a bgzipped or gzipped `fastq` file.
 
 ### Config
 

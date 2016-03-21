@@ -22,7 +22,7 @@
     <parent>
         <artifactId>Biopet</artifactId>
         <groupId>nl.lumc.sasc</groupId>
-        <version>0.5.0</version>
+        <version>0.6.0</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue</artifactId>
-            <version>3.4</version>
+            <version>3.5</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.broadinstitute.gatk</groupId>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-public</artifactId>
-            <version>3.4</version>
+            <version>3.5</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra.scalate</groupId>

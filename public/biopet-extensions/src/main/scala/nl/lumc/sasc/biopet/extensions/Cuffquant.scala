@@ -40,46 +40,46 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
 
   /** input GTF file */
   @Input(doc = "Input GTF file", required = true)
-  var transcripts_gtf: File = null
+  var transcriptsGtf: File = null
 
   /** output file, computed automatically from output directory */
   @Output(doc = "Output CXB file")
   lazy val outputCxb: File = {
-    require(output_dir != null,
+    require(outputDir != null,
       "Can not set Cuffquant CXB output while input file and/or output directory is not defined")
     // cufflinks always outputs a transcripts.gtf file in the output directory
-    new File(output_dir, "abundances.cxb")
+    new File(outputDir, "abundances.cxb")
   }
 
   /** write all output files to this directory [./] */
-  var output_dir: File = config("output_dir", default = new File("."))
+  var outputDir: File = config("output_dir", default = new File("."))
 
   /** ignore all alignment within transcripts in this file */
-  var mask_file: Option[File] = config("mask_file")
+  var maskFile: Option[File] = config("mask_file")
 
   /** use bias correction - reference fasta required [NULL] */
-  var frag_bias_correct: Option[String] = config("frag_bias_correct")
+  var fragBiasCorrect: Option[String] = config("frag_bias_correct")
 
   /** use 'rescue method' for multi-reads (more accurate) [FALSE] */
-  var multi_read_correct: Boolean = config("multi_read_correct", default = false)
+  var multiReadCorrect: Boolean = config("multi_read_correct", default = false)
 
   /** number of threads used during analysis [1] */
-  var num_threads: Option[Int] = config("num_threads")
+  var numThreads: Option[Int] = config("num_threads")
 
   /** library prep used for input reads [below] */
-  var library_type: Option[String] = config("library_type")
+  var libraryType: Option[String] = config("library_type")
 
   /** average fragment length (unpaired reads only) [200] */
-  var frag_len_mean: Option[Int] = config("frag_len_mean")
+  var fragLenMean: Option[Int] = config("frag_len_mean")
 
   /** fragment length std deviation (unpaired reads only) [80] */
-  var frag_len_std_dev: Option[Int] = config("frag_len_std_dev")
+  var fragLenStdDev: Option[Int] = config("frag_len_std_dev")
 
   /** minimum number of alignments in a locus for testing [10] */
-  var min_alignment_count: Option[Int] = config("min_alignment_count")
+  var minAlignmentCount: Option[Int] = config("min_alignment_count")
 
   /** maximum iterations allowed for MLE calculation [5000] */
-  var max_mle_iterations: Option[Int] = config("max_mle_iterations")
+  var maxMleIterations: Option[Int] = config("max_mle_iterations")
 
   /** log-friendly verbose processing (no progress bar) [FALSE] */
   var verbose: Boolean = config("verbose", default = false)
@@ -91,31 +91,31 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
   var seed: Option[Int] = config("seed")
 
   /** do not contact server to check for update availability [FALSE] */
-  var no_update_check: Boolean = config("no_update_check", default = false)
+  var noUpdateCheck: Boolean = config("no_update_check", default = false)
 
   /** maximum fragments allowed in a bundle before skipping [500000] */
-  var max_bundle_frags: Option[Int] = config("max_bundle_frags")
+  var maxBundleFrags: Option[Int] = config("max_bundle_frags")
 
   /** Maximum number of alignments allowed per fragment [unlim] */
-  var max_frag_multihits: Option[Int] = config("max_frag_multihits")
+  var maxFragMultihits: Option[Int] = config("max_frag_multihits")
 
   /** No effective length correction [FALSE] */
-  var no_effective_length_correction: Boolean = config("no_effective_length_correction", default = false)
+  var noEffectiveLengthCorrection: Boolean = config("no_effective_length_correction", default = false)
 
   /** No length correction [FALSE] */
-  var no_length_correction: Boolean = config("no_length_correction", default = false)
+  var noLengthCorrection: Boolean = config("no_length_correction", default = false)
 
   /** Skip a random subset of reads this size [0.0] */
-  var read_skip_fraction: Option[Double] = config("read_skip_fraction")
+  var readSkipFraction: Option[Double] = config("read_skip_fraction")
 
   /** Break all read pairs [FALSE] */
-  var no_read_pairs: Boolean = config("no_read_pairs", default = false)
+  var noReadPairs: Boolean = config("no_read_pairs", default = false)
 
   /** Trim reads to be this long (keep 5' end) [none] */
-  var trim_read_length: Option[Int] = config("trim_read_length")
+  var trimReadLength: Option[Int] = config("trim_read_length")
 
   /** Disable SCV correction */
-  var no_scv_correction: Boolean = config("no_scv_correction", default = false)
+  var noScvCorrection: Boolean = config("no_scv_correction", default = false)
 
   def versionRegex = """cuffquant v(.*)""".r
   def versionCommand = executable
@@ -123,28 +123,28 @@ class Cuffquant(val root: Configurable) extends BiopetCommandLineFunction with V
 
   def cmdLine =
     required(executable) +
-      required("--output-dir", output_dir) +
-      optional("--mask-file", mask_file) +
-      optional("--frag-bias-correct", frag_bias_correct) +
-      conditional(multi_read_correct, "--multi-read-correct") +
-      optional("--num-threads", num_threads) +
-      optional("--library-type", library_type) +
-      optional("--frag-len-mean", frag_len_mean) +
-      optional("--frag-len-std-dev", frag_len_std_dev) +
-      optional("--min-alignment-count", min_alignment_count) +
-      optional("--max-mle-iterations", max_mle_iterations) +
+      required("--output-dir", outputDir) +
+      optional("--mask-file", maskFile) +
+      optional("--frag-bias-correct", fragBiasCorrect) +
+      conditional(multiReadCorrect, "--multi-read-correct") +
+      optional("--num-threads", numThreads) +
+      optional("--library-type", libraryType) +
+      optional("--frag-len-mean", fragLenMean) +
+      optional("--frag-len-std-dev", fragLenStdDev) +
+      optional("--min-alignment-count", minAlignmentCount) +
+      optional("--max-mle-iterations", maxMleIterations) +
       conditional(verbose, "--verbose") +
       conditional(quiet, "--quiet") +
       optional("--seed", seed) +
-      conditional(no_update_check, "--no-update-check") +
-      optional("--max-bundle-frags", max_bundle_frags) +
-      optional("--max-frag-multihits", max_frag_multihits) +
-      conditional(no_effective_length_correction, "--no-effective-length-correction") +
-      conditional(no_length_correction, "--no-length-correction") +
-      optional("--read-skip-fraction", read_skip_fraction) +
-      conditional(no_read_pairs, "--no-read-pairs") +
-      optional("--trim-read-length", trim_read_length) +
-      conditional(no_scv_correction, "--no-scv-correction") +
-      required(transcripts_gtf) +
+      conditional(noUpdateCheck, "--no-update-check") +
+      optional("--max-bundle-frags", maxBundleFrags) +
+      optional("--max-frag-multihits", maxFragMultihits) +
+      conditional(noEffectiveLengthCorrection, "--no-effective-length-correction") +
+      conditional(noLengthCorrection, "--no-length-correction") +
+      optional("--read-skip-fraction", readSkipFraction) +
+      conditional(noReadPairs, "--no-read-pairs") +
+      optional("--trim-read-length", trimReadLength) +
+      conditional(noScvCorrection, "--no-scv-correction") +
+      required(transcriptsGtf) +
       required(input.map(_.mkString(";").mkString(" ")))
 }

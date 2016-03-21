@@ -17,12 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.report._
-import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
+import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingReportTrait
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.rscript.StackedBarPlot
-import nl.lumc.sasc.biopet.pipelines.bammetrics.BammetricsReport
-import nl.lumc.sasc.biopet.pipelines.flexiprep.FlexiprepReport
+import nl.lumc.sasc.biopet.utils.summary.{ Summary, SummaryValue }
 
 /**
  * With this extension the report is executed within a pipeline
@@ -34,52 +33,32 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 }
 
 /** Object for report generation for Shiva pipeline */
-object ShivaReport extends MultisampleReportBuilder {
+object ShivaReport extends MultisampleMappingReportTrait {
 
   def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
     case Some(true) => true
     case _          => false
   }
 
+  override def frontSection = ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")
+
+  override def pipelineName = "shiva"
+
   override def extFiles = super.extFiles ++ List("js/gears.js")
     .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext/" + x, x))
 
+  override def additionalSections = super.additionalSections ++ (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
+    Map("showPlot" -> true, "showTable" -> false)))
+  else Nil)
+
   /** Root page for the shiva report */
-  def indexPage = {
+  override def indexPage = {
     val regions = regionsPage
-    ReportPage(
-      List("Samples" -> generateSamplesPage(pageArgs)) ++
-        (if (regions.isDefined) Map(regions.get) else Map()) ++
-        Map("Reference" -> ReportPage(List(), List(
-          "Reference" -> ReportSection("/nl/lumc/sasc/biopet/core/report/reference.ssp", Map("pipeline" -> "shiva"))
-        ), Map()),
-          "Files" -> filesPage,
-          "Versions" -> ReportPage(List(), List(
-            "Executables" -> ReportSection("/nl/lumc/sasc/biopet/core/report/executables.ssp")
-          ), Map())
-        ),
-      List(
-        "Report" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/shivaFront.ssp")) ++
-        (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
-          Map("showPlot" -> true, "showTable" -> false)))
-        else Nil) ++
-        List("Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
-          Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)
-        ),
-          "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp",
-            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-          "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
-            Map("sampleLevel" -> true, "showPlot" -> true, "showTable" -> false)),
-          "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp",
-            Map("showPlot" -> true, "showTable" -> false)),
-          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp",
-            Map("showPlot" -> true, "showTable" -> false))
-        ),
-      pageArgs
-    )
+    val oldPage = super.indexPage
+
+    oldPage.copy(subPages = oldPage.subPages ++ regionsPage)
   }
 
-  //TODO: Add variants per target
   /** Generate a page with all target coverage stats */
   def regionsPage: Option[(String, ReportPage)] = {
     val roi = summary.getValue("shiva", "settings", "regions_of_interest")
@@ -107,60 +86,33 @@ object ShivaReport extends MultisampleReportBuilder {
     }
 
     if (regionPages.nonEmpty) Some("Regions" -> ReportPage(
-      List(),
-      regionPages.map(p => p._1 -> ReportSection(
-        "/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp",
-        Map("target" -> p._1.stripSuffix(" (Amplicon)"))
+      regionPages.map(p => p._1 -> ReportPage(Nil,
+        List(
+          "Variants" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp", Map("showPlot" -> true)),
+          "Coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsMultiTable.ssp")
+        ),
+        Map("target" -> Some(p._1.stripSuffix(" (Amplicon)")))
       )).toList.sortBy(_._1),
+      List(),
       Map())
     )
     else None
   }
 
   /** Files page, can be used general or at sample level */
-  def filesPage: ReportPage = ReportPage(List(), List(
-    "Input fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepInputfiles.ssp"),
-    "After QC fastq files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepOutputfiles.ssp"),
-    "Bam files per lib" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp", Map("sampleLevel" -> false)),
-    "Preprocessed bam files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/mapping/outputBamfiles.ssp",
-      Map("pipelineName" -> "shiva", "fileTag" -> "preProcessBam"))) ++
-    (if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
+  override def filesPage: ReportPage = {
+    val vcfFilesSection = if (variantcallingExecuted) List("VCF files" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/outputVcfFiles.ssp",
       Map("sampleId" -> None)))
-    else Nil), Map())
-
-  /** Single sample page */
-  def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
-    ReportPage(List(
-      "Libraries" -> generateLibraryPage(args),
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), None),
-      "Files" -> filesPage
-    ), List(
-      "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp",
-        if (summary.libraries(sampleId).size > 1) Map("showPlot" -> true) else Map()),
-      "Preprocessing" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp", Map("sampleLevel" -> true))) ++
-      (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil) ++
-      List("QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-        "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-      ), args)
+    else Nil
+    val oldPage = super.filesPage
+    oldPage.copy(sections = oldPage.sections ++ vcfFilesSection)
   }
 
-  /** Library page */
-  def libraryPage(sampleId: String, libId: String, args: Map[String, Any]): ReportPage = {
-    val flexiprepExecuted = summary.getLibraryValue(sampleId, libId, "flexiprep").isDefined
-    val krakenExecuted = summary.getValue(Some(sampleId), Some(libId), "gears", "stats", "krakenreport").isDefined
-
-    ReportPage(
-      "Alignment" -> BammetricsReport.bamMetricsPage(summary, Some(sampleId), Some(libId)) ::
-        (if (flexiprepExecuted) List("QC" -> FlexiprepReport.flexiprepPage) else Nil
-        ) ::: (if (krakenExecuted) List("Gears - Metagenomics" -> ReportPage(List(), List(
-          "Sunburst analysis" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/gearsSunburst.ssp"
-          )), Map()))
-        else Nil), "Alignment" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp") ::
-        (if (flexiprepExecuted) List(
-          "QC reads" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepReadSummary.ssp"),
-          "QC bases" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/flexiprep/flexiprepBaseSummary.ssp")
-        )
-        else Nil), args)
+  /** Single sample page */
+  override def samplePage(sampleId: String, args: Map[String, Any]): ReportPage = {
+    val variantcallingSection = if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp")) else Nil
+    val oldPage = super.samplePage(sampleId, args)
+    oldPage.copy(sections = variantcallingSection ++ oldPage.sections)
   }
 
   /** Name of the report */
@@ -178,7 +130,9 @@ object ShivaReport extends MultisampleReportBuilder {
                          prefix: String,
                          summary: Summary,
                          libraryLevel: Boolean = false,
-                         sampleId: Option[String] = None): Unit = {
+                         sampleId: Option[String] = None,
+                         caller: String = "final",
+                         target: Option[String] = None): Unit = {
     val tsvFile = new File(outputDir, prefix + ".tsv")
     val pngFile = new File(outputDir, prefix + ".png")
     val tsvWriter = new PrintWriter(tsvFile)
@@ -186,14 +140,14 @@ object ShivaReport extends MultisampleReportBuilder {
     tsvWriter.println("\tHomVar\tHet\tHomRef\tNoCall")
 
     def getLine(summary: Summary, sample: String, lib: Option[String] = None): String = {
-      val homVar = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "HomVar"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val homRef = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "HomRef"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val noCall = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "NoCall"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
-      val het = new SummaryValue(List("shivavariantcalling", "stats", "multisample-vcfstats-final", "genotype", "Het"),
-        summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val path = target match {
+        case Some(t) => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller-$t", "genotype")
+        case _       => List("shivavariantcalling", "stats", s"multisample-vcfstats-$caller", "genotype")
+      }
+      val homVar = new SummaryValue(path :+ "HomVar", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val homRef = new SummaryValue(path :+ "HomRef", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val noCall = new SummaryValue(path :+ "NoCall", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
+      val het = new SummaryValue(path :+ "Het", summary, Some(sample), lib).value.getOrElse(0).toString.toLong
       val sb = new StringBuffer()
       if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
       sb.append(homVar + "\t")

@@ -64,13 +64,13 @@ object VepNormalizer extends ToolCommand {
     versionCheck(header)
     logger.debug("VCF version OK")
     logger.debug("Parsing header")
-    val new_infos = parseCsq(header)
+    val newInfos = parseCsq(header)
     header.setWriteCommandLine(true)
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(output).setReferenceDictionary(header.getSequenceDictionary)
       build ())
 
-    for (info <- new_infos) {
+    for (info <- newInfos) {
       val tmpheaderline = new VCFInfoHeaderLine(info, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String, "A VEP annotation")
       header.addMetaDataLine(tmpheaderline)
     }
@@ -81,7 +81,7 @@ object VepNormalizer extends ToolCommand {
     writer.writeHeader(header)
     logger.debug("Wrote header to file")
 
-    normalize(reader, writer, new_infos, commandArgs.mode, commandArgs.removeCSQ)
+    normalize(reader, writer, newInfos, commandArgs.mode, commandArgs.removeCSQ)
     writer.close()
     logger.debug("Closed writer")
     reader.close()

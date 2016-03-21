@@ -62,7 +62,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   var genomeDir: File = null
   var runmode: String = _
-  var sjdbOverhang: Int = _
+  var sjdbOverhang: Option[Int] = None
   var outFileNamePrefix: String = _
   var runThreadN: Option[Int] = config("runThreadN")
 
@@ -73,24 +73,24 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   override def beforeGraph() {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
-    genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     if (outFileNamePrefix != null && !outFileNamePrefix.endsWith(".")) outFileNamePrefix += "."
     val prefix = if (outFileNamePrefix != null) outputDir + File.separator + outFileNamePrefix else outputDir + File.separator
     if (runmode == null) {
       outputSam = new File(prefix + "Aligned.out.sam")
       outputTab = new File(prefix + "SJ.out.tab")
+      genomeDir = config("genomeDir", new File(reference.getAbsoluteFile.getParent, "star"))
     } else if (runmode == "genomeGenerate") {
       genomeDir = outputDir
       outputGenome = new File(prefix + "Genome")
       outputSA = new File(prefix + "SA")
       outputSAindex = new File(prefix + "SAindex")
-      sjdbOverhang = config("sjdboverhang", 75)
+      sjdbOverhang = config("sjdboverhang")
     }
   }
 
   /** Returns command to execute */
   def cmdLine = {
-    var cmd: String = required("cd", outputDir) + "&&" + required(executable)
+    var cmd: String = required("cd", outputDir) + " && " + required(executable)
     if (runmode != null && runmode == "genomeGenerate") { // Create index
       cmd += required("--runMode", runmode) +
         required("--genomeFastaFiles", reference)
@@ -100,8 +100,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
     cmd += required("--genomeDir", genomeDir) +
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
       optional("--runThreadN", threads) +
-      optional("--outFileNamePrefix", outFileNamePrefix)
-    if (sjdbOverhang > 0) cmd += optional("--sjdbOverhang", sjdbOverhang)
+      optional("--outFileNamePrefix", outFileNamePrefix) +
+      optional("--sjdbOverhang", sjdbOverhang)
 
     cmd
   }
@@ -146,24 +146,24 @@ object Star {
              outputDir: File,
              isIntermediate: Boolean = false,
              deps: List[File] = Nil): (File, List[Star]) = {
-    val starCommand_pass1 = Star(configurable, R1, R2, new File(outputDir, "aln-pass1"))
-    starCommand_pass1.isIntermediate = isIntermediate
-    starCommand_pass1.deps = deps
-    starCommand_pass1.beforeGraph()
+    val starCommandPass1 = Star(configurable, R1, R2, new File(outputDir, "aln-pass1"))
+    starCommandPass1.isIntermediate = isIntermediate
+    starCommandPass1.deps = deps
+    starCommandPass1.beforeGraph()
 
-    val starCommand_reindex = new Star(configurable)
-    starCommand_reindex.sjdbFileChrStartEnd = starCommand_pass1.outputTab
-    starCommand_reindex.outputDir = new File(outputDir, "re-index")
-    starCommand_reindex.runmode = "genomeGenerate"
-    starCommand_reindex.isIntermediate = isIntermediate
-    starCommand_reindex.beforeGraph()
+    val starCommandReindex = new Star(configurable)
+    starCommandReindex.sjdbFileChrStartEnd = starCommandPass1.outputTab
+    starCommandReindex.outputDir = new File(outputDir, "re-index")
+    starCommandReindex.runmode = "genomeGenerate"
+    starCommandReindex.isIntermediate = isIntermediate
+    starCommandReindex.beforeGraph()
 
-    val starCommand_pass2 = Star(configurable, R1, R2, new File(outputDir, "aln-pass2"))
-    starCommand_pass2.genomeDir = starCommand_reindex.outputDir
-    starCommand_pass2.isIntermediate = isIntermediate
-    starCommand_pass2.deps = deps
-    starCommand_pass2.beforeGraph()
+    val starCommandPass2 = Star(configurable, R1, R2, new File(outputDir, "aln-pass2"))
+    starCommandPass2.genomeDir = starCommandReindex.outputDir
+    starCommandPass2.isIntermediate = isIntermediate
+    starCommandPass2.deps = deps
+    starCommandPass2.beforeGraph()
 
-    (starCommand_pass2.outputSam, List(starCommand_pass1, starCommand_reindex, starCommand_pass2))
+    (starCommandPass2.outputSam, List(starCommandPass1, starCommandReindex, starCommandPass2))
   }
 }

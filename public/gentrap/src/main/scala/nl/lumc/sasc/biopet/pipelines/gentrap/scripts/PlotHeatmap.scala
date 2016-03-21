@@ -17,16 +17,16 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.scripts
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.pipelines.gentrap.extensions.RScriptCommandLineFunction
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the plot_heatmap.R script, used internally in Gentrap
  */
-class PlotHeatmap(val root: Configurable) extends RScriptCommandLineFunction {
+class PlotHeatmap(val root: Configurable) extends RscriptCommandLineFunction {
 
-  setRScript("plot_heatmap.R", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
+  protected var script: File = config("script", default = "plot_heatmap.R")
 
   @Input(doc = "Input table", required = true)
   var input: File = null
@@ -38,12 +38,12 @@ class PlotHeatmap(val root: Configurable) extends RScriptCommandLineFunction {
   var useLog: Boolean = config("use_log", default = false)
   var tmmNormalize: Boolean = config("tmm_normalize", default = false)
 
-  def cmdLine = {
-    RScriptCommand +
-      conditional(tmmNormalize, "-T") +
-      conditional(useLog, "-L") +
-      required("-C", countType) +
-      required("-I", input) +
-      required("-O", output)
-  }
+  override def cmd = super.cmd ++
+    (if (tmmNormalize) Seq("-T") else Seq()) ++
+    (if (useLog) Seq("-L") else Seq()) ++
+    (countType match {
+      case Some(t) => Seq("-C", t)
+      case _       => Seq()
+    }) ++
+    Seq("-I", input.getAbsolutePath, "-O", output.getAbsolutePath)
 }

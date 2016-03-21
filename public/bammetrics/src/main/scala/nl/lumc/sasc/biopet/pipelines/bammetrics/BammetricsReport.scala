@@ -57,9 +57,19 @@ object BammetricsReport extends ReportBuilder {
                      sampleId: Option[String],
                      libId: Option[String],
                      metricsTag: String = "bammetrics") = {
+
+    val wgsExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "wgs").isDefined
+    val rnaExecuted = summary.getValue(sampleId, libId, metricsTag, "stats", "rna").isDefined
+
+    val insertsizeMetrics = summary.getValue(sampleId, libId, metricsTag, "stats", "CollectInsertSizeMetrics", "metrics") match {
+      case Some(None) => false
+      case Some(_)    => true
+      case _          => false
+    }
+
     val targets = (
-      summary.getValue(sampleId, libId, "bammetrics", "settings", "amplicon_name"),
-      summary.getValue(sampleId, libId, "bammetrics", "settings", "roi_name")
+      summary.getValue(sampleId, libId, metricsTag, "settings", "amplicon_name"),
+      summary.getValue(sampleId, libId, metricsTag, "settings", "roi_name")
     ) match {
         case (Some(amplicon: String), Some(roi: List[_])) => amplicon :: roi.map(_.toString)
         case (_, Some(roi: List[_])) => roi.map(_.toString)
@@ -70,13 +80,18 @@ object BammetricsReport extends ReportBuilder {
       if (targets.isEmpty) List()
       else List("Targets" -> ReportPage(
         List(),
-        targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> t))),
+        targets.map(t => t -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/covstatsPlot.ssp", Map("target" -> Some(t)))),
         Map())),
       List(
-        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp"),
-        "Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true)),
-        "Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp", Map("showPlot" -> true))
-      ),
+        "Summary" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/alignmentSummary.ssp")) ++
+        (if (insertsizeMetrics) List("Insert Size" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/insertSize.ssp", Map("showPlot" -> true))
+        )
+        else Nil) ++ (if (wgsExecuted) List("Whole genome coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/wgsHistogram.ssp",
+          Map("showPlot" -> true)))
+        else Nil) ++
+        (if (rnaExecuted) List("Rna coverage" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/bammetrics/rnaHistogram.ssp",
+          Map("showPlot" -> true)))
+        else Nil),
       Map("metricsTag" -> metricsTag)
     )
   }
@@ -319,6 +334,96 @@ object BammetricsReport extends ReportBuilder {
     plot.width = Some(1200)
     plot.removeZero = true
     plot.title = Some("Whole genome coverage")
+    plot.runLocal()
+  }
+
+  /**
+   * Generate a line plot for rna coverage
+   * @param outputDir OutputDir for the tsv and png file
+   * @param prefix Prefix of the tsv and png file
+   * @param summary Summary class
+   * @param libraryLevel Default false, when set true plot will be based on library stats instead of sample stats
+   * @param sampleId Default it selects all sampples, when sample is giving it limits to selected sample
+   */
+  def rnaHistogramPlot(outputDir: File,
+                       prefix: String,
+                       summary: Summary,
+                       libraryLevel: Boolean = false,
+                       sampleId: Option[String] = None,
+                       libId: Option[String] = None): Unit = {
+    val tsvFile = new File(outputDir, prefix + ".tsv")
+    val pngFile = new File(outputDir, prefix + ".png")
+    val tsvWriter = new PrintWriter(tsvFile)
+    if (libraryLevel) {
+      tsvWriter.println((for (
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
+      ) yield s"$sample-$lib")
+        .mkString("library\t", "\t", ""))
+    } else {
+      sampleId match {
+        case Some(sample) => tsvWriter.println("\t" + sample)
+        case _            => tsvWriter.println(summary.samples.mkString("Sample\t", "\t", ""))
+      }
+    }
+
+    var map: Map[Int, Map[String, Double]] = Map()
+
+    def fill(sample: String, lib: Option[String]): Unit = {
+
+      val insertSize = new SummaryValue(List("bammetrics", "stats", "rna", "histogram", "normalized_position"),
+        summary, Some(sample), lib).value.getOrElse(List())
+      val counts = new SummaryValue(List("bammetrics", "stats", "rna", "histogram", "All_Reads.normalized_coverage"),
+        summary, Some(sample), lib).value.getOrElse(List())
+
+      (insertSize, counts) match {
+        case (l: List[_], l2: List[_]) =>
+          l.zip(l2).foreach(i => {
+            val insertSize = i._1.toString.toInt
+            val count = i._2.toString.toDouble
+            val old = map.getOrElse(insertSize, Map())
+            if (libraryLevel) map += insertSize -> (old + ((s"$sample-" + lib.get) -> count))
+            else map += insertSize -> (old + (sample -> count))
+          })
+        case _ => throw new IllegalStateException("Must be a list")
+      }
+    }
+
+    if (libraryLevel) {
+      for (
+        sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
+        lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
+      ) fill(sample, Some(lib))
+    } else if (sampleId.isDefined) fill(sampleId.get, None)
+    else summary.samples.foreach(fill(_, None))
+
+    for ((insertSize, counts) <- map) {
+      tsvWriter.print(insertSize)
+      if (libraryLevel) {
+        for (
+          sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample;
+          lib <- summary.libraries(sample) if libId.isEmpty || libId.get == lib
+        ) {
+          tsvWriter.print("\t" + counts.getOrElse(s"$sample-$lib", "0"))
+        }
+      } else {
+        for (sample <- summary.samples if sampleId.isEmpty || sampleId.get == sample) {
+          tsvWriter.print("\t" + counts.getOrElse(sample, "0"))
+        }
+      }
+      tsvWriter.println()
+    }
+
+    tsvWriter.close()
+
+    val plot = new LinePlot(null)
+    plot.input = tsvFile
+    plot.output = pngFile
+    plot.xlabel = Some("Relative position")
+    plot.ylabel = Some("Coverage")
+    plot.width = Some(1200)
+    plot.removeZero = true
+    plot.title = Some("Rna coverage")
     plot.runLocal()
   }
 }

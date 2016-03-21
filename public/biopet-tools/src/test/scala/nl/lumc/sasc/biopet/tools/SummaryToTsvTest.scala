@@ -77,13 +77,13 @@ class SummaryToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val line = values.head._2.keys.map(x => createLine(paths, values, x)).head
     line should equal("value\t")
-    val sample_values = fetchValues(summary, paths, true, false)
-    val sample_line = sample_values.head._2.keys.map(x => createLine(paths, sample_values, x)).head
-    sample_line should equal("016\t")
+    val sampleValues = fetchValues(summary, paths, true, false)
+    val sampleLine = sampleValues.head._2.keys.map(x => createLine(paths, sampleValues, x)).head
+    sampleLine should equal("016\t")
 
-    val lib_values = fetchValues(summary, paths, false, true)
-    val lib_line = lib_values.head._2.keys.map(x => createLine(paths, lib_values, x)).head
-    lib_line should equal("016-L001\tfalse")
+    val libValues = fetchValues(summary, paths, false, true)
+    val libLine = libValues.head._2.keys.map(x => createLine(paths, libValues, x)).head
+    libLine should equal("016-L001\tfalse")
   }
 
 }

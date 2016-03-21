@@ -31,12 +31,14 @@ class Cat(val root: Configurable) extends BiopetCommandLineFunction {
   @Output(doc = "Unzipped file", required = true)
   var output: File = _
 
+  var appending = false
+
   executable = config("exe", default = "cat")
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
     (if (inputAsStdin) "" else repeat(input)) +
-    (if (outputAsStsout) "" else " > " + required(output))
+    (if (outputAsStsout) "" else (if (appending) " >> " else " > ") + required(output))
 }
 
 /**

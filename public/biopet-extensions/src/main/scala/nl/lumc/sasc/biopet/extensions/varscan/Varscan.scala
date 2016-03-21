@@ -15,20 +15,15 @@
  */
 package nl.lumc.sasc.biopet.extensions.varscan
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{ Version, BiopetJavaCommandLineFunction }
 
-abstract class Varscan extends BiopetJavaCommandLineFunction {
+abstract class Varscan extends BiopetJavaCommandLineFunction with Version {
 
   override def subPath = "varscan" :: super.subPath
 
   jarFile = config("varscan_jar")
 
-  /**
-   * TODO: test version
-   * override def versionCommand = super.commandLine
-   * override val versionRegex = """VarScan v(.*)""".r
-   */
-
-  override def defaultCoreMemory = 5.0
+  def versionCommand = s"$executable -jar $jarFile"
+  def versionRegex = """VarScan v(.*)""".r
 }
 

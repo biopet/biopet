@@ -15,17 +15,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import htsjdk.samtools.SamReaderFactory
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.breakdancer.Breakdancer
-import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
-import nl.lumc.sasc.biopet.extensions.delly.Delly
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.extensions.Pysvtools
+import nl.lumc.sasc.biopet.pipelines.shiva.svcallers._
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import org.broadinstitute.gatk.queue.QScript
-
-import scala.collection.JavaConversions._
 
 /**
  * Common trait for ShivaVariantcalling
@@ -37,28 +33,18 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
 
   def this() = this(null)
 
+  var outputMergedVCFbySample: Map[String, File] = Map()
+  var outputMergedVCF: File = _
+
   @Input(doc = "Bam files (should be deduped bams)", shortName = "BAM", required = true)
-  protected var inputBamsArg: List[File] = Nil
+  protected[shiva] var inputBamsArg: List[File] = Nil
 
-  protected var inputBams: Map[String, File] = Map()
-
-  def addBamFile(file: File, sampleId: Option[String] = None): Unit = {
-    sampleId match {
-      case Some(sample)        => inputBams += sample -> file
-      case _ if !file.exists() => throw new IllegalArgumentException("Bam file does not exits: " + file)
-      case _ => {
-        val inputSam = SamReaderFactory.makeDefault.open(file)
-        val samples = inputSam.getFileHeader.getReadGroups.map(_.getSample).distinct
-        if (samples.size == 1) {
-          inputBams += samples.head -> file
-        } else throw new IllegalArgumentException("Bam contains multiple sample IDs: " + file)
-      }
-    }
-  }
+  var inputBams: Map[String, File] = Map()
 
   /** Executed before script */
   def init(): Unit = {
-    inputBamsArg.foreach(addBamFile(_))
+    if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    outputMergedVCF = new File(outputDir, "allsamples.merged.vcf")
   }
 
   /** Variantcallers requested by the config */
@@ -74,70 +60,43 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
     val callers = callersList.filter(x => configCallers.contains(x.name))
 
     require(inputBams.nonEmpty, "No input bams found")
-    require(callers.nonEmpty, "must select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
+    require(callers.nonEmpty, "Please select at least 1 SV caller, choices are: " + callersList.map(_.name).mkString(", "))
 
-    callers.foreach(_.addJobs())
+    callers.foreach { caller =>
+      caller.inputBams = inputBams
+      caller.outputDir = new File(outputDir, caller.name)
+      add(caller)
+    }
+
+    // merge VCF by sample
+    for ((sample, bamFile) <- inputBams) {
+      var sampleVCFS: List[Option[File]] = List.empty
+      callers.foreach { caller =>
+        sampleVCFS ::= caller.outputVCF(sample)
+      }
+      val mergeSVcalls = new Pysvtools(this)
+      mergeSVcalls.input = sampleVCFS.flatten
+      mergeSVcalls.output = new File(outputDir, sample + ".merged.vcf")
+      add(mergeSVcalls)
+      outputMergedVCFbySample += (sample -> mergeSVcalls.output)
+    }
+
+    // merge all files from all samples in project
+    val mergeSVcallsProject = new Pysvtools(this)
+    mergeSVcallsProject.input = outputMergedVCFbySample.values.toList
+    mergeSVcallsProject.output = outputMergedVCF
+    add(mergeSVcallsProject)
+
+    // merging the VCF calls by project
+    // basicly this will do all samples from this pipeline run
+    // group by "tags"
+    // sample tagging is however not available within this pipeline
 
     addSummaryJobs()
   }
 
   /** Will generate all available variantcallers */
-  protected def callersList: List[SvCaller] = List(new Breakdancer, new Clever, new Delly)
-
-  /** General trait for a variantcaller mode */
-  trait SvCaller {
-    /** Name of mode, this should also be used in the config */
-    val name: String
-
-    /** Output dir for this mode */
-    def outputDir = new File(qscript.outputDir, name)
-
-    /** This should add the variantcaller jobs */
-    def addJobs()
-  }
-
-  /** default mode of freebayes */
-  class Breakdancer extends SvCaller {
-    val name = "breakdancer"
-
-    def addJobs() {
-      //TODO: move minipipeline of breakdancer to here
-      for ((sample, bamFile) <- inputBams) {
-        val breakdancerDir = new File(outputDir, sample)
-        val breakdancer = Breakdancer(qscript, bamFile, breakdancerDir)
-        addAll(breakdancer.functions)
-      }
-    }
-  }
-
-  /** default mode of bcftools */
-  class Clever extends SvCaller {
-    val name = "clever"
-
-    def addJobs() {
-      //TODO: check double directories
-      for ((sample, bamFile) <- inputBams) {
-        val cleverDir = new File(outputDir, sample)
-        val clever = CleverCaller(qscript, bamFile, cleverDir)
-        add(clever)
-      }
-    }
-  }
-
-  /** Makes a vcf file from a mpileup without statistics */
-  class Delly extends SvCaller {
-    val name = "delly"
-
-    def addJobs() {
-      //TODO: Move mini delly pipeline to here
-      for ((sample, bamFile) <- inputBams) {
-        val dellyDir = new File(outputDir, sample)
-        val delly = Delly(qscript, bamFile, dellyDir)
-        delly.outputName = sample
-        addAll(delly.functions)
-      }
-    }
-  }
+  protected def callersList: List[SvCaller] = List(new Breakdancer(this), new Clever(this), new Delly(this), new Pindel(this))
 
   /** Location of summary file */
   def summaryFile = new File(outputDir, "ShivaSvCalling.summary.json")
@@ -149,7 +108,10 @@ class ShivaSvCalling(val root: Configurable) extends QScript with SummaryQScript
   def summaryFiles: Map[String, File] = {
     val callers: Set[String] = configCallers
     //callersList.filter(x => callers.contains(x.name)).map(x => x.name -> x.outputFile).toMap + ("final" -> finalFile)
-    Map()
+    Map(
+      "final_mergedvcf" -> outputMergedVCF
+
+    )
   }
 }
 

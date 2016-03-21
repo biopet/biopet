@@ -1,0 +1,37 @@
+#import(nl.lumc.sasc.biopet.utils.summary.Summary)
+#import(org.apache.commons.io.FileUtils)
+#import(java.io.File)
+<%@ var summary: Summary %>
+<%@ var outputDir: File %>
+<%@ var pipelineName: String %>
+<%@ var plotPath: Option[Any] %>
+#{
+
+def getPlot(path:Option[Any], targetPath:String) = {
+    path.collect {
+        case value =>
+            new File(targetPath).mkdirs()
+            val file = new File(value.toString)
+            val newFile = new File(outputDir, targetPath + File.separator + file.getName)
+
+            if (file.exists()) FileUtils.copyFile(file, newFile)
+            targetPath + File.separator + file.getName
+    }
+}
+
+}#
+<div class="panel-body">
+<!-- Table -->
+<table class="table">
+<thead>
+</thead>
+<tbody>
+    <tr>
+        <td>
+            <img src="${getPlot(plotPath, "measurements" )}" class="img-responsive center-block" />
+        </td>
+    </tr>
+</tbody>
+</table>
+
+</div>

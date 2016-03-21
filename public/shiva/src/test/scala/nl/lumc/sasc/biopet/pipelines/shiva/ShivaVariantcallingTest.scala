@@ -18,16 +18,17 @@ package nl.lumc.sasc.biopet.pipelines.shiva
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.config.Config
+import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
+import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.apache.commons.io.FileUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -53,54 +54,58 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       bams <- 0 to 3;
       raw <- bool;
       bcftools <- bool;
-      bcftools_singlesample <- bool;
-      freebayes <- bool
-    ) yield Array(bams, raw, bcftools, bcftools_singlesample, freebayes)).toArray
+      bcftoolsSinglesample <- bool;
+      freebayes <- bool;
+      varscanCnsSinglesample <- bool
+    ) yield Array(bams, raw, bcftools, bcftoolsSinglesample, freebayes, varscanCnsSinglesample)).toArray
   }
 
   @Test(dataProvider = "shivaVariantcallingOptions")
   def testShivaVariantcalling(bams: Int,
                               raw: Boolean,
                               bcftools: Boolean,
-                              bcftools_singlesample: Boolean,
-                              freebayes: Boolean) = {
+                              bcftoolsSinglesample: Boolean,
+                              freebayes: Boolean,
+                              varscanCnsSinglesample: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     if (raw) callers.append("raw")
     if (bcftools) callers.append("bcftools")
-    if (bcftools_singlesample) callers.append("bcftools_singlesample")
+    if (bcftoolsSinglesample) callers.append("bcftools_singlesample")
     if (freebayes) callers.append("freebayes")
+    if (varscanCnsSinglesample) callers.append("varscan_cns_singlesample")
     val map = Map("variantcallers" -> callers.toList)
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = (for (n <- 1 to bams) yield ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toList
+    pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftools_singlesample && !freebayes)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!raw && !bcftools && !bcftoolsSinglesample && !freebayes && !varscanCnsSinglesample)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
+      pipeline.init()
       pipeline.script()
     }
 
     if (!illegalArgumentException) {
+      pipeline.init()
       pipeline.script()
 
-      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe 1 + (if (raw) 1 else 0)
-      //pipeline.functions.count(_.isInstanceOf[Bcftools]) shouldBe (if (bcftools) 1 else 0)
-      //FIXME: Can not check for bcftools because of piping
-      pipeline.functions.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
-      //pipeline.functions.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
+      val pipesJobs = pipeline.functions.filter(_.isInstanceOf[BiopetPipe]).flatMap(_.asInstanceOf[BiopetPipe].pipesJobs)
+
+      pipeline.functions.count(_.isInstanceOf[CombineVariants]) shouldBe (1 + (if (raw) 1 else 0) + (if (varscanCnsSinglesample) 1 else 0))
+      pipesJobs.count(_.isInstanceOf[BcftoolsCall]) shouldBe (if (bcftools) 1 else 0) + (if (bcftoolsSinglesample) bams else 0)
+      pipeline.functions.count(_.isInstanceOf[BcftoolsMerge]) shouldBe (if (bcftoolsSinglesample && bams > 1) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[Freebayes]) shouldBe (if (freebayes) 1 else 0)
+      pipesJobs.count(_.isInstanceOf[MpileupToVcf]) shouldBe (if (raw) bams else 0)
       pipeline.functions.count(_.isInstanceOf[VcfFilter]) shouldBe (if (raw) bams else 0)
     }
-  }
-
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
   }
 }
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
-  def inputTouch(name: String): File = {
+  private def inputTouch(name: String): File = {
     val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
     Files.touch(file)
     file
@@ -130,6 +135,9 @@ object ShivaVariantcallingTest {
     "freebayes" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "rscript" -> Map("exe" -> "test"),
+    "exe" -> "test",
+    "varscan_jar" -> "test"
   )
 }

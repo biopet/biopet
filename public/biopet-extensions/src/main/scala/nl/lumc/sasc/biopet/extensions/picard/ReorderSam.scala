@@ -34,6 +34,9 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
   @Output(doc = "Output SAM or BAM file", required = true)
   var output: File = null
 
+  @Output(doc = "The output file to bam file to", required = true)
+  lazy val outputIndex: File = new File(output.getAbsolutePath.stripSuffix(".bam") + ".bai")
+
   @Argument(doc = "Allow incomplete dict concordance", required = false)
   var allowIncompleteDictConcordance: Boolean = config("allow_incomplete_dict_concordance", default = false)
 
@@ -49,6 +52,8 @@ class ReorderSam(val root: Configurable) extends Picard with Reference {
     conditional(allowIncompleteDictConcordance, "ALLOW_INCOMPLETE_DICT_CONCORDANCE=TRUE") +
     conditional(allowContigLengthDiscordance, "ALLOW_CONTIG_LENGTH_DISCORDANCE=TRUE") +
     required("REFERENCE=", reference, spaceSeparated = false) +
-    required("INPUT=", input, spaceSeparated = false) +
-    required("OUTPUT=", output, spaceSeparated = false)
+    (if (inputAsStdin) required("INPUT=", new File("/dev/stdin"), spaceSeparated = false)
+    else required("INPUT=", input, spaceSeparated = false)) +
+    (if (outputAsStsout) required("OUTPUT=", new File("/dev/stdout"), spaceSeparated = false)
+    else required("OUTPUT=", output, spaceSeparated = false))
 }

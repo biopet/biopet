@@ -25,7 +25,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{ BeforeClass, AfterClass, DataProvider, Test }
 
 /**
  * Test class for [[Mapping]]
@@ -64,20 +64,20 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
                   skipMarkDuplicate: Boolean,
                   skipFlexiprep: Boolean,
                   zipped: Boolean) = {
-    val map = ConfigUtils.mergeMaps(Map("output_dir" -> MappingTest.outputDir,
+    val map = ConfigUtils.mergeMaps(Map("output_dir" -> outputDir,
       "aligner" -> aligner,
       "number_chunks" -> chunks,
       "skip_markduplicates" -> skipMarkDuplicate,
       "skip_flexiprep" -> skipFlexiprep
-    ), Map(MappingTest.executables.toSeq: _*))
+    ), Map(executables.toSeq: _*))
     val mapping: Mapping = initPipeline(map)
 
     if (zipped) {
-      mapping.input_R1 = MappingTest.r1Zipped
-      if (paired) mapping.input_R2 = Some(MappingTest.r2Zipped)
+      mapping.inputR1 = r1Zipped
+      if (paired) mapping.inputR2 = Some(r2Zipped)
     } else {
-      mapping.input_R1 = MappingTest.r1
-      if (paired) mapping.input_R2 = Some(MappingTest.r2)
+      mapping.inputR1 = r1
+      if (paired) mapping.inputR2 = Some(r2)
     }
     mapping.sampleId = Some("1")
     mapping.libId = Some("1")
@@ -87,34 +87,28 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
   }
 
-  // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(MappingTest.outputDir)
-  }
-}
-
-class MappingBwaMemTest extends AbstractTestMapping("bwa-mem")
-class MappingBwaAlnTest extends AbstractTestMapping("bwa-aln")
-class MappingStarTest extends AbstractTestMapping("star")
-class MappingStar2PassTest extends AbstractTestMapping("star-2pass")
-class MappingBowtieTest extends AbstractTestMapping("bowtie")
-class MappingStampyTest extends AbstractTestMapping("stampy")
-class MappingGsnapTest extends AbstractTestMapping("gsnap")
-class MappingTophatTest extends AbstractTestMapping("tophat")
-
-object MappingTest {
-
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
 
   val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
-  Files.touch(r1)
   val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
-  Files.touch(r2)
   val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
-  Files.touch(r1Zipped)
   val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
-  Files.touch(r2Zipped)
+
+  @BeforeClass
+  def createTempFiles: Unit = {
+    Files.touch(r1)
+    Files.touch(r2)
+    Files.touch(r1Zipped)
+    Files.touch(r2Zipped)
+
+    copyFile("ref.fa")
+    copyFile("ref.dict")
+    copyFile("ref.fa.fai")
+    copyFile("ref.1.bt2")
+    copyFile("ref.1.ebwt")
+
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)
@@ -122,12 +116,6 @@ object MappingTest {
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
-
-  copyFile("ref.fa")
-  copyFile("ref.dict")
-  copyFile("ref.fa.fai")
-  copyFile("ref.1.bt2")
-  copyFile("ref.1.ebwt")
 
   val executables = Map(
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
@@ -142,8 +130,24 @@ object MappingTest {
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
+    "bowtie2" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )
+
+  // remove temporary run directory all tests in the class have been run
+  @AfterClass def removeTempOutputDir() = {
+    FileUtils.deleteDirectory(outputDir)
+  }
 }
+
+class MappingBwaMemTest extends AbstractTestMapping("bwa-mem")
+class MappingBwaAlnTest extends AbstractTestMapping("bwa-aln")
+class MappingStarTest extends AbstractTestMapping("star")
+class MappingStar2PassTest extends AbstractTestMapping("star-2pass")
+class MappingBowtieTest extends AbstractTestMapping("bowtie")
+class MappingBowtie2Test extends AbstractTestMapping("bowtie2")
+class MappingStampyTest extends AbstractTestMapping("stampy")
+class MappingGsnapTest extends AbstractTestMapping("gsnap")
+class MappingTophatTest extends AbstractTestMapping("tophat")

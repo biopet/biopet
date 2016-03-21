@@ -18,8 +18,9 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
-import nl.lumc.sasc.biopet.utils.Logging
-import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.core.summary.{ SummaryQScript, Summarizable }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 
 import scala.collection.JavaConversions._
 
@@ -63,21 +64,45 @@ trait Reference extends Configurable {
   protected def faiRequired = false
 
   /** When set override this on true the pipeline with raise an exception when dict index is not found */
-  protected def dictRequired = false
+  protected def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
 
   /** Returns the fasta file */
   def referenceFasta(): File = {
     val file: File = config("reference_fasta")
-    checkFasta(file)
+    if (config.contains("reference_fasta")) {
+      checkFasta(file)
 
-    val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
-    val fai = new File(file.getAbsolutePath + ".fai")
+      val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta").stripSuffix(".fna") + ".dict")
+      val fai = new File(file.getAbsolutePath + ".fai")
 
-    this match {
-      case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
-      case _                            =>
+      this match {
+        case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
+        case _                            =>
+      }
+    } else {
+      val defaults = ConfigUtils.mergeMaps(this.defaults, this.internalDefaults)
+
+      def getReferences(map: Map[String, Any]): Set[(String, String)] = (for (
+        (species, species_content) <- map.getOrElse("references", Map[String, Any]()).asInstanceOf[Map[String, Any]].toList;
+        (reference_name, _) <- species_content.asInstanceOf[Map[String, Any]].toList
+      ) yield (species, reference_name)).toSet
+
+      val references = getReferences(defaults) ++ getReferences(Config.global.map)
+      if (!references.contains((referenceSpecies, referenceName))) {
+        val buffer = new StringBuilder()
+        if (references.exists(_._1 == referenceSpecies)) {
+          buffer.append(s"Reference: '$referenceName' does not exist in config for species: '$referenceSpecies'")
+          buffer.append(s"\nRefrences found for species '$referenceSpecies':")
+          references.filter(_._1 == referenceSpecies).foreach(x => buffer.append("\n - " + x._2))
+        } else {
+          buffer.append(s"Species: '$referenceSpecies' does not exist in config")
+          if (references.nonEmpty) buffer.append("\n    References available in config (species -> reference_name):")
+          else buffer.append("\n    No references found in user or global config")
+          references.toList.sorted.foreach(x => buffer.append(s"\n     - ${x._1} -> ${x._2}"))
+        }
+        Logging.addError(buffer.toString)
+      }
     }
-
     file
   }
 
@@ -101,12 +126,11 @@ trait Reference extends Configurable {
   def checkFasta(file: File): Unit = {
     if (!Reference.checked.contains(file)) {
       if (!file.exists()) Logging.addError(s"Reference not found: $file, species: $referenceSpecies, name: $referenceName, configValue: " + config("reference_fasta"))
-
-      if (dictRequired) Reference.requireDict(file)
-      if (faiRequired) Reference.requireFai(file)
-
       Reference.checked += file
     }
+
+    if (dictRequired) Reference.requireDict(file)
+    if (faiRequired) Reference.requireFai(file)
   }
 }
 
@@ -117,22 +141,33 @@ object Reference {
 
   /**
    * Raise an exception when given fasta file has no fai file
+   *
    * @param fastaFile Fasta file
    */
   def requireFai(fastaFile: File): Unit = {
     val fai = new File(fastaFile.getAbsolutePath + ".fai")
-    if (fai.exists()) {
-      if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
-        Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
-    } else Logging.addError("Reference is missing a fai file")
+    if (!checked.contains(fai)) {
+      checked += fai
+      if (fai.exists()) {
+        if (!IndexedFastaSequenceFile.canCreateIndexedFastaReader(fastaFile))
+          Logging.addError(s"Index of reference cannot be loaded, reference: $fastaFile")
+      } else Logging.addError("Reference is missing a fai file")
+    }
   }
 
   /**
    * Raise an exception when given fasta file has no dict file
+   *
    * @param fastaFile Fasta file
    */
   def requireDict(fastaFile: File): Unit = {
-    val dict = new File(fastaFile.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta") + ".dict")
-    if (!dict.exists()) Logging.addError("Reference is missing a dict file")
+    val dict = new File(fastaFile.getAbsolutePath
+      .stripSuffix(".fna")
+      .stripSuffix(".fa")
+      .stripSuffix(".fasta") + ".dict")
+    if (!checked.contains(dict)) {
+      checked += dict
+      if (!dict.exists()) Logging.addError("Reference is missing a dict file")
+    }
   }
 }

@@ -83,13 +83,14 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   /** Set default output file, threads and vmem for current job */
   final def internalBeforeGraph(): Unit = {
 
-    pipesJobs.foreach(_.beforeGraph())
-    pipesJobs.foreach(_.internalBeforeGraph())
+    _pipesJobs.foreach(_.beforeGraph())
+    _pipesJobs.foreach(_.internalBeforeGraph())
 
   }
 
   /**
    * Can override this value is executable may not be converted to CanonicalPath
+   *
    * @deprecated
    */
   val executableToCanonicalPath = true
@@ -121,6 +122,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   /**
    * This operator sends stdout to `that` and combine this into 1 command line function
+   *
    * @param that Function that will read from stdin
    * @return BiopetPipe function
    */
@@ -141,6 +143,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   /**
    * This operator can be used to give a program a file as stdin
+   *
    * @param file File that will become stdin for this program
    * @return It's own class
    */
@@ -152,6 +155,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   /**
    * This operator can be used to give a program a file write it's atdout
+   *
    * @param file File that will become stdout for this program
    * @return It's own class
    */
@@ -169,6 +173,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
 
   /**
    * This function needs to be implemented to define the command that is executed
+   *
    * @return Command to run
    */
   protected[core] def cmdLine: String
@@ -176,6 +181,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   /**
    * implementing a final version of the commandLine from org.broadinstitute.gatk.queue.function.CommandLineFunction
    * User needs to implement cmdLine instead
+   *
    * @return Command to run
    */
   override final def commandLine: String = {
@@ -187,10 +193,11 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     cmd
   }
 
-  private[core] var pipesJobs: List[BiopetCommandLineFunction] = Nil
+  private[core] var _pipesJobs: List[BiopetCommandLineFunction] = Nil
+  def pipesJobs = _pipesJobs
   def addPipeJob(job: BiopetCommandLineFunction) {
-    pipesJobs :+= job
-    pipesJobs = pipesJobs.distinct
+    _pipesJobs :+= job
+    _pipesJobs = _pipesJobs.distinct
   }
 }
 

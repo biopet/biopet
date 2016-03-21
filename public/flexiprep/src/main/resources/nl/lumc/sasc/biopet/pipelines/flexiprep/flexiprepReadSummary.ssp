@@ -13,8 +13,8 @@
 <%@ var multisample: Boolean = true %>
 #{
     val samples = sampleId match {
-        case Some(sample) => List(sample.toString)
-        case _ => summary.samples.toList
+    case Some(sample) => List(sample.toString)
+    case _ => summary.samples.toList
     }
     val trimCount = summary.getLibraryValues("flexiprep", "settings", "skip_trim").count(_._2 == Some(false))
     val clipCount = summary.getLibraryValues("flexiprep", "settings", "skip_clip").count(_._2 == Some(false))
@@ -44,17 +44,17 @@
             #end
         </p>
         <p>
-        #if(sampleId.isDefined && libId.isDefined)
-            Here we show aggregated quality statistics for sequencing library ${libId} for sample ${sampleId}. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
-        #elseif(sampleId.isDefined)
-            Here we show aggregated quality statistics for every sequencing library for sample ${sampleId}. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
-        #else
-            Here we show aggregated quality statistics for every sequencing library. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
-            We show two plots; one for the forward read in the pair, and another one of the reverse read in the pair.
-            Red denotes number of reads left after QC. Green denotes reads filtered by adaptor clipping.
-            Blue denotes number of reads filtered by read trimming.
-            Purple denotes the amount of <em>synced</em> reads. That is, reads removed in one orientation should be removed in the other as well to ensure correctness.
-        #end
+            #if(sampleId.isDefined && libId.isDefined)
+                Here we show aggregated quality statistics for sequencing library ${libId} for sample ${sampleId}. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
+            #elseif(sampleId.isDefined)
+                Here we show aggregated quality statistics for every sequencing library for sample ${sampleId}. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
+            #else
+                Here we show aggregated quality statistics for every sequencing library. It shows the total number of reads used after quality control, and the total number of reads discarded during quality control. This is done for both forward and reverse reads.
+                We show two plots; one for the forward read in the pair, and another one of the reverse read in the pair.
+                Red denotes number of reads left after QC. Green denotes reads filtered by adaptor clipping.
+                Blue denotes number of reads filtered by read trimming.
+                Purple denotes the amount of <em>synced</em> reads. That is, reads removed in one orientation should be removed in the other as well to ensure correctness.
+            #end
         </p>
     </div>
     </div>
@@ -62,28 +62,36 @@
 
 #if (showPlot)
     #{
+        val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
+            summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
+        else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
         FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
-        FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
+        if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
     }#
     <div class="panel-body">
-        <div class="row">
-            <div class="col-sm-6 col-md-6">
-                <img src="QC_Reads_R1.png" class="img-responsive">
-            </div>
-            <div class="col-sm-6 col-md-6">
-                <img src="QC_Reads_R2.png" class="img-responsive">
-            </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6">
+            <img src="QC_Reads_R1.png" class="img-responsive">
         </div>
+        #if (paired)
+        <div class="col-sm-6 col-md-6">
+            <img src="QC_Reads_R2.png" class="img-responsive">
+        </div>
+        #end
+    </div>
 
     </div>
     <div class="panel-footer">
-        #if (showTable)
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_ReadsTable">Hide table</button>
-        #else
-            <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_ReadsTable">Show table</button>
-        #end
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R1.tsv">R1 reads stats</a> -
-        <i class="glyphicon glyphicon-file"></i> <a href="QC_Reads_R2.tsv">R2 reads stats</a>
+    #if (showTable)
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_ReadsTable">Hide table</button>
+    #else
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#QC_ReadsTable">Show table</button>
+    #end
+
+    <a href="QC_Reads_R1.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R1 reads stats</button></a>
+    #if (paired)
+    <a href="QC_Reads_R2.tsv"><button type="button" class="btn btn-info"><i class="glyphicon glyphicon-cloud-download"></i> R2 reads stats</button></a>
+    #end
     </div>
 #end
 
@@ -103,8 +111,8 @@
         #for (sample <- samples.toList.sorted)
             #{
                 val libs = libId match {
-                case Some(libId) => List(libId.toString)
-                case _ => summary.libraries(sample).toList
+                case Some(libId) => List(libId.toString).sorted
+                case _ => summary.libraries(sample).toList.sorted
                 }
                 val sampleRowspan = {
                 libs.size +
@@ -136,7 +144,12 @@
                             val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total")
                             val clippingDiscardedToShort = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short").getOrElse(0).toString.toLong
                             val clippingDiscardedToLong = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long").getOrElse(0).toString.toLong
-                            val trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming", "num_reads_discarded_" + read).getOrElse(0).toString.toLong
+                            var trimmingDiscarded: Long = 0
+                            if(paired == true) {
+                            trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_" + read).getOrElse(0).toString.toLong
+                            } else {
+                            trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_total").getOrElse(0).toString.toLong
+                            }
                         }#
                         <td>${read}</td>
                         <td>${beforeTotal}</td>

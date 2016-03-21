@@ -12,22 +12,37 @@
         val buffer: StringBuffer = new StringBuffer()
 
         if (page.subPages.nonEmpty){
-            buffer.append("<ul class=\"dropdown-menu\">")
+            buffer.append("<ul class=\"dropdown-menu list-group\">")
         }
 
-        for (subPage <- page.subPages) {
+        for (subPage <- page.subPages.sortBy(_._1)) {
+
             val href: String = {
                 if (path.isEmpty) rootPath + subPage._1 + "/index.html"
                 else rootPath + path.mkString("","/","/") + subPage._1 + "/index.html"
             }
 
-            buffer.append("<li")
-            if(subPage._2.subPages.nonEmpty) buffer.append(" class=\"dropdown-submenu\"")
-            buffer.append("><a href=\"" + href + "\"")
-            if (first) buffer.append(" tabindex=\"-1\"")
-            buffer.append(">" + subPage._1 + "</a>")
-            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false))
-            buffer.append("</li>")
+//            buffer.append("<li")
+//            if(subPage._2.subPages.nonEmpty) buffer.append(" class=\"dropdown-submenu list-group-item\"")
+//            buffer.append("><span class=\"badge\">%d</span><a href=\"%s\"".format(subPage._2.subPages.size, href))
+//            if (first) buffer.append(" tabindex=\"-1\"")
+//            buffer.append(">%s</a>".format(subPage._1))
+//            buffer.append(createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false))
+//            buffer.append("</li>")
+
+            val listSubmenu = if(subPage._2.subPages.nonEmpty) "dropdown-submenu" else ""
+//            val subMenuBadgeCount = if(subPage._2.subPages.nonEmpty && first) "<span class='badge'>%d</span>".format(subPage._2.subPages.size) else ""
+            val tabIndex = if (first) " tabindex='-1'" else ""
+//            val listGroupA = if(subPage._2.subPages.nonEmpty) "list-group-item" else ""
+
+            var menuItem: String = "<li class='%s'>".format(listSubmenu) +
+            "<a href='%s' class='%s'%s>".format(href, "", tabIndex) +
+            "%s".format(subPage._1) +
+            "</a>" +
+            createMenu(subPage._2, path ::: subPage._1 :: Nil, first = false) +
+            "</li>"
+            buffer.append(menuItem)
+
         }
         if(page.subPages.nonEmpty) {
             buffer.append("</ul>\n")
@@ -74,7 +89,7 @@
                 Sortable.init()
 
                 $('body').scrollspy({
-                    target: '.bs-sidebar',
+                    target: '.bs-sidebar'
                 });
             });
 
@@ -113,14 +128,14 @@
                         <a href="${rootPath}index.html">Home
                             #if (indexPage.subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
-                        ${unescape(createMenu(indexPage))}
+                        ${unescape(createMenu(indexPage, Nil, false))}
                     </li>
                 #else
                     <li class="root #if (t == path.size) active #end">
                         <a href="${rootPath}${path.slice(0,t).mkString("", "/", "/")}index.html">${path( t - 1 )}
                             #if (getSubPage(path.slice(0, t)).subPages.nonEmpty) <b class="caret"></b> #end
                         </a>
-                        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t)))}
+                        ${unescape(createMenu(getSubPage(path.slice(0, t)), path.slice(0, t), false))}
                     </li>
                 #end
             #end
@@ -148,7 +163,7 @@
                         ${name}
                     </h3>
                 </div>
-            ${unescape(section.render(args))}
+            ${unescape(section.render(args ++ Map("args" -> args)))}
             </div>
         #end
     </div>

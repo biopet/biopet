@@ -20,14 +20,16 @@ import java.util.Date
 
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
-import nl.lumc.sasc.biopet.extensions.{ Gsnap, Tophat, _ }
+import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
-import nl.lumc.sasc.biopet.pipelines.gears.Gears
+import nl.lumc.sasc.biopet.pipelines.gears.GearsSingle
 import nl.lumc.sasc.biopet.pipelines.mapping.scripts.TophatRecondition
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -39,11 +41,11 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   def this() = this(null)
 
-  @Input(doc = "R1 fastq file", shortName = "R1", required = true)
-  var input_R1: File = _
+  @Input(doc = "R1 fastq file", shortName = "R1", fullName = "inputR1", required = true)
+  var inputR1: File = _
 
-  @Input(doc = "R2 fastq file", shortName = "R2", required = false)
-  var input_R2: Option[File] = None
+  @Input(doc = "R2 fastq file", shortName = "R2", fullName = "inputR2", required = false)
+  var inputR2: Option[File] = None
 
   /** Output name */
   var outputName: String = _
@@ -105,9 +107,16 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   )
 
   /** File to add to the summary */
-  def summaryFiles: Map[String, File] = Map("output_bamfile" -> finalBamFile, "input_R1" -> input_R1,
+  def summaryFiles: Map[String, File] = Map("output_bam" -> finalBamFile, "input_R1" -> inputR1,
     "reference" -> referenceFasta()) ++
-    (if (input_R2.isDefined) Map("input_R2" -> input_R2.get) else Map())
+    (if (inputR2.isDefined) Map("input_R2" -> inputR2.get) else Map()) ++
+    (bam2wig match {
+      case Some(b) => Map(
+        "output_wigle" -> b.outputWigleFile,
+        "output_tdf" -> b.outputTdfFile,
+        "output_bigwig" -> b.outputBwFile)
+      case _ => Map()
+    })
 
   /** Settings to add to summary */
   def summarySettings = Map(
@@ -132,14 +141,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** Will be executed before script */
   def init() {
     require(outputDir != null, "Missing output directory on mapping module")
-    require(input_R1 != null, "Missing output directory on mapping module")
+    require(inputR1 != null, "Missing output directory on mapping module")
     require(sampleId.isDefined, "Missing sample ID on mapping module")
     require(libId.isDefined, "Missing library ID on mapping module")
 
-    inputFiles :+= new InputFile(input_R1)
-    input_R2.foreach(inputFiles :+= new InputFile(_))
+    inputFiles :+= new InputFile(inputR1)
+    inputR2.foreach(inputFiles :+= new InputFile(_))
 
-    paired = input_R2.isDefined
+    paired = inputR2.isDefined
 
     if (readgroupId == null)
       readgroupId = config("readgroup_id", default = sampleId.get + "-" + libId.get)
@@ -151,8 +160,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         if (config.contains("numberchunks")) numberChunks = config("numberchunks", default = None)
         else {
           val chunkSize: Int = config("chunksize", 1 << 30)
-          val filesize = if (input_R1.getName.endsWith(".gz") || input_R1.getName.endsWith(".gzip")) input_R1.length * 3
-          else input_R1.length
+          val filesize = if (inputR1.getName.endsWith(".gz") || inputR1.getName.endsWith(".gzip")) inputR1.length * 3
+          else inputR1.length
           numberChunks = Option(ceil(filesize.toDouble / chunkSize).toInt)
         }
       }
@@ -164,40 +173,40 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   def biopetScript() {
     if (!skipFlexiprep) {
       flexiprep.outputDir = new File(outputDir, "flexiprep")
-      flexiprep.input_R1 = input_R1
-      flexiprep.input_R2 = input_R2
+      flexiprep.inputR1 = inputR1
+      flexiprep.inputR2 = inputR2
       flexiprep.sampleId = this.sampleId
       flexiprep.libId = this.libId
       flexiprep.init()
       flexiprep.runInitialJobs()
     }
     var bamFiles: List[File] = Nil
-    var fastq_R1_output: List[File] = Nil
-    var fastq_R2_output: List[File] = Nil
+    var fastqR1Output: List[File] = Nil
+    var fastqR2Output: List[File] = Nil
 
     val chunks: Map[File, (File, Option[File])] = {
       if (chunking) (for (t <- 1 to numberChunks.getOrElse(1)) yield {
         val chunkDir = new File(outputDir, "chunks" + File.separator + t)
-        chunkDir -> (new File(chunkDir, input_R1.getName),
-          if (paired) Some(new File(chunkDir, input_R2.get.getName)) else None)
+        chunkDir -> (new File(chunkDir, inputR1.getName),
+          if (paired) Some(new File(chunkDir, inputR2.get.getName)) else None)
       }).toMap
-      else if (skipFlexiprep) Map(outputDir -> (input_R1, if (paired) input_R2 else None))
-      else Map(outputDir -> (flexiprep.input_R1, flexiprep.input_R2))
+      else if (skipFlexiprep) Map(outputDir -> (inputR1, if (paired) inputR2 else None))
+      else Map(outputDir -> (flexiprep.inputR1, flexiprep.inputR2))
     }
 
     if (chunking) {
-      val fastSplitter_R1 = new FastqSplitter(this)
-      fastSplitter_R1.input = input_R1
-      for ((chunkDir, fastqfile) <- chunks) fastSplitter_R1.output :+= fastqfile._1
-      fastSplitter_R1.isIntermediate = true
-      add(fastSplitter_R1)
+      val fastSplitterR1 = new FastqSplitter(this)
+      fastSplitterR1.input = inputR1
+      for ((chunkDir, fastqfile) <- chunks) fastSplitterR1.output :+= fastqfile._1
+      fastSplitterR1.isIntermediate = true
+      add(fastSplitterR1)
 
       if (paired) {
-        val fastSplitter_R2 = new FastqSplitter(this)
-        fastSplitter_R2.input = input_R2.get
-        for ((chunkDir, fastqfile) <- chunks) fastSplitter_R2.output :+= fastqfile._2.get
-        fastSplitter_R2.isIntermediate = true
-        add(fastSplitter_R2)
+        val fastSplitterR2 = new FastqSplitter(this)
+        fastSplitterR2.input = inputR2.get
+        for ((chunkDir, fastqfile) <- chunks) fastSplitterR2.output :+= fastqfile._2.get
+        fastSplitterR2.isIntermediate = true
+        add(fastSplitterR2)
       }
     }
 
@@ -209,8 +218,8 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         logger.debug(chunkDir + " - " + flexiout)
         R1 = flexiout._1
         if (paired) R2 = flexiout._2
-        fastq_R1_output :+= R1
-        R2.foreach(R2 => fastq_R2_output :+= R2)
+        fastqR1Output :+= R1
+        R2.foreach(R2 => fastqR2Output :+= R2)
       }
 
       val outputBam = new File(chunkDir, outputName + ".bam")
@@ -219,6 +228,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bwa-mem"    => addBwaMem(R1, R2, outputBam)
         case "bwa-aln"    => addBwaAln(R1, R2, outputBam)
         case "bowtie"     => addBowtie(R1, R2, outputBam)
+        case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
@@ -231,7 +241,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         addAll(BamMetrics(this, outputBam, new File(chunkDir, "metrics"), sampleId, libId).functions)
     }
     if (!skipFlexiprep) {
-      flexiprep.runFinalize(fastq_R1_output, fastq_R2_output)
+      flexiprep.runFinalize(fastqR1Output, fastqR2Output)
       addAll(flexiprep.functions) // Add function of flexiprep to curent function pool
       addSummaryQScript(flexiprep)
     }
@@ -243,7 +253,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
       add(md)
       addSummarizable(md, "mark_duplicates")
     } else if (skipMarkduplicates && chunking) {
-      val mergeSamFile = MergeSamFiles(this, bamFiles, outputDir)
+      val mergeSamFile = MergeSamFiles(this, bamFiles, new File(outputDir, outputName + ".merge.bam"))
       add(mergeSamFile)
       bamFile = mergeSamFile.output
     }
@@ -259,20 +269,22 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     outputFiles += ("finalBamFile" -> finalBamFile.getAbsoluteFile)
 
     if (config("unmapped_to_gears", default = false).asBoolean) {
-      val gears = new Gears(this)
+      val gears = new GearsSingle(this)
       gears.bamFile = Some(finalBamFile)
+      gears.sampleId = sampleId
+      gears.libId = libId
       gears.outputDir = new File(outputDir, "gears")
-      gears.init()
-      gears.biopetScript()
-      addAll(gears.functions)
-      addSummaryQScript(gears)
+      add(gears)
     }
 
-    if (config("generate_wig", default = false).asBoolean)
-      addAll(Bam2Wig(this, finalBamFile).functions)
+    bam2wig.foreach(add(_))
 
     addSummaryJobs()
   }
+
+  protected lazy val bam2wig = if (config("generate_wig", default = false)) {
+    Some(Bam2Wig(this, finalBamFile))
+  } else None
 
   /** Add bwa aln jobs */
   def addBwaAln(R1: File, R2: Option[File], output: File): File = {
@@ -354,15 +366,15 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val tophat = new Tophat(this)
     tophat.R1 = tophat.R1 :+ R1
     if (paired) tophat.R2 = tophat.R2 :+ R2.get
-    tophat.output_dir = new File(outputDir, "tophat_out")
+    tophat.outputDir = new File(outputDir, "tophat_out")
     // always output BAM
-    tophat.no_convert_bam = false
+    tophat.noConvertBam = false
     // and always keep input ordering
-    tophat.keep_fasta_order = true
+    tophat.keepFastaOrder = true
     add(tophat)
 
     // fix unmapped file coordinates
-    val fixedUnmapped = new File(tophat.output_dir, "unmapped_fixup.sam")
+    val fixedUnmapped = new File(tophat.outputDir, "unmapped_fixup.sam")
     val fixer = new TophatRecondition(this)
     fixer.inputBam = tophat.outputAcceptedHits
     fixer.outputSam = fixedUnmapped.getAbsoluteFile
@@ -370,14 +382,14 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(fixer)
 
     // sort fixed SAM file
-    val sorter = SortSam(this, fixer.outputSam, new File(tophat.output_dir, "unmapped_fixup.sorted.bam"))
+    val sorter = SortSam(this, fixer.outputSam, new File(tophat.outputDir, "unmapped_fixup.sorted.bam"))
     sorter.sortOrder = "coordinate"
     sorter.isIntermediate = true
     add(sorter)
 
     // merge with mapped file
     val mergeSamFile = MergeSamFiles(this, List(tophat.outputAcceptedHits, sorter.output),
-      tophat.output_dir, "coordinate")
+      new File(tophat.outputDir, "fixed_merged.bam"), sortOrder = "coordinate")
     mergeSamFile.createIndex = true
     mergeSamFile.isIntermediate = true
     add(mergeSamFile)
@@ -392,6 +404,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     add(ar._1)
     ar._2
   }
+
   /** Adds stampy jobs */
   def addStampy(R1: File, R2: Option[File], output: File): File = {
 
@@ -435,6 +448,25 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -1
     add(pipe)
     ar._2
+  }
+
+  /** Add bowtie2 jobs **/
+  def addBowtie2(R1: File, R2: Option[File], output: File): File = {
+    val bowtie2 = new Bowtie2(this)
+    bowtie2.rgId = Some(readgroupId)
+    bowtie2.rg +:= ("LB:" + libId.get)
+    bowtie2.rg +:= ("PL:" + platform)
+    bowtie2.rg +:= ("PU:" + platformUnit)
+    bowtie2.rg +:= ("SM:" + sampleId.get)
+    bowtie2.R1 = R1
+    bowtie2.R2 = R2
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = bowtie2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = -1
+    add(pipe)
+    output
   }
 
   /** Adds Star jobs */

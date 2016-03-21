@@ -18,16 +18,14 @@ package nl.lumc.sasc.biopet.pipelines.carp
 import java.io.File
 
 import nl.lumc.sasc.biopet.core._
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
-import nl.lumc.sasc.biopet.utils.config._
-import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.extensions.Ln
+import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
-import nl.lumc.sasc.biopet.extensions.picard.{ BuildBamIndex, MergeSamFiles }
+import nl.lumc.sasc.biopet.extensions.picard.BuildBamIndex
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
-import nl.lumc.sasc.biopet.pipelines.mapping.Mapping
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
+import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 
 /**
@@ -35,15 +33,16 @@ import org.broadinstitute.gatk.queue.QScript
  * Chip-Seq analysis pipeline
  * This pipeline performs QC,mapping and peak calling
  */
-class Carp(val root: Configurable) extends QScript with MultiSampleQScript with SummaryQScript with Reference {
+class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait with Reference {
   qscript =>
   def this() = this(null)
 
-  override def defaults = Map(
+  override def defaults = super.defaults ++ Map(
     "mapping" -> Map(
       "skip_markduplicates" -> false,
       "aligner" -> "bwa-mem"
     ),
+    "merge_strategy" -> "preprocessmergesam",
     "samtoolsview" -> Map("q" -> 10)
   )
 
@@ -56,136 +55,70 @@ class Carp(val root: Configurable) extends QScript with MultiSampleQScript with 
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
 
-  //TODO: Add summary
-  def summaryFiles = Map("reference" -> referenceFasta())
+  override def makeSample(id: String) = new Sample(id)
+  class Sample(sampleId: String) extends super.Sample(sampleId) {
 
-  //TODO: Add summary
-  def summarySettings = Map("reference" -> referenceSummary)
+    override def preProcessBam = Some(createFile(".filter.bam"))
 
-  def makeSample(id: String) = new Sample(id)
-  class Sample(sampleId: String) extends AbstractSample(sampleId) {
-    //TODO: Add summary
-    def summaryFiles: Map[String, File] = Map()
-
-    //TODO: Add summary
-    def summaryStats: Map[String, Any] = Map()
-
-    def makeLibrary(id: String) = new Library(id)
-    class Library(libId: String) extends AbstractLibrary(libId) {
-      //TODO: Add summary
-      def summaryFiles: Map[String, File] = Map()
-
-      //TODO: Add summary
-      def summaryStats: Map[String, Any] = Map()
-
-      val mapping = new Mapping(qscript)
-      mapping.libId = Some(libId)
-      mapping.sampleId = Some(sampleId)
-      mapping.outputDir = libDir
-
-      def addJobs(): Unit = {
-        if (config.contains("R1")) {
-          mapping.input_R1 = config("R1")
-          if (config.contains("R2")) mapping.input_R2 = config("R2")
-
-          inputFiles :+= new InputFile(mapping.input_R1, config("R1_md5"))
-          mapping.input_R2.foreach(inputFiles :+= new InputFile(_, config("R2_md5")))
-
-          mapping.init()
-          mapping.biopetScript()
-          addAll(mapping.functions)
-
-        } else logger.error("Sample: " + sampleId + ": No R1 found for library: " + libId)
-
-        addSummaryQScript(mapping)
-      }
-    }
-
-    val bamFile = createFile(".bam")
-    val bamFileFilter = createFile(".filter.bam")
     val controls: List[String] = config("control", default = Nil)
 
-    def addJobs(): Unit = {
-      addPerLibJobs()
-      val bamFiles = libraries.map(_._2.mapping.finalBamFile).toList
-      if (bamFiles.length == 1) {
-        add(Ln(qscript, bamFiles.head, bamFile))
-        val oldIndex = new File(bamFiles.head.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        val newIndex = new File(bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
-        add(Ln(qscript, oldIndex, newIndex))
-      } else if (bamFiles.length > 1) {
-        val merge = new MergeSamFiles(qscript)
-        merge.input = bamFiles
-        merge.sortOrder = "coordinate"
-        merge.output = bamFile
-        add(merge)
-      }
+    override def summarySettings = super.summarySettings ++ Map("controls" -> controls)
 
-      val bamMetrics = BamMetrics(qscript, bamFile, new File(sampleDir, "metrics"), sampleId = Some(sampleId))
-      addAll(bamMetrics.functions)
-      addSummaryQScript(bamMetrics)
+    override def addJobs(): Unit = {
+      super.addJobs()
 
-      val bamMetricsFilter = BamMetrics(qscript, bamFileFilter, new File(sampleDir, "metrics-filter"), sampleId = Some(sampleId))
-      addAll(bamMetricsFilter.functions)
-      bamMetricsFilter.summaryName = "bammetrics-filter"
-      addSummaryQScript(bamMetricsFilter)
-
-      addAll(Bam2Wig(qscript, bamFile).functions)
-      addAll(Bam2Wig(qscript, bamFileFilter).functions)
+      add(Bam2Wig(qscript, bamFile.get))
 
       val samtoolsView = new SamtoolsView(qscript)
-      samtoolsView.input = bamFile
-      samtoolsView.output = bamFileFilter
+      samtoolsView.input = bamFile.get
+      samtoolsView.output = preProcessBam.get
       samtoolsView.b = true
       samtoolsView.h = true
       add(samtoolsView)
 
+      val bamMetricsFilter = BamMetrics(qscript, preProcessBam.get, new File(sampleDir, "metrics-filter"), sampleId = Some(sampleId))
+      addAll(bamMetricsFilter.functions)
+      bamMetricsFilter.summaryName = "bammetrics-filter"
+      addSummaryQScript(bamMetricsFilter)
+
+      add(Bam2Wig(qscript, preProcessBam.get))
+
       val buildBamIndex = new BuildBamIndex(qscript)
-      buildBamIndex.input = bamFileFilter
-      buildBamIndex.output = swapExt(bamFileFilter.getParent, bamFileFilter, ".bam", ".bai")
+      buildBamIndex.input = preProcessBam.get
+      buildBamIndex.output = swapExt(preProcessBam.get.getParentFile, preProcessBam.get, ".bam", ".bai")
       add(buildBamIndex)
 
       val macs2 = new Macs2CallPeak(qscript)
-      macs2.treatment = bamFileFilter
+      macs2.treatment = preProcessBam.get
       macs2.name = Some(sampleId)
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
       add(macs2)
-
-      addSummaryJobs()
     }
   }
 
-  override def reportClass = {
+  override def reportClass: Option[ReportBuilderExtension] = {
     val carp = new CarpReport(this)
     carp.outputDir = new File(outputDir, "report")
     carp.summaryFile = summaryFile
     Some(carp)
   }
 
-  def init() = {
+  override def init() = {
+    super.init()
     // ensure that no samples are called 'control' since that is our reserved keyword
     require(!sampleIds.contains("control"),
       "No sample should be named 'control' since it is a reserved for the Carp pipeline")
   }
 
-  def biopetScript() {
-    // Define what the pipeline should do
-    // First step is QC, this will be done with Flexiprep
-    // Second step is mapping, this will be done with the Mapping pipeline
-    // Third step is calling peaks on the bam files produced with the mapping pipeline, this will be done with MACS2
-    logger.info("Starting CArP pipeline")
-
-    addSamplesJobs()
-  }
-
-  def addMultiSampleJobs(): Unit = {
+  override def addMultiSampleJobs(): Unit = {
+    super.addMultiSampleJobs()
     for ((sampleId, sample) <- samples) {
       for (controlId <- sample.controls) {
         if (!samples.contains(controlId))
           throw new IllegalStateException("For sample: " + sampleId + " this control: " + controlId + " does not exist")
         val macs2 = new Macs2CallPeak(this)
-        macs2.treatment = sample.bamFileFilter
-        macs2.control = samples(controlId).bamFileFilter
+        macs2.treatment = sample.preProcessBam.get
+        macs2.control = samples(controlId).preProcessBam.get
         macs2.name = Some(sampleId + "_VS_" + controlId)
         macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
         add(macs2)
