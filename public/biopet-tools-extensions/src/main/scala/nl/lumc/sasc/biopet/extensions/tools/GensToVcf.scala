@@ -26,7 +26,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Output, Input }
  *
  */
 class GensToVcf(val root: Configurable) extends ToolCommandFunction with Reference {
-  def toolObject = nl.lumc.sasc.biopet.tools.BaseCounter
+  def toolObject = nl.lumc.sasc.biopet.tools.GensToVcf
 
   @Input(doc = "Input genotypes file", required = true)
   var inputGens: File = _
@@ -56,7 +56,7 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
     required("--inputInfo", inputInfo) +
     required("--outputVcf", outputVcf) +
     optional("--contig", contig) +
-    required("--reference", reference) +
+    required("--referenceFasta", reference) +
     required("--samplesFile", samplesFile)
 
 }
