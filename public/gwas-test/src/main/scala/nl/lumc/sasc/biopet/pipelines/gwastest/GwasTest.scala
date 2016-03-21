@@ -25,21 +25,17 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
   case class GensInput(genotypes: File, info: Option[File], contig: String)
 
   val inputBlaGens: List[GensInput] = if (inputVcf.isDefined) List[GensInput]()
-  else {
-    println("blabla")
-      config("input_gens", default = Nil).asList.map(x => x match {
-        case value: Map[String, Any] =>
-          GensInput(new File(value("genotypes").toString),
-            value.get("info").map(x => new File(x.toString)),
-            value("contig").toString)
-        case value: util.LinkedHashMap[_, _] =>
-          GensInput(new File(value("genotypes").toString),
-            value.toMap.get("info").map(x => new File(x.toString)),
-            value("contig").toString)
-        case _ => throw new IllegalArgumentException
-      })
-    List[GensInput]()
-    }
+  else config("input_gens", default = Nil).asList.map(x => x match {
+    case value: Map[String, Any] =>
+      GensInput(new File(value("genotypes").toString),
+        value.get("info").map(x => new File(x.toString)),
+        value("contig").toString)
+    case value: util.LinkedHashMap[String, _] =>
+      GensInput(new File(value.get("genotypes").toString),
+        value.toMap.get("info").map(x => new File(x.toString)),
+        value.get("contig").toString)
+    case _ => throw new IllegalArgumentException
+  })
 
   /** Init for pipeline */
   def init(): Unit = {
@@ -69,7 +65,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     }
 
     val snpTests = BedRecordList.fromReference(referenceFasta())
-      .scatter(config("bin_size", default = 10 ^ 6))
+      .scatter(config("bin_size", default = 1000000))
       .allRecords.map { region =>
         val regionDir = new File(outputDir, "snptest" + File.separator + region.chr)
         regionDir.mkdirs()
