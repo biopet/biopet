@@ -26,6 +26,8 @@ import org.broadinstitute.gatk.queue.QScript
 class FragmentsPerGene(val root: Configurable) extends QScript with Measurement with AnnotationGtf {
   def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, numHeaderLines = 0, fallback = "0")
 
+  override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> "pos"))
+
   /** Pipeline itself */
   def biopetScript(): Unit = {
     val jobs = bamFiles.map {
@@ -38,10 +40,6 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         job.output = new File(outputDir, s"$id.$name.counts")
         job.format = Option("bam")
         add(job)
-        // We are forcing the sort order to be ID-sorted, since HTSeq-count often chokes when using position-sorting due
-        // to its buffer not being large enough.
-        //TODO: ID sorting job
-        //job.order = Option("name")
         id -> job
     }
 
