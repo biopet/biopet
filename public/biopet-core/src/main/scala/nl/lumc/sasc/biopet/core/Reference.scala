@@ -83,8 +83,8 @@ trait Reference extends Configurable {
       val defaults = ConfigUtils.mergeMaps(this.defaults, this.internalDefaults)
 
       def getReferences(map: Map[String, Any]): Set[(String, String)] = (for (
-        (species, species_content: Map[String, Any]) <- map.getOrElse("references", Map[String, Any]()).asInstanceOf[Map[String, Any]].toList;
-        (reference_name, _) <- species_content.toList
+        (species, species_content) <- map.getOrElse("references", Map[String, Any]()).asInstanceOf[Map[String, Any]].toList;
+        (reference_name, _) <- species_content.asInstanceOf[Map[String, Any]].toList
       ) yield (species, reference_name)).toSet
 
       val references = getReferences(defaults) ++ getReferences(Config.global.map)
