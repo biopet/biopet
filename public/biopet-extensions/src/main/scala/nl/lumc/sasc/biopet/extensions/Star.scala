@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import com.beust.jcommander.Strings
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
@@ -40,7 +41,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   @Output(doc = "Output tab file", required = false)
   var outputTab: File = _
 
-  @Input(doc = "sjdbFileChrStartEnd file", required = false)
+  @Input(doc = "sjdbFileChrStartEnd file", required = false) /**Can be a list of file Paths TO BE CHECKED  **/
   var sjdbFileChrStartEnd: File = _
 
   @Output(doc = "Output genome file", required = false)
@@ -62,9 +63,163 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   var genomeDir: File = null
   var runmode: String = _
-  var sjdbOverhang: Option[Int] = None
   var outFileNamePrefix: String = _
-  var runThreadN: Option[Int] = config("runThreadN")
+  var runThreadN: Option[Int] = config("runthreadn")
+
+  var runDirPerm: String = config("rundirperm")
+  var runRNGseed: Option[Int] = config("runrngseed")
+  var genomeLoad: String = config("genomeload")
+
+  var genomeFastaFiles: String = config("genomefastafiles") /** can be a list of strings **/
+  var genomeChrBinNbits: Option[Int] = config("genomechrbinnbits")
+  var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
+  var genomeSAsparseD: Option[Int] = config("genomesasparsed")
+
+  var sjdbGTFfile: String = config("sjdbgtfile")
+  var sjdbGTFchrPrefix: String = config("sjdbgtfchrprefix")
+  var sjdbGTFfeatureExon: String = config("sjdbgtffeatureexon")
+  var sjdbGTFtagExonParentTranscript: String = config("sjdbgtftagexonparenttranscript")
+  var sjdbGTFtagExonParentGene: String = config("sjdbgtftagexonparentgene")
+  var sjdbOverhang: Option[Int] = config("sjdboverhang")
+  var sjdbScore: Option[Int] = config("sjdbscore")
+  var sjdbInsertSave: String = config("sjdbinsertsave")
+
+  var readFilesCommand: String = config("readfilescommand")
+  var readMapNumber: Option[Int] = config("readmapnumber")
+  var readMatesLengthsIn: String = config("readmateslengthsin")
+  var readNameSeparator: String = config("readnameseparator")
+  var clip3pNbases: Option[Int] = config("clip3pnbases")
+  var clip5pNbases: Option[Int] = config("clip5pnbases")
+  var clip3pAdapterSeq: String = config("clip3adapterseq")
+  var clip3pAdapterMMp: String = config("clip3adaptermmp")
+  var clip3pAfterAdapterNbases: Option[Int] = config("clip3afteradapternbases")
+  var limitGenomeGenerateRAM: Option[Int] = config("limitgenomegenerateram")
+  var limitIObufferSize: Option[Int] = config("limitiobuffersize")
+  var limitOutSAMoneReadBytes: Option[Int] = config("limitoutsamonereadbytes")
+  var limitOutSJoneRead: Option[Int] = config("limitoutsjoneread")
+  var limitOutSJcollapsed: Option[Int] = config("limitoutsjcollapsed")
+  var limitBAMsortRAM: Option[Int] = config("limitbamsortram")
+  var limitSjdbInsertNsj: Option[Int] = config("limitsjdbinsertnsj")
+
+  var outTmpDir: String = config("outtmpdir")
+  var outStd: String = config("outstd")
+  var outReadsUnmapped: String = config("outreadsunmapped")
+  var outQSconversionAdd: Option[Int] = config("outqsconversionadd")
+  var outMultimapperOrder: String = config("outmultimapperorder")
+  var outSAMtype: String = config("outsamtype")
+  var outSAMmode: String = config("outsammode")
+  var outSAMstrandField: String = config("outsamstrandfield")
+  var outSAMattributes: String = config("outsamattributes")
+  var outSAMattrIHstart: Option[Int] = config("outsamattrihstart")
+  var outSAMunmapped: String = config("outsamunmapped")
+  var outSAMorder: String = config("outsamorder")
+  var outSAMprimaryFlag: String = config("outsamprimaryflag")
+  var outSAMreadID: String = config("outsamreadid")
+  var outSAMmapqUnique: Option[Int] = config("outsammapqunique")
+  var outSAMflagOR: Option[Int] = config("outsamflagor")
+  var outSAMflagAND: Option[Int] = config("outsamflagand")
+  var outSAMattrRGline: String = config("outsamattrrgline")
+  var outSAMheaderHD: String = config("outsamheaderhd")
+  var outSAMheaderPG: String = config("outsamheaderpg")
+  var outSAMheaderCommentFile: String = config("outsamheadercommentfile")
+  var outSAMfilter: String = config("outsamfilter")
+  var outSAMmultNmax: Option[Int] = config("outsammultnmax")
+  var outBAMcompression: Option[Int] = config("outbamcompression")
+  var outBAMsortingThreadN: Option[Int] = config("outbamsortingthreadn")
+  var bamRemoveDuplicatesType: String = config("bamremoveduplicatestype")
+  var bamRemoveDuplicatesMate2basesN: Option[Int] = config("bamremoveduplicatesmate2basesn")
+
+  var outWigType: String = config("outwigtype")
+  var outWigStrand: String = config("outwigstrand")
+  var outWigReferencesPrefix: String = config("outwigreferencesprefix")
+  var outWigNorm: String = config("outwignorm")
+  var outFilterType: String = config("outfiltertype")
+  var outFilterMultimapScoreRange: Option[Int] = config("outfiltermultimapscorerange")
+  var outFilterMultimapNmax: Option[Int] = config("outfiltermultimapnmax")
+  var outFilterMismatchNmax: Option[Int] = config("outfiltermismatchnmax")
+  var outFilterMismatchNoverLmax: Option[Int] = config("outfiltermismatchnoverlmax")
+  var outFilterMismatchNoverReadLmax: Option[Int] = config("outfiltermismatchnoverreadlmax")
+  var outFilterScoreMin: Option[Int] = config("outfilterscoremin")
+  var outFilterScoreMinOverLread: Option[Float] = config("outfilterscoreminoverlread")
+  var outFilterMatchNmin: Option[Int] = config("outfiltermatchnmin")
+  var outFilterMatchNminOverLread: Option[Int] = config("outfiltermatchnminoverload")
+  var outFilterIntronMotifs: String = config("outfilterintronmotifs")
+
+  var outSJfilterReads: String = config("outsjfilterreads")
+  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
+  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
+  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
+  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
+  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
+
+  var scoreGap: Option[Int] = config("scoregap")
+  var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
+  var scoreGapGCAG: Option[Int] = config("scoregapgcag")
+  var scoreGapATAC: Option[Int] = config("scoregapatac")
+  var scoreGenomicLengthLog2scale: Option[Float] = config("scoregenomiclengthlog2scale")
+  var scoreDelOpen: Option[Int] = config("scoredelopen")
+  var scoreDelBase: Option[Int] = config("scoredelbase")
+  var scoreInsOpen: Option[Int] = config("scoreinsopen")
+  var scoreInsBase: Option[Int] = config("scoreinsbase")
+  var scoreStitchSJshift: Option[Int] = config("scorestitchsjshift")
+
+  var seedSearchStartLmax: Option[Int] = config("seedsearchstartlmax")
+  var seedSearchStartLmaxOverLread: Option[Float] = config("seedsearchstartlmaxoverlread")
+  var seedSearchLmax: Option[Int] = config("seedsearchlmax")
+  var seedMultimapNmax: Option[Int] = config("seedmultimapnmax")
+  var seedPerReadNmax: Option[Int] = config("seedperreadnmax")
+  var seedPerWindowNmax: Option[Int] = config("seedperwindownmax")
+  var seedNoneLociPerWindow: Option[Int] = config("seednonlociperwindow")
+  var alignIntronMin: Option[Int] = config("alignintronmin")
+  var alignIntronMax: Option[Int] = config("alignintronmax")
+  var alignMatesGapMax: Option[Int] = config("alignmatesgapmax")
+  var alignSJoverhangMin: Option[Int]= config("alignsjoverhangmin")
+  var alignSJstitchMismatchNmax: Option[Int] = config("alignsjstitchmismatchnmax")
+  var alignSJDBoverhangMin: Option[Int] = config("alignsjdboverhangmin")
+  var alignSplicedMateMapLmin: Option[Int] = config("alignsplicedmatemaplmin")
+  var alignSplicedMateMapLminOverLmate: Option[Float] = config("alignsplicedmatemaplminoverlmate")
+  var alignWindowsPerReadNmax: Option[Int] = config("alignwindowsperreadnmax")
+  var alignTranscriptsPerWindowNmax: Option[Int] = config("aligntranscriptsperwindownmax")
+  var alignTranscriptsPerReadNmax: Option[Int] = config("aligntranscriptsperreadnmax")
+  var alignEndsType: String = config("alignendstype")
+  var alignSoftClipAtReferenceEnds: String = config("alignsoftclipatreferenceends")
+
+  var winAnchorMultimapNmax: Option[Int] = config("winanchormultimapnmax")
+  var winBinNbits: Option[Int] = config("winbinnbits")
+  var winAnchorDistNbins: Option[Int] = config("winanchordistnbins")
+  var winFlankNbins: Option[Int] = config("winflaknbins")
+  var chimOutType: String = config("chimOutType")
+  var chimSegmentMin: Option[Int] = config("chimsegmentmin")
+  var chimScoreMin: Option[Int] = config("chimscoremin")
+  var chimScoreDropMax: Option[Int] = config("chimscoredropmax")
+  var chimScoreSeparation: Option[Int] = config("chimscoreseparation")
+  var chimScoreJunctionNonGTAG: Option[Int] = config("chimscorejunctionnongtag")
+  var chimJunctionOverhangMin: Option[Int]= config("chimjunctionoverhangmin")
+  var chimSegmentReadGapMax: Option[Int] = config("chimsegmentreadgapmax")
+  var chimFilter: String = config("chimfilter")
+
+  var quantMode: String = config("quantmode")
+  var quantTranscriptomeBAMcompression: Option[Int] = config("quanttranscriptomebamcompression")
+  var quantTranscriptomeBan: String = config("quanttranscriptomebam")
+
+  var twopassMode: String = config("twopassmode")
+  var twopass1readsN: Option[Int] = config("twopass1readsn")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   override def defaultCoreMemory = 6.0
   override def defaultThreads = 8
@@ -101,7 +256,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
       optional("--runThreadN", threads) +
       optional("--outFileNamePrefix", outFileNamePrefix) +
-      optional("--sjdbOverhang", sjdbOverhang)
+      optional("--sjdbOverhang", sjdbOverhang) +
+      optional("--runDirPerm", runDirPerm)
 
     cmd
   }
