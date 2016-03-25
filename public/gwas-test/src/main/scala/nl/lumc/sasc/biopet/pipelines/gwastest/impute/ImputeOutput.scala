@@ -35,6 +35,8 @@ object ImputeOutput {
   val ASSESSMENT_HEADER = "-{32}\\n Imputation accuracy assessment \\n-{32}".r
   val TOO_FEW_SNPS = "There are no SNPs in the imputation interval, so " +
     "there is nothing for IMPUTE2 to analyze; the program will quit now."
+  val NO_TYPE_2 = "ERROR: There are no type 2 SNPs after applying the command-line settings for this run, which makes it impossible to perform imputation. One possible reason is that you have specified an analysis interval (-int) that contains reference panel SNPs but not inference panel SNPs -- e.g., this can happen at the ends of chromosomes. Another possibility is that your genotypes and the reference panel are mapped to different genome builds, which can lead the same SNPs to be assigned different positions in different panels. If you need help fixing this error, please contact the authors."
+  val NO_ANALYSIS = "Your current command-line settings imply that there will not be any SNPs in the output file, so IMPUTE2 will not perform any analysis or print output files."
 
   def validateChunk(chunk: Chunk, raiseErrors: Boolean = true): Option[Chunk] = {
 
@@ -50,20 +52,26 @@ object ImputeOutput {
       val summaryReader = Source.fromFile(chunk.summary)
       val summaryLines = summaryReader.getLines().toList
       summaryReader.close()
-      if (summaryLines.contains(TOO_FEW_SNPS)) None
+      if (summaryLines.contains(NO_ANALYSIS)) None
+      else if (summaryLines.contains(TOO_FEW_SNPS)) None
+      else if (summaryLines.contains(NO_TYPE_2)) {
+        Logging.logger.warn(s"No Type 2 SNPs found, skipping this chunk: '${chunk.summary}'")
+        None
+      }
       else if (summaryLines.exists(ASSESSMENT_HEADER.findFirstIn(_).isDefined)) None
       else if (!chunk.gens.exists()) {
         addError(s"Gens file '${chunk.gens}' does not exist, please check Impute output")
         None
-      } else if (!chunk.gensInfo.exists()) {
+      }
+      else if (!chunk.gensInfo.exists()) {
         addError(s"GensInfo file '${chunk.gensInfo}' does not exist, please check Impute output")
         None
-      } else if (!chunk.gensInfoBySample.exists()) {
+      }
+      else if (!chunk.gensInfoBySample.exists()) {
         addError(s"GensInfoBySample file '${chunk.gensInfoBySample}' does not exist, please check Impute output")
         None
-      } else {
-        Some(chunk)
       }
+      else Some(chunk)
     } else None
   }
 }
