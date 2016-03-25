@@ -49,6 +49,7 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
     if (contig == null) throw new IllegalStateException
+    if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
   override def cmdLine = super.cmdLine +
