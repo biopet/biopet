@@ -58,21 +58,17 @@ object ImputeOutput {
       else if (summaryLines.contains(NO_TYPE_2)) {
         Logging.logger.warn(s"No Type 2 SNPs found, skipping this chunk: '${chunk.summary}'")
         None
-      }
-      else if (summaryLines.exists(ASSESSMENT_HEADER.findFirstIn(_).isDefined)) None
+      } else if (summaryLines.exists(ASSESSMENT_HEADER.findFirstIn(_).isDefined)) None
       else if (!chunk.gens.exists()) {
         addError(s"Gens file '${chunk.gens}' does not exist, please check Impute output")
         None
-      }
-      else if (!chunk.gensInfo.exists()) {
+      } else if (!chunk.gensInfo.exists()) {
         addError(s"GensInfo file '${chunk.gensInfo}' does not exist, please check Impute output")
         None
-      }
-      else if (!chunk.gensInfoBySample.exists()) {
+      } else if (!chunk.gensInfoBySample.exists()) {
         addError(s"GensInfoBySample file '${chunk.gensInfoBySample}' does not exist, please check Impute output")
         None
-      }
-      else {
+      } else {
         if (!summaryLines.contains(CORRECT_LOG)) {
           Logging.logger.warn(s"Impute says it did not run but the gens files are there, pipeline will still continue")
           Logging.logger.warn(s"      Please check: ${chunk.summary}")
