@@ -50,7 +50,7 @@ object GensToVcf extends ToolCommand {
     val argsParser = new OptParser
     val cmdArgs = argsParser.parse(args, Args()).getOrElse(throw new IllegalArgumentException)
 
-    val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").head)
+    val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").take(2).mkString("_"))
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
