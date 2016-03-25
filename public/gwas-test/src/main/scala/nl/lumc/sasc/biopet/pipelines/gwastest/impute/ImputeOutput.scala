@@ -37,6 +37,7 @@ object ImputeOutput {
     "there is nothing for IMPUTE2 to analyze; the program will quit now."
   val NO_TYPE_2 = "ERROR: There are no type 2 SNPs after applying the command-line settings for this run, which makes it impossible to perform imputation. One possible reason is that you have specified an analysis interval (-int) that contains reference panel SNPs but not inference panel SNPs -- e.g., this can happen at the ends of chromosomes. Another possibility is that your genotypes and the reference panel are mapped to different genome builds, which can lead the same SNPs to be assigned different positions in different panels. If you need help fixing this error, please contact the authors."
   val NO_ANALYSIS = "Your current command-line settings imply that there will not be any SNPs in the output file, so IMPUTE2 will not perform any analysis or print output files."
+  val CORRECT_LOG = " Imputation accuracy assessment "
 
   def validateChunk(chunk: Chunk, raiseErrors: Boolean = true): Option[Chunk] = {
 
@@ -71,7 +72,13 @@ object ImputeOutput {
         addError(s"GensInfoBySample file '${chunk.gensInfoBySample}' does not exist, please check Impute output")
         None
       }
-      else Some(chunk)
+      else {
+        if (!summaryLines.contains(CORRECT_LOG)) {
+          Logging.logger.warn(s"Impute says it did not run but the gens files are there, pipeline will still continue")
+          Logging.logger.warn(s"      Please check: ${chunk.summary}")
+        }
+        Some(chunk)
+      }
     } else None
   }
 }
