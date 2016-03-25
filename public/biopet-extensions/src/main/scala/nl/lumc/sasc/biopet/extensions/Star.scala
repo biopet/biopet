@@ -146,11 +146,11 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outFilterIntronMotifs: String = config("outfilterintronmotifs")
 
   var outSJfilterReads: String = config("outsjfilterreads")
-  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
-  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
-  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
-  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
-  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
+//  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
+//  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
+//  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
+//  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
+//  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
 
   var scoreGap: Option[Int] = config("scoregap")
   var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
@@ -206,21 +206,6 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var twopass1readsN: Option[Int] = config("twopass1readsn")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   override def defaultCoreMemory = 6.0
   override def defaultThreads = 8
 
@@ -257,7 +242,126 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--runThreadN", threads) +
       optional("--outFileNamePrefix", outFileNamePrefix) +
       optional("--sjdbOverhang", sjdbOverhang) +
-      optional("--runDirPerm", runDirPerm)
+      optional("--runDirPerm", runDirPerm) +
+      optional("--genomeFastaFiles", genomeFastaFiles) +
+      optional("--genomeChrBinNbits", genomeChrBinNbits) +
+      optional("--genomeSAindexNbases", genomeSAindexNbases) +
+      optional("--genomeSAsparseD", genomeSAsparseD) +
+      optional("--sjdbGTFfile", sjdbGTFfile) +
+      optional("--sjdbGTFchrPrefix", sjdbGTFchrPrefix) +
+      optional("--sjdbGTFfeatureExon", sjdbGTFfeatureExon) +
+      optional("--sjdbGTFtagExonParentTranscript", sjdbGTFtagExonParentTranscript) +
+      optional("--sjdbGTFtagExonParentGene", sjdbGTFtagExonParentGene) +
+      optional("--sjdbOverhang", sjdbOverhang) +
+      optional("--sjdbScore", sjdbScore) +
+      optional("--sjdbInsertSave", sjdbInsertSave) +
+      optional("--readFilesCommand", readFilesCommand) +
+      optional("--readMapNumber", readMapNumber) +
+      optional("--readMatesLengthsIn", readMatesLengthsIn) +
+      optional("--readNameSeparator", readNameSeparator) +
+      optional("--clip3pNbases", clip3pNbases) +
+      optional("--clip5pNbases", clip5pNbases) +
+      optional("--clip3pAdapterSeq", clip3pAdapterSeq) +
+      optional("--clip3pAdapterMMp", clip3pAdapterMMp) +
+      optional("--clip3pAfterAdapterNbases", clip3pAfterAdapterNbases) +
+      optional("--limitGenomeGenerateRAM", limitGenomeGenerateRAM) +
+      optional("--limitIObufferSize", limitIObufferSize) +
+      optional("--limitOutSAMoneReadBytes", limitOutSAMoneReadBytes) +
+      optional("--limitOutSJoneRead", limitOutSJoneRead) +
+      optional("--limitOutSJcollapsed", limitOutSJcollapsed) +
+      optional("--limitBAMsortRAM", limitBAMsortRAM) +
+      optional("--limitSjdbInsertNsj", limitSjdbInsertNsj) +
+      optional("--outTmpDir", outTmpDir) +
+      optional("--outStd", outStd) +
+      optional("--outReadsUnmapped", outReadsUnmapped) +
+      optional("--outQSconversionAdd", outQSconversionAdd) +
+      optional("--outMultimapperOrder", outMultimapperOrder) +
+      optional("--outSAMtype", outSAMtype) +
+      optional("--outSAMmode", outSAMmode) +
+      optional("--outSAMstrandField", outSAMstrandField) +
+      optional("--outSAMattributes", outSAMattributes) +
+      optional("--outSAMattrIHstart", outSAMattrIHstart) +
+      optional("--outSAMunmapped", outSAMunmapped) +
+      optional("--outSAMorder", outSAMorder) +
+      optional("--outSAMprimaryFlag", outSAMprimaryFlag) +
+      optional("--outSAMreadID", outSAMreadID) +
+      optional("--outSAMmapqUnique", outSAMmapqUnique) +
+      optional("--outSAMflagOR", outSAMflagOR) +
+      optional("--outSAMflagAND", outSAMflagAND) +
+      optional("--outSAMattrRGline", outSAMattrRGline) +
+      optional("--outSAMheaderHD", outSAMheaderHD) +
+      optional("--outSAMheaderPG", outSAMheaderPG) +
+      optional("--outSAMheaderCommentFile", outSAMheaderCommentFile) +
+      optional("--outSAMfilter", outSAMfilter) +
+      optional("--outSAMmultNmax", outSAMmultNmax) +
+      optional("--outBAMcompression", outBAMcompression) +
+      optional("--outBAMsortingThreadN", outBAMsortingThreadN) +
+      optional("--bamRemoveDuplicatesType", bamRemoveDuplicatesType) +
+      optional("--bamRemoveDuplicatesMate2basesN", bamRemoveDuplicatesMate2basesN) +
+      optional("--outWigType", outWigType) +
+      optional("--outWigStrand", outWigStrand) +
+      optional("--outWigReferencesPrefix", outWigReferencesPrefix) +
+      optional("--outWigNorm", outWigNorm) +
+      optional("--outFilterType", outFilterType) +
+      optional("--outFilterMultimapScoreRange", outFilterMultimapScoreRange) +
+      optional("--outFilterMultimapNmax", outFilterMultimapNmax) +
+      optional("--outFilterMismatchNmax", outFilterMismatchNmax) +
+      optional("--outFilterMismatchNoverLmax", outFilterMismatchNoverLmax) +
+      optional("--outFilterMismatchNoverReadLmax", outFilterMismatchNoverReadLmax) +
+      optional("--outFilterScoreMin", outFilterScoreMin) +
+      optional("--outFilterScoreMinOverLread", outFilterScoreMinOverLread) +
+      optional("--outFilterMatchNmin", outFilterMatchNmin) +
+      optional("--outFilterMatchNminOverLread", outFilterMatchNminOverLread) +
+      optional("--outFilterIntronMotifs", outFilterIntronMotifs) +
+      optional("--outSJfilterReads", outSJfilterReads) +
+      optional("--scoreGap", scoreGap) +
+      optional("--scoreGapNoncan", scoreGapNoncan) +
+      optional("--scoreGapGCAG", scoreGapGCAG) +
+      optional("--scoreGapATAC", scoreGapATAC) +
+      optional("--scoreGenomicLengthLog2scale", scoreGenomicLengthLog2scale) +
+      optional("--scoreDelOpen", scoreDelOpen) +
+      optional("--scoreDelBase", scoreDelBase) +
+      optional("--scoreInsOpen", scoreInsOpen) +
+      optional("--scoreInsBase", scoreInsBase) +
+      optional("--scoreStitchSJshift", scoreStitchSJshift) +
+      optional("--seedSearchStartLmax", seedSearchStartLmax) +
+      optional("--seedSearchStartLmaxOverLread", seedSearchStartLmaxOverLread) +
+      optional("--seedSearchLmax", seedSearchLmax) +
+      optional("--seedMultimapNmax", seedMultimapNmax) +
+      optional("--seedPerReadNmax", seedPerReadNmax) +
+      optional("--seedPerWindowNmax", seedPerWindowNmax) +
+      optional("--seedNoneLociPerWindow", seedNoneLociPerWindow) +
+      optional("--alignIntronMin", alignIntronMin) +
+      optional("--alignIntronMax", alignIntronMax) +
+      optional("--alignMatesGapMax", alignMatesGapMax) +
+      optional("--alignSJoverhangMin", alignSJoverhangMin) +
+      optional("--alignSJstitchMismatchNmax", alignSJstitchMismatchNmax) +
+      optional("--alignSJDBoverhangMin", alignSJDBoverhangMin) +
+      optional("--alignSplicedMateMapLmin", alignSplicedMateMapLmin) +
+      optional("--alignSplicedMateMapLminOverLmate", alignSplicedMateMapLminOverLmate) +
+      optional("--alignWindowsPerReadNmax", alignWindowsPerReadNmax) +
+      optional("--alignTranscriptsPerWindowNmax", alignTranscriptsPerWindowNmax) +
+      optional("--alignTranscriptsPerReadNmax", alignTranscriptsPerReadNmax) +
+      optional("--alignEndsType", alignEndsType) +
+      optional("--alignSoftClipAtReferenceEnds", alignSoftClipAtReferenceEnds) +
+      optional("--winAnchorMultimapNmax", winAnchorMultimapNmax) +
+      optional("--winBinNbits", winBinNbits) +
+      optional("--winAnchorDistNbins", winAnchorDistNbins) +
+      optional("--winFlankNbins", winFlankNbins) +
+      optional("--chimOutType", chimOutType) +
+      optional("--chimSegmentMin", chimSegmentMin) +
+      optional("--chimScoreMin", chimScoreMin) +
+      optional("--chimScoreDropMax", chimScoreDropMax) +
+      optional("--chimScoreSeparation", chimScoreSeparation) +
+      optional("--chimScoreJunctionNonGTAG", chimScoreJunctionNonGTAG) +
+      optional("--chimJunctionOverhangMin", chimJunctionOverhangMin) +
+      optional("--chimSegmentReadGapMax", chimSegmentReadGapMax) +
+      optional("--chimFilter", chimFilter) +
+      optional("--quantMode", quantMode) +
+      optional("--quantTranscriptomeBAMcompression", quantTranscriptomeBAMcompression) +
+      optional("--quantTranscriptomeBan", quantTranscriptomeBan) +
+      optional("--twopassMode", twopassMode) +
+      optional("--twopass1readsN", twopass1readsN)
 
     cmd
   }
