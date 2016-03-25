@@ -45,6 +45,8 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
 
   var contig: String = _
 
+  override def defaultCoreMemory = 5.0
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
