@@ -3,14 +3,13 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.{ReferenceSequenceFileFactory, ReferenceSequenceFileWalker, ReferenceSequenceFile, FastaSequenceFile}
+import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
-import htsjdk.variant.variantcontext.writer.{ VariantContextWriterBuilder, AsyncVariantContextWriter }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
-
 import scala.io.Source
 
 /**
@@ -81,15 +80,13 @@ object GensToVcf extends ToolCommand {
         val start = genotypeValues(2).toInt
         if (genotypeValues(4) == "-") {
           val seq = fastaFile.getSubsequenceAt(cmdArgs.contig, start - 1, start + genotypeValues(4).length - 1)
-          (start - 1, (start + genotypeValues(4).length - 1),
+          (start - 1, start + genotypeValues(4).length - 1,
             Allele.create(new String(seq.getBases), true), Allele.create(new String(Array(seq.getBases.head))))
         } else {
           val ref = Allele.create(genotypeValues(3), true)
-          (start, (ref.length - 1 + start), Allele.create(genotypeValues(3), true), Allele.create(genotypeValues(4)))
+          (start, ref.length - 1 + start, Allele.create(genotypeValues(3), true), Allele.create(genotypeValues(4)))
         }
       }
-      //val start = genotypeValues(2).toInt
-      //val end = ref.length - 1 + start
       val genotypes = samples.toList.zipWithIndex.map {
         case (sampleName, index) =>
           val gps = Array(
