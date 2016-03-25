@@ -5,7 +5,7 @@ import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, BiopetQScript }
-import nl.lumc.sasc.biopet.extensions.Cat
+import nl.lumc.sasc.biopet.extensions.{Snptest, Cat}
 import nl.lumc.sasc.biopet.extensions.gatk.{ SelectVariants, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
 import nl.lumc.sasc.biopet.utils.Logging
@@ -100,12 +100,13 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         add(sv)
 
         //TODO: snptest
-        region -> sv.outputFile
+
+        val snptest = new Snptest(this)
+        snptest.inputGenotypes :+= sv.outputFile
+        snptest.inputSampleFiles :+= phenotypeFile
+        add(snptest)
+        region -> snptest
       }
-    val cat = new Cat(this)
-    cat.input = snpTests.map(_._2).toList
-    cat.output = new File(outputDir, "merge.txt")
-    add(cat)
   }
 }
 
