@@ -3,10 +3,12 @@ package nl.lumc.sasc.biopet.pipelines.gwastest
 import java.io.File
 import java.util
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, BiopetQScript }
 import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.gatk.{ SelectVariants, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
@@ -45,8 +47,16 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     case _          => Nil
   })
 
+  lazy val referenceDict = new FastaSequenceFile(referenceFasta(), true).getSequenceDictionary
+
+  override def dictRequired = true
+
   /** Init for pipeline */
   def init(): Unit = {
+    inputGens.foreach { g =>
+      if (referenceDict.getSequenceIndex(g.contig) == -1)
+        Logging.addError(s"Contig '${g.contig}' does not exist on reference: ${referenceFasta()}")
+    }
   }
 
   /** Pipeline itself */
