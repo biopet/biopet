@@ -4,11 +4,14 @@ import java.io.File
 import java.util
 
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, BiopetQScript }
+import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.gatk.{ SelectVariants, CombineVariants }
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
+
+import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 
 import scala.collection.JavaConversions._
 
@@ -18,13 +21,15 @@ import scala.collection.JavaConversions._
 class GwasTest(val root: Configurable) extends QScript with BiopetQScript with Reference {
   def this() = this(null)
 
+  import GwasTest._
+
   val inputVcf: Option[File] = config("input_vcf")
 
   val phenotypeFile: File = config("phenotype_file")
 
-  case class GensInput(genotypes: File, info: Option[File], contig: String)
+  val specsFile: Option[File] = config("imute_specs_file")
 
-  val inputBlaGens: List[GensInput] = if (inputVcf.isDefined) List[GensInput]()
+  val inputGens: List[GensInput] = if (inputVcf.isDefined) List[GensInput]()
   else config("input_gens", default = Nil).asList.map(x => x match {
     case value: Map[String, Any] =>
       GensInput(new File(value("genotypes").toString),
@@ -35,6 +40,9 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         value.toMap.get("info").map(x => new File(x.toString)),
         value.get("contig").toString)
     case _ => throw new IllegalArgumentException
+  }) ++ (specsFile match {
+    case Some(file) => imputeSpecsToGensInput(file, config("validate_specs", default = true))
+    case _          => Nil
   })
 
   /** Init for pipeline */
@@ -44,18 +52,19 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
   /** Pipeline itself */
   def biopetScript(): Unit = {
     val vcfFile: File = inputVcf.getOrElse {
-      require(inputBlaGens.nonEmpty, "No vcf file or gens files defined in config")
+      require(inputGens.nonEmpty, "No vcf file or gens files defined in config")
       val outputDirGens = new File(outputDir, "gens_to_vcf")
       val cv = new CombineVariants(this)
       cv.outputFile = new File(outputDirGens, "merge.gens.vcf.gz")
       cv.setKey = "null"
-      inputBlaGens.foreach { gen =>
+      cv.genotypeMergeOptions = Some("UNSORTED") //TODO: should be a default
+      inputGens.zipWithIndex.foreach { gen =>
         val gensToVcf = new GensToVcf(this)
-        gensToVcf.inputGens = gen.genotypes
-        gensToVcf.inputInfo = gen.info
-        gensToVcf.contig = gen.contig
+        gensToVcf.inputGens = gen._1.genotypes
+        gensToVcf.inputInfo = gen._1.info
+        gensToVcf.contig = gen._1.contig
         gensToVcf.samplesFile = phenotypeFile
-        gensToVcf.outputVcf = new File(outputDirGens, gen.genotypes.getName + ".vcf.gz")
+        gensToVcf.outputVcf = new File(outputDirGens, gen._1.genotypes.getName + s".${gen._2}.vcf.gz")
         gensToVcf.isIntermediate = true
         add(gensToVcf)
         cv.inputFiles :+= gensToVcf.outputVcf
@@ -81,9 +90,20 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         add(sv)
 
         //TODO: snptest
-        (region -> "")
+        region -> sv.outputFile
       }
+    val cat = new Cat(this)
+    cat.input = snpTests.map(_._2).toList
+    cat.output = new File(outputDir, "merge.txt")
+    add(cat)
   }
 }
 
-object GwasTest extends PipelineCommand
+object GwasTest extends PipelineCommand {
+  case class GensInput(genotypes: File, info: Option[File], contig: String)
+
+  def imputeSpecsToGensInput(specsFile: File, validate: Boolean = true): List[GensInput] = {
+    ImputeOutput.readSpecsFile(specsFile, validate)
+      .map(x => GensInput(x.gens, Some(x.gensInfo), x.chromosome))
+  }
+}
