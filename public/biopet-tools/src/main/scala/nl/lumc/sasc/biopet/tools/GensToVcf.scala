@@ -5,7 +5,7 @@ import java.util
 
 import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
+import htsjdk.variant.variantcontext.{VariantContext, Allele, GenotypeBuilder, VariantContextBuilder}
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
@@ -22,7 +22,8 @@ object GensToVcf extends ToolCommand {
                   outputVcf: File = null,
                   sampleFile: File = null,
                   referenceFasta: File = null,
-                  contig: String = null) extends AbstractArgs
+                  contig: String = null,
+                  sortInput: Boolean = false) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('g', "inputGenotypes") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -43,13 +44,21 @@ object GensToVcf extends ToolCommand {
     opt[String]('c', "contig") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(contig = x)
     } text "contig of impute file"
+    opt[Unit]("sort") maxOccurs 1 action { (x, c) =>
+      c.copy(sortInput = true)
+    } text "In memory sorting"
   }
 
   def main(args: Array[String]): Unit = {
+    logger.info("Start")
+
     val argsParser = new OptParser
     val cmdArgs = argsParser.parse(args, Args()).getOrElse(throw new IllegalArgumentException)
 
     val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").take(2).mkString("_"))
+
+    val infoIt = cmdArgs.inputInfo.map(Source.fromFile(_).getLines())
+    val infoHeader = infoIt.map(_.next())
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
@@ -70,12 +79,28 @@ object GensToVcf extends ToolCommand {
 
     val genotypeIt = Source.fromFile(cmdArgs.inputGenotypes).getLines()
     //TODO: Add info fields
-    val infoIt = cmdArgs.inputInfo.map(Source.fromFile(_).getLines())
 
     lazy val fastaFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(cmdArgs.referenceFasta, true, true)
 
-    for (genotypeLine <- genotypeIt) {
-      val genotypeValues = genotypeLine.split(" ")
+    case class Line(genotype: String, info: Option[String])
+    def lineIt: Iterator[Line] = {
+      val it = infoIt match {
+        case Some(x) => genotypeIt.zip(x).map(x => Line(x._1, Some(x._2)))
+        case _ => genotypeIt.map(x => Line(x, None))
+      }
+
+      if (cmdArgs.sortInput) {
+        logger.info("Start Sorting input files")
+        val list = it.toList
+        val pos = list.map(_.genotype.split(" ")(2).toInt)
+        list.zip(pos).sortBy(_._2).map(_._1).toIterator
+      }
+      else it
+    }
+
+    logger.info("Start processing genotypes")
+    for (line <- lineIt) {
+      val genotypeValues = line.genotype.split(" ")
       val (start, end, ref, alt) = {
         val start = genotypeValues(2).toInt
         if (genotypeValues(4) == "-") {
@@ -119,5 +144,7 @@ object GensToVcf extends ToolCommand {
     }
 
     writer.close()
+
+    logger.info("Done")
   }
 }
