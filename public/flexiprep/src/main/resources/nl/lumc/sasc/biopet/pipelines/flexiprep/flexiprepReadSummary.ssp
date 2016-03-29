@@ -144,12 +144,7 @@
                             val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total")
                             val clippingDiscardedToShort = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short").getOrElse(0).toString.toLong
                             val clippingDiscardedToLong = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long").getOrElse(0).toString.toLong
-                            var trimmingDiscarded: Long = 0
-                            if(paired == true) {
-                            trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_" + read).getOrElse(0).toString.toLong
-                            } else {
-                            trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_total").getOrElse(0).toString.toLong
-                            }
+                            var trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_total").getOrElse(0).toString.toLong
                         }#
                         <td>${read}</td>
                         <td>${beforeTotal}</td>
