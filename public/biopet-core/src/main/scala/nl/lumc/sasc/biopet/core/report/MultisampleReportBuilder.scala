@@ -36,7 +36,7 @@ trait MultisampleReportBuilder extends ReportBuilder {
   def libraryPage(sampleId: String, libraryId: String, args: Map[String, Any]): ReportPage
 
   /** Default list of libraries, can be override */
-  def libririesSections: List[(String, ReportSection)] = {
+  def librariesSections: List[(String, ReportSection)] = {
     List(
       ("Libraries", ReportSection("/nl/lumc/sasc/biopet/core/report/librariesList.ssp"))
     )
@@ -60,6 +60,6 @@ trait MultisampleReportBuilder extends ReportBuilder {
     val libPages = summary.libraries(sampleId)
       .map(libId => libId -> libraryPage(sampleId, libId, args ++ Map("libId" -> Some(libId))))
       .toList
-    ReportPage(libPages, libririesSections, args)
+    ReportPage(libPages, librariesSections, args)
   }
 }

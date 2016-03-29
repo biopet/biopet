@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.{ SampleLibraryTag, BiopetQScript }
@@ -45,14 +60,14 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     val slfR1 = new SplitLibrariesFastq(this)
     slfR1.input :+= fastqR1
     slfR1.outputDir = new File(outputDir, "split_libraries_fastq_R1")
-    sampleId.foreach(slfR1.sample_ids :+= _)
+    sampleId.foreach(slfR1.sampleIds :+= _)
     add(slfR1)
 
     lazy val slfR2 = fastqR2.map { file =>
       val j = new SplitLibrariesFastq(this)
       j.input :+= file
       j.outputDir = new File(outputDir, "split_libraries_fastq_R2")
-      sampleId.foreach(j.sample_ids :+= _)
+      sampleId.foreach(j.sampleIds :+= _)
       add(j)
       j
     }
@@ -75,8 +90,8 @@ class GearsQiimeRtax(val root: Configurable) extends QScript with BiopetQScript 
     assignTaxonomy.outputDir = new File(outputDir, "assign_taxonomy")
     assignTaxonomy.jobOutputFile = new File(assignTaxonomy.outputDir, ".assign_taxonomy.out")
     assignTaxonomy.inputFasta = pickRepSet.outputFasta.get
-    assignTaxonomy.read_1_seqs_fp = Some(slfR1.outputSeqs)
-    assignTaxonomy.read_2_seqs_fp = slfR2.map(_.outputSeqs)
+    assignTaxonomy.read1SeqsFp = Some(slfR1.outputSeqs)
+    assignTaxonomy.read2SeqsFp = slfR2.map(_.outputSeqs)
     add(assignTaxonomy)
   }
 }

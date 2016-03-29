@@ -48,7 +48,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
   override def defaultThreads = 3
 
   val seqtk = new SeqtkSeq(root)
-  var clip: Option[Cutadapt] = None
+  var clip: Option[Cutadapt] = if (!flexiprep.skipClip) Some(new Cutadapt(root, fastqc)) else None
   var trim: Option[Sickle] = None
   lazy val outputCommand: BiopetCommandLineFunction = if (compress) {
     val gzip = Gzip(root)
@@ -101,7 +101,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val foundAdapters = fastqc.foundAdapters.map(_.seq)
       if (foundAdapters.nonEmpty) {
-        val cutadapt = new Cutadapt(root, fastqc)
+        val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
         cutadapt.fastqInput = seqtk.output
         cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
@@ -115,18 +115,18 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
 
     trim = if (!flexiprep.skipTrim) {
       val sickle = new Sickle(root)
-      sickle.output_stats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
-      sickle.input_R1 = clip match {
+      sickle.outputStats = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.trim.stats")
+      sickle.inputR1 = clip match {
         case Some(c) => c.fastqOutput
         case _       => seqtk.output
       }
-      sickle.output_R1 = new File(output.getParentFile, input.getName + ".sickle.fq")
+      sickle.outputR1 = new File(output.getParentFile, input.getName + ".sickle.fq")
       addPipeJob(sickle)
       Some(sickle)
     } else None
 
     val outputFile = (clip, trim) match {
-      case (_, Some(t)) => t.output_R1
+      case (_, Some(t)) => t.outputR1
       case (Some(c), _) => c.fastqOutput
       case _            => seqtk.output
     }

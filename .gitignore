@@ -13,3 +13,4 @@ target/
 public/target/
 protected/target/
 site/
+*.sc

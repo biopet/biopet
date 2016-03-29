@@ -18,15 +18,14 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
-import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
 import nl.lumc.sasc.biopet.utils.ConfigUtils
-import org.apache.commons.io.FileUtils
+import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{ DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNGSuite with Matchers {
 
@@ -143,10 +142,6 @@ abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNG
     }
   }
 
-  // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(GentrapTest.outputDir)
-  }
 }
 
 class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene")
@@ -158,6 +153,7 @@ class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind")
 
 object GentrapTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
   def inputTouch(name: String): String = {
     val file = new File(outputDir, "input" + File.separator + name)
@@ -182,7 +178,8 @@ object GentrapTest {
     "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
     "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
     "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
-    "varscan_jar" -> "test"
+    "varscan_jar" -> "test",
+    "rscript" -> Map("exe" -> "test")
   ) ++ Seq(
       // fastqc executables
       "fastqc", "seqtk", "sickle", "cutadapt",

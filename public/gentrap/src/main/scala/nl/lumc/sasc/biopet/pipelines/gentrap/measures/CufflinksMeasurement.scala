@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.extensions.{ Ln, Cufflinks }
@@ -11,7 +26,7 @@ trait CufflinksMeasurement extends QScript with Measurement {
   def makeCufflinksJob(id: String, bamFile: File) = {
     val cufflinks = new Cufflinks(this)
     cufflinks.input = bamFile
-    cufflinks.output_dir = new File(outputDir, id)
+    cufflinks.outputDir = new File(outputDir, id)
     cufflinks
   }
 
@@ -25,14 +40,14 @@ trait CufflinksMeasurement extends QScript with Measurement {
 
     val genesFpkmFiles = jobs.toList.map {
       case (id, job) =>
-        val file = new File(job.output_dir, s"$id.genes_fpkm.counts")
+        val file = new File(job.outputDir, s"$id.genes_fpkm.counts")
         add(Ln(this, job.outputGenesFpkm, file))
         file
     }
 
     val isoFormFpkmFiles = jobs.toList.map {
       case (id, job) =>
-        val file = new File(job.output_dir, s"$id.iso_form_fpkn.counts")
+        val file = new File(job.outputDir, s"$id.iso_form_fpkn.counts")
         add(Ln(this, job.outputIsoformsFpkm, file))
         file
     }

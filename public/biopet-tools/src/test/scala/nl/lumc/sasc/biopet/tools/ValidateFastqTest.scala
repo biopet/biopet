@@ -1,24 +1,36 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{ OutputStream, PrintStream, ByteArrayOutputStream }
 import java.nio.file.Paths
 
 import htsjdk.samtools.fastq.FastqRecord
-import nl.lumc.sasc.biopet.utils.Logging
-import org.apache.log4j.{ FileAppender, Appender }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
-import scala.collection.JavaConversions._
-
 /**
+ * This class test ValidateFatq
+ *
  * Created by pjvan_thof on 2/17/16.
  */
 class ValidateFastqTest extends TestNGSuite with Matchers {
 
   @Test
-  def testCheckMate: Unit = {
+  def testCheckMate(): Unit = {
     ValidateFastq.checkMate(new FastqRecord("read_1", "ATCG", "", "AAAA"), new FastqRecord("read_1", "ATCG", "", "AAAA"))
 
     intercept[IllegalStateException] {
@@ -27,7 +39,7 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDuplicateCheck: Unit = {
+  def testDuplicateCheck(): Unit = {
     ValidateFastq.duplicateCheck(new FastqRecord("read_1", "ATCG", "", "AAAA"), None)
     ValidateFastq.duplicateCheck(new FastqRecord("read_1", "ATCG", "", "AAAA"), Some(new FastqRecord("read_2", "ATCG", "", "AAAA")))
 
@@ -58,38 +70,41 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGetPossibleEncodingsFail: Unit = {
-    intercept[IllegalStateException] {
-      ValidateFastq.minQual = Some('!')
-      ValidateFastq.maxQual = Some('h')
-      ValidateFastq.getPossibleEncodings
-    }
+  def testGetPossibleEncodingsFail(): Unit = {
+    ValidateFastq.minQual = Some('!')
+    ValidateFastq.maxQual = Some('h')
+    ValidateFastq.getPossibleEncodings shouldBe Nil
   }
 
   @Test
-  def testCheckQualEncoding: Unit = {
+  def testCheckQualEncoding(): Unit = {
     ValidateFastq.minQual = None
     ValidateFastq.maxQual = None
     ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "AAAA"))
+    ValidateFastq.getPossibleEncodings should not be Nil
+
+    ValidateFastq.minQual = None
+    ValidateFastq.maxQual = None
+
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "A!hA"))
+    ValidateFastq.getPossibleEncodings shouldBe Nil
+
+    ValidateFastq.minQual = None
+    ValidateFastq.maxQual = None
+
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "hhhh"))
+    ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!!!!"))
+    ValidateFastq.getPossibleEncodings shouldBe Nil
 
     intercept[IllegalStateException] {
       ValidateFastq.minQual = None
       ValidateFastq.maxQual = None
-
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "A!hA"))
-    }
-
-    intercept[IllegalStateException] {
-      ValidateFastq.minQual = None
-      ValidateFastq.maxQual = None
-
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "hhhh"))
-      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!!!!"))
+      ValidateFastq.checkQualEncoding(new FastqRecord("read_1", "ATCG", "", "!! !!"))
     }
   }
 
   @Test
-  def testValidFastqRecord: Unit = {
+  def testValidFastqRecord(): Unit = {
     ValidateFastq.minQual = None
     ValidateFastq.maxQual = None
     ValidateFastq.validFastqRecord(new FastqRecord("read_1", "ATCG", "", "AAAA"))
@@ -107,7 +122,7 @@ class ValidateFastqTest extends TestNGSuite with Matchers {
     Paths.get(getClass.getResource(p).toURI).toString
 
   @Test
-  def testMain: Unit = {
+  def testMain(): Unit = {
     ValidateFastq.minQual = None
     ValidateFastq.maxQual = None
     val r1 = resourcePath("/paired01a.fq")

@@ -31,13 +31,13 @@ class SambambaMerge(val root: Configurable) extends Sambamba {
   var output: File = _
 
   // @doc: compression_level 6 is average, 0 = no compression, 9 = best
-  val compression_level: Option[Int] = config("compression_level", default = 6)
+  val compressionLevel: Option[Int] = config("compression_level", default = 6)
 
   /** Returns command to execute */
   def cmdLine = required(executable) +
     required("merge") +
     optional("-t", nCoresRequest) +
-    optional("-l", compression_level) +
+    optional("-l", compressionLevel) +
     required(output) +
     repeat("", input)
 }

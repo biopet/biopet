@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
@@ -16,38 +31,38 @@ class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction w
   var inputFasta: File = _
 
   @Input(required = false)
-  var read_1_seqs_fp: Option[File] = None
+  var read1SeqsFp: Option[File] = None
 
   @Input(required = false)
-  var read_2_seqs_fp: Option[File] = None
+  var read2SeqsFp: Option[File] = None
 
   @Input(required = false)
-  var id_to_taxonomy_fp: Option[File] = config("id_to_taxonomy_fp")
+  var idToTaxonomyFp: Option[File] = config("id_to_taxonomy_fp")
 
   @Input(required = false)
-  var reference_seqs_fp: Option[File] = config("reference_seqs_fp")
+  var referenceSeqsFp: Option[File] = config("reference_seqs_fp")
 
   @Input(required = false)
-  var training_data_properties_fp: Option[File] = config("training_data_properties_fp")
+  var trainingDataPropertiesFp: Option[File] = config("training_data_properties_fp")
 
-  var single_ok: Boolean = config("single_ok", default = false)
-  var no_single_ok_generic: Boolean = config("no_single_ok_generic", default = false)
+  var singleOk: Boolean = config("single_ok", default = false)
+  var noSingleOkGeneric: Boolean = config("no_single_ok_generic", default = false)
 
-  var amplicon_id_regex: Option[String] = config("amplicon_id_regex")
-  var header_id_regex: Option[String] = config("header_id_regex")
-  var assignment_method: Option[String] = config("assignment_method")
-  var sortmerna_db: Option[String] = config("sortmerna_db")
-  var sortmerna_e_value: Option[String] = config("sortmerna_e_value")
-  var sortmerna_coverage: Option[String] = config("sortmerna_coverage")
-  var sortmerna_best_N_alignments: Option[String] = config("sortmerna_best_N_alignments")
-  var sortmerna_threads: Option[String] = config("sortmerna_threads")
-  var blast_db: Option[String] = config("blast_db")
+  var ampliconIdRegex: Option[String] = config("amplicon_id_regex")
+  var headerIdRegex: Option[String] = config("header_id_regex")
+  var assignmentMethod: Option[String] = config("assignment_method")
+  var sortmernaDb: Option[String] = config("sortmerna_db")
+  var sortmernaEValue: Option[String] = config("sortmerna_e_value")
+  var sortmernaCoverage: Option[String] = config("sortmerna_coverage")
+  var sortmernaBestNAlignments: Option[String] = config("sortmerna_best_N_alignments")
+  var sortmernaThreads: Option[String] = config("sortmerna_threads")
+  var blastDb: Option[String] = config("blast_db")
   var confidence: Option[String] = config("confidence")
-  var min_consensus_fraction: Option[String] = config("min_consensus_fraction")
+  var minConsensusFraction: Option[String] = config("min_consensus_fraction")
   var similarity: Option[String] = config("similarity")
-  var uclust_max_accepts: Option[String] = config("uclust_max_accepts")
-  var rdp_max_memory: Option[String] = config("rdp_max_memory")
-  var blast_e_value: Option[String] = config("blast_e_value")
+  var uclustMaxAccepts: Option[String] = config("uclust_max_accepts")
+  var rdpMaxMemory: Option[String] = config("rdp_max_memory")
+  var blastEValue: Option[String] = config("blast_e_value")
   var outputDir: File = _
 
   def versionCommand = executable + " --version"
@@ -61,27 +76,27 @@ class AssignTaxonomy(val root: Configurable) extends BiopetCommandLineFunction w
 
   def cmdLine = executable +
     required("-i", inputFasta) +
-    optional("--read_1_seqs_fp", read_1_seqs_fp) +
-    optional("--read_2_seqs_fp", read_2_seqs_fp) +
-    optional("-t", id_to_taxonomy_fp) +
-    optional("-r", reference_seqs_fp) +
-    optional("-p", training_data_properties_fp) +
-    optional("--amplicon_id_regex", amplicon_id_regex) +
-    optional("--header_id_regex", header_id_regex) +
-    optional("--assignment_method", assignment_method) +
-    optional("--sortmerna_db", sortmerna_db) +
-    optional("--sortmerna_e_value", sortmerna_e_value) +
-    optional("--sortmerna_coverage", sortmerna_coverage) +
-    optional("--sortmerna_best_N_alignments", sortmerna_best_N_alignments) +
-    optional("--sortmerna_threads", sortmerna_threads) +
-    optional("--blast_db", blast_db) +
+    optional("--read_1_seqs_fp", read1SeqsFp) +
+    optional("--read_2_seqs_fp", read2SeqsFp) +
+    optional("-t", idToTaxonomyFp) +
+    optional("-r", referenceSeqsFp) +
+    optional("-p", trainingDataPropertiesFp) +
+    optional("--amplicon_id_regex", ampliconIdRegex) +
+    optional("--header_id_regex", headerIdRegex) +
+    optional("--assignment_method", assignmentMethod) +
+    optional("--sortmerna_db", sortmernaDb) +
+    optional("--sortmerna_e_value", sortmernaEValue) +
+    optional("--sortmerna_coverage", sortmernaCoverage) +
+    optional("--sortmerna_best_N_alignments", sortmernaBestNAlignments) +
+    optional("--sortmerna_threads", sortmernaThreads) +
+    optional("--blast_db", blastDb) +
     optional("--confidence", confidence) +
-    optional("--min_consensus_fraction", min_consensus_fraction) +
+    optional("--min_consensus_fraction", minConsensusFraction) +
     optional("--similarity", similarity) +
-    optional("--uclust_max_accepts", uclust_max_accepts) +
-    optional("--rdp_max_memory", rdp_max_memory) +
-    optional("--blast_e_value", blast_e_value) +
+    optional("--uclust_max_accepts", uclustMaxAccepts) +
+    optional("--rdp_max_memory", rdpMaxMemory) +
+    optional("--blast_e_value", blastEValue) +
     required("--output_dir", outputDir) +
-    conditional(single_ok, "--single_ok") +
-    conditional(no_single_ok_generic, "--no_single_ok_generic")
+    conditional(singleOk, "--single_ok") +
+    conditional(noSingleOkGeneric, "--no_single_ok_generic")
 }

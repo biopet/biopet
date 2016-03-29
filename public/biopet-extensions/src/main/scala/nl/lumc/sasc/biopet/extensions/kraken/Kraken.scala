@@ -29,10 +29,10 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
   var input: List[File] = _
 
   @Output(doc = "Unidentified reads", required = false)
-  var unclassified_out: Option[File] = None
+  var unclassifiedOut: Option[File] = None
 
   @Output(doc = "Identified reads", required = false)
-  var classified_out: Option[File] = None
+  var classifiedOut: Option[File] = None
 
   @Output(doc = "Output with hits per sequence")
   var output: File = _
@@ -53,7 +53,7 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   def versionCommand = executable + " --version"
 
-  override def defaultCoreMemory = 15.0
+  override def defaultCoreMemory = 17.0
 
   override def defaultThreads = 4
 
@@ -69,8 +69,8 @@ class Kraken(val root: Configurable) extends BiopetCommandLineFunction with Vers
     optional("--threads", nCoresRequest) +
     conditional(quick, "--quick") +
     optional("--min_hits", minHits) +
-    optional("--unclassified-out ", unclassified_out.get) +
-    optional("--classified-out ", classified_out.get) +
+    optional("--unclassified-out ", unclassifiedOut) +
+    optional("--classified-out ", classifiedOut) +
     required("--output", output) +
     conditional(preLoad, "--preload") +
     conditional(paired, "--paired") +

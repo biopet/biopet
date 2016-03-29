@@ -93,12 +93,12 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
 
     if (outputDir.getParentFile.canWrite || (outputDir.exists && outputDir.canWrite))
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
-    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, outputdir can not be created")
+    else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, output directory cannot be created")
 
     inputFiles.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
       if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
-      if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absulute path: ${i.file}")
+      if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
     }
 
     functions.filter(_.jobOutputFile == null).foreach(f => {

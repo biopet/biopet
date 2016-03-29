@@ -30,17 +30,19 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
 
   /** Clipped adapter names from FastQC */
-  protected def seqToName = fastqc.foundAdapters
+  protected def seqToName: Map[String, String] = fastqc.foundAdapters
     .map(adapter => adapter.seq -> adapter.name).toMap
 
   override def summaryStats: Map[String, Any] = {
     val initStats = super.summaryStats
+    // translationTable of sequences to the sequence-name, run once
+    val seqToNameMap: Map[String, String] = seqToName
     // Map of adapter sequence and how many times it is found
     val adapterCounts: Map[String, Any] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(m: Map[_, _]) => m.flatMap {
         case (seq: String, count) =>
-          seqToName.get(seq) match {
+          seqToNameMap.get(seq) match {
             // adapter sequence is found by FastQC
             case Some(n) => Some(n -> Map("sequence" -> seq, "count" -> count))
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter

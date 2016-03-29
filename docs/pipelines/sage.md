@@ -30,6 +30,11 @@ Specific configuration values for the Sage pipeline are:
 | transcriptome | Path (required) | Fasta file for transcriptome. Note: Must come from Ensembl! |
 | tags_library | Path (optional) | Five-column tab-delimited file (<tag> <firstTag> <AllTags> <FirstAntiTag> <AllAntiTags>). Unsupported option |
 
+### Sample input extensions
+
+Please refer [to our mapping pipeline](mapping.md) for information about how the input samples should be handled. 
+
+
 ## Running Sage
 
 As with other pipelines, you can run the Sage pipeline by invoking the `pipeline` subcommand. There is also a general help available which can be invoked using the `-h` flag:

@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
@@ -17,24 +32,24 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
 
   var outputDir: File = null
 
-  override def defaultThreads = 2
-  override def defaultCoreMemory = 10.0
+  override def defaultThreads = 3
+  override def defaultCoreMemory = 16.0
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 
   @Input(required = false)
-  var parameter_fp: Option[File] = config("parameter_fp")
+  var parameterFp: Option[File] = config("parameter_fp")
 
   @Input(required = false)
-  var reference_fp: Option[File] = config("reference_fp")
+  var referenceFp: Option[File] = config("reference_fp")
 
   @Input(required = false)
-  var taxonomy_fp: Option[File] = config("taxonomy_fp")
+  var taxonomyFp: Option[File] = config("taxonomy_fp")
 
-  var assign_taxonomy: Boolean = config("assign_taxonomy", default = false)
+  var assignTaxonomy: Boolean = config("assign_taxonomy", default = false)
   var force: Boolean = config("force", default = false)
-  var print_only: Boolean = config("print_only", default = false)
-  var suppress_taxonomy_assignment: Boolean = config("suppress_taxonomy_assignment", default = false)
+  var printOnly: Boolean = config("print_only", default = false)
+  var suppressTaxonomyAssignment: Boolean = config("suppress_taxonomy_assignment", default = false)
 
   def otuTable = new File(outputDir, "otu_table.biom")
   def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
@@ -49,13 +64,13 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   def cmdLine = executable + required("-f") +
     required("-i", inputFasta) +
     required("-o", outputDir) +
-    optional("--reference_fp", reference_fp) +
-    optional("--parameter_fp", parameter_fp) +
-    optional("--taxonomy_fp", taxonomy_fp) +
-    conditional(assign_taxonomy, "--assign_taxonomy") +
+    optional("--reference_fp", referenceFp) +
+    optional("--parameter_fp", parameterFp) +
+    optional("--taxonomy_fp", taxonomyFp) +
+    conditional(assignTaxonomy, "--assign_taxonomy") +
     conditional(force, "--force") +
-    conditional(print_only, "--print_only") +
-    conditional(suppress_taxonomy_assignment, "--suppress_taxonomy_assignment") +
+    conditional(printOnly, "--print_only") +
+    conditional(suppressTaxonomyAssignment, "--suppress_taxonomy_assignment") +
     (if (threads > 1) required("-a") + required("-O", threads) else "")
 
 }

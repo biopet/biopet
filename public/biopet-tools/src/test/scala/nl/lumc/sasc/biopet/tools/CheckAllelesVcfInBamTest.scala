@@ -47,24 +47,24 @@ class CheckAllelesVcfInBamTest extends TestNGSuite with MockitoSugar with Matche
   @Test def testOutputTypeVcf() = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmpPath)
     main(arguments)
   }
 
   @Test def testOutputTypeVcfGz() = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".vcf.gz")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmpPath)
     main(arguments)
   }
 
   @Test def testOutputTypeBcf() = {
     val tmp = File.createTempFile("CheckAllelesVcfInBam", ".bcf")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmp_path)
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vcf, "-b", bam, "-s", "sample01", "-o", tmpPath)
     main(arguments)
   }
 

@@ -79,8 +79,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   protected def executeFlexiprep(r1: File, r2: Option[File]): (File, Option[File]) = {
     if (!skipFlexiprep) {
       val flexiprep = new Flexiprep(this)
-      flexiprep.input_R1 = r1
-      flexiprep.input_R2 = r2
+      flexiprep.inputR1 = r1
+      flexiprep.inputR2 = r2
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       add(flexiprep)
       (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
@@ -97,7 +97,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
         extract.bamFile = bam
         extract.outputName = outputName
         add(extract)
-        executeFlexiprep(extract.fastqUnmappedR1, Some(extract.fastqUnmappedR2))
+        executeFlexiprep(extract.fastqUnmappedR1, extract.fastqUnmappedR2)
       case _ => throw new IllegalArgumentException("Missing input files")
     }
 
@@ -159,6 +159,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   def summaryFiles: Map[String, File] = Map.empty ++
     (if (bamFile.isDefined) Map("input_bam" -> bamFile.get) else Map()) ++
     (if (fastqR1.isDefined) Map("input_R1" -> fastqR1.get) else Map()) ++
+    (if (fastqR2.isDefined) Map("input_R2" -> fastqR2.get) else Map()) ++
     outputFiles
 }
 

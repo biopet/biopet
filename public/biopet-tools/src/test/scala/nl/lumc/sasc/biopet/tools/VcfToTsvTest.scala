@@ -44,31 +44,31 @@ class VcfToTsvTest extends TestNGSuite with MockitoSugar with Matchers {
   @Test def testAllFields() = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", unvepped, "-o", tmp_path, "--all_info")
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", unvepped, "-o", tmpPath, "--all_info")
     main(arguments)
   }
 
   @Test def testSpecificField() = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped, "-o", tmp_path, "-i", "CSQ")
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vepped, "-o", tmpPath, "-i", "CSQ")
     main(arguments)
   }
 
   @Test def testNewSeparators() = {
     val tmp = File.createTempFile("VcfToTsv", ".tsv")
     tmp.deleteOnExit()
-    val tmp_path = tmp.getAbsolutePath
-    val arguments = Array("-I", vepped, "-o", tmp_path, "--all_info", "--separator", ",", "--list_separator", "|")
+    val tmpPath = tmp.getAbsolutePath
+    val arguments = Array("-I", vepped, "-o", tmpPath, "--all_info", "--separator", ",", "--list_separator", "|")
     main(arguments)
   }
 
   @Test(expectedExceptions = Array(classOf[IllegalArgumentException]))
   def testIdenticalSeparators() = {
-    val tmp_path = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
-    val arguments = Array("-I", vepped, "-o", tmp_path, "--all_info", "--separator", ",")
+    val tmpPath = "/tmp/VcfToTsv_" + rand.nextString(10) + ".tsv"
+    val arguments = Array("-I", vepped, "-o", tmpPath, "--all_info", "--separator", ",")
     main(arguments)
   }
 

@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.{ File, PrintWriter }
@@ -5,6 +20,7 @@ import java.io.{ File, PrintWriter }
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.kraken.{ KrakenReport, Kraken }
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSeq
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -32,26 +48,43 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
       .stripSuffix(".fastq")
   }
 
+  lazy val krakenConvertToFasta: Boolean = config("kraken_discard_quality", default = false)
+
+  protected def fastqToFasta(input: File): File = {
+    val seqtk = new SeqtkSeq(this)
+    seqtk.input = input
+    seqtk.output = new File(outputDir, input.getName + ".fasta")
+    seqtk.A = true
+    seqtk.isIntermediate = true
+    add(seqtk)
+    seqtk.output
+  }
+
   def biopetScript(): Unit = {
     // start kraken
+
+    val (fqR1, fqR2) = if (krakenConvertToFasta)
+      (fastqToFasta(fastqR1), fastqR2.map(fastqToFasta))
+    else (fastqR1, fastqR2)
+
     val krakenAnalysis = new Kraken(this)
-    krakenAnalysis.input = fastqR1 :: fastqR2.toList
+    krakenAnalysis.input = fqR1 :: fqR2.toList
     krakenAnalysis.output = new File(outputDir, s"$outputName.krkn.raw")
 
     krakenAnalysis.paired = fastqR2.isDefined
 
-    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
+    krakenAnalysis.classifiedOut = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
+    krakenAnalysis.unclassifiedOut = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
     outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
+    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classifiedOut.getOrElse(""))
+    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassifiedOut.getOrElse(""))
 
     // create kraken summary file
     val krakenReport = new KrakenReport(this)
     krakenReport.input = krakenAnalysis.output
-    krakenReport.show_zeros = true
+    krakenReport.showZeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 
@@ -79,7 +112,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1) ++ (fastqR2 match {
-    case Some(file) => Map("input_R1" -> file)
+    case Some(file) => Map("input_R2" -> file)
     case _          => Map()
   })
 }

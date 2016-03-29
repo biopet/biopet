@@ -210,4 +210,30 @@ object SimpleTool {
 
 ### Summary setup (for reporting results to JSON)
 
+Any tool extension can create summary output for use within a larger pipeline.
+To accomplish this, it first has to mix in the `Summarizable` trait. 
+Once that its done, it must implement the following functions:
+
+1. `summaryFiles: Map[String, File]`
+2. `summaryStats: Map[String, Any]`
+
+The first of these can contain any files one wishes to include into the summary, but can be just an empty map. 
+
+The second function, `summaryStats`, should create a map of statistics. 
+This function is only executed after the tool has completed running, and it is therefore possible to extract values from the output.
+
+Suppose, that our tool simply creates a file that lists the amount of lines in the input file. 
+ We could then extract this value, and store it in the summary through the `summaryStats` function. 
+ This would look like the following:
+ 
+ ```scala
+ 
+ def summaryStats: Map[String, Any] = {
+    Map("count" -> Source.fromFile(output).getLines.head.toInt)
+ }
+ 
+ ```
+ 
+ See the [pipeline tutorial](example-pipeline.md) for how to use these statistics in a pipeline.
+
 

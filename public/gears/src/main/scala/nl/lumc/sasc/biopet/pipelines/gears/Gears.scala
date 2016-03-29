@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
@@ -97,8 +112,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       lazy val flexiprep = new Flexiprep(qscript)
       flexiprep.sampleId = Some(sampleId)
       flexiprep.libId = Some(libId)
-      flexiprep.input_R1 = config("R1")
-      flexiprep.input_R2 = config("R2")
+      flexiprep.inputR1 = config("R1")
+      flexiprep.inputR2 = config("R2")
       flexiprep.outputDir = new File(libDir, "flexiprep")
 
       lazy val gs = new GearsSingle(qscript)
@@ -108,8 +123,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
-        inputFiles :+= InputFile(flexiprep.input_R1, config("R1_md5"))
-        flexiprep.input_R2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
+        inputFiles :+= InputFile(flexiprep.inputR1, config("R1_md5"))
+        flexiprep.inputR2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
         add(flexiprep)
 
         gs.fastqR1 = Some(flexiprep.fastqR1Qc)

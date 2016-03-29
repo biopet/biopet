@@ -22,14 +22,13 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerCaller, BreakdancerConfig, BreakdancerVCF }
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.pindel.{ PindelVCF, PindelConfig, PindelCaller }
+import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelConfig, PindelVCF }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
-import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ AfterClass, DataProvider, Test }
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -106,7 +105,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[PindelVCF]) shouldBe (if (pindel) bams else 0)
 
       pipeline.functions.count(_.isInstanceOf[CleverCaller]) shouldBe (if (clever) bams else 0)
-      pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe (if (delly) (bams * 4) else 0)
+      pipeline.functions.count(_.isInstanceOf[DellyCaller]) shouldBe (if (delly) bams * 4 else 0)
 
     }
   }
@@ -114,12 +113,12 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
   @DataProvider(name = "dellyOptions")
   def dellyOptions = {
     val bool = Array(true, false)
-    (for (
+    for (
       del <- bool;
       dup <- bool;
       inv <- bool;
       tra <- bool
-    ) yield Array(1, del, dup, inv, tra)).toArray
+    ) yield Array(1, del, dup, inv, tra)
   }
 
   @Test(dataProvider = "dellyOptions")
@@ -130,7 +129,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     )
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+    pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
     if (!del && !dup && !inv && !tra) intercept[IllegalArgumentException] {
       pipeline.init()
@@ -150,7 +149,7 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     val map = Map("sv_callers" -> List("this is not a caller"))
     val pipeline = initPipeline(map)
 
-    pipeline.inputBams = Map("bam" -> ShivaVariantcallingTest.inputTouch("bam" + ".bam"))
+    pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
     intercept[IllegalArgumentException] {
       pipeline.init()
@@ -176,16 +175,13 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     assert(summaryCallers.contains("clever"))
     assert(summaryCallers.contains("breakdancer"))
   }
-
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaSvCallingTest.outputDir)
-  }
 }
 
 object ShivaSvCallingTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
-  def inputTouch(name: String): File = {
+  private def inputTouch(name: String): File = {
     val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile
     Files.touch(file)
     file
@@ -221,6 +217,10 @@ object ShivaSvCallingTest {
     "pindelvcf" -> Map("exe" -> "test"),
     "clever" -> Map("exe" -> "test"),
     "delly" -> Map("exe" -> "test"),
-    "varscan_jar" -> "test"
+    "varscan_jar" -> "test",
+    "pysvtools" -> Map(
+      "exe" -> "test",
+      "exclusion_regions" -> "test",
+      "translocations_only" -> false)
   )
 }
