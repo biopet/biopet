@@ -45,6 +45,8 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
 
   var contig: String = _
 
+  var sortInput: Boolean = false
+
   override def defaultCoreMemory = 5.0
 
   override def beforeGraph(): Unit = {
@@ -54,13 +56,19 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
     if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
+  override def setupRetry(): Unit = {
+    super.setupRetry()
+    sortInput = true
+  }
+
   override def cmdLine = super.cmdLine +
     required("--inputGenotypes", inputGens) +
     required("--inputInfo", inputInfo) +
     required("--outputVcf", outputVcf) +
     optional("--contig", contig) +
     required("--referenceFasta", reference) +
-    required("--samplesFile", samplesFile)
+    required("--samplesFile", samplesFile) +
+    conditional(sortInput, "--sortInput")
 
 }
 

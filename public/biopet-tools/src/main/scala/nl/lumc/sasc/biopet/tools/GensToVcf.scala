@@ -5,7 +5,7 @@ import java.util
 
 import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{VariantContext, Allele, GenotypeBuilder, VariantContextBuilder}
+import htsjdk.variant.variantcontext.{ VariantContext, Allele, GenotypeBuilder, VariantContextBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
@@ -44,7 +44,7 @@ object GensToVcf extends ToolCommand {
     opt[String]('c', "contig") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(contig = x)
     } text "contig of impute file"
-    opt[Unit]("sort") maxOccurs 1 action { (x, c) =>
+    opt[Unit]("sortInput") maxOccurs 1 action { (x, c) =>
       c.copy(sortInput = true)
     } text "In memory sorting"
   }
@@ -86,13 +86,13 @@ object GensToVcf extends ToolCommand {
     val lineIt: Iterator[Line] = {
       val it = infoIt match {
         case Some(x) => genotypeIt.zip(x).map(x => Line(x._1, Some(x._2)))
-        case _ => genotypeIt.map(x => Line(x, None))
+        case _       => genotypeIt.map(x => Line(x, None))
       }
 
       if (cmdArgs.sortInput) {
         logger.info("Start Sorting input files")
         val list = it.toList
-        val pos = list.map{ line =>
+        val pos = list.map { line =>
           val values = line.genotype.split(" ")
           val p = values(2).toInt
           val alt = values(4)
@@ -100,8 +100,7 @@ object GensToVcf extends ToolCommand {
           else p
         }
         list.zip(pos).sortBy(_._2).map(_._1).toIterator
-      }
-      else it
+      } else it
     }
 
     logger.info("Start processing genotypes")
