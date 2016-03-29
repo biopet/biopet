@@ -47,7 +47,7 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
 
   var sortInput: Boolean = false
 
-  override def defaultCoreMemory = 5.0
+  override def defaultCoreMemory = 6.0
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
