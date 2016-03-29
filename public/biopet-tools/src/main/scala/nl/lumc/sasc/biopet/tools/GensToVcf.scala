@@ -83,7 +83,7 @@ object GensToVcf extends ToolCommand {
     lazy val fastaFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(cmdArgs.referenceFasta, true, true)
 
     case class Line(genotype: String, info: Option[String])
-    def lineIt: Iterator[Line] = {
+    val lineIt: Iterator[Line] = {
       val it = infoIt match {
         case Some(x) => genotypeIt.zip(x).map(x => Line(x._1, Some(x._2)))
         case _ => genotypeIt.map(x => Line(x, None))
@@ -92,13 +92,20 @@ object GensToVcf extends ToolCommand {
       if (cmdArgs.sortInput) {
         logger.info("Start Sorting input files")
         val list = it.toList
-        val pos = list.map(_.genotype.split(" ")(2).toInt)
+        val pos = list.map{ line =>
+          val values = line.genotype.split(" ")
+          val p = values(2).toInt
+          val alt = values(4)
+          if (alt == "-") p - 1
+          else p
+        }
         list.zip(pos).sortBy(_._2).map(_._1).toIterator
       }
       else it
     }
 
     logger.info("Start processing genotypes")
+    var count = 0L
     for (line <- lineIt) {
       val genotypeValues = line.genotype.split(" ")
       val (start, end, ref, alt) = {
@@ -141,7 +148,11 @@ object GensToVcf extends ToolCommand {
       val id = genotypeValues(1)
       if (id.startsWith(cmdArgs.contig + ":")) writer.add(builder.make())
       else writer.add(builder.id(id).make())
+      count += 1
+      if (count % 10000 == 0) logger.info(s"$count lines processed")
     }
+
+    logger.info(s"$count lines processed")
 
     writer.close()
 
