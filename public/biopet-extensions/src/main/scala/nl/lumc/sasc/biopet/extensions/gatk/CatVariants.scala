@@ -34,6 +34,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Input
   var reference: File = null
 
+  var assumeSorted = false
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
@@ -42,7 +44,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   override def cmdLine = super.cmdLine +
     repeat("-V", inputFiles) +
     required("-out", outputFile) +
-    required("-R", reference)
+    required("-R", reference) +
+    conditional(assumeSorted, "--assumeSorted")
 }
 
 object CatVariants {

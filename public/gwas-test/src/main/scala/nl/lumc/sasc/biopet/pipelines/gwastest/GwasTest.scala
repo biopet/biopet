@@ -4,15 +4,14 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, BiopetQScript }
-import nl.lumc.sasc.biopet.extensions.{ Snptest, Cat }
-import nl.lumc.sasc.biopet.extensions.gatk.{ SelectVariants, CombineVariants }
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.extensions.{Cat, Snptest}
+import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, CombineVariants, SelectVariants}
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
-
 import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 
 import scala.collection.JavaConversions._
@@ -64,10 +63,9 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     val vcfFile: File = inputVcf.getOrElse {
       require(inputGens.nonEmpty, "No vcf file or gens files defined in config")
       val outputDirGens = new File(outputDir, "gens_to_vcf")
-      val cv = new CombineVariants(this)
+      val cv = new CatVariants(this)
+      cv.assumeSorted = true
       cv.outputFile = new File(outputDirGens, "merge.gens.vcf.gz")
-      cv.setKey = "null"
-      cv.genotypeMergeOptions = Some("UNSORTED") //TODO: should be a default
       inputGens.zipWithIndex.foreach { gen =>
         val gensToVcf = new GensToVcf(this)
         gensToVcf.inputGens = gen._1.genotypes
