@@ -32,14 +32,11 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   @Output(doc = "output File")
   var output: File = null
 
-  @Argument(doc = "depth", required = false)
   var depth: Boolean = false
-
-  @Argument(doc = "sameStrand", required = false)
   var sameStrand: Boolean = false
-
-  @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
+  var split: Boolean = false
+  var hist: Boolean = false
 
   override def defaultCoreMemory = 4.0
 
@@ -47,6 +44,8 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   def cmdLine = required(executable) + required("coverage") +
     required("-a", input) +
     required("-b", intersectFile) +
+    conditional(split, "-split") +
+    conditional(hist, "-hist") +
     conditional(depth, "-d") +
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +

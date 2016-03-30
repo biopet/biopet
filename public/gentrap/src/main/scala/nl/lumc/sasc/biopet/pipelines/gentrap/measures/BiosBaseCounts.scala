@@ -16,9 +16,11 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
+import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.{Cat, Grep}
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.Hist2count
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -61,7 +63,18 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     val outputFile = swapExt(outputDir, bamFile, ".bam", s".$name.counts")
 
     val grep = strand.map(x => Grep(this, """\""" + x + """$""", perlRegexp = true))
+    val bedtoolsCoverage = new BedtoolsCoverage(this)
+    bedtoolsCoverage.hist = true
+    bedtoolsCoverage.split = true
+    bedtoolsCoverage.input = bamFile
+    bedtoolsCoverage.intersectFile = new File("stdin")
 
+    val hist2count = new Hist2count(this)
+
+    grep match {
+      case Some(g) => add(annotationBed :<: g | bedtoolsCoverage | hist2count > outputFile)
+      case _ => add(annotationBed :<: bedtoolsCoverage | hist2count > outputFile)
+    }
 
     outputFile
   }
