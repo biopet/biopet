@@ -66,7 +66,7 @@ object MpileupToVcf extends ToolCommand {
     if (commandArgs.input != null && !commandArgs.input.exists) throw new IllegalStateException("Input file does not exist")
 
     val writer = new PrintWriter(commandArgs.output)
-    writer.println("##fileformat=VCFv4.2")
+    writer.println("##fileformat=VCFv4.1")
     writer.println("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
     writer.println("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency, for each ALT allele, in the same order as listed\">")
     writer.println("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">")
@@ -76,7 +76,7 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
     writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
-    writer.println("##FORMAT=<ID=SEQ-ERR,Number=R,Type=Float,Description=\"Probilty to not be a sequence error with error rate " + commandArgs.seqError + "\">")
+    writer.println("##FORMAT=<ID=SEQ-ERR,Number=.,Type=Float,Description=\"Probilty to not be a sequence error with error rate " + commandArgs.seqError + "\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
     val inputStream = if (commandArgs.input != null) {
