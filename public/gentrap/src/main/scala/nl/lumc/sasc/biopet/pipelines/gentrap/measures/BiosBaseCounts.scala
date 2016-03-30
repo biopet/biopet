@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.extensions.{Cat, Grep}
+import nl.lumc.sasc.biopet.extensions.{ Cat, Grep }
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.Hist2count
@@ -33,7 +33,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
   def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 0, fallback = "0")
 
-  override def fixedValues = Map("SamtoolsView" -> Map("b" -> true, "h" -> true))
+  override def fixedValues = Map("samtoolsview" -> Map("b" -> true, "h" -> true))
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
