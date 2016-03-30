@@ -15,6 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
+import java.io.File
+
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
 import nl.lumc.sasc.biopet.extensions.{Cat, Grep}
@@ -40,27 +42,32 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
         val plusBam: File = extractStrand(file, '+', new File(outputDir, id))
         val minBam: File = extractStrand(file, '-', new File(outputDir, id))
 
-        val nonStrandedCount = addBaseCounts(file, new File(outputDir, id), "non_stranded", None)
-        val plusStrandedCount = addBaseCounts(plusBam, new File(outputDir, id), "plus_strand", Some('+'))
-        val minStrandedCount = addBaseCounts(minBam, new File(outputDir, id), "min_strand", Some('-'))
+        val nonStrandedCount = addBaseCounts(file, new File(outputDir, id), id, "non_stranded", None)
+        val plusStrandedCount = addBaseCounts(plusBam, new File(outputDir, id), id, "plus_strand", Some('+'))
+        val minStrandedCount = addBaseCounts(minBam, new File(outputDir, id), id, "min_strand", Some('-'))
 
         val cat = new Cat(this)
         cat.input = List(plusStrandedCount, minStrandedCount)
-        cat.output = swapExt(outputDir, file, ".bam", s".stranded.counts")
+        cat.output = new File(outputDir, id + File.separator + s"$id.stranded.counts")
         add(cat)
 
         id -> (nonStrandedCount, cat.output)
     }
 
-    //TODO: Merge table
-    //TODO: Heatmap
+    val nonStrandedCounts = new File(outputDir, "non_stranded.counts")
+    addMergeTableJob(jobs.map(_._2._1).toList, nonStrandedCounts, "non_stranded", ".non_stranded.counts")
+    addHeatmapJob(nonStrandedCounts, new File(outputDir, "non_stranded.png"), "non_stranded")
+
+    val strandedCounts = new File(outputDir, "stranded.counts")
+    addMergeTableJob(jobs.map(_._2._1).toList, strandedCounts, "stranded", ".stranded.counts")
+    addHeatmapJob(strandedCounts, new File(outputDir, "stranded.png"), "stranded")
 
     addSummaryJobs()
   }
 
-  protected def addBaseCounts(bamFile: File, outputDir: File, name: String, strand: Option[Char]): File = {
-    //TODO: Add counting
-    val outputFile = swapExt(outputDir, bamFile, ".bam", s".$name.counts")
+  protected def addBaseCounts(bamFile: File, outputDir: File, sampleName: String,
+                              name: String, strand: Option[Char]): File = {
+    val outputFile = new File(outputDir, s"$sampleName.$name.counts")
 
     val grep = strand.map(x => Grep(this, """\""" + x + """$""", perlRegexp = true))
     val bedtoolsCoverage = new BedtoolsCoverage(this)
@@ -73,7 +80,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
     grep match {
       case Some(g) => add(annotationBed :<: g | bedtoolsCoverage | hist2count > outputFile)
-      case _ => add(annotationBed :<: bedtoolsCoverage | hist2count > outputFile)
+      case _       => add(annotationBed :<: bedtoolsCoverage | hist2count > outputFile)
     }
 
     outputFile
@@ -83,7 +90,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     val name = strand match {
       case '+' => "plus"
       case '-' => "min"
-      case _ => throw new IllegalArgumentException("Only '+' or '-' allowed as strand")
+      case _   => throw new IllegalArgumentException("Only '+' or '-' allowed as strand")
     }
 
     val forwardView = new SamtoolsView(this)
