@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
-import nl.lumc.sasc.biopet.extensions.Cat
+import nl.lumc.sasc.biopet.extensions.{Cat, Grep}
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -58,6 +58,14 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
   protected def addBaseCounts(bamFile: File, outputDir: File, name: String, strand: Option[Char]): File = {
     //TODO: Add counting
+
+    strand match {
+      case Some(x) =>
+        add(Grep(this, x.toString))
+      case _ =>
+        add()
+    }
+
     swapExt(outputDir, bamFile, ".bam", s".$name.counts")
   }
 
