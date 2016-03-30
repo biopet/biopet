@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.tools
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import cern.jet.random.Binomial
 import cern.jet.random.engine.RandomEngine
@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.utils.ToolCommand
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import scala.math.{floor, round}
+import scala.math.{ floor, round }
 
 object MpileupToVcf extends ToolCommand {
   case class Args(input: File = null, output: File = null, sample: String = null, minDP: Int = 8, minAP: Int = 2,
@@ -76,7 +76,7 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
     writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
-    writer.println(s"##FORMAT=<ID=SEQ-ERR,Number=R,Type=Float,Description=\"Probilty to not be a sequence error with error rate ${commandArgs.seqError}\">")
+    writer.println("##FORMAT=<ID=SEQ-ERR,Number=R,Type=Float,Description=\"Probilty to not be a sequence error with error rate " + commandArgs.seqError + "\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
     val inputStream = if (commandArgs.input != null) {
