@@ -242,8 +242,7 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene, FragmentsPerExon, BaseCounts, BiosBaseCounts,
-    CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
+    val FragmentsPerGene, FragmentsPerExon, BaseCounts, BiosBaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
   }
 
   /** Enumeration of available strandedness */

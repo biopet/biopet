@@ -4,11 +4,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
-  * Created by pjvanthof on 30/03/16.
-  */
+ * Created by pjvanthof on 30/03/16.
+ */
 class Grep(val root: Configurable) extends BiopetCommandLineFunction {
   @Input(doc = "Input file", required = true)
   var input: File = _
@@ -40,7 +40,7 @@ object Grep {
             regex: Boolean = false,
             invertMatch: Boolean = false,
             perlRegexp: Boolean = false): Grep = {
-    val grep  = new Grep(root)
+    val grep = new Grep(root)
     grep.grepFor = grepFor
     grep.regex = regex
     grep.perlRegexp = perlRegexp
