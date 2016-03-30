@@ -22,11 +22,13 @@ class Grep(val root: Configurable) extends BiopetCommandLineFunction {
 
   var invertMatch: Boolean = false
   var regex: Boolean = false
+  var perlRegexp: Boolean = false
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
     conditional(invertMatch, "-v") +
     conditional(regex, "-e") +
+    conditional(perlRegexp, "-P") +
     required(grepFor) +
     (if (inputAsStdin) "" else required(input)) +
     (if (outputAsStsout) "" else " > " + required(output))
@@ -36,10 +38,12 @@ object Grep {
   def apply(root: Configurable,
             grepFor: String,
             regex: Boolean = false,
-            invertMatch: Boolean = false): Grep = {
+            invertMatch: Boolean = false,
+            perlRegexp: Boolean = false): Grep = {
     val grep  = new Grep(root)
     grep.grepFor = grepFor
     grep.regex = regex
+    grep.perlRegexp = perlRegexp
     grep.invertMatch = invertMatch
     grep
   }

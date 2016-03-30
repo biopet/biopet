@@ -58,15 +58,12 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
   protected def addBaseCounts(bamFile: File, outputDir: File, name: String, strand: Option[Char]): File = {
     //TODO: Add counting
+    val outputFile = swapExt(outputDir, bamFile, ".bam", s".$name.counts")
 
-    strand match {
-      case Some(x) =>
-        add(Grep(this, x.toString))
-      case _ =>
-        add()
-    }
+    val grep = strand.map(x => Grep(this, x.toString, perlRegexp = true))
 
-    swapExt(outputDir, bamFile, ".bam", s".$name.counts")
+
+    outputFile
   }
 
   protected def extractStrand(bamFile: File, strand: Char, outputDir: File): File = {
