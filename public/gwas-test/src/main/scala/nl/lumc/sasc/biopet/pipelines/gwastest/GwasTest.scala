@@ -4,15 +4,15 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.extensions.{Cat, Snptest}
-import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, CombineVariants, SelectVariants}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.extensions.Snptest
+import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
 import nl.lumc.sasc.biopet.extensions.tools.GensToVcf
+import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
-import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 
 import scala.collection.JavaConversions._
 
