@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
+import nl.lumc.sasc.biopet.extensions.Cat
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -37,15 +38,27 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
         val plusBam: File = extractStrand(file, '+', new File(outputDir, id))
         val minBam: File = extractStrand(file, '-', new File(outputDir, id))
 
+        val nonStrandedCount = addBaseCounts(file, new File(outputDir, id), "non_stranded", None)
+        val plusStrandedCount = addBaseCounts(plusBam, new File(outputDir, id), "plus_strand", Some('+'))
+        val minStrandedCount = addBaseCounts(minBam, new File(outputDir, id), "min_strand", Some('-'))
 
-        //TODO: end result (nonStranded table, stranded table)
-        id -> (???, ???)
+        val cat = new Cat(this)
+        cat.input = List(plusStrandedCount, minStrandedCount)
+        cat.output = swapExt(outputDir, file, ".bam", s".stranded.counts")
+        add(cat)
+
+        id -> (nonStrandedCount, cat.output)
     }
 
     //TODO: Merge table
     //TODO: Heatmap
 
     addSummaryJobs()
+  }
+
+  protected def addBaseCounts(bamFile: File, outputDir: File, name: String, strand: Option[Char]): File = {
+    //TODO: Add counting
+    swapExt(outputDir, bamFile, ".bam", s".$name.counts")
   }
 
   protected def extractStrand(bamFile: File, strand: Char, outputDir: File): File = {
