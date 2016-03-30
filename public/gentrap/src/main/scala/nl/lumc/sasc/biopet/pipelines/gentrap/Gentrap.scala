@@ -131,6 +131,9 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val baseCounts = if (expMeasures().contains(ExpMeasures.BaseCounts))
     Some(new BaseCounts(this)) else None
 
+  lazy val biosBaseCounts = if (expMeasures().contains(ExpMeasures.BiosBaseCounts))
+    Some(new BiosBaseCounts(this)) else None
+
   lazy val cufflinksBlind = if (expMeasures().contains(ExpMeasures.CufflinksBlind))
     Some(new CufflinksBlind(this)) else None
 
@@ -140,8 +143,8 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val cufflinksStrict = if (expMeasures().contains(ExpMeasures.CufflinksStrict))
     Some(new CufflinksStrict(this)) else None
 
-  def executedMeasures = (fragmentsPerGene :: fragmentsPerExon :: baseCounts :: cufflinksBlind ::
-    cufflinksGuided :: cufflinksStrict :: Nil).flatten
+  def executedMeasures = (fragmentsPerGene :: fragmentsPerExon :: baseCounts :: biosBaseCounts ::
+    cufflinksBlind :: cufflinksGuided :: cufflinksStrict :: Nil).flatten
 
   /** Whether to do simple variant calling on RNA or not */
   lazy val shivaVariantcalling = if (config("call_variants", default = false)) {
@@ -239,7 +242,8 @@ object Gentrap extends PipelineCommand {
 
   /** Enumeration of available expression measures */
   object ExpMeasures extends Enumeration {
-    val FragmentsPerGene, FragmentsPerExon, BaseCounts, CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
+    val FragmentsPerGene, FragmentsPerExon, BaseCounts, BiosBaseCounts,
+    CufflinksStrict, CufflinksGuided, CufflinksBlind = Value
   }
 
   /** Enumeration of available strandedness */

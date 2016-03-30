@@ -31,11 +31,21 @@ trait AnnotationGtf extends BiopetQScript { qscript: QScript =>
     file
   }
 }
+
 trait AnnotationGff extends BiopetQScript { qscript: QScript =>
   /** GFF reference file in GFF3 format */
   lazy val annotationGff: File = {
     val file: File = config("annotation_gff", freeVar = true)
     inputFiles :+ InputFile(file, config("annotation_gff_md5", freeVar = true))
+    file
+  }
+}
+
+trait AnnotationBed extends BiopetQScript { qscript: QScript =>
+  /** GTF reference file */
+  lazy val annotationBed: File = {
+    val file: File = config("annotation_bed", freeVar = true)
+    inputFiles :+ InputFile(file, config("annotation_bed_md5", freeVar = true))
     file
   }
 }
