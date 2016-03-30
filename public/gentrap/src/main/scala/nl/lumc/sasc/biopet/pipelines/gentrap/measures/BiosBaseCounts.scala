@@ -114,9 +114,8 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
         reverseView.f = List("0x90")
     }
 
-    val mergeSam = new MergeSamFiles(this)
-    mergeSam.input = List(forwardView.output, reverseView.output)
-    mergeSam.output = swapExt(outputDir, bamFile, ".bam", s"$name.bam")
+    val mergeSam = MergeSamFiles(this, List(forwardView.output, reverseView.output),
+      swapExt(outputDir, bamFile, ".bam", s"$name.bam"))
     mergeSam.isIntermediate = true
 
     add(forwardView, reverseView, mergeSam)
