@@ -272,8 +272,10 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--limitBAMsortRAM", limitBAMsortRAM) +
       optional("--limitSjdbInsertNsj", limitSjdbInsertNsj) +
       optional("--outTmpDir", outTmpDir) +
-      optional("--outStd", outStd) +
-      optional("--outReadsUnmapped", outReadsUnmapped) +
+      optional("--outStd", outStd)
+
+    // Break as workaround for a stackoverflow error for the compiler
+    cmd += optional("--outReadsUnmapped", outReadsUnmapped) +
       optional("--outQSconversionAdd", outQSconversionAdd) +
       optional("--outMultimapperOrder", outMultimapperOrder) +
       optional("--outSAMtype", outSAMtype) +
@@ -319,8 +321,10 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--scoreGapGCAG", scoreGapGCAG) +
       optional("--scoreGapATAC", scoreGapATAC) +
       optional("--scoreGenomicLengthLog2scale", scoreGenomicLengthLog2scale) +
-      optional("--scoreDelOpen", scoreDelOpen) +
-      optional("--scoreDelBase", scoreDelBase) +
+      optional("--scoreDelOpen", scoreDelOpen)
+
+    // Break as workaround for a stackoverflow error for the compiler
+    cmd +=  optional("--scoreDelBase", scoreDelBase) +
       optional("--scoreInsOpen", scoreInsOpen) +
       optional("--scoreInsBase", scoreInsBase) +
       optional("--scoreStitchSJshift", scoreStitchSJshift) +
