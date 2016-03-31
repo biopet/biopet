@@ -17,7 +17,6 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import com.beust.jcommander.Strings
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
