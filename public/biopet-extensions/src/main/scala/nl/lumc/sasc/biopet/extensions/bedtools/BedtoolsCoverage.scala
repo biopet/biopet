@@ -42,7 +42,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
 
   /** Returns command to execute */
   def cmdLine = required(executable) + required("coverage") +
-    required("-a", input) +
+    (if (input.getName.endsWith(".bam")) required("-abam", input) else required("-a", input)) +
     required("-b", intersectFile) +
     conditional(split, "-split") +
     conditional(hist, "-hist") +
