@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
+import com.beust.jcommander.Strings
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
@@ -69,7 +70,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var runRNGseed: Option[Int] = config("runrngseed")
   var genomeLoad: String = config("genomeload")
 
-  var genomeFastaFiles: String = config("genomefastafiles") /** can be a list of strings **/
+  var genomeFastaFiles: String = config("genomefastafiles")
+  /** can be a list of strings **/
   var genomeChrBinNbits: Option[Int] = config("genomechrbinnbits")
   var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
   var genomeSAsparseD: Option[Int] = config("genomesasparsed")
@@ -145,11 +147,11 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outFilterIntronMotifs: String = config("outfilterintronmotifs")
 
   var outSJfilterReads: String = config("outsjfilterreads")
-//  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
-//  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
-//  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
-//  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
-//  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
+  //  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
+  //  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
+  //  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
+  //  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
+  //  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
 
   var scoreGap: Option[Int] = config("scoregap")
   var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
@@ -172,7 +174,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var alignIntronMin: Option[Int] = config("alignintronmin")
   var alignIntronMax: Option[Int] = config("alignintronmax")
   var alignMatesGapMax: Option[Int] = config("alignmatesgapmax")
-  var alignSJoverhangMin: Option[Int]= config("alignsjoverhangmin")
+  var alignSJoverhangMin: Option[Int] = config("alignsjoverhangmin")
   var alignSJstitchMismatchNmax: Option[Int] = config("alignsjstitchmismatchnmax")
   var alignSJDBoverhangMin: Option[Int] = config("alignsjdboverhangmin")
   var alignSplicedMateMapLmin: Option[Int] = config("alignsplicedmatemaplmin")
@@ -193,7 +195,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var chimScoreDropMax: Option[Int] = config("chimscoredropmax")
   var chimScoreSeparation: Option[Int] = config("chimscoreseparation")
   var chimScoreJunctionNonGTAG: Option[Int] = config("chimscorejunctionnongtag")
-  var chimJunctionOverhangMin: Option[Int]= config("chimjunctionoverhangmin")
+  var chimJunctionOverhangMin: Option[Int] = config("chimjunctionoverhangmin")
   var chimSegmentReadGapMax: Option[Int] = config("chimsegmentreadgapmax")
   var chimFilter: String = config("chimfilter")
 
@@ -203,7 +205,6 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
 
   var twopassMode: String = config("twopassmode")
   var twopass1readsN: Option[Int] = config("twopass1readsn")
-
 
   override def defaultCoreMemory = 6.0
   override def defaultThreads = 8
