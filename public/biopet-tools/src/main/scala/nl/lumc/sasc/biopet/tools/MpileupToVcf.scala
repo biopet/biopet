@@ -150,11 +150,11 @@ object MpileupToVcf extends ToolCommand {
       format += ("RFC" -> counts(ref.toUpperCase).forward.toString)
       format += ("RRC" -> counts(ref.toUpperCase).reverse.toString)
       format += ("AD" -> (counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse).toString)
-      format += ("SEQ-ERR" -> binomial.cdf(counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse).toString)
+      format += ("SEQ-ERR" -> (1.0 - binomial.cdf(counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse)).toString)
       if (reads >= commandArgs.minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward + value.reverse >= commandArgs.minAP) {
         alt += key
         format += ("AD" -> (format("AD") + "," + (value.forward + value.reverse).toString))
-        format += ("SEQ-ERR" -> (format("SEQ-ERR") + "," + binomial.cdf(value.forward + value.reverse).toString))
+        format += ("SEQ-ERR" -> (format("SEQ-ERR") + "," + (1.0 - binomial.cdf(value.forward + value.reverse)).toString))
         format += ("AFC" -> ((if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
         format += ("ARC" -> ((if (format.contains("ARC")) format("ARC") + "," else "") + value.reverse))
         format += ("FREQ" -> ((if (format.contains("FREQ")) format("FREQ") + "," else "") +
