@@ -21,7 +21,6 @@ import htsjdk.variant.variantcontext.{ GenotypeType, VariantContext }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
 import scala.io.Source
