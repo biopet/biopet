@@ -29,6 +29,8 @@ class RawVcf(val root: Configurable) extends Variantcaller {
   // This caller is designed as fallback when other variantcallers fails to report
   protected def defaultPrio = Int.MaxValue
 
+  val keepRefCalls: Boolean = config("keep_ref_calls", default = false)
+
   def biopetScript {
     val rawFiles = inputBams.map {
       case (sample, bamFile) =>
@@ -48,7 +50,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
           override def defaults = Map("min_sample_depth" -> 8,
             "min_alternate_depth" -> 2,
             "min_samples_pass" -> 1,
-            "filter_ref_calls" -> true
+            "filter_ref_calls" -> !keepRefCalls
           )
         }
         vcfFilter.inputVcf = m2v.output
@@ -61,7 +63,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
     cv.inputFiles = rawFiles.toList
     cv.outputFile = outputFile
     cv.setKey = "null"
-    cv.excludeNonVariants = true
+    cv.excludeNonVariants = !keepRefCalls
     add(cv)
   }
 }
