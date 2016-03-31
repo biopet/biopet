@@ -177,7 +177,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val tooLongR = """.* that were too long: *([,\d]+) .*""".r
 
     val tooManyN = """.* with too many N: *([,\d]+) .*""".r
-    val adapterR = """Sequence ([C|T|A|G]*);.*Trimmed: ([,\d]+) times.""".r
+    val adapterR = """Sequence: ([C|T|A|G]+);.*Trimmed: ([\d]+) times\.""".r
 
     val basePairsProcessed = """Total basepairs processed: *([,\d]+) bp""".r
     val basePairsWritten = """Total written \(filtered\): *([,\d]+) bp .*""".r
@@ -192,7 +192,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "bpoutput" -> 0,
       "toomanyn" -> 0
     )
-    val adapterStats: mutable.Map[String, Long] = mutable.Map()
+    val adapterStats = mutable.Map[String, Long]()
 
     if (statsOutput.exists) {
       val statsFile = Source.fromFile(statsOutput)
@@ -210,6 +210,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
           case _                        =>
         }
       }
+      statsFile.close()
     }
 
     val cleanReads = stats("processed") - stats("withadapters")
