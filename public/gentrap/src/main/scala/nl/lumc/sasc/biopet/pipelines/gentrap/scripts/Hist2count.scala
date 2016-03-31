@@ -9,5 +9,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 class Hist2count(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("hist2count.py", "/nl/lumc/sasc/biopet/pipelines/gentrap/scripts/")
 
-  def cmdLine = getPythonCommand + optional("-c", "3")
+  var column: Option[Int] = config("column", default = 3)
+
+  def cmdLine = getPythonCommand + optional("-c", column)
 }
