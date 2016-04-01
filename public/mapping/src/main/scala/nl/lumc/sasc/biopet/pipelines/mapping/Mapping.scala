@@ -475,13 +475,18 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     val zcatR2 = if (paired) Some(extractIfNeeded(R2.get, output.getParentFile)) else None
     val starCommand = Star(this, zcatR1._2, zcatR2.map(_._2), outputDir, isIntermediate = true)
     val ar = addAddOrReplaceReadGroups(starCommand.outputSam, output)
+
+    val reorderSam = new ReorderSam(this)
+    reorderSam.input = ar._2
+    reorderSam.output = swapExt(ar._2.getParentFile, output, ".bam", ".reordered.bam")
+
     val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
-      Some(starCommand) :: Some(ar._1) :: Nil).flatten)
-    pipe.threadsCorrection = -1
+      Some(starCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
+    pipe.threadsCorrection = -3
     zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)
     zcatR2.foreach(_._1.foreach(x => pipe.threadsCorrection -= 1))
     add(pipe)
-    ar._2
+    reorderSam.output
   }
 
   /** Adds Start 2 pass jobs */
