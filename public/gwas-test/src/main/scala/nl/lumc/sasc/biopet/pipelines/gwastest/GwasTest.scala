@@ -60,25 +60,34 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    val vcfFile: File = inputVcf.getOrElse {
+    val (vcfFile, chrVcfFiles): (File, Map[String, File]) = inputVcf.map((_, Map[String, File]())).getOrElse {
       require(inputGens.nonEmpty, "No vcf file or gens files defined in config")
       val outputDirGens = new File(outputDir, "gens_to_vcf")
-      val cv = new CatVariants(this)
-      cv.assumeSorted = true
-      cv.outputFile = new File(outputDirGens, "merge.gens.vcf.gz")
-      inputGens.zipWithIndex.foreach { gen =>
-        val gensToVcf = new GensToVcf(this)
-        gensToVcf.inputGens = gen._1.genotypes
-        gensToVcf.inputInfo = gen._1.info
-        gensToVcf.contig = gen._1.contig
-        gensToVcf.samplesFile = phenotypeFile
-        gensToVcf.outputVcf = new File(outputDirGens, gen._1.genotypes.getName + s".${gen._2}.vcf.gz")
-        gensToVcf.isIntermediate = true
-        add(gensToVcf)
-        cv.inputFiles :+= gensToVcf.outputVcf
+      val cvTotal = new CatVariants(this)
+      cvTotal.assumeSorted = true
+      cvTotal.outputFile = new File(outputDirGens, "merge.gens.vcf.gz")
+      val chrGens = inputGens.groupBy(_.contig).map { case (contig, gens) =>
+        val cvChr = new CatVariants(this)
+        cvChr.assumeSorted = true
+        //cvChr.isIntermediate = true
+        cvChr.outputFile = new File(outputDirGens, s"${contig}.merge.gens.vcf.gz")
+        gens.zipWithIndex.foreach { gen =>
+          val gensToVcf = new GensToVcf(this)
+          gensToVcf.inputGens = gen._1.genotypes
+          gensToVcf.inputInfo = gen._1.info
+          gensToVcf.contig = gen._1.contig
+          gensToVcf.samplesFile = phenotypeFile
+          gensToVcf.outputVcf = new File(outputDirGens, gen._1.genotypes.getName + s".${gen._2}.vcf.gz")
+          gensToVcf.isIntermediate = true
+          add(gensToVcf)
+          cvChr.inputFiles :+= gensToVcf.outputVcf
+        }
+        add(cvChr)
+        cvTotal.inputFiles :+= cvChr.outputFile
+        contig -> cvChr.outputFile
       }
-      add(cv)
-      cv.outputFile
+      add(cvTotal)
+      (cvTotal.outputFile, Map[String, File]())
     }
 
     val snpTests = BedRecordList.fromReference(referenceFasta())
@@ -91,7 +100,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         bedFile.deleteOnExit()
 
         val sv = new SelectVariants(this)
-        sv.inputFiles :+= vcfFile
+        sv.inputFiles :+= chrVcfFiles.getOrElse(region.chr, vcfFile)
         sv.outputFile = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.vcf.gz")
         sv.intervals :+= bedFile
         sv.isIntermediate = true
