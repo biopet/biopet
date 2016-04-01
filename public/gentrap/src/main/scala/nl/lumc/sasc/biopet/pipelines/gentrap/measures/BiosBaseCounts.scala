@@ -80,7 +80,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
     grep match {
       case Some(g) => add(annotationBed :<: g | bedtoolsCoverage | hist2count > outputFile)
-      case _       =>
+      case _ =>
         bedtoolsCoverage.intersectFile = annotationBed
         add(bedtoolsCoverage | hist2count > outputFile)
     }
