@@ -88,7 +88,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
           contig -> cvChr.outputFile
       }
       add(cvTotal)
-      (cvTotal.outputFile, Map[String, File]())
+      (cvTotal.outputFile, chrGens)
     }
 
     val snpTests = BedRecordList.fromReference(referenceFasta())
