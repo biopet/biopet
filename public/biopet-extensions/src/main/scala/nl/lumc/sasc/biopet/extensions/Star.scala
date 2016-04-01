@@ -324,7 +324,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--scoreDelOpen", scoreDelOpen)
 
     // Break as workaround for a stackoverflow error for the compiler
-    cmd +=  optional("--scoreDelBase", scoreDelBase) +
+    cmd += optional("--scoreDelBase", scoreDelBase) +
       optional("--scoreInsOpen", scoreInsOpen) +
       optional("--scoreInsBase", scoreInsBase) +
       optional("--scoreStitchSJshift", scoreStitchSJshift) +
