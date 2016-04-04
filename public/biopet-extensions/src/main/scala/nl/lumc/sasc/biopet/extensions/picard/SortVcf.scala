@@ -31,7 +31,7 @@ class SortVcf(val root: Configurable) extends Picard {
   var output: File = _
 
   @Argument(doc = "Sequence dictionary to use", required = false)
-  var sequenceDictionary: String = config("sort_order", default = "coordinate")
+  var sequenceDictionary: File = _
 
   /** Returns command to execute */
   override def cmdLine = super.cmdLine +
