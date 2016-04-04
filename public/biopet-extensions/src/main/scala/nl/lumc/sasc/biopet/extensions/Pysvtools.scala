@@ -33,7 +33,7 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
   @Argument(doc = "Set flanking amount")
   var flanking: Option[Int] = config("flanking")
 
-  var exclusionRegions: List[File] = config("exclusion_regions")
+  var exclusionRegions: List[File] = config("exclusion_regions", default = List.empty)
   var translocationsOnly: Boolean = config("translocations_only", default = false)
 
   @Output(doc = "Unzipped file", required = true)
@@ -64,7 +64,7 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
-    repeat("-c", input) +
+    repeat("-c", exclusionRegions) +
     optional("-f", flanking) +
     "-i " + repeat(input) +
     "-o " + required(tsvoutput) +

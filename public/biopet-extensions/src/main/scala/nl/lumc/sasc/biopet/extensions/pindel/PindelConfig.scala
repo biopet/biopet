@@ -31,14 +31,14 @@ class PindelConfig(val root: Configurable) extends BiopetJavaCommandLineFunction
   var output: File = _
 
   @Argument(doc = "Insertsize")
-  var insertSize: Int = _
+  var insertSize: Int = 0
 
   var sampleName: String = _
 
   override def cmdLine = super.cmdLine +
     required("-i", input) +
     required("-n", sampleName) +
-    required("-s", insertSize) +
+    { if (insertSize == 0) "" else s" -s $insertSize " } +
     required("-o", output)
 }
 
