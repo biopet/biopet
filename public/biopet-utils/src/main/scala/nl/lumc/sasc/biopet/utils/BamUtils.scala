@@ -73,7 +73,9 @@ object BamUtils {
 
           val insertsizes: List[Int] = (for {
             read <- samIterator.toStream.takeWhile(rec => {
+              // TODO: This value is now hard-coded. I'm not sure whether this is the best practice on selecting reads with a minimum required quality.
               val minQ10 = rec.getMappingQuality >= 10
+              // with properPairFlag we exclude readpairs that span multiple contigs.
               val paired = rec.getReadPairedFlag && rec.getProperPairFlag
               val bothMapped = if (paired) ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)) else false
               paired && bothMapped && minQ10
@@ -81,11 +83,11 @@ object BamUtils {
           } yield {
             read.getInferredInsertSize.asInstanceOf[Int].abs
           })(collection.breakOut)
-          val cti = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+          val lociInsertSize = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
 
           samIterator.close()
           inputSam.close()
-          if (cti._2 == 0) None else Some((cti._1 / cti._2).toInt)
+          if (lociInsertSize._2 == 0) None else Some((lociInsertSize._1 / lociInsertSize._2).toInt)
       }).toList.flatten
 
     val contigInsertSize = insertSizesOnAllFragments.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
@@ -95,16 +97,17 @@ object BamUtils {
   /**
    * Estimate the insertsize for one single bamfile and return the insertsize
    *
-   * @param bamFile bamfile to estimate avg insertsize from
+   * @param bamFile bamfile to estimate average insertsize from
    * @return
    */
   def sampleBamInsertSize(bamFile: File, samplingSize: Int = 10000, binSize: Int = 1000000): Int = {
     val inputSam: SamReader = SamReaderFactory.makeDefault.open(bamFile)
-    val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.par.map({
+    val bamInsertSizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.par.map({
       contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength, samplingSize, binSize)
     }).toList
-    val counts = baminsertsizes.flatMap(x => x)
+    val counts = bamInsertSizes.flatMap(x => x)
 
+    // avoid division by zero
     if (counts.size != 0) {
       counts.sum / counts.size
     } else {
