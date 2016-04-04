@@ -159,7 +159,7 @@ object MpileupToVcf extends ToolCommand {
         val seqErr = 1.0 - binomial.cdf(value.forward + value.reverse)
         maSeqErr match {
           case Some(x) if (x < seqErr) =>
-          case _ => maSeqErr = Some(seqErr)
+          case _                       => maSeqErr = Some(seqErr)
         }
         format += ("SEQ-ERR" -> (format("SEQ-ERR") + "," + seqErr.toString))
         format += ("AFC" -> ((if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
@@ -170,9 +170,8 @@ object MpileupToVcf extends ToolCommand {
 
       maSeqErr match {
         case Some(x) => format += ("MA-SEQ-ERR" -> x)
-        case _ =>
+        case _       =>
       }
-
 
       if (alt.nonEmpty) {
         val ad = for (ad <- format("AD").toString.split(",")) yield ad.toInt
