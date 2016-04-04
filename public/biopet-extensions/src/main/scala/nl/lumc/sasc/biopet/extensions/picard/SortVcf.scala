@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.picard
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
 /** Extension for picard SortVcf */
 class SortVcf(val root: Configurable) extends Picard {
@@ -30,7 +30,7 @@ class SortVcf(val root: Configurable) extends Picard {
   @Output(doc = "Output VCF to be written.", required = true)
   var output: File = _
 
-  @Argument(doc = "Sequence dictionary to use", required = false)
+  @Input(doc = "Sequence dictionary to use", required = true)
   var sequenceDictionary: File = _
 
   /** Returns command to execute */
