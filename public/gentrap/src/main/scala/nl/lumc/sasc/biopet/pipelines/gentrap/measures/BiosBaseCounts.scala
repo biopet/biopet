@@ -39,28 +39,28 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
   def biopetScript(): Unit = {
     val jobs = bamFiles.map {
       case (id, file) =>
-        val plusBam: File = extractStrand(file, '+', new File(outputDir, id))
-        val minBam: File = extractStrand(file, '-', new File(outputDir, id))
+        //val plusBam: File = extractStrand(file, '+', new File(outputDir, id))
+        //val minBam: File = extractStrand(file, '-', new File(outputDir, id))
 
         val nonStrandedCount = addBaseCounts(file, new File(outputDir, id), id, "non_stranded", None)
-        val plusStrandedCount = addBaseCounts(plusBam, new File(outputDir, id), id, "plus_strand", Some('+'))
-        val minStrandedCount = addBaseCounts(minBam, new File(outputDir, id), id, "min_strand", Some('-'))
+        //val plusStrandedCount = addBaseCounts(plusBam, new File(outputDir, id), id, "plus_strand", Some('+'))
+        //val minStrandedCount = addBaseCounts(minBam, new File(outputDir, id), id, "min_strand", Some('-'))
 
-        val cat = new Cat(this)
-        cat.input = List(plusStrandedCount, minStrandedCount)
-        cat.output = new File(outputDir, id + File.separator + s"$id.stranded.counts")
-        add(cat)
+        //val cat = new Cat(this)
+        //cat.input = List(plusStrandedCount, minStrandedCount)
+        //cat.output = new File(outputDir, id + File.separator + s"$id.stranded.counts")
+        //add(cat)
 
-        id -> (nonStrandedCount, cat.output)
+        id -> nonStrandedCount
     }
 
     val nonStrandedCounts = new File(outputDir, "non_stranded.counts")
-    addMergeTableJob(jobs.map(_._2._1).toList, nonStrandedCounts, "non_stranded", ".non_stranded.counts")
+    addMergeTableJob(jobs.map(_._2).toList, nonStrandedCounts, "non_stranded", ".non_stranded.counts")
     addHeatmapJob(nonStrandedCounts, new File(outputDir, "non_stranded.png"), "non_stranded")
 
-    val strandedCounts = new File(outputDir, "stranded.counts")
-    addMergeTableJob(jobs.map(_._2._1).toList, strandedCounts, "stranded", ".stranded.counts")
-    addHeatmapJob(strandedCounts, new File(outputDir, "stranded.png"), "stranded")
+//    val strandedCounts = new File(outputDir, "stranded.counts")
+//    addMergeTableJob(jobs.map(_._2._1).toList, strandedCounts, "stranded", ".stranded.counts")
+//    addHeatmapJob(strandedCounts, new File(outputDir, "stranded.png"), "stranded")
 
     addSummaryJobs()
   }
@@ -88,40 +88,40 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     outputFile
   }
 
-  protected def extractStrand(bamFile: File, strand: Char, outputDir: File): File = {
-    val name = strand match {
-      case '+' => "plus"
-      case '-' => "min"
-      case _   => throw new IllegalArgumentException("Only '+' or '-' allowed as strand")
-    }
-
-    val forwardView = new SamtoolsView(this)
-    forwardView.input = bamFile
-    forwardView.output = swapExt(outputDir, bamFile, ".bam", s"$name.R1.bam")
-    forwardView.isIntermediate = true
-
-    val reverseView = new SamtoolsView(this)
-    reverseView.input = bamFile
-    reverseView.output = swapExt(outputDir, bamFile, ".bam", s"$name.R2.bam")
-    reverseView.isIntermediate = true
-
-    strand match {
-      case '+' =>
-        forwardView.f = List("0x10")
-        forwardView.F = List("0x80")
-        reverseView.f = List("0x80")
-        reverseView.F = List("0x10")
-      case '-' =>
-        forwardView.F = List("0x90")
-        reverseView.f = List("0x90")
-    }
-
-    val mergeSam = MergeSamFiles(this, List(forwardView.output, reverseView.output),
-      swapExt(outputDir, bamFile, ".bam", s"$name.bam"))
-    mergeSam.isIntermediate = true
-
-    add(forwardView, reverseView, mergeSam)
-
-    mergeSam.output
-  }
+//  protected def extractStrand(bamFile: File, strand: Char, outputDir: File): File = {
+//    val name = strand match {
+//      case '+' => "plus"
+//      case '-' => "min"
+//      case _   => throw new IllegalArgumentException("Only '+' or '-' allowed as strand")
+//    }
+//
+//    val forwardView = new SamtoolsView(this)
+//    forwardView.input = bamFile
+//    forwardView.output = swapExt(outputDir, bamFile, ".bam", s"$name.R1.bam")
+//    forwardView.isIntermediate = true
+//
+//    val reverseView = new SamtoolsView(this)
+//    reverseView.input = bamFile
+//    reverseView.output = swapExt(outputDir, bamFile, ".bam", s"$name.R2.bam")
+//    reverseView.isIntermediate = true
+//
+//    strand match {
+//      case '+' =>
+//        forwardView.f = List("0x10")
+//        forwardView.F = List("0x80")
+//        reverseView.f = List("0x80")
+//        reverseView.F = List("0x10")
+//      case '-' =>
+//        forwardView.F = List("0x90")
+//        reverseView.f = List("0x90")
+//    }
+//
+//    val mergeSam = MergeSamFiles(this, List(forwardView.output, reverseView.output),
+//      swapExt(outputDir, bamFile, ".bam", s"$name.bam"))
+//    mergeSam.isIntermediate = true
+//
+//    add(forwardView, reverseView, mergeSam)
+//
+//    mergeSam.output
+//  }
 }
