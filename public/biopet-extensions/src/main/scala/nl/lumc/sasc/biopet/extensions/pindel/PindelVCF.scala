@@ -81,7 +81,6 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
     required("--reference", reference) +
     required("--reference_name", referenceSpecies) +
     required("--reference_date", rDate) +
-    required("--fake_biopet_input_holder", pindelOutputInputHolder) +
     optional("--pindel_output", pindelOutput) +
     optional("--pindel_output_root", pindelOutputRoot) +
     required("--vcf", outputVCF) +
