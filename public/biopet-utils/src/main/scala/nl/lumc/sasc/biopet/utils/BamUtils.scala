@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.utils
 import java.io.File
 
 import htsjdk.samtools.{ SamReader, SamReaderFactory }
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.parallel.immutable
@@ -57,24 +58,38 @@ object BamUtils {
    * @param end postion to stop scanning
    * @return Int with insertsize for this contig
    */
-  def contigInsertSize(inputBam: File, contig: String, start: Int, end: Int, samplingSize: Int = 100000): Option[Int] = {
-    val inputSam: SamReader = SamReaderFactory.makeDefault.open(inputBam)
-    val samIterator = inputSam.query(contig, start, end, true)
-    val insertsizes: List[Int] = (for {
-      read <- samIterator.toStream.takeWhile(rec => {
-        val paired = rec.getReadPairedFlag && rec.getProperPairFlag
-        val bothMapped = if (paired) ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)) else false
-        paired && bothMapped
-      }).take(samplingSize)
-    } yield {
-      read.getInferredInsertSize.asInstanceOf[Int].abs
-    })(collection.breakOut)
-    val cti = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+  def contigInsertSize(inputBam: File, contig: String, start: Int, end: Int,
+                       samplingSize: Int = 10000,
+                       binSize: Int = 1000000): Option[Int] = {
 
-    samIterator.close()
-    inputSam.close()
-    val ret = if (cti._2 == 0) None else Some((cti._1 / cti._2).toInt)
-    ret
+    // create a bedList to devide the contig into multiple pieces
+    val insertSizesOnAllFragments = BedRecordList.fromList(Seq(BedRecord(contig, start, end)))
+      .scatter(binSize)
+      .allRecords.par.map({
+        bedRecord =>
+          // for each scatter, open the bamfile for this specific region-query
+          val inputSam: SamReader = SamReaderFactory.makeDefault.open(inputBam)
+          val samIterator = inputSam.query(bedRecord.chr, bedRecord.start, bedRecord.end, true)
+
+          val insertsizes: List[Int] = (for {
+            read <- samIterator.toStream.takeWhile(rec => {
+              val minQ10 = rec.getMappingQuality >= 10
+              val paired = rec.getReadPairedFlag && rec.getProperPairFlag
+              val bothMapped = if (paired) ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)) else false
+              paired && bothMapped && minQ10
+            }).take(samplingSize)
+          } yield {
+            read.getInferredInsertSize.asInstanceOf[Int].abs
+          })(collection.breakOut)
+          val cti = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+
+          samIterator.close()
+          inputSam.close()
+          if (cti._2 == 0) None else Some((cti._1 / cti._2).toInt)
+      }).toList.flatten
+
+    val contigInsertSize = insertSizesOnAllFragments.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+    if (contigInsertSize._2 == 0) None else Some((contigInsertSize._1 / contigInsertSize._2).toInt)
   }
 
   /**
@@ -83,10 +98,10 @@ object BamUtils {
    * @param bamFile bamfile to estimate avg insertsize from
    * @return
    */
-  def sampleBamInsertSize(bamFile: File, samplingSize: Int = 100000): Int = {
+  def sampleBamInsertSize(bamFile: File, samplingSize: Int = 10000, binSize: Int = 1000000): Int = {
     val inputSam: SamReader = SamReaderFactory.makeDefault.open(bamFile)
     val baminsertsizes = inputSam.getFileHeader.getSequenceDictionary.getSequences.par.map({
-      contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength, samplingSize)
+      contig => BamUtils.contigInsertSize(bamFile, contig.getSequenceName, 1, contig.getSequenceLength, samplingSize, binSize)
     }).toList
     val counts = baminsertsizes.flatMap(x => x)
 
@@ -103,8 +118,8 @@ object BamUtils {
    * @param bamFiles input bam files
    * @return
    */
-  def sampleBamsInsertSize(bamFiles: List[File], samplingSize: Int = 100000): immutable.ParMap[File, Int] = bamFiles.par.map { bamFile =>
-    bamFile -> sampleBamInsertSize(bamFile, samplingSize)
+  def sampleBamsInsertSize(bamFiles: List[File], samplingSize: Int = 10000, binSize: Int = 1000000): immutable.ParMap[File, Int] = bamFiles.par.map { bamFile =>
+    bamFile -> sampleBamInsertSize(bamFile, samplingSize, binSize)
   }.toMap
 
 }
