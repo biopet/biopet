@@ -103,7 +103,7 @@ object CleverFixVCF extends ToolCommand {
     for (line <- inputVCF.getLines()) {
       (line == vcfColHeader) match {
         case true => {
-          writer.write(extraHeader+"\n")
+          writer.write(extraHeader + "\n")
           writer.write(vcfColReplacementHeader + "\n")
         }
         case _ => writer.write(line + "\n")

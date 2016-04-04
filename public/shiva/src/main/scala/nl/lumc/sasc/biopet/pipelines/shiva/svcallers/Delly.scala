@@ -68,7 +68,7 @@ class Delly(val root: Configurable) extends SvCaller {
         add(delly)
       }
 
-      require(catVariants.inputFiles.nonEmpty, "Must atleast 1 SV-type be selected for Delly")
+      require(catVariants.inputFiles.nonEmpty, "At least 1 SV-type must be selected for Delly [DEL/DUP/INV/TRA]")
 
       add(catVariants)
       addVCF(sample, catVariants.outputFile)
