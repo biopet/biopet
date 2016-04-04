@@ -30,13 +30,13 @@ class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
   @Output(doc = "Output VCF to PATH")
   var output: File = _
 
-  @Argument(doc="Samplename")
+  @Argument(doc = "Samplename")
   var sample: String = _
 
   def cmdLine = {
     getPythonCommand +
       "-i " + required(input) +
-      "-o " + required(output)+
+      "-o " + required(output) +
       "-s " + required(sample)
   }
 }

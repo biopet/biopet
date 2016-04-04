@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
+import nl.lumc.sasc.biopet.extensions.clever.{ CleverCaller, CleverFixVCF }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Clever */
@@ -29,7 +29,13 @@ class Clever(val root: Configurable) extends SvCaller {
       val clever = CleverCaller(this, bamFile, cleverDir)
       add(clever)
 
-      addVCF(sample, clever.outputvcf)
+      val cleverVCF = new CleverFixVCF(this)
+      cleverVCF.input = clever.outputvcf
+      cleverVCF.output = new File(cleverDir, s"${sample}.clever.vcf")
+      cleverVCF.sampleName = sample
+      add(cleverVCF)
+
+      addVCF(sample, cleverVCF.output)
     }
   }
 }
