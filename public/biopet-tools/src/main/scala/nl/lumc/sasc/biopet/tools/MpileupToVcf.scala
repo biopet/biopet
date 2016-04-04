@@ -101,7 +101,7 @@ object MpileupToVcf extends ToolCommand {
       }
       val reads = values(3).toInt
       val mpileup = values(4)
-      val qual = values(5)
+      //val qual = values(5)
 
       val counts: mutable.Map[String, Counts] = mutable.Map(ref.toUpperCase -> new Counts(0, 0))
 
@@ -158,8 +158,8 @@ object MpileupToVcf extends ToolCommand {
         format += ("AD" -> (format("AD") + "," + (value.forward + value.reverse).toString))
         val seqErr = 1.0 - binomial.cdf(value.forward + value.reverse)
         maSeqErr match {
-          case Some(x) if (x < seqErr) =>
-          case _                       => maSeqErr = Some(seqErr)
+          case Some(x) if x < seqErr =>
+          case _                     => maSeqErr = Some(seqErr)
         }
         format += ("SEQ-ERR" -> (format("SEQ-ERR") + "," + seqErr.toString))
         format += ("AFC" -> ((if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
