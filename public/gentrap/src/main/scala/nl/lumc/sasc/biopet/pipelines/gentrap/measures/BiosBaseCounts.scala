@@ -57,8 +57,8 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     }
 
     val nonStrandedCounts = new File(outputDir, "non_stranded.counts")
-    //addMergeTableJob(jobs.map(_._2).toList, nonStrandedCounts, "non_stranded", ".non_stranded.counts")
-    //addHeatmapJob(nonStrandedCounts, new File(outputDir, "non_stranded.png"), "non_stranded")
+    addMergeTableJob(jobs.map(_._2).toList, nonStrandedCounts, "non_stranded", ".non_stranded.counts")
+    addHeatmapJob(nonStrandedCounts, new File(outputDir, "non_stranded.png"), "non_stranded")
 
     //    val strandedCounts = new File(outputDir, "stranded.counts")
     //    addMergeTableJob(jobs.map(_._2._1).toList, strandedCounts, "stranded", ".stranded.counts")
