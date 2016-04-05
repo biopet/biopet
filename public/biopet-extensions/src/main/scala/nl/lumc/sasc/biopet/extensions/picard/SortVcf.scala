@@ -34,6 +34,8 @@ class SortVcf(val root: Configurable) extends Picard with Reference {
   @Input(doc = "Sequence dictionary to use", required = true)
   var sequenceDictionary: File = _
 
+  override val dictRequired = true
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (sequenceDictionary == null) sequenceDictionary = referenceDict
