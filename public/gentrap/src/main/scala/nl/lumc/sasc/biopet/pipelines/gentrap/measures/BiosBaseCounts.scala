@@ -35,6 +35,8 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
 
   override def fixedValues = Map("samtoolsview" -> Map("b" -> true, "h" -> true))
 
+  override def defaults = Map("hist2count" -> Map("column" -> 4))
+
   /** Pipeline itself */
   def biopetScript(): Unit = {
     val jobs = bamFiles.map {
