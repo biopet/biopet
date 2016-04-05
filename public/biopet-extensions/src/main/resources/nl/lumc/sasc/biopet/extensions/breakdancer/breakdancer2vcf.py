@@ -172,7 +172,7 @@ def _format_vcffile(dictreader, vcffile):
 
             SAMPLEINFO = "{}:{}".format( '1/.', line['num_Reads'] )
             # Create record
-            output_vcf.append([CHROM, POS, '.', '.', ALT, '.', 'PASS', INFO, FORMAT, SAMPLEINFO])
+            output_vcf.append([CHROM, POS, '.', 'N', ALT, '.', 'PASS', INFO, FORMAT, SAMPLEINFO])
 
         # Sort all results
         output_vcf.sort()
