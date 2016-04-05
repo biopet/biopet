@@ -61,25 +61,25 @@ trait Reference extends Configurable {
   }
 
   /** When set override this on true the pipeline with raise an exception when fai index is not found */
-  protected def faiRequired = false
+  def faiRequired = false
 
   /** When set override this on true the pipeline with raise an exception when dict index is not found */
-  protected def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
+  def dictRequired = this.isInstanceOf[Summarizable] || this.isInstanceOf[SummaryQScript]
+
+  /** Returns the dict file belonging to the fasta file */
+  def referenceDict = new File(referenceFasta().getAbsolutePath
+    .stripSuffix(".fa")
+    .stripSuffix(".fasta")
+    .stripSuffix(".fna") + ".dict")
+
+  /** Returns the fai file belonging to the fasta file */
+  def referenceFai = new File(referenceFasta().getAbsolutePath + ".fai")
 
   /** Returns the fasta file */
   def referenceFasta(): File = {
     val file: File = config("reference_fasta")
-    if (config.contains("reference_fasta")) {
-      checkFasta(file)
-
-      val dict = new File(file.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta").stripSuffix(".fna") + ".dict")
-      val fai = new File(file.getAbsolutePath + ".fai")
-
-      this match {
-        case c: BiopetCommandLineFunction => c.deps :::= dict :: fai :: Nil
-        case _                            =>
-      }
-    } else {
+    if (config.contains("reference_fasta")) checkFasta(file)
+    else {
       val defaults = ConfigUtils.mergeMaps(this.defaults, this.internalDefaults)
 
       def getReferences(map: Map[String, Any]): Set[(String, String)] = (for (
