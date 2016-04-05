@@ -35,7 +35,30 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var totalProbLimit: Option[Double] = config("total_prob_limit")
   var tableName: Option[String] = config("table_name")
   var useLongColumnNamingScheme: Boolean = config("use_long_column_naming_scheme", default = false)
+
+  var excludeSamples: List[String] = config("exclude_samples", default = Nil)
+
+  @Input(required = false)
+  val excludeSnp: Option[File] = config("exclude_snp")
+
+  var missThresh: Option[Double] = config("miss_thresh")
+  var baselinePhenotype: Option[String] = config("baseline_phenotype")
+  var bayesian: List[String] = config("bayesian", default = Nil)
+  var callThresh: Option[Double] = config("call_thresh")
+  var frequentist: List[String] = config("frequentist", default = Nil)
+  var fullParameterEstimates: Boolean = config("full_parameter_estimates", default = false)
+  var method: Option[String] = config("method")
+  var pheno: Option[String] = config("pheno")
   var summaryStatsOnly: Boolean = config("summary_stats_only", default = false)
+
+  var covAll: Boolean = config("cov_all", default = false)
+  var covAllContinuous: Boolean = config("cov_all_continuous", default = false)
+  var covAllDiscrete: Boolean = config("cov_all_discrete", default = false)
+  var covNames: List[String] = config("cov_names", default = Nil)
+  var sexColumn: Option[String] = config("sex_column")
+  var stratifyOn: Option[String] = config("stratify_on")
+
+  var conditionOn: List[String] = config("condition_on")
 
   executable = config("exe", default = "snptest")
 
@@ -48,7 +71,8 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   }
 
   def multiArg(argName: String, values: Iterable[Any]): String = {
-    required(argName) + values.map(required(_)).mkString
+    if (values.nonEmpty) required(argName) + values.map(required(_)).mkString
+    else ""
   }
 
   def cmdLine: String = {
@@ -66,7 +90,24 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
       optional("-odb", outputDatabaseFile) +
       optional("-table_name", tableName) +
       conditional(useLongColumnNamingScheme, "-use_long_column_naming_scheme") +
-      conditional(summaryStatsOnly, "-summary_stats_only")
+      multiArg("-exclude_samples", excludeSamples) +
+      optional("-exclude_snp", excludeSnp) +
+      optional("-miss_thresh", missThresh) +
+      optional("-baseline_phenotype", baselinePhenotype) +
+      multiArg("-bayesian", bayesian) +
+      optional("-call_thresh", callThresh) +
+      multiArg("-frequentist", frequentist) +
+      conditional(fullParameterEstimates, "-full_parameter_estimates") +
+      optional("-method", method) +
+      optional("-pheno", pheno)
+      conditional(summaryStatsOnly, "-summary_stats_only") +
+      conditional(covAll, "-cov_all") +
+      conditional(covAllContinuous, "-cov_all_continuous") +
+      conditional(covAllDiscrete, "-cov_all_discrete") +
+      multiArg("-cov_names", covNames) +
+      optional("-sex_column", sexColumn) +
+      optional("-stratify_on", stratifyOn) +
+      multiArg("-condition_on", conditionOn)
   }
 
 }
