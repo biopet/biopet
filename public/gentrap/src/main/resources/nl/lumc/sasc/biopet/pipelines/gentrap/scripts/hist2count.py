@@ -55,7 +55,7 @@ def hist2count(inputHandle, outputHandle, copy):
 
     def __write():
         outputHandle.write("%s\t%i\t%i\t%i\t%f%s\n" % (chromosome, start,
-                                                       end, count, float(count) / (end - start), copyList))
+                                                       end, count, float(count) / (1 + end - start), copyList))
 
     chromosome = ""
     start = 0
