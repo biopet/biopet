@@ -80,7 +80,6 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var meanBf: List[String] = config("mean_bf", default = Nil)
 
   var analysisDescription: Option[String] = config("analysis_description")
-  var analysisName: Option[String] = config("analysis_name")
   var chunk: Option[Int] = config("chunk")
   var debug: Boolean = config("debug", default = false)
   var hwe: Boolean = config("hwe", default = false)
@@ -170,5 +169,4 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
       conditional(useRawPhenotypes, "-use_raw_phenotypes") +
       conditional(noClobber, "-no_clobber")
   }
-
 }
