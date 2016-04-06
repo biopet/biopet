@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationBed
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.Hist2count
+import nl.lumc.sasc.biopet.pipelines.gentrap.scripts.{AggrBaseCount, Hist2count}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -26,15 +26,21 @@ import org.broadinstitute.gatk.queue.QScript
  */
 class BiosBaseCounts(val root: Configurable) extends QScript with Measurement with AnnotationBed {
 
-  def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 0, fallback = "0")
+  def mergeArgs = MergeArgs(List(1), 2, numHeaderLines = 1, fallback = "0")
 
   override def defaults = Map("hist2count" -> Map("column" -> 4))
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
-    bamFiles.map {
+    val countFiles = bamFiles.map {
       case (id, file) => id -> addBaseCounts(file, new File(outputDir, id), id, "non_stranded")
     }
+
+    addMergeTableJob(countFiles.map(_._2._1).toList, new File(outputDir, "merge.gene.counts"), "bios_gene_base_counts", ".non_stranded.gene.counts")
+    addMergeTableJob(countFiles.map(_._2._2).toList, new File(outputDir, "merge.exon.counts"), "bios_exon_base_counts", ".non_stranded.exon.counts")
+
+    addHeatmapJob(new File(outputDir, "merge.gene.counts"), new File(outputDir, "merge.gene.png"), "bios_gene_base_counts")
+    addHeatmapJob(new File(outputDir, "merge.exon.counts"), new File(outputDir, "merge.exon.png"), "bios_exon_base_counts")
 
     addSummaryJobs()
   }
@@ -42,8 +48,8 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
   protected def addBaseCounts(bamFile: File,
                               outputDir: File,
                               sampleName: String,
-                              name: String): File = {
-    val outputFile = new File(outputDir, s"$sampleName.$name.counts")
+                              name: String): (File, File) = {
+    val rawOutputFile = new File(outputDir, s"$sampleName.$name.raw.counts")
 
     val bedtoolsCoverage = new BedtoolsCoverage(this)
     bedtoolsCoverage.hist = true
@@ -54,8 +60,21 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     val hist2count = new Hist2count(this)
 
     bedtoolsCoverage.intersectFile = annotationBed
-    add(bedtoolsCoverage | hist2count > outputFile)
+    add(bedtoolsCoverage | hist2count > rawOutputFile)
 
-    outputFile
+    val geneAggr = new AggrBaseCount(this)
+    geneAggr.input = rawOutputFile
+    geneAggr.output = new File(outputDir, s"$sampleName.$name.gene.counts")
+    geneAggr.mode = "gene"
+    geneAggr.inputLabel = sampleName
+    add(geneAggr)
+
+    val exonAggr = new AggrBaseCount(this)
+    exonAggr.input = rawOutputFile
+    exonAggr.output = new File(outputDir, s"$sampleName.$name.exon.counts")
+    exonAggr.inputLabel = sampleName
+    add(exonAggr)
+
+    (geneAggr.output, exonAggr.output)
   }
 }
