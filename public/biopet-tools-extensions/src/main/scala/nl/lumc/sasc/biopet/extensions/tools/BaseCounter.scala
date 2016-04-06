@@ -89,6 +89,7 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
       nonStrandedMetaExonCounts,
       strandedMetaExonCounts, strandedSenseMetaExonCounts, strandedAntiSenseMetaExonCounts)
     jobOutputFile = new File(outputDir, s".$prefix.basecounter.out")
+    if (bamFile != null) deps :+= new File(bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
     super.beforeGraph()
 
   }
