@@ -72,6 +72,7 @@ class BiosBaseCounts(val root: Configurable) extends QScript with Measurement wi
     val exonAggr = new AggrBaseCount(this)
     exonAggr.input = rawOutputFile
     exonAggr.output = new File(outputDir, s"$sampleName.$name.exon.counts")
+    exonAggr.mode = "exon"
     exonAggr.inputLabel = sampleName
     add(exonAggr)
 
