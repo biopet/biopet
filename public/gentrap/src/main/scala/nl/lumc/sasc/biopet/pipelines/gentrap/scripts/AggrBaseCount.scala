@@ -38,11 +38,12 @@ class AggrBaseCount(val root: Configurable) extends RscriptCommandLineFunction {
   var mode: String = null
 
   override def beforeGraph(): Unit = {
+    super.beforeGraph()
     require(mode == "exon" || mode == "gene", "Mode must be either exon or gene")
     require(input != null, "Input raw base count table must be defined")
   }
 
   override def cmd = super.cmd ++
     Seq("-I", input.getAbsolutePath, "-N", inputLabel) ++
-    (if (mode == "gene") Seq("-G") else Seq("-E"))
+    (if (mode == "gene") Seq("-G", output.getAbsolutePath) else Seq("-E", output.getAbsolutePath))
 }
