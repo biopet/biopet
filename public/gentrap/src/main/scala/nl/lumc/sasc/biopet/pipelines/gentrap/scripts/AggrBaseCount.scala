@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
   * Wrapper for the aggr_base_count.R script, used internally in Gentrap
@@ -42,8 +42,7 @@ class AggrBaseCount(val root: Configurable) extends RscriptCommandLineFunction {
     require(input != null, "Input raw base count table must be defined")
   }
 
-  override def cmdLine = super.cmdLine +
-    required("-I", input) +
-    required("-N", inputLabel) +
-    optional(if (mode == "gene") "-G" else "-E", output)
+  override def cmd = super.cmd ++
+    Seq("-I", input.getAbsolutePath, "-N", inputLabel) ++
+    (if (mode == "gene") Seq("-G") else Seq("-E"))
 }
