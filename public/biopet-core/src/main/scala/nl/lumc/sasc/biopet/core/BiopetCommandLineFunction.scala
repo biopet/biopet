@@ -165,6 +165,18 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     this
   }
 
+  def multiArg(argName: String, values: Iterable[Any], groupSize: Int = 1, minGroups: Int = 0, maxGroups: Int = 0): String = {
+    if (values.size % groupSize != 0)
+      Logging.addError(s"Arg '${argName}' values: '${values}' does not fit to a groupSize of ${groupSize}")
+    val groups = values.size / groupSize
+    if (groups < minGroups)
+      Logging.addError(s"Args '${argName}' need atleast $minGroups with size $groupSize")
+    if (maxGroups > 0 && groups > maxGroups)
+      Logging.addError(s"Args '${argName}' may only have $maxGroups with size $groupSize")
+    if (values.nonEmpty) required(argName) + values.map(required(_)).mkString
+    else ""
+  }
+
   @Output(required = false)
   private[core] var stdoutFile: Option[File] = None
 

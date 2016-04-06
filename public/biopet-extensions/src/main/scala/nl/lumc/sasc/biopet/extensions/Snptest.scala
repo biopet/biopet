@@ -60,6 +60,41 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
 
   var conditionOn: List[String] = config("condition_on")
 
+  var priorAdd: List[String] = config("prior_add", default = Nil)
+  var priorCov: List[String] = config("prior_cov", default = Nil)
+  var priorDom: List[String] = config("prior_dom", default = Nil)
+  var priorGen: List[String] = config("prior_gen", default = Nil)
+  var priorHet: List[String] = config("prior_het", default = Nil)
+  var priorRec: List[String] = config("prior_rec", default = Nil)
+  var tDf: Option[String] = config("t_df")
+  var tPrior: Boolean = config("t_prior", default = false)
+
+  var priorMqtQ: Option[String] = config("prior_mqt_Q")
+  var priorQtVb: Option[String] = config("prior_qt_V_b")
+  var priorQtVq: Option[String] = config("prior_qt_V_q")
+  var priorQtA: Option[String] = config("prior_qt_a")
+  var priorQtB: Option[String] = config("prior_qt_b")
+  var priorQtMeanB: Option[String] = config("prior_qt_mean_b")
+  var priorQtMeanQ: Option[String] = config("prior_qt_mean_q")
+
+  var meanBf: List[String] = config("mean_bf", default = Nil)
+
+  var analysisDescription: Option[String] = config("analysis_description")
+  var analysisName: Option[String] = config("analysis_name")
+  var chunk: Option[Int] = config("chunk")
+  var debug: Boolean = config("debug", default = false)
+  var hwe: Boolean = config("hwe", default = false)
+  var lowerSampleLimit: Option[Int] = config("lower_sample_limit")
+  var overlap: Boolean = config("overlap", default = false)
+  var printids: Boolean = config("printids", default = false)
+  var quantileNormalisePhenotypes: Boolean = config("quantile_normalise_phenotypes", default = false)
+  var range: List[String] = config("range", default = Nil)
+  var renorm: Boolean = config("renorm", default = false)
+  var snpid: List[String] = config("snpid", default = Nil)
+  var useRawCovariates: Boolean = config("use_raw_covariates")
+  var useRawPhenotypes: Boolean = config("use_raw_phenotypes")
+  var noClobber: Boolean = config("no_clobber", default = false)
+
   executable = config("exe", default = "snptest")
 
   def versionCommand: String = executable + " -help"
@@ -70,16 +105,11 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
     require(inputGenotypes.length == inputSampleFiles.length)
   }
 
-  def multiArg(argName: String, values: Iterable[Any]): String = {
-    if (values.nonEmpty) required(argName) + values.map(required(_)).mkString
-    else ""
-  }
-
   def cmdLine: String = {
     val data = inputGenotypes.zip(inputSampleFiles).flatMap(x => List(x._1, x._2))
     required(executable) +
       optional("-assume_chromosome", assumeChromosome) +
-      multiArg("-data", data) +
+      multiArg("-data", data, groupSize = 2) +
       optional("-genotype_field", genotypeField) +
       optional("-genotype_probability_scale", genotypeProbabilityScale) +
       optional("-haploid_genotype_coding", haploidGenotypeCoding) +
@@ -107,7 +137,38 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
       multiArg("-cov_names", covNames) +
       optional("-sex_column", sexColumn) +
       optional("-stratify_on", stratifyOn) +
-      multiArg("-condition_on", conditionOn)
+      multiArg("-condition_on", conditionOn) +
+      multiArg("-prior_add", priorAdd, groupSize = 4, maxGroups = 1) +
+      multiArg("-prior_cov", priorCov, groupSize = 2, maxGroups = 1) +
+      multiArg("-prior_dom", priorDom, groupSize = 4, maxGroups = 1) +
+      multiArg("-prior_gen", priorGen, groupSize = 6, maxGroups = 1) +
+      multiArg("-prior_het", priorHet, groupSize = 4, maxGroups = 1) +
+      multiArg("-prior_rec", priorRec, groupSize = 4, maxGroups = 1) +
+      optional("-t_df", tDf) +
+      conditional(tPrior, "-t_prior") +
+      optional("-prior_mqt_Q", priorMqtQ) +
+      optional("-prior_qt_V_b", priorQtVb) +
+      optional("-prior_qt_V_q", priorQtVq) +
+      optional("-prior_qt_a", priorQtA) +
+      optional("-prior_qt_b", priorQtB) +
+      optional("-prior_qt_mean_b", priorQtMeanB) +
+      optional("-prior_qt_mean_q", priorQtMeanQ) +
+      multiArg("-mean_bf", meanBf, groupSize = 2, maxGroups = 1) +
+      optional("-analysis_description", analysisDescription) +
+      optional("-analysis_name", analysisName) +
+      optional("-chunk", chunk) +
+      conditional(debug, "-debug") +
+      conditional(hwe, "-hwe") +
+      optional("-lower_sample_limit", lowerSampleLimit) +
+      conditional(overlap, "-overlap") +
+      conditional(printids, "-printids") +
+      conditional(quantileNormalisePhenotypes, "quantile_normalise_phenotypes") +
+      multiArg("-range", range, groupSize = 2) +
+      conditional(renorm, "-renorm") +
+      multiArg("-snpid", snpid) +
+      conditional(useRawCovariates, "-use_raw_covariates") +
+      conditional(useRawPhenotypes, "-use_raw_phenotypes") +
+      conditional(noClobber, "-no_clobber")
   }
 
 }
