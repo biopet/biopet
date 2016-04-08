@@ -29,11 +29,11 @@ class ConfigurableTest extends TestNGSuite with Matchers {
   abstract class Cfg extends Configurable {
     def get(key: String,
             default: String = null,
-            submodule: String = null,
+            configNamespace: String = null,
             freeVar: Boolean = true,
             sample: String = null,
             library: String = null) = {
-      config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
+      config(key, default, configNamespace, freeVar = freeVar, sample = sample, library = library)
     }
   }
 

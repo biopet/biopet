@@ -161,7 +161,7 @@ The other mode, `library_variantcalling`, will call simultaneously call all libr
 
 The config for these therefore is:
 
-| configNamespace | Name | Type | Default | Function |
+| namespace | Name | Type | Default | Function |
 | ----------- | ---- | ---- | ------- | -------- |
 | shiva | multisample_variantcalling | Boolean | true | Default, multisample calling |
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |

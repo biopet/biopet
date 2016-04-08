@@ -31,7 +31,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
   @Argument(doc = "JSON / YAML config file(s)", fullName = "config_file", shortName = "config", required = false)
   val configfiles: List[File] = Nil
 
-  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'configNamespace:configNamespace:key=value'", fullName = "config_value", shortName = "cv", required = false)
+  @Argument(doc = "Config values, value should be formatted like 'key=value' or 'namespace:namespace:key=value'", fullName = "config_value", shortName = "cv", required = false)
   val configValues: List[String] = Nil
 
   /** Output directory of pipeline */

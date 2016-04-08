@@ -131,11 +131,11 @@ trait BastyTrait extends MultiSampleQScript {
       raxmlMl.p = Some(seed)
       raxmlMl.n = outputName + "_ml"
       raxmlMl.w = dirSufixRaxml
-      raxmlMl.N = config("ml_runs", default = 20, configNamespace = "raxml")
+      raxmlMl.N = config("ml_runs", default = 20, namespace = "raxml")
       add(raxmlMl)
 
       val r = new scala.util.Random(seed)
-      val numBoot = config("boot_runs", default = 100, configNamespace = "raxml").asInt
+      val numBoot = config("boot_runs", default = 100, namespace = "raxml").asInt
       val bootList = for (t <- 0 until numBoot) yield {
         val raxmlBoot = new Raxml(this)
         raxmlBoot.input = variants

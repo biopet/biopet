@@ -24,7 +24,7 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc = "Python script", required = false)
   var pythonScript: File = _
 
-  executable = config("exe", default = "python", configNamespace = "python", freeVar = false)
+  executable = config("exe", default = "python", namespace = "python", freeVar = false)
 
   protected var pythonScriptName: String = _
 

@@ -119,8 +119,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   def importAndActivateSample(sampleID: String, inputVcf: File,
                               gVCF: File, annotation: ManweAnnotateVcf): ManweActivateAfterAnnotImport = {
 
-    val minGQ: Int = config("minimum_genome_quality", default = 20, configNamespace = "manwe")
-    val isPublic: Boolean = config("varda_is_public", default = true, configNamespace = "manwe")
+    val minGQ: Int = config("minimum_genome_quality", default = 20, namespace = "manwe")
+    val isPublic: Boolean = config("varda_is_public", default = true, namespace = "manwe")
 
     val bedTrack = new GvcfToBed(this)
     bedTrack.inputVcf = gVCF
@@ -185,7 +185,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    */
   def varda(vcf: File, gVcf: File): File = {
 
-    val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), configNamespace = "manwe")
+    val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), namespace = "manwe")
     //TODO: add groups!!! Need sample-specific group tags for this
 
     val annotate = new ManweAnnotateVcf(this)

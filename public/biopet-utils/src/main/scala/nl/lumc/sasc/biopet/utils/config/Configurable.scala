@@ -92,7 +92,7 @@ trait Configurable extends ImplicitConversions {
      *
      * @param key Name of value
      * @param default Default value if not found
-     * @param configNamespace Adds to the path
+     * @param namespace Adds to the path
      * @param freeVar Default true, if set false value must exist in module
      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
@@ -100,15 +100,15 @@ trait Configurable extends ImplicitConversions {
      */
     def apply(key: String,
               default: Any = null,
-              configNamespace: String = null,
+              namespace: String = null,
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null,
               path: List[String] = null): ConfigValue = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
-      val m = if (configNamespace != null) configNamespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, configNamespace) ::: subPath else path
+      val m = if (namespace != null) namespace else configNamespace
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
       val d = {
         val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -120,22 +120,22 @@ trait Configurable extends ImplicitConversions {
     /**
      * Check if value exist in config
      * @param key Name of value
-     * @param configNamespace Adds to the path
+     * @param namespace Adds to the path
      * @param freeVar Default true, if set false value must exist in module
      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
      * @return true when value is found in config
      */
     def contains(key: String,
-                 configNamespace: String = null,
+                 namespace: String = null,
                  freeVar: Boolean = true,
                  sample: String = null,
                  library: String = null,
                  path: List[String] = null) = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
-      val m = if (configNamespace != null) configNamespace else configNamespace
-      val p = if (path == null) getConfigPath(s, l, configNamespace) ::: subPath else path
+      val m = if (namespace != null) namespace else configNamespace
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
 
       globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }

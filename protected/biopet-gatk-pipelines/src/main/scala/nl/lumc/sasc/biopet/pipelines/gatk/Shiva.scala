@@ -20,7 +20,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
   qscript =>
   def this() = this(null)
 
-  /** Make variantcalling configNamespace, this with the gatk modes in there */
+  /** Make variantcalling namespace, this with the gatk modes in there */
   override def makeVariantcalling(multisample: Boolean = false) = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
