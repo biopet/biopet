@@ -63,7 +63,6 @@ object GensToVcf extends ToolCommand {
     val metaLines = new util.HashSet[VCFHeaderLine]()
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
     metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
-    metaLines.add(new VCFFormatHeaderLine("PL", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Integer, ""))
 
     val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
     require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
@@ -134,7 +133,6 @@ object GensToVcf extends ToolCommand {
             .name(sampleName)
             .alleles(alleles)
             .attribute("GP", gps)
-            .PL(gps)
             .make()
       }
 
