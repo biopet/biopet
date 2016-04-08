@@ -58,7 +58,7 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var sexColumn: Option[String] = config("sex_column")
   var stratifyOn: Option[String] = config("stratify_on")
 
-  var conditionOn: List[String] = config("condition_on")
+  var conditionOn: List[String] = config("condition_on", default = Nil)
 
   var priorAdd: List[String] = config("prior_add", default = Nil)
   var priorCov: List[String] = config("prior_cov", default = Nil)
@@ -90,8 +90,8 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
   var range: List[String] = config("range", default = Nil)
   var renorm: Boolean = config("renorm", default = false)
   var snpid: List[String] = config("snpid", default = Nil)
-  var useRawCovariates: Boolean = config("use_raw_covariates")
-  var useRawPhenotypes: Boolean = config("use_raw_phenotypes")
+  var useRawCovariates: Boolean = config("use_raw_covariates", default = false)
+  var useRawPhenotypes: Boolean = config("use_raw_phenotypes", default = false)
   var noClobber: Boolean = config("no_clobber", default = false)
 
   executable = config("exe", default = "snptest")
