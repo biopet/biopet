@@ -94,15 +94,17 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     val snpTests = BedRecordList.fromReference(referenceFasta())
       .scatter(config("bin_size", default = 1000000))
       .allRecords.map { region =>
-        val regionDir = new File(outputDir, "snptest" + File.separator + region.chr)
+      val name = s"${region.chr}-${region.start + 1}-${region.end}"
+
+      val regionDir = new File(outputDir, ".queue" + File.separator + "regions" + File.separator + region.chr)
         regionDir.mkdirs()
-        val bedFile = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.bed")
+        val bedFile = new File(regionDir, s"${name}.bed")
         BedRecordList.fromList(List(region)).writeToFile(bedFile)
         bedFile.deleteOnExit()
 
         val sv = new SelectVariants(this)
         sv.inputFiles :+= chrVcfFiles.getOrElse(region.chr, vcfFile)
-        sv.outputFile = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.vcf.gz")
+        sv.outputFile = new File(regionDir, s"${name}.vcf.gz")
         sv.intervals :+= bedFile
         sv.isIntermediate = true
         add(sv)
@@ -110,12 +112,12 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         val snptest = new Snptest(this)
         snptest.inputGenotypes :+= sv.outputFile
         snptest.inputSampleFiles :+= phenotypeFile
-        snptest.outputFile = Some(new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.snptest"))
+        snptest.outputFile = Some(new File(regionDir, s"${name}.snptest"))
         add(snptest)
 
         val snptestToVcf = new SnptestToVcf(this)
         snptestToVcf.inputInfo = snptest.outputFile.get
-        snptestToVcf.outputVcf = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.snptest.vcf.gz")
+        snptestToVcf.outputVcf = new File(regionDir, s"${name}.snptest.vcf.gz")
         snptestToVcf.contig = region.chr
         add(snptestToVcf)
 

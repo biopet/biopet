@@ -60,11 +60,11 @@ object SnptestToVcf extends ToolCommand {
     val reference = new FastaSequenceFile(referenceFasta, true)
     val vcfHeader = new VCFHeader()
     vcfHeader.setSequenceDictionary(reference.getSequenceDictionary)
-    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
+    val writer = new VariantContextWriterBuilder()
       .setOutputFile(outputVcf)
       .setReferenceDictionary(vcfHeader.getSequenceDictionary)
       .unsetOption(Options.INDEX_ON_THE_FLY)
-      .build)
+      .build
     writer.writeHeader(vcfHeader)
     writer.close()
   }
