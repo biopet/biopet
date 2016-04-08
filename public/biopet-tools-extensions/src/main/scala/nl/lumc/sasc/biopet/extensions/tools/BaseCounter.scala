@@ -37,7 +37,7 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
 
   var prefix: String = "output"
 
-  override def defaultCoreMemory = 5.0
+  override def defaultCoreMemory = 6.0
   override def defaultThreads = 4
 
   def transcriptTotalCounts = new File(outputDir, s"$prefix.base.transcript.counts")
