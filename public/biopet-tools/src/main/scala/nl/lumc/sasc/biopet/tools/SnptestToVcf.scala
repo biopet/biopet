@@ -110,7 +110,7 @@ object SnptestToVcf extends ToolCommand {
         .stop(end)
         .noGenotypes()
 
-      val infoBuilder = infoKeys.foldLeft(builder) { case (a, b) => a.attribute("ST_" + b, values(headerMap(b))) }
+      val infoBuilder = infoKeys.foldLeft(builder) { case (a, b) => a.attribute("ST_" + b, values(headerMap(b)).replaceAll(";", ",")) }
 
       writer.add(builder.id(rsid.replaceAll(";", ",")).make())
 
