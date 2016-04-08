@@ -5,7 +5,7 @@ import java.util
 
 import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{ VariantContext, Allele, GenotypeBuilder, VariantContextBuilder }
+import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
