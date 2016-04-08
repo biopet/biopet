@@ -50,8 +50,11 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     writer.println("set -eubf")
     writer.println("set -o pipefail")
     lines.foreach(writer.println)
+    jobDelayTime.foreach(x => writer.println(s"sleep $x"))
     writer.close()
   }
+
+  var jobDelayTime: Option[Int] = config("job_delay_time")
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
