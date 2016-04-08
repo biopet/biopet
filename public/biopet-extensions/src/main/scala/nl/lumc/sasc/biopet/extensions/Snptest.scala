@@ -129,7 +129,7 @@ class Snptest(val root: Configurable) extends BiopetCommandLineFunction with Ref
       conditional(fullParameterEstimates, "-full_parameter_estimates") +
       optional("-method", method) +
       optional("-pheno", pheno)
-      conditional(summaryStatsOnly, "-summary_stats_only") +
+    conditional(summaryStatsOnly, "-summary_stats_only") +
       conditional(covAll, "-cov_all") +
       conditional(covAllContinuous, "-cov_all_continuous") +
       conditional(covAllDiscrete, "-cov_all_discrete") +

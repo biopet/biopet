@@ -4,10 +4,10 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Snptest
-import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, SelectVariants}
-import nl.lumc.sasc.biopet.extensions.tools.{GensToVcf, SnptestToVcf}
+import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
+import nl.lumc.sasc.biopet.extensions.tools.{ GensToVcf, SnptestToVcf }
 import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -107,8 +107,6 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         sv.isIntermediate = true
         add(sv)
 
-        //TODO: snptest
-
         val snptest = new Snptest(this)
         snptest.inputGenotypes :+= sv.outputFile
         snptest.inputSampleFiles :+= phenotypeFile
@@ -118,6 +116,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         val snptestToVcf = new SnptestToVcf(this)
         snptestToVcf.inputInfo = snptest.outputFile.get
         snptestToVcf.outputVcf = new File(regionDir, s"${region.chr}-${region.start + 1}-${region.end}.snptest.vcf.gz")
+        snptestToVcf.contig = region.chr
         add(snptestToVcf)
 
         region -> snptestToVcf.outputVcf

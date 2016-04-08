@@ -3,9 +3,9 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.{FastaSequenceFile, ReferenceSequenceFileFactory}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, Options, VariantContextWriterBuilder}
-import htsjdk.variant.variantcontext.{Allele, GenotypeBuilder, VariantContextBuilder}
+import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
+import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, Options, VariantContextWriterBuilder }
+import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
@@ -48,7 +48,7 @@ object SnptestToVcf extends ToolCommand {
 
     infoHeader match {
       case Some(header) => parseLines(header, infoIt, cmdArgs)
-      case _ => logger.info("No header and records found in file")
+      case _            => logger.info("No header and records found in file")
     }
 
     logger.info("Done")
@@ -59,9 +59,9 @@ object SnptestToVcf extends ToolCommand {
     val headerMap = headerKeys.zipWithIndex.toMap
     require(headerKeys.size == headerMap.size, "Duplicates header keys found")
     val metaLines = new util.HashSet[VCFHeaderLine]()
-    for (key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position"
-         if key != "alleleA" if key != "alleleB" if key != "alleleA")
-      metaLines.add(new VCFInfoHeaderLine(s"ST_$key", 1, VCFHeaderLineType.String, ""))
+    for (
+      key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position" if key != "alleleA" if key != "alleleB" if key != "alleleA"
+    ) metaLines.add(new VCFInfoHeaderLine(s"ST_$key", 1, VCFHeaderLineType.String, ""))
 
     val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
     require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
@@ -76,8 +76,9 @@ object SnptestToVcf extends ToolCommand {
       .build)
     writer.writeHeader(vcfHeader)
 
-    val infoKeys = for (key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position"
-                        if key != "alleleA" if key != "alleleB" if key != "alleleA") yield key
+    val infoKeys = for (
+      key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position" if key != "alleleA" if key != "alleleB" if key != "alleleA"
+    ) yield key
 
     var counter = 0
     for (line <- lineIt if !line.startsWith("#")) {
@@ -94,7 +95,7 @@ object SnptestToVcf extends ToolCommand {
         .stop(end)
         .noGenotypes()
 
-      val infoBuilder = infoKeys.foldLeft(builder) { case (a,b) => a.attribute("ST_" + b, values(headerMap(b))) }
+      val infoBuilder = infoKeys.foldLeft(builder) { case (a, b) => a.attribute("ST_" + b, values(headerMap(b))) }
 
       writer.add(builder.id(rsid).make())
 

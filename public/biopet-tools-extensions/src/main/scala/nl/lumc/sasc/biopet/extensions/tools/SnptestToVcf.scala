@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.extensions.tools
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.{Reference, ToolCommandFunction}
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{Input, Output}
 
@@ -43,7 +44,7 @@ class SnptestToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
-    if (contig == null) throw new IllegalStateException
+    if (contig == null) Logging.addError("SnptestToVcf is missing a contig")
     //if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
