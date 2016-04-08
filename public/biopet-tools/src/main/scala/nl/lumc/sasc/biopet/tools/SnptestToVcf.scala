@@ -48,7 +48,7 @@ object SnptestToVcf extends ToolCommand {
 
     infoHeader match {
       case Some(header) => parseLines(header, infoIt, cmdArgs)
-      case _            =>
+      case _ =>
         writeEmptyVcf(cmdArgs.outputVcf, cmdArgs.referenceFasta)
         logger.info("No header and records found in file")
     }
