@@ -1,0 +1,87 @@
+package nl.lumc.sasc.biopet.tools
+
+import java.io.File
+import java.util
+
+import htsjdk.samtools.reference.{FastaSequenceFile, ReferenceSequenceFileFactory}
+import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.{Allele, GenotypeBuilder, VariantContextBuilder}
+import htsjdk.variant.vcf._
+import nl.lumc.sasc.biopet.utils.ToolCommand
+
+import scala.collection.JavaConversions._
+import scala.io.Source
+
+/**
+ * Created by pjvanthof on 15/03/16.
+ */
+object SnptestToVcf extends ToolCommand {
+
+  case class Args(inputInfo: File = null,
+                  outputVcf: File = null,
+                  referenceFasta: File = null,
+                  contig: String = null) extends AbstractArgs
+
+  class OptParser extends AbstractOptParser {
+    opt[File]('i', "inputInfo") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(inputInfo = x)
+    } text "Input info fields"
+    opt[File]('o', "outputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(outputVcf = x)
+    } text "Output vcf file"
+    opt[File]('R', "referenceFasta") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(referenceFasta = x)
+    } text "reference fasta file"
+    opt[String]('c', "contig") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(contig = x)
+    } text "contig of impute file"
+  }
+
+  def main(args: Array[String]): Unit = {
+    logger.info("Start")
+
+    val argsParser = new OptParser
+    val cmdArgs = argsParser.parse(args, Args()).getOrElse(throw new IllegalArgumentException)
+
+    val infoIt = Source.fromFile(cmdArgs.inputInfo).getLines()
+    val infoHeader = infoIt.find(!_.startsWith("#"))
+
+    infoHeader match {
+      case Some(header) => parseLines(header, infoIt, cmdArgs)
+      case _ => logger.info("No header and records found in file")
+    }
+
+    logger.info("Done")
+  }
+
+  def parseLines(header: String, lineIt: Iterator[String], cmdArgs: Args): Unit = {
+    val headerKeys = header.split(" ")
+    val headerMap = headerKeys.zipWithIndex.toMap
+    require(headerKeys.size == headerMap.size, "Duplicates header keys found")
+    val metaLines = new util.HashSet[VCFHeaderLine]()
+    for (key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position"
+         if key != "alleleA" if key != "alleleB" if key != "alleleA")
+      metaLines.add(new VCFInfoHeaderLine(s"ST_$key", 1, VCFHeaderLineType.String, ""))
+
+    val reference = new FastaSequenceFile(cmdArgs.referenceFasta, true)
+    require(reference.getSequenceDictionary.getSequence(cmdArgs.contig) != null,
+      s"contig '${cmdArgs.contig}' not found on reference")
+
+    val vcfHeader = new VCFHeader(metaLines)
+    vcfHeader.setSequenceDictionary(reference.getSequenceDictionary)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
+      .setOutputFile(cmdArgs.outputVcf)
+      .setReferenceDictionary(vcfHeader.getSequenceDictionary)
+      .build)
+    writer.writeHeader(vcfHeader)
+
+    for (line <- lineIt if !line.startsWith("#")) {
+      val values = line.split(" ")
+      require(values.size == headerKeys.size, "Number of values are not the same as number of header keys")
+
+    }
+
+    writer.close()
+
+  }
+}
