@@ -31,7 +31,7 @@ abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNG
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
-      override def configName = "gentrap"
+      override def configNamespace = "gentrap"
       override def globalConfig = new Config(map)
       // disable dict file check since it is based on the reference file name (which we can't modify here since
       // we use the mock /usr/bin/test file

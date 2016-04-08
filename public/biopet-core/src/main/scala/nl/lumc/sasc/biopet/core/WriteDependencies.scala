@@ -36,7 +36,7 @@ object WriteDependencies extends Logging with Configurable {
     val cache: mutable.Map[String, Int] = mutable.Map()
     for (function <- functions) {
       val baseName = function match {
-        case f: Configurable => f.configName
+        case f: Configurable => f.configNamespace
         case f               => f.getClass.getSimpleName
       }
       cache += baseName -> (cache.getOrElse(baseName, 0) + 1)

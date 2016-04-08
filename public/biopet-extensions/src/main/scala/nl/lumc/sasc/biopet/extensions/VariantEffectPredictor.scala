@@ -32,7 +32,7 @@ import scala.io.Source
  */
 class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFunction with Reference with Version with Summarizable {
 
-  executable = config("exe", submodule = "perl", default = "perl")
+  executable = config("exe", namespace = "perl", default = "perl")
   var vepScript: String = config("vep_script")
 
   @Input(doc = "input VCF", required = true)

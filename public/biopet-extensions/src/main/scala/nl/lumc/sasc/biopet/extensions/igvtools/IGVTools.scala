@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
  * Created by wyleung on 5-1-15
  */
 abstract class IGVTools extends BiopetCommandLineFunction with Version {
-  executable = config("exe", default = "igvtools", submodule = "igvtools", freeVar = false)
+  executable = config("exe", default = "igvtools", namespace = "igvtools", freeVar = false)
   def versionCommand = executable + " version"
   def versionRegex = """IGV Version:? ([\w\.]*) .*""".r
   override def versionExitcode = List(0)

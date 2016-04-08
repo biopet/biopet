@@ -33,7 +33,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
     val rawFiles = inputBams.map {
       case (sample, bamFile) =>
         val mp = new SamtoolsMpileup(this) {
-          override def configName = "samtoolsmpileup"
+          override def configNamespace = "samtoolsmpileup"
           override def defaults = Map("samtoolsmpileup" -> Map("disable_baq" -> true, "min_map_quality" -> 1))
         }
         mp.input :+= bamFile
@@ -44,7 +44,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
         add(mp | m2v)
 
         val vcfFilter = new VcfFilter(this) {
-          override def configName = "vcffilter"
+          override def configNamespace = "vcffilter"
           override def defaults = Map("min_sample_depth" -> 8,
             "min_alternate_depth" -> 2,
             "min_samples_pass" -> 1,

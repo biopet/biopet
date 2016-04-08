@@ -35,7 +35,7 @@ import org.testng.annotations.{ BeforeClass, AfterClass, DataProvider, Test }
 abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Mapping = {
     new Mapping {
-      override def configName = "mapping"
+      override def configNamespace = "mapping"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"
