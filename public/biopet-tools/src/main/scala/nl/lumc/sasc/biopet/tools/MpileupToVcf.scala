@@ -77,7 +77,7 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternative Forward Reads\">")
     writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternative Reverse Reads\">")
     writer.println("##FORMAT=<ID=SEQ-ERR,Number=.,Type=Float,Description=\"Probability to not be a sequence error with error rate " + commandArgs.seqError + "\">")
-    writer.println("##FORMAT=<ID=MA-SEQ-ERR,Number=1,Type=Float,Description=\"Probability to not be a sequence error with error rate " + commandArgs.seqError + "\">")
+    writer.println("##FORMAT=<ID=MA-SEQ-ERR,Number=1,Type=Float,Description=\"Minimal probability for all alternative alleles to not be a sequence error with error rate " + commandArgs.seqError + "\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
     val inputStream = if (commandArgs.input != null) {
