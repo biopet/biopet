@@ -4,7 +4,7 @@ import java.io.File
 import java.util
 
 import htsjdk.samtools.reference.{FastaSequenceFile, ReferenceSequenceFileFactory}
-import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, VariantContextWriterBuilder}
+import htsjdk.variant.variantcontext.writer.{AsyncVariantContextWriter, Options, VariantContextWriterBuilder}
 import htsjdk.variant.variantcontext.{Allele, GenotypeBuilder, VariantContextBuilder}
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
@@ -72,14 +72,37 @@ object SnptestToVcf extends ToolCommand {
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
       .setOutputFile(cmdArgs.outputVcf)
       .setReferenceDictionary(vcfHeader.getSequenceDictionary)
+      .unsetOption(Options.INDEX_ON_THE_FLY)
       .build)
     writer.writeHeader(vcfHeader)
 
+    val infoKeys = for (key <- headerKeys if key != "rsid" if key != "chromosome" if key != "position"
+                        if key != "alleleA" if key != "alleleB" if key != "alleleA") yield key
+
+    var counter = 0
     for (line <- lineIt if !line.startsWith("#")) {
       val values = line.split(" ")
       require(values.size == headerKeys.size, "Number of values are not the same as number of header keys")
+      val alleles = List(Allele.create(values(headerMap("alleleA")), true), Allele.create(values(headerMap("alleleB"))))
+      val start = values(headerMap("position")).toLong
+      val end = alleles.head.length() + start - 1
+      val rsid = values(headerMap("rsid"))
+      val builder = (new VariantContextBuilder)
+        .chr(cmdArgs.contig)
+        .alleles(alleles)
+        .start(start)
+        .stop(end)
+        .noGenotypes()
 
+      val infoBuilder = infoKeys.foldLeft(builder) { case (a,b) => a.attribute("ST_" + b, values(headerMap(b))) }
+
+      writer.add(builder.id(rsid).make())
+
+      counter += 1
+      if (counter % 10000 == 0) logger.info(s"$counter lines processed")
     }
+
+    logger.info(s"$counter lines processed")
 
     writer.close()
 
