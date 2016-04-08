@@ -39,8 +39,6 @@ class SnptestToVcf(val root: Configurable) extends ToolCommandFunction with Refe
 
   var contig: String = _
 
-  override def defaultCoreMemory = 6.0
-
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()

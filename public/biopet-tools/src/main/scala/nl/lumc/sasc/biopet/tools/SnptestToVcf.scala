@@ -48,10 +48,25 @@ object SnptestToVcf extends ToolCommand {
 
     infoHeader match {
       case Some(header) => parseLines(header, infoIt, cmdArgs)
-      case _            => logger.info("No header and records found in file")
+      case _            =>
+        writeEmptyVcf(cmdArgs.outputVcf, cmdArgs.referenceFasta)
+        logger.info("No header and records found in file")
     }
 
     logger.info("Done")
+  }
+
+  def writeEmptyVcf(outputVcf: File, referenceFasta: File): Unit = {
+    val reference = new FastaSequenceFile(referenceFasta, true)
+    val vcfHeader = new VCFHeader()
+    vcfHeader.setSequenceDictionary(reference.getSequenceDictionary)
+    val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder()
+      .setOutputFile(outputVcf)
+      .setReferenceDictionary(vcfHeader.getSequenceDictionary)
+      .unsetOption(Options.INDEX_ON_THE_FLY)
+      .build)
+    writer.writeHeader(vcfHeader)
+    writer.close()
   }
 
   def parseLines(header: String, lineIt: Iterator[String], cmdArgs: Args): Unit = {
