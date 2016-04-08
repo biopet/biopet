@@ -41,10 +41,10 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
     val adapterCounts: Map[String, Any] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(m: Map[_, _]) => m.flatMap {
-        case (seq: String, count) =>
+        case (seq: String, adapterStats: Map[String, _]) =>
           seqToNameMap.get(seq) match {
             // adapter sequence is found by FastQC
-            case Some(n) => Some(n -> Map("sequence" -> seq, "count" -> count))
+            case Some(n) => Some(n -> (Map("sequence" -> seq) ++ adapterStats))
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
             // sequences come from FastQC
             case _ =>
@@ -57,7 +57,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
           None
       }
       // "adapters" key not found ~ something went wrong in our part
-      case _ => throw new RuntimeException(s"Required key 'adapters' not found in stats entry '$fastqInput'.")
+      case _ => throw new RuntimeException(s"Required key '${adaptersStatsName}' not found in stats entry '${fastqInput}'.")
     }
     initStats.updated(adaptersStatsName, adapterCounts)
   }
