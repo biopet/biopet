@@ -52,7 +52,7 @@ class GensToVcf(val root: Configurable) extends ToolCommandFunction with Referen
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
-    if (contig == null) throw new IllegalStateException
+    if (contig == null) throw new IllegalStateException("Contig is missing")
     if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 

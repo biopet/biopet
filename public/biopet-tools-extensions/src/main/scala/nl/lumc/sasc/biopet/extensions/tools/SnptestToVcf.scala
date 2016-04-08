@@ -42,7 +42,7 @@ class SnptestToVcf(val root: Configurable) extends ToolCommandFunction with Refe
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
-    if (contig == null) Logging.addError("SnptestToVcf is missing a contig")
+    if (contig == null) throw new IllegalStateException("Contig is missing")
     //if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
