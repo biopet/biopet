@@ -96,9 +96,10 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
       .allRecords.map { region =>
         val name = s"${region.chr}-${region.start + 1}-${region.end}"
 
-        val regionDir = new File(outputDir, ".queue" + File.separator + "regions" + File.separator + region.chr)
+        val regionDir = new File(outputDir, "snptest" + File.separator + region.chr)
+        val bedDir = new File(outputDir, ".queue" + File.separator + "regions" + File.separator + region.chr)
         regionDir.mkdirs()
-        val bedFile = new File(regionDir, s"${name}.bed")
+        val bedFile = new File(bedDir, s"${name}.bed")
         BedRecordList.fromList(List(region)).writeToFile(bedFile)
         bedFile.deleteOnExit()
 
