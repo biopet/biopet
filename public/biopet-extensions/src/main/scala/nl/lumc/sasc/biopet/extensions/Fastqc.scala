@@ -85,7 +85,7 @@ class Fastqc(val root: Configurable) extends BiopetCommandLineFunction with Vers
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
-    optional("--java", java_exe) +
+    optional("--java", javaExe) +
     optional("--threads", threads) +
     optional("--contaminants", contaminants) +
     optional("--adapters", adapters) +
