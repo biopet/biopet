@@ -112,7 +112,7 @@ object SnptestToVcf extends ToolCommand {
 
       val infoBuilder = infoKeys.foldLeft(builder) { case (a, b) => a.attribute("ST_" + b, values(headerMap(b))) }
 
-      writer.add(builder.id(rsid).make())
+      writer.add(builder.id(rsid.replaceAll(";", ",")).make())
 
       counter += 1
       if (counter % 10000 == 0) logger.info(s"$counter lines processed")
