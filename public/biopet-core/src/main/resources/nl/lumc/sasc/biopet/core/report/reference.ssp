@@ -5,7 +5,7 @@
 <%@ var pipeline: String %>
 
 #{
-    val contigs = summary.getValue(pipeline, "settings", "reference", "contigs").get.asInstanceOf[Map[String, Map[String, Any]]]
+    val contigs = summary.getValue(pipeline, "settings", "reference", "contigs").getOrElse(Map.empty).asInstanceOf[Map[String, Map[String, Any]]]
 }#
 
 <table class="table">

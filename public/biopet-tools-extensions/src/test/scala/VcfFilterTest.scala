@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 import java.io.File
 
 import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
@@ -102,85 +117,45 @@ class VcfFilterTest extends TestNGSuite with Matchers {
     val command = cmd(vcfFilter.cmdLine)
 
     var cmdString: List[String] = Nil
-    if (minSampleDepth.isDefined) {
-      cmdString = "--minSampleDepth " + minSampleDepth.getOrElse("") :: cmdString
-    }
+    if (minSampleDepth.isDefined) cmdString = "--minSampleDepth " + minSampleDepth.getOrElse("") :: cmdString
 
-    if (minTotalDepth.isDefined) {
-      cmdString = "--minTotalDepth " + minTotalDepth.getOrElse("") :: cmdString
-    }
+    if (minTotalDepth.isDefined) cmdString = "--minTotalDepth " + minTotalDepth.getOrElse("") :: cmdString
 
-    if (minAlternateDepth.isDefined) {
-      cmdString = "--minAlternateDepth " + minAlternateDepth.getOrElse("") :: cmdString
-    }
+    if (minAlternateDepth.isDefined) cmdString = "--minAlternateDepth " + minAlternateDepth.getOrElse("") :: cmdString
 
-    if (minSamplesPass.isDefined) {
-      cmdString = "--minSamplesPass " + minSamplesPass.getOrElse("") :: cmdString
-    }
+    if (minSamplesPass.isDefined) cmdString = "--minSamplesPass " + minSamplesPass.getOrElse("") :: cmdString
 
-    if (minGenomeQuality.isDefined) {
-      cmdString = "--minGenomeQuality " + minGenomeQuality.getOrElse("") :: cmdString
-    }
+    if (minGenomeQuality.isDefined) cmdString = "--minGenomeQuality " + minGenomeQuality.getOrElse("") :: cmdString
 
-    if (filterRefCalls) {
-      cmdString = "--filterRefCalls" :: cmdString
-    }
+    if (filterRefCalls) cmdString = "--filterRefCalls" :: cmdString
 
-    if (invertedOutputVcf.isDefined) {
-      cmdString = "--invertedOutputVcf " + invertedOutputVcf.getOrElse(new File("")).getAbsolutePath :: cmdString
-    }
+    if (invertedOutputVcf.isDefined) cmdString = "--invertedOutputVcf " + invertedOutputVcf.getOrElse(new File("")).getAbsolutePath :: cmdString
 
-    if (resToDom.isDefined) {
-      cmdString = "--resToDom " + resToDom.getOrElse("") :: cmdString
-    }
+    if (resToDom.isDefined) cmdString = "--resToDom " + resToDom.getOrElse("") :: cmdString
 
-    if (trioCompound.isDefined) {
-      cmdString = "--trioCompound " + trioCompound.getOrElse("") :: cmdString
-    }
+    if (trioCompound.isDefined) cmdString = "--trioCompound " + trioCompound.getOrElse("") :: cmdString
 
-    if (deNovoInSample.isDefined) {
-      cmdString = "--deNovoInSample " + deNovoInSample.getOrElse("") :: cmdString
-    }
+    if (deNovoInSample.isDefined) cmdString = "--deNovoInSample " + deNovoInSample.getOrElse("") :: cmdString
 
-    if (deNovoTrio.isDefined) {
-      cmdString = "--deNovoTrio " + deNovoTrio.getOrElse("") :: cmdString
-    }
+    if (deNovoTrio.isDefined) cmdString = "--deNovoTrio " + deNovoTrio.getOrElse("") :: cmdString
 
-    if (trioLossOfHet.isDefined) {
-      cmdString = "--trioLossOfHet " + trioLossOfHet.getOrElse("") :: cmdString
-    }
+    if (trioLossOfHet.isDefined) cmdString = "--trioLossOfHet " + trioLossOfHet.getOrElse("") :: cmdString
 
-    if (mustHaveVariant.nonEmpty) {
-      cmdString = mustHaveVariant.map(x => "--mustHaveVariant " + x) ::: cmdString
-    }
+    if (mustHaveVariant.nonEmpty) cmdString = mustHaveVariant.map(x => "--mustHaveVariant " + x) ::: cmdString
 
-    if (calledIn.nonEmpty) {
-      cmdString = calledIn.map(x => "--calledIn " + x) ::: cmdString
-    }
+    if (calledIn.nonEmpty) cmdString = calledIn.map(x => "--calledIn " + x) ::: cmdString
 
-    if (mustHaveGenotype.nonEmpty) {
-      cmdString = mustHaveGenotype.map(x => "--mustHaveGenotype " + x) ::: cmdString
-    }
+    if (mustHaveGenotype.nonEmpty) cmdString = mustHaveGenotype.map(x => "--mustHaveGenotype " + x) ::: cmdString
 
-    if (diffGenotype.nonEmpty) {
-      cmdString = diffGenotype.map(x => "--diffGenotype " + x) ::: cmdString
-    }
+    if (diffGenotype.nonEmpty) cmdString = diffGenotype.map(x => "--diffGenotype " + x) ::: cmdString
 
-    if (filterHetVarToHomVar.nonEmpty) {
-      cmdString = filterHetVarToHomVar.map(x => "--filterHetVarToHomVar " + x) ::: cmdString
-    }
+    if (filterHetVarToHomVar.nonEmpty) cmdString = filterHetVarToHomVar.map(x => "--filterHetVarToHomVar " + x) ::: cmdString
 
-    if (id.nonEmpty) {
-      cmdString = id.map(x => "--id " + x) ::: cmdString
-    }
+    if (id.nonEmpty) cmdString = id.map(x => "--id " + x) ::: cmdString
 
-    if (idFile.isDefined) {
-      cmdString = "--idFile " + idFile.getOrElse(new File("")).getAbsolutePath :: cmdString
-    }
+    if (idFile.isDefined) cmdString = "--idFile " + idFile.getOrElse(new File("")).getAbsolutePath :: cmdString
 
-    if (minQualScore.isDefined) {
-      cmdString = "--minQualScore " + minQualScore.getOrElse("") :: cmdString
-    }
+    if (minQualScore.isDefined) cmdString = "--minQualScore " + minQualScore.getOrElse("") :: cmdString
 
     cmdString.foreach(x => command.contains(x) shouldBe true)
   }

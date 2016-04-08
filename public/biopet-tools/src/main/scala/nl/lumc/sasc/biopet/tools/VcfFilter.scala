@@ -276,8 +276,10 @@ object VcfFilter extends ToolCommand {
    * @return
    */
   def minGenomeQuality(record: VariantContext, minGQ: Int, minSamplesPass: Int = 1): Boolean = {
-    record.getGenotypes.count(x => if (!x.hasGQ) false
-    else if (x.getGQ >= minGQ) true else false) >= minSamplesPass
+    record.getGenotypes.count(x =>
+      if (minGQ == 0) true
+      else if (!x.hasGQ) false
+      else if (x.getGQ >= minGQ) true else false) >= minSamplesPass
   }
 
   /**

@@ -31,22 +31,22 @@ import scala.io.Source
  */
 class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summarizable with Version {
   @Input(doc = "R1 input")
-  var input_R1: File = _
+  var inputR1: File = _
 
   @Input(doc = "R2 input", required = false)
-  var input_R2: File = _
+  var inputR2: File = _
 
   @Output(doc = "R1 output", required = false)
-  var output_R1: File = _
+  var outputR1: File = _
 
   @Output(doc = "R2 output", required = false)
-  var output_R2: File = _
+  var outputR2: File = _
 
   @Output(doc = "singles output", required = false)
-  var output_singles: File = _
+  var outputSingles: File = _
 
   @Output(doc = "stats output")
-  var output_stats: File = _
+  var outputStats: File = _
 
   executable = config("exe", default = "sickle", freeVar = false)
   var qualityType: Option[String] = config("qualitytype")
@@ -67,22 +67,22 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
   /** Return command to execute */
   def cmdLine = {
     var cmd: String = required(executable)
-    if (input_R2 != null) {
+    if (inputR2 != null) {
       cmd += required("pe") +
-        required("-r", input_R2) +
-        required("-p", output_R2) +
-        required("-s", output_singles)
+        required("-r", inputR2) +
+        required("-p", outputR2) +
+        required("-s", outputSingles)
     } else cmd += required("se")
     cmd +
-      (if (inputAsStdin) required("-f", new File("/dev/stdin")) else required("-f", input_R1)) +
+      (if (inputAsStdin) required("-f", new File("/dev/stdin")) else required("-f", inputR1)) +
       required("-t", qualityType) +
-      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else required("-o", output_R1)) +
+      (if (outputAsStsout) required("-o", new File("/dev/stdout")) else required("-o", outputR1)) +
       optional("-q", qualityThreshold) +
       optional("-l", lengthThreshold) +
       conditional(noFiveprime, "-x") +
       conditional(discardN, "-n") +
       conditional(quiet || outputAsStsout, "--quiet") +
-      (if (outputAsStsout) "" else " > " + required(output_stats))
+      (if (outputAsStsout) "" else " > " + required(outputStats))
   }
 
   /** returns stats map for summary */
@@ -98,7 +98,7 @@ class Sickle(val root: Configurable) extends BiopetCommandLineFunction with Summ
 
     var stats: mutable.Map[String, Int] = mutable.Map()
 
-    if (output_stats.exists) for (line <- Source.fromFile(output_stats).getLines()) {
+    if (outputStats.exists) for (line <- Source.fromFile(outputStats).getLines()) {
       line match {
         // single run
         case sKept(num)              => stats += ("num_reads_kept" -> num.toInt)

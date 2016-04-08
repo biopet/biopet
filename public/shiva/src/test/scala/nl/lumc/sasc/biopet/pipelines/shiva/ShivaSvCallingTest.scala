@@ -217,6 +217,10 @@ object ShivaSvCallingTest {
     "pindelvcf" -> Map("exe" -> "test"),
     "clever" -> Map("exe" -> "test"),
     "delly" -> Map("exe" -> "test"),
-    "varscan_jar" -> "test"
+    "varscan_jar" -> "test",
+    "pysvtools" -> Map(
+      "exe" -> "test",
+      "exclusion_regions" -> "test",
+      "translocations_only" -> false)
   )
 }

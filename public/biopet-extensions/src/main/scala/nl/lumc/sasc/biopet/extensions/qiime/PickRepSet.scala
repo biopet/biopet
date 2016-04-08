@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
@@ -22,7 +37,7 @@ class PickRepSet(val root: Configurable) extends BiopetCommandLineFunction with 
   var logFile: Option[File] = None
 
   @Input(required = false)
-  var reference_seqs_fp: Option[File] = config("reference_seqs_fp")
+  var referenceSeqsFp: Option[File] = config("reference_seqs_fp")
 
   @Input(required = false)
   var fastaInput: Option[File] = None
@@ -32,14 +47,14 @@ class PickRepSet(val root: Configurable) extends BiopetCommandLineFunction with 
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 
-  var rep_set_picking_method: Option[String] = config("rep_set_picking_method")
+  var repSetPickingMethod: Option[String] = config("rep_set_picking_method")
 
   def cmdLine = executable +
     required("-i", inputFile) +
     required("-o", outputFasta) +
-    optional("-m", rep_set_picking_method) +
+    optional("-m", repSetPickingMethod) +
     optional("-f", fastaInput) +
     optional("-l", logFile) +
     optional("-s", sortBy) +
-    optional("-r", reference_seqs_fp)
+    optional("-r", referenceSeqsFp)
 }

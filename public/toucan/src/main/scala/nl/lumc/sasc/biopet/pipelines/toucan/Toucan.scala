@@ -68,6 +68,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     vep.output = new File(outputDir, inputVCF.getName.stripSuffix(".gz").stripSuffix(".vcf") + ".vep.vcf")
     vep.isIntermediate = true
     add(vep)
+    addSummarizable(vep, "variant_effect_predictor")
 
     val normalizer = new VepNormalizer(this)
     normalizer.inputVCF = vep.output

@@ -22,22 +22,22 @@ import org.broadinstitute.gatk.utils.commandline.Input
 
 trait PythonCommandLineFunction extends BiopetCommandLineFunction {
   @Input(doc = "Python script", required = false)
-  var python_script: File = _
+  var pythonScript: File = _
 
   executable = config("exe", default = "python", configNamespace = "python", freeVar = false)
 
-  protected var python_script_name: String = _
+  protected var pythonScriptName: String = _
 
   /**
    * checks if script already exist in jar otherwise try to fetch from the jar
    * @param script name / location of script
    */
   def setPythonScript(script: String) {
-    python_script = new File(script)
-    if (!python_script.exists()) {
+    pythonScript = new File(script)
+    if (!pythonScript.exists()) {
       setPythonScript(script, "")
     } else {
-      python_script_name = script
+      pythonScriptName = script
     }
   }
 
@@ -47,17 +47,17 @@ trait PythonCommandLineFunction extends BiopetCommandLineFunction {
    * @param subpackage location of script in jar
    */
   def setPythonScript(script: String, subpackage: String) {
-    python_script_name = script
-    python_script = new File(".queue/tmp/" + subpackage + python_script_name)
-    if (!python_script.getParentFile.exists) python_script.getParentFile.mkdirs
-    val is = getClass.getResourceAsStream(subpackage + python_script_name)
-    val os = new FileOutputStream(python_script)
+    pythonScriptName = script
+    pythonScript = new File(".queue/tmp/" + subpackage + pythonScriptName)
+    if (!pythonScript.getParentFile.exists) pythonScript.getParentFile.mkdirs
+    val is = getClass.getResourceAsStream(subpackage + pythonScriptName)
+    val os = new FileOutputStream(pythonScript)
     org.apache.commons.io.IOUtils.copy(is, os)
     os.close()
   }
 
   /** return basic command to prefix the complete command with */
   def getPythonCommand: String = {
-    required(executable) + required(python_script)
+    required(executable) + required(pythonScript)
   }
 }

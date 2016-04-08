@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import java.io.{ File, PrintWriter }
@@ -58,18 +73,18 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
 
     krakenAnalysis.paired = fastqR2.isDefined
 
-    krakenAnalysis.classified_out = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
-    krakenAnalysis.unclassified_out = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
+    krakenAnalysis.classifiedOut = Some(new File(outputDir, s"$outputName.krkn.classified.fastq"))
+    krakenAnalysis.unclassifiedOut = Some(new File(outputDir, s"$outputName.krkn.unclassified.fastq"))
     add(krakenAnalysis)
 
     outputFiles += ("kraken_output_raw" -> krakenAnalysis.output)
-    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classified_out.getOrElse(""))
-    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassified_out.getOrElse(""))
+    outputFiles += ("kraken_classified_out" -> krakenAnalysis.classifiedOut.getOrElse(""))
+    outputFiles += ("kraken_unclassified_out" -> krakenAnalysis.unclassifiedOut.getOrElse(""))
 
     // create kraken summary file
     val krakenReport = new KrakenReport(this)
     krakenReport.input = krakenAnalysis.output
-    krakenReport.show_zeros = true
+    krakenReport.showZeros = true
     krakenReport.output = new File(outputDir, s"$outputName.krkn.full")
     add(krakenReport)
 

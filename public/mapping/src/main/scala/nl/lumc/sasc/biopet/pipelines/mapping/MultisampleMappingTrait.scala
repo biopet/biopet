@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.mapping
 
 import java.io.File
@@ -110,8 +125,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
         if (inputR1.isDefined) {
           mapping.foreach { m =>
-            m.input_R1 = inputR1.get
-            m.input_R2 = inputR2
+            m.inputR1 = inputR1.get
+            m.inputR2 = inputR2
             add(m)
           }
         } else if (inputBam.isDefined) {
@@ -122,8 +137,8 @@ trait MultisampleMappingTrait extends MultiSampleQScript
             samToFastq.isIntermediate = libraries.size > 1
             qscript.add(samToFastq)
             mapping.foreach(m => {
-              m.input_R1 = samToFastq.fastqR1
-              m.input_R2 = Some(samToFastq.fastqR2)
+              m.inputR1 = samToFastq.fastqR1
+              m.inputR2 = Some(samToFastq.fastqR2)
               add(m)
             })
           } else {

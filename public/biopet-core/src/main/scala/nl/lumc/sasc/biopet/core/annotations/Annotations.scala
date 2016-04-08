@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.core.annotations
 
 import nl.lumc.sasc.biopet.core.BiopetQScript
@@ -13,6 +28,14 @@ trait AnnotationGtf extends BiopetQScript { qscript: QScript =>
   lazy val annotationGtf: File = {
     val file: File = config("annotation_gtf", freeVar = true)
     inputFiles :+ InputFile(file, config("annotation_gtf_md5", freeVar = true))
+    file
+  }
+}
+trait AnnotationGff extends BiopetQScript { qscript: QScript =>
+  /** GFF reference file in GFF3 format */
+  lazy val annotationGff: File = {
+    val file: File = config("annotation_gff", freeVar = true)
+    inputFiles :+ InputFile(file, config("annotation_gff_md5", freeVar = true))
     file
   }
 }

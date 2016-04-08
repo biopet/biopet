@@ -41,7 +41,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
     case e: Exception => Nil
   }
 
-  pipesJobs :::= commands
+  _pipesJobs :::= commands
 
   override def beforeGraph() {
     super.beforeGraph()
@@ -61,7 +61,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   }
 
   override def setResources(): Unit = {
-    combineResources(pipesJobs)
+    combineResources(_pipesJobs)
   }
 
   override def setupRetry(): Unit = {

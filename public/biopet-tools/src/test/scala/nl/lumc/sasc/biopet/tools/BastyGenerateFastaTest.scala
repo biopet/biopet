@@ -35,11 +35,11 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     Paths.get(getClass.getResource(p).toURI).toString
   }
 
-  val vepped_path = resourcePath("/VEP_oneline.vcf")
-  val vepped = new File(vepped_path)
-  val bam_path = resourcePath("/paired01.bam")
-  val chrQ_path = resourcePath("/chrQ.vcf.gz")
-  val chrQRef_path = resourcePath("/fake_chrQ.fa")
+  val veppedPath = resourcePath("/VEP_oneline.vcf")
+  val vepped = new File(veppedPath)
+  val bamPath = resourcePath("/paired01.bam")
+  val chrQPath = resourcePath("/chrQ.vcf.gz")
+  val chrQRefPath = resourcePath("/fake_chrQ.fa")
   val bam = new File(resourcePath("/paired01.bam"))
   val chrQ = new File(resourcePath("/chrQ.vcf.gz"))
   val chrQRef = new File(resourcePath("/fake_chrQ.fa"))
@@ -50,7 +50,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQPath, "--outputVariants", tmppath, "--sampleName", "Sample_101", "--reference", chrQRefPath, "--outputName", "test")
     main(arguments)
   }
 
@@ -60,7 +60,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQPath, "--outputVariants", tmppath, "--bamFile", bamPath, "--sampleName", "Sample_101", "--reference", chrQRefPath, "--outputName", "test")
     main(arguments)
   }
 
@@ -70,7 +70,7 @@ class BastyGenerateFastaTest extends TestNGSuite with MockitoSugar with Matchers
     val tmppath = tmp.getAbsolutePath
     tmp.deleteOnExit()
 
-    val arguments = Array("-V", chrQ_path, "--outputConsensus", tmppath, "--outputConsensusVariants", tmppath, "--bamFile", bam_path, "--sampleName", "Sample_101", "--reference", chrQRef_path, "--outputName", "test")
+    val arguments = Array("-V", chrQPath, "--outputConsensus", tmppath, "--outputConsensusVariants", tmppath, "--bamFile", bamPath, "--sampleName", "Sample_101", "--reference", chrQRefPath, "--outputName", "test")
     main(arguments)
   }
 

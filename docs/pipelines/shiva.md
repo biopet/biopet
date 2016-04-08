@@ -135,6 +135,17 @@ To view all possible config options please navigate to our Gitlab wiki page
 Since Shiva uses the [Mapping](mapping.md) pipeline internally, mapping config values can be specified as well.
 For all the options, please see the corresponding documentation for the mapping pipeline.
 
+### Exome variant calling
+
+If one calls variants with Shiva on exome samples and a ```amplicon_bed``` file is available, the user is able to add this file to the config file.
+ When the file is given, the coverage over the positions in the bed file will be calculated plus the number of variants on each position. If there is an interest
+ in a specific region of the genome/exome one is capable to give multiple ```regionOfInterest.bed``` files with the option ```regions_of_interest``` (in list/array format).
+ 
+ A short recap: the option ```amplicon_bed``` can only be given one time and should be composed of the amplicon kit used to obtain the exome data.
+ The option ```regions_of_interest``` can contain multiple bed files in ```list``` format and can contain any region a user wants. If multiple regions are given,
+ the pipeline will make an coverage plot over each bed file separately. 
+ 
+
 ### Modes
 
 Shiva furthermore supports three modes. The default and recommended option is `multisample_variantcalling`.

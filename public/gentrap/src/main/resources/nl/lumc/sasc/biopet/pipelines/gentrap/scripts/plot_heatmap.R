@@ -118,8 +118,8 @@ plotHeatmap <- function(in.data, out.name=OUTPUT.PLOT, count.type=COUNT.TYPE, tm
     img.margin <- 8
   } else {
     img.len <- 800
-    img.margin <- max(11, max(sapply(rownames(in.data), nchar)))
-  }
+    img.margin <- min(16, max(sapply(rownames(in.data), nchar)))
+}
 
   png(out.name, height=img.len, width=img.len, res=100)
   heatmap.2(in.data, col=brewer.pal(9, "YlGnBu"), trace="none", density.info="histogram", main=title, margins=c(img.margin, img.margin))

@@ -1,3 +1,18 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.tools
 
 import java.io.{ PrintWriter, File }
@@ -55,7 +70,9 @@ object BaseCounter extends ToolCommand {
     logger.info("Finding overlapping genes")
     val overlapGenes = groupGenesOnOverlap(geneReader.getAll)
 
-    logger.info("Start reading bamFile")
+    counter = 0
+
+    logger.info(s"Start reading bamFile divided over ${overlapGenes.values.flatten.size} chunks")
     val counts = (for (genes <- overlapGenes.values.flatten.par) yield runThread(cmdArgs.bamFile, genes)).toList
     logger.info("Done reading bamFile")
 
@@ -277,6 +294,8 @@ object BaseCounter extends ToolCommand {
     else samRecord.getReadNegativeStrandFlag == strand
   }
 
+  private[tools] var counter = 0
+
   private[tools] case class ThreadOutput(geneCounts: List[GeneCount],
                                          nonStrandedMetaExonCounts: List[(String, RegionCount)],
                                          strandedMetaExonCounts: List[(String, RegionCount)])
@@ -300,6 +319,8 @@ object BaseCounter extends ToolCommand {
     }
 
     bamReader.close()
+    counter += 1
+    if (counter % 1000 == 0) logger.info(s"${counter} chunks done")
     ThreadOutput(counts.values.toList, metaExons, plusMetaExons ::: minMetaExons)
   }
 

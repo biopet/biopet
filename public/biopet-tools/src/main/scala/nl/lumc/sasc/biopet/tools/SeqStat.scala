@@ -84,10 +84,10 @@ object SeqStat extends ToolCommand {
    */
   def detectPhredEncoding(quals: mutable.ArrayBuffer[Long]): Unit = {
     // substract 1 on high value, because we start from index 0
-    val qual_low_boundery = quals.takeWhile(_ == 0).length
-    val qual_high_boundery = quals.length - 1
+    val qualLowBoundery = quals.takeWhile(_ == 0).length
+    val qualHighBoundery = quals.length - 1
 
-    (qual_low_boundery < 59, qual_high_boundery > 74) match {
+    (qualLowBoundery < 59, qualHighBoundery > 74) match {
       case (false, true) => phredEncoding = Solexa
       // TODO: check this later on
       // complex case, we cannot tell wheter this is a sanger or solexa
@@ -122,7 +122,7 @@ object SeqStat extends ToolCommand {
    *
    * @param record FastqRecord
    */
-  def procesRead(record: FastqRecord): Unit = {
+  def processRead(record: FastqRecord): Unit = {
 
     // Adjust/expand the length of baseStat case classes to the size of current
     // read if the current list is not long enough to store the data
@@ -130,9 +130,8 @@ object SeqStat extends ToolCommand {
       baseStats ++= mutable.ArrayBuffer.fill(record.length - baseStats.length)(BaseStat())
     }
 
-    if (readStats.lengths.length < record.length) {
+    if (readStats.lengths.length <= record.length)
       readStats.lengths ++= mutable.ArrayBuffer.fill(record.length - readStats.lengths.length + 1)(0)
-    }
 
     val readQuality = record.getBaseQualityString
     val readNucleotides = record.getReadString
@@ -166,7 +165,7 @@ object SeqStat extends ToolCommand {
   def seqStat(fqreader: FastqReader): Long = {
     var numReads: Long = 0
     for (read <- fqreader.iterator.asScala) {
-      procesRead(read)
+      processRead(read)
       numReads += 1
     }
 

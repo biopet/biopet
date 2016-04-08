@@ -71,10 +71,16 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.contaminants = Option(resourceFile("fqc_contaminants_v0101.txt"))
+    // found adapters also contain the adapters in reverse complement (done within flexiprep/fastqc only)
     val adapters = fqc.foundAdapters
-    adapters.size shouldBe 1
-    adapters.head.name should ===("TruSeq Adapter, Index 1")
-    // from fqc_contaminants_v0101.txt
-    adapters.head.seq should ===("GATCGGAAGAGCACACGTCTGAACTCCAGTCACATCACGATCTCGTATGCCGTCTTCTGCTTG")
+    // we find 1 adapter which comes with the Reverse Complement counterpart
+    adapters.size shouldBe 2
+
+    adapters.head.name shouldEqual "TruSeq Adapter, Index 1_RC"
+    adapters.head.seq shouldEqual "CAAGCAGAAGACGGCATACGAGATCGTGATGTGACTGGAGTTCAGACGTGTGCTCTTCCGATC"
+
+    adapters.last.name shouldEqual "TruSeq Adapter, Index 1"
+    adapters.last.seq shouldEqual "GATCGGAAGAGCACACGTCTGAACTCCAGTCACATCACGATCTCGTATGCCGTCTTCTGCTTG"
+
   }
 }
