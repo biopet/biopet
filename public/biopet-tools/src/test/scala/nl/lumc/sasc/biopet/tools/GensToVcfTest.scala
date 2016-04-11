@@ -25,7 +25,7 @@ class GensToVcfTest extends TestNGSuite with Matchers {
 
   @Test
   def testGensInfo: Unit = {
-    val output = File.createTempFile("test.", ".vcf.gz")
+    val output = File.createTempFile("test.", ".vcf")
     GensToVcf.main(Array(
       "--inputGenotypes", GensToVcfTest.resourcePath("/test.gens"),
       "--inputInfo", GensToVcfTest.resourcePath("/test.gens_info"),
