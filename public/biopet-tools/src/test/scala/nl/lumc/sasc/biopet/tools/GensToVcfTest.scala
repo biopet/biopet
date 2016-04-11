@@ -14,6 +14,7 @@ class GensToVcfTest extends TestNGSuite with Matchers {
   @Test
   def testGensOnly: Unit = {
     val output = File.createTempFile("test.", ".vcf.gz")
+    output.deleteOnExit()
     GensToVcf.main(Array(
       "--inputGenotypes", GensToVcfTest.resourcePath("/test.gens"),
       "--outputVcf", output.getAbsolutePath,
@@ -26,6 +27,7 @@ class GensToVcfTest extends TestNGSuite with Matchers {
   @Test
   def testGensInfo: Unit = {
     val output = File.createTempFile("test.", ".vcf")
+    output.deleteOnExit()
     GensToVcf.main(Array(
       "--inputGenotypes", GensToVcfTest.resourcePath("/test.gens"),
       "--inputInfo", GensToVcfTest.resourcePath("/test.gens_info"),
