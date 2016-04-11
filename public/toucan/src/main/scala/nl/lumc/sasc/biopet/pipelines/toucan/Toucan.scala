@@ -94,6 +94,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         val normalizer = new VepNormalizer(this)
         normalizer.inputVCF = vep.output
         normalizer.outputVcf = new File(chunkDir, chunkName + ".normalized.vcf.gz")
+        normalizer.isIntermediate = true
         add(normalizer)
 
         var outputFile = normalizer.outputVcf
@@ -105,6 +106,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
             vcfWithVcf.secondaryVcf = gonlFile
             vcfWithVcf.output = swapExt(chunkDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
             vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
+            vcfWithVcf.isIntermediate = true
             add(vcfWithVcf)
             outputFile = vcfWithVcf.output
           case _ =>
@@ -117,6 +119,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
             vcfWithVcf.secondaryVcf = exacFile
             vcfWithVcf.output = swapExt(chunkDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
             vcfWithVcf.fields ::= ("AF", "AF_exac", None)
+            vcfWithVcf.isIntermediate = true
             add(vcfWithVcf)
             outputFile = vcfWithVcf.output
           case _ =>
