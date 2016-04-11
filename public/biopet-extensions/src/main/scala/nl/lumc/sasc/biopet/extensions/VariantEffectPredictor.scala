@@ -268,6 +268,13 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else Map()
   }
 
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    (v1, v2) match {
+      case (x1: Int, x2: Int) => x1 + x2
+      case _ => throw new IllegalStateException("Value are not Int's, unable to sum them up")
+    }
+  }
+
   def parseStatsFile(file: File): Map[String, Any] = {
     val contents = Source.fromFile(file).getLines().toList
     val headers = contents
@@ -282,25 +289,16 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     var theMap: Map[String, Any] = Map()
     for (x <- contents) {
       val stripped = x.stripPrefix("[").stripSuffix("]")
-      if (stripped == header) {
-        inBlock = true
-      } else {
+      if (stripped == header) inBlock = true
+      else {
         if (inBlock) {
           val key = stripped.split('\t').head.replace(" ", "_")
           val value = stripped.split('\t').last
           theMap ++= Map(key -> tryToParseNumber(value, fallBack = true).getOrElse(value))
         }
-      }
-      if (stripped == "") {
-        inBlock = false
-      }
+      } if (stripped == "") inBlock = false
     }
     theMap
-  }
-
-  def getHeadersFromStatsFile(contents: List[String]): List[String] = {
-    // block headers are of format '[block]'
-    contents.filter(_.startsWith("[")).filter(_.endsWith("]")).map(_.stripPrefix("[")).map(_.stripSuffix("]"))
   }
 
 }
