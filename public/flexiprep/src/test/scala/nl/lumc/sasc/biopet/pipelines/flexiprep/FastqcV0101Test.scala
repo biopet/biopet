@@ -83,4 +83,23 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     adapters.last.seq shouldEqual "GATCGGAAGAGCACACGTCTGAACTCCAGTCACATCACGATCTCGTATGCCGTCTTCTGCTTG"
 
   }
+
+  @Test def testPerBaseSequenceQuality() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+
+    val perBaseSequenceQuality = fqc.perBaseSequenceQuality
+    perBaseSequenceQuality.size shouldBe 28
+    perBaseSequenceQuality.keys should contain ("10-14")
+  }
+
+  @Test def testPerBaseSequenceContent() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+
+    val perBaseSequenceContent: Map[String, Map[String, Double]] = fqc.perBaseSequenceContent
+    perBaseSequenceContent.size shouldBe 28
+    perBaseSequenceContent.keys should contain ("1")
+  }
+
 }

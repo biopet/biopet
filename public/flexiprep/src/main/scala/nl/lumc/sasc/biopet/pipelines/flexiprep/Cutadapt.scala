@@ -47,7 +47,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
             case Some(adapterSeqName) =>
               Some(adapterSeqName ->
                 Map("sequence" -> adapterSequence,
-                    "stats" -> adapterStats))
+                  "stats" -> adapterStats))
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
             // sequences come from FastQC
             case _ =>
