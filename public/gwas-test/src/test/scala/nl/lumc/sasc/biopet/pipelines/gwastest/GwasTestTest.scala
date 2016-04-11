@@ -16,7 +16,7 @@ import org.testng.annotations.Test
 class GwasTestTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GwasTest = {
     new GwasTest {
-      override def configName = "gwastest"
+      override def configNamespace = "gwastest"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"
