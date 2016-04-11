@@ -19,7 +19,7 @@ import java.io.File
 
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by ahbbollen on 2-3-16.

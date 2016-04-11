@@ -264,17 +264,16 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   def summaryFiles: Map[String, File] = Map()
 
   def summaryStats: Map[String, Any] = {
-    if (statsText) {
-      val statsFile: File = new File(output.getAbsolutePath + "_summary.txt")
-      parseStatsFile(statsFile)
-    } else {
-      Map()
-    }
+    if (statsText) parseStatsFile(new File(output.getAbsolutePath + "_summary.txt"))
+    else Map()
   }
 
   def parseStatsFile(file: File): Map[String, Any] = {
     val contents = Source.fromFile(file).getLines().toList
-    val headers = getHeadersFromStatsFile(contents)
+    val headers = contents
+      .filter(x => x.startsWith("[") && x.endsWith("]"))
+      .map(_.stripPrefix("[").stripSuffix("]"))
+
     headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
   }
 
