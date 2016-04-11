@@ -11,8 +11,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 4/11/16.
-  */
+ * Created by pjvan_thof on 4/11/16.
+ */
 class GwasTestTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GwasTest = {
     new GwasTest {
@@ -59,7 +59,6 @@ class GwasTestTest extends TestNGSuite with Matchers {
     )
     pipeline.script()
   }
-
 
   @Test
   def testEmpty: Unit = {

@@ -3,9 +3,9 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
-import htsjdk.samtools.reference.{ FastaSequenceFile, ReferenceSequenceFileFactory }
+import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, Options, VariantContextWriterBuilder }
-import htsjdk.variant.variantcontext.{ Allele, GenotypeBuilder, VariantContextBuilder }
+import htsjdk.variant.variantcontext.{ Allele, VariantContextBuilder }
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 

@@ -8,11 +8,11 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 4/11/16.
-  */
+ * Created by pjvan_thof on 4/11/16.
+ */
 class GensToVcfTest extends TestNGSuite with Matchers {
   @Test
-  def testGensOnly: Unit = {
+  def testGensOnly(): Unit = {
     val output = File.createTempFile("test.", ".vcf.gz")
     output.deleteOnExit()
     GensToVcf.main(Array(
@@ -25,7 +25,7 @@ class GensToVcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testGensInfo: Unit = {
+  def testGensInfo(): Unit = {
     val output = File.createTempFile("test.", ".vcf")
     output.deleteOnExit()
     GensToVcf.main(Array(

@@ -8,11 +8,11 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 4/11/16.
-  */
+ * Created by pjvan_thof on 4/11/16.
+ */
 class SnptestToVcfTest extends TestNGSuite with Matchers {
   @Test
-  def testSnptest: Unit = {
+  def testSnptest(): Unit = {
     val output = File.createTempFile("test.", ".vcf.gz")
     output.deleteOnExit()
     SnptestToVcf.main(Array(
@@ -24,7 +24,7 @@ class SnptestToVcfTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testEmptySnptest: Unit = {
+  def testEmptySnptest(): Unit = {
     val output = File.createTempFile("test.", ".vcf.gz")
     output.deleteOnExit()
     SnptestToVcf.main(Array(
