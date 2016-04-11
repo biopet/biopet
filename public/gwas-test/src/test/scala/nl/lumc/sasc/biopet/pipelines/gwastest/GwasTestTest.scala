@@ -33,6 +33,35 @@ class GwasTestTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testFromGens: Unit = {
+    val pipeline = initPipeline(GwasTestTest.config ++
+      Map("input_gens" -> List(Map("genotypes" -> GwasTestTest.vcfFile, "contig" -> "chrQ"))
+      )
+    )
+    pipeline.script()
+  }
+
+  @Test
+  def testWrongContig: Unit = {
+    val pipeline = initPipeline(GwasTestTest.config ++
+      Map("input_gens" -> List(Map("genotypes" -> GwasTestTest.vcfFile, "contig" -> "chrBla"))
+      )
+    )
+    intercept[IllegalStateException] {
+      pipeline.script()
+    }
+  }
+
+  @Test
+  def testFromSpecs: Unit = {
+    val pipeline = initPipeline(GwasTestTest.config ++
+      Map("imute_specs_file" -> GwasTestTest.resourcePath("/specs/files.specs"))
+    )
+    pipeline.script()
+  }
+
+
+  @Test
   def testEmpty: Unit = {
     val pipeline = initPipeline(GwasTestTest.config)
     intercept[IllegalArgumentException] {
