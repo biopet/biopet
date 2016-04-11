@@ -45,6 +45,4 @@ object GensToVcfTest {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
   }
-
-
 }
