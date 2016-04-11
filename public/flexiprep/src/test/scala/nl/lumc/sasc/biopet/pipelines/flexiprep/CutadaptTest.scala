@@ -39,7 +39,7 @@ class CutadaptTest extends FastqcV0101Test {
 
   @Test def testAdapterFound() = {
     val cutadapt = testCutadaptInst
-    val adapters = cutadapt.extractClippedAdapters( cutadaptOut )
+    val adapters = cutadapt.extractClippedAdapters(cutadaptOut)
     adapters.keys.size shouldBe 4
 
     adapters.get("CAAGCAGAAGACGGCATACGAGATCGTGATGTGACTGGAGTTCAGACGTGTGCTCTTCCGATC") shouldBe Some(
@@ -69,6 +69,7 @@ class CutadaptTest extends FastqcV0101Test {
       "adapters", "num_reads_discarded_many_n", "num_reads_discarded_too_short", "num_bases_output")
 
     summary.keys.size shouldBe 10
+    summary("adapters").asInstanceOf[Map[String, Any]].keys.size shouldBe 4
 
     summary("num_bases_input") shouldBe 100000
     summary("num_reads_input") shouldBe 1000
