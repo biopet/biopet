@@ -21,7 +21,6 @@ import htsjdk.variant.variantcontext.{ GenotypeType, VariantContext }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -276,8 +275,10 @@ object VcfFilter extends ToolCommand {
    * @return
    */
   def minGenomeQuality(record: VariantContext, minGQ: Int, minSamplesPass: Int = 1): Boolean = {
-    record.getGenotypes.count(x => if (!x.hasGQ) false
-    else if (x.getGQ >= minGQ) true else false) >= minSamplesPass
+    record.getGenotypes.count(x =>
+      if (minGQ == 0) true
+      else if (!x.hasGQ) false
+      else if (x.getGQ >= minGQ) true else false) >= minSamplesPass
   }
 
   /**
