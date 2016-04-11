@@ -24,28 +24,28 @@ class ToucanTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testDefault: Unit = {
+  def testDefault(): Unit = {
     val pipeline = initPipeline(ToucanTest.config)
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
   }
 
   @Test
-  def testGonl: Unit = {
+  def testGonl(): Unit = {
     val pipeline = initPipeline(ToucanTest.config ++ Map("gonl_vcf" -> ToucanTest.gonlVcfFile))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
   }
 
   @Test
-  def testExac: Unit = {
+  def testExac(): Unit = {
     val pipeline = initPipeline(ToucanTest.config ++ Map("exac_vcf" -> ToucanTest.exacVcfFile))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
   }
 
   @Test
-  def testVarda: Unit = {
+  def testVarda(): Unit = {
     val pipeline = initPipeline(ToucanTest.config ++ Map("use_varda" -> true))
     val gvcfFile = File.createTempFile("bla.", ".g.vcf")
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
