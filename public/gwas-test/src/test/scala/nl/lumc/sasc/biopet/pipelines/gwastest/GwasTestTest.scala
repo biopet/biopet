@@ -76,6 +76,7 @@ object GwasTestTest {
   vcfFile.deleteOnExit()
 
   val phenotypeFile = File.createTempFile("gwas.", ".txt")
+  phenotypeFile.deleteOnExit()
 
   val outputDir = Files.createTempDir()
   outputDir.deleteOnExit()
