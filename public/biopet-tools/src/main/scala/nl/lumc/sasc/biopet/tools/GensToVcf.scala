@@ -81,7 +81,6 @@ object GensToVcf extends ToolCommand {
     writer.writeHeader(header)
 
     val genotypeIt = Source.fromFile(cmdArgs.inputGenotypes).getLines()
-    //TODO: Add info fields
 
     lazy val fastaFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(cmdArgs.referenceFasta, true, true)
 
