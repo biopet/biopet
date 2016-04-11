@@ -127,7 +127,7 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
-        toucan.inputVCF = vc.finalFile
+        toucan.inputVcf = vc.finalFile
         add(toucan)
       }
     })

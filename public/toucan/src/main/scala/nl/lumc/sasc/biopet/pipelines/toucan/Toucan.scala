@@ -39,20 +39,22 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   def this() = this(null)
 
   @Input(doc = "Input VCF file", shortName = "Input", required = true)
-  var inputVCF: File = _
+  var inputVcf: File = _
 
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
   lazy val gonlVcfFile: Option[File] = config("gonl_vcf")
   lazy val exacVcfFile: Option[File] = config("exac_vcf")
+  lazy val doVarda: Boolean = config("use_varda", default = false)
 
   var sampleIds: List[String] = Nil
   def init(): Unit = {
-    inputFiles :+= new InputFile(inputVCF)
+    require(inputVcf != null, "No Input vcf given")
+    inputFiles :+= new InputFile(inputVcf)
     sampleIds = root match {
       case m: MultiSampleQScript => m.samples.keys.toList
-      case null                  => VcfUtils.getSampleIds(inputVCF)
+      case null                  => VcfUtils.getSampleIds(inputVcf)
       case s: SampleLibraryTag   => s.sampleId.toList
       case _                     => throw new IllegalArgumentException("You don't have any samples")
     }
@@ -63,13 +65,12 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   )
 
   def biopetScript(): Unit = {
-    val doVarda: Boolean = config("use_varda", default = false)
     val useVcf: File = if (doVarda) {
       inputGvcf match {
-        case Some(s) => varda(inputVCF, s)
+        case Some(s) => varda(inputVcf, s)
         case _       => throw new IllegalArgumentException("You have not specified a GVCF file")
       }
-    } else inputVCF
+    } else inputVcf
 
     val outputVcfFiles = BedRecordList.fromReference(referenceFasta())
       .scatter(config("bin_size", default = 50000000))
@@ -127,10 +128,10 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val cv = new CatVariants(this)
     cv.inputFiles = outputVcfFiles.toList
     cv.outputFile = (gonlVcfFile, exacVcfFile) match {
-      case (Some(_), Some(_)) => swapExt(outputDir, inputVCF, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
-      case (Some(_), _)       => swapExt(outputDir, inputVCF, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
-      case (_, Some(_))       => swapExt(outputDir, inputVCF, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
-      case _                  => swapExt(outputDir, inputVCF, ".vcf.gz", ".vep.normalized.vcf.gz")
+      case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
+      case (Some(_), _)       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
+      case (_, Some(_))       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
+      case _                  => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
     }
     add(cv)
 
@@ -139,7 +140,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   /**
    * Performs the varda import and activate for one sample
-   * @param sampleID the sampleID to be used
+    *
+    * @param sampleID the sampleID to be used
    * @param inputVcf the input VCF
    * @param gVCF the gVCF for coverage
    * @param annotation: ManweDownloadAnnotateVcf object of annotated vcf
@@ -171,8 +173,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     add(bgzippedBed)
 
     val singleVcf = new BcftoolsView(this)
-    singleVcf.input = inputVCF
-    singleVcf.output = swapExt(outputDir, inputVCF, ".vcf.gz", s""".$sampleID.vcf.gz""")
+    singleVcf.input = inputVcf
+    singleVcf.output = swapExt(outputDir, inputVcf, ".vcf.gz", s""".$sampleID.vcf.gz""")
     singleVcf.samples = List(sampleID)
     singleVcf.minAC = Some(1)
     singleVcf.isIntermediate = true
@@ -208,7 +210,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   /**
    * Perform varda analysis
-   * @param vcf input vcf
+    *
+    * @param vcf input vcf
    * @param gVcf The gVCF to be used for coverage calculations
    * @return return vcf
    */
