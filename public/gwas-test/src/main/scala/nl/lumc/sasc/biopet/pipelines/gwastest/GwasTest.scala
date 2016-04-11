@@ -31,7 +31,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
   val specsFile: Option[File] = config("imute_specs_file")
 
   val inputGens: List[GensInput] = if (inputVcf.isDefined) List[GensInput]()
-  else config("input_gens", default = Nil).asList.map(x => x match {
+  else config("input_gens", default = Nil).asList.map {
     case value: Map[String, Any] =>
       GensInput(new File(value("genotypes").toString),
         value.get("info").map(x => new File(x.toString)),
@@ -41,7 +41,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         value.toMap.get("info").map(x => new File(x.toString)),
         value.get("contig").toString)
     case _ => throw new IllegalArgumentException
-  }) ++ (specsFile match {
+  } ++ (specsFile match {
     case Some(file) => imputeSpecsToGensInput(file, config("validate_specs", default = true))
     case _          => Nil
   })
@@ -73,7 +73,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
           val cvChr = new CatVariants(this)
           cvChr.assumeSorted = true
           //cvChr.isIntermediate = true
-          cvChr.outputFile = new File(outputDirGens, s"${contig}.merge.gens.vcf.gz")
+          cvChr.outputFile = new File(outputDirGens, s"$contig.merge.gens.vcf.gz")
           gens.zipWithIndex.foreach { gen =>
             val gensToVcf = new GensToVcf(this)
             gensToVcf.inputGens = gen._1.genotypes
@@ -101,13 +101,13 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         val regionDir = new File(outputDir, "snptest" + File.separator + region.chr)
         val bedDir = new File(outputDir, ".queue" + File.separator + "regions" + File.separator + region.chr)
         bedDir.mkdirs()
-        val bedFile = new File(bedDir, s"${name}.bed")
+        val bedFile = new File(bedDir, s"$name.bed")
         BedRecordList.fromList(List(region)).writeToFile(bedFile)
         bedFile.deleteOnExit()
 
         val sv = new SelectVariants(this)
         sv.inputFiles :+= chrVcfFiles.getOrElse(region.chr, vcfFile)
-        sv.outputFile = new File(regionDir, s"${name}.vcf.gz")
+        sv.outputFile = new File(regionDir, s"$name.vcf.gz")
         sv.intervals :+= bedFile
         sv.isIntermediate = true
         add(sv)
@@ -115,12 +115,12 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         val snptest = new Snptest(this)
         snptest.inputGenotypes :+= sv.outputFile
         snptest.inputSampleFiles :+= phenotypeFile
-        snptest.outputFile = Some(new File(regionDir, s"${name}.snptest"))
+        snptest.outputFile = Some(new File(regionDir, s"$name.snptest"))
         add(snptest)
 
         val snptestToVcf = new SnptestToVcf(this)
         snptestToVcf.inputInfo = snptest.outputFile.get
-        snptestToVcf.outputVcf = new File(regionDir, s"${name}.snptest.vcf.gz")
+        snptestToVcf.outputVcf = new File(regionDir, s"$name.snptest.vcf.gz")
         snptestToVcf.contig = region.chr
         add(snptestToVcf)
 
