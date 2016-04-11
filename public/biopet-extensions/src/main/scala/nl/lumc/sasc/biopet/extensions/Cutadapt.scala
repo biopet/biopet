@@ -164,7 +164,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     (if (outputAsStsout) "" else required("--output", fastqOutput) +
       " > " + required(statsOutput))
 
-  private def extractClippedAdapters(statsOutput: File): Map[String, Any] = {
+  def extractClippedAdapters(statsOutput: File): Map[String, Any] = {
     val histoCountRow: Regex = """([\d]+)\t([\d]+)\t.*""".r
     val adapterR = """Sequence: ([C|T|A|G]+);.*Trimmed: ([\d]+) times\.""".r
 
@@ -271,7 +271,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "num_reads_discarded_too_long" -> stats("toolong"),
       "num_reads_discarded_many_n" -> stats("toomanyn"),
       "num_bases_input" -> stats("bpinput"),
-      "num_based_output" -> stats("bpoutput"),
+      "num_bases_output" -> stats("bpoutput"),
       adaptersStatsName -> adapterStats
     )
   }
