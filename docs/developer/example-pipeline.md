@@ -138,7 +138,7 @@ Setting up the pipeline is done within the pipeline itself, fine-tuning is alway
 
 For our new pipeline, one should setup the (default) config options.
 
-Since our pipeline is called `HelloPipeline`, the root of the configoptions will called `hellopipeline` (lowercaps).
+Since our pipeline is called `HelloPipeline`, the root of the namespace for our pipeline will be called `hellopipeline` (lowercaps).
 
 ```json
 {

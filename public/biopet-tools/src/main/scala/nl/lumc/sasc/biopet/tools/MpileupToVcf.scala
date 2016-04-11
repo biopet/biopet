@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.tools
 
 import java.io.{ File, PrintWriter }
 
+import cern.jet.random.Binomial
+import cern.jet.random.engine.RandomEngine
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.mutable
@@ -26,7 +28,7 @@ import scala.math.{ floor, round }
 
 object MpileupToVcf extends ToolCommand {
   case class Args(input: File = null, output: File = null, sample: String = null, minDP: Int = 8, minAP: Int = 2,
-                  homoFraction: Double = 0.8, ploidy: Int = 2) extends AbstractArgs
+                  homoFraction: Double = 0.8, ploidy: Int = 2, seqError: Double = 0.005) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") valueName "<file>" action { (x, c) =>
@@ -50,6 +52,9 @@ object MpileupToVcf extends ToolCommand {
     opt[Int]("ploidy") action { (x, c) =>
       c.copy(ploidy = x)
     }
+    opt[Double]("seqError") action { (x, c) =>
+      c.copy(seqError = x)
+    }
   }
 
   /**
@@ -69,8 +74,10 @@ object MpileupToVcf extends ToolCommand {
     writer.println("##FORMAT=<ID=FREQ,Number=A,Type=Float,Description=\"Allele Frequency\">")
     writer.println("##FORMAT=<ID=RFC,Number=1,Type=Integer,Description=\"Reference Forward Reads\">")
     writer.println("##FORMAT=<ID=RRC,Number=1,Type=Integer,Description=\"Reference Reverse Reads\">")
-    writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternetive Forward Reads\">")
-    writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternetive Reverse Reads\">")
+    writer.println("##FORMAT=<ID=AFC,Number=A,Type=Integer,Description=\"Alternative Forward Reads\">")
+    writer.println("##FORMAT=<ID=ARC,Number=A,Type=Integer,Description=\"Alternative Reverse Reads\">")
+    writer.println("##FORMAT=<ID=SEQ-ERR,Number=.,Type=Float,Description=\"Probability to not be a sequence error with error rate " + commandArgs.seqError + "\">")
+    writer.println("##FORMAT=<ID=MA-SEQ-ERR,Number=1,Type=Float,Description=\"Minimal probability for all alternative alleles to not be a sequence error with error rate " + commandArgs.seqError + "\">")
     writer.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
     writer.println("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + commandArgs.sample)
     val inputStream = if (commandArgs.input != null) {
@@ -94,7 +101,7 @@ object MpileupToVcf extends ToolCommand {
       }
       val reads = values(3).toInt
       val mpileup = values(4)
-      val qual = values(5)
+      //val qual = values(5)
 
       val counts: mutable.Map[String, Counts] = mutable.Map(ref.toUpperCase -> new Counts(0, 0))
 
@@ -137,23 +144,37 @@ object MpileupToVcf extends ToolCommand {
         }
       }
 
+      val binomial = new Binomial(reads, commandArgs.seqError, RandomEngine.makeDefault())
       val info: ArrayBuffer[String] = ArrayBuffer("DP=" + reads)
-      val format: mutable.Map[String, String] = mutable.Map("DP" -> reads.toString)
+      val format: mutable.Map[String, Any] = mutable.Map("DP" -> reads.toString)
       val alt: ArrayBuffer[String] = new ArrayBuffer
+      var maSeqErr: Option[Double] = None
       format += ("RFC" -> counts(ref.toUpperCase).forward.toString)
       format += ("RRC" -> counts(ref.toUpperCase).reverse.toString)
       format += ("AD" -> (counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse).toString)
+      format += ("SEQ-ERR" -> (1.0 - binomial.cdf(counts(ref.toUpperCase).forward + counts(ref.toUpperCase).reverse)).toString)
       if (reads >= commandArgs.minDP) for ((key, value) <- counts if key != ref.toUpperCase if value.forward + value.reverse >= commandArgs.minAP) {
         alt += key
         format += ("AD" -> (format("AD") + "," + (value.forward + value.reverse).toString))
+        val seqErr = 1.0 - binomial.cdf(value.forward + value.reverse)
+        maSeqErr match {
+          case Some(x) if x < seqErr =>
+          case _                     => maSeqErr = Some(seqErr)
+        }
+        format += ("SEQ-ERR" -> (format("SEQ-ERR") + "," + seqErr.toString))
         format += ("AFC" -> ((if (format.contains("AFC")) format("AFC") + "," else "") + value.forward))
         format += ("ARC" -> ((if (format.contains("ARC")) format("ARC") + "," else "") + value.reverse))
         format += ("FREQ" -> ((if (format.contains("FREQ")) format("FREQ") + "," else "") +
           round((value.forward + value.reverse).toDouble / reads * 1E4).toDouble / 1E2))
       }
 
+      maSeqErr match {
+        case Some(x) => format += ("MA-SEQ-ERR" -> x)
+        case _       =>
+      }
+
       if (alt.nonEmpty) {
-        val ad = for (ad <- format("AD").split(",")) yield ad.toInt
+        val ad = for (ad <- format("AD").toString.split(",")) yield ad.toInt
         var left = reads - dels
         val gt = ArrayBuffer[Int]()
 

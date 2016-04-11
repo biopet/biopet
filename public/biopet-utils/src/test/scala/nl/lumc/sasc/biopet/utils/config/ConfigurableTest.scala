@@ -29,11 +29,11 @@ class ConfigurableTest extends TestNGSuite with Matchers {
   abstract class Cfg extends Configurable {
     def get(key: String,
             default: String = null,
-            submodule: String = null,
+            configNamespace: String = null,
             freeVar: Boolean = true,
             sample: String = null,
             library: String = null) = {
-      config(key, default, submodule, freeVar = freeVar, sample = sample, library = library)
+      config(key, default, configNamespace, freeVar = freeVar, sample = sample, library = library)
     }
   }
 
@@ -52,7 +52,7 @@ class ConfigurableTest extends TestNGSuite with Matchers {
 
   @Test def testConfigurable(): Unit = {
     val classC = new ClassC {
-      override def configName = "classc"
+      override def configNamespace = "classc"
       override val globalConfig = new Config(ConfigurableTest.map)
       override val fixedValues = Map("fixed" -> "fixed")
     }
