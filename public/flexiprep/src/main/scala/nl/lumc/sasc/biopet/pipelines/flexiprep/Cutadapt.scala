@@ -16,6 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import scala.collection.JavaConversions._
 
 /**
  * Cutadapt wrapper specific for Flexiprep.
@@ -41,12 +42,14 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
     val adapterCounts: Map[String, Any] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(m: Map[_, _]) => m.flatMap {
-        case (adapterSequence: String, adapterStats) =>
+        case (adapterSequence: String, adapterStats: scala.collection.mutable.HashMap[_, _]) =>
           seqToNameMap.get(adapterSequence) match {
             // adapter sequence is found by FastQC
-            case Some(adapterSeqName) => Some(adapterSeqName ->
-              Map("sequence" -> adapterSequence,
-                "stats" -> adapterStats))
+            case Some(adapterSeqName) => {
+              Some(adapterSeqName ->
+                Map("sequence" -> adapterSequence, "stats" -> adapterStats.toMap)
+              )
+            }
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
             // sequences come from FastQC
             case _ =>
