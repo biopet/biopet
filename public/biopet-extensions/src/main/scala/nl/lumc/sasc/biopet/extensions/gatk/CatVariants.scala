@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
 
-  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getClass.getName
+  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getName
 
   @Input(required = true)
   var inputFiles: List[File] = Nil
