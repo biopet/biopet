@@ -1,5 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.gwastest
 
+import java.io.File
+import java.nio.file.Paths
+
+import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -19,13 +23,47 @@ class GwasTestTest extends TestNGSuite with Matchers {
     }
   }
 
-
+  @Test
+  def testFromVcf: Unit = {
+    val pipeline = initPipeline(GwasTestTest.config ++
+      Map("input_vcf" -> GwasTestTest.vcfFile.toString
+      )
+    )
+    pipeline.script()
+  }
 
   @Test
   def testEmpty: Unit = {
-    val pipeline = initPipeline(Map())
+    val pipeline = initPipeline(GwasTestTest.config)
     intercept[IllegalArgumentException] {
       pipeline.script()
     }
   }
+}
+
+object GwasTestTest {
+  val vcfFile = File.createTempFile("gwas.", ".vcf")
+  Files.touch(vcfFile)
+  vcfFile.deleteOnExit()
+
+  val phenotypeFile = File.createTempFile("gwas.", ".txt")
+
+  val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
+
+  val reference = new File(resourcePath("/fake_chrQ.fa"))
+
+  private def resourcePath(p: String): String = {
+    Paths.get(getClass.getResource(p).toURI).toString
+  }
+
+  val config = Map(
+    "reference_fasta" -> GwasTestTest.reference.toString,
+    "phenotype_file" -> GwasTestTest.phenotypeFile.toString,
+    "output_dir" -> outputDir,
+    "snptest" -> Map("exe" -> "test"),
+    "md5sum" -> Map("exe" -> "test"),
+    "gatk_jar" -> "test"
+  )
+
 }
