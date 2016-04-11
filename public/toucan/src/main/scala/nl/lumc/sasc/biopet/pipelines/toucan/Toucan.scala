@@ -140,8 +140,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   /**
    * Performs the varda import and activate for one sample
-    *
-    * @param sampleID the sampleID to be used
+   *
+   * @param sampleID the sampleID to be used
    * @param inputVcf the input VCF
    * @param gVCF the gVCF for coverage
    * @param annotation: ManweDownloadAnnotateVcf object of annotated vcf
@@ -210,8 +210,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   /**
    * Perform varda analysis
-    *
-    * @param vcf input vcf
+   *
+   * @param vcf input vcf
    * @param gVcf The gVCF to be used for coverage calculations
    * @return return vcf
    */
