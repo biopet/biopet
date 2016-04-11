@@ -190,17 +190,16 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       }
 
       val counts = adapter.split("Overview of removed sequences ")
-        .filter(
-          x => x.contains("length")
-        ).map(clipSide => {
-            val sideLabel = if (clipSide.contains("5'")) { "5p" } else { "3p" }
+        .filter(x => x.contains("length"))
+        .map(clipSideRawStats => {
+          val clipSideLabel = if (clipSideRawStats.contains("5'")) { "5p" } else { "3p" }
 
-            val histogramValues = clipSide.split("\n").flatMap({
-              case histoCountRow(length, count) => Some(length.toInt -> count.toInt)
-              case _                            => None
-            })
-            sideLabel -> histogramValues.toMap
+          val histogramValues = clipSideRawStats.split("\n").flatMap({
+            case histoCountRow(length, count) => Some(length.toInt -> count.toInt)
+            case _                            => None
           })
+          clipSideLabel -> histogramValues.toMap
+        })
 
       adapterName -> mutable.Map(
         "count" -> adapterCount,
@@ -223,7 +222,6 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val tooLongR = """.* that were too long: *([,\d]+) .*""".r
 
     val tooManyN = """.* with too many N: *([,\d]+) .*""".r
-    val adapterR = """Sequence: ([C|T|A|G]+);.*Trimmed: ([\d]+) times\.""".r
 
     val basePairsProcessed = """Total basepairs processed: *([,\d]+) bp""".r
     val basePairsWritten = """Total written \(filtered\): *([,\d]+) bp .*""".r
@@ -238,7 +236,11 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "bpoutput" -> 0,
       "toomanyn" -> 0
     )
-    var adapterStats: Map[String, Any] = Map.empty
+
+    // extract the adapters with its histogram
+    val adapterStats = if (statsOutput.exists) {
+      extractClippedAdapters(statsOutput)
+    } else Map.empty
 
     if (statsOutput.exists) {
       val statsFile = Source.fromFile(statsOutput)
@@ -256,9 +258,6 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
         }
       }
       statsFile.close()
-
-      // extract the adapters with its histogram
-      adapterStats = extractClippedAdapters(statsOutput)
     }
 
     val cleanReads = stats("processed") - stats("withadapters")

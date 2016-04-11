@@ -41,18 +41,20 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
     val adapterCounts: Map[String, Any] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(m: Map[_, _]) => m.flatMap {
-        case (seq: String, adapterStats: Map[String, _]) =>
-          seqToNameMap.get(seq) match {
+        case (adapterSequence: String, adapterStats) =>
+          seqToNameMap.get(adapterSequence) match {
             // adapter sequence is found by FastQC
-            case Some(n) => Some(n -> (Map("sequence" -> seq) ++ adapterStats))
+            case Some(adapterSeqName) =>
+              Some(adapterSeqName ->
+                Map("sequence" -> adapterSequence,
+                    "stats" -> adapterStats))
             // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
             // sequences come from FastQC
             case _ =>
-              throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in '$fastqInput'.")
+              throw new IllegalStateException(s"Adapter '$adapterSequence' is clipped but not found by FastQC in '$fastqInput'.")
           }
         // FastQC found no adapters
         case otherwise =>
-          ;
           logger.debug(s"No adapters found for summarizing in '$fastqInput'.")
           None
       }
