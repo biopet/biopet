@@ -58,9 +58,13 @@ object GensToVcf extends ToolCommand {
     val samples = Source.fromFile(cmdArgs.sampleFile).getLines().toArray.drop(2).map(_.split("\t").take(2).mkString("_"))
 
     val infoIt = cmdArgs.inputInfo.map(Source.fromFile(_).getLines())
-    val infoHeader = infoIt.map(_.next())
+    val infoHeaderKeys = infoIt.map(_.next().split(" ").filterNot(x => x == "rs_id" || x == "position"))
+    val infoHeaderMap = infoHeaderKeys.map(_.zipWithIndex.toMap)
 
     val metaLines = new util.HashSet[VCFHeaderLine]()
+    for (keys <- infoHeaderKeys; key <- keys)
+      metaLines.add(new VCFInfoHeaderLine(s"GENS_$key", 1, VCFHeaderLineType.String, ""))
+
     metaLines.add(new VCFFormatHeaderLine("GT", 1, VCFHeaderLineType.String, ""))
     metaLines.add(new VCFFormatHeaderLine("GP", VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.Float, ""))
 
@@ -106,6 +110,8 @@ object GensToVcf extends ToolCommand {
     var count = 0L
     for (line <- lineIt) {
       val genotypeValues = line.genotype.split(" ")
+      val infoValues = line.info.map(_.split(" "))
+
       val (start, end, ref, alt) = {
         val start = genotypeValues(2).toInt
         if (genotypeValues(4) == "-") {
@@ -136,9 +142,12 @@ object GensToVcf extends ToolCommand {
             .make()
       }
 
+      val infoMap = infoHeaderKeys.map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x))).toMap).getOrElse(Map())
+
       val builder = (new VariantContextBuilder)
         .chr(cmdArgs.contig)
         .alleles(List(ref, alt))
+        .attributes(infoMap)
         .start(start)
         .stop(end)
         .genotypes(genotypes)
