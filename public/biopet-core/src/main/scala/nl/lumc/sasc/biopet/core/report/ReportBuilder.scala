@@ -142,9 +142,14 @@ trait ReportBuilder extends ToolCommand {
     // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
     val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
 
-    for (resource <- extFiles.par) {
-      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource.resourcePath), new File(extOutputDir, resource.targetPath), createDirs = true)
-    }
+    // Copy each resource files out to the report destination
+    extFiles.par.foreach(
+      resource =>
+        IoUtils.copyStreamToFile(
+          getClass.getResourceAsStream(resource.resourcePath),
+          new File(extOutputDir, resource.targetPath),
+          createDirs = true)
+    )
 
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
@@ -165,7 +170,7 @@ trait ReportBuilder extends ToolCommand {
   /** This must be implemented, this will be the root page of the report */
   def indexPage: ReportPage
 
-  /** This must be implemented, this will because the title of the report */
+  /** This must be implemented, this will become the title of the report */
   def reportName: String
 
   /**
@@ -194,8 +199,9 @@ trait ReportBuilder extends ToolCommand {
       )
 
     // Generating subpages
-    val jobs = for ((name, subPage) <- page.subPages.par) yield {
-      generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
+    val jobs = page.subPages.par.flatMap {
+      case (name, subPage) => Some(generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs))
+      case _               => None
     }
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",
