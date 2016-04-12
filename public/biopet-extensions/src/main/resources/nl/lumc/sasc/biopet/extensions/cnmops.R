@@ -26,7 +26,6 @@ bamFile <- args
 BAMFiles <- c(bamFile)
 bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=1000, parallel=opt$threads)
 
-
 write.table(as.data.frame( bamDataRanges ), quote = FALSE, opt$rawoutput, row.names=FALSE)
 
 res <- cn.mops(bamDataRanges)
