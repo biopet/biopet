@@ -30,7 +30,7 @@ import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
-  analysisName = configName
+  analysisName = configNamespace
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil

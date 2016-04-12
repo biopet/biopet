@@ -88,7 +88,7 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor)
 
     if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler))) + "G")
-    jobName = configName + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
+    jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
   }
 
   override def setupRetry(): Unit = {

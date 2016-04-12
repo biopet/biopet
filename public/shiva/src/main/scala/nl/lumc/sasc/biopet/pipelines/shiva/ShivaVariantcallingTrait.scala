@@ -92,8 +92,8 @@ trait ShivaVariantcallingTrait extends SummaryQScript
       caller.outputDir = new File(outputDir, caller.name)
       add(caller)
       addStats(caller.outputFile, caller.name)
-      val normalize: Boolean = config("execute_vt_normalize", default = false, submodule = caller.configName)
-      val decompose: Boolean = config("execute_vt_decompose", default = false, submodule = caller.configName)
+      val normalize: Boolean = config("execute_vt_normalize", default = false, namespace = caller.configNamespace)
+      val decompose: Boolean = config("execute_vt_decompose", default = false, namespace = caller.configNamespace)
 
       val vtNormalize = new VtNormalize(this)
       vtNormalize.inputVcf = caller.outputFile

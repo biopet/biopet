@@ -21,6 +21,7 @@ import htsjdk.samtools.{ SamReader, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.collection.parallel.immutable
 
 /**
@@ -65,33 +66,53 @@ object BamUtils {
     // create a bedList to devide the contig into multiple pieces
     val insertSizesOnAllFragments = BedRecordList.fromList(Seq(BedRecord(contig, start, end)))
       .scatter(binSize)
-      .allRecords.par.map({
+      .allRecords.par.flatMap({
         bedRecord =>
           // for each scatter, open the bamfile for this specific region-query
           val inputSam: SamReader = SamReaderFactory.makeDefault.open(inputBam)
           val samIterator = inputSam.query(bedRecord.chr, bedRecord.start, bedRecord.end, true)
 
-          val insertsizes: List[Int] = (for {
-            read <- samIterator.toStream.takeWhile(rec => {
-              // TODO: This value is now hard-coded. I'm not sure whether this is the best practice on selecting reads with a minimum required quality.
-              val minQ10 = rec.getMappingQuality >= 10
-              // with properPairFlag we exclude readpairs that span multiple contigs.
-              val paired = rec.getReadPairedFlag && rec.getProperPairFlag
-              val bothMapped = if (paired) ((rec.getReadUnmappedFlag == false) && (rec.getMateUnmappedFlag == false)) else false
-              paired && bothMapped && minQ10
-            }).take(samplingSize)
-          } yield {
-            read.getInferredInsertSize.asInstanceOf[Int].abs
-          })(collection.breakOut)
-          val lociInsertSize = insertsizes.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
+          val counts: mutable.Map[Int, Int] = mutable.Map()
 
-          samIterator.close()
-          inputSam.close()
-          if (lociInsertSize._2 == 0) None else Some((lociInsertSize._1 / lociInsertSize._2).toInt)
-      }).toList.flatten
+          for (i <- 0 until samplingSize if samIterator.hasNext) {
+            val rec = samIterator.next()
+            val isPaired = rec.getReadPairedFlag
+            val minQ10 = rec.getMappingQuality >= 10
+            val pairOnSameContig = rec.getContig == rec.getMateReferenceName
 
-    val contigInsertSize = insertSizesOnAllFragments.foldLeft((0.0, 0))((t, r) => (t._1 + r, t._2 + 1))
-    if (contigInsertSize._2 == 0) None else Some((contigInsertSize._1 / contigInsertSize._2).toInt)
+            if (isPaired && minQ10 && pairOnSameContig) {
+              val insertSize = rec.getInferredInsertSize.abs
+              counts(insertSize) = counts.getOrElse(insertSize, 0) + 1
+            }
+          }
+
+          counts.keys.size match {
+            case 1 => Some(counts.keys.head)
+            case 0 => None
+            case _ => {
+              Some(counts.foldLeft(0)((old, observation) => {
+                observation match {
+                  case (insertSize: Int, observations: Int) => {
+                    (old + (insertSize * observations)) / (observations + 1)
+                  }
+                  case _ => 0
+                }
+              }))
+            }
+          }
+      })
+
+    insertSizesOnAllFragments.size match {
+      case 1 => Some(insertSizesOnAllFragments.head)
+      case 0 => None
+      case _ => {
+        Some(
+          insertSizesOnAllFragments.foldLeft(0)((old, observation) => {
+            (old + observation) / 2
+          }))
+      }
+
+    }
   }
 
   /**

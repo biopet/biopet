@@ -37,7 +37,7 @@ class BamMetricsTest extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): BamMetrics = {
     new BamMetrics() {
-      override def configName = "bammetrics"
+      override def configNamespace = "bammetrics"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"

@@ -37,7 +37,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
   private[summary] var summaryQScripts: List[SummaryQScript] = Nil
 
   /** Name of the pipeline in the summary */
-  var summaryName = configName
+  var summaryName = configNamespace
 
   /** Must return a map with used settings for this pipeline */
   def summarySettings: Map[String, Any]
@@ -103,7 +103,7 @@ trait SummaryQScript extends BiopetQScript { qscript: QScript =>
       if (writeSummary.md5sum) {
         if (!SummaryQScript.md5sumCache.contains(file)) {
           val md5sum = new Md5sum(this) {
-            override def configName = "md5sum"
+            override def configNamespace = "md5sum"
 
             override def cmdLine: String = super.cmdLine + " || " +
               required("echo") + required("error_on_capture  " + input.toString) + " > " + required(output)

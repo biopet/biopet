@@ -20,7 +20,7 @@ import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
 /** General abstract class for bedtools extensions */
 abstract class Bedtools extends BiopetCommandLineFunction with Version {
   override def subPath = "bedtools" :: super.subPath
-  executable = config("exe", default = "bedtools", submodule = "bedtools")
+  executable = config("exe", default = "bedtools", namespace = "bedtools")
   def versionCommand = executable + " --version"
   def versionRegex = """bedtools (.*)""".r
 }

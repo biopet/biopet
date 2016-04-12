@@ -36,7 +36,7 @@ class FlexiprepTest extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): Flexiprep = {
     new Flexiprep() {
-      override def configName = "flexiprep"
+      override def configNamespace = "flexiprep"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"
