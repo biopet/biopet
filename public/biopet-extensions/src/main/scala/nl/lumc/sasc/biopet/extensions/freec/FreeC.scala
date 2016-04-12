@@ -59,7 +59,7 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
 
   executable = config("exe", default = "freec")
   var bedGraphOutput: Boolean = config("BedGraphOutput", default = false)
-  var _bedtools: File = config("exe", default = "bedtools", submodule = "bedtools")
+  var _bedtools: File = config("exe", default = "bedtools", namespace = "bedtools")
   var bedtools: Option[String] = config("bedtools", default = _bedtools, freeVar = false)
   var breakPointThreshold: Option[Double] = config("breakPointThreshold")
   var breakPointType: Option[Int] = config("breakPointType")
@@ -91,11 +91,11 @@ class FreeC(val root: Configurable) extends BiopetCommandLineFunction with Refer
   var printNA: Boolean = config("printNA", default = false)
   var readCountThreshold: Option[Int] = config("readCountThreshold")
 
-  var _sambamba: File = config("exe", submodule = "sambamba", default = "sambamba")
+  var _sambamba: File = config("exe", namespace = "sambamba", default = "sambamba")
   var sambamba: File = config("sambamba", default = _sambamba, freeVar = false)
   var sambambaThreads: Option[Int] = config("SambambaThreads")
 
-  var _samtools: File = config("exe", submodule = "samtools", default = "samtools")
+  var _samtools: File = config("exe", namespace = "samtools", default = "samtools")
   var samtools: File = config("samtools", default = _samtools, freeVar = false)
 
   var sex: Option[String] = config("sex")
