@@ -36,15 +36,15 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
     Some(shiva)
   }
 
-  /** Method to make the variantcalling submodule of shiva */
+  /** Method to make the variantcalling namespace of shiva */
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait with QScript = {
     if (multisample) new ShivaVariantcalling(qscript) {
       override def namePrefix = "multisample"
-      override def configName: String = "shivavariantcalling"
+      override def configNamespace: String = "shivavariantcalling"
       override def configPath: List[String] = super.configPath ::: "multisample" :: Nil
     }
     else new ShivaVariantcalling(qscript) {
-      override def configName = "shivavariantcalling"
+      override def configNamespace = "shivavariantcalling"
     }
   }
 

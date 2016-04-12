@@ -36,7 +36,7 @@ import org.testng.annotations.{ DataProvider, Test }
 class ShivaTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Shiva = {
     new Shiva() {
-      override def configName = "shiva"
+      override def configNamespace = "shiva"
       override def globalConfig = new Config(ConfigUtils.mergeMaps(map, ShivaTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"

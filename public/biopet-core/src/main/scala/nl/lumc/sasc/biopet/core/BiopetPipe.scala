@@ -74,7 +74,7 @@ class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCo
   override def defaultThreads = 0
 
   val root: Configurable = commands.head.root
-  override def configName = commands.map(_.configName).mkString("-")
+  override def configNamespace = commands.map(_.configNamespace).mkString("-")
   def cmdLine: String = {
     "(" + commands.head.cmdLine + (if (commands.head.stdinFile.isDefined) {
       " < " + required(commands.head.stdinFile.map(_.getAbsoluteFile))

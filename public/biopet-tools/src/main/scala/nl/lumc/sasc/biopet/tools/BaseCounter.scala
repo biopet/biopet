@@ -70,7 +70,9 @@ object BaseCounter extends ToolCommand {
     logger.info("Finding overlapping genes")
     val overlapGenes = groupGenesOnOverlap(geneReader.getAll)
 
-    logger.info("Start reading bamFile")
+    counter = 0
+
+    logger.info(s"Start reading bamFile divided over ${overlapGenes.values.flatten.size} chunks")
     val counts = (for (genes <- overlapGenes.values.flatten.par) yield runThread(cmdArgs.bamFile, genes)).toList
     logger.info("Done reading bamFile")
 
@@ -292,6 +294,8 @@ object BaseCounter extends ToolCommand {
     else samRecord.getReadNegativeStrandFlag == strand
   }
 
+  private[tools] var counter = 0
+
   private[tools] case class ThreadOutput(geneCounts: List[GeneCount],
                                          nonStrandedMetaExonCounts: List[(String, RegionCount)],
                                          strandedMetaExonCounts: List[(String, RegionCount)])
@@ -315,6 +319,8 @@ object BaseCounter extends ToolCommand {
     }
 
     bamReader.close()
+    counter += 1
+    if (counter % 1000 == 0) logger.info(s"${counter} chunks done")
     ThreadOutput(counts.values.toList, metaExons, plusMetaExons ::: minMetaExons)
   }
 
