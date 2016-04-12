@@ -54,6 +54,10 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     writer.close()
   }
 
+  /**
+   *  This value is used to let you job wait a x number of second after it finish.
+   *  This is ionly used when having storage delay issues
+   */
   var jobDelayTime: Option[Int] = config("job_delay_time")
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
@@ -168,6 +172,15 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     this
   }
 
+  /**
+   * This method can handle args that have multiple args for 1 arg name
+   * @param argName Name of the arg like "-h" or "--help"
+   * @param values Values for this arg
+   * @param groupSize Values must come in groups of x number, default is 1
+   * @param minGroups Minimal groups that are required, default is 0, when 0 the method return en empty string
+   * @param maxGroups Max number of groups that can be filled here
+   * @return Command part of this arg
+   */
   def multiArg(argName: String, values: Iterable[Any], groupSize: Int = 1, minGroups: Int = 0, maxGroups: Int = 0): String = {
     if (values.size % groupSize != 0)
       Logging.addError(s"Arg '${argName}' values: '${values}' does not fit to a groupSize of ${groupSize}")
