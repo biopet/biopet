@@ -24,6 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 import scala.collection.mutable
+import scala.language.postfixOps
 
 /**
  * This trait is meant to make an extension for a report object
@@ -66,15 +67,28 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null, outputDir: File = null, pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
+  case class Args(summary: File = null,
+                  outputDir: File = null,
+                  pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
+
+    head(
+      s"""
+         |$commandName - Generate HTML formatted report from a biopet summary.json
+       """.stripMargin
+    )
+
     opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
-    }
+    } validate {
+      x => if (x.exists) success else failure("Summary JSON file not found!")
+    } text "Biopet summary JSON file"
+
     opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
-    }
+    } text "Output HTML report files to this directory"
+
     opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
