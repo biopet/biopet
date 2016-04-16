@@ -46,8 +46,6 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
     case _          => Nil
   })
 
-  lazy val referenceDict = new FastaSequenceFile(referenceFasta(), true).getSequenceDictionary
-
   override def dictRequired = true
 
   override def defaults = Map("snptest" -> Map("genotype_field" -> "GP"))
@@ -55,6 +53,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
   /** Init for pipeline */
   def init(): Unit = {
     inputGens.foreach { g =>
+      val referenceDict = new FastaSequenceFile(referenceFasta(), true).getSequenceDictionary
       if (referenceDict.getSequenceIndex(g.contig) == -1)
         Logging.addError(s"Contig '${g.contig}' does not exist on reference: ${referenceFasta()}")
     }
