@@ -80,6 +80,15 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   def beforeGraph() {}
 
   override def freezeFieldValues() {
+
+    this match {
+      case r: Reference =>
+        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.faiRequired) deps :+= r.referenceFai
+        deps = deps.distinct
+      case _ =>
+    }
+
     preProcessExecutable()
     beforeGraph()
     internalBeforeGraph()
