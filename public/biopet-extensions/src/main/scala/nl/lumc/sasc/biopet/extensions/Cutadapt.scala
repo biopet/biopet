@@ -171,8 +171,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val statsFile = Source.fromFile(statsOutput)
     val adapterRawStats = statsFile.mkString
       .split("=== Adapter [\\d]+ ===")
-      .filter(
-        x => x.contains("Sequence")
+      .filter(_.contains("Sequence")
       )
     statsFile.close()
 
