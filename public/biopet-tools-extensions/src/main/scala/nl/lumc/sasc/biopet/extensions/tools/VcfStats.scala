@@ -20,6 +20,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.summary.{ Summarizable, SummaryQScript }
 import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import nl.lumc.sasc.biopet.utils.tryToParseNumber
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
@@ -85,7 +86,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     Map("info" -> (for (
       line <- Source.fromFile(generalStats).getLines().toList.tail;
       values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
-    ) yield values(0) -> values(1).toInt
+    ) yield values(0) -> tryToParseNumber(values(1))
     ).toMap)
   }
 
@@ -101,7 +102,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     for (s <- 1 until data(0).size) {
       val sample = data(0)(s)
       val stats = Map("genotype" -> (for (f <- 1 until data.length) yield {
-        data(f)(0) -> data(f)(s)
+        data(f)(0) -> tryToParseNumber(data(f)(s))
       }).toMap)
 
       val sum = new Summarizable {
