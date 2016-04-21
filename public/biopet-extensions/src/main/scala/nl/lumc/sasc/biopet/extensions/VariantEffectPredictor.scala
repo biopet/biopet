@@ -153,9 +153,9 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (!cache && !database) {
-      Logging.addError("Must supply either cache or database for VariantEffectPredictor")
+      Logging.addError("Must either set 'cache' or 'database' to true for VariantEffectPredictor")
     } else if (cache && dir.isEmpty) {
-      Logging.addError("Must supply dir to cache for VariantEffectPredictor")
+      Logging.addError("Must supply 'dir_cache' to cache for VariantEffectPredictor")
     }
     if (statsText) outputFiles :+= new File(output.getAbsolutePath + "_summary.txt")
   }
