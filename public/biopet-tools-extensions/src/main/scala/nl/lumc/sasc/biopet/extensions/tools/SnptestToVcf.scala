@@ -13,46 +13,44 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.gatk
+package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
+/**
+ *
+ */
+class SnptestToVcf(val root: Configurable) extends ToolCommandFunction with Reference {
+  def toolObject = nl.lumc.sasc.biopet.tools.SnptestToVcf
 
-  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getName
+  @Input(doc = "input Info file", required = true)
+  var inputInfo: File = null
 
   @Input(required = true)
-  var inputFiles: List[File] = Nil
+  var reference: File = _
 
   @Output(required = true)
-  var outputFile: File = null
+  var outputVcf: File = _
 
-  @Input
-  var reference: File = null
-
-  var assumeSorted = false
+  var contig: String = _
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
+    if (contig == null) throw new IllegalStateException("Contig is missing")
+    //if (outputVcf.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputVcf.getAbsolutePath + ".tbi")
   }
 
   override def cmdLine = super.cmdLine +
-    repeat("-V", inputFiles) +
-    required("-out", outputFile) +
-    required("-R", reference) +
-    conditional(assumeSorted, "--assumeSorted")
+    required("--inputInfo", inputInfo) +
+    required("--outputVcf", outputVcf) +
+    optional("--contig", contig) +
+    required("--referenceFasta", reference)
+
 }
 
-object CatVariants {
-  def apply(root: Configurable, input: List[File], output: File): CatVariants = {
-    val cv = new CatVariants(root)
-    cv.inputFiles = input
-    cv.outputFile = output
-    cv
-  }
-}

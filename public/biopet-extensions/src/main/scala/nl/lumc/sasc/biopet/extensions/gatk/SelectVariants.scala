@@ -17,42 +17,46 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetJavaCommandLineFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
+/**
+ * Extension for CombineVariants from GATK
+ *
+ * Created by pjvan_thof on 2/26/15.
+ */
+class SelectVariants(val root: Configurable) extends Gatk {
+  val analysisType = "SelectVariants"
 
-  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getName
-
-  @Input(required = true)
+  @Input(doc = "", required = true)
   var inputFiles: List[File] = Nil
 
-  @Output(required = true)
+  @Output(doc = "", required = true)
   var outputFile: File = null
 
-  @Input
-  var reference: File = null
+  var excludeNonVariants: Boolean = false
 
-  var assumeSorted = false
+  var inputMap: Map[File, String] = Map()
+
+  def addInput(file: File, name: String): Unit = {
+    inputFiles :+= file
+    inputMap += file -> name
+  }
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    if (reference == null) reference = referenceFasta()
+    if (outputFile.getName.endsWith(".vcf.gz")) outputFiles :+= new File(outputFile.getAbsolutePath + ".tbi")
+    deps :::= inputFiles.filter(_.getName.endsWith("vcf.gz")).map(x => new File(x.getAbsolutePath + ".tbi"))
+    deps = deps.distinct
   }
 
   override def cmdLine = super.cmdLine +
-    repeat("-V", inputFiles) +
-    required("-out", outputFile) +
-    required("-R", reference) +
-    conditional(assumeSorted, "--assumeSorted")
-}
-
-object CatVariants {
-  def apply(root: Configurable, input: List[File], output: File): CatVariants = {
-    val cv = new CatVariants(root)
-    cv.inputFiles = input
-    cv.outputFile = output
-    cv
-  }
+    (for (file <- inputFiles) yield {
+      inputMap.get(file) match {
+        case Some(name) => required("-V:" + name, file)
+        case _          => required("-V", file)
+      }
+    }).mkString +
+    required("-o", outputFile) +
+    conditional(excludeNonVariants, "--excludeNonVariants")
 }

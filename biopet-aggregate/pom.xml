@@ -28,6 +28,7 @@
         <module>../public/bam2wig</module>
         <module>../public/carp</module>
         <module>../public/toucan</module>
+        <module>../public/gwas-test</module>
         <module>../public/shiva</module>
         <module>../public/basty</module>
         <module>../public/tinycap</module>
