@@ -40,7 +40,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
-  val sampleInfo: Map[String, Map[String, Any]] = root match {
+  def sampleInfo: Map[String, Map[String, Any]] = root match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
     case null                  => VcfUtils.getSampleIds(inputVCF).map(x => x -> Map[String, Any]()).toMap
     case s: SampleLibraryTag   => s.sampleId.map(x => x -> Map[String, Any]()).toMap
