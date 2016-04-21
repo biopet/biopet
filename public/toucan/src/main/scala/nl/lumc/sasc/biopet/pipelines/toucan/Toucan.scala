@@ -42,20 +42,13 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   val sampleInfo: Map[String, Map[String, Any]] = root match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
-    case null => VcfUtils.getSampleIds(inputVCF).map(x => x -> Map[String, Any]()).toMap
-    case s: SampleLibraryTag => s.sampleId.map(x => x -> Map[String, Any]()).toMap
-    case _ => throw new IllegalArgumentException("")
+    case null                  => VcfUtils.getSampleIds(inputVCF).map(x => x -> Map[String, Any]()).toMap
+    case s: SampleLibraryTag   => s.sampleId.map(x => x -> Map[String, Any]()).toMap
+    case _                     => throw new IllegalArgumentException("")
   }
 
-  var sampleIds: List[String] = Nil
   def init(): Unit = {
     inputFiles :+= new InputFile(inputVCF)
-    sampleIds = root match {
-      case m: MultiSampleQScript => m.samples.keys.toList
-      case null                  => VcfUtils.getSampleIds(inputVCF)
-      case s: SampleLibraryTag   => s.sampleId.toList
-      case _                     => throw new IllegalArgumentException("You don't have any samples")
-    }
   }
 
   override def defaults = Map(
@@ -123,7 +116,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
    * @param annotation: ManweDownloadAnnotateVcf object of annotated vcf
    * @return
    */
-  def importAndActivateSample(sampleID: String, inputVcf: File,
+  def importAndActivateSample(sampleID: String, sampleGroups: List[String], inputVcf: File,
                               gVCF: File, annotation: ManweAnnotateVcf): ManweActivateAfterAnnotImport = {
 
     val minGQ: Int = config("minimum_genome_quality", default = 20, namespace = "manwe")
@@ -172,6 +165,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     imported.beds = List(bgzippedBed.output)
     imported.name = Some(sampleID)
     imported.public = isPublic
+    imported.group = sampleGroups
     imported.waitToComplete = false
     imported.isIntermediate = true
     imported.output = swapExt(outputDir, intersected.output, ".vcf.gz", ".manwe.import")
@@ -193,7 +187,6 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   def varda(vcf: File, gVcf: File): File = {
 
     val annotationQueries: List[String] = config("annotation_queries", default = List("GLOBAL *"), namespace = "manwe")
-    //TODO: add groups!!! Need sample-specific group tags for this
 
     val annotate = new ManweAnnotateVcf(this)
     annotate.vcf = vcf
@@ -209,7 +202,14 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     annotatedVcf.output = swapExt(outputDir, annotate.output, ".manwe.annot", "manwe.annot.vcf.gz")
     add(annotatedVcf)
 
-    val activates = sampleIds map { x => importAndActivateSample(x, vcf, gVcf, annotate) }
+    val activates = sampleInfo map { x =>
+      val sampleGroup = x._2.getOrElse("varda_group", Nil) match {
+        case x: List[String] => x
+        case Nil             => Nil
+        case _               => throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings")
+      }
+      importAndActivateSample(x._1, sampleGroup, vcf, gVcf, annotate)
+    }
 
     val finalLn = new Ln(this)
     activates.foreach(x => finalLn.deps :+= x.output)
