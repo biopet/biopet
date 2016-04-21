@@ -1,0 +1,26 @@
+{
+        files = (
+                {
+                        chromosome = "chrQ";
+                        name = "imputation_06/test";
+                        orig = "imputation_03/LLS_Offspring_Partners_Final_37_Overlap_chr1";
+                },
+                {
+                        chromosome = "chrQ";
+                        name = "imputation_06/test";
+                        orig = "imputation_03/LLS_Offspring_Partners_Final_37_Overlap_chr1";
+                },
+                {
+                        chromosome = "chrQ";
+                        name = "imputation_06/test";
+                        orig = "imputation_03/LLS_Offspring_Partners_Final_37_Overlap_chr22";
+                },
+                {
+                        chromosome = "chrQ";
+                        name = "imputation_06/test";
+                        orig = "imputation_03/LLS_Offspring_Partners_Final_37_Overlap_chr22";
+                }
+        );
+        jids = ( "2102064" );
+        type = "tped3col";
+}

@@ -24,6 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.fusesource.scalate.{ TemplateEngine, TemplateSource }
 
 import scala.collection.mutable
+import scala.language.postfixOps
 
 /**
  * This trait is meant to make an extension for a report object
@@ -66,15 +67,28 @@ trait ReportBuilderExtension extends ToolCommandFunction {
 
 trait ReportBuilder extends ToolCommand {
 
-  case class Args(summary: File = null, outputDir: File = null, pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
+  case class Args(summary: File = null,
+                  outputDir: File = null,
+                  pageArgs: mutable.Map[String, Any] = mutable.Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
+
+    head(
+      s"""
+         |$commandName - Generate HTML formatted report from a biopet summary.json
+       """.stripMargin
+    )
+
     opt[File]('s', "summary") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(summary = x)
-    }
+    } validate {
+      x => if (x.exists) success else failure("Summary JSON file not found!")
+    } text "Biopet summary JSON file"
+
     opt[File]('o', "outputDir") unbounded () required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputDir = x)
-    }
+    } text "Output HTML report files to this directory"
+
     opt[Map[String, String]]('a', "args") unbounded () action { (x, c) =>
       c.copy(pageArgs = c.pageArgs ++ x)
     }
@@ -142,9 +156,14 @@ trait ReportBuilder extends ToolCommand {
     // Static files that will be copied to the output folder, then file is added to [resourceDir] it's need to be added here also
     val extOutputDir: File = new File(cmdArgs.outputDir, "ext")
 
-    for (resource <- extFiles.par) {
-      IoUtils.copyStreamToFile(getClass.getResourceAsStream(resource.resourcePath), new File(extOutputDir, resource.targetPath), createDirs = true)
-    }
+    // Copy each resource files out to the report destination
+    extFiles.par.foreach(
+      resource =>
+        IoUtils.copyStreamToFile(
+          getClass.getResourceAsStream(resource.resourcePath),
+          new File(extOutputDir, resource.targetPath),
+          createDirs = true)
+    )
 
     logger.info("Parsing summary")
     setSummary = new Summary(cmdArgs.summary)
@@ -165,7 +184,7 @@ trait ReportBuilder extends ToolCommand {
   /** This must be implemented, this will be the root page of the report */
   def indexPage: ReportPage
 
-  /** This must be implemented, this will because the title of the report */
+  /** This must be implemented, this will become the title of the report */
   def reportName: String
 
   /**
@@ -194,8 +213,9 @@ trait ReportBuilder extends ToolCommand {
       )
 
     // Generating subpages
-    val jobs = for ((name, subPage) <- page.subPages.par) yield {
-      generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs)
+    val jobs = page.subPages.par.flatMap {
+      case (name, subPage) => Some(generatePage(summary, subPage, outputDir, path ::: name :: Nil, pageArgs))
+      case _               => None
     }
 
     val output = ReportBuilder.renderTemplate("/nl/lumc/sasc/biopet/core/report/main.ssp",

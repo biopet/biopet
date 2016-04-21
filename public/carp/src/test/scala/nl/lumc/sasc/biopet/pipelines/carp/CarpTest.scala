@@ -37,7 +37,7 @@ import org.testng.annotations.{ AfterClass, DataProvider, Test }
 class CarpTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Carp = {
     new Carp() {
-      override def configName = "carp"
+      override def configNamespace = "carp"
       override def globalConfig = new Config(map)
       qSettings = new QSettings
       qSettings.runName = "test"

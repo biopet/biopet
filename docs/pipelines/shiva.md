@@ -105,7 +105,7 @@ To view all possible config options please navigate to our Gitlab wiki page
 <a href="https://git.lumc.nl/biopet/biopet/wikis/GATK-Variantcalling-Pipeline" target="_blank">Config</a>
 
 ### Required settings
-| Namespace | Name | Type | Default | Function |
+| Confignamespace | Name | Type | Default | Function |
 | ----------- | ---- | ---- | ------- | -------- |
 | - | output_dir | String |  | Path to output directory |
 | Shiva | variantcallers | List[String] | | Which variant callers to use |
@@ -113,7 +113,7 @@ To view all possible config options please navigate to our Gitlab wiki page
 
 ### Config options
 
-| Namespace | Name |  Type | Default | Function |
+| ConfignNamespace | Name |  Type | Default | Function |
 | ----------- | ---- | ----- | ------- | -------- |
 | shiva | species | String | unknown_species | Name of species, like H.sapiens |
 | shiva | reference_name | String | unknown_reference_name | Name of reference, like hg19 |
@@ -161,7 +161,7 @@ The other mode, `library_variantcalling`, will call simultaneously call all libr
 
 The config for these therefore is:
 
-| Namespace | Name | Type | Default | Function |
+| namespace | Name | Type | Default | Function |
 | ----------- | ---- | ---- | ------- | -------- |
 | shiva | multisample_variantcalling | Boolean | true | Default, multisample calling |
 | shiva | single_sample_variantcalling | Boolean | false | Not-recommended, single sample, merged bam |

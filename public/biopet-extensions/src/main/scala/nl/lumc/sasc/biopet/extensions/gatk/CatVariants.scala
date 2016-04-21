@@ -23,7 +23,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
 
-  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getClass.getName
+  javaMainClass = classOf[org.broadinstitute.gatk.tools.CatVariants].getName
 
   @Input(required = true)
   var inputFiles: List[File] = Nil
@@ -34,6 +34,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Input
   var reference: File = null
 
+  var assumeSorted = false
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
@@ -42,7 +44,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   override def cmdLine = super.cmdLine +
     repeat("-V", inputFiles) +
     required("-out", outputFile) +
-    required("-R", reference)
+    required("-R", reference) +
+    conditional(assumeSorted, "--assumeSorted")
 }
 
 object CatVariants {

@@ -37,7 +37,7 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
 
   var prefix: String = "output"
 
-  override def defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 5.0
   override def defaultThreads = 4
 
   def transcriptTotalCounts = new File(outputDir, s"$prefix.base.transcript.counts")
@@ -89,6 +89,7 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
       nonStrandedMetaExonCounts,
       strandedMetaExonCounts, strandedSenseMetaExonCounts, strandedAntiSenseMetaExonCounts)
     jobOutputFile = new File(outputDir, s".$prefix.basecounter.out")
+    if (bamFile != null) deps :+= new File(bamFile.getAbsolutePath.stripSuffix(".bam") + ".bai")
     super.beforeGraph()
 
   }

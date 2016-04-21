@@ -39,7 +39,7 @@ import org.testng.annotations._
 class GearsSingleTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): GearsSingle = {
     new GearsSingle {
-      override def configName = "gearssingle"
+      override def configNamespace = "gearssingle"
 
       override def globalConfig = new Config(map)
 
