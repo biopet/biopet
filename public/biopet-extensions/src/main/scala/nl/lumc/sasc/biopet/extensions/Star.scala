@@ -147,11 +147,11 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var outFilterIntronMotifs: Option[String] = config("outfilterintronmotifs")
 
   var outSJfilterReads: Option[String] = config("outsjfilterreads")
-  //  var outSJfilterOverhangMin: List[String]  = config("outsjfilteroverhandmin",default = List.empty[String])
-  //  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin",default = List.empty[String])
-  //  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin",default = List.empty[String])
-  //  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin",default = List.empty[String])
-  //  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn",default = List.empty[String])
+  var outSJfilterOverhangMin: List[String] = config("outsjfilteroverhandmin", default = Nil)
+  var outSJfilterCountUniqueMin: List[String] = config("outsjfiltercountuniquemin", default = Nil)
+  var outSJfilterCountTotalMin: List[String] = config("outsjfiltercounttotalmin", default = Nil)
+  var outSJfilterDistToOtherSJmin: List[String] = config("outsjfilterdisttoothersjmin", default = Nil)
+  var outSJfilterIntronMaxVsReadN: List[String] = config("outsjfilterintronmaxvsreadn", default = Nil)
 
   var scoreGap: Option[Int] = config("scoregap")
   var scoreGapNoncan: Option[Int] = config("scoregapnoncan")
@@ -272,7 +272,12 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       optional("--limitBAMsortRAM", limitBAMsortRAM) +
       optional("--limitSjdbInsertNsj", limitSjdbInsertNsj) +
       optional("--outTmpDir", outTmpDir) +
-      optional("--outStd", outStd)
+      optional("--outStd", outStd) +
+      multiArg("--outSJfilterOverhangMin", outSJfilterOverhangMin, groupSize = 4, maxGroups = 1) +
+      multiArg("--outSJfilterCountUniqueMin", outSJfilterCountUniqueMin, groupSize = 4, maxGroups = 1) +
+      multiArg("--outSJfilterCountTotalMin", outSJfilterCountTotalMin, groupSize = 4, maxGroups = 1) +
+      multiArg("--outSJfilterDistToOtherSJmin", outSJfilterDistToOtherSJmin, groupSize = 4, maxGroups = 1) +
+      multiArg("--outSJfilterIntronMaxVsReadN", outSJfilterIntronMaxVsReadN, groupSize = 3, maxGroups = 1)
 
     // Break as workaround for a stackoverflow error for the compiler
     cmd += optional("--outReadsUnmapped", outReadsUnmapped) +
