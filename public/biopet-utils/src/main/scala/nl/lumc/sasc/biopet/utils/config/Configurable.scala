@@ -30,10 +30,10 @@ trait Configurable extends ImplicitConversions {
   def configPath: List[String] = if (root != null) root.configFullPath else Nil
 
   /** Gets name of module for config */
-  def configName = getClass.getSimpleName.toLowerCase
+  def configNamespace = getClass.getSimpleName.toLowerCase
 
   /** ull path with module in there */
-  def configFullPath: List[String] = configPath ::: configName :: Nil
+  def configFullPath: List[String] = configPath ::: configNamespace :: Nil
 
   /** Map to store defaults for config */
   def defaults: Map[String, Any] = Map()
@@ -69,7 +69,7 @@ trait Configurable extends ImplicitConversions {
   def getConfigPath(sample: String = null, library: String = null, submodule: String = null) = {
     (if (sample != null) "samples" :: sample :: Nil else Nil) :::
       (if (library != null) "libraries" :: library :: Nil else Nil) :::
-      (if (submodule != null) configPath ::: configName :: Nil else configPath)
+      (if (submodule != null) configPath ::: configNamespace :: Nil else configPath)
   }
 
   /** Class is used for retrieval of config values */
@@ -92,7 +92,7 @@ trait Configurable extends ImplicitConversions {
      *
      * @param key Name of value
      * @param default Default value if not found
-     * @param submodule Adds to the path
+     * @param namespace Adds to the path
      * @param freeVar Default true, if set false value must exist in module
      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
@@ -100,15 +100,15 @@ trait Configurable extends ImplicitConversions {
      */
     def apply(key: String,
               default: Any = null,
-              submodule: String = null,
+              namespace: String = null,
               freeVar: Boolean = true,
               sample: String = null,
               library: String = null,
               path: List[String] = null): ConfigValue = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
-      val m = if (submodule != null) submodule else configName
-      val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
+      val m = if (namespace != null) namespace else configNamespace
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
       val d = {
         val value = Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar))
         if (value.isDefined) value.get.value else default
@@ -120,22 +120,22 @@ trait Configurable extends ImplicitConversions {
     /**
      * Check if value exist in config
      * @param key Name of value
-     * @param submodule Adds to the path
+     * @param namespace Adds to the path
      * @param freeVar Default true, if set false value must exist in module
      * @param sample Default null, when set path is prefixed with "samples" -> "sampleID"
      * @param library Default null, when set path is prefixed with "libraries" -> "libraryID"
      * @return true when value is found in config
      */
     def contains(key: String,
-                 submodule: String = null,
+                 namespace: String = null,
                  freeVar: Boolean = true,
                  sample: String = null,
                  library: String = null,
                  path: List[String] = null) = {
       val s = if (sample != null || defaultSample.isEmpty) sample else defaultSample.get
       val l = if (library != null || defaultLibrary.isEmpty) library else defaultLibrary.get
-      val m = if (submodule != null) submodule else configName
-      val p = if (path == null) getConfigPath(s, l, submodule) ::: subPath else path
+      val m = if (namespace != null) namespace else configNamespace
+      val p = if (path == null) getConfigPath(s, l, namespace) ::: subPath else path
 
       globalConfig.contains(m, p, key, freeVar, internalFixedValues) || Config.getValueFromMap(internalDefaults, ConfigValueIndex(m, p, key, freeVar)).isDefined
     }

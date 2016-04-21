@@ -30,7 +30,7 @@ import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
-  analysisName = configName
+  analysisName = configNamespace
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
@@ -73,6 +73,15 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   def beforeGraph() {}
 
   override def freezeFieldValues() {
+
+    this match {
+      case r: Reference =>
+        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.faiRequired) deps :+= r.referenceFai
+        deps = deps.distinct
+      case _ =>
+    }
+
     preProcessExecutable()
     beforeGraph()
     internalBeforeGraph()

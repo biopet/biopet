@@ -319,7 +319,7 @@ object ConfigUtils extends Logging {
       val exist = valueExists(value)
       if (!exist)
         Logging.addError("Value does not exist but is required, key: " + value.requestIndex.key +
-          "  module: " + value.requestIndex.module,
+          "  namespace: " + value.requestIndex.module,
           if (value.requestIndex.path != Nil) "  path: " + value.requestIndex.path.mkString("->") else null)
       exist
     }

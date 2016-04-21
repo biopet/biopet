@@ -75,16 +75,16 @@ class WriteSummary(val root: Configurable) extends InProcessFunction with Config
         def fetchVersion(f: QFunction): Option[(String, Any)] = {
           f match {
             case f: BiopetJavaCommandLineFunction with Version =>
-              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+              Some(f.configNamespace -> Map("version" -> f.getVersion.getOrElse(None),
                 "java_md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "java_version" -> f.getJavaVersion,
                 "jar_path" -> f.jarFile))
             case f: BiopetCommandLineFunction with Version =>
-              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None),
+              Some(f.configNamespace -> Map("version" -> f.getVersion.getOrElse(None),
                 "md5" -> BiopetCommandLineFunction.executableMd5Cache.getOrElse(f.executable, None),
                 "path" -> f.executable))
             case f: Configurable with Version =>
-              Some(f.configName -> Map("version" -> f.getVersion.getOrElse(None)))
+              Some(f.configNamespace -> Map("version" -> f.getVersion.getOrElse(None)))
             case _ => None
           }
         }
