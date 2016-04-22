@@ -40,8 +40,8 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   @Output(doc = "Output tab file", required = false)
   var outputTab: File = _
 
-  @Input(doc = "sjdbFileChrStartEnd file", required = false) /**Can be a list of file Paths TO BE CHECKED  **/
-  var sjdbFileChrStartEnd: File = _
+  @Input(doc = "sjdbFileChrStartEnd file", required = false)
+  var sjdbFileChrStartEnd: List[File] = Nil
 
   @Output(doc = "Output genome file", required = false)
   var outputGenome: File = _
@@ -237,7 +237,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
       cmd += required("--readFilesIn", R1) + optional(R2)
     }
     cmd += required("--genomeDir", genomeDir) +
-      optional("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
+      multiArg("--sjdbFileChrStartEnd", sjdbFileChrStartEnd) +
       optional("--runThreadN", threads) +
       optional("--outFileNamePrefix", outFileNamePrefix) +
       optional("--sjdbOverhang", sjdbOverhang) +
@@ -420,7 +420,7 @@ object Star {
     starCommandPass1.beforeGraph()
 
     val starCommandReindex = new Star(configurable)
-    starCommandReindex.sjdbFileChrStartEnd = starCommandPass1.outputTab
+    starCommandReindex.sjdbFileChrStartEnd :+= starCommandPass1.outputTab
     starCommandReindex.outputDir = new File(outputDir, "re-index")
     starCommandReindex.runmode = "genomeGenerate"
     starCommandReindex.isIntermediate = isIntermediate
