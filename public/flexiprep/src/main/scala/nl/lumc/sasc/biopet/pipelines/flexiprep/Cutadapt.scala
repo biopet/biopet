@@ -29,9 +29,29 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
  */
 class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
 
+  val ignoreFastqcAdapters: Boolean = config("ignore_fastqc_adapters", default = false)
+  val customAdaptersConfig: Map[String, Any] = config("custom_adapters", default = Map.empty)
+
   /** Clipped adapter names from FastQC */
-  protected def seqToName: Map[String, String] = fastqc.foundAdapters
-    .map(adapter => adapter.seq -> adapter.name).toMap
+  protected def seqToName: Map[String, String] = {
+    if (!ignoreFastqcAdapters) {
+      (fastqc.foundAdapters ++ customAdapters)
+        .map(adapter => adapter.seq -> adapter.name).toMap
+    } else {
+      Map.empty ++ customAdapters.map(adapter => adapter.seq -> adapter.name).toMap
+    }
+  }
+
+  def customAdapters: Set[AdapterSequence] = {
+    customAdaptersConfig.flatMap(adapter => {
+      adapter match {
+        case (adapterName: String, sequence: String) =>
+          Some(AdapterSequence(adapterName, sequence))
+        case _ =>
+          throw new IllegalStateException(s"Custom adapter was setup wrong for: $adapter")
+      }
+    }).toSet
+  }
 
   override def summaryStats: Map[String, Any] = {
     val initStats = super.summaryStats
@@ -45,10 +65,10 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
           seqToNameMap.get(seq) match {
             // adapter sequence is found by FastQC
             case Some(n) => Some(n -> Map("sequence" -> seq, "count" -> count))
-            // adapter sequence is clipped but not found by FastQC ~ should not happen since all clipped adapter
-            // sequences come from FastQC
             case _ =>
-              throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC in '$fastqInput'.")
+              // in this case, the adapter used is not one of the found by fastqc.
+              // consider this as a custom adapter which was supplied by the user
+              throw new IllegalStateException(s"Adapter '$seq' is clipped but not found by FastQC or 'custom adapters' in '$fastqInput'.")
           }
         // FastQC found no adapters
         case otherwise =>

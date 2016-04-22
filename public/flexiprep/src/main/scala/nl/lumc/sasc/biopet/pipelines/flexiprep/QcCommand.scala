@@ -99,9 +99,15 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     addPipeJob(seqtk)
 
     clip = if (!flexiprep.skipClip) {
-      val foundAdapters = fastqc.foundAdapters.map(_.seq)
+      val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
+
+      val foundAdapters = if (!cutadapt.ignoreFastqcAdapters) {
+        fastqc.foundAdapters.map(_.seq) ++ cutadapt.customAdapters.map(_.seq)
+      } else {
+        Seq.empty ++ cutadapt.customAdapters.map(_.seq)
+      }
+
       if (foundAdapters.nonEmpty) {
-        val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
         cutadapt.fastqInput = seqtk.output
         cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")
