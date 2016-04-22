@@ -1,4 +1,6 @@
 library('optparse')
+library('naturalsort')
+
 # Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 option_list <- list(
@@ -19,7 +21,7 @@ dataTable <-read.table( opt$input , header=TRUE);
 
 ratio<-data.frame(dataTable)
 ploidy <- opt$ploidy
-chromosomes <- levels(ratio$Chromosome)
+chromosomes <- naturalorder(levels(ratio$Chromosome))
 ppi <- 300
 plot_margins <- c(3,4,1,2)+0.1
 label_positions <- c(2,0.5,0)
@@ -127,3 +129,56 @@ dev.off()
 
 
 
+# Export the whole genome graph
+
+png(filename = paste(opt$output, ".wg.png",sep=""), width = 16 * ppi, height = 10 * ppi,
+res=ppi, bg = "white")
+par(mfrow = c(6,4))
+par(mar=plot_margins)
+par(mgp=label_positions)
+par(xaxs="i", yaxs="i")
+
+
+maxLevelToPlot <- 3
+for (i in c(1:length(ratio$Ratio))) {
+    if (ratio$Ratio[i]>maxLevelToPlot) {
+        ratio$Ratio[i]=maxLevelToPlot
+    }
+}
+
+for (i in c(1:length(ratio$Start))) {
+    ratio$Position[i] = (i-1) *50000 +1
+}
+
+plot(ratio$Position,
+ratio$Ratio*ploidy,
+ylim = c(0,maxLevelToPlot*ploidy),
+xlab = paste ("Chr. on genome"),
+ylab = "normalized CN",
+pch = ".",
+col = colors()[88])
+
+
+title(outer=TRUE)
+tt <- which(ratio$CopyNumber>ploidy )
+points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
+
+tt <- which(ratio$Ratio==maxLevelToPlot & ratio$CopyNumber>ploidy)
+points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
+
+tt <- which(ratio$CopyNumber<ploidy & ratio$CopyNumber!= -1)
+points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[461], bg="black")
+
+for (chrom in chromosomes) {
+    tt <- which(ratio$Chromosome == chrom)
+    print(ratio[tt[1],])
+    xpos <- ratio$Position[tt][1]
+    abline(v=xpos, col="grey")
+    axis(1, at=xpos, labels=chrom , las=2)
+
+    print(paste("Plotting the line for chrom ", chrom ," on:", xpos))
+
+
+    #mtext(chrom, 1, at=xpos)
+
+}
