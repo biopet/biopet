@@ -44,60 +44,68 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   val veppedPath = resourcePath("/VEP_oneline.vcf.gz")
   val unveppedPath = resourcePath("/unvep_online.vcf.gz")
+  val referenceFasta = resourcePath("/fake_chrQ.fa")
   val rand = new Random()
 
-  @Test def testOutputTypeVcf() = {
+  @Test
+  def testOutputTypeVcf() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ")
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
     main(arguments)
   }
 
-  @Test def testOutputTypeVcfGz() = {
+  @Test
+  def testOutputTypeVcfGz() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf.gz")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ")
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
     main(arguments)
   }
 
-  @Test def testOutputTypeBcf() = {
+  @Test
+  def testOutputTypeBcf() = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".bcf")
     tmpFile.deleteOnExit()
-    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ")
+    val arguments = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ", "-R", referenceFasta)
     main(arguments)
   }
 
-  @Test def testOutputFieldException = {
+  @Test
+  def testOutputFieldException = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:AC")
+    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:AC", "-R", referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Field 'AC' already exists in input vcf")
   }
 
-  @Test def testInputFieldException = {
+  @Test
+  def testInputFieldException = {
     val tmpFile = File.createTempFile("VCFWithVCf", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", unveppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:NEW_CSQ")
+    val args = Array("-I", unveppedPath, "-s", unveppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:NEW_CSQ", "-R", referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Field 'CSQ' does not exist in secondary vcf")
   }
 
-  @Test def testMinMethodException = {
+  @Test
+  def testMinMethodException = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:min")
+    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:min", "-R", referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Type of field CSQ is not numeric")
   }
 
-  @Test def testMaxMethodException = {
+  @Test
+  def testMaxMethodException = {
     val tmpFile = File.createTempFile("VcfWithVcf_", ".vcf")
     tmpFile.deleteOnExit()
-    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:max")
+    val args = Array("-I", unveppedPath, "-s", veppedPath, "-o", tmpFile.getAbsolutePath, "-f", "CSQ:CSQ:max", "-R", referenceFasta)
     an[IllegalArgumentException] should be thrownBy main(args)
     val thrown = the[IllegalArgumentException] thrownBy main(args)
     thrown.getMessage should equal("Type of field CSQ is not numeric")
@@ -162,7 +170,8 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
 
   }
 
-  @Test def testGetSecondaryRecords = {
+  @Test
+  def testGetSecondaryRecords = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val vepRecord = vepReader.iterator().next()
@@ -172,7 +181,8 @@ class VcfWithVcfTest extends TestNGSuite with MockitoSugar with Matchers {
     secRec.foreach(x => identicalVariantContext(x, vepRecord) shouldBe true)
   }
 
-  @Test def testCreateRecord = {
+  @Test
+  def testCreateRecord = {
     val unvepRecord = new VCFFileReader(new File(unveppedPath)).iterator().next()
     val vepReader = new VCFFileReader(new File(veppedPath))
     val header = vepReader.getFileHeader
