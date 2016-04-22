@@ -79,7 +79,7 @@ object VcfWithVcf extends ToolCommand {
     logger.info("Init phase")
 
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     val reader = new VCFFileReader(commandArgs.inputFile)
     val secondaryReader = new VCFFileReader(commandArgs.secondaryVcf)
