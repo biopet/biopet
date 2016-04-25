@@ -57,7 +57,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     val splitLib = new SplitLibrariesFastq(this)
     splitLib.input :+= fastqInput
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
-    sampleId.foreach(splitLib.sampleIds :+= _)
+    sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
