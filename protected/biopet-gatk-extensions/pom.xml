@@ -32,6 +32,13 @@
             <groupId>org.broadinstitute.gatk</groupId>
             <artifactId>gatk-queue-extensions-distribution</artifactId>
             <version>3.5</version>
+            <exclusions>
+                <!-- This exclusion is needed for the selective licence for Queue -->
+                <exclusion>
+                    <groupId>org.broadinstitute.gatk</groupId>
+                    <artifactId>gatk-tools-protected</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
