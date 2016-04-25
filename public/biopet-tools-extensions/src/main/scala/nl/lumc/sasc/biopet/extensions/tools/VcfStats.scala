@@ -86,7 +86,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     Map("info" -> (for (
       line <- Source.fromFile(generalStats).getLines().toList.tail;
       values = line.split("\t") if values.size >= 2 && !values(0).isEmpty
-    ) yield values(0) -> tryToParseNumber(values(1))
+    ) yield values(0) -> tryToParseNumber(values(1)).getOrElse(None)
     ).toMap)
   }
 
@@ -102,7 +102,7 @@ class VcfStats(val root: Configurable) extends ToolCommandFunction with Summariz
     for (s <- 1 until data(0).size) {
       val sample = data(0)(s)
       val stats = Map("genotype" -> (for (f <- 1 until data.length) yield {
-        data(f)(0) -> tryToParseNumber(data(f)(s))
+        data(f)(0) -> tryToParseNumber(data(f)(s)).getOrElse(None)
       }).toMap)
 
       val sum = new Summarizable {
