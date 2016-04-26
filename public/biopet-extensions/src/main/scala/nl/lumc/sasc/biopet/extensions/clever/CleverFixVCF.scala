@@ -106,7 +106,22 @@ object CleverFixVCF extends ToolCommand {
           writer.write(extraHeader + "\n")
           writer.write(vcfColReplacementHeader + "\n")
         }
-        case _ => writer.write(line + "\n")
+        case _ => {
+          // We have to deal with matching records
+          // these don't start with #
+
+          line.startsWith("#") match {
+            case true =>
+              writer.write(line + "\n")
+            case _ => {
+              // this should be a record
+              // Ensure the REF field is at least an N
+              val cols = line.split("\t")
+              cols(3) = "N"
+              writer.write(cols.mkString("\t") + "\n")
+            }
+          }
+        }
       }
     }
     writer.close()
