@@ -324,7 +324,7 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (reference_sequence != null) reference_sequence = referenceFasta()
+    if (reference_sequence == null) reference_sequence = referenceFasta()
     input_fileIndexes ++= input_file.filter(orig => orig != null && orig.getName.endsWith(".bam")).flatMap(orig => Array(new File(orig.getPath + ".bai"), new File(orig.getPath.stripSuffix(".bam") + ".bai")))
     if (num_threads.isDefined) nCoresRequest = num_threads
     if (num_cpu_threads_per_data_thread.isDefined) nCoresRequest = Some(nCoresRequest.getOrElse(1) * num_cpu_threads_per_data_thread.getOrElse(1))
