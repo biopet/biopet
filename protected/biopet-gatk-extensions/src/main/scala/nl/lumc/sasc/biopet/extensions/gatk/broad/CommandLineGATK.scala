@@ -2,9 +2,9 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Reference, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference, Version }
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
 trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with Version {
   analysisName = "CommandLineGATK"
@@ -319,6 +319,8 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
   def versionRegex = """(.*)""".r
   override def versionExitcode = List(0, 1)
   def versionCommand = executable + " -jar " + jarFile + " -version"
+
+  override def dictRequired = true
 
   override def beforeGraph() {
     super.beforeGraph()
