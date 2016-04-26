@@ -57,23 +57,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 //  }
 //}
 //
-//object HaplotypeCaller {
-//  def apply(root: Configurable, inputFiles: List[File], outputFile: File): HaplotypeCaller = {
-//    val hc = new HaplotypeCaller(root)
-//    hc.input_file = inputFiles
-//    hc.out = outputFile
-//    if (hc.out.getName.endsWith(".vcf.gz")) hc.vcfIndex = new File(hc.out.getAbsolutePath + ".tbi")
-//    hc
-//  }
-//
-//  def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
-//    val hc = apply(root, List(inputFile), outputFile)
-//    hc.emitRefConfidence = org.broadinstitute.gatk.tools.walkers.haplotypecaller.ReferenceConfidenceMode.GVCF
-//    hc.variant_index_type = GATKVCFIndexType.LINEAR
-//    hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
-//    hc
-//  }
-//}
 
 import java.io.File
 
@@ -81,6 +64,7 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk._
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
+import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   analysisName = "HaplotypeCaller"
@@ -1130,4 +1114,22 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object HaplotypeCaller {
+  def apply(root: Configurable, inputFiles: List[File], outputFile: File): HaplotypeCaller = {
+    val hc = new HaplotypeCaller(root)
+    hc.input_file = inputFiles
+    hc.out = outputFile
+    //if (hc.out.getName.endsWith(".vcf.gz")) hc.vcfIndex = new File(hc.out.getAbsolutePath + ".tbi")
+    hc
+  }
+
+  def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
+    val hc = apply(root, List(inputFile), outputFile)
+    hc.emitRefConfidence = "GVCF"
+    hc.variant_index_type = GATKVCFIndexType.LINEAR
+    hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
+    hc
+  }
 }

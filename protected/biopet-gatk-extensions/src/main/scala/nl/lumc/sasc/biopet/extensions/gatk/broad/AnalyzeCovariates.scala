@@ -5,23 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//
-//class AnalyzeCovariates(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.AnalyzeCovariates with GatkGeneral {
-//}
-//
-//object AnalyzeCovariates {
-//  def apply(root: Configurable, before: File, after: File, plots: File): AnalyzeCovariates = {
-//    val ac = new AnalyzeCovariates(root)
-//    ac.before = before
-//    ac.after = after
-//    ac.plots = plots
-//    ac
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -174,4 +157,14 @@ class AnalyzeCovariates(val root: Configurable) extends CommandLineGATK with Sca
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object AnalyzeCovariates {
+  def apply(root: Configurable, before: File, after: File, plots: File): AnalyzeCovariates = {
+    val ac = new AnalyzeCovariates(root)
+    ac.before = before
+    ac.after = after
+    ac.plots = plots
+    ac
+  }
 }

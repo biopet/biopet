@@ -5,31 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//import org.broadinstitute.gatk.utils.commandline.{ Gather, Output }
-//
-//class IndelRealigner(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.IndelRealigner with GatkGeneral {
-//
-//  @Gather(enabled = false)
-//  @Output
-//  protected var bamIndex: File = _
-//
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//}
-//
-//object IndelRealigner {
-//  def apply(root: Configurable, input: File, targetIntervals: File, outputDir: File): IndelRealigner = {
-//    val ir = new IndelRealigner(root)
-//    ir.input_file :+= input
-//    ir.targetIntervals = targetIntervals
-//    ir.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bam")
-//    ir.bamIndex = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bai")
-//    ir
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -429,4 +404,15 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object IndelRealigner {
+  def apply(root: Configurable, input: File, targetIntervals: File, outputDir: File): IndelRealigner = {
+    val ir = new IndelRealigner(root)
+    ir.input_file :+= input
+    ir.targetIntervals = targetIntervals
+    ir.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bam")
+    ir.deps :+= new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.bai")
+    ir
+  }
 }

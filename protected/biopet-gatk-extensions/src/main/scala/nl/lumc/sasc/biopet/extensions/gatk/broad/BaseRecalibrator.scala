@@ -15,14 +15,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 //  if (config.contains("known_sites")) knownSites :+= new File(config("known_sites").asString)
 //}
 //
-//object BaseRecalibrator {
-//  def apply(root: Configurable, input: File, output: File): BaseRecalibrator = {
-//    val br = new BaseRecalibrator(root)
-//    br.input_file :+= input
-//    br.out = output
-//    br
-//  }
-//}
 
 import java.io.File
 
@@ -488,4 +480,13 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with S
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object BaseRecalibrator {
+  def apply(root: Configurable, input: File, output: File): BaseRecalibrator = {
+    val br = new BaseRecalibrator(root)
+    br.input_file :+= input
+    br.out = output
+    br
+  }
 }

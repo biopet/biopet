@@ -5,25 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//
-//class RealignerTargetCreator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.RealignerTargetCreator with GatkGeneral {
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//
-//  if (config.contains("known")) known ++= config("known").asFileList
-//}
-//
-//object RealignerTargetCreator {
-//  def apply(root: Configurable, input: File, outputDir: File): RealignerTargetCreator = {
-//    val re = new RealignerTargetCreator(root)
-//    re.input_file :+= input
-//    re.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.intervals")
-//    re
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -193,4 +174,13 @@ class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK wit
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object RealignerTargetCreator {
+  def apply(root: Configurable, input: File, outputDir: File): RealignerTargetCreator = {
+    val re = new RealignerTargetCreator(root)
+    re.input_file :+= input
+    re.out = new File(outputDir, input.getName.stripSuffix(".bam") + ".realign.intervals")
+    re
+  }
 }

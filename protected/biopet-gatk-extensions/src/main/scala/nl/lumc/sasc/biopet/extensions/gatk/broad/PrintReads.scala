@@ -5,23 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//
-//class PrintReads(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.PrintReads with GatkGeneral {
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//}
-//
-//object PrintReads {
-//  def apply(root: Configurable, input: File, output: File): PrintReads = {
-//    val br = new PrintReads(root)
-//    br.input_file :+= input
-//    br.out = output
-//    br
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -220,4 +203,13 @@ class PrintReads(val root: Configurable) extends CommandLineGATK with ScatterGat
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object PrintReads {
+  def apply(root: Configurable, input: File, output: File): PrintReads = {
+    val br = new PrintReads(root)
+    br.input_file :+= input
+    br.out = output
+    br
+  }
 }

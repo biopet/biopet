@@ -44,17 +44,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 //    memoryLimit = Option(nct.getOrElse(1) * memoryLimit.getOrElse(2.0))
 //  }
 //}
-//
-//object UnifiedGenotyper {
-//  def apply(root: Configurable, inputFiles: List[File], outputFile: File): UnifiedGenotyper = {
-//    val ug = new UnifiedGenotyper(root)
-//    ug.input_file = inputFiles
-//    ug.out = outputFile
-//    if (ug.out.getName.endsWith(".vcf.gz")) ug.vcfIndex = new File(ug.out.getAbsolutePath + ".tbi")
-//    ug
-//  }
-//
-//}
 
 import java.io.File
 
@@ -891,4 +880,14 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object UnifiedGenotyper {
+  def apply(root: Configurable, inputFiles: List[File], outputFile: File): UnifiedGenotyper = {
+    val ug = new UnifiedGenotyper(root)
+    ug.input_file = inputFiles
+    ug.out = outputFile
+    //if (ug.out.getName.endsWith(".vcf.gz")) ug.vcfIndex = new File(ug.out.getAbsolutePath + ".tbi")
+    ug
+  }
 }

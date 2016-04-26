@@ -34,16 +34,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 //    if (out.getName.endsWith(".vcf.gz")) vcfIndex = new File(out.getAbsolutePath + ".tbi")
 //  }
 //}
-//
-//object GenotypeGVCFs {
-//  def apply(root: Configurable, gvcfFiles: List[File], output: File): GenotypeGVCFs = {
-//    val gg = new GenotypeGVCFs(root)
-//    gg.variant = gvcfFiles
-//    gg.out = output
-//    if (gg.out.getName.endsWith(".vcf.gz")) gg.vcfIndex = new File(gg.out.getAbsolutePath + ".tbi")
-//    gg
-//  }
-//}
 
 import java.io.File
 
@@ -393,4 +383,14 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+}
+
+object GenotypeGVCFs {
+  def apply(root: Configurable, gvcfFiles: List[File], output: File): GenotypeGVCFs = {
+    val gg = new GenotypeGVCFs(root)
+    gg.variant = gvcfFiles
+    gg.out = output
+    //if (gg.out.getName.endsWith(".vcf.gz")) gg.vcfIndex = new File(gg.out.getAbsolutePath + ".tbi")
+    gg
+  }
 }
