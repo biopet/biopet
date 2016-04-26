@@ -39,18 +39,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Input(fullName = "variant", shortName = "V", doc = "Input VCF file", required = true, exclusiveOf = "", validation = "")
   var variant: File = _
 
-  /**
-   * Short name of variant
-   * @return Short name of variant
-   */
-  def V = this.variant
-
-  /**
-   * Short name of variant
-   * @param value Short name of variant
-   */
-  def V_=(value: File) { this.variant = value }
-
   /** Dependencies on the index of variant */
   @Input(fullName = "variantIndex", shortName = "", doc = "Dependencies on the index of variant", required = false, exclusiveOf = "", validation = "")
   private var variantIndex: Seq[File] = Nil
@@ -59,18 +47,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Input(fullName = "discordance", shortName = "disc", doc = "Output variants not called in this comparison track", required = false, exclusiveOf = "", validation = "")
   var discordance: File = _
 
-  /**
-   * Short name of discordance
-   * @return Short name of discordance
-   */
-  def disc = this.discordance
-
-  /**
-   * Short name of discordance
-   * @param value Short name of discordance
-   */
-  def disc_=(value: File) { this.discordance = value }
-
   /** Dependencies on the index of discordance */
   @Input(fullName = "discordanceIndex", shortName = "", doc = "Dependencies on the index of discordance", required = false, exclusiveOf = "", validation = "")
   private var discordanceIndex: Seq[File] = Nil
@@ -78,18 +54,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   /** Output variants also called in this comparison track */
   @Input(fullName = "concordance", shortName = "conc", doc = "Output variants also called in this comparison track", required = false, exclusiveOf = "", validation = "")
   var concordance: File = _
-
-  /**
-   * Short name of concordance
-   * @return Short name of concordance
-   */
-  def conc = this.concordance
-
-  /**
-   * Short name of concordance
-   * @param value Short name of concordance
-   */
-  def conc_=(value: File) { this.concordance = value }
 
   /** Dependencies on the index of concordance */
   @Input(fullName = "concordanceIndex", shortName = "", doc = "Dependencies on the index of concordance", required = false, exclusiveOf = "", validation = "")
@@ -100,18 +64,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
 
-  /**
-   * Short name of out
-   * @return Short name of out
-   */
-  def o = this.out
-
-  /**
-   * Short name of out
-   * @param value Short name of out
-   */
-  def o_=(value: File) { this.out = value }
-
   /** Automatically generated index for out */
   @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
   @Gather(enabled = false)
@@ -121,193 +73,49 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Argument(fullName = "sample_name", shortName = "sn", doc = "Include genotypes from this sample", required = false, exclusiveOf = "", validation = "")
   var sample_name: Seq[String] = Nil
 
-  /**
-   * Short name of sample_name
-   * @return Short name of sample_name
-   */
-  def sn = this.sample_name
-
-  /**
-   * Short name of sample_name
-   * @param value Short name of sample_name
-   */
-  def sn_=(value: Seq[String]) { this.sample_name = value }
-
   /** Regular expression to select multiple samples */
   @Argument(fullName = "sample_expressions", shortName = "se", doc = "Regular expression to select multiple samples", required = false, exclusiveOf = "", validation = "")
   var sample_expressions: Seq[String] = Nil
-
-  /**
-   * Short name of sample_expressions
-   * @return Short name of sample_expressions
-   */
-  def se = this.sample_expressions
-
-  /**
-   * Short name of sample_expressions
-   * @param value Short name of sample_expressions
-   */
-  def se_=(value: Seq[String]) { this.sample_expressions = value }
 
   /** File containing a list of samples to include */
   @Input(fullName = "sample_file", shortName = "sf", doc = "File containing a list of samples to include", required = false, exclusiveOf = "", validation = "")
   var sample_file: Seq[File] = Nil
 
-  /**
-   * Short name of sample_file
-   * @return Short name of sample_file
-   */
-  def sf = this.sample_file
-
-  /**
-   * Short name of sample_file
-   * @param value Short name of sample_file
-   */
-  def sf_=(value: Seq[File]) { this.sample_file = value }
-
   /** Exclude genotypes from this sample */
   @Argument(fullName = "exclude_sample_name", shortName = "xl_sn", doc = "Exclude genotypes from this sample", required = false, exclusiveOf = "", validation = "")
   var exclude_sample_name: Seq[String] = Nil
-
-  /**
-   * Short name of exclude_sample_name
-   * @return Short name of exclude_sample_name
-   */
-  def xl_sn = this.exclude_sample_name
-
-  /**
-   * Short name of exclude_sample_name
-   * @param value Short name of exclude_sample_name
-   */
-  def xl_sn_=(value: Seq[String]) { this.exclude_sample_name = value }
 
   /** List of samples to exclude */
   @Input(fullName = "exclude_sample_file", shortName = "xl_sf", doc = "List of samples to exclude", required = false, exclusiveOf = "", validation = "")
   var exclude_sample_file: Seq[File] = Nil
 
-  /**
-   * Short name of exclude_sample_file
-   * @return Short name of exclude_sample_file
-   */
-  def xl_sf = this.exclude_sample_file
-
-  /**
-   * Short name of exclude_sample_file
-   * @param value Short name of exclude_sample_file
-   */
-  def xl_sf_=(value: Seq[File]) { this.exclude_sample_file = value }
-
   /** List of sample expressions to exclude */
   @Input(fullName = "exclude_sample_expressions", shortName = "xl_se", doc = "List of sample expressions to exclude", required = false, exclusiveOf = "", validation = "")
   var exclude_sample_expressions: Seq[File] = Nil
-
-  /**
-   * Short name of exclude_sample_expressions
-   * @return Short name of exclude_sample_expressions
-   */
-  def xl_se = this.exclude_sample_expressions
-
-  /**
-   * Short name of exclude_sample_expressions
-   * @param value Short name of exclude_sample_expressions
-   */
-  def xl_se_=(value: Seq[File]) { this.exclude_sample_expressions = value }
 
   /** One or more criteria to use when selecting the data */
   @Argument(fullName = "selectexpressions", shortName = "select", doc = "One or more criteria to use when selecting the data", required = false, exclusiveOf = "", validation = "")
   var selectexpressions: Seq[String] = Nil
 
-  /**
-   * Short name of selectexpressions
-   * @return Short name of selectexpressions
-   */
-  def select = this.selectexpressions
-
-  /**
-   * Short name of selectexpressions
-   * @param value Short name of selectexpressions
-   */
-  def select_=(value: Seq[String]) { this.selectexpressions = value }
-
   /** Invert the selection criteria for -select */
   @Argument(fullName = "invertselect", shortName = "invertSelect", doc = "Invert the selection criteria for -select", required = false, exclusiveOf = "", validation = "")
   var invertselect: Boolean = _
-
-  /**
-   * Short name of invertselect
-   * @return Short name of invertselect
-   */
-  def invertSelect = this.invertselect
-
-  /**
-   * Short name of invertselect
-   * @param value Short name of invertselect
-   */
-  def invertSelect_=(value: Boolean) { this.invertselect = value }
 
   /** Don't include non-variant sites */
   @Argument(fullName = "excludeNonVariants", shortName = "env", doc = "Don't include non-variant sites", required = false, exclusiveOf = "", validation = "")
   var excludeNonVariants: Boolean = _
 
-  /**
-   * Short name of excludeNonVariants
-   * @return Short name of excludeNonVariants
-   */
-  def env = this.excludeNonVariants
-
-  /**
-   * Short name of excludeNonVariants
-   * @param value Short name of excludeNonVariants
-   */
-  def env_=(value: Boolean) { this.excludeNonVariants = value }
-
   /** Don't include filtered sites */
   @Argument(fullName = "excludeFiltered", shortName = "ef", doc = "Don't include filtered sites", required = false, exclusiveOf = "", validation = "")
   var excludeFiltered: Boolean = _
-
-  /**
-   * Short name of excludeFiltered
-   * @return Short name of excludeFiltered
-   */
-  def ef = this.excludeFiltered
-
-  /**
-   * Short name of excludeFiltered
-   * @param value Short name of excludeFiltered
-   */
-  def ef_=(value: Boolean) { this.excludeFiltered = value }
 
   /** Preserve original alleles, do not trim */
   @Argument(fullName = "preserveAlleles", shortName = "noTrim", doc = "Preserve original alleles, do not trim", required = false, exclusiveOf = "", validation = "")
   var preserveAlleles: Boolean = _
 
-  /**
-   * Short name of preserveAlleles
-   * @return Short name of preserveAlleles
-   */
-  def noTrim = this.preserveAlleles
-
-  /**
-   * Short name of preserveAlleles
-   * @param value Short name of preserveAlleles
-   */
-  def noTrim_=(value: Boolean) { this.preserveAlleles = value }
-
   /** Remove alternate alleles not present in any genotypes */
   @Argument(fullName = "removeUnusedAlternates", shortName = "trimAlternates", doc = "Remove alternate alleles not present in any genotypes", required = false, exclusiveOf = "", validation = "")
   var removeUnusedAlternates: Boolean = _
-
-  /**
-   * Short name of removeUnusedAlternates
-   * @return Short name of removeUnusedAlternates
-   */
-  def trimAlternates = this.removeUnusedAlternates
-
-  /**
-   * Short name of removeUnusedAlternates
-   * @param value Short name of removeUnusedAlternates
-   */
-  def trimAlternates_=(value: Boolean) { this.removeUnusedAlternates = value }
 
   /** Select only variants of a particular allelicity */
   @Argument(fullName = "restrictAllelesTo", shortName = "restrictAllelesTo", doc = "Select only variants of a particular allelicity", required = false, exclusiveOf = "", validation = "")
@@ -325,49 +133,13 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Argument(fullName = "mendelianViolation", shortName = "mv", doc = "Output mendelian violation sites only", required = false, exclusiveOf = "", validation = "")
   var mendelianViolation: Boolean = _
 
-  /**
-   * Short name of mendelianViolation
-   * @return Short name of mendelianViolation
-   */
-  def mv = this.mendelianViolation
-
-  /**
-   * Short name of mendelianViolation
-   * @param value Short name of mendelianViolation
-   */
-  def mv_=(value: Boolean) { this.mendelianViolation = value }
-
   /** Output non-mendelian violation sites only */
   @Argument(fullName = "invertMendelianViolation", shortName = "invMv", doc = "Output non-mendelian violation sites only", required = false, exclusiveOf = "", validation = "")
   var invertMendelianViolation: Boolean = _
 
-  /**
-   * Short name of invertMendelianViolation
-   * @return Short name of invertMendelianViolation
-   */
-  def invMv = this.invertMendelianViolation
-
-  /**
-   * Short name of invertMendelianViolation
-   * @param value Short name of invertMendelianViolation
-   */
-  def invMv_=(value: Boolean) { this.invertMendelianViolation = value }
-
   /** Minimum GQ score for each trio member to accept a site as a violation */
   @Argument(fullName = "mendelianViolationQualThreshold", shortName = "mvq", doc = "Minimum GQ score for each trio member to accept a site as a violation", required = false, exclusiveOf = "", validation = "")
   var mendelianViolationQualThreshold: Option[Double] = None
-
-  /**
-   * Short name of mendelianViolationQualThreshold
-   * @return Short name of mendelianViolationQualThreshold
-   */
-  def mvq = this.mendelianViolationQualThreshold
-
-  /**
-   * Short name of mendelianViolationQualThreshold
-   * @param value Short name of mendelianViolationQualThreshold
-   */
-  def mvq_=(value: Option[Double]) { this.mendelianViolationQualThreshold = value }
 
   /** Format string for mendelianViolationQualThreshold */
   @Argument(fullName = "mendelianViolationQualThresholdFormat", shortName = "", doc = "Format string for mendelianViolationQualThreshold", required = false, exclusiveOf = "", validation = "")
@@ -377,18 +149,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Argument(fullName = "select_random_fraction", shortName = "fraction", doc = "Select a fraction of variants at random from the input", required = false, exclusiveOf = "", validation = "")
   var select_random_fraction: Option[Double] = None
 
-  /**
-   * Short name of select_random_fraction
-   * @return Short name of select_random_fraction
-   */
-  def fraction = this.select_random_fraction
-
-  /**
-   * Short name of select_random_fraction
-   * @param value Short name of select_random_fraction
-   */
-  def fraction_=(value: Option[Double]) { this.select_random_fraction = value }
-
   /** Format string for select_random_fraction */
   @Argument(fullName = "select_random_fractionFormat", shortName = "", doc = "Format string for select_random_fraction", required = false, exclusiveOf = "", validation = "")
   var select_random_fractionFormat: String = "%s"
@@ -396,18 +156,6 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   /** Select a fraction of genotypes at random from the input and sets them to no-call */
   @Argument(fullName = "remove_fraction_genotypes", shortName = "fractionGenotypes", doc = "Select a fraction of genotypes at random from the input and sets them to no-call", required = false, exclusiveOf = "", validation = "")
   var remove_fraction_genotypes: Option[Double] = None
-
-  /**
-   * Short name of remove_fraction_genotypes
-   * @return Short name of remove_fraction_genotypes
-   */
-  def fractionGenotypes = this.remove_fraction_genotypes
-
-  /**
-   * Short name of remove_fraction_genotypes
-   * @param value Short name of remove_fraction_genotypes
-   */
-  def fractionGenotypes_=(value: Option[Double]) { this.remove_fraction_genotypes = value }
 
   /** Format string for remove_fraction_genotypes */
   @Argument(fullName = "remove_fraction_genotypesFormat", shortName = "", doc = "Format string for remove_fraction_genotypes", required = false, exclusiveOf = "", validation = "")
@@ -417,65 +165,17 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Argument(fullName = "selectTypeToInclude", shortName = "selectType", doc = "Select only a certain type of variants from the input file", required = false, exclusiveOf = "", validation = "")
   var selectTypeToInclude: Seq[htsjdk.variant.variantcontext.VariantContext.Type] = Nil
 
-  /**
-   * Short name of selectTypeToInclude
-   * @return Short name of selectTypeToInclude
-   */
-  def selectType = this.selectTypeToInclude
-
-  /**
-   * Short name of selectTypeToInclude
-   * @param value Short name of selectTypeToInclude
-   */
-  def selectType_=(value: Seq[htsjdk.variant.variantcontext.VariantContext.Type]) { this.selectTypeToInclude = value }
-
   /** Do not select certain type of variants from the input file */
   @Argument(fullName = "selectTypeToExclude", shortName = "xlSelectType", doc = "Do not select certain type of variants from the input file", required = false, exclusiveOf = "", validation = "")
   var selectTypeToExclude: Seq[htsjdk.variant.variantcontext.VariantContext.Type] = Nil
-
-  /**
-   * Short name of selectTypeToExclude
-   * @return Short name of selectTypeToExclude
-   */
-  def xlSelectType = this.selectTypeToExclude
-
-  /**
-   * Short name of selectTypeToExclude
-   * @param value Short name of selectTypeToExclude
-   */
-  def xlSelectType_=(value: Seq[htsjdk.variant.variantcontext.VariantContext.Type]) { this.selectTypeToExclude = value }
 
   /** List of variant IDs to select */
   @Argument(fullName = "keepIDs", shortName = "IDs", doc = "List of variant IDs to select", required = false, exclusiveOf = "", validation = "")
   var keepIDs: File = _
 
-  /**
-   * Short name of keepIDs
-   * @return Short name of keepIDs
-   */
-  def IDs = this.keepIDs
-
-  /**
-   * Short name of keepIDs
-   * @param value Short name of keepIDs
-   */
-  def IDs_=(value: File) { this.keepIDs = value }
-
   /** List of variant IDs to select */
   @Argument(fullName = "excludeIDs", shortName = "xlIDs", doc = "List of variant IDs to select", required = false, exclusiveOf = "", validation = "")
   var excludeIDs: File = _
-
-  /**
-   * Short name of excludeIDs
-   * @return Short name of excludeIDs
-   */
-  def xlIDs = this.excludeIDs
-
-  /**
-   * Short name of excludeIDs
-   * @param value Short name of excludeIDs
-   */
-  def xlIDs_=(value: File) { this.excludeIDs = value }
 
   /** If true, the incoming VariantContext will be fully decoded */
   @Argument(fullName = "fullyDecode", shortName = "", doc = "If true, the incoming VariantContext will be fully decoded", required = false, exclusiveOf = "", validation = "")
@@ -533,49 +233,13 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_reads_with_N_cigar: Boolean = _
 
-  /**
-   * Short name of filter_reads_with_N_cigar
-   * @return Short name of filter_reads_with_N_cigar
-   */
-  def filterRNC = this.filter_reads_with_N_cigar
-
-  /**
-   * Short name of filter_reads_with_N_cigar
-   * @param value Short name of filter_reads_with_N_cigar
-   */
-  def filterRNC_=(value: Boolean) { this.filter_reads_with_N_cigar = value }
-
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_mismatching_base_and_quals: Boolean = _
 
-  /**
-   * Short name of filter_mismatching_base_and_quals
-   * @return Short name of filter_mismatching_base_and_quals
-   */
-  def filterMBQ = this.filter_mismatching_base_and_quals
-
-  /**
-   * Short name of filter_mismatching_base_and_quals
-   * @param value Short name of filter_mismatching_base_and_quals
-   */
-  def filterMBQ_=(value: Boolean) { this.filter_mismatching_base_and_quals = value }
-
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = _
-
-  /**
-   * Short name of filter_bases_not_stored
-   * @return Short name of filter_bases_not_stored
-   */
-  def filterNoBases = this.filter_bases_not_stored
-
-  /**
-   * Short name of filter_bases_not_stored
-   * @param value Short name of filter_bases_not_stored
-   */
-  def filterNoBases_=(value: Boolean) { this.filter_bases_not_stored = value }
 
   override def freezeFieldValues() {
     super.freezeFieldValues()

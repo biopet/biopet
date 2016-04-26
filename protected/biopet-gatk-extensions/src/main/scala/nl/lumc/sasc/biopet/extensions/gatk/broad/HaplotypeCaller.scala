@@ -77,18 +77,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
 
-  /**
-   * Short name of out
-   * @return Short name of out
-   */
-  def o = this.out
-
-  /**
-   * Short name of out
-   * @param value Short name of out
-   */
-  def o_=(value: File) { this.out = value }
-
   /** Automatically generated index for out */
   @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
   @Gather(enabled = false)
@@ -98,49 +86,13 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "likelihoodCalculationEngine", shortName = "likelihoodEngine", doc = "What likelihood calculation engine to use to calculate the relative likelihood of reads vs haplotypes", required = false, exclusiveOf = "", validation = "")
   var likelihoodCalculationEngine: String = _
 
-  /**
-   * Short name of likelihoodCalculationEngine
-   * @return Short name of likelihoodCalculationEngine
-   */
-  def likelihoodEngine = this.likelihoodCalculationEngine
-
-  /**
-   * Short name of likelihoodCalculationEngine
-   * @param value Short name of likelihoodCalculationEngine
-   */
-  def likelihoodEngine_=(value: String) { this.likelihoodCalculationEngine = value }
-
   /** How to solve heterogeneous kmer situations using the fast method */
   @Argument(fullName = "heterogeneousKmerSizeResolution", shortName = "hksr", doc = "How to solve heterogeneous kmer situations using the fast method", required = false, exclusiveOf = "", validation = "")
   var heterogeneousKmerSizeResolution: String = _
 
-  /**
-   * Short name of heterogeneousKmerSizeResolution
-   * @return Short name of heterogeneousKmerSizeResolution
-   */
-  def hksr = this.heterogeneousKmerSizeResolution
-
-  /**
-   * Short name of heterogeneousKmerSizeResolution
-   * @param value Short name of heterogeneousKmerSizeResolution
-   */
-  def hksr_=(value: String) { this.heterogeneousKmerSizeResolution = value }
-
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
   var dbsnp: File = _
-
-  /**
-   * Short name of dbsnp
-   * @return Short name of dbsnp
-   */
-  def D = this.dbsnp
-
-  /**
-   * Short name of dbsnp
-   * @param value Short name of dbsnp
-   */
-  def D_=(value: File) { this.dbsnp = value }
 
   /** Dependencies on the index of dbsnp */
   @Input(fullName = "dbsnpIndex", shortName = "", doc = "Dependencies on the index of dbsnp", required = false, exclusiveOf = "", validation = "")
@@ -178,49 +130,13 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "annotation", shortName = "A", doc = "One or more specific annotations to apply to variant calls", required = false, exclusiveOf = "", validation = "")
   var annotation: Seq[String] = Nil
 
-  /**
-   * Short name of annotation
-   * @return Short name of annotation
-   */
-  def A = this.annotation
-
-  /**
-   * Short name of annotation
-   * @param value Short name of annotation
-   */
-  def A_=(value: Seq[String]) { this.annotation = value }
-
   /** One or more specific annotations to exclude */
   @Argument(fullName = "excludeAnnotation", shortName = "XA", doc = "One or more specific annotations to exclude", required = false, exclusiveOf = "", validation = "")
   var excludeAnnotation: Seq[String] = Nil
 
-  /**
-   * Short name of excludeAnnotation
-   * @return Short name of excludeAnnotation
-   */
-  def XA = this.excludeAnnotation
-
-  /**
-   * Short name of excludeAnnotation
-   * @param value Short name of excludeAnnotation
-   */
-  def XA_=(value: Seq[String]) { this.excludeAnnotation = value }
-
   /** One or more classes/groups of annotations to apply to variant calls */
   @Argument(fullName = "group", shortName = "G", doc = "One or more classes/groups of annotations to apply to variant calls", required = false, exclusiveOf = "", validation = "")
   var group: Seq[String] = Nil
-
-  /**
-   * Short name of group
-   * @return Short name of group
-   */
-  def G = this.group
-
-  /**
-   * Short name of group
-   * @param value Short name of group
-   */
-  def G_=(value: Seq[String]) { this.group = value }
 
   /** Print out very verbose debug information about each triggering active region */
   @Argument(fullName = "debug", shortName = "debug", doc = "Print out very verbose debug information about each triggering active region", required = false, exclusiveOf = "", validation = "")
@@ -234,34 +150,10 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "emitRefConfidence", shortName = "ERC", doc = "Mode for emitting reference confidence scores", required = false, exclusiveOf = "", validation = "")
   var emitRefConfidence: String = _
 
-  /**
-   * Short name of emitRefConfidence
-   * @return Short name of emitRefConfidence
-   */
-  def ERC = this.emitRefConfidence
-
-  /**
-   * Short name of emitRefConfidence
-   * @param value Short name of emitRefConfidence
-   */
-  def ERC_=(value: String) { this.emitRefConfidence = value }
-
   /** File to which assembled haplotypes should be written */
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[BamGatherFunction])
   var bamOutput: File = _
-
-  /**
-   * Short name of bamOutput
-   * @return Short name of bamOutput
-   */
-  def bamout = this.bamOutput
-
-  /**
-   * Short name of bamOutput
-   * @param value Short name of bamOutput
-   */
-  def bamout_=(value: File) { this.bamOutput = value }
 
   /** Automatically generated index for bamOutput */
   @Output(fullName = "bamOutputIndex", shortName = "", doc = "Automatically generated index for bamOutput", required = false, exclusiveOf = "", validation = "")
@@ -285,33 +177,9 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "annotateNDA", shortName = "nda", doc = "If provided, we will annotate records with the number of alternate alleles that were discovered (but not necessarily genotyped) at a given site", required = false, exclusiveOf = "", validation = "")
   var annotateNDA: Boolean = _
 
-  /**
-   * Short name of annotateNDA
-   * @return Short name of annotateNDA
-   */
-  def nda = this.annotateNDA
-
-  /**
-   * Short name of annotateNDA
-   * @param value Short name of annotateNDA
-   */
-  def nda_=(value: Boolean) { this.annotateNDA = value }
-
   /** Heterozygosity value used to compute prior likelihoods for any locus */
   @Argument(fullName = "heterozygosity", shortName = "hets", doc = "Heterozygosity value used to compute prior likelihoods for any locus", required = false, exclusiveOf = "", validation = "")
   var heterozygosity: Option[Double] = None
-
-  /**
-   * Short name of heterozygosity
-   * @return Short name of heterozygosity
-   */
-  def hets = this.heterozygosity
-
-  /**
-   * Short name of heterozygosity
-   * @param value Short name of heterozygosity
-   */
-  def hets_=(value: Option[Double]) { this.heterozygosity = value }
 
   /** Format string for heterozygosity */
   @Argument(fullName = "heterozygosityFormat", shortName = "", doc = "Format string for heterozygosity", required = false, exclusiveOf = "", validation = "")
@@ -321,18 +189,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "indel_heterozygosity", shortName = "indelHeterozygosity", doc = "Heterozygosity for indel calling", required = false, exclusiveOf = "", validation = "")
   var indel_heterozygosity: Option[Double] = None
 
-  /**
-   * Short name of indel_heterozygosity
-   * @return Short name of indel_heterozygosity
-   */
-  def indelHeterozygosity = this.indel_heterozygosity
-
-  /**
-   * Short name of indel_heterozygosity
-   * @param value Short name of indel_heterozygosity
-   */
-  def indelHeterozygosity_=(value: Option[Double]) { this.indel_heterozygosity = value }
-
   /** Format string for indel_heterozygosity */
   @Argument(fullName = "indel_heterozygosityFormat", shortName = "", doc = "Format string for indel_heterozygosity", required = false, exclusiveOf = "", validation = "")
   var indel_heterozygosityFormat: String = "%s"
@@ -340,18 +196,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   /** The minimum phred-scaled confidence threshold at which variants should be called */
   @Argument(fullName = "standard_min_confidence_threshold_for_calling", shortName = "stand_call_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be called", required = false, exclusiveOf = "", validation = "")
   var standard_min_confidence_threshold_for_calling: Option[Double] = None
-
-  /**
-   * Short name of standard_min_confidence_threshold_for_calling
-   * @return Short name of standard_min_confidence_threshold_for_calling
-   */
-  def stand_call_conf = this.standard_min_confidence_threshold_for_calling
-
-  /**
-   * Short name of standard_min_confidence_threshold_for_calling
-   * @param value Short name of standard_min_confidence_threshold_for_calling
-   */
-  def stand_call_conf_=(value: Option[Double]) { this.standard_min_confidence_threshold_for_calling = value }
 
   /** Format string for standard_min_confidence_threshold_for_calling */
   @Argument(fullName = "standard_min_confidence_threshold_for_callingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_calling", required = false, exclusiveOf = "", validation = "")
@@ -361,18 +205,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "standard_min_confidence_threshold_for_emitting", shortName = "stand_emit_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", required = false, exclusiveOf = "", validation = "")
   var standard_min_confidence_threshold_for_emitting: Option[Double] = None
 
-  /**
-   * Short name of standard_min_confidence_threshold_for_emitting
-   * @return Short name of standard_min_confidence_threshold_for_emitting
-   */
-  def stand_emit_conf = this.standard_min_confidence_threshold_for_emitting
-
-  /**
-   * Short name of standard_min_confidence_threshold_for_emitting
-   * @param value Short name of standard_min_confidence_threshold_for_emitting
-   */
-  def stand_emit_conf_=(value: Option[Double]) { this.standard_min_confidence_threshold_for_emitting = value }
-
   /** Format string for standard_min_confidence_threshold_for_emitting */
   @Argument(fullName = "standard_min_confidence_threshold_for_emittingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_emitting", required = false, exclusiveOf = "", validation = "")
   var standard_min_confidence_threshold_for_emittingFormat: String = "%s"
@@ -381,65 +213,17 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "max_alternate_alleles", shortName = "maxAltAlleles", doc = "Maximum number of alternate alleles to genotype", required = false, exclusiveOf = "", validation = "")
   var max_alternate_alleles: Option[Int] = None
 
-  /**
-   * Short name of max_alternate_alleles
-   * @return Short name of max_alternate_alleles
-   */
-  def maxAltAlleles = this.max_alternate_alleles
-
-  /**
-   * Short name of max_alternate_alleles
-   * @param value Short name of max_alternate_alleles
-   */
-  def maxAltAlleles_=(value: Option[Int]) { this.max_alternate_alleles = value }
-
   /** Input prior for calls */
   @Argument(fullName = "input_prior", shortName = "inputPrior", doc = "Input prior for calls", required = false, exclusiveOf = "", validation = "")
   var input_prior: Seq[Double] = Nil
-
-  /**
-   * Short name of input_prior
-   * @return Short name of input_prior
-   */
-  def inputPrior = this.input_prior
-
-  /**
-   * Short name of input_prior
-   * @param value Short name of input_prior
-   */
-  def inputPrior_=(value: Seq[Double]) { this.input_prior = value }
 
   /** Ploidy (number of chromosomes) per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy). */
   @Argument(fullName = "sample_ploidy", shortName = "ploidy", doc = "Ploidy (number of chromosomes) per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy).", required = false, exclusiveOf = "", validation = "")
   var sample_ploidy: Option[Int] = None
 
-  /**
-   * Short name of sample_ploidy
-   * @return Short name of sample_ploidy
-   */
-  def ploidy = this.sample_ploidy
-
-  /**
-   * Short name of sample_ploidy
-   * @param value Short name of sample_ploidy
-   */
-  def ploidy_=(value: Option[Int]) { this.sample_ploidy = value }
-
   /** Specifies how to determine the alternate alleles to use for genotyping */
   @Argument(fullName = "genotyping_mode", shortName = "gt_mode", doc = "Specifies how to determine the alternate alleles to use for genotyping", required = false, exclusiveOf = "", validation = "")
   var genotyping_mode: String = _
-
-  /**
-   * Short name of genotyping_mode
-   * @return Short name of genotyping_mode
-   */
-  def gt_mode = this.genotyping_mode
-
-  /**
-   * Short name of genotyping_mode
-   * @param value Short name of genotyping_mode
-   */
-  def gt_mode_=(value: String) { this.genotyping_mode = value }
 
   /** The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES */
   @Input(fullName = "alleles", shortName = "alleles", doc = "The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES", required = false, exclusiveOf = "", validation = "")
@@ -453,18 +237,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "contamination_fraction_to_filter", shortName = "contamination", doc = "Fraction of contamination in sequencing data (for all samples) to aggressively remove", required = false, exclusiveOf = "", validation = "")
   var contamination_fraction_to_filter: Option[Double] = None
 
-  /**
-   * Short name of contamination_fraction_to_filter
-   * @return Short name of contamination_fraction_to_filter
-   */
-  def contamination = this.contamination_fraction_to_filter
-
-  /**
-   * Short name of contamination_fraction_to_filter
-   * @param value Short name of contamination_fraction_to_filter
-   */
-  def contamination_=(value: Option[Double]) { this.contamination_fraction_to_filter = value }
-
   /** Format string for contamination_fraction_to_filter */
   @Argument(fullName = "contamination_fraction_to_filterFormat", shortName = "", doc = "Format string for contamination_fraction_to_filter", required = false, exclusiveOf = "", validation = "")
   var contamination_fraction_to_filterFormat: String = "%s"
@@ -473,65 +245,17 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", doc = "Tab-separated File containing fraction of contamination in sequencing data (per sample) to aggressively remove. Format should be \"<SampleID><TAB><Contamination>\" (Contamination is double) per line; No header.", required = false, exclusiveOf = "", validation = "")
   var contamination_fraction_per_sample_file: File = _
 
-  /**
-   * Short name of contamination_fraction_per_sample_file
-   * @return Short name of contamination_fraction_per_sample_file
-   */
-  def contaminationFile = this.contamination_fraction_per_sample_file
-
-  /**
-   * Short name of contamination_fraction_per_sample_file
-   * @param value Short name of contamination_fraction_per_sample_file
-   */
-  def contaminationFile_=(value: File) { this.contamination_fraction_per_sample_file = value }
-
   /** Non-reference probability calculation model to employ */
   @Argument(fullName = "p_nonref_model", shortName = "pnrm", doc = "Non-reference probability calculation model to employ", required = false, exclusiveOf = "", validation = "")
   var p_nonref_model: String = _
-
-  /**
-   * Short name of p_nonref_model
-   * @return Short name of p_nonref_model
-   */
-  def pnrm = this.p_nonref_model
-
-  /**
-   * Short name of p_nonref_model
-   * @param value Short name of p_nonref_model
-   */
-  def pnrm_=(value: String) { this.p_nonref_model = value }
 
   /** x */
   @Argument(fullName = "exactcallslog", shortName = "logExactCalls", doc = "x", required = false, exclusiveOf = "", validation = "")
   var exactcallslog: File = _
 
-  /**
-   * Short name of exactcallslog
-   * @return Short name of exactcallslog
-   */
-  def logExactCalls = this.exactcallslog
-
-  /**
-   * Short name of exactcallslog
-   * @param value Short name of exactcallslog
-   */
-  def logExactCalls_=(value: File) { this.exactcallslog = value }
-
   /** Specifies which type of calls we should output */
   @Argument(fullName = "output_mode", shortName = "out_mode", doc = "Specifies which type of calls we should output", required = false, exclusiveOf = "", validation = "")
   var output_mode: String = _
-
-  /**
-   * Short name of output_mode
-   * @return Short name of output_mode
-   */
-  def out_mode = this.output_mode
-
-  /**
-   * Short name of output_mode
-   * @param value Short name of output_mode
-   */
-  def out_mode_=(value: String) { this.output_mode = value }
 
   /** Annotate all sites with PLs */
   @Argument(fullName = "allSitePLs", shortName = "allSitePLs", doc = "Annotate all sites with PLs", required = false, exclusiveOf = "", validation = "")
@@ -545,65 +269,17 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "pair_hmm_implementation", shortName = "pairHMM", doc = "The PairHMM implementation to use for genotype likelihood calculations", required = false, exclusiveOf = "", validation = "")
   var pair_hmm_implementation: org.broadinstitute.gatk.utils.pairhmm.PairHMM.HMM_IMPLEMENTATION = _
 
-  /**
-   * Short name of pair_hmm_implementation
-   * @return Short name of pair_hmm_implementation
-   */
-  def pairHMM = this.pair_hmm_implementation
-
-  /**
-   * Short name of pair_hmm_implementation
-   * @param value Short name of pair_hmm_implementation
-   */
-  def pairHMM_=(value: org.broadinstitute.gatk.utils.pairhmm.PairHMM.HMM_IMPLEMENTATION) { this.pair_hmm_implementation = value }
-
   /** The PairHMM machine-dependent sub-implementation to use for genotype likelihood calculations */
   @Argument(fullName = "pair_hmm_sub_implementation", shortName = "pairHMMSub", doc = "The PairHMM machine-dependent sub-implementation to use for genotype likelihood calculations", required = false, exclusiveOf = "", validation = "")
   var pair_hmm_sub_implementation: org.broadinstitute.gatk.utils.pairhmm.PairHMM.HMM_SUB_IMPLEMENTATION = _
-
-  /**
-   * Short name of pair_hmm_sub_implementation
-   * @return Short name of pair_hmm_sub_implementation
-   */
-  def pairHMMSub = this.pair_hmm_sub_implementation
-
-  /**
-   * Short name of pair_hmm_sub_implementation
-   * @param value Short name of pair_hmm_sub_implementation
-   */
-  def pairHMMSub_=(value: org.broadinstitute.gatk.utils.pairhmm.PairHMM.HMM_SUB_IMPLEMENTATION) { this.pair_hmm_sub_implementation = value }
 
   /** Load the vector logless PairHMM library each time a GATK run is initiated in the test suite */
   @Argument(fullName = "always_load_vector_logless_PairHMM_lib", shortName = "alwaysloadVectorHMM", doc = "Load the vector logless PairHMM library each time a GATK run is initiated in the test suite", required = false, exclusiveOf = "", validation = "")
   var always_load_vector_logless_PairHMM_lib: Boolean = _
 
-  /**
-   * Short name of always_load_vector_logless_PairHMM_lib
-   * @return Short name of always_load_vector_logless_PairHMM_lib
-   */
-  def alwaysloadVectorHMM = this.always_load_vector_logless_PairHMM_lib
-
-  /**
-   * Short name of always_load_vector_logless_PairHMM_lib
-   * @param value Short name of always_load_vector_logless_PairHMM_lib
-   */
-  def alwaysloadVectorHMM_=(value: Boolean) { this.always_load_vector_logless_PairHMM_lib = value }
-
   /** The global assumed mismapping rate for reads */
   @Argument(fullName = "phredScaledGlobalReadMismappingRate", shortName = "globalMAPQ", doc = "The global assumed mismapping rate for reads", required = false, exclusiveOf = "", validation = "")
   var phredScaledGlobalReadMismappingRate: Option[Int] = None
-
-  /**
-   * Short name of phredScaledGlobalReadMismappingRate
-   * @return Short name of phredScaledGlobalReadMismappingRate
-   */
-  def globalMAPQ = this.phredScaledGlobalReadMismappingRate
-
-  /**
-   * Short name of phredScaledGlobalReadMismappingRate
-   * @param value Short name of phredScaledGlobalReadMismappingRate
-   */
-  def globalMAPQ_=(value: Option[Int]) { this.phredScaledGlobalReadMismappingRate = value }
 
   /** Disable the use of the FPGA HMM implementation */
   @Argument(fullName = "noFpga", shortName = "noFpga", doc = "Disable the use of the FPGA HMM implementation", required = false, exclusiveOf = "", validation = "")
@@ -612,18 +288,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   /** Name of single sample to use from a multi-sample bam */
   @Argument(fullName = "sample_name", shortName = "sn", doc = "Name of single sample to use from a multi-sample bam", required = false, exclusiveOf = "", validation = "")
   var sample_name: String = _
-
-  /**
-   * Short name of sample_name
-   * @return Short name of sample_name
-   */
-  def sn = this.sample_name
-
-  /**
-   * Short name of sample_name
-   * @param value Short name of sample_name
-   */
-  def sn_=(value: String) { this.sample_name = value }
 
   /** Kmer size to use in the read threading assembler */
   @Argument(fullName = "kmerSize", shortName = "kmerSize", doc = "Kmer size to use in the read threading assembler", required = false, exclusiveOf = "", validation = "")
@@ -678,18 +342,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var graphOutput: File = _
 
-  /**
-   * Short name of graphOutput
-   * @return Short name of graphOutput
-   */
-  def graph = this.graphOutput
-
-  /**
-   * Short name of graphOutput
-   * @param value Short name of graphOutput
-   */
-  def graph_=(value: File) { this.graphOutput = value }
-
   /** Use an exploratory algorithm to error correct the kmers used during assembly */
   @Argument(fullName = "kmerLengthForReadErrorCorrection", shortName = "kmerLengthForReadErrorCorrection", doc = "Use an exploratory algorithm to error correct the kmers used during assembly", required = false, exclusiveOf = "", validation = "")
   var kmerLengthForReadErrorCorrection: Option[Int] = None
@@ -702,81 +354,21 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "GVCFGQBands", shortName = "GQB", doc = "GQ thresholds for reference confidence bands", required = false, exclusiveOf = "", validation = "")
   var GVCFGQBands: Seq[Int] = Nil
 
-  /**
-   * Short name of GVCFGQBands
-   * @return Short name of GVCFGQBands
-   */
-  def GQB = this.GVCFGQBands
-
-  /**
-   * Short name of GVCFGQBands
-   * @param value Short name of GVCFGQBands
-   */
-  def GQB_=(value: Seq[Int]) { this.GVCFGQBands = value }
-
   /** The size of an indel to check for in the reference model */
   @Argument(fullName = "indelSizeToEliminateInRefModel", shortName = "ERCIS", doc = "The size of an indel to check for in the reference model", required = false, exclusiveOf = "", validation = "")
   var indelSizeToEliminateInRefModel: Option[Int] = None
-
-  /**
-   * Short name of indelSizeToEliminateInRefModel
-   * @return Short name of indelSizeToEliminateInRefModel
-   */
-  def ERCIS = this.indelSizeToEliminateInRefModel
-
-  /**
-   * Short name of indelSizeToEliminateInRefModel
-   * @param value Short name of indelSizeToEliminateInRefModel
-   */
-  def ERCIS_=(value: Option[Int]) { this.indelSizeToEliminateInRefModel = value }
 
   /** Minimum base quality required to consider a base for calling */
   @Argument(fullName = "min_base_quality_score", shortName = "mbq", doc = "Minimum base quality required to consider a base for calling", required = false, exclusiveOf = "", validation = "")
   var min_base_quality_score: Option[Byte] = None
 
-  /**
-   * Short name of min_base_quality_score
-   * @return Short name of min_base_quality_score
-   */
-  def mbq = this.min_base_quality_score
-
-  /**
-   * Short name of min_base_quality_score
-   * @param value Short name of min_base_quality_score
-   */
-  def mbq_=(value: Option[Byte]) { this.min_base_quality_score = value }
-
   /** Include unmapped reads with chromosomal coordinates */
   @Argument(fullName = "includeUmappedReads", shortName = "unmapped", doc = "Include unmapped reads with chromosomal coordinates", required = false, exclusiveOf = "", validation = "")
   var includeUmappedReads: Boolean = _
 
-  /**
-   * Short name of includeUmappedReads
-   * @return Short name of includeUmappedReads
-   */
-  def unmapped = this.includeUmappedReads
-
-  /**
-   * Short name of includeUmappedReads
-   * @param value Short name of includeUmappedReads
-   */
-  def unmapped_=(value: Boolean) { this.includeUmappedReads = value }
-
   /** Use additional trigger on variants found in an external alleles file */
   @Argument(fullName = "useAllelesTrigger", shortName = "allelesTrigger", doc = "Use additional trigger on variants found in an external alleles file", required = false, exclusiveOf = "", validation = "")
   var useAllelesTrigger: Boolean = _
-
-  /**
-   * Short name of useAllelesTrigger
-   * @return Short name of useAllelesTrigger
-   */
-  def allelesTrigger = this.useAllelesTrigger
-
-  /**
-   * Short name of useAllelesTrigger
-   * @param value Short name of useAllelesTrigger
-   */
-  def allelesTrigger_=(value: Boolean) { this.useAllelesTrigger = value }
 
   /** Disable physical phasing */
   @Argument(fullName = "doNotRunPhysicalPhasing", shortName = "doNotRunPhysicalPhasing", doc = "Disable physical phasing", required = false, exclusiveOf = "", validation = "")
@@ -810,18 +402,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "pcr_indel_model", shortName = "pcrModel", doc = "The PCR indel model to use", required = false, exclusiveOf = "", validation = "")
   var pcr_indel_model: String = _
 
-  /**
-   * Short name of pcr_indel_model
-   * @return Short name of pcr_indel_model
-   */
-  def pcrModel = this.pcr_indel_model
-
-  /**
-   * Short name of pcr_indel_model
-   * @param value Short name of pcr_indel_model
-   */
-  def pcrModel_=(value: String) { this.pcr_indel_model = value }
-
   /** Maximum reads in an active region */
   @Argument(fullName = "maxReadsInRegionPerSample", shortName = "maxReadsInRegionPerSample", doc = "Maximum reads in an active region", required = false, exclusiveOf = "", validation = "")
   var maxReadsInRegionPerSample: Option[Int] = None
@@ -830,67 +410,19 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "minReadsPerAlignmentStart", shortName = "minReadsPerAlignStart", doc = "Minimum number of reads sharing the same alignment start for each genomic location in an active region", required = false, exclusiveOf = "", validation = "")
   var minReadsPerAlignmentStart: Option[Int] = None
 
-  /**
-   * Short name of minReadsPerAlignmentStart
-   * @return Short name of minReadsPerAlignmentStart
-   */
-  def minReadsPerAlignStart = this.minReadsPerAlignmentStart
-
-  /**
-   * Short name of minReadsPerAlignmentStart
-   * @param value Short name of minReadsPerAlignmentStart
-   */
-  def minReadsPerAlignStart_=(value: Option[Int]) { this.minReadsPerAlignmentStart = value }
-
   /** Output the raw activity profile results in IGV format */
   @Output(fullName = "activityProfileOut", shortName = "APO", doc = "Output the raw activity profile results in IGV format", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var activityProfileOut: File = _
-
-  /**
-   * Short name of activityProfileOut
-   * @return Short name of activityProfileOut
-   */
-  def APO = this.activityProfileOut
-
-  /**
-   * Short name of activityProfileOut
-   * @param value Short name of activityProfileOut
-   */
-  def APO_=(value: File) { this.activityProfileOut = value }
 
   /** Output the active region to this IGV formatted file */
   @Output(fullName = "activeRegionOut", shortName = "ARO", doc = "Output the active region to this IGV formatted file", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var activeRegionOut: File = _
 
-  /**
-   * Short name of activeRegionOut
-   * @return Short name of activeRegionOut
-   */
-  def ARO = this.activeRegionOut
-
-  /**
-   * Short name of activeRegionOut
-   * @param value Short name of activeRegionOut
-   */
-  def ARO_=(value: File) { this.activeRegionOut = value }
-
   /** Use this interval list file as the active regions to process */
   @Input(fullName = "activeRegionIn", shortName = "AR", doc = "Use this interval list file as the active regions to process", required = false, exclusiveOf = "", validation = "")
   var activeRegionIn: Seq[File] = Nil
-
-  /**
-   * Short name of activeRegionIn
-   * @return Short name of activeRegionIn
-   */
-  def AR = this.activeRegionIn
-
-  /**
-   * Short name of activeRegionIn
-   * @param value Short name of activeRegionIn
-   */
-  def AR_=(value: Seq[File]) { this.activeRegionIn = value }
 
   /** The active region extension; if not provided defaults to Walker annotated default */
   @Argument(fullName = "activeRegionExtension", shortName = "activeRegionExtension", doc = "The active region extension; if not provided defaults to Walker annotated default", required = false, exclusiveOf = "", validation = "")
@@ -916,33 +448,9 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "maxProbPropagationDistance", shortName = "maxProbPropDist", doc = "Region probability propagation distance beyond it's maximum size.", required = false, exclusiveOf = "", validation = "")
   var maxProbPropagationDistance: Option[Int] = None
 
-  /**
-   * Short name of maxProbPropagationDistance
-   * @return Short name of maxProbPropagationDistance
-   */
-  def maxProbPropDist = this.maxProbPropagationDistance
-
-  /**
-   * Short name of maxProbPropagationDistance
-   * @param value Short name of maxProbPropagationDistance
-   */
-  def maxProbPropDist_=(value: Option[Int]) { this.maxProbPropagationDistance = value }
-
   /** Threshold for the probability of a profile state being active. */
   @Argument(fullName = "activeProbabilityThreshold", shortName = "ActProbThresh", doc = "Threshold for the probability of a profile state being active.", required = false, exclusiveOf = "", validation = "")
   var activeProbabilityThreshold: Option[Double] = None
-
-  /**
-   * Short name of activeProbabilityThreshold
-   * @return Short name of activeProbabilityThreshold
-   */
-  def ActProbThresh = this.activeProbabilityThreshold
-
-  /**
-   * Short name of activeProbabilityThreshold
-   * @param value Short name of activeProbabilityThreshold
-   */
-  def ActProbThresh_=(value: Option[Double]) { this.activeProbabilityThreshold = value }
 
   /** Format string for activeProbabilityThreshold */
   @Argument(fullName = "activeProbabilityThresholdFormat", shortName = "", doc = "Format string for activeProbabilityThreshold", required = false, exclusiveOf = "", validation = "")
@@ -952,65 +460,17 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "min_mapping_quality_score", shortName = "mmq", doc = "Minimum read mapping quality required to consider a read for analysis with the HaplotypeCaller", required = false, exclusiveOf = "", validation = "")
   var min_mapping_quality_score: Option[Int] = None
 
-  /**
-   * Short name of min_mapping_quality_score
-   * @return Short name of min_mapping_quality_score
-   */
-  def mmq = this.min_mapping_quality_score
-
-  /**
-   * Short name of min_mapping_quality_score
-   * @param value Short name of min_mapping_quality_score
-   */
-  def mmq_=(value: Option[Int]) { this.min_mapping_quality_score = value }
-
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_reads_with_N_cigar: Boolean = _
-
-  /**
-   * Short name of filter_reads_with_N_cigar
-   * @return Short name of filter_reads_with_N_cigar
-   */
-  def filterRNC = this.filter_reads_with_N_cigar
-
-  /**
-   * Short name of filter_reads_with_N_cigar
-   * @param value Short name of filter_reads_with_N_cigar
-   */
-  def filterRNC_=(value: Boolean) { this.filter_reads_with_N_cigar = value }
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_mismatching_base_and_quals: Boolean = _
 
-  /**
-   * Short name of filter_mismatching_base_and_quals
-   * @return Short name of filter_mismatching_base_and_quals
-   */
-  def filterMBQ = this.filter_mismatching_base_and_quals
-
-  /**
-   * Short name of filter_mismatching_base_and_quals
-   * @param value Short name of filter_mismatching_base_and_quals
-   */
-  def filterMBQ_=(value: Boolean) { this.filter_mismatching_base_and_quals = value }
-
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = _
-
-  /**
-   * Short name of filter_bases_not_stored
-   * @return Short name of filter_bases_not_stored
-   */
-  def filterNoBases = this.filter_bases_not_stored
-
-  /**
-   * Short name of filter_bases_not_stored
-   * @param value Short name of filter_bases_not_stored
-   */
-  def filterNoBases_=(value: Boolean) { this.filter_bases_not_stored = value }
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
