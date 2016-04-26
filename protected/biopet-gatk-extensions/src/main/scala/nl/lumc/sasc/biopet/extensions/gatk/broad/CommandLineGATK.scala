@@ -9,6 +9,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, Argume
 trait CommandLineGATK extends BiopetJavaCommandLineFunction {
   analysisName = "CommandLineGATK"
   javaMainClass = "org.broadinstitute.gatk.engine.CommandLineGATK"
+  jarFile = config("gatk_jar")
 
   /** Name of the tool to run */
   @Argument(fullName = "analysis_type", shortName = "T", doc = "Name of the tool to run", required = true, exclusiveOf = "", validation = "")
