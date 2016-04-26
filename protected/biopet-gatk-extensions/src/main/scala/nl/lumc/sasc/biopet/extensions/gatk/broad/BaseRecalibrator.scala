@@ -31,11 +31,13 @@ import org.broadinstitute.gatk.queue.extensions.gatk.{ GATKScatterFunction, Read
 import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
-class BaseRecalibrator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
+//TODO: check gathering
+class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with ScatterGatherableFunction */ {
   analysisName = "BaseRecalibrator"
   analysis_type = "BaseRecalibrator"
-  scatterClass = classOf[ReadScatterFunction]
-  setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
+  //TODO: check gathering
+  //scatterClass = classOf[ReadScatterFunction]
+  //setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 
   /** A database of known polymorphic sites */
   @Input(fullName = "knownSites", shortName = "knownSites", doc = "A database of known polymorphic sites", required = false, exclusiveOf = "", validation = "")
@@ -46,8 +48,8 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK with Scat
   private var knownSitesIndexes: Seq[File] = Nil
 
   /** The output recalibration table file to create */
-  @Output(fullName = "out", shortName = "o", doc = "The output recalibration table file to create", required = true, exclusiveOf = "", validation = "")
-  @Gather(classOf[org.broadinstitute.gatk.engine.recalibration.BQSRGatherer])
+  @Output(fullName = "out", shortName = "o", doc = "The output recalibration table file to create", required = true, exclusiveOf = "", validation = "") //TODO: check gathering
+  //@Gather(classOf[org.broadinstitute.gatk.engine.recalibration.BQSRGatherer])
   var out: File = _
 
   /**
