@@ -2,11 +2,11 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Reference, Version}
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, Argument }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
-trait CommandLineGATK extends BiopetJavaCommandLineFunction {
+trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with Version {
   analysisName = "CommandLineGATK"
   javaMainClass = "org.broadinstitute.gatk.engine.CommandLineGATK"
   jarFile = config("gatk_jar")
@@ -316,8 +316,13 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction {
   @Argument(fullName = "version", shortName = "version", doc = "Output version information", required = false, exclusiveOf = "", validation = "")
   var version: Boolean = _
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  def versionRegex = """(.*)""".r
+  override def versionExitcode = List(0, 1)
+  def versionCommand = executable + " -jar " + jarFile + " -version"
+
+  override def beforeGraph() {
+    super.beforeGraph()
+    if (reference_sequence != null) reference_sequence = referenceFasta()
     input_fileIndexes ++= input_file.filter(orig => orig != null && orig.getName.endsWith(".bam")).flatMap(orig => Array(new File(orig.getPath + ".bai"), new File(orig.getPath.stripSuffix(".bam") + ".bai")))
     if (num_threads.isDefined) nCoresRequest = num_threads
     if (num_cpu_threads_per_data_thread.isDefined) nCoresRequest = Some(nCoresRequest.getOrElse(1) * num_cpu_threads_per_data_thread.getOrElse(1))
