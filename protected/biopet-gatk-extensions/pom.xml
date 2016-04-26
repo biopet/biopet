@@ -28,17 +28,17 @@
             <artifactId>BiopetExtensions</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.broadinstitute.gatk</groupId>
-            <artifactId>gatk-queue-extensions-distribution</artifactId>
-            <version>3.5</version>
-            <exclusions>
-                <!-- This exclusion is needed for the selective licence for Queue -->
-                <exclusion>
-                    <groupId>org.broadinstitute.gatk</groupId>
-                    <artifactId>gatk-tools-protected</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.broadinstitute.gatk</groupId>-->
+            <!--<artifactId>gatk-queue-extensions-distribution</artifactId>-->
+            <!--<version>3.5</version>-->
+            <!--<exclusions>-->
+                <!--&lt;!&ndash; This exclusion is needed for the selective licence for Queue &ndash;&gt;-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.broadinstitute.gatk</groupId>-->
+                    <!--<artifactId>gatk-tools-protected</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        <!--</dependency>-->
     </dependencies>
 </project>
