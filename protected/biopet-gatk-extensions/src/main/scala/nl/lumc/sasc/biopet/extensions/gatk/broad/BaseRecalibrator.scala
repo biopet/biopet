@@ -157,8 +157,10 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with S
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = _
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  if (config.contains("dbsnp")) knownSites :+= new File(config("dbsnp").asString)
+
+  override def beforeGraph() {
+    super.beforeGraph()
     knownSitesIndexes ++= knownSites.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
   }
 
