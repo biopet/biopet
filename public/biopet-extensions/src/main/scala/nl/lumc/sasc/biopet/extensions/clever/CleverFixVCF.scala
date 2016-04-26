@@ -81,6 +81,7 @@ object CleverFixVCF extends ToolCommand {
 ##INFO=<ID=MATEID,Number=.,Type=String,Description="ID of mate breakends">
 ##INFO=<ID=PARID,Number=1,Type=String,Description="ID of partner breakend">
 ##INFO=<ID=EVENT,Number=1,Type=String,Description="ID of event associated to breakend">
+##INFO=<ID=BPWINDOW,Number=2,Type=Integer,Description="Window of breakpoints">
 ##INFO=<ID=CILEN,Number=2,Type=Integer,Description="Confidence interval around the inserted material between breakends">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth of segment containing breakend">
 ##INFO=<ID=DPADJ,Number=.,Type=Integer,Description="Read Depth of adjacency">
