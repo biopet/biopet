@@ -26,7 +26,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, GATKScatterFunction, ReadScatterFunction }
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline._
 
 class PrintReads(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {

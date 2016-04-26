@@ -79,7 +79,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk._
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {

@@ -34,7 +34,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, GATKScatterFunction, ReadScatterFunction, TaggedFile }
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class IndelRealigner(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {

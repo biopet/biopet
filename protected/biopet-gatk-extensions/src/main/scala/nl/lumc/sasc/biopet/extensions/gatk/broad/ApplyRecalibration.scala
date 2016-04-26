@@ -50,7 +50,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
-import org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.utils.commandline.Gather
 import org.broadinstitute.gatk.utils.commandline.Input
