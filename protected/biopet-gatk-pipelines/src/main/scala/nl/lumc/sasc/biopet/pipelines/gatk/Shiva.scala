@@ -104,7 +104,7 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
     indelRealigner.isIntermediate = isIntermediate
     add(indelRealigner)
 
-    indelRealigner.o
+    indelRealigner.out
   }
 
   /** Adds base recalibration jobs */
@@ -116,18 +116,18 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
 
     if (config("use_analyze_covariates", default = false).asBoolean) {
       val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
-      baseRecalibratorAfter.BQSR = baseRecalibrator.o
+      baseRecalibratorAfter.BQSR = baseRecalibrator.out
       add(baseRecalibratorAfter)
 
-      add(AnalyzeCovariates(this, baseRecalibrator.o, baseRecalibratorAfter.o, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
+      add(AnalyzeCovariates(this, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
     }
 
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
-    printReads.BQSR = baseRecalibrator.o
+    printReads.BQSR = baseRecalibrator.out
     printReads.isIntermediate = isIntermediate
     add(printReads)
 
-    printReads.o
+    printReads.out
   }
 }
 
