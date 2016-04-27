@@ -8,36 +8,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
-
-//class VariantEval(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantEval with GatkGeneral {
-//}
-//
-//object VariantEval {
-//  def apply(root: Configurable, sample: File, compareWith: File,
-//            output: File): VariantEval = {
-//    val vareval = new VariantEval(root)
-//    vareval.eval = Seq(sample)
-//    vareval.comp = Seq(compareWith)
-//    vareval.out = output
-//    vareval
-//  }
-//
-//  def apply(root: Configurable, sample: File, compareWith: File,
-//            output: File, ST: Seq[String], EV: Seq[String]): VariantEval = {
-//    val vareval = new VariantEval(root)
-//    vareval.eval = Seq(sample)
-//    vareval.comp = Seq(compareWith)
-//    vareval.out = output
-//    vareval.noST = true
-//    vareval.ST = ST
-//    vareval.noEV = true
-//    vareval.EV = EV
-//    vareval
-//  }
-//
-//}
-
 import java.io.File
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.utils.commandline.Gather
@@ -160,8 +130,8 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def beforeGraph() {
+    super.beforeGraph()
     deps ++= eval.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))

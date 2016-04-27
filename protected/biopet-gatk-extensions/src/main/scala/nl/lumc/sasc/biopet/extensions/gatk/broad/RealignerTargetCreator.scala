@@ -61,8 +61,8 @@ class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK wit
 
   if (config.contains("dbsnp")) known :+= new File(config("dbsnp").asString)
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def beforeGraph() {
+    super.beforeGraph()
     deps ++= known.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
   }
 

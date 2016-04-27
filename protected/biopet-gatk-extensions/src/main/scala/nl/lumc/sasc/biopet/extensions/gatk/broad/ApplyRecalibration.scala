@@ -82,8 +82,8 @@ class ApplyRecalibration(val root: Configurable) extends CommandLineGATK with Sc
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def beforeGraph() {
+    super.beforeGraph()
     deps ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (recal_file != null)
       deps :+= VcfUtils.getVcfIndexFile(recal_file)

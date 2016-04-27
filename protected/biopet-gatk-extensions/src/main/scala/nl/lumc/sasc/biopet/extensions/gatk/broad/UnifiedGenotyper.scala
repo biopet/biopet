@@ -251,8 +251,8 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def beforeGraph() {
+    super.beforeGraph()
     reference_sample_calls.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     alleles.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
