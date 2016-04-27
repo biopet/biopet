@@ -48,9 +48,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "UnifiedGenotyper"
@@ -131,11 +132,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** VCF file with the truth callset for the reference sample */
   @Input(fullName = "reference_sample_calls", shortName = "referenceCalls", doc = "VCF file with the truth callset for the reference sample", required = false, exclusiveOf = "", validation = "")
-  var reference_sample_calls: File = _
-
-  /** Dependencies on the index of reference_sample_calls */
-  @Input(fullName = "reference_sample_callsIndex", shortName = "", doc = "Dependencies on the index of reference_sample_calls", required = false, exclusiveOf = "", validation = "")
-  private var reference_sample_callsIndex: Seq[File] = Nil
+  var reference_sample_calls: Option[File] = None
 
   /** Reference sample name. */
   @Argument(fullName = "reference_sample_name", shortName = "refsample", doc = "Reference sample name.", required = false, exclusiveOf = "", validation = "")
@@ -215,11 +212,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES */
   @Input(fullName = "alleles", shortName = "alleles", doc = "The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES", required = false, exclusiveOf = "", validation = "")
-  var alleles: File = _
-
-  /** Dependencies on the index of alleles */
-  @Input(fullName = "allelesIndex", shortName = "", doc = "Dependencies on the index of alleles", required = false, exclusiveOf = "", validation = "")
-  private var allelesIndex: Seq[File] = Nil
+  var alleles: Option[File] = _
 
   /** Fraction of contamination in sequencing data (for all samples) to aggressively remove */
   @Argument(fullName = "contamination_fraction_to_filter", shortName = "contamination", doc = "Fraction of contamination in sequencing data (for all samples) to aggressively remove", required = false, exclusiveOf = "", validation = "")
@@ -251,29 +244,16 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: File = _
-
-  /** Dependencies on the index of dbsnp */
-  @Input(fullName = "dbsnpIndex", shortName = "", doc = "Dependencies on the index of dbsnp", required = false, exclusiveOf = "", validation = "")
-  private var dbsnpIndex: Seq[File] = Nil
+  var dbsnp: Option[File] = None
 
   /** Comparison VCF file */
   @Input(fullName = "comp", shortName = "comp", doc = "Comparison VCF file", required = false, exclusiveOf = "", validation = "")
   var comp: Seq[File] = Nil
 
-  /** Dependencies on any indexes of comp */
-  @Input(fullName = "compIndexes", shortName = "", doc = "Dependencies on any indexes of comp", required = false, exclusiveOf = "", validation = "")
-  private var compIndexes: Seq[File] = Nil
-
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
-
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
 
   /** If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file */
   @Argument(fullName = "onlyEmitSamples", shortName = "onlyEmitSamples", doc = "If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file", required = false, exclusiveOf = "", validation = "")
@@ -313,16 +293,13 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    if (reference_sample_calls != null)
-      reference_sample_callsIndex :+= new File(reference_sample_calls.getPath + ".idx")
-    if (alleles != null)
-      allelesIndex :+= new File(alleles.getPath + ".idx")
-    if (dbsnp != null)
-      dbsnpIndex :+= new File(dbsnp.getPath + ".idx")
-    compIndexes ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    reference_sample_calls.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
+    alleles.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
+    dbsnp.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outIndex = new File(out.getPath + ".idx")
+        outputFiles :+= VcfUtils.getVcfIndexFile(out)
   }
 
   override def cmdLine = super.cmdLine +

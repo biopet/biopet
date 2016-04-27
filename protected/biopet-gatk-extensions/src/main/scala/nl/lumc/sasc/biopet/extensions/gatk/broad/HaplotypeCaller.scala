@@ -402,7 +402,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
         outputFiles :+= VcfUtils.getVcfIndexFile(out)
-    dbsnp.foreach(x => VcfUtils.getVcfIndexFile(x))
+    dbsnp.foreach(deps :+=  VcfUtils.getVcfIndexFile(_))
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)

@@ -5,29 +5,13 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//
-//class SelectVariants(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.SelectVariants with GatkGeneral {
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//}
-//
-//object SelectVariants {
-//  def apply(root: Configurable, input: File, output: File): SelectVariants = {
-//    val sv = new SelectVariants(root)
-//    sv.variant = input
-//    sv.out = output
-//    sv
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class SelectVariants(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "SelectVariants"
@@ -38,107 +22,90 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
   @Input(fullName = "variant", shortName = "V", doc = "Input VCF file", required = true, exclusiveOf = "", validation = "")
   var variant: File = _
 
-  /** Dependencies on the index of variant */
-  @Input(fullName = "variantIndex", shortName = "", doc = "Dependencies on the index of variant", required = false, exclusiveOf = "", validation = "")
-  private var variantIndex: Seq[File] = Nil
-
   /** Output variants not called in this comparison track */
   @Input(fullName = "discordance", shortName = "disc", doc = "Output variants not called in this comparison track", required = false, exclusiveOf = "", validation = "")
-  var discordance: File = _
-
-  /** Dependencies on the index of discordance */
-  @Input(fullName = "discordanceIndex", shortName = "", doc = "Dependencies on the index of discordance", required = false, exclusiveOf = "", validation = "")
-  private var discordanceIndex: Seq[File] = Nil
+  var discordance: Option[File] = None
 
   /** Output variants also called in this comparison track */
   @Input(fullName = "concordance", shortName = "conc", doc = "Output variants also called in this comparison track", required = false, exclusiveOf = "", validation = "")
-  var concordance: File = _
-
-  /** Dependencies on the index of concordance */
-  @Input(fullName = "concordanceIndex", shortName = "", doc = "Dependencies on the index of concordance", required = false, exclusiveOf = "", validation = "")
-  private var concordanceIndex: Seq[File] = Nil
+  var concordance: Option[File] = None
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
 
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
-
   /** Include genotypes from this sample */
   @Argument(fullName = "sample_name", shortName = "sn", doc = "Include genotypes from this sample", required = false, exclusiveOf = "", validation = "")
-  var sample_name: Seq[String] = Nil
+  var sample_name: List[String] = config("sample_name", default = Nil)
 
   /** Regular expression to select multiple samples */
   @Argument(fullName = "sample_expressions", shortName = "se", doc = "Regular expression to select multiple samples", required = false, exclusiveOf = "", validation = "")
-  var sample_expressions: Seq[String] = Nil
+  var sample_expressions: List[String] = config("sample_expressions", default = Nil)
 
   /** File containing a list of samples to include */
   @Input(fullName = "sample_file", shortName = "sf", doc = "File containing a list of samples to include", required = false, exclusiveOf = "", validation = "")
-  var sample_file: Seq[File] = Nil
+  var sample_file: List[File] = config("sample_file", default = Nil)
 
   /** Exclude genotypes from this sample */
   @Argument(fullName = "exclude_sample_name", shortName = "xl_sn", doc = "Exclude genotypes from this sample", required = false, exclusiveOf = "", validation = "")
-  var exclude_sample_name: Seq[String] = Nil
+  var exclude_sample_name: List[String] = config("exclude_sample_name", default = Nil)
 
   /** List of samples to exclude */
   @Input(fullName = "exclude_sample_file", shortName = "xl_sf", doc = "List of samples to exclude", required = false, exclusiveOf = "", validation = "")
-  var exclude_sample_file: Seq[File] = Nil
+  var exclude_sample_file: List[File] = config("exclude_sample_file", default = Nil)
 
   /** List of sample expressions to exclude */
   @Input(fullName = "exclude_sample_expressions", shortName = "xl_se", doc = "List of sample expressions to exclude", required = false, exclusiveOf = "", validation = "")
-  var exclude_sample_expressions: Seq[File] = Nil
+  var exclude_sample_expressions: List[File] = config("exclude_sample_expressions", default = Nil)
 
   /** One or more criteria to use when selecting the data */
   @Argument(fullName = "selectexpressions", shortName = "select", doc = "One or more criteria to use when selecting the data", required = false, exclusiveOf = "", validation = "")
-  var selectexpressions: Seq[String] = Nil
+  var selectexpressions: List[String] = config("selectexpressions", default = Nil)
 
   /** Invert the selection criteria for -select */
   @Argument(fullName = "invertselect", shortName = "invertSelect", doc = "Invert the selection criteria for -select", required = false, exclusiveOf = "", validation = "")
-  var invertselect: Boolean = _
+  var invertselect: Boolean = config("invertselect", default = false)
 
   /** Don't include non-variant sites */
   @Argument(fullName = "excludeNonVariants", shortName = "env", doc = "Don't include non-variant sites", required = false, exclusiveOf = "", validation = "")
-  var excludeNonVariants: Boolean = _
+  var excludeNonVariants: Boolean = config("excludeNonVariants", default = false)
 
   /** Don't include filtered sites */
   @Argument(fullName = "excludeFiltered", shortName = "ef", doc = "Don't include filtered sites", required = false, exclusiveOf = "", validation = "")
-  var excludeFiltered: Boolean = _
+  var excludeFiltered: Boolean = config("excludeFiltered", default = false)
 
   /** Preserve original alleles, do not trim */
   @Argument(fullName = "preserveAlleles", shortName = "noTrim", doc = "Preserve original alleles, do not trim", required = false, exclusiveOf = "", validation = "")
-  var preserveAlleles: Boolean = _
+  var preserveAlleles: Boolean = config("preserveAlleles", default = false)
 
   /** Remove alternate alleles not present in any genotypes */
   @Argument(fullName = "removeUnusedAlternates", shortName = "trimAlternates", doc = "Remove alternate alleles not present in any genotypes", required = false, exclusiveOf = "", validation = "")
-  var removeUnusedAlternates: Boolean = _
+  var removeUnusedAlternates: Boolean = config("removeUnusedAlternates", default = false)
 
   /** Select only variants of a particular allelicity */
   @Argument(fullName = "restrictAllelesTo", shortName = "restrictAllelesTo", doc = "Select only variants of a particular allelicity", required = false, exclusiveOf = "", validation = "")
-  var restrictAllelesTo: org.broadinstitute.gatk.tools.walkers.variantutils.SelectVariants.NumberAlleleRestriction = _
+  var restrictAllelesTo: Option[String] = config("restrictAllelesTo")
 
   /** Store the original AC, AF, and AN values after subsetting */
   @Argument(fullName = "keepOriginalAC", shortName = "keepOriginalAC", doc = "Store the original AC, AF, and AN values after subsetting", required = false, exclusiveOf = "", validation = "")
-  var keepOriginalAC: Boolean = _
+  var keepOriginalAC: Boolean = config("keepOriginalAC", default = false)
 
   /** Store the original DP value after subsetting */
   @Argument(fullName = "keepOriginalDP", shortName = "keepOriginalDP", doc = "Store the original DP value after subsetting", required = false, exclusiveOf = "", validation = "")
-  var keepOriginalDP: Boolean = _
+  var keepOriginalDP: Boolean = config("keepOriginalDP", default = false)
 
   /** Output mendelian violation sites only */
   @Argument(fullName = "mendelianViolation", shortName = "mv", doc = "Output mendelian violation sites only", required = false, exclusiveOf = "", validation = "")
-  var mendelianViolation: Boolean = _
+  var mendelianViolation: Boolean = config("mendelianViolation", default = false)
 
   /** Output non-mendelian violation sites only */
   @Argument(fullName = "invertMendelianViolation", shortName = "invMv", doc = "Output non-mendelian violation sites only", required = false, exclusiveOf = "", validation = "")
-  var invertMendelianViolation: Boolean = _
+  var invertMendelianViolation: Boolean = config("invertMendelianViolation", default = false)
 
   /** Minimum GQ score for each trio member to accept a site as a violation */
   @Argument(fullName = "mendelianViolationQualThreshold", shortName = "mvq", doc = "Minimum GQ score for each trio member to accept a site as a violation", required = false, exclusiveOf = "", validation = "")
-  var mendelianViolationQualThreshold: Option[Double] = None
+  var mendelianViolationQualThreshold: Option[Double] = config("mendelianViolationQualThreshold")
 
   /** Format string for mendelianViolationQualThreshold */
   @Argument(fullName = "mendelianViolationQualThresholdFormat", shortName = "", doc = "Format string for mendelianViolationQualThreshold", required = false, exclusiveOf = "", validation = "")
@@ -146,7 +113,7 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Select a fraction of variants at random from the input */
   @Argument(fullName = "select_random_fraction", shortName = "fraction", doc = "Select a fraction of variants at random from the input", required = false, exclusiveOf = "", validation = "")
-  var select_random_fraction: Option[Double] = None
+  var select_random_fraction: Option[Double] = config("select_random_fraction")
 
   /** Format string for select_random_fraction */
   @Argument(fullName = "select_random_fractionFormat", shortName = "", doc = "Format string for select_random_fraction", required = false, exclusiveOf = "", validation = "")
@@ -154,7 +121,7 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Select a fraction of genotypes at random from the input and sets them to no-call */
   @Argument(fullName = "remove_fraction_genotypes", shortName = "fractionGenotypes", doc = "Select a fraction of genotypes at random from the input and sets them to no-call", required = false, exclusiveOf = "", validation = "")
-  var remove_fraction_genotypes: Option[Double] = None
+  var remove_fraction_genotypes: Option[Double] = config("remove_fraction_genotypes")
 
   /** Format string for remove_fraction_genotypes */
   @Argument(fullName = "remove_fraction_genotypesFormat", shortName = "", doc = "Format string for remove_fraction_genotypes", required = false, exclusiveOf = "", validation = "")
@@ -162,47 +129,47 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Select only a certain type of variants from the input file */
   @Argument(fullName = "selectTypeToInclude", shortName = "selectType", doc = "Select only a certain type of variants from the input file", required = false, exclusiveOf = "", validation = "")
-  var selectTypeToInclude: Seq[htsjdk.variant.variantcontext.VariantContext.Type] = Nil
+  var selectTypeToInclude: List[String] = config("selectTypeToInclude", default = Nil)
 
   /** Do not select certain type of variants from the input file */
   @Argument(fullName = "selectTypeToExclude", shortName = "xlSelectType", doc = "Do not select certain type of variants from the input file", required = false, exclusiveOf = "", validation = "")
-  var selectTypeToExclude: Seq[htsjdk.variant.variantcontext.VariantContext.Type] = Nil
+  var selectTypeToExclude: Seq[String] = config("selectTypeToExclude", default = Nil)
 
   /** List of variant IDs to select */
-  @Argument(fullName = "keepIDs", shortName = "IDs", doc = "List of variant IDs to select", required = false, exclusiveOf = "", validation = "")
-  var keepIDs: File = _
+  @Input(fullName = "keepIDs", shortName = "IDs", doc = "List of variant IDs to select", required = false, exclusiveOf = "", validation = "")
+  var keepIDs: Option[File] = config("keepIDs")
 
   /** List of variant IDs to select */
   @Argument(fullName = "excludeIDs", shortName = "xlIDs", doc = "List of variant IDs to select", required = false, exclusiveOf = "", validation = "")
-  var excludeIDs: File = _
+  var excludeIDs: Option[File] = config("excludeIDs")
 
   /** If true, the incoming VariantContext will be fully decoded */
   @Argument(fullName = "fullyDecode", shortName = "", doc = "If true, the incoming VariantContext will be fully decoded", required = false, exclusiveOf = "", validation = "")
-  var fullyDecode: Boolean = _
+  var fullyDecode: Boolean = config("fullyDecode", default = false)
 
   /** If true, we won't actually write the output file.  For efficiency testing only */
   @Argument(fullName = "justRead", shortName = "", doc = "If true, we won't actually write the output file.  For efficiency testing only", required = false, exclusiveOf = "", validation = "")
-  var justRead: Boolean = _
+  var justRead: Boolean = config("justRead", default = false)
 
   /** Maximum size of indels to include */
   @Argument(fullName = "maxIndelSize", shortName = "", doc = "Maximum size of indels to include", required = false, exclusiveOf = "", validation = "")
-  var maxIndelSize: Option[Int] = None
+  var maxIndelSize: Option[Int] = config("maxIndelSize")
 
   /** Minimum size of indels to include */
   @Argument(fullName = "minIndelSize", shortName = "", doc = "Minimum size of indels to include", required = false, exclusiveOf = "", validation = "")
-  var minIndelSize: Option[Int] = None
+  var minIndelSize: Option[Int] = config("minIndelSize")
 
   /** Maximum number of samples filtered at the genotype level */
   @Argument(fullName = "maxFilteredGenotypes", shortName = "", doc = "Maximum number of samples filtered at the genotype level", required = false, exclusiveOf = "", validation = "")
-  var maxFilteredGenotypes: Option[Int] = None
+  var maxFilteredGenotypes: Option[Int] = config("maxFilteredGenotypes")
 
   /** Minimum number of samples filtered at the genotype level */
   @Argument(fullName = "minFilteredGenotypes", shortName = "", doc = "Minimum number of samples filtered at the genotype level", required = false, exclusiveOf = "", validation = "")
-  var minFilteredGenotypes: Option[Int] = None
+  var minFilteredGenotypes: Option[Int] = config("minFilteredGenotypes")
 
   /** Maximum fraction of samples filtered at the genotype level */
   @Argument(fullName = "maxFractionFilteredGenotypes", shortName = "", doc = "Maximum fraction of samples filtered at the genotype level", required = false, exclusiveOf = "", validation = "")
-  var maxFractionFilteredGenotypes: Option[Double] = None
+  var maxFractionFilteredGenotypes: Option[Double] = config("maxFractionFilteredGenotypes")
 
   /** Format string for maxFractionFilteredGenotypes */
   @Argument(fullName = "maxFractionFilteredGenotypesFormat", shortName = "", doc = "Format string for maxFractionFilteredGenotypes", required = false, exclusiveOf = "", validation = "")
@@ -210,7 +177,7 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Maximum fraction of samples filtered at the genotype level */
   @Argument(fullName = "minFractionFilteredGenotypes", shortName = "", doc = "Maximum fraction of samples filtered at the genotype level", required = false, exclusiveOf = "", validation = "")
-  var minFractionFilteredGenotypes: Option[Double] = None
+  var minFractionFilteredGenotypes: Option[Double] = config("minFractionFilteredGenotypes")
 
   /** Format string for minFractionFilteredGenotypes */
   @Argument(fullName = "minFractionFilteredGenotypesFormat", shortName = "", doc = "Format string for minFractionFilteredGenotypes", required = false, exclusiveOf = "", validation = "")
@@ -218,39 +185,37 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Set filtered genotypes to no-call */
   @Argument(fullName = "setFilteredGtToNocall", shortName = "", doc = "Set filtered genotypes to no-call", required = false, exclusiveOf = "", validation = "")
-  var setFilteredGtToNocall: Boolean = _
+  var setFilteredGtToNocall: Boolean = config("setFilteredGtToNocall", default = false)
 
   /** Allow samples other than those in the VCF to be specified on the command line. These samples will be ignored. */
   @Argument(fullName = "ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES", shortName = "", doc = "Allow samples other than those in the VCF to be specified on the command line. These samples will be ignored.", required = false, exclusiveOf = "", validation = "")
-  var ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES: Boolean = _
+  var ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES: Boolean = config("ALLOW_NONOVERLAPPING_COMMAND_LINE_SAMPLES", default = false)
 
   /** Forces output VCF to be compliant to up-to-date version */
   @Argument(fullName = "forceValidOutput", shortName = "", doc = "Forces output VCF to be compliant to up-to-date version", required = false, exclusiveOf = "", validation = "")
-  var forceValidOutput: Boolean = _
+  var forceValidOutput: Boolean = config("forceValidOutput", default = false)
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
     if (variant != null)
-      variantIndex :+= new File(variant.getPath + ".idx")
-    if (discordance != null)
-      discordanceIndex :+= new File(discordance.getPath + ".idx")
-    if (concordance != null)
-      concordanceIndex :+= new File(concordance.getPath + ".idx")
+      deps :+= VcfUtils.getVcfIndexFile(variant)
+    discordance.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    concordance.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outIndex = new File(out.getPath + ".idx")
+        outputFiles :+= VcfUtils.getVcfIndexFile(out)
   }
 
   override def cmdLine = super.cmdLine +

@@ -8,9 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ GATKScatterFunction, ReadScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{GATKScatterFunction, ReadScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 //TODO: check gathering
 class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with ScatterGatherableFunction */ {
@@ -145,7 +146,7 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with S
 
   override def beforeGraph() {
     super.beforeGraph()
-    knownSitesIndexes ++= knownSites.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    knownSitesIndexes ++= knownSites.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
   }
 
   override def cmdLine = super.cmdLine +

@@ -5,31 +5,13 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//
-//class VariantAnnotator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantAnnotator with GatkGeneral {
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//  dbsnp = config("dbsnp")
-//}
-//
-//object VariantAnnotator {
-//  def apply(root: Configurable, input: File, bamFiles: List[File], output: File): VariantAnnotator = {
-//    val va = new VariantAnnotator(root)
-//    va.variant = input
-//    va.input_file = bamFiles
-//    va.out = output
-//    va
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class VariantAnnotator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "VariantAnnotator"
@@ -40,51 +22,26 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
   @Input(fullName = "variant", shortName = "V", doc = "Input VCF file", required = true, exclusiveOf = "", validation = "")
   var variant: File = _
 
-  /** Dependencies on the index of variant */
-  @Input(fullName = "variantIndex", shortName = "", doc = "Dependencies on the index of variant", required = false, exclusiveOf = "", validation = "")
-  private var variantIndex: Seq[File] = Nil
-
   /** SnpEff file from which to get annotations */
   @Input(fullName = "snpEffFile", shortName = "snpEffFile", doc = "SnpEff file from which to get annotations", required = false, exclusiveOf = "", validation = "")
-  var snpEffFile: File = _
-
-  /** Dependencies on the index of snpEffFile */
-  @Input(fullName = "snpEffFileIndex", shortName = "", doc = "Dependencies on the index of snpEffFile", required = false, exclusiveOf = "", validation = "")
-  private var snpEffFileIndex: Seq[File] = Nil
+  var snpEffFile: Option[File] = None
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: File = _
-
-  /** Dependencies on the index of dbsnp */
-  @Input(fullName = "dbsnpIndex", shortName = "", doc = "Dependencies on the index of dbsnp", required = false, exclusiveOf = "", validation = "")
-  private var dbsnpIndex: Seq[File] = Nil
+  var dbsnp: Option[File] = None
 
   /** Comparison VCF file */
   @Input(fullName = "comp", shortName = "comp", doc = "Comparison VCF file", required = false, exclusiveOf = "", validation = "")
   var comp: Seq[File] = Nil
 
-  /** Dependencies on any indexes of comp */
-  @Input(fullName = "compIndexes", shortName = "", doc = "Dependencies on any indexes of comp", required = false, exclusiveOf = "", validation = "")
-  private var compIndexes: Seq[File] = Nil
-
   /** External resource VCF file */
   @Input(fullName = "resource", shortName = "resource", doc = "External resource VCF file", required = false, exclusiveOf = "", validation = "")
   var resource: Seq[File] = Nil
-
-  /** Dependencies on any indexes of resource */
-  @Input(fullName = "resourceIndexes", shortName = "", doc = "Dependencies on any indexes of resource", required = false, exclusiveOf = "", validation = "")
-  private var resourceIndexes: Seq[File] = Nil
 
   /** File to which variants should be written */
   @Output(fullName = "out", shortName = "o", doc = "File to which variants should be written", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
-
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
 
   /** One or more specific annotations to apply to variant calls */
   @Argument(fullName = "annotation", shortName = "A", doc = "One or more specific annotations to apply to variant calls", required = false, exclusiveOf = "", validation = "")
@@ -138,19 +95,17 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = _
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def beforeGraph() {
+    super.beforeGraph()
     if (variant != null)
-      variantIndex :+= new File(variant.getPath + ".idx")
-    if (snpEffFile != null)
-      snpEffFileIndex :+= new File(snpEffFile.getPath + ".idx")
-    if (dbsnp != null)
-      dbsnpIndex :+= new File(dbsnp.getPath + ".idx")
-    compIndexes ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
-    resourceIndexes ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+      deps :+= VcfUtils.getVcfIndexFile(variant)
+    snpEffFile.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    deps ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outIndex = new File(out.getPath + ".idx")
+        outputFiles :+= VcfUtils.getVcfIndexFile(out)
   }
 
   override def cmdLine = super.cmdLine +

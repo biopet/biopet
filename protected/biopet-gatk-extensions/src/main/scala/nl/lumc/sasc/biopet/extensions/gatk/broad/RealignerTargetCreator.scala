@@ -8,9 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ GATKScatterFunction, LocusScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{GATKScatterFunction, LocusScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, _}
 
 class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "RealignerTargetCreator"
@@ -24,19 +25,15 @@ class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK wit
 
   /** Input VCF file with known indels */
   @Input(fullName = "known", shortName = "known", doc = "Input VCF file with known indels", required = false, exclusiveOf = "", validation = "")
-  var known: Seq[File] = Nil
-
-  /** Dependencies on any indexes of known */
-  @Input(fullName = "knownIndexes", shortName = "", doc = "Dependencies on any indexes of known", required = false, exclusiveOf = "", validation = "")
-  private var knownIndexes: Seq[File] = Nil
+  var known: List[File] = config("known", default = Nil)
 
   /** window size for calculating entropy or SNP clusters */
   @Argument(fullName = "windowSize", shortName = "window", doc = "window size for calculating entropy or SNP clusters", required = false, exclusiveOf = "", validation = "")
-  var windowSize: Option[Int] = None
+  var windowSize: Option[Int] = config("windowSize")
 
   /** fraction of base qualities needing to mismatch for a position to have high entropy */
   @Argument(fullName = "mismatchFraction", shortName = "mismatch", doc = "fraction of base qualities needing to mismatch for a position to have high entropy", required = false, exclusiveOf = "", validation = "")
-  var mismatchFraction: Option[Double] = None
+  var mismatchFraction: Option[Double] = config("mismatchFraction")
 
   /** Format string for mismatchFraction */
   @Argument(fullName = "mismatchFractionFormat", shortName = "", doc = "Format string for mismatchFraction", required = false, exclusiveOf = "", validation = "")
@@ -44,27 +41,29 @@ class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK wit
 
   /** minimum reads at a locus to enable using the entropy calculation */
   @Argument(fullName = "minReadsAtLocus", shortName = "minReads", doc = "minimum reads at a locus to enable using the entropy calculation", required = false, exclusiveOf = "", validation = "")
-  var minReadsAtLocus: Option[Int] = None
+  var minReadsAtLocus: Option[Int] = config("minReadsAtLocus")
 
   /** maximum interval size; any intervals larger than this value will be dropped */
   @Argument(fullName = "maxIntervalSize", shortName = "maxInterval", doc = "maximum interval size; any intervals larger than this value will be dropped", required = false, exclusiveOf = "", validation = "")
-  var maxIntervalSize: Option[Int] = None
+  var maxIntervalSize: Option[Int] = config("maxIntervalSize")
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("", default = false)
+
+  if (config.contains("dbsnp")) known :+= new File(config("dbsnp").asString)
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    knownIndexes ++= known.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    deps ++= known.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
   }
 
   override def cmdLine = super.cmdLine +

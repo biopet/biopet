@@ -8,8 +8,9 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import org.broadinstitute.gatk.utils.commandline.Argument
 import org.broadinstitute.gatk.utils.commandline.Gather
 import org.broadinstitute.gatk.utils.commandline.Input
@@ -36,11 +37,6 @@ class ApplyRecalibration(val root: Configurable) extends CommandLineGATK with Sc
   @Output(fullName = "out", shortName = "o", doc = "The output filtered and recalibrated VCF file in which each variant is annotated with its VQSLOD value", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
-
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
 
   /** The truth sensitivity level at which to start filtering */
   @Argument(fullName = "ts_filter_level", shortName = "ts_filter_level", doc = "The truth sensitivity level at which to start filtering", required = false, exclusiveOf = "", validation = "")
@@ -88,12 +84,12 @@ class ApplyRecalibration(val root: Configurable) extends CommandLineGATK with Sc
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    deps ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    deps ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (recal_file != null)
-      deps :+= new File(recal_file.getPath + ".idx")
+      deps :+= VcfUtils.getVcfIndexFile(recal_file)
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outIndex = new File(out.getPath + ".idx")
+        outputFiles :+= VcfUtils.getVcfIndexFile(out)
     num_threads = Option(getThreads)
   }
 

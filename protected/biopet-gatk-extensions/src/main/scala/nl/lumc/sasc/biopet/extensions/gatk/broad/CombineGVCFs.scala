@@ -61,7 +61,7 @@ class CombineGVCFs(val root: Configurable) extends CommandLineGATK with ScatterG
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    dbsnp.foreach(x => deps :+= VcfUtils.getVcfIndexFile(x))
+    dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     deps ++= variant.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))

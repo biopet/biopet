@@ -5,51 +5,12 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-//
-//class VariantRecalibrator(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantRecalibrator with GatkGeneral {
-//  override val defaultThreads = 4
-//
-//  nt = Option(getThreads)
-//  memoryLimit = Option(nt.getOrElse(1) * 2)
-//
-//  if (config.contains("dbsnp")) resource :+= new TaggedFile(config("dbsnp").asString, "known=true,training=false,truth=false,prior=2.0")
-//
-//  an = config("annotation", default = List("QD", "DP", "FS", "ReadPosRankSum", "MQRankSum")).asStringList
-//  minNumBadVariants = config("minnumbadvariants")
-//  maxGaussians = config("maxgaussians")
-//}
-//
-//object VariantRecalibrator {
-//  def apply(root: Configurable, input: File, recal_file: File, tranches_file: File, indel: Boolean = false): VariantRecalibrator = {
-//    val vr = new VariantRecalibrator(root) {
-//      override lazy val configNamespace = "variantrecalibrator"
-//      override def configPath: List[String] = (if (indel) "indel" else "snp") :: super.configPath
-//      if (indel) {
-//        mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.INDEL
-//        if (config.contains("mills")) resource :+= new TaggedFile(config("mills").asString, "known=false,training=true,truth=true,prior=12.0")
-//      } else {
-//        mode = org.broadinstitute.gatk.tools.walkers.variantrecalibration.VariantRecalibratorArgumentCollection.Mode.SNP
-//        if (config.contains("hapmap")) resource +:= new TaggedFile(config("hapmap").asString, "known=false,training=true,truth=true,prior=15.0")
-//        if (config.contains("omni")) resource +:= new TaggedFile(config("omni").asString, "known=false,training=true,truth=true,prior=12.0")
-//        if (config.contains("1000G")) resource +:= new TaggedFile(config("1000G").asString, "known=false,training=true,truth=false,prior=10.0")
-//      }
-//    }
-//    vr.input :+= input
-//    vr.recal_file = recal_file
-//    vr.tranches_file = tranches_file
-//    vr
-//  }
-//}
-
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, TaggedFile }
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
+import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, TaggedFile}
+import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
 
 class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
   def analysis_type = "VariantRecalibrator"
@@ -142,35 +103,18 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
   @Input(fullName = "input", shortName = "input", doc = "The raw input variants to be recalibrated", required = true, exclusiveOf = "", validation = "")
   var input: Seq[File] = Nil
 
-  /** Dependencies on any indexes of input */
-  @Input(fullName = "inputIndexes", shortName = "", doc = "Dependencies on any indexes of input", required = false, exclusiveOf = "", validation = "")
-  private var inputIndexes: Seq[File] = Nil
-
   /** Additional raw input variants to be used in building the model */
   @Input(fullName = "aggregate", shortName = "aggregate", doc = "Additional raw input variants to be used in building the model", required = false, exclusiveOf = "", validation = "")
   var aggregate: Seq[File] = Nil
-
-  /** Dependencies on any indexes of aggregate */
-  @Input(fullName = "aggregateIndexes", shortName = "", doc = "Dependencies on any indexes of aggregate", required = false, exclusiveOf = "", validation = "")
-  private var aggregateIndexes: Seq[File] = Nil
 
   /** A list of sites for which to apply a prior probability of being correct but which aren't used by the algorithm (training and truth sets are required to run) */
   @Input(fullName = "resource", shortName = "resource", doc = "A list of sites for which to apply a prior probability of being correct but which aren't used by the algorithm (training and truth sets are required to run)", required = true, exclusiveOf = "", validation = "")
   var resource: Seq[File] = Nil
 
-  /** Dependencies on any indexes of resource */
-  @Input(fullName = "resourceIndexes", shortName = "", doc = "Dependencies on any indexes of resource", required = false, exclusiveOf = "", validation = "")
-  private var resourceIndexes: Seq[File] = Nil
-
   /** The output recal file used by ApplyRecalibration */
   @Output(fullName = "recal_file", shortName = "recalFile", doc = "The output recal file used by ApplyRecalibration", required = true, exclusiveOf = "", validation = "")
   @Gather(classOf[CatVariantsGatherer])
   var recal_file: File = _
-
-  /** Automatically generated index for recal_file */
-  @Output(fullName = "recal_fileIndex", shortName = "", doc = "Automatically generated index for recal_file", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var recal_fileIndex: File = _
 
   /** The output tranches file used by ApplyRecalibration */
   @Output(fullName = "tranches_file", shortName = "tranchesFile", doc = "The output tranches file used by ApplyRecalibration", required = true, exclusiveOf = "", validation = "")
@@ -228,13 +172,44 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    inputIndexes ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
-    aggregateIndexes ++= aggregate.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
-    resourceIndexes ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    deps ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    deps ++= aggregate.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    deps ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (recal_file != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(recal_file))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(recal_file.getPath))
-        recal_fileIndex = new File(recal_file.getPath + ".idx")
+        outputFiles :+= VcfUtils.getVcfIndexFile(recal_file)
   }
 
-  override def cmdLine = super.cmdLine + required("-mode", mode, spaceSeparated = true, escape = true, format = "%s") + optional("-mG", maxGaussians, spaceSeparated = true, escape = true, format = "%s") + optional("-mNG", maxNegativeGaussians, spaceSeparated = true, escape = true, format = "%s") + optional("-mI", maxIterations, spaceSeparated = true, escape = true, format = "%s") + optional("-nKM", numKMeans, spaceSeparated = true, escape = true, format = "%s") + optional("-std", stdThreshold, spaceSeparated = true, escape = true, format = stdThresholdFormat) + optional("-shrinkage", shrinkage, spaceSeparated = true, escape = true, format = shrinkageFormat) + optional("-dirichlet", dirichlet, spaceSeparated = true, escape = true, format = dirichletFormat) + optional("-priorCounts", priorCounts, spaceSeparated = true, escape = true, format = priorCountsFormat) + optional("-maxNumTrainingData", maxNumTrainingData, spaceSeparated = true, escape = true, format = "%s") + optional("-minNumBad", minNumBadVariants, spaceSeparated = true, escape = true, format = "%s") + optional("-badLodCutoff", badLodCutoff, spaceSeparated = true, escape = true, format = badLodCutoffFormat) + optional("-MQCap", MQCapForLogitJitterTransform, spaceSeparated = true, escape = true, format = "%s") + conditional(no_MQ_logit, "-NoMQLogit", escape = true, format = "%s") + optional("-MQJitt", MQ_jitter, spaceSeparated = true, escape = true, format = MQ_jitterFormat) + repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") + repeat("-aggregate", aggregate, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") + repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") + required("-recalFile", recal_file, spaceSeparated = true, escape = true, format = "%s") + required("-tranchesFile", tranches_file, spaceSeparated = true, escape = true, format = "%s") + optional("-titv", target_titv, spaceSeparated = true, escape = true, format = target_titvFormat) + repeat("-an", use_annotation, spaceSeparated = true, escape = true, format = "%s") + repeat("-tranche", TStranche, spaceSeparated = true, escape = true, format = "%s") + repeat("-ignoreFilter", ignore_filter, spaceSeparated = true, escape = true, format = "%s") + conditional(ignore_all_filters, "-ignoreAllFilters", escape = true, format = "%s") + optional("-rscriptFile", rscript_file, spaceSeparated = true, escape = true, format = "%s") + optional("-replicate", replicate, spaceSeparated = true, escape = true, format = "%s") + conditional(trustAllPolymorphic, "-allPoly", escape = true, format = "%s") + conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") + conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") + conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
+  override def cmdLine = super.cmdLine +
+    required("-mode", mode, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-mG", maxGaussians, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-mNG", maxNegativeGaussians, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-mI", maxIterations, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-nKM", numKMeans, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-std", stdThreshold, spaceSeparated = true, escape = true, format = stdThresholdFormat) +
+    optional("-shrinkage", shrinkage, spaceSeparated = true, escape = true, format = shrinkageFormat) +
+    optional("-dirichlet", dirichlet, spaceSeparated = true, escape = true, format = dirichletFormat) +
+    optional("-priorCounts", priorCounts, spaceSeparated = true, escape = true, format = priorCountsFormat) +
+    optional("-maxNumTrainingData", maxNumTrainingData, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-minNumBad", minNumBadVariants, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-badLodCutoff", badLodCutoff, spaceSeparated = true, escape = true, format = badLodCutoffFormat) +
+    optional("-MQCap", MQCapForLogitJitterTransform, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(no_MQ_logit, "-NoMQLogit", escape = true, format = "%s") +
+    optional("-MQJitt", MQ_jitter, spaceSeparated = true, escape = true, format = MQ_jitterFormat) +
+    repeat("-input", input, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
+    repeat("-aggregate", aggregate, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
+    repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
+    required("-recalFile", recal_file, spaceSeparated = true, escape = true, format = "%s") +
+    required("-tranchesFile", tranches_file, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-titv", target_titv, spaceSeparated = true, escape = true, format = target_titvFormat) +
+    repeat("-an", use_annotation, spaceSeparated = true, escape = true, format = "%s") +
+    repeat("-tranche", TStranche, spaceSeparated = true, escape = true, format = "%s") +
+    repeat("-ignoreFilter", ignore_filter, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(ignore_all_filters, "-ignoreAllFilters", escape = true, format = "%s") +
+    optional("-rscriptFile", rscript_file, spaceSeparated = true, escape = true, format = "%s") +
+    optional("-replicate", replicate, spaceSeparated = true, escape = true, format = "%s") +
+    conditional(trustAllPolymorphic, "-allPoly", escape = true, format = "%s") +
+    conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
+    conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
+    conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")
 }

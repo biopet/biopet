@@ -7,9 +7,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
 //class VariantEval(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantEval with GatkGeneral {
 //}
@@ -57,33 +58,17 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
   @Input(fullName = "eval", shortName = "eval", doc = "Input evaluation file(s)", required = true, exclusiveOf = "", validation = "")
   var eval: Seq[File] = Nil
 
-  /** Dependencies on any indexes of eval */
-  @Input(fullName = "evalIndexes", shortName = "", doc = "Dependencies on any indexes of eval", required = false, exclusiveOf = "", validation = "")
-  private var evalIndexes: Seq[File] = Nil
-
   /** Input comparison file(s) */
   @Input(fullName = "comp", shortName = "comp", doc = "Input comparison file(s)", required = false, exclusiveOf = "", validation = "")
   var comp: Seq[File] = Nil
 
-  /** Dependencies on any indexes of comp */
-  @Input(fullName = "compIndexes", shortName = "", doc = "Dependencies on any indexes of comp", required = false, exclusiveOf = "", validation = "")
-  private var compIndexes: Seq[File] = Nil
-
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: File = _
-
-  /** Dependencies on the index of dbsnp */
-  @Input(fullName = "dbsnpIndex", shortName = "", doc = "Dependencies on the index of dbsnp", required = false, exclusiveOf = "", validation = "")
-  private var dbsnpIndex: Seq[File] = Nil
+  var dbsnp: Option[File] = None
 
   /** Evaluations that count calls at sites of true variation (e.g., indel calls) will use this argument as their gold standard for comparison */
   @Input(fullName = "goldStandard", shortName = "gold", doc = "Evaluations that count calls at sites of true variation (e.g., indel calls) will use this argument as their gold standard for comparison", required = false, exclusiveOf = "", validation = "")
-  var goldStandard: File = _
-
-  /** Dependencies on the index of goldStandard */
-  @Input(fullName = "goldStandardIndex", shortName = "", doc = "Dependencies on the index of goldStandard", required = false, exclusiveOf = "", validation = "")
-  private var goldStandardIndex: Seq[File] = Nil
+  var goldStandard: Option[File] = None
 
   /** List the available eval modules and exit */
   @Argument(fullName = "list", shortName = "ls", doc = "List the available eval modules and exit", required = false, exclusiveOf = "", validation = "")
@@ -183,12 +168,10 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    evalIndexes ++= eval.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
-    compIndexes ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
-    if (dbsnp != null)
-      dbsnpIndex :+= new File(dbsnp.getPath + ".idx")
-    if (goldStandard != null)
-      goldStandardIndex :+= new File(goldStandard.getPath + ".idx")
+    deps ++= eval.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    goldStandard.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
   }
 
   override def cmdLine = super.cmdLine +
