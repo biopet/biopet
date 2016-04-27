@@ -5,36 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//import org.broadinstitute.gatk.utils.commandline.{ Gather, Output }
-//import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
-//
-//class HaplotypeCaller(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.HaplotypeCaller with GatkGeneral {
-//
-//  @Gather(enabled = false)
-//  @Output(required = false)
-//  protected var vcfIndex: File = _
-//
-//  override val defaultThreads = 1
-//
-//  min_mapping_quality_score = config("minMappingQualityScore", default = 20)
-//  scatterCount = config("scattercount", default = 1)
-//  if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-//  this.sample_ploidy = config("ploidy")
-//  if (config.contains("bamOutput")) bamOutput = config("bamOutput")
-//  if (config.contains("allSitePLs")) allSitePLs = config("allSitePLs")
-//  if (config.contains("output_mode")) {
-//    import org.broadinstitute.gatk.tools.walkers.genotyper.OutputMode._
-//    config("output_mode").asString match {
-//      case "EMIT_ALL_CONFIDENT_SITES" => output_mode = EMIT_ALL_CONFIDENT_SITES
-//      case "EMIT_ALL_SITES"           => output_mode = EMIT_ALL_SITES
-//      case "EMIT_VARIANTS_ONLY"       => output_mode = EMIT_VARIANTS_ONLY
-//      case e                          => logger.warn("output mode '" + e + "' does not exist")
-//    }
-//  }
-//
 //  if (config("inputtype", default = "dna").asString == "rna") {
 //    dontUseSoftClippedBases = config("dontusesoftclippedbases", default = true)
 //    stand_call_conf = config("stand_call_conf", default = 5)
@@ -45,25 +15,14 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 //    stand_emit_conf = config("stand_emit_conf", default = 0)
 //  }
 //
-//  override def freezeFieldValues() {
-//    super.freezeFieldValues()
-//    if (out.getName.endsWith(".vcf.gz")) vcfIndex = new File(out.getAbsolutePath + ".tbi")
-//    if (bamOutput != null && nct.getOrElse(1) > 1) {
-//      logger.warn("BamOutput is on, nct/threads is forced to set on 1, this option is only for debug")
-//      nCoresRequest = Some(1)
-//    }
-//    nct = Some(getThreads)
-//    memoryLimit = Option(memoryLimit.getOrElse(2.0) * nct.getOrElse(1))
-//  }
-//}
-//
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk._
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, _}
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
@@ -77,11 +36,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Gather(classOf[CatVariantsGatherer])
   var out: File = _
 
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
-
   /** What likelihood calculation engine to use to calculate the relative likelihood of reads vs haplotypes */
   @Argument(fullName = "likelihoodCalculationEngine", shortName = "likelihoodEngine", doc = "What likelihood calculation engine to use to calculate the relative likelihood of reads vs haplotypes", required = false, exclusiveOf = "", validation = "")
   var likelihoodCalculationEngine: String = _
@@ -92,59 +46,51 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: File = _
-
-  /** Dependencies on the index of dbsnp */
-  @Input(fullName = "dbsnpIndex", shortName = "", doc = "Dependencies on the index of dbsnp", required = false, exclusiveOf = "", validation = "")
-  private var dbsnpIndex: Seq[File] = Nil
+  var dbsnp: Option[File] = config("dbsnp")
 
   /** If specified, we will not trim down the active region from the full region (active + extension) to just the active interval for genotyping */
   @Argument(fullName = "dontTrimActiveRegions", shortName = "dontTrimActiveRegions", doc = "If specified, we will not trim down the active region from the full region (active + extension) to just the active interval for genotyping", required = false, exclusiveOf = "", validation = "")
-  var dontTrimActiveRegions: Boolean = _
+  var dontTrimActiveRegions: Boolean = config("dontTrimActiveRegions", default = false)
 
   /** the maximum extent into the full active region extension that we're willing to go in genotyping our events for discovery */
   @Argument(fullName = "maxDiscARExtension", shortName = "maxDiscARExtension", doc = "the maximum extent into the full active region extension that we're willing to go in genotyping our events for discovery", required = false, exclusiveOf = "", validation = "")
-  var maxDiscARExtension: Option[Int] = None
+  var maxDiscARExtension: Option[Int] = config("maxDiscARExtension")
 
   /** the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode */
   @Argument(fullName = "maxGGAARExtension", shortName = "maxGGAARExtension", doc = "the maximum extent into the full active region extension that we're willing to go in genotyping our events for GGA mode", required = false, exclusiveOf = "", validation = "")
-  var maxGGAARExtension: Option[Int] = None
+  var maxGGAARExtension: Option[Int] = config("maxGGAARExtension")
 
   /** Include at least this many bases around an event for calling indels */
   @Argument(fullName = "paddingAroundIndels", shortName = "paddingAroundIndels", doc = "Include at least this many bases around an event for calling indels", required = false, exclusiveOf = "", validation = "")
-  var paddingAroundIndels: Option[Int] = None
+  var paddingAroundIndels: Option[Int] = config("paddingAroundIndels")
 
   /** Include at least this many bases around an event for calling snps */
   @Argument(fullName = "paddingAroundSNPs", shortName = "paddingAroundSNPs", doc = "Include at least this many bases around an event for calling snps", required = false, exclusiveOf = "", validation = "")
-  var paddingAroundSNPs: Option[Int] = None
+  var paddingAroundSNPs: Option[Int] = config("paddingAroundSNPs")
 
   /** Comparison VCF file */
   @Input(fullName = "comp", shortName = "comp", doc = "Comparison VCF file", required = false, exclusiveOf = "", validation = "")
-  var comp: Seq[File] = Nil
-
-  /** Dependencies on any indexes of comp */
-  @Input(fullName = "compIndexes", shortName = "", doc = "Dependencies on any indexes of comp", required = false, exclusiveOf = "", validation = "")
-  private var compIndexes: Seq[File] = Nil
+  var comp: List[File] = config("comp", default = Nil)
 
   /** One or more specific annotations to apply to variant calls */
   @Argument(fullName = "annotation", shortName = "A", doc = "One or more specific annotations to apply to variant calls", required = false, exclusiveOf = "", validation = "")
-  var annotation: Seq[String] = Nil
+  var annotation: List[String] = config("annotation", default = Nil, freeVar = false)
 
   /** One or more specific annotations to exclude */
   @Argument(fullName = "excludeAnnotation", shortName = "XA", doc = "One or more specific annotations to exclude", required = false, exclusiveOf = "", validation = "")
-  var excludeAnnotation: Seq[String] = Nil
+  var excludeAnnotation: List[String] = config("excludeAnnotation", default = Nil, freeVar = false)
 
   /** One or more classes/groups of annotations to apply to variant calls */
   @Argument(fullName = "group", shortName = "G", doc = "One or more classes/groups of annotations to apply to variant calls", required = false, exclusiveOf = "", validation = "")
-  var group: Seq[String] = Nil
+  var group: List[String] = config("group", default = Nil, freeVar = false)
 
   /** Print out very verbose debug information about each triggering active region */
   @Argument(fullName = "debug", shortName = "debug", doc = "Print out very verbose debug information about each triggering active region", required = false, exclusiveOf = "", validation = "")
-  var debug: Boolean = _
+  var debug: Boolean = config("debug", default = false, freeVar = false)
 
   /** Use the contamination-filtered read maps for the purposes of annotating variants */
   @Argument(fullName = "useFilteredReadsForAnnotations", shortName = "useFilteredReadsForAnnotations", doc = "Use the contamination-filtered read maps for the purposes of annotating variants", required = false, exclusiveOf = "", validation = "")
-  var useFilteredReadsForAnnotations: Boolean = _
+  var useFilteredReadsForAnnotations: Boolean = config("useFilteredReadsForAnnotations", default = false)
 
   /** Mode for emitting reference confidence scores */
   @Argument(fullName = "emitRefConfidence", shortName = "ERC", doc = "Mode for emitting reference confidence scores", required = false, exclusiveOf = "", validation = "")
@@ -154,11 +100,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[BamGatherFunction])
   var bamOutput: File = _
-
-  /** Automatically generated index for bamOutput */
-  @Output(fullName = "bamOutputIndex", shortName = "", doc = "Automatically generated index for bamOutput", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var bamOutputIndex: File = _
 
   /** Automatically generated md5 for bamOutput */
   @Output(fullName = "bamOutputMD5", shortName = "", doc = "Automatically generated md5 for bamOutput", required = false, exclusiveOf = "", validation = "")
@@ -171,15 +112,15 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Don't skip calculations in ActiveRegions with no variants */
   @Argument(fullName = "disableOptimizations", shortName = "disableOptimizations", doc = "Don't skip calculations in ActiveRegions with no variants", required = false, exclusiveOf = "", validation = "")
-  var disableOptimizations: Boolean = _
+  var disableOptimizations: Boolean = config("disableOptimizations", default = false)
 
   /** If provided, we will annotate records with the number of alternate alleles that were discovered (but not necessarily genotyped) at a given site */
   @Argument(fullName = "annotateNDA", shortName = "nda", doc = "If provided, we will annotate records with the number of alternate alleles that were discovered (but not necessarily genotyped) at a given site", required = false, exclusiveOf = "", validation = "")
-  var annotateNDA: Boolean = _
+  var annotateNDA: Boolean = config("annotateNDA", default = false)
 
   /** Heterozygosity value used to compute prior likelihoods for any locus */
   @Argument(fullName = "heterozygosity", shortName = "hets", doc = "Heterozygosity value used to compute prior likelihoods for any locus", required = false, exclusiveOf = "", validation = "")
-  var heterozygosity: Option[Double] = None
+  var heterozygosity: Option[Double] = config("heterozygosity")
 
   /** Format string for heterozygosity */
   @Argument(fullName = "heterozygosityFormat", shortName = "", doc = "Format string for heterozygosity", required = false, exclusiveOf = "", validation = "")
@@ -187,7 +128,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Heterozygosity for indel calling */
   @Argument(fullName = "indel_heterozygosity", shortName = "indelHeterozygosity", doc = "Heterozygosity for indel calling", required = false, exclusiveOf = "", validation = "")
-  var indel_heterozygosity: Option[Double] = None
+  var indel_heterozygosity: Option[Double] = config("indel_heterozygosity")
 
   /** Format string for indel_heterozygosity */
   @Argument(fullName = "indel_heterozygosityFormat", shortName = "", doc = "Format string for indel_heterozygosity", required = false, exclusiveOf = "", validation = "")
@@ -195,7 +136,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** The minimum phred-scaled confidence threshold at which variants should be called */
   @Argument(fullName = "standard_min_confidence_threshold_for_calling", shortName = "stand_call_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be called", required = false, exclusiveOf = "", validation = "")
-  var standard_min_confidence_threshold_for_calling: Option[Double] = None
+  var standard_min_confidence_threshold_for_calling: Option[Double] = config("stand_call_conf")
 
   /** Format string for standard_min_confidence_threshold_for_calling */
   @Argument(fullName = "standard_min_confidence_threshold_for_callingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_calling", required = false, exclusiveOf = "", validation = "")
@@ -203,7 +144,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold) */
   @Argument(fullName = "standard_min_confidence_threshold_for_emitting", shortName = "stand_emit_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", required = false, exclusiveOf = "", validation = "")
-  var standard_min_confidence_threshold_for_emitting: Option[Double] = None
+  var standard_min_confidence_threshold_for_emitting: Option[Double] = config("stand_emit_conf")
 
   /** Format string for standard_min_confidence_threshold_for_emitting */
   @Argument(fullName = "standard_min_confidence_threshold_for_emittingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_emitting", required = false, exclusiveOf = "", validation = "")
@@ -211,59 +152,55 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Maximum number of alternate alleles to genotype */
   @Argument(fullName = "max_alternate_alleles", shortName = "maxAltAlleles", doc = "Maximum number of alternate alleles to genotype", required = false, exclusiveOf = "", validation = "")
-  var max_alternate_alleles: Option[Int] = None
+  var max_alternate_alleles: Option[Int] = config("max_alternate_alleles")
 
   /** Input prior for calls */
   @Argument(fullName = "input_prior", shortName = "inputPrior", doc = "Input prior for calls", required = false, exclusiveOf = "", validation = "")
-  var input_prior: Seq[Double] = Nil
+  var input_prior: List[Double] = config("input_prior", default = Nil)
 
   /** Ploidy (number of chromosomes) per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy). */
   @Argument(fullName = "sample_ploidy", shortName = "ploidy", doc = "Ploidy (number of chromosomes) per sample. For pooled data, set to (Number of samples in each pool * Sample Ploidy).", required = false, exclusiveOf = "", validation = "")
-  var sample_ploidy: Option[Int] = None
+  var sample_ploidy: Option[Int] = config("sample_ploidy")
 
   /** Specifies how to determine the alternate alleles to use for genotyping */
   @Argument(fullName = "genotyping_mode", shortName = "gt_mode", doc = "Specifies how to determine the alternate alleles to use for genotyping", required = false, exclusiveOf = "", validation = "")
-  var genotyping_mode: String = _
+  var genotyping_mode: Option[String] = config("genotyping_mode")
 
   /** The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES */
   @Input(fullName = "alleles", shortName = "alleles", doc = "The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES", required = false, exclusiveOf = "", validation = "")
   var alleles: File = _
 
-  /** Dependencies on the index of alleles */
-  @Input(fullName = "allelesIndex", shortName = "", doc = "Dependencies on the index of alleles", required = false, exclusiveOf = "", validation = "")
-  private var allelesIndex: Seq[File] = Nil
-
   /** Fraction of contamination in sequencing data (for all samples) to aggressively remove */
   @Argument(fullName = "contamination_fraction_to_filter", shortName = "contamination", doc = "Fraction of contamination in sequencing data (for all samples) to aggressively remove", required = false, exclusiveOf = "", validation = "")
-  var contamination_fraction_to_filter: Option[Double] = None
+  var contamination_fraction_to_filter: Option[Double] = config("contamination_fraction_to_filter")
 
   /** Format string for contamination_fraction_to_filter */
   @Argument(fullName = "contamination_fraction_to_filterFormat", shortName = "", doc = "Format string for contamination_fraction_to_filter", required = false, exclusiveOf = "", validation = "")
   var contamination_fraction_to_filterFormat: String = "%s"
 
   /** Tab-separated File containing fraction of contamination in sequencing data (per sample) to aggressively remove. Format should be \"<SampleID><TAB><Contamination>\" (Contamination is double) per line; No header. */
-  @Argument(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", doc = "Tab-separated File containing fraction of contamination in sequencing data (per sample) to aggressively remove. Format should be \"<SampleID><TAB><Contamination>\" (Contamination is double) per line; No header.", required = false, exclusiveOf = "", validation = "")
-  var contamination_fraction_per_sample_file: File = _
+  @Input(fullName = "contamination_fraction_per_sample_file", shortName = "contaminationFile", doc = "Tab-separated File containing fraction of contamination in sequencing data (per sample) to aggressively remove. Format should be \"<SampleID><TAB><Contamination>\" (Contamination is double) per line; No header.", required = false, exclusiveOf = "", validation = "")
+  var contamination_fraction_per_sample_file: Option[File] = config("contamination_fraction_per_sample_file")
 
   /** Non-reference probability calculation model to employ */
   @Argument(fullName = "p_nonref_model", shortName = "pnrm", doc = "Non-reference probability calculation model to employ", required = false, exclusiveOf = "", validation = "")
-  var p_nonref_model: String = _
+  var p_nonref_model: Option[String] = config("p_nonref_model")
 
   /** x */
   @Argument(fullName = "exactcallslog", shortName = "logExactCalls", doc = "x", required = false, exclusiveOf = "", validation = "")
-  var exactcallslog: File = _
+  var exactcallslog: Option[File] = config("exactcallslog")
 
   /** Specifies which type of calls we should output */
   @Argument(fullName = "output_mode", shortName = "out_mode", doc = "Specifies which type of calls we should output", required = false, exclusiveOf = "", validation = "")
-  var output_mode: String = _
+  var output_mode: Option[String] = config("output_mode")
 
   /** Annotate all sites with PLs */
   @Argument(fullName = "allSitePLs", shortName = "allSitePLs", doc = "Annotate all sites with PLs", required = false, exclusiveOf = "", validation = "")
-  var allSitePLs: Boolean = _
+  var allSitePLs: Boolean = config("allSitePLs", default = false)
 
   /** Flat gap continuation penalty for use in the Pair HMM */
   @Argument(fullName = "gcpHMM", shortName = "gcpHMM", doc = "Flat gap continuation penalty for use in the Pair HMM", required = false, exclusiveOf = "", validation = "")
-  var gcpHMM: Option[Int] = None
+  var gcpHMM: Option[Int] = config("gcpHMM")
 
   /** The PairHMM implementation to use for genotype likelihood calculations */
   @Argument(fullName = "pair_hmm_implementation", shortName = "pairHMM", doc = "The PairHMM implementation to use for genotype likelihood calculations", required = false, exclusiveOf = "", validation = "")
@@ -275,51 +212,51 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Load the vector logless PairHMM library each time a GATK run is initiated in the test suite */
   @Argument(fullName = "always_load_vector_logless_PairHMM_lib", shortName = "alwaysloadVectorHMM", doc = "Load the vector logless PairHMM library each time a GATK run is initiated in the test suite", required = false, exclusiveOf = "", validation = "")
-  var always_load_vector_logless_PairHMM_lib: Boolean = _
+  var always_load_vector_logless_PairHMM_lib: Boolean = config("always_load_vector_logless_PairHMM_lib", default = false)
 
   /** The global assumed mismapping rate for reads */
   @Argument(fullName = "phredScaledGlobalReadMismappingRate", shortName = "globalMAPQ", doc = "The global assumed mismapping rate for reads", required = false, exclusiveOf = "", validation = "")
-  var phredScaledGlobalReadMismappingRate: Option[Int] = None
+  var phredScaledGlobalReadMismappingRate: Option[Int] = config("phredScaledGlobalReadMismappingRate")
 
   /** Disable the use of the FPGA HMM implementation */
   @Argument(fullName = "noFpga", shortName = "noFpga", doc = "Disable the use of the FPGA HMM implementation", required = false, exclusiveOf = "", validation = "")
-  var noFpga: Boolean = _
+  var noFpga: Boolean = config("noFpga", default = false)
 
   /** Name of single sample to use from a multi-sample bam */
   @Argument(fullName = "sample_name", shortName = "sn", doc = "Name of single sample to use from a multi-sample bam", required = false, exclusiveOf = "", validation = "")
-  var sample_name: String = _
+  var sample_name: Option[String] = config("sample_name")
 
   /** Kmer size to use in the read threading assembler */
   @Argument(fullName = "kmerSize", shortName = "kmerSize", doc = "Kmer size to use in the read threading assembler", required = false, exclusiveOf = "", validation = "")
-  var kmerSize: Seq[Int] = Nil
+  var kmerSize: List[Int] = config("kmerSize", default = Nil)
 
   /** Disable iterating over kmer sizes when graph cycles are detected */
   @Argument(fullName = "dontIncreaseKmerSizesForCycles", shortName = "dontIncreaseKmerSizesForCycles", doc = "Disable iterating over kmer sizes when graph cycles are detected", required = false, exclusiveOf = "", validation = "")
-  var dontIncreaseKmerSizesForCycles: Boolean = _
+  var dontIncreaseKmerSizesForCycles: Boolean = config("dontIncreaseKmerSizesForCycles", default = false)
 
   /** Allow graphs that have non-unique kmers in the reference */
   @Argument(fullName = "allowNonUniqueKmersInRef", shortName = "allowNonUniqueKmersInRef", doc = "Allow graphs that have non-unique kmers in the reference", required = false, exclusiveOf = "", validation = "")
-  var allowNonUniqueKmersInRef: Boolean = _
+  var allowNonUniqueKmersInRef: Boolean = config("allowNonUniqueKmersInRef", default = false)
 
   /** Number of samples that must pass the minPruning threshold */
   @Argument(fullName = "numPruningSamples", shortName = "numPruningSamples", doc = "Number of samples that must pass the minPruning threshold", required = false, exclusiveOf = "", validation = "")
-  var numPruningSamples: Option[Int] = None
+  var numPruningSamples: Option[Int] = config("numPruningSamples")
 
   /** Disable dangling head and tail recovery */
   @Argument(fullName = "doNotRecoverDanglingBranches", shortName = "doNotRecoverDanglingBranches", doc = "Disable dangling head and tail recovery", required = false, exclusiveOf = "", validation = "")
-  var doNotRecoverDanglingBranches: Boolean = _
+  var doNotRecoverDanglingBranches: Boolean = config("doNotRecoverDanglingBranches", default = false)
 
   /** Minimum length of a dangling branch to attempt recovery */
   @Argument(fullName = "minDanglingBranchLength", shortName = "minDanglingBranchLength", doc = "Minimum length of a dangling branch to attempt recovery", required = false, exclusiveOf = "", validation = "")
-  var minDanglingBranchLength: Option[Int] = None
+  var minDanglingBranchLength: Option[Int] = config("minDanglingBranchLength")
 
   /** 1000G consensus mode */
   @Argument(fullName = "consensus", shortName = "consensus", doc = "1000G consensus mode", required = false, exclusiveOf = "", validation = "")
-  var consensus: Boolean = _
+  var consensus: Boolean = config("consensus", default = false)
 
   /** Maximum number of haplotypes to consider for your population */
   @Argument(fullName = "maxNumHaplotypesInPopulation", shortName = "maxNumHaplotypesInPopulation", doc = "Maximum number of haplotypes to consider for your population", required = false, exclusiveOf = "", validation = "")
-  var maxNumHaplotypesInPopulation: Option[Int] = None
+  var maxNumHaplotypesInPopulation: Option[Int] = config("maxNumHaplotypesInPopulation")
 
   /** Use an exploratory algorithm to error correct the kmers used during assembly */
   @Argument(fullName = "errorCorrectKmers", shortName = "errorCorrectKmers", doc = "Use an exploratory algorithm to error correct the kmers used during assembly", required = false, exclusiveOf = "", validation = "")
@@ -327,15 +264,15 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Minimum support to not prune paths in the graph */
   @Argument(fullName = "minPruning", shortName = "minPruning", doc = "Minimum support to not prune paths in the graph", required = false, exclusiveOf = "", validation = "")
-  var minPruning: Option[Int] = None
+  var minPruning: Option[Int] = config("minPruning")
 
   /** Write DOT formatted graph files out of the assembler for only this graph size */
   @Argument(fullName = "debugGraphTransformations", shortName = "debugGraphTransformations", doc = "Write DOT formatted graph files out of the assembler for only this graph size", required = false, exclusiveOf = "", validation = "")
-  var debugGraphTransformations: Boolean = _
+  var debugGraphTransformations: Boolean = config("debugGraphTransformations", default = false)
 
   /** Allow cycles in the kmer graphs to generate paths with multiple copies of the path sequenece rather than just the shortest paths */
   @Argument(fullName = "allowCyclesInKmerGraphToGeneratePaths", shortName = "allowCyclesInKmerGraphToGeneratePaths", doc = "Allow cycles in the kmer graphs to generate paths with multiple copies of the path sequenece rather than just the shortest paths", required = false, exclusiveOf = "", validation = "")
-  var allowCyclesInKmerGraphToGeneratePaths: Boolean = _
+  var allowCyclesInKmerGraphToGeneratePaths: Boolean = config("allowCyclesInKmerGraphToGeneratePaths", default = false)
 
   /** Write debug assembly graph information to this file */
   @Output(fullName = "graphOutput", shortName = "graph", doc = "Write debug assembly graph information to this file", required = false, exclusiveOf = "", validation = "")
@@ -344,71 +281,71 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Use an exploratory algorithm to error correct the kmers used during assembly */
   @Argument(fullName = "kmerLengthForReadErrorCorrection", shortName = "kmerLengthForReadErrorCorrection", doc = "Use an exploratory algorithm to error correct the kmers used during assembly", required = false, exclusiveOf = "", validation = "")
-  var kmerLengthForReadErrorCorrection: Option[Int] = None
+  var kmerLengthForReadErrorCorrection: Option[Int] = config("kmerLengthForReadErrorCorrection")
 
   /** A k-mer must be seen at least these times for it considered to be solid */
   @Argument(fullName = "minObservationsForKmerToBeSolid", shortName = "minObservationsForKmerToBeSolid", doc = "A k-mer must be seen at least these times for it considered to be solid", required = false, exclusiveOf = "", validation = "")
-  var minObservationsForKmerToBeSolid: Option[Int] = None
+  var minObservationsForKmerToBeSolid: Option[Int] = config("minObservationsForKmerToBeSolid")
 
   /** GQ thresholds for reference confidence bands */
   @Argument(fullName = "GVCFGQBands", shortName = "GQB", doc = "GQ thresholds for reference confidence bands", required = false, exclusiveOf = "", validation = "")
-  var GVCFGQBands: Seq[Int] = Nil
+  var GVCFGQBands: List[Int] = config("GVCFGQBands")
 
   /** The size of an indel to check for in the reference model */
   @Argument(fullName = "indelSizeToEliminateInRefModel", shortName = "ERCIS", doc = "The size of an indel to check for in the reference model", required = false, exclusiveOf = "", validation = "")
-  var indelSizeToEliminateInRefModel: Option[Int] = None
+  var indelSizeToEliminateInRefModel: Option[Int] = config("indelSizeToEliminateInRefModel")
 
   /** Minimum base quality required to consider a base for calling */
   @Argument(fullName = "min_base_quality_score", shortName = "mbq", doc = "Minimum base quality required to consider a base for calling", required = false, exclusiveOf = "", validation = "")
-  var min_base_quality_score: Option[Byte] = None
+  var min_base_quality_score: Option[Int] = config("min_base_quality_score")
 
   /** Include unmapped reads with chromosomal coordinates */
   @Argument(fullName = "includeUmappedReads", shortName = "unmapped", doc = "Include unmapped reads with chromosomal coordinates", required = false, exclusiveOf = "", validation = "")
-  var includeUmappedReads: Boolean = _
+  var includeUmappedReads: Boolean = config("includeUmappedReads", default = false)
 
   /** Use additional trigger on variants found in an external alleles file */
   @Argument(fullName = "useAllelesTrigger", shortName = "allelesTrigger", doc = "Use additional trigger on variants found in an external alleles file", required = false, exclusiveOf = "", validation = "")
-  var useAllelesTrigger: Boolean = _
+  var useAllelesTrigger: Boolean = config("useAllelesTrigger", default = false)
 
   /** Disable physical phasing */
   @Argument(fullName = "doNotRunPhysicalPhasing", shortName = "doNotRunPhysicalPhasing", doc = "Disable physical phasing", required = false, exclusiveOf = "", validation = "")
-  var doNotRunPhysicalPhasing: Boolean = _
+  var doNotRunPhysicalPhasing: Boolean = config("doNotRunPhysicalPhasing", default = false)
 
   /** Only use reads from this read group when making calls (but use all reads to build the assembly) */
   @Argument(fullName = "keepRG", shortName = "keepRG", doc = "Only use reads from this read group when making calls (but use all reads to build the assembly)", required = false, exclusiveOf = "", validation = "")
-  var keepRG: String = _
+  var keepRG: Option[String] = config("keepRG")
 
   /** Just determine ActiveRegions, don't perform assembly or calling */
   @Argument(fullName = "justDetermineActiveRegions", shortName = "justDetermineActiveRegions", doc = "Just determine ActiveRegions, don't perform assembly or calling", required = false, exclusiveOf = "", validation = "")
-  var justDetermineActiveRegions: Boolean = _
+  var justDetermineActiveRegions: Boolean = config("justDetermineActiveRegions", default = false)
 
   /** Perform assembly but do not genotype variants */
   @Argument(fullName = "dontGenotype", shortName = "dontGenotype", doc = "Perform assembly but do not genotype variants", required = false, exclusiveOf = "", validation = "")
-  var dontGenotype: Boolean = _
+  var dontGenotype: Boolean = config("dontGenotype", default = false)
 
   /** Do not analyze soft clipped bases in the reads */
   @Argument(fullName = "dontUseSoftClippedBases", shortName = "dontUseSoftClippedBases", doc = "Do not analyze soft clipped bases in the reads", required = false, exclusiveOf = "", validation = "")
-  var dontUseSoftClippedBases: Boolean = _
+  var dontUseSoftClippedBases: Boolean = config("dontUseSoftClippedBases", default = false)
 
   /** Write a BAM called assemblyFailure.bam capturing all of the reads that were in the active region when the assembler failed for any reason */
   @Argument(fullName = "captureAssemblyFailureBAM", shortName = "captureAssemblyFailureBAM", doc = "Write a BAM called assemblyFailure.bam capturing all of the reads that were in the active region when the assembler failed for any reason", required = false, exclusiveOf = "", validation = "")
-  var captureAssemblyFailureBAM: Boolean = _
+  var captureAssemblyFailureBAM: Boolean = config("captureAssemblyFailureBAM", default = false)
 
   /** Use an exploratory algorithm to error correct the kmers used during assembly */
   @Argument(fullName = "errorCorrectReads", shortName = "errorCorrectReads", doc = "Use an exploratory algorithm to error correct the kmers used during assembly", required = false, exclusiveOf = "", validation = "")
-  var errorCorrectReads: Boolean = _
+  var errorCorrectReads: Boolean = config("errorCorrectReads", default = false)
 
   /** The PCR indel model to use */
   @Argument(fullName = "pcr_indel_model", shortName = "pcrModel", doc = "The PCR indel model to use", required = false, exclusiveOf = "", validation = "")
-  var pcr_indel_model: String = _
+  var pcr_indel_model: Option[String] = config("pcr_indel_model")
 
   /** Maximum reads in an active region */
   @Argument(fullName = "maxReadsInRegionPerSample", shortName = "maxReadsInRegionPerSample", doc = "Maximum reads in an active region", required = false, exclusiveOf = "", validation = "")
-  var maxReadsInRegionPerSample: Option[Int] = None
+  var maxReadsInRegionPerSample: Option[Int] = config("maxReadsInRegionPerSample")
 
   /** Minimum number of reads sharing the same alignment start for each genomic location in an active region */
   @Argument(fullName = "minReadsPerAlignmentStart", shortName = "minReadsPerAlignStart", doc = "Minimum number of reads sharing the same alignment start for each genomic location in an active region", required = false, exclusiveOf = "", validation = "")
-  var minReadsPerAlignmentStart: Option[Int] = None
+  var minReadsPerAlignmentStart: Option[Int] = config("minReadsPerAlignmentStart")
 
   /** Output the raw activity profile results in IGV format */
   @Output(fullName = "activityProfileOut", shortName = "APO", doc = "Output the raw activity profile results in IGV format", required = false, exclusiveOf = "", validation = "")
@@ -426,19 +363,19 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** The active region extension; if not provided defaults to Walker annotated default */
   @Argument(fullName = "activeRegionExtension", shortName = "activeRegionExtension", doc = "The active region extension; if not provided defaults to Walker annotated default", required = false, exclusiveOf = "", validation = "")
-  var activeRegionExtension: Option[Int] = None
+  var activeRegionExtension: Option[Int] = config("activeRegionExtension")
 
   /** If provided, all bases will be tagged as active */
   @Argument(fullName = "forceActive", shortName = "forceActive", doc = "If provided, all bases will be tagged as active", required = false, exclusiveOf = "", validation = "")
-  var forceActive: Boolean = _
+  var forceActive: Boolean = config("forceActive", default = false)
 
   /** The active region maximum size; if not provided defaults to Walker annotated default */
   @Argument(fullName = "activeRegionMaxSize", shortName = "activeRegionMaxSize", doc = "The active region maximum size; if not provided defaults to Walker annotated default", required = false, exclusiveOf = "", validation = "")
-  var activeRegionMaxSize: Option[Int] = None
+  var activeRegionMaxSize: Option[Int] = config("activeRegionMaxSize")
 
   /** The sigma of the band pass filter Gaussian kernel; if not provided defaults to Walker annotated default */
   @Argument(fullName = "bandPassSigma", shortName = "bandPassSigma", doc = "The sigma of the band pass filter Gaussian kernel; if not provided defaults to Walker annotated default", required = false, exclusiveOf = "", validation = "")
-  var bandPassSigma: Option[Double] = None
+  var bandPassSigma: Option[Double] = config("bandPassSigma")
 
   /** Format string for bandPassSigma */
   @Argument(fullName = "bandPassSigmaFormat", shortName = "", doc = "Format string for bandPassSigma", required = false, exclusiveOf = "", validation = "")
@@ -446,11 +383,11 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Region probability propagation distance beyond it's maximum size. */
   @Argument(fullName = "maxProbPropagationDistance", shortName = "maxProbPropDist", doc = "Region probability propagation distance beyond it's maximum size.", required = false, exclusiveOf = "", validation = "")
-  var maxProbPropagationDistance: Option[Int] = None
+  var maxProbPropagationDistance: Option[Int] = config("maxProbPropagationDistance")
 
   /** Threshold for the probability of a profile state being active. */
   @Argument(fullName = "activeProbabilityThreshold", shortName = "ActProbThresh", doc = "Threshold for the probability of a profile state being active.", required = false, exclusiveOf = "", validation = "")
-  var activeProbabilityThreshold: Option[Double] = None
+  var activeProbabilityThreshold: Option[Double] = config("activeProbabilityThreshold")
 
   /** Format string for activeProbabilityThreshold */
   @Argument(fullName = "activeProbabilityThresholdFormat", shortName = "", doc = "Format string for activeProbabilityThreshold", required = false, exclusiveOf = "", validation = "")
@@ -458,36 +395,38 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Minimum read mapping quality required to consider a read for analysis with the HaplotypeCaller */
   @Argument(fullName = "min_mapping_quality_score", shortName = "mmq", doc = "Minimum read mapping quality required to consider a read for analysis with the HaplotypeCaller", required = false, exclusiveOf = "", validation = "")
-  var min_mapping_quality_score: Option[Int] = None
+  var min_mapping_quality_score: Option[Int] = config("min_mapping_quality_score")
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  override def defaultCoreMemory = 3.0
+
+  override def beforeGraph() {
+    super.beforeGraph()
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outIndex = new File(out.getPath + ".idx")
-    if (dbsnp != null)
-      dbsnpIndex :+= new File(dbsnp.getPath + ".idx")
-    compIndexes ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+        outputFiles :+= VcfUtils.getVcfIndexFile(out)
+    dbsnp.foreach(x => VcfUtils.getVcfIndexFile(x))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)
-        bamOutputIndex = new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
+        outputFiles :+= new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (generate_md5)
         bamOutputMD5 = new File(bamOutput.getPath + ".md5")
     if (alleles != null)
-      allelesIndex :+= new File(alleles.getPath + ".idx")
+      deps :+= new File(alleles.getPath + ".idx")
+    num_cpu_threads_per_data_thread = Some(getThreads)
   }
 
   override def cmdLine = super.cmdLine +
@@ -581,7 +520,6 @@ object HaplotypeCaller {
     val hc = new HaplotypeCaller(root)
     hc.input_file = inputFiles
     hc.out = outputFile
-    //if (hc.out.getName.endsWith(".vcf.gz")) hc.vcfIndex = new File(hc.out.getAbsolutePath + ".tbi")
     hc
   }
 
