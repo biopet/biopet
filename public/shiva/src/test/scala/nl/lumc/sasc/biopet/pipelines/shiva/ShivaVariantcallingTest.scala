@@ -3,7 +3,7 @@
   * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
   * on how to use this protected part of biopet or contact us at sasc@lumc.nl
   */
-package nl.lumc.sasc.biopet.pipelines.gatk
+package nl.lumc.sasc.biopet.pipelines.shiva
 
 import java.io.{File, FileOutputStream}
 
