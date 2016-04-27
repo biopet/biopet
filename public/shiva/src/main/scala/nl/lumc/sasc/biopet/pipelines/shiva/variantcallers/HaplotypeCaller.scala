@@ -3,11 +3,10 @@
  * LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions
  * on how to use this protected part of biopet or contact us at sasc@lumc.nl
  */
-package nl.lumc.sasc.biopet.pipelines.gatk.variantcallers
+package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.Variantcaller
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.extensions.gatk.broad
+import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Default mode for the haplotypecaller */
 class HaplotypeCaller(val root: Configurable) extends Variantcaller {
