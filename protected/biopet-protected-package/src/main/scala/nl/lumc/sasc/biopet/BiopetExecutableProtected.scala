@@ -9,9 +9,7 @@ import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutableProtected extends BiopetExecutable {
   def pipelines: List[MainCommand] = BiopetExecutablePublic.publicPipelines ::: List(
-    nl.lumc.sasc.biopet.pipelines.gatk.Shiva,
-    nl.lumc.sasc.biopet.pipelines.gatk.ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.gatk.Basty)
+    nl.lumc.sasc.biopet.pipelines.gatk.Shiva)
 
   def tools = BiopetExecutablePublic.tools
 }

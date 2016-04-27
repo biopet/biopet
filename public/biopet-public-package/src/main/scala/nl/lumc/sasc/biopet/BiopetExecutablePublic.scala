@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutablePublic extends BiopetExecutable {
@@ -33,13 +32,13 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling,
     nl.lumc.sasc.biopet.pipelines.gears.GearsSingle,
     nl.lumc.sasc.biopet.pipelines.gears.Gears,
-    nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest
+    nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest,
+    nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
+    nl.lumc.sasc.biopet.pipelines.basty.Basty
   )
 
   def pipelines: List[MainCommand] = List(
-    nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
-    ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.basty.Basty
+    nl.lumc.sasc.biopet.pipelines.shiva.Shiva
   ) ::: publicPipelines
 
   def tools: List[MainCommand] = BiopetToolsExecutable.tools
