@@ -430,6 +430,18 @@ object ConfigUtils extends Logging {
       else Nil
     }
 
+    /** Convert ConfigValue to List[Double] */
+    implicit def configValue2doubleList(value: ConfigValue): List[Double] = {
+      if (requiredValue(value)) any2list(value.value).map(any2double(_))
+      else Nil
+    }
+
+    /** Convert ConfigValue to List[Int] */
+    implicit def configValue2intList(value: ConfigValue): List[Int] = {
+      if (requiredValue(value)) any2list(value.value).map(any2int(_))
+      else Nil
+    }
+
     /** Convert ConfigValue to Set[String] */
     implicit def configValue2stringSet(value: ConfigValue): Set[String] = {
       if (requiredValue(value)) any2stringSet(value.value)
