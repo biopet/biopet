@@ -27,7 +27,7 @@ class AnalyzeCovariates(val root: Configurable) extends CommandLineGATK with Sca
 
   /** do not emit warning messages related to suspicious last modification time order of inputs */
   @Argument(fullName = "ignoreLastModificationTimes", shortName = "ignoreLMT", doc = "do not emit warning messages related to suspicious last modification time order of inputs", required = false, exclusiveOf = "", validation = "")
-  var ignoreLastModificationTimes: Boolean = _
+  var ignoreLastModificationTimes: Boolean = config("ignoreLastModificationTimes", default = false)
 
   /** location of the output report */
   @Output(fullName = "plotsReportFile", shortName = "plots", doc = "location of the output report", required = false, exclusiveOf = "", validation = "")
@@ -41,15 +41,15 @@ class AnalyzeCovariates(val root: Configurable) extends CommandLineGATK with Sca
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
   override def cmdLine = super.cmdLine +
     optional("-before", beforeReportFile, spaceSeparated = true, escape = true, format = "%s") +
