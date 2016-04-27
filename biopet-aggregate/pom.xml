@@ -37,9 +37,6 @@
         <module>../public/biopet-tools-extensions</module>
         <module>../public/biopet-extensions</module>
         <module>../public/biopet-tools-package</module>
-        <module>../protected/biopet-gatk-extensions</module>
-        <module>../protected/biopet-gatk-pipelines</module>
-        <module>../protected/biopet-protected-package</module>
     </modules>
 
 </project>

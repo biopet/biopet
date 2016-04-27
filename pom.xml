@@ -15,8 +15,6 @@
     
     <modules>
         <module>public</module>
-        <module>protected</module>
         <module>external-example</module>
-        <!--<module>biopet-aggregate</module>-->
     </modules>
 </project>
