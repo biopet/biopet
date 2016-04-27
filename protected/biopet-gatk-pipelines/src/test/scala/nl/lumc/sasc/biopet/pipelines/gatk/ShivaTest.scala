@@ -52,7 +52,7 @@ class ShivaTest extends TestNGSuite with Matchers {
       var m: Map[String, Any] = ShivaTest.config
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
-      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test"), m)
+      if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test.vcf.gz"), m)
       ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
         "use_indel_realigner" -> realign,
         "use_base_recalibration" -> baseRecalibration), m)
