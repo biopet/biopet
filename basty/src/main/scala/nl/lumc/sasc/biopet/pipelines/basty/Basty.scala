@@ -24,7 +24,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
-import nl.lumc.sasc.biopet.pipelines.shiva.{ Shiva, ShivaTrait }
+import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -44,7 +44,7 @@ class Basty(val root: Configurable) extends QScript with MultiSampleQScript {
     "variantcallers" -> variantcallers
   )
 
-  lazy val shiva: ShivaTrait = new Shiva(qscript)
+  lazy val shiva = new Shiva(qscript)
 
   def summaryFile: File = new File(outputDir, "Basty.summary.json")
 

@@ -205,11 +205,12 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
     logger.info(s"Starting script for ${samples.size} samples")
     var count = 0
     if (onlySamples.isEmpty || samples.forall(x => onlySamples.contains(x._1))) {
-      samples.foreach { case (sampleId, sample) =>
-        logger.info(s"Starting script sample '$sampleId'")
-        sample.addAndTrackJobs()
-        count += 1
-        logger.info(s"Finish script for '$sampleId', samples done: $count / ${samples.size}")
+      samples.foreach {
+        case (sampleId, sample) =>
+          logger.info(s"Starting script sample '$sampleId'")
+          sample.addAndTrackJobs()
+          count += 1
+          logger.info(s"Finish script for '$sampleId', samples done: $count / ${samples.size}")
       }
       logger.info("Starting script for multisample jobs")
       addMultiSampleJobs()

@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
@@ -26,13 +26,13 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
-  * Class for testing shiva
-  *
-  * Created by pjvan_thof on 3/2/15.
-  */
+ * Class for testing shiva
+ *
+ * Created by pjvan_thof on 3/2/15.
+ */
 class ShivaTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Shiva = {
     new Shiva() {

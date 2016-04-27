@@ -189,7 +189,7 @@ trait ReportBuilder extends ToolCommand {
 
   /**
    * This method will render the page and the subpages recursivly
- *
+   *
    * @param summary The summary object
    * @param page Page to render
    * @param outputDir Root output dir of the report

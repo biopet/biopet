@@ -120,7 +120,7 @@ object ShivaReport extends MultisampleMappingReportTrait {
 
   /**
    * Generate a stackbar plot for found variants
- *
+   *
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class

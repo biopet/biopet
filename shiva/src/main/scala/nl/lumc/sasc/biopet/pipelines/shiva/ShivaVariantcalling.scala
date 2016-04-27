@@ -22,7 +22,6 @@ import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordanc
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
 import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.gatk.variantcallers._
 import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{ VarscanCnsSingleSample, _ }
 import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable

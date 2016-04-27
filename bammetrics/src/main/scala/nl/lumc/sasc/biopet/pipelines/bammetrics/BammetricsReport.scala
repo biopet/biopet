@@ -98,7 +98,7 @@ object BammetricsReport extends ReportBuilder {
 
   /**
    * Generate a stackbar plot for alignment stats
- *
+   *
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class
@@ -162,7 +162,7 @@ object BammetricsReport extends ReportBuilder {
 
   /**
    * Generate a line plot for insertsize
- *
+   *
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class
@@ -251,7 +251,7 @@ object BammetricsReport extends ReportBuilder {
 
   /**
    * Generate a line plot for wgs coverage
- *
+   *
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class
@@ -342,7 +342,7 @@ object BammetricsReport extends ReportBuilder {
 
   /**
    * Generate a line plot for rna coverage
- *
+   *
    * @param outputDir OutputDir for the tsv and png file
    * @param prefix Prefix of the tsv and png file
    * @param summary Summary class
