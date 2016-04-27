@@ -17,7 +17,7 @@ class HaplotypeCallerAllele(val root: Configurable) extends Variantcaller {
   def biopetScript() {
     val hc = broad.HaplotypeCaller(this, inputBams.values.toList, outputFile)
     hc.alleles = config("input_alleles")
-    hc.genotyping_mode = "GENOTYPE_GIVEN_ALLELES"
+    hc.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
     add(hc)
   }
 }
