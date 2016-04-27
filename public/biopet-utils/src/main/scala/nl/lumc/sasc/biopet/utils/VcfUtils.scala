@@ -127,4 +127,11 @@ object VcfUtils {
   def hasMinGenomeQuality(gt: Genotype, minGQ: Int): Boolean = {
     gt.hasGQ && gt.getGQ >= minGQ
   }
+
+  def getVcfIndexFile(vcfFile: File): File = {
+    val name = vcfFile.getAbsolutePath
+    if (name.endsWith(".vcf")) new File(name + ".idx")
+    else if (name.endsWith(".vcf.gz")) new File(name + ".tbi")
+    else throw new IllegalArgumentException(s"File given is no vcf file: $vcfFile")
+  }
 }
