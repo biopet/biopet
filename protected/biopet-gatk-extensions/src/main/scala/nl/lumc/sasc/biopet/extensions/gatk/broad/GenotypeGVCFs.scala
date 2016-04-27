@@ -43,8 +43,7 @@ import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
-  analysisName = "GenotypeGVCFs"
-  analysis_type = "GenotypeGVCFs"
+  def analysis_type = "GenotypeGVCFs"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 

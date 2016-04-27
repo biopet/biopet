@@ -15,17 +15,17 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, FileInputStream, PrintWriter}
+import java.io.{ File, FileInputStream, PrintWriter }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output }
 import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
 
 import scala.collection.mutable
 import scala.io.Source
-import scala.sys.process.{Process, ProcessLogger}
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */

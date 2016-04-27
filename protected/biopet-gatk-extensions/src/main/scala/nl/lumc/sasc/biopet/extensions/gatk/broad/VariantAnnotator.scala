@@ -32,8 +32,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATK
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class VariantAnnotator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
-  analysisName = "VariantAnnotator"
-  analysis_type = "VariantAnnotator"
+  def analysis_type = "VariantAnnotator"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 

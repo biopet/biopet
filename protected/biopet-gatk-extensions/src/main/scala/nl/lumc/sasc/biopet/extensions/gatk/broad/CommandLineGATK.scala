@@ -7,13 +7,12 @@ import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
 trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with Version {
-  analysisName = "CommandLineGATK"
+  analysisName = analysis_type
   javaMainClass = "org.broadinstitute.gatk.engine.CommandLineGATK"
   jarFile = config("gatk_jar")
 
   /** Name of the tool to run */
-  @Argument(fullName = "analysis_type", shortName = "T", doc = "Name of the tool to run", required = true, exclusiveOf = "", validation = "")
-  var analysis_type: String = _
+  def analysis_type: String
 
   /** Input file containing sequence data (BAM or CRAM) */
   @Input(fullName = "input_file", shortName = "I", doc = "Input file containing sequence data (BAM or CRAM)", required = false, exclusiveOf = "", validation = "")

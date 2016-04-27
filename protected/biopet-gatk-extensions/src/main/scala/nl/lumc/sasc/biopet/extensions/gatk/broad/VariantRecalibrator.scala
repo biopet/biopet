@@ -52,8 +52,7 @@ import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, Tagg
 import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
 class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
-  analysisName = "VariantRecalibrator"
-  analysis_type = "VariantRecalibrator"
+  def analysis_type = "VariantRecalibrator"
 
   /** Recalibration mode to employ */
   @Argument(fullName = "mode", shortName = "mode", doc = "Recalibration mode to employ", required = true, exclusiveOf = "", validation = "")

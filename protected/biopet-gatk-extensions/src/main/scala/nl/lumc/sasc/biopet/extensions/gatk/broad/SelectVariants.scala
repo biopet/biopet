@@ -30,8 +30,7 @@ import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class SelectVariants(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
-  analysisName = "SelectVariants"
-  analysis_type = "SelectVariants"
+  def analysis_type = "SelectVariants"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 

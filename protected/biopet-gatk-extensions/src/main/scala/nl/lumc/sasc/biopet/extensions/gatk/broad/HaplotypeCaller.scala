@@ -5,29 +5,17 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//  if (config("inputtype", default = "dna").asString == "rna") {
-//    dontUseSoftClippedBases = config("dontusesoftclippedbases", default = true)
-//    stand_call_conf = config("stand_call_conf", default = 5)
-//    stand_emit_conf = config("stand_emit_conf", default = 0)
-//  } else {
-//    dontUseSoftClippedBases = config("dontusesoftclippedbases", default = false)
-//    stand_call_conf = config("stand_call_conf", default = 5)
-//    stand_emit_conf = config("stand_emit_conf", default = 0)
-//  }
-//
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk._
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
-import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, _}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
 import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
-  analysisName = "HaplotypeCaller"
-  analysis_type = "HaplotypeCaller"
+  def analysis_type = "HaplotypeCaller"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 

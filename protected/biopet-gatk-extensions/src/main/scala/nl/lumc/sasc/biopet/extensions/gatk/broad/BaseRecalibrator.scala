@@ -25,8 +25,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 //TODO: check gathering
 class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with ScatterGatherableFunction */ {
-  analysisName = "BaseRecalibrator"
-  analysis_type = "BaseRecalibrator"
+  def analysis_type = "BaseRecalibrator"
   //TODO: check gathering
   //scatterClass = classOf[ReadScatterFunction]
   //setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }

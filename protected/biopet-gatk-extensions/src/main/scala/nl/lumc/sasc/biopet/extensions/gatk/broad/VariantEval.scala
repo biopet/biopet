@@ -46,8 +46,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.broadinstitute.gatk.utils.commandline.Output
 
 class VariantEval(val root: Configurable) extends CommandLineGATK {
-  analysisName = "VariantEval"
-  analysis_type = "VariantEval"
+  def analysis_type = "VariantEval"
 
   /** An output file created by the walker.  Will overwrite contents if file exists */
   @Output(fullName = "out", shortName = "o", doc = "An output file created by the walker.  Will overwrite contents if file exists", required = false, exclusiveOf = "", validation = "")

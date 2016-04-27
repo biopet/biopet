@@ -57,8 +57,7 @@ import org.broadinstitute.gatk.utils.commandline.Input
 import org.broadinstitute.gatk.utils.commandline.Output
 
 class ApplyRecalibration(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
-  analysisName = "ApplyRecalibration"
-  analysis_type = "ApplyRecalibration"
+  def analysis_type = "ApplyRecalibration"
   scatterClass = classOf[LocusScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 
