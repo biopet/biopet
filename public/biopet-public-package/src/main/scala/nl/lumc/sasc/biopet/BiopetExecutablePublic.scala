@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutablePublic extends BiopetExecutable {
-  def publicPipelines: List[MainCommand] = List(
+  def pipelines: List[MainCommand] = List(
     nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep,
     nl.lumc.sasc.biopet.pipelines.mapping.Mapping,
     nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMapping,
@@ -34,12 +34,9 @@ object BiopetExecutablePublic extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gears.Gears,
     nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
-    nl.lumc.sasc.biopet.pipelines.basty.Basty
-  )
-
-  def pipelines: List[MainCommand] = List(
+    nl.lumc.sasc.biopet.pipelines.basty.Basty,
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva
-  ) ::: publicPipelines
+  )
 
   def tools: List[MainCommand] = BiopetToolsExecutable.tools
 }
