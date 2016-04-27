@@ -397,8 +397,6 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
-  override def defaultCoreMemory = 3.0
-
   override def beforeGraph() {
     super.beforeGraph()
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))

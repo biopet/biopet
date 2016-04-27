@@ -311,6 +311,8 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
   override def versionExitcode = List(0, 1)
   def versionCommand = executable + " -jar " + jarFile + " -version"
 
+  override def defaultCoreMemory = 4.0
+  override def faiRequired = true
   override def dictRequired = true
 
   override def beforeGraph() {
