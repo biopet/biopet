@@ -64,51 +64,47 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
 
   /** dbSNP file */
   @Input(fullName = "dbsnp", shortName = "D", doc = "dbSNP file", required = false, exclusiveOf = "", validation = "")
-  var dbsnp: Option[File] = None
+  var dbsnp: Option[File] = config("dbsnp")
 
   /** Evaluations that count calls at sites of true variation (e.g., indel calls) will use this argument as their gold standard for comparison */
   @Input(fullName = "goldStandard", shortName = "gold", doc = "Evaluations that count calls at sites of true variation (e.g., indel calls) will use this argument as their gold standard for comparison", required = false, exclusiveOf = "", validation = "")
-  var goldStandard: Option[File] = None
-
-  /** List the available eval modules and exit */
-  @Argument(fullName = "list", shortName = "ls", doc = "List the available eval modules and exit", required = false, exclusiveOf = "", validation = "")
-  var list: Boolean = _
+  var goldStandard: Option[File] = config("goldStandard")
 
   /** One or more stratifications to use when evaluating the data */
   @Argument(fullName = "select_exps", shortName = "select", doc = "One or more stratifications to use when evaluating the data", required = false, exclusiveOf = "", validation = "")
-  var select_exps: Seq[String] = Nil
+  var select_exps: List[String] = config("select_exps", default = Nil)
 
   /** Names to use for the list of stratifications (must be a 1-to-1 mapping) */
   @Argument(fullName = "select_names", shortName = "selectName", doc = "Names to use for the list of stratifications (must be a 1-to-1 mapping)", required = false, exclusiveOf = "", validation = "")
-  var select_names: Seq[String] = Nil
+  var select_names: List[String] = config("select_names", default = Nil)
 
   /** Derive eval and comp contexts using only these sample genotypes, when genotypes are available in the original context */
   @Argument(fullName = "sample", shortName = "sn", doc = "Derive eval and comp contexts using only these sample genotypes, when genotypes are available in the original context", required = false, exclusiveOf = "", validation = "")
-  var sample: Seq[String] = Nil
+  var sample: List[String] = config("sample", default = Nil, freeVar = false
 
   /** Name of ROD bindings containing variant sites that should be treated as known when splitting eval rods into known and novel subsets */
   @Argument(fullName = "known_names", shortName = "knownName", doc = "Name of ROD bindings containing variant sites that should be treated as known when splitting eval rods into known and novel subsets", required = false, exclusiveOf = "", validation = "")
-  var known_names: Seq[String] = Nil
+  var known_names: List[String] = config("known_names", default = Nil)
 
   /** One or more specific stratification modules to apply to the eval track(s) (in addition to the standard stratifications, unless -noS is specified) */
   @Argument(fullName = "stratificationModule", shortName = "ST", doc = "One or more specific stratification modules to apply to the eval track(s) (in addition to the standard stratifications, unless -noS is specified)", required = false, exclusiveOf = "", validation = "")
-  var stratificationModule: Seq[String] = Nil
+  var stratificationModule: List[String] = config("stratificationModule", default = Nil)
 
   /** Do not use the standard stratification modules by default (instead, only those that are specified with the -S option) */
   @Argument(fullName = "doNotUseAllStandardStratifications", shortName = "noST", doc = "Do not use the standard stratification modules by default (instead, only those that are specified with the -S option)", required = false, exclusiveOf = "", validation = "")
-  var doNotUseAllStandardStratifications: Boolean = _
+  var doNotUseAllStandardStratifications: Boolean = config("doNotUseAllStandardStratifications", default = false)
 
   /** One or more specific eval modules to apply to the eval track(s) (in addition to the standard modules, unless -noEV is specified) */
   @Argument(fullName = "evalModule", shortName = "EV", doc = "One or more specific eval modules to apply to the eval track(s) (in addition to the standard modules, unless -noEV is specified)", required = false, exclusiveOf = "", validation = "")
-  var evalModule: Seq[String] = Nil
+  var evalModule: List[String] = config("evalModule", default = Nil)
 
   /** Do not use the standard modules by default (instead, only those that are specified with the -EV option) */
   @Argument(fullName = "doNotUseAllStandardModules", shortName = "noEV", doc = "Do not use the standard modules by default (instead, only those that are specified with the -EV option)", required = false, exclusiveOf = "", validation = "")
-  var doNotUseAllStandardModules: Boolean = _
+  var doNotUseAllStandardModules: Boolean = config("doNotUseAllStandardModules", default = false)
 
   /** Minimum phasing quality */
   @Argument(fullName = "minPhaseQuality", shortName = "mpq", doc = "Minimum phasing quality", required = false, exclusiveOf = "", validation = "")
-  var minPhaseQuality: Option[Double] = None
+  var minPhaseQuality: Option[Double] = config("minPhaseQuality")
 
   /** Format string for minPhaseQuality */
   @Argument(fullName = "minPhaseQualityFormat", shortName = "", doc = "Format string for minPhaseQuality", required = false, exclusiveOf = "", validation = "")
@@ -116,7 +112,7 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
 
   /** Minimum genotype QUAL score for each trio member required to accept a site as a violation. Default is 50. */
   @Argument(fullName = "mendelianViolationQualThreshold", shortName = "mvq", doc = "Minimum genotype QUAL score for each trio member required to accept a site as a violation. Default is 50.", required = false, exclusiveOf = "", validation = "")
-  var mendelianViolationQualThreshold: Option[Double] = None
+  var mendelianViolationQualThreshold: Option[Double] = config("mendelianViolationQualThreshold")
 
   /** Format string for mendelianViolationQualThreshold */
   @Argument(fullName = "mendelianViolationQualThresholdFormat", shortName = "", doc = "Format string for mendelianViolationQualThreshold", required = false, exclusiveOf = "", validation = "")
@@ -124,47 +120,47 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
 
   /** Per-sample ploidy (number of chromosomes per sample) */
   @Argument(fullName = "samplePloidy", shortName = "ploidy", doc = "Per-sample ploidy (number of chromosomes per sample)", required = false, exclusiveOf = "", validation = "")
-  var samplePloidy: Option[Int] = None
+  var samplePloidy: Option[Int] = config("samplePloidy")
 
   /** Fasta file with ancestral alleles */
   @Argument(fullName = "ancestralAlignments", shortName = "aa", doc = "Fasta file with ancestral alleles", required = false, exclusiveOf = "", validation = "")
-  var ancestralAlignments: File = _
+  var ancestralAlignments: Option[File] = config("ancestralAlignments")
 
   /** If provided only comp and eval tracks with exactly matching reference and alternate alleles will be counted as overlapping */
   @Argument(fullName = "requireStrictAlleleMatch", shortName = "strict", doc = "If provided only comp and eval tracks with exactly matching reference and alternate alleles will be counted as overlapping", required = false, exclusiveOf = "", validation = "")
-  var requireStrictAlleleMatch: Boolean = _
+  var requireStrictAlleleMatch: Boolean = config("requireStrictAlleleMatch", default = false)
 
   /** If provided, modules that track polymorphic sites will not require that a site have AC > 0 when the input eval has genotypes */
   @Argument(fullName = "keepAC0", shortName = "keepAC0", doc = "If provided, modules that track polymorphic sites will not require that a site have AC > 0 when the input eval has genotypes", required = false, exclusiveOf = "", validation = "")
-  var keepAC0: Boolean = _
+  var keepAC0: Boolean = config("keepAC0", default = false)
 
   /** If provided, modules that track polymorphic sites will not require that a site have AC > 0 when the input eval has genotypes */
   @Argument(fullName = "numSamples", shortName = "numSamples", doc = "If provided, modules that track polymorphic sites will not require that a site have AC > 0 when the input eval has genotypes", required = false, exclusiveOf = "", validation = "")
-  var numSamples: Option[Int] = None
+  var numSamples: Option[Int] = config("numSamples")
 
   /** If provided, all -eval tracks will be merged into a single eval track */
   @Argument(fullName = "mergeEvals", shortName = "mergeEvals", doc = "If provided, all -eval tracks will be merged into a single eval track", required = false, exclusiveOf = "", validation = "")
-  var mergeEvals: Boolean = _
+  var mergeEvals: Boolean = config("mergeEvals", default = false)
 
   /** File containing tribble-readable features for the IntervalStratificiation */
   @Input(fullName = "stratIntervals", shortName = "stratIntervals", doc = "File containing tribble-readable features for the IntervalStratificiation", required = false, exclusiveOf = "", validation = "")
-  var stratIntervals: File = _
+  var stratIntervals: Option[File] = config("stratIntervals")
 
   /** File containing tribble-readable features describing a known list of copy number variants */
   @Input(fullName = "knownCNVs", shortName = "knownCNVs", doc = "File containing tribble-readable features describing a known list of copy number variants", required = false, exclusiveOf = "", validation = "")
-  var knownCNVs: File = _
+  var knownCNVs: Option[File] = config("knownCNVs")
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
@@ -180,7 +176,6 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     optional(TaggedFile.formatCommandLineParameter("-gold", goldStandard), goldStandard, spaceSeparated = true, escape = true, format = "%s") +
-    conditional(list, "-ls", escape = true, format = "%s") +
     repeat("-select", select_exps, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-selectName", select_names, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-sn", sample, spaceSeparated = true, escape = true, format = "%s") +

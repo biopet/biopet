@@ -21,23 +21,23 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** Max number of Gaussians for the positive model */
   @Argument(fullName = "maxGaussians", shortName = "mG", doc = "Max number of Gaussians for the positive model", required = false, exclusiveOf = "", validation = "")
-  var maxGaussians: Option[Int] = None
+  var maxGaussians: Option[Int] = config("maxGaussians")
 
   /** Max number of Gaussians for the negative model */
   @Argument(fullName = "maxNegativeGaussians", shortName = "mNG", doc = "Max number of Gaussians for the negative model", required = false, exclusiveOf = "", validation = "")
-  var maxNegativeGaussians: Option[Int] = None
+  var maxNegativeGaussians: Option[Int] = config("maxNegativeGaussians")
 
   /** Maximum number of VBEM iterations */
   @Argument(fullName = "maxIterations", shortName = "mI", doc = "Maximum number of VBEM iterations", required = false, exclusiveOf = "", validation = "")
-  var maxIterations: Option[Int] = None
+  var maxIterations: Option[Int] = config("maxIterations")
 
   /** Number of k-means iterations */
   @Argument(fullName = "numKMeans", shortName = "nKM", doc = "Number of k-means iterations", required = false, exclusiveOf = "", validation = "")
-  var numKMeans: Option[Int] = None
+  var numKMeans: Option[Int] = config("numKMeans")
 
   /** Annotation value divergence threshold (number of standard deviations from the means)  */
   @Argument(fullName = "stdThreshold", shortName = "std", doc = "Annotation value divergence threshold (number of standard deviations from the means) ", required = false, exclusiveOf = "", validation = "")
-  var stdThreshold: Option[Double] = None
+  var stdThreshold: Option[Double] = config("stdThreshold")
 
   /** Format string for stdThreshold */
   @Argument(fullName = "stdThresholdFormat", shortName = "", doc = "Format string for stdThreshold", required = false, exclusiveOf = "", validation = "")
@@ -45,7 +45,7 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** The shrinkage parameter in the variational Bayes algorithm. */
   @Argument(fullName = "shrinkage", shortName = "shrinkage", doc = "The shrinkage parameter in the variational Bayes algorithm.", required = false, exclusiveOf = "", validation = "")
-  var shrinkage: Option[Double] = None
+  var shrinkage: Option[Double] = config("shrinkage")
 
   /** Format string for shrinkage */
   @Argument(fullName = "shrinkageFormat", shortName = "", doc = "Format string for shrinkage", required = false, exclusiveOf = "", validation = "")
@@ -53,7 +53,7 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** The dirichlet parameter in the variational Bayes algorithm. */
   @Argument(fullName = "dirichlet", shortName = "dirichlet", doc = "The dirichlet parameter in the variational Bayes algorithm.", required = false, exclusiveOf = "", validation = "")
-  var dirichlet: Option[Double] = None
+  var dirichlet: Option[Double] = config("dirichlet")
 
   /** Format string for dirichlet */
   @Argument(fullName = "dirichletFormat", shortName = "", doc = "Format string for dirichlet", required = false, exclusiveOf = "", validation = "")
@@ -61,7 +61,7 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** The number of prior counts to use in the variational Bayes algorithm. */
   @Argument(fullName = "priorCounts", shortName = "priorCounts", doc = "The number of prior counts to use in the variational Bayes algorithm.", required = false, exclusiveOf = "", validation = "")
-  var priorCounts: Option[Double] = None
+  var priorCounts: Option[Double] = config("priorCounts")
 
   /** Format string for priorCounts */
   @Argument(fullName = "priorCountsFormat", shortName = "", doc = "Format string for priorCounts", required = false, exclusiveOf = "", validation = "")
@@ -69,15 +69,15 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** Maximum number of training data */
   @Argument(fullName = "maxNumTrainingData", shortName = "maxNumTrainingData", doc = "Maximum number of training data", required = false, exclusiveOf = "", validation = "")
-  var maxNumTrainingData: Option[Int] = None
+  var maxNumTrainingData: Option[Int] = config("maxNumTrainingData")
 
   /** Minimum number of bad variants */
   @Argument(fullName = "minNumBadVariants", shortName = "minNumBad", doc = "Minimum number of bad variants", required = false, exclusiveOf = "", validation = "")
-  var minNumBadVariants: Option[Int] = None
+  var minNumBadVariants: Option[Int] = config("minNumBadVariants")
 
   /** LOD score cutoff for selecting bad variants */
   @Argument(fullName = "badLodCutoff", shortName = "badLodCutoff", doc = "LOD score cutoff for selecting bad variants", required = false, exclusiveOf = "", validation = "")
-  var badLodCutoff: Option[Double] = None
+  var badLodCutoff: Option[Double] = config("badLodCutoff")
 
   /** Format string for badLodCutoff */
   @Argument(fullName = "badLodCutoffFormat", shortName = "", doc = "Format string for badLodCutoff", required = false, exclusiveOf = "", validation = "")
@@ -85,15 +85,15 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** Apply logit transform and jitter to MQ values */
   @Argument(fullName = "MQCapForLogitJitterTransform", shortName = "MQCap", doc = "Apply logit transform and jitter to MQ values", required = false, exclusiveOf = "", validation = "")
-  var MQCapForLogitJitterTransform: Option[Int] = None
+  var MQCapForLogitJitterTransform: Option[Int] = config("MQCapForLogitJitterTransform")
 
   /** MQ is by default transformed to log[(MQ_cap + epsilon - MQ)/(MQ + epsilon)] to make it more Gaussian-like.  Use this flag to not do that. */
   @Argument(fullName = "no_MQ_logit", shortName = "NoMQLogit", doc = "MQ is by default transformed to log[(MQ_cap + epsilon - MQ)/(MQ + epsilon)] to make it more Gaussian-like.  Use this flag to not do that.", required = false, exclusiveOf = "", validation = "")
-  var no_MQ_logit: Boolean = _
+  var no_MQ_logit: Boolean = config("no_MQ_logit", default = false)
 
   /** Amount of jitter (as a factor to a Normal(0,1) noise) to add to the MQ capped values */
   @Argument(fullName = "MQ_jitter", shortName = "MQJitt", doc = "Amount of jitter (as a factor to a Normal(0,1) noise) to add to the MQ capped values", required = false, exclusiveOf = "", validation = "")
-  var MQ_jitter: Option[Double] = None
+  var MQ_jitter: Option[Double] = config("MQ_jitter", default = false)
 
   /** Format string for MQ_jitter */
   @Argument(fullName = "MQ_jitterFormat", shortName = "", doc = "Format string for MQ_jitter", required = false, exclusiveOf = "", validation = "")
@@ -105,11 +105,11 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** Additional raw input variants to be used in building the model */
   @Input(fullName = "aggregate", shortName = "aggregate", doc = "Additional raw input variants to be used in building the model", required = false, exclusiveOf = "", validation = "")
-  var aggregate: Seq[File] = Nil
+  var aggregate: List[File] = config("aggregate", default = Nil)
 
   /** A list of sites for which to apply a prior probability of being correct but which aren't used by the algorithm (training and truth sets are required to run) */
   @Input(fullName = "resource", shortName = "resource", doc = "A list of sites for which to apply a prior probability of being correct but which aren't used by the algorithm (training and truth sets are required to run)", required = true, exclusiveOf = "", validation = "")
-  var resource: Seq[File] = Nil
+  var resource: List[File] = config("resource", default = Nil)
 
   /** The output recal file used by ApplyRecalibration */
   @Output(fullName = "recal_file", shortName = "recalFile", doc = "The output recal file used by ApplyRecalibration", required = true, exclusiveOf = "", validation = "")
@@ -123,7 +123,7 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** The expected novel Ti/Tv ratio to use when calculating FDR tranches and for display on the optimization curve output figures. (approx 2.15 for whole genome experiments). ONLY USED FOR PLOTTING PURPOSES! */
   @Argument(fullName = "target_titv", shortName = "titv", doc = "The expected novel Ti/Tv ratio to use when calculating FDR tranches and for display on the optimization curve output figures. (approx 2.15 for whole genome experiments). ONLY USED FOR PLOTTING PURPOSES!", required = false, exclusiveOf = "", validation = "")
-  var target_titv: Option[Double] = None
+  var target_titv: Option[Double] = config("target_titv")
 
   /** Format string for target_titv */
   @Argument(fullName = "target_titvFormat", shortName = "", doc = "Format string for target_titv", required = false, exclusiveOf = "", validation = "")
@@ -131,15 +131,15 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** The names of the annotations which should used for calculations */
   @Argument(fullName = "use_annotation", shortName = "an", doc = "The names of the annotations which should used for calculations", required = true, exclusiveOf = "", validation = "")
-  var use_annotation: Seq[String] = Nil
+  var use_annotation: List[String] = config("use_annotation", default = Nil)
 
   /** The levels of truth sensitivity at which to slice the data. (in percent, that is 1.0 for 1 percent) */
   @Argument(fullName = "TStranche", shortName = "tranche", doc = "The levels of truth sensitivity at which to slice the data. (in percent, that is 1.0 for 1 percent)", required = false, exclusiveOf = "", validation = "")
-  var TStranche: Seq[Double] = Nil
+  var TStranche: List[Double] = config("TStranche", default = Nil)
 
   /** If specified, the variant recalibrator will also use variants marked as filtered by the specified filter name in the input VCF file */
   @Argument(fullName = "ignore_filter", shortName = "ignoreFilter", doc = "If specified, the variant recalibrator will also use variants marked as filtered by the specified filter name in the input VCF file", required = false, exclusiveOf = "", validation = "")
-  var ignore_filter: Seq[String] = Nil
+  var ignore_filter: List[String] = config("ignore_filter", default = Nil)
 
   /** If specified, the variant recalibrator will ignore all input filters. Useful to rerun the VQSR from a filtered output file. */
   @Argument(fullName = "ignore_all_filters", shortName = "ignoreAllFilters", doc = "If specified, the variant recalibrator will ignore all input filters. Useful to rerun the VQSR from a filtered output file.", required = false, exclusiveOf = "", validation = "")
@@ -152,23 +152,23 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
 
   /** Used to debug the random number generation inside the VQSR. Do not use. */
   @Argument(fullName = "replicate", shortName = "replicate", doc = "Used to debug the random number generation inside the VQSR. Do not use.", required = false, exclusiveOf = "", validation = "")
-  var replicate: Option[Int] = None
+  var replicate: Option[Int] = config("replicate")
 
   /** Trust that all the input training sets' unfiltered records contain only polymorphic sites to drastically speed up the computation. */
   @Argument(fullName = "trustAllPolymorphic", shortName = "allPoly", doc = "Trust that all the input training sets' unfiltered records contain only polymorphic sites to drastically speed up the computation.", required = false, exclusiveOf = "", validation = "")
-  var trustAllPolymorphic: Boolean = _
+  var trustAllPolymorphic: Boolean = config("trustAllPolymorphic", default = false)
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
