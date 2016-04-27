@@ -36,6 +36,8 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
     Some(shiva)
   }
 
+  override def defaults = Map("haplotypecaller" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0))
+
   /** Method to make the variantcalling namespace of shiva */
   def makeVariantcalling(multisample: Boolean = false): ShivaVariantcallingTrait with QScript = {
     if (multisample) new ShivaVariantcalling(qscript) {
