@@ -22,9 +22,8 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import nl.lumc.sasc.biopet.core._
 import org.broadinstitute.gatk.engine.phonehome.GATKRunReport
-import org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK
 
-trait GatkGeneral extends CommandLineGATK with CommandLineResources with Reference with Version {
+trait GatkGeneral extends org.broadinstitute.gatk.queue.extensions.gatk.CommandLineGATK with CommandLineResources with Reference with Version {
   var executable: String = config("java", default = "java", namespace = "java", freeVar = false)
 
   override def subPath = "gatk" :: super.subPath
