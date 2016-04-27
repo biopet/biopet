@@ -5,19 +5,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gatk
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.gatk.broad._
-import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, SortSam }
+import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, SortSam}
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
+import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 /**
  * Class for testing shiva
