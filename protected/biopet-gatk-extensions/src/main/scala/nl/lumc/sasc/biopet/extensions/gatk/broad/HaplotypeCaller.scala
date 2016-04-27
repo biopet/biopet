@@ -277,7 +277,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** GQ thresholds for reference confidence bands */
   @Argument(fullName = "GVCFGQBands", shortName = "GQB", doc = "GQ thresholds for reference confidence bands", required = false, exclusiveOf = "", validation = "")
-  var GVCFGQBands: List[Int] = config("GVCFGQBands")
+  var GVCFGQBands: List[Int] = config("GVCFGQBands", default = Nil)
 
   /** The size of an indel to check for in the reference model */
   @Argument(fullName = "indelSizeToEliminateInRefModel", shortName = "ERCIS", doc = "The size of an indel to check for in the reference model", required = false, exclusiveOf = "", validation = "")
@@ -402,7 +402,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
         outputFiles :+= VcfUtils.getVcfIndexFile(out)
-    dbsnp.foreach(deps :+=  VcfUtils.getVcfIndexFile(_))
+    dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)

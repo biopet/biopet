@@ -9,8 +9,8 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, TaggedFile}
-import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, TaggedFile }
+import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
 class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
   def analysis_type = "VariantRecalibrator"

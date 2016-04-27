@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{GATKScatterFunction, ReadScatterFunction, TaggedFile}
+import org.broadinstitute.gatk.queue.extensions.gatk.{ GATKScatterFunction, ReadScatterFunction, TaggedFile }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
-import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 //TODO: check gathering
 class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with ScatterGatherableFunction */ {
@@ -22,7 +22,7 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with S
 
   /** A database of known polymorphic sites */
   @Input(fullName = "knownSites", shortName = "knownSites", doc = "A database of known polymorphic sites", required = false, exclusiveOf = "", validation = "")
-  var knownSites: List[File] = config("known_sites")
+  var knownSites: List[File] = config("known_sites", default = Nil)
 
   /** Dependencies on any indexes of knownSites */
   @Input(fullName = "knownSitesIndexes", shortName = "", doc = "Dependencies on any indexes of knownSites", required = false, exclusiveOf = "", validation = "")

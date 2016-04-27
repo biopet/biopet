@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
-import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class CombineVariants(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "CombineVariants"

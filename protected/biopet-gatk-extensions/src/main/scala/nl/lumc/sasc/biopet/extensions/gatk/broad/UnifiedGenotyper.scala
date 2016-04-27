@@ -48,10 +48,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile}
+import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, GATKScatterFunction, LocusScatterFunction, TaggedFile }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
-import org.broadinstitute.gatk.utils.commandline.{Gather, Input, Output, _}
+import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
 class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "UnifiedGenotyper"
@@ -293,9 +293,9 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    reference_sample_calls.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
-    alleles.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
-    dbsnp.foreach( deps :+= VcfUtils.getVcfIndexFile(_))
+    reference_sample_calls.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    alleles.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
+    dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
