@@ -512,7 +512,7 @@ object HaplotypeCaller {
   def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
     val hc = apply(root, List(inputFile), outputFile)
     hc.emitRefConfidence = "GVCF"
-    hc.variant_index_type = GATKVCFIndexType.LINEAR
+    hc.variant_index_type = Some("LINEAR")
     hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
     hc
   }
