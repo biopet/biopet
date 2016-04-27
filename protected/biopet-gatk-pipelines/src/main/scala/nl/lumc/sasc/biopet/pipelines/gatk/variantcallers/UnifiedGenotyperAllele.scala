@@ -17,7 +17,7 @@ class UnifiedGenotyperAllele(val root: Configurable) extends Variantcaller {
   def biopetScript() {
     val ug = broad.UnifiedGenotyper(this, inputBams.values.toList, outputFile)
     ug.alleles = config("input_alleles")
-    ug.genotyping_mode = "GENOTYPE_GIVEN_ALLELES"
+    ug.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
     add(ug)
   }
 }

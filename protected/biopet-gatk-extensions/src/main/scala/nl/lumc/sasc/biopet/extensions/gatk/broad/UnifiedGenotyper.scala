@@ -5,46 +5,6 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-//import java.io.File
-//
-//import nl.lumc.sasc.biopet.utils.config.Configurable
-//import org.broadinstitute.gatk.utils.commandline.{ Gather, Output }
-//
-//class UnifiedGenotyper(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.UnifiedGenotyper with GatkGeneral {
-//
-//  @Gather(enabled = false)
-//  @Output(required = false)
-//  protected var vcfIndex: File = _
-//
-//  if (config.contains("scattercount")) scatterCount = config("scattercount")
-//  if (config.contains("dbsnp")) this.dbsnp = config("dbsnp")
-//  sample_ploidy = config("ploidy")
-//  if (config.contains("allSitePLs")) this.allSitePLs = config("allSitePLs")
-//
-//  stand_call_conf = config("stand_call_conf", default = 5)
-//  stand_emit_conf = config("stand_emit_conf", default = 0)
-//
-//  if (config.contains("output_mode")) {
-//    import org.broadinstitute.gatk.tools.walkers.genotyper.OutputMode._
-//    config("output_mode").asString match {
-//      case "EMIT_ALL_CONFIDENT_SITES" => output_mode = EMIT_ALL_CONFIDENT_SITES
-//      case "EMIT_ALL_SITES"           => output_mode = EMIT_ALL_SITES
-//      case "EMIT_VARIANTS_ONLY"       => output_mode = EMIT_VARIANTS_ONLY
-//      case e                          => logger.warn("output mode '" + e + "' does not exist")
-//    }
-//  }
-//
-//  override val defaultThreads = 1
-//
-//  override def freezeFieldValues() {
-//    super.freezeFieldValues()
-//
-//    genotype_likelihoods_model = org.broadinstitute.gatk.tools.walkers.genotyper.GenotypeLikelihoodsCalculationModel.Model.BOTH
-//    nct = Some(getThreads)
-//    memoryLimit = Option(nct.getOrElse(1) * memoryLimit.getOrElse(2.0))
-//  }
-//}
-
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -180,7 +140,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** The minimum phred-scaled confidence threshold at which variants should be called */
   @Argument(fullName = "standard_min_confidence_threshold_for_calling", shortName = "stand_call_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be called", required = false, exclusiveOf = "", validation = "")
-  var standard_min_confidence_threshold_for_calling: Option[Double] = config("standard_min_confidence_threshold_for_calling")
+  var standard_min_confidence_threshold_for_calling: Option[Double] = config("stand_call_conf")
 
   /** Format string for standard_min_confidence_threshold_for_calling */
   @Argument(fullName = "standard_min_confidence_threshold_for_callingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_calling", required = false, exclusiveOf = "", validation = "")
@@ -188,7 +148,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold) */
   @Argument(fullName = "standard_min_confidence_threshold_for_emitting", shortName = "stand_emit_conf", doc = "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", required = false, exclusiveOf = "", validation = "")
-  var standard_min_confidence_threshold_for_emitting: Option[Double] = config("standard_min_confidence_threshold_for_emitting")
+  var standard_min_confidence_threshold_for_emitting: Option[Double] = config("stand_emit_conf")
 
   /** Format string for standard_min_confidence_threshold_for_emitting */
   @Argument(fullName = "standard_min_confidence_threshold_for_emittingFormat", shortName = "", doc = "Format string for standard_min_confidence_threshold_for_emitting", required = false, exclusiveOf = "", validation = "")

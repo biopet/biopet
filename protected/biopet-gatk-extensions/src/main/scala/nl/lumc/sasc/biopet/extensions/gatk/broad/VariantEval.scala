@@ -5,12 +5,10 @@
  */
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
-import java.io.File
-
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
 //class VariantEval(val root: Configurable) extends org.broadinstitute.gatk.queue.extensions.gatk.VariantEval with GatkGeneral {
 //}
@@ -80,7 +78,7 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
 
   /** Derive eval and comp contexts using only these sample genotypes, when genotypes are available in the original context */
   @Argument(fullName = "sample", shortName = "sn", doc = "Derive eval and comp contexts using only these sample genotypes, when genotypes are available in the original context", required = false, exclusiveOf = "", validation = "")
-  var sample: List[String] = config("sample", default = Nil, freeVar = false
+  var sample: List[String] = config("sample", default = Nil, freeVar = false)
 
   /** Name of ROD bindings containing variant sites that should be treated as known when splitting eval rods into known and novel subsets */
   @Argument(fullName = "known_names", shortName = "knownName", doc = "Name of ROD bindings containing variant sites that should be treated as known when splitting eval rods into known and novel subsets", required = false, exclusiveOf = "", validation = "")

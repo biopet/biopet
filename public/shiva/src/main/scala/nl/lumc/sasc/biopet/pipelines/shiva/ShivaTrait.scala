@@ -38,7 +38,8 @@ trait ShivaTrait extends MultisampleMappingTrait with Reference with TargetRegio
 
   override def defaults = Map(
     "haplotypecaller" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0),
-    "genotypegvcfs" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0)
+    "genotypegvcfs" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0),
+    "unifiedgenotyper" -> Map("stand_call_conf" -> 30, "stand_emit_conf" -> 0)
   )
 
   /** Method to make the variantcalling namespace of shiva */
