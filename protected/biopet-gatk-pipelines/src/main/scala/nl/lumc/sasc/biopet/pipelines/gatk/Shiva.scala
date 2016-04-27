@@ -116,14 +116,14 @@ class Shiva(val root: Configurable) extends QScript with ShivaTrait {
 
     if (config("use_analyze_covariates", default = false).asBoolean) {
       val baseRecalibratorAfter = BaseRecalibrator(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.after"))
-      baseRecalibratorAfter.BQSR = baseRecalibrator.out
+      baseRecalibratorAfter.BQSR = Some(baseRecalibrator.out)
       add(baseRecalibratorAfter)
 
       add(AnalyzeCovariates(this, baseRecalibrator.out, baseRecalibratorAfter.out, swapExt(dir, inputBam, ".bam", ".baserecal.pdf")))
     }
 
     val printReads = PrintReads(this, inputBam, swapExt(dir, inputBam, ".bam", ".baserecal.bam"))
-    printReads.BQSR = baseRecalibrator.out
+    printReads.BQSR = Some(baseRecalibrator.out)
     printReads.isIntermediate = isIntermediate
     add(printReads)
 

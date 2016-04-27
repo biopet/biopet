@@ -8,9 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, GATKScatterFunction, ReadScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{BamGatherFunction, GATKScatterFunction, ReadScatterFunction, TaggedFile}
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import nl.lumc.sasc.biopet.utils.VcfUtils
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Output, _}
 
 class IndelRealigner(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "IndelRealigner"
@@ -21,17 +22,13 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
   @Input(fullName = "knownAlleles", shortName = "known", doc = "Input VCF file(s) with known indels", required = false, exclusiveOf = "", validation = "")
   var knownAlleles: Seq[File] = Nil
 
-  /** Dependencies on any indexes of knownAlleles */
-  @Input(fullName = "knownAllelesIndexes", shortName = "", doc = "Dependencies on any indexes of knownAlleles", required = false, exclusiveOf = "", validation = "")
-  private var knownAllelesIndexes: Seq[File] = Nil
-
   /** Intervals file output from RealignerTargetCreator */
   @Input(fullName = "targetIntervals", shortName = "targetIntervals", doc = "Intervals file output from RealignerTargetCreator", required = true, exclusiveOf = "", validation = "")
   var targetIntervals: File = _
 
   /** LOD threshold above which the cleaner will clean */
   @Argument(fullName = "LODThresholdForCleaning", shortName = "LOD", doc = "LOD threshold above which the cleaner will clean", required = false, exclusiveOf = "", validation = "")
-  var LODThresholdForCleaning: Option[Double] = None
+  var LODThresholdForCleaning: Option[Double] = config("LODThresholdForCleaning")
 
   /** Format string for LODThresholdForCleaning */
   @Argument(fullName = "LODThresholdForCleaningFormat", shortName = "", doc = "Format string for LODThresholdForCleaning", required = false, exclusiveOf = "", validation = "")
@@ -42,11 +39,6 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
   @Gather(classOf[BamGatherFunction])
   var out: File = _
 
-  /** Automatically generated index for out */
-  @Output(fullName = "outIndex", shortName = "", doc = "Automatically generated index for out", required = false, exclusiveOf = "", validation = "")
-  @Gather(enabled = false)
-  private var outIndex: File = _
-
   /** Automatically generated md5 for out */
   @Output(fullName = "outMD5", shortName = "", doc = "Automatically generated md5 for out", required = false, exclusiveOf = "", validation = "")
   @Gather(enabled = false)
@@ -54,11 +46,11 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Determines how to compute the possible alternate consenses */
   @Argument(fullName = "consensusDeterminationModel", shortName = "model", doc = "Determines how to compute the possible alternate consenses", required = false, exclusiveOf = "", validation = "")
-  var consensusDeterminationModel: String = _
+  var consensusDeterminationModel: Option[String] = config("consensusDeterminationModel")
 
   /** Percentage of mismatches at a locus to be considered having high entropy (0.0 < entropy <= 1.0) */
   @Argument(fullName = "entropyThreshold", shortName = "entropy", doc = "Percentage of mismatches at a locus to be considered having high entropy (0.0 < entropy <= 1.0)", required = false, exclusiveOf = "", validation = "")
-  var entropyThreshold: Option[Double] = None
+  var entropyThreshold: Option[Double] = config("entropyThreshold")
 
   /** Format string for entropyThreshold */
   @Argument(fullName = "entropyThresholdFormat", shortName = "", doc = "Format string for entropyThreshold", required = false, exclusiveOf = "", validation = "")
@@ -66,51 +58,51 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** max reads allowed to be kept in memory at a time by the SAMFileWriter */
   @Argument(fullName = "maxReadsInMemory", shortName = "maxInMemory", doc = "max reads allowed to be kept in memory at a time by the SAMFileWriter", required = false, exclusiveOf = "", validation = "")
-  var maxReadsInMemory: Option[Int] = None
+  var maxReadsInMemory: Option[Int] = config("maxReadsInMemory")
 
   /** maximum insert size of read pairs that we attempt to realign */
   @Argument(fullName = "maxIsizeForMovement", shortName = "maxIsize", doc = "maximum insert size of read pairs that we attempt to realign", required = false, exclusiveOf = "", validation = "")
-  var maxIsizeForMovement: Option[Int] = None
+  var maxIsizeForMovement: Option[Int] = config("maxIsizeForMovement")
 
   /** Maximum positional move in basepairs that a read can be adjusted during realignment */
   @Argument(fullName = "maxPositionalMoveAllowed", shortName = "maxPosMove", doc = "Maximum positional move in basepairs that a read can be adjusted during realignment", required = false, exclusiveOf = "", validation = "")
-  var maxPositionalMoveAllowed: Option[Int] = None
+  var maxPositionalMoveAllowed: Option[Int] = config("maxPositionalMoveAllowed")
 
   /** Max alternate consensuses to try (necessary to improve performance in deep coverage) */
   @Argument(fullName = "maxConsensuses", shortName = "maxConsensuses", doc = "Max alternate consensuses to try (necessary to improve performance in deep coverage)", required = false, exclusiveOf = "", validation = "")
-  var maxConsensuses: Option[Int] = None
+  var maxConsensuses: Option[Int] = config("maxConsensuses")
 
   /** Max reads used for finding the alternate consensuses (necessary to improve performance in deep coverage) */
   @Argument(fullName = "maxReadsForConsensuses", shortName = "greedy", doc = "Max reads used for finding the alternate consensuses (necessary to improve performance in deep coverage)", required = false, exclusiveOf = "", validation = "")
-  var maxReadsForConsensuses: Option[Int] = None
+  var maxReadsForConsensuses: Option[Int] = config("maxReadsForConsensuses")
 
   /** Max reads allowed at an interval for realignment */
   @Argument(fullName = "maxReadsForRealignment", shortName = "maxReads", doc = "Max reads allowed at an interval for realignment", required = false, exclusiveOf = "", validation = "")
-  var maxReadsForRealignment: Option[Int] = None
+  var maxReadsForRealignment: Option[Int] = config("maxReadsForRealignment")
 
   /** Don't output the original cigar or alignment start tags for each realigned read in the output bam */
   @Argument(fullName = "noOriginalAlignmentTags", shortName = "noTags", doc = "Don't output the original cigar or alignment start tags for each realigned read in the output bam", required = false, exclusiveOf = "", validation = "")
-  var noOriginalAlignmentTags: Boolean = _
+  var noOriginalAlignmentTags: Boolean = config("noOriginalAlignmentTags", default = false)
 
   /** Generate one output file for each input (-I) bam file (not compatible with -output) */
   @Argument(fullName = "nWayOut", shortName = "nWayOut", doc = "Generate one output file for each input (-I) bam file (not compatible with -output)", required = false, exclusiveOf = "", validation = "")
-  var nWayOut: String = _
+  var nWayOut: Option[String] = config("nWayOut")
 
   /** Generate md5sums for BAMs */
   @Argument(fullName = "generate_nWayOut_md5s", shortName = "", doc = "Generate md5sums for BAMs", required = false, exclusiveOf = "", validation = "")
-  var generate_nWayOut_md5s: Boolean = _
+  var generate_nWayOut_md5s: Boolean = config("generate_nWayOut_md5s", default = false)
 
   /** Do early check of reads against existing consensuses */
   @Argument(fullName = "check_early", shortName = "check_early", doc = "Do early check of reads against existing consensuses", required = false, exclusiveOf = "", validation = "")
-  var check_early: Boolean = _
+  var check_early: Boolean = config("check_early", default = false)
 
   /** Don't output the usual PG tag in the realigned bam file header. FOR DEBUGGING PURPOSES ONLY.  This option is required in order to pass integration tests. */
   @Argument(fullName = "noPGTag", shortName = "noPG", doc = "Don't output the usual PG tag in the realigned bam file header. FOR DEBUGGING PURPOSES ONLY.  This option is required in order to pass integration tests.", required = false, exclusiveOf = "", validation = "")
-  var noPGTag: Boolean = _
+  var noPGTag: Boolean = config("noPGTag", default = false)
 
   /** Keep older PG tags left in the bam header by previous runs of this tool (by default, all these historical tags will be replaced by the latest tag generated in the current run). */
   @Argument(fullName = "keepPGTags", shortName = "keepPG", doc = "Keep older PG tags left in the bam header by previous runs of this tool (by default, all these historical tags will be replaced by the latest tag generated in the current run).", required = false, exclusiveOf = "", validation = "")
-  var keepPGTags: Boolean = _
+  var keepPGTags: Boolean = config("keepPGTags", default = false)
 
   /** Output file (text) for the indels found; FOR DEBUGGING PURPOSES ONLY */
   @Output(fullName = "indelsFileForDebugging", shortName = "indels", doc = "Output file (text) for the indels found; FOR DEBUGGING PURPOSES ONLY", required = false, exclusiveOf = "", validation = "")
@@ -129,22 +121,22 @@ class IndelRealigner(val root: Configurable) extends CommandLineGATK with Scatte
 
   /** Filter out reads with CIGAR containing the N operator, instead of failing with an error */
   @Argument(fullName = "filter_reads_with_N_cigar", shortName = "filterRNC", doc = "Filter out reads with CIGAR containing the N operator, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_reads_with_N_cigar: Boolean = _
+  var filter_reads_with_N_cigar: Boolean = config("filter_reads_with_N_cigar", default = false)
 
   /** Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error */
   @Argument(fullName = "filter_mismatching_base_and_quals", shortName = "filterMBQ", doc = "Filter out reads with mismatching numbers of bases and base qualities, instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_mismatching_base_and_quals: Boolean = _
+  var filter_mismatching_base_and_quals: Boolean = config("filter_mismatching_base_and_quals", default = false)
 
   /** Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error */
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
-  var filter_bases_not_stored: Boolean = _
+  var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
   override def freezeFieldValues() {
     super.freezeFieldValues()
-    knownAllelesIndexes ++= knownAlleles.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    deps ++= knownAlleles.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!disable_bam_indexing)
-        outIndex = new File(out.getPath.stripSuffix(".bam") + ".bai")
+        outputFiles :+= new File(out.getPath.stripSuffix(".bam") + ".bai")
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (generate_md5)
         outMD5 = new File(out.getPath + ".md5")
