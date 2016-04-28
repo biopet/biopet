@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>BiopetAggregate</artifactId>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+        <relativePath>../</relativePath>
+    </parent>
+
+    <modules>
+        <module>../biopet-core</module>
+        <module>../biopet-public-package</module>
+        <module>../bammetrics</module>
+        <module>../flexiprep</module>
+        <module>../gentrap</module>
+        <module>../mapping</module>
+        <module>../sage</module>
+        <module>../kopisu</module>
+        <module>../gears</module>
+        <module>../bam2wig</module>
+        <module>../carp</module>
+        <module>../toucan</module>
+        <module>../gwas-test</module>
+        <module>../shiva</module>
+        <module>../basty</module>
+        <module>../tinycap</module>
+        <module>../biopet-utils</module>
+        <module>../biopet-tools</module>
+        <module>../biopet-tools-extensions</module>
+        <module>../biopet-extensions</module>
+        <module>../biopet-tools-package</module>
+    </modules>
+
+</project>
