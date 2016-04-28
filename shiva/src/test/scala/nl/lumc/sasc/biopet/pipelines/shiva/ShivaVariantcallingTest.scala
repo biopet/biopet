@@ -53,8 +53,12 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
       haplotypeCallerAllele <- bool;
       unifiedGenotyperAllele <- bool;
       unifiedGenotyper <- bool;
-      haplotypeCaller <- bool
-    ) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper, haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele)
+      haplotypeCaller <- bool;
+      freebayes <- bool;
+      varscanCnsSinglesample <- bool
+    ) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper,
+      haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele,
+      freebayes, varscanCnsSinglesample)
     ).toArray
   }
 
