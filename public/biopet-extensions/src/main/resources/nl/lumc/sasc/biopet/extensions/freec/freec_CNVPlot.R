@@ -4,6 +4,7 @@ library('naturalsort')
 # Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 option_list <- list(
+    make_option(c("-m", "--mappability"), dest="mappability"),
     make_option(c("-p", "--ploidy"), default=2, type="integer", dest="ploidy"),
     make_option(c("-i", "--input"), dest="input"),
     make_option(c("-o", "--output"), dest="output")
@@ -14,14 +15,33 @@ opt = parse_args(parser)
 
 
 #
+# Load mappability track
+#
+
+mappabilityFile <- opt$mappability
+mappabilityTrack <- read.table(mappabilityFile, header=FALSE, col.names=c("chrom", "start", "end", "score"))
+
+mappabilityTrack$Start <- mappabilityTrack$start+1
+mappabilityTrack$Chromosome <- gsub("chr", "", mappabilityTrack$chrom)
+
+
+#
 # Load Data
 #
 
-dataTable <-read.table( opt$input , header=TRUE);
 
-ratio<-data.frame(dataTable)
+dataTable <- read.table( opt$input , header=TRUE)
+input_ratio <- data.frame(dataTable)
+
+chromosomes <- naturalsort(levels(input_ratio$Chromosome))
+input_ratio$Chromosome <- factor(input_ratio$Chromosome, levels=chromosomes, ordered=T)
+
+sorted_ratio <- input_ratio[order(input_ratio$Chromosome),]
+ratio <- merge(sorted_ratio, mappabilityTrack, sort=TRUE)
+ratio <- ratio[order(ratio$Chromosome, ratio$Start),]
+
+
 ploidy <- opt$ploidy
-chromosomes <- naturalorder(levels(ratio$Chromosome))
 ppi <- 300
 plot_margins <- c(3,4,1,2)+0.1
 label_positions <- c(2,0.5,0)
@@ -133,7 +153,11 @@ dev.off()
 
 png(filename = paste(opt$output, ".wg.png",sep=""), width = 16 * ppi, height = 10 * ppi,
 res=ppi, bg = "white")
-par(mfrow = c(6,4))
+
+plot_margins <- c(3,4,2,2)+0.1
+label_positions <- c(2,0.5,0)
+
+par(mfrow = c(1,1))
 par(mar=plot_margins)
 par(mgp=label_positions)
 par(xaxs="i", yaxs="i")
@@ -147,11 +171,16 @@ for (i in c(1:length(ratio$Ratio))) {
 }
 
 for (i in c(1:length(ratio$Start))) {
-    ratio$Position[i] = (i-1) *50000 +1
+    ratio$Position[i] = (i-1) *5000 +1
 }
 
-plot(ratio$Position,
-ratio$Ratio*ploidy,
+
+plotRatioLT <- 0.10
+
+filteredSet <- ratio[ ratio$score > plotRatioLT, ]
+
+plot(filteredSet$Position,
+filteredSet$Ratio*ploidy,
 ylim = c(0,maxLevelToPlot*ploidy),
 xlab = paste ("Chr. on genome"),
 ylab = "normalized CN",
@@ -160,25 +189,23 @@ col = colors()[88])
 
 
 title(outer=TRUE)
-tt <- which(ratio$CopyNumber>ploidy )
-points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
+tt <- which(filteredSet$CopyNumber>ploidy)
+points(filteredSet$Position[tt],filteredSet$Ratio[tt]*ploidy,pch = ".",col = colors()[136])
 
-tt <- which(ratio$Ratio==maxLevelToPlot & ratio$CopyNumber>ploidy)
-points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
+tt <- which(filteredSet$Ratio==maxLevelToPlot & filteredSet$CopyNumber>ploidy)
+points(filteredSet$Position[tt],filteredSet$Ratio[tt]*ploidy,pch = ".",col = colors()[136],cex=4)
 
-tt <- which(ratio$CopyNumber<ploidy & ratio$CopyNumber!= -1)
-points(ratio$Position[tt],ratio$Ratio[tt]*ploidy,pch = ".",col = colors()[461], bg="black")
+tt <- which(filteredSet$CopyNumber<ploidy & filteredSet$CopyNumber!= -1)
+points(filteredSet$Position[tt],filteredSet$Ratio[tt]*ploidy,pch = ".",col = colors()[461], bg="black")
+
 
 for (chrom in chromosomes) {
-    tt <- which(ratio$Chromosome == chrom)
-    print(ratio[tt[1],])
-    xpos <- ratio$Position[tt][1]
+    tt <- which(filteredSet$Chromosome == chrom)
+    print(filteredSet[tt[1],])
+    xpos <- filteredSet$Position[tt][1]
     abline(v=xpos, col="grey")
-    axis(1, at=xpos, labels=chrom , las=2)
-
-    print(paste("Plotting the line for chrom ", chrom ," on:", xpos))
-
-
-    #mtext(chrom, 1, at=xpos)
-
+    axis(3, at=xpos, labels=chrom , las=2)
 }
+
+
+dev.off()
