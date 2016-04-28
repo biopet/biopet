@@ -169,7 +169,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val adapterR = """Sequence: ([C|T|A|G]+);.*Trimmed: ([\d]+) times\.""".r
 
     val statsFile = Source.fromFile(statsOutput)
-    val adapterRawStats = statsFile.mkString
+    val adapterRawStats: Array[String] = statsFile.mkString
       .split("=== Adapter [\\d]+ ===")
       .filter(_.contains("Sequence")
       )
@@ -178,6 +178,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     adapterRawStats.map(adapter => {
       var adapterName = ""
       var adapterCount = 0
+      // identify the adapter name and count
       for (line <- adapter.split("\n")) {
         line match {
           case adapterR(adapter, count) => {
@@ -188,6 +189,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
         }
       }
 
+      // parse the block that gives the histogram of clipped bases and from which end
       val counts = adapter.split("Overview of removed sequences ")
         .filter(x => x.contains("length"))
         .map(clipSideRawStats => {
@@ -204,7 +206,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
         "count" -> adapterCount,
         "histogram" -> counts.toMap
       )
-    }).toMap
+    }).toMap // converting the Array[String] containing map-items to Map with 'toMap'
   }
 
   /** Output summary stats */
