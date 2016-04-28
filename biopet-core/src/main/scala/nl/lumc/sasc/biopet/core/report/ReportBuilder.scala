@@ -125,7 +125,7 @@ trait ReportBuilder extends ToolCommand {
     "fonts/glyphicons-halflings-regular.woff",
     "fonts/glyphicons-halflings-regular.ttf",
     "fonts/glyphicons-halflings-regular.woff2"
-  ).map(x => ExtFile("/nl/lumc/sasc/biopet/core/report/ext" + x, x))
+  ).map(x => ExtFile("/nl/lumc/sasc/biopet/core/report/ext/" + x, x))
 
   /** Main function to for building the report */
   def main(args: Array[String]): Unit = {
