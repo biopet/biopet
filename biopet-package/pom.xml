@@ -30,7 +30,7 @@
     </parent>
     
     <inceptionYear>2014</inceptionYear>
-    <name>BiopetPublicPackage</name>
+    <name>BiopetPackage</name>
     <url>http://maven.apache.org</url>
 
     <properties>
