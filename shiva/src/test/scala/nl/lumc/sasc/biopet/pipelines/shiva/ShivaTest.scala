@@ -126,7 +126,6 @@ class ShivaSampleCallingTest extends ShivaTestTrait {
   override def sampleCalling = true
 }
 
-
 object ShivaTest {
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
