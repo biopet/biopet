@@ -33,7 +33,7 @@ import org.testng.annotations.{ DataProvider, Test }
  *
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaTest extends TestNGSuite with Matchers {
+trait ShivaTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Shiva = {
     new Shiva() {
       override def configNamespace = "shiva"
@@ -45,24 +45,33 @@ class ShivaTest extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaOptions")
   def shivaOptions = {
-    val bool = Array(true, false)
-
     for (
-      s1 <- bool; s2 <- bool; multi <- bool;
-      dbsnp <- bool; realign <- bool; baseRecalibration <- bool
-    ) yield Array("", s1, s2, multi, dbsnp, realign, baseRecalibration)
+      s1 <- sample1; s2 <- sample2;
+      realign <- realignProvider; baseRecalibration <- baseRecalibrationProvider
+    ) yield Array("", s1, s2, realign, baseRecalibration)
   }
+
+  def sample1 = Array(false, true)
+  def sample2 = Array(false, true)
+  def realignProvider = Array(false, true)
+  def baseRecalibrationProvider = Array(false, true)
+  def multisampleCalling: Boolean = true
+  def sampleCalling = false
+  def libraryCalling = false
+  def dbsnp: Boolean = true
 
   @Test(dataProvider = "shivaOptions")
   def testShiva(f: String, sample1: Boolean, sample2: Boolean,
-                multi: Boolean, dbsnp: Boolean,
                 realign: Boolean, baseRecalibration: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = ShivaTest.config
       if (sample1) m = ConfigUtils.mergeMaps(ShivaTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(ShivaTest.sample2, m)
       if (dbsnp) m = ConfigUtils.mergeMaps(Map("dbsnp" -> "test.vcf.gz"), m)
-      ConfigUtils.mergeMaps(Map("multisample_variantcalling" -> multi,
+      ConfigUtils.mergeMaps(Map(
+        "multisample_variantcalling" -> multisampleCalling,
+        "single_sample_variantcalling" -> sampleCalling,
+        "library_variantcalling" -> libraryCalling,
         "use_indel_realigner" -> realign,
         "use_base_recalibration" -> baseRecalibration), m)
 
@@ -87,10 +96,36 @@ class ShivaTest extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
 
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (if (multi) 2 else 0)
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (
+        (if (multisampleCalling) 2 else 0) +
+        (if (sampleCalling) numberSamples * 2 else 0) +
+        (if (libraryCalling) numberLibs * 2 else 0))
     }
   }
 }
+
+class ShivaDefaultTest extends ShivaTestTrait
+class ShivaNoDbsnpTest extends ShivaTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def realignProvider = Array(true)
+  override def dbsnp = false
+}
+class ShivaLibraryCallingTest extends ShivaTestTrait {
+  override def sample1 = Array(true, false)
+  override def sample2 = Array(false, true)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def libraryCalling = true
+}
+class ShivaSampleCallingTest extends ShivaTestTrait {
+  override def sample1 = Array(true, false)
+  override def sample2 = Array(false, true)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def sampleCalling = true
+}
+
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
