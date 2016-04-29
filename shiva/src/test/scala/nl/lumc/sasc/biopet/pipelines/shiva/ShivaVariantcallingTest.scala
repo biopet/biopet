@@ -39,16 +39,16 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     }
   }
 
-  def raw  : Boolean = false
-  def bcftools  : Boolean = false
-  def bcftools_singlesample  : Boolean = false
-  def haplotypeCallerGvcf  : Boolean = false
-  def haplotypeCallerAllele  : Boolean = false
-  def unifiedGenotyperAllele  : Boolean = false
-  def unifiedGenotyper  : Boolean = false
-  def haplotypeCaller  : Boolean = false
-  def freebayes  : Boolean = false
-  def varscanCnsSinglesample  : Boolean = false
+  def raw: Boolean = false
+  def bcftools: Boolean = false
+  def bcftools_singlesample: Boolean = false
+  def haplotypeCallerGvcf: Boolean = false
+  def haplotypeCallerAllele: Boolean = false
+  def unifiedGenotyperAllele: Boolean = false
+  def unifiedGenotyper: Boolean = false
+  def haplotypeCaller: Boolean = false
+  def freebayes: Boolean = false
+  def varscanCnsSinglesample: Boolean = false
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
@@ -114,46 +114,46 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
 
 class ShivaVariantcallingNoVariantcallersTest extends ShivaVariantcallingTestTrait
 class ShivaVariantcallingAllTest extends ShivaVariantcallingTestTrait {
-  override def raw  : Boolean = true
-  override def bcftools  : Boolean = true
-  override def bcftools_singlesample  : Boolean = true
-  override def haplotypeCallerGvcf  : Boolean = true
-  override def haplotypeCallerAllele  : Boolean = true
-  override def unifiedGenotyperAllele  : Boolean = true
-  override def unifiedGenotyper  : Boolean = true
-  override def haplotypeCaller  : Boolean = true
-  override def freebayes  : Boolean = true
-  override def varscanCnsSinglesample  : Boolean = true
+  override def raw: Boolean = true
+  override def bcftools: Boolean = true
+  override def bcftools_singlesample: Boolean = true
+  override def haplotypeCallerGvcf: Boolean = true
+  override def haplotypeCallerAllele: Boolean = true
+  override def unifiedGenotyperAllele: Boolean = true
+  override def unifiedGenotyper: Boolean = true
+  override def haplotypeCaller: Boolean = true
+  override def freebayes: Boolean = true
+  override def varscanCnsSinglesample: Boolean = true
 }
 class ShivaVariantcallingRawTest extends ShivaVariantcallingTestTrait {
-  override def raw  : Boolean = true
+  override def raw: Boolean = true
 }
 class ShivaVariantcallingBcftoolsTest extends ShivaVariantcallingTestTrait {
-  override def bcftools  : Boolean = true
+  override def bcftools: Boolean = true
 }
 class ShivaVariantcallingBcftoolsSinglesampleTest extends ShivaVariantcallingTestTrait {
-  override def bcftools_singlesample  : Boolean = true
+  override def bcftools_singlesample: Boolean = true
 }
 class ShivaVariantcallingHaplotypeCallerGvcfTest extends ShivaVariantcallingTestTrait {
-  override def haplotypeCallerGvcf  : Boolean = true
+  override def haplotypeCallerGvcf: Boolean = true
 }
 class ShivaVariantcallingHaplotypeCallerAlleleTest extends ShivaVariantcallingTestTrait {
-  override def haplotypeCallerAllele  : Boolean = true
+  override def haplotypeCallerAllele: Boolean = true
 }
 class ShivaVariantcallingUnifiedGenotyperAlleleTest extends ShivaVariantcallingTestTrait {
-  override def unifiedGenotyperAllele  : Boolean = true
+  override def unifiedGenotyperAllele: Boolean = true
 }
 class ShivaVariantcallingUnifiedGenotyperTest extends ShivaVariantcallingTestTrait {
-  override def unifiedGenotyper  : Boolean = true
+  override def unifiedGenotyper: Boolean = true
 }
 class ShivaVariantcallingHaplotypeCallerTest extends ShivaVariantcallingTestTrait {
-  override def haplotypeCaller  : Boolean = true
+  override def haplotypeCaller: Boolean = true
 }
 class ShivaVariantcallingFreebayesTest extends ShivaVariantcallingTestTrait {
-  override def freebayes  : Boolean = true
+  override def freebayes: Boolean = true
 }
 class ShivaVariantcallingVarscanCnsSinglesampleTest extends ShivaVariantcallingTestTrait {
-  override def varscanCnsSinglesample  : Boolean = true
+  override def varscanCnsSinglesample: Boolean = true
 }
 
 object ShivaVariantcallingTest {
