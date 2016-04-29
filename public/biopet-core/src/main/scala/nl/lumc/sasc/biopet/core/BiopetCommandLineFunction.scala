@@ -30,7 +30,7 @@ import scala.collection.JavaConversions._
 
 /** Biopet command line trait to auto check executable and cluster values */
 trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
-  analysisName = configName
+  analysisName = configNamespace
 
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
@@ -50,8 +50,15 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     writer.println("set -eubf")
     writer.println("set -o pipefail")
     lines.foreach(writer.println)
+    jobDelayTime.foreach(x => writer.println(s"sleep $x"))
     writer.close()
   }
+
+  /**
+   *  This value is used to let you job wait a x number of second after it finish.
+   *  This is ionly used when having storage delay issues
+   */
+  var jobDelayTime: Option[Int] = config("job_delay_time")
 
   // This overrides the default "sh" from queue. For Biopet the default is "bash"
   updateJobRun = {
@@ -73,6 +80,15 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   def beforeGraph() {}
 
   override def freezeFieldValues() {
+
+    this match {
+      case r: Reference =>
+        if (r.dictRequired) deps :+= r.referenceDict
+        if (r.faiRequired) deps :+= r.referenceFai
+        deps = deps.distinct
+      case _ =>
+    }
+
     preProcessExecutable()
     beforeGraph()
     internalBeforeGraph()
@@ -163,6 +179,27 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
     this._outputAsStdout = true
     this.stdoutFile = Some(file)
     this
+  }
+
+  /**
+   * This method can handle args that have multiple args for 1 arg name
+   * @param argName Name of the arg like "-h" or "--help"
+   * @param values Values for this arg
+   * @param groupSize Values must come in groups of x number, default is 1
+   * @param minGroups Minimal groups that are required, default is 0, when 0 the method return en empty string
+   * @param maxGroups Max number of groups that can be filled here
+   * @return Command part of this arg
+   */
+  def multiArg(argName: String, values: Iterable[Any], groupSize: Int = 1, minGroups: Int = 0, maxGroups: Int = 0): String = {
+    if (values.size % groupSize != 0)
+      Logging.addError(s"Arg '${argName}' values: '${values}' does not fit to a groupSize of ${groupSize}")
+    val groups = values.size / groupSize
+    if (groups < minGroups)
+      Logging.addError(s"Args '${argName}' need atleast $minGroups with size $groupSize")
+    if (maxGroups > 0 && groups > maxGroups)
+      Logging.addError(s"Args '${argName}' may only have $maxGroups with size $groupSize")
+    if (values.nonEmpty) required(argName) + values.map(required(_)).mkString
+    else ""
   }
 
   @Output(required = false)

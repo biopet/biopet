@@ -21,7 +21,6 @@ import htsjdk.variant.variantcontext.{ GenotypeType, VariantContext }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf.VCFFileReader
 import nl.lumc.sasc.biopet.utils.ToolCommand
-import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.collection.JavaConversions._
 import scala.io.Source
@@ -264,7 +263,7 @@ object VcfFilter extends ToolCommand {
   def minAlternateDepth(record: VariantContext, minAlternateDepth: Int, minSamplesPass: Int = 1): Boolean = {
     record.getGenotypes.count(genotype => {
       val AD = if (genotype.hasAD) List(genotype.getAD: _*) else Nil
-      if (AD.nonEmpty) AD.tail.count(_ >= minAlternateDepth) > 0 else true
+      if (AD.nonEmpty && minAlternateDepth >= 0) AD.tail.count(_ >= minAlternateDepth) > 0 else true
     }) >= minSamplesPass
   }
 

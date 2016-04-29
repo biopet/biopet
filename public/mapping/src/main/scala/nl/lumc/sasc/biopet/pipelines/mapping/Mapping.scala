@@ -480,7 +480,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     reorderSam.input = ar._2
     reorderSam.output = output
 
-    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: (if (paired) zcatR2.get._1 else None) ::
+    val pipe = new BiopetFifoPipe(this, (zcatR1._1 :: zcatR2.flatMap(_._1) ::
       Some(starCommand) :: Some(ar._1) :: Some(reorderSam) :: Nil).flatten)
     pipe.threadsCorrection = -3
     zcatR1._1.foreach(x => pipe.threadsCorrection -= 1)

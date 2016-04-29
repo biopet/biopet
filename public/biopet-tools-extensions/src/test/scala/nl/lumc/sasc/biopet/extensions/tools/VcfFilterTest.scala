@@ -13,9 +13,10 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
+package nl.lumc.sasc.biopet.extensions.tools
+
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.tools.VcfFilter
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }

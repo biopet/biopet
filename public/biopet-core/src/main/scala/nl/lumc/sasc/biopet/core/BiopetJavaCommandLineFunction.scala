@@ -19,7 +19,7 @@ import org.broadinstitute.gatk.queue.function.JavaCommandLineFunction
 
 /** Biopet commandline class for java based programs */
 trait BiopetJavaCommandLineFunction extends JavaCommandLineFunction with BiopetCommandLineFunction {
-  executable = config("java", default = "java", submodule = "java", freeVar = false)
+  executable = config("java", default = "java", namespace = "java", freeVar = false)
 
   javaGCThreads = config("java_gc_threads", default = 4)
   javaGCHeapFreeLimit = config("java_gc_heap_freelimit", default = 10)

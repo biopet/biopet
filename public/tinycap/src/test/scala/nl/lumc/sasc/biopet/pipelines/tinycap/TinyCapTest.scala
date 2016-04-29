@@ -35,7 +35,7 @@ class TinyCapTest extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): TinyCap = {
     new TinyCap() {
-      override def configName = "tinycap"
+      override def configNamespace = "tinycap"
 
       override def globalConfig = new Config(map)
 
