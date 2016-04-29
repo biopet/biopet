@@ -30,7 +30,7 @@ import scala.collection.mutable.ListBuffer
  *
  * Created by pjvan_thof on 3/2/15.
  */
-class ShivaVariantcallingTest extends TestNGSuite with Matchers {
+trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): ShivaVariantcalling = {
     new ShivaVariantcalling() {
       override def configNamespace = "shivavariantcalling"
@@ -40,22 +40,21 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
     }
   }
 
+  def raw  : Boolean = false
+  def bcftools  : Boolean = false
+  def bcftools_singlesample  : Boolean = false
+  def haplotypeCallerGvcf  : Boolean = false
+  def haplotypeCallerAllele  : Boolean = false
+  def unifiedGenotyperAllele  : Boolean = false
+  def unifiedGenotyper  : Boolean = false
+  def haplotypeCaller  : Boolean = false
+  def freebayes  : Boolean = false
+  def varscanCnsSinglesample  : Boolean = false
+
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
-    val bool = Array(true, false)
-
     (for (
       bams <- 0 to 2;
-      raw <- bool;
-      bcftools <- bool;
-      bcftools_singlesample <- bool;
-      haplotypeCallerGvcf <- bool;
-      haplotypeCallerAllele <- bool;
-      unifiedGenotyperAllele <- bool;
-      unifiedGenotyper <- bool;
-      haplotypeCaller <- bool;
-      freebayes <- bool;
-      varscanCnsSinglesample <- bool
     ) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper,
       haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele,
       freebayes, varscanCnsSinglesample)
@@ -90,11 +89,7 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty ||
-      (!raw && !bcftools &&
-        !haplotypeCaller && !unifiedGenotyper &&
-        !haplotypeCallerGvcf && !haplotypeCallerAllele && !unifiedGenotyperAllele &&
-        !bcftoolsSinglesample)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (callers.isEmpty)
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -122,6 +117,50 @@ class ShivaVariantcallingTest extends TestNGSuite with Matchers {
   @AfterClass def removeTempOutputDir() = {
     FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
   }
+}
+
+class ShivaVariantcallingNoVariantcallersTest extends ShivaVariantcallingTestTrait
+class ShivaVariantcallingAllTest extends ShivaVariantcallingTestTrait {
+  override def raw  : Boolean = true
+  override def bcftools  : Boolean = true
+  override def bcftools_singlesample  : Boolean = true
+  override def haplotypeCallerGvcf  : Boolean = true
+  override def haplotypeCallerAllele  : Boolean = true
+  override def unifiedGenotyperAllele  : Boolean = true
+  override def unifiedGenotyper  : Boolean = true
+  override def haplotypeCaller  : Boolean = true
+  override def freebayes  : Boolean = true
+  override def varscanCnsSinglesample  : Boolean = true
+}
+class ShivaVariantcallingRawTest extends ShivaVariantcallingTestTrait {
+  override def raw  : Boolean = true
+}
+class ShivaVariantcallingBcftoolsTest extends ShivaVariantcallingTestTrait {
+  override def bcftools  : Boolean = true
+}
+class ShivaVariantcallingBcftoolsSinglesampleTest extends ShivaVariantcallingTestTrait {
+  override def bcftools_singlesample  : Boolean = true
+}
+class ShivaVariantcallingHaplotypeCallerGvcfTest extends ShivaVariantcallingTestTrait {
+  override def haplotypeCallerGvcf  : Boolean = true
+}
+class ShivaVariantcallingHaplotypeCallerAlleleTest extends ShivaVariantcallingTestTrait {
+  override def haplotypeCallerAllele  : Boolean = true
+}
+class ShivaVariantcallingUnifiedGenotyperAlleleTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyperAllele  : Boolean = true
+}
+class ShivaVariantcallingUnifiedGenotyperTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper  : Boolean = true
+}
+class ShivaVariantcallingHaplotypeCallerTest extends ShivaVariantcallingTestTrait {
+  override def haplotypeCaller  : Boolean = true
+}
+class ShivaVariantcallingFreebayesTest extends ShivaVariantcallingTestTrait {
+  override def freebayes  : Boolean = true
+}
+class ShivaVariantcallingVarscanCnsSinglesampleTest extends ShivaVariantcallingTestTrait {
+  override def varscanCnsSinglesample  : Boolean = true
 }
 
 object ShivaVariantcallingTest {
