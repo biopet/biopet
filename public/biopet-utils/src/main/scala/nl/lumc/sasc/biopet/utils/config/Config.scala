@@ -91,12 +91,12 @@ class Config(protected var _map: Map[String, Any],
     else _map = mergeMaps(valueMap, _map)
   }
 
-  protected[config] var notFoundCache: List[ConfigValueIndex] = List()
+  protected[config] var notFoundCache: Set[ConfigValueIndex] = Set()
   protected[config] var fixedCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var foundCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] var defaultCache: Map[ConfigValueIndex, ConfigValue] = Map()
   protected[config] def clearCache(): Unit = {
-    notFoundCache = List()
+    notFoundCache = Set()
     foundCache = Map()
     defaultCache = Map()
   }
@@ -137,7 +137,7 @@ class Config(protected var _map: Map[String, Any],
           foundCache += (requestedIndex -> value.get)
           true
         } else {
-          notFoundCache +:= requestedIndex
+          notFoundCache += requestedIndex
           false
         }
       }
@@ -220,7 +220,7 @@ class Config(protected var _map: Map[String, Any],
     val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val effectiveFixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
     val effectiveDefaultFound = convertIndexValuesToMap(defaultCache.filter(_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
-    val notFound = convertIndexValuesToMap(notFoundCache.map((_, None)), Some(false))
+    val notFound = convertIndexValuesToMap(notFoundCache.toList.map((_, None)), Some(false))
 
     // Merged maps
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
