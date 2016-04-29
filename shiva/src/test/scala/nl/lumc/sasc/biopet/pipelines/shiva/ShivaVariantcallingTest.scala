@@ -15,7 +15,6 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gatk.broad.{ HaplotypeCaller, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
-import nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
@@ -53,9 +52,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
-    (for (
-      bams <- 0 to 2;
-    ) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper,
+    (for (bams <- 0 to 2) yield Array[Any](bams, raw, bcftools, bcftools_singlesample, unifiedGenotyper,
       haplotypeCaller, haplotypeCallerGvcf, haplotypeCallerAllele, unifiedGenotyperAllele,
       freebayes, varscanCnsSinglesample)
     ).toArray
@@ -89,7 +86,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (callers.isEmpty)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || callers.isEmpty
 
     if (illegalArgumentException) intercept[IllegalArgumentException] {
       pipeline.script()
@@ -112,10 +109,6 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
         (if (unifiedGenotyperAllele) 1 else 0)
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size)
     }
-  }
-
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(ShivaVariantcallingTest.outputDir)
   }
 }
 
@@ -165,6 +158,7 @@ class ShivaVariantcallingVarscanCnsSinglesampleTest extends ShivaVariantcallingT
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
   def inputTouch(name: String): File = {
     val file = new File(outputDir, "input" + File.separator + name).getAbsoluteFile

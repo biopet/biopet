@@ -15,20 +15,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 import java.nio.file.Paths
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerCaller, BreakdancerConfig, BreakdancerVCF }
+import nl.lumc.sasc.biopet.extensions.breakdancer.{BreakdancerCaller, BreakdancerConfig, BreakdancerVCF}
 import nl.lumc.sasc.biopet.extensions.clever.CleverCaller
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.pindel.{ PindelCaller, PindelConfig, PindelVCF }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.extensions.pindel.{PindelCaller, PindelConfig, PindelVCF}
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 import scala.collection.mutable.ListBuffer
 
@@ -152,9 +152,9 @@ class ShivaSvCallingTest extends TestNGSuite with Matchers {
     pipeline.inputBams = Map("bam" -> ShivaSvCallingTest.inputTouch("bam" + ".bam"))
 
     intercept[IllegalArgumentException] {
-      pipeline.init()
       pipeline.script()
     }
+    Logging.errors.clear()
   }
 
   private def resourcePath(p: String): String = {
