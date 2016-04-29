@@ -17,7 +17,7 @@
 
     <modules>
         <module>../biopet-core</module>
-        <module>../biopet-public-package</module>
+        <module>../biopet-package</module>
         <module>../bammetrics</module>
         <module>../flexiprep</module>
         <module>../gentrap</module>
