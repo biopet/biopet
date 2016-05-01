@@ -217,7 +217,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
 
   /** If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file */
   @Argument(fullName = "onlyEmitSamples", shortName = "onlyEmitSamples", doc = "If provided, only these samples will be emitted into the VCF, regardless of which samples are present in the BAM file", required = false, exclusiveOf = "", validation = "")
-  var onlyEmitSamples: List[String] = config("onlyEmitSamples", default = false)
+  var onlyEmitSamples: List[String] = config("onlyEmitSamples", default = Nil)
 
   /** File to print all of the annotated and detailed debugging output */
   @Argument(fullName = "debug_file", shortName = "debug_file", doc = "File to print all of the annotated and detailed debugging output", required = false, exclusiveOf = "", validation = "")
