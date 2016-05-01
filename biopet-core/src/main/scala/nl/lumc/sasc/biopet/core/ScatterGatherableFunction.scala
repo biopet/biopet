@@ -5,5 +5,5 @@ package nl.lumc.sasc.biopet.core
  */
 trait ScatterGatherableFunction extends BiopetCommandLineFunction
   with org.broadinstitute.gatk.queue.function.scattergather.ScatterGatherableFunction {
-  scatterCount = config("scatter_count", freeVar = true, default = 1)
+  scatterCount = config("scattercount", freeVar = true, default = 1)
 }
