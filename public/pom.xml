@@ -46,6 +46,7 @@
         <module>biopet-tools-extensions</module>
         <module>biopet-extensions</module>
         <module>biopet-tools-package</module>
+        <module>gwas-test</module>
     </modules>
 
     <properties>

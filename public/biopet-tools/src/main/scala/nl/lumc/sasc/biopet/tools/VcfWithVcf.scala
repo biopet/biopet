@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.tools
 import java.io.File
 import java.util
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import htsjdk.variant.variantcontext.{ VariantContext, VariantContextBuilder }
 import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, VariantContextWriterBuilder }
 import htsjdk.variant.vcf._
@@ -36,6 +37,7 @@ object VcfWithVcf extends ToolCommand {
 
   case class Args(inputFile: File = null,
                   outputFile: File = null,
+                  referenceFasta: File = null,
                   secondaryVcf: File = null,
                   fields: List[Fields] = Nil,
                   matchAllele: Boolean = true) extends AbstractArgs
@@ -53,6 +55,9 @@ object VcfWithVcf extends ToolCommand {
     }
     opt[File]('s', "secondaryVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(secondaryVcf = x)
+    }
+    opt[File]('R', "reference") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
+      c.copy(referenceFasta = x)
     }
     opt[String]('f', "field") unbounded () valueName "<field> or <input_field:output_field> or <input_field:output_field:method>" action { (x, c) =>
       val values = x.split(":")
@@ -74,16 +79,30 @@ object VcfWithVcf extends ToolCommand {
     logger.info("Init phase")
 
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val reader = new VCFFileReader(commandArgs.inputFile)
     val secondaryReader = new VCFFileReader(commandArgs.secondaryVcf)
 
+    val referenceDict = new FastaSequenceFile(commandArgs.referenceFasta, true).getSequenceDictionary
+
     val header = reader.getFileHeader
+    val vcfDict = header.getSequenceDictionary match {
+      case r if r != null =>
+        r.assertSameDictionary(referenceDict)
+        r
+      case _ => referenceDict
+    }
     val secondHeader = secondaryReader.getFileHeader
+
+    secondHeader.getSequenceDictionary match {
+      case r if r != null => r.assertSameDictionary(referenceDict)
+      case _              =>
+    }
+
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(commandArgs.outputFile).
-      setReferenceDictionary(header.getSequenceDictionary).
+      setReferenceDictionary(vcfDict).
       build)
 
     for (x <- commandArgs.fields) {
