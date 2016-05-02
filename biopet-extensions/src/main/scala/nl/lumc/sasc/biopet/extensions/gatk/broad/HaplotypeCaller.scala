@@ -156,7 +156,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES */
   @Input(fullName = "alleles", shortName = "alleles", doc = "The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES", required = false, exclusiveOf = "", validation = "")
-  var alleles: Option[File] = _
+  var alleles: Option[File] = None
 
   /** Fraction of contamination in sequencing data (for all samples) to aggressively remove */
   @Argument(fullName = "contamination_fraction_to_filter", shortName = "contamination", doc = "Fraction of contamination in sequencing data (for all samples) to aggressively remove", required = false, exclusiveOf = "", validation = "")
