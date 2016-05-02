@@ -202,7 +202,7 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
           clipSideLabel -> histogramValues.toMap
         })
 
-      adapterName -> mutable.Map(
+      adapterName -> Map(
         "count" -> adapterCount,
         "histogram" -> counts.toMap
       )

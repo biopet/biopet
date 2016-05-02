@@ -42,7 +42,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
     val adapterCounts: Map[String, Any] = initStats.get(adaptersStatsName) match {
       // "adapters" key found in statistics
       case Some(m: Map[_, _]) => m.flatMap {
-        case (adapterSequence: String, adapterStats: scala.collection.mutable.HashMap[_, _]) =>
+        case (adapterSequence: String, adapterStats: Map[_, _]) =>
           seqToNameMap.get(adapterSequence) match {
             // adapter sequence is found by FastQC
             case Some(adapterSeqName) => {
