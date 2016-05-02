@@ -400,10 +400,9 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   override def beforeGraph() {
     super.beforeGraph()
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
-      if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outputFiles :+= VcfUtils.getVcfIndexFile(out)
+      outputFiles :+= VcfUtils.getVcfIndexFile(out)
     dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
-    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => orig + ".idx")
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)
         outputFiles :+= new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
