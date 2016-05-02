@@ -1,7 +1,7 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
@@ -10,8 +10,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by ahbbollen on 21-4-16.
-  */
+ * Created by ahbbollen on 21-4-16.
+ */
 class ToucanTest extends TestNGSuite with Matchers {
 
   val faultyToucan = new Toucan(null) {
@@ -36,9 +36,8 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testIncompletePipeline() = {
-    an [IllegalStateException] should be thrownBy faultyToucan.script()
+    an[IllegalStateException] should be thrownBy faultyToucan.script()
   }
-
 
   val correctToucan = new Toucan(null) {
     override def sampleInfo: Map[String, Map[String, Any]] = Map(

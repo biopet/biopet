@@ -40,6 +40,8 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
+  var outputVcf: Option[File] = None
+
   def sampleInfo: Map[String, Map[String, Any]] = root match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
     case null                  => VcfUtils.getSampleIds(inputVCF).map(x => x -> Map[String, Any]()).toMap
@@ -79,29 +81,29 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val gonlVcfFile: Option[File] = config("gonl_vcf")
     val exacVcfFile: Option[File] = config("exac_vcf")
 
-    var outputFile = normalizer.outputVcf
+    outputVcf = Some(normalizer.outputVcf)
 
     gonlVcfFile match {
       case Some(gonlFile) =>
         val vcfWithVcf = new VcfWithVcf(this)
-        vcfWithVcf.input = outputFile
+        vcfWithVcf.input = outputVcf.getOrElse(new File(""))
         vcfWithVcf.secondaryVcf = gonlFile
         vcfWithVcf.output = swapExt(outputDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
         add(vcfWithVcf)
-        outputFile = vcfWithVcf.output
+        outputVcf = Some(vcfWithVcf.output)
       case _ =>
     }
 
     exacVcfFile match {
       case Some(exacFile) =>
         val vcfWithVcf = new VcfWithVcf(this)
-        vcfWithVcf.input = outputFile
+        vcfWithVcf.input = outputVcf.getOrElse(new File(""))
         vcfWithVcf.secondaryVcf = exacFile
-        vcfWithVcf.output = swapExt(outputDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
+        vcfWithVcf.output = swapExt(outputDir, outputVcf.getOrElse(new File("")), ".vcf.gz", ".exac.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_exac", None)
         add(vcfWithVcf)
-        outputFile = vcfWithVcf.output
+        outputVcf = Some(vcfWithVcf.output)
       case _ =>
     }
 
