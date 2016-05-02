@@ -1,12 +1,12 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesImport}
-import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VepNormalizer}
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesImport }
+import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VepNormalizer }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -89,6 +89,5 @@ class ToucanTest extends TestNGSuite with Matchers {
       map(x => x.asInstanceOf[ManweSamplesImport]).
       foreach(x => x.group shouldBe List("group1", "group2"))
   }
-
 
 }
