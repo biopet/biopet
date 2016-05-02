@@ -44,9 +44,6 @@ object ShivaReport extends MultisampleMappingReportTrait {
 
   override def pipelineName = "shiva"
 
-  override def extFiles = super.extFiles ++ List("js/gears.js")
-    .map(x => ExtFile("/nl/lumc/sasc/biopet/pipelines/gears/report/ext" + x, x))
-
   override def additionalSections = super.additionalSections ++ (if (variantcallingExecuted) List("Variantcalling" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/shiva/sampleVariants.ssp",
     Map("showPlot" -> true, "showTable" -> false)))
   else Nil)
