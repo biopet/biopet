@@ -17,14 +17,14 @@ package nl.lumc.sasc.biopet.extensions.tools
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFunction
+import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Biopet extension for tool VcfWithVcf
  */
-class VcfWithVcf(val root: Configurable) extends ToolCommandFunction {
+class VcfWithVcf(val root: Configurable) extends ToolCommandFunction with Reference {
   def toolObject = nl.lumc.sasc.biopet.tools.VcfWithVcf
 
   @Input(doc = "Input vcf file", shortName = "input", required = true)
@@ -39,12 +39,16 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output vcf file index", shortName = "output", required = true)
   private var outputIndex: File = _
 
+  @Input
+  var reference: File = _
+
   var fields: List[(String, String, Option[String])] = List()
 
   override def defaultCoreMemory = 2.0
 
   override def beforeGraph() {
     super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
     if (output.getName.endsWith(".gz")) outputIndex = new File(output.getAbsolutePath + ".tbi")
     if (output.getName.endsWith(".vcf")) outputIndex = new File(output.getAbsolutePath + ".idx")
     if (fields.isEmpty) throw new IllegalArgumentException("No fields found for VcfWithVcf")
@@ -54,5 +58,6 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFunction {
     required("-I", input) +
     required("-o", output) +
     required("-s", secondaryVcf) +
+    required("-R", reference) +
     repeat("-f", fields.map(x => x._1 + ":" + x._2 + ":" + x._3.getOrElse("none")))
 }
