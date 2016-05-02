@@ -1,8 +1,12 @@
 package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
-import java.nio.file.{ Files, Paths }
+import java.nio.file.{Files, Paths}
 
+import nl.lumc.sasc.biopet.extensions.VariantEffectPredictor
+import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
+import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesImport}
+import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VepNormalizer}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -16,7 +20,7 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   val faultyToucan = new Toucan(null) {
     override def sampleInfo: Map[String, Map[String, Any]] = Map(
-      "sample1" -> Map("varda_groups" -> List("group1", "group2"))
+      "sample1" -> Map("varda_group" -> List("group1", "group2"))
     )
 
     override def globalConfig = new Config(Map(
@@ -41,7 +45,7 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   val correctToucan = new Toucan(null) {
     override def sampleInfo: Map[String, Map[String, Any]] = Map(
-      "sample1" -> Map("varda_groups" -> List("group1", "group2"))
+      "sample1" -> Map("varda_group" -> List("group1", "group2"))
     )
 
     override def globalConfig = new Config(Map(
@@ -65,4 +69,26 @@ class ToucanTest extends TestNGSuite with Matchers {
   def testCompletePipeline() = {
     noException should be thrownBy correctToucan.script()
   }
+
+  @Test
+  def testExpectedFunctions() = {
+    correctToucan.functions.count(_.isInstanceOf[VariantEffectPredictor]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[VepNormalizer]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[ManweSamplesImport]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[ManweActivateAfterAnnotImport]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[ManweDownloadAfterAnnotate]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[ManweAnnotateVcf]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[GvcfToBed]) shouldBe 1
+    correctToucan.functions.count(_.isInstanceOf[BcftoolsView]) shouldBe 1
+  }
+
+  @Test
+  def testSamples() = {
+    correctToucan.functions.
+      filter(_.isInstanceOf[ManweSamplesImport]).
+      map(x => x.asInstanceOf[ManweSamplesImport]).
+      foreach(x => x.group shouldBe List("group1", "group2"))
+  }
+
+
 }
