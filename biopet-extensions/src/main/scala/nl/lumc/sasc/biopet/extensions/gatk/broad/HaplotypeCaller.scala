@@ -156,7 +156,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES */
   @Input(fullName = "alleles", shortName = "alleles", doc = "The set of alleles at which to genotype when --genotyping_mode is GENOTYPE_GIVEN_ALLELES", required = false, exclusiveOf = "", validation = "")
-  var alleles: File = _
+  var alleles: Option[File] = _
 
   /** Fraction of contamination in sequencing data (for all samples) to aggressively remove */
   @Argument(fullName = "contamination_fraction_to_filter", shortName = "contamination", doc = "Fraction of contamination in sequencing data (for all samples) to aggressively remove", required = false, exclusiveOf = "", validation = "")
@@ -403,15 +403,14 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
       if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
         outputFiles :+= VcfUtils.getVcfIndexFile(out)
     dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
-    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig.getPath + ".idx"))
+    deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)
         outputFiles :+= new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (generate_md5)
         bamOutputMD5 = new File(bamOutput.getPath + ".md5")
-    if (alleles != null)
-      deps :+= new File(alleles.getPath + ".idx")
+    alleles.foreach(VcfUtils.getVcfIndexFile(_))
     num_cpu_threads_per_data_thread = Some(getThreads)
   }
 
