@@ -8,14 +8,14 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, GATKScatterFunction, ReadScatterFunction, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, TaggedFile }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class IndelRealigner(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "IndelRealigner"
-  scatterClass = classOf[ReadScatterFunction]
+  scatterClass = classOf[ContigScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = true }
 
   /** Input VCF file(s) with known indels */

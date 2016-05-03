@@ -12,7 +12,6 @@ import org.broadinstitute.gatk.queue.extensions.gatk._
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
-import org.broadinstitute.gatk.utils.variant.GATKVCFIndexType
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "HaplotypeCaller"

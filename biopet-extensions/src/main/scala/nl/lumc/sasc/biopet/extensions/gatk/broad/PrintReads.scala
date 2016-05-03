@@ -8,13 +8,13 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction, GATKScatterFunction, ReadScatterFunction }
+import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline._
 
 class PrintReads(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "PrintReads"
-  scatterClass = classOf[ReadScatterFunction]
+  scatterClass = classOf[ContigScatterFunction]
   setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = true }
 
   /** Write output to this BAM filename instead of STDOUT */

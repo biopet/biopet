@@ -5,6 +5,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.{ BiopetJavaCommandLineFunction, Reference, Version }
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
+import org.broadinstitute.gatk.utils.interval.{ IntervalMergingRule, IntervalSetRule }
 
 trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with Version {
   analysisName = analysis_type
@@ -68,11 +69,11 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
 
   /** Set merging approach to use for combining interval inputs */
   @Argument(fullName = "interval_set_rule", shortName = "isr", doc = "Set merging approach to use for combining interval inputs", required = false, exclusiveOf = "", validation = "")
-  var interval_set_rule: Option[String] = config("interval_set_rule")
+  var interval_set_rule: Option[IntervalSetRule] = None
 
   /** Interval merging rule for abutting intervals */
   @Argument(fullName = "interval_merging", shortName = "im", doc = "Interval merging rule for abutting intervals", required = false, exclusiveOf = "", validation = "")
-  var interval_merging: Option[String] = config("interval_merging")
+  var interval_merging: Option[IntervalMergingRule] = None
 
   /** Amount of padding (in bp) to add to each interval */
   @Argument(fullName = "interval_padding", shortName = "ip", doc = "Amount of padding (in bp) to add to each interval", required = false, exclusiveOf = "", validation = "")
@@ -317,6 +318,14 @@ trait CommandLineGATK extends BiopetJavaCommandLineFunction with Reference with 
 
   override def beforeGraph() {
     super.beforeGraph()
+    if (interval_set_rule.isEmpty) {
+      val v: Option[String] = config("interval_set_rule")
+      interval_set_rule = v.map(IntervalSetRule.valueOf(_))
+    }
+    if (interval_merging.isEmpty) {
+      val v: Option[String] = config("interval_merging")
+      interval_merging = v.map(IntervalMergingRule.valueOf(_))
+    }
     if (reference_sequence == null) reference_sequence = referenceFasta()
     input_fileIndexes ++= input_file.filter(orig => orig != null && orig.getName.endsWith(".bam")).flatMap(orig => Array(new File(orig.getPath.stripSuffix(".bam") + ".bai")))
     if (num_threads.isDefined) nCoresRequest = num_threads
