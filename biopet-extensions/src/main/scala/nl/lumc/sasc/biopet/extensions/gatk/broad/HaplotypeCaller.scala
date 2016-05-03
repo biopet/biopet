@@ -8,10 +8,10 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk._
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
 class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "HaplotypeCaller"
@@ -396,15 +396,23 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
+  @Output
+  @Gather(enabled = false)
+  private var outputIndex: File = _
+
+  @Output
+  @Gather(enabled = false)
+  private var outputBamIndex: File = _
+
   override def beforeGraph() {
     super.beforeGraph()
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
-      outputFiles :+= VcfUtils.getVcfIndexFile(out)
+      outputIndex = VcfUtils.getVcfIndexFile(out)
     dbsnp.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => new File(orig + ".idx"))
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (!disable_bam_indexing)
-        outputFiles :+= new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
+        outputBamIndex = new File(bamOutput.getPath.stripSuffix(".bam") + ".bai")
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (generate_md5)
         bamOutputMD5 = new File(bamOutput.getPath + ".md5")

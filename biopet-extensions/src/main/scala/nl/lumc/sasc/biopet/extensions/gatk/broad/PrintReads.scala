@@ -8,7 +8,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ BamGatherFunction }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import org.broadinstitute.gatk.utils.commandline._
 
@@ -62,14 +61,22 @@ class PrintReads(val root: Configurable) extends CommandLineGATK with ScatterGat
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
+  @Output
+  @Gather(enabled = false)
+  private var outputIndex: File = _
+
+  @Output
+  @Gather(enabled = false)
+  private var outputMd5: File = _
+
   override def beforeGraph() {
     super.beforeGraph()
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (!disable_bam_indexing)
-        outputFiles :+= new File(out.getPath.stripSuffix(".bam") + ".bai")
+        outputIndex = new File(out.getPath.stripSuffix(".bam") + ".bai")
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       if (generate_md5)
-        outputFiles :+= new File(out.getPath + ".md5")
+        outputMd5 = new File(out.getPath + ".md5")
   }
 
   override def cmdLine = super.cmdLine +

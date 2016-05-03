@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 12/4/15.
@@ -97,6 +97,9 @@ class PickOtus(val root: Configurable) extends BiopetCommandLineFunction with Ve
   def clustersFile = new File(outputDir, s"${name}_clusters.uc")
   def logFile = new File(outputDir, s"${name}_otus.log")
   def otusTxt = new File(outputDir, s"${name}_otus.txt")
+
+  @Output
+  private var outputFiles: List[File] = Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

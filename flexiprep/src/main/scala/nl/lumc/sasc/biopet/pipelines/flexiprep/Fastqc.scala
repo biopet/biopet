@@ -22,8 +22,8 @@ import nl.lumc.sasc.biopet.core.summary.Summarizable
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 import scala.io.Source
-
 import htsjdk.samtools.util.SequenceUtil.reverseComplement
+import org.broadinstitute.gatk.utils.commandline.Output
 
 /**
  * FastQC wrapper with added functionality for the Flexiprep pipeline
@@ -215,6 +215,9 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC
     } else Set()
   }
+
+  @Output
+  private var outputFiles: List[File] = Nil
 
   def summaryFiles: Map[String, File] = {
     val outputFiles = Map("plot_duplication_levels" -> ("Images" + File.separator + "duplication_levels.png"),

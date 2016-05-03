@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 12/10/15.
@@ -54,7 +54,10 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
   var maxBarcodeErrors: Option[Double] = config("max_barcode_errors")
   var phredOffset: Option[String] = config("phred_offset")
 
-  def outputSeqs = new File(outputDir, "seqs.fna")
+  def outputSeqs = _outputSeqs
+
+  @Output
+  var _outputSeqs: File = _
 
   override def defaultCoreMemory = 4.0
 
@@ -62,7 +65,7 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
     super.beforeGraph()
     require(input.nonEmpty)
     require(outputDir != null)
-    outputFiles :+= outputSeqs
+    _outputSeqs = new File(outputDir, "seqs.fna")
   }
 
   def cmdLine = executable +

@@ -77,6 +77,9 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     }
   }
 
+  @Output
+  private var outputFiles: List[File] = Nil
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     require(read != null)

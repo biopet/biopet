@@ -150,6 +150,9 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   override def defaultCoreMemory = 4.0
 
+  @Output
+  private var _summary: File = null
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (!cache && !database) {
@@ -157,7 +160,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     } else if (cache && dir.isEmpty) {
       Logging.addError("Must supply dir to cache for VariantEffectPredictor")
     }
-    if (statsText) outputFiles :+= new File(output.getAbsolutePath + "_summary.txt")
+    if (statsText) _summary = new File(output.getAbsolutePath + "_summary.txt")
   }
 
   /** Returns command to execute */

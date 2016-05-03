@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.extensions
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.util.matching.Regex
 
@@ -64,16 +64,33 @@ class Flash(val root: Configurable) extends BiopetCommandLineFunction with Versi
 
   private def suffix = outputSuffix.getOrElse("fastq") + (if (compress) ".gz" else "")
 
-  def combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
-  def notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
-  def notCombinedR2 = new File(outputDirectory, s"$outputPrefix.notCombined_2.$suffix")
-  def outputHistogramTable = new File(outputDirectory, s"$outputPrefix.hist")
-  def outputHistogram = new File(outputDirectory, s"$outputPrefix.histogram")
+  @Output
+  private var _combinedFastq: File = _
+  def combinedFastq = _combinedFastq
+
+  @Output
+  private var _notCombinedR1: File = _
+  def notCombinedR1 = _notCombinedR1
+
+  @Output
+  private var _notCombinedR2: File = _
+  def notCombinedR2 = _notCombinedR2
+
+  @Output
+  private var _outputHistogramTable: File = _
+  def outputHistogramTable = _outputHistogramTable
+
+  @Output
+  private var _outputHistogram: File = _
+  def outputHistogram = _outputHistogram
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    outputFiles :::= combinedFastq :: notCombinedR1 ::
-      notCombinedR2 :: outputHistogramTable :: outputHistogram :: Nil
+    _combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
+    _notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
+    _notCombinedR2 = new File(outputDirectory, s"$outputPrefix.notCombined_2.$suffix")
+    _outputHistogramTable = new File(outputDirectory, s"$outputPrefix.hist")
+    _outputHistogram = new File(outputDirectory, s"$outputPrefix.histogram")
   }
 
   def cmdLine = executable +

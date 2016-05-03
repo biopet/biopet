@@ -17,9 +17,9 @@ package nl.lumc.sasc.biopet.extensions.bowtie
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
  * Created by pjvan_thof on 8/15/15.
@@ -36,6 +36,9 @@ class Bowtie2Build(val root: Configurable) extends BiopetCommandLineFunction wit
   def versionCommand = executable + " --version"
 
   override def defaultCoreMemory = 15.0
+
+  @Output
+  private var outputFiles: List[File] = Nil
 
   override def beforeGraph: Unit = {
     outputFiles ::= new File(reference.getParentFile, baseName + ".1.bt2")

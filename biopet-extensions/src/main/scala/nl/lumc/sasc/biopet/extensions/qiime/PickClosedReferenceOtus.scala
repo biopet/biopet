@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Input
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 12/4/15.
@@ -53,6 +53,9 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
 
   def otuTable = new File(outputDir, "otu_table.biom")
   def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
+
+  @Output
+  private var outputFiles: List[File] = Nil
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()

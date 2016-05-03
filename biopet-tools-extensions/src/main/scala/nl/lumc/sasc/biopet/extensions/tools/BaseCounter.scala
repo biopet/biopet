@@ -75,6 +75,9 @@ class BaseCounter(val root: Configurable) extends ToolCommandFunction {
   def strandedSenseMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.sense.counts")
   def strandedAntiSenseMetaExonCounts = new File(outputDir, s"$prefix.base.metaexons.stranded.antisense.counts")
 
+  @Output
+  private var outputFiles: List[File] = Nil
+
   override def beforeGraph(): Unit = {
     outputFiles ++= List(transcriptTotalCounts, transcriptTotalSenseCounts, transcriptTotalAntiSenseCounts,
       transcriptExonicCounts, transcriptExonicSenseCounts, transcriptExonicAntiSenseCounts,

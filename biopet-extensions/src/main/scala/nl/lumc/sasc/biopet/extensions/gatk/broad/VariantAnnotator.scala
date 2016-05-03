@@ -10,7 +10,7 @@ import java.io.File
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
 
 class VariantAnnotator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
@@ -91,6 +91,10 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
+  @Output
+  @Gather(enabled = false)
+  private var outputIndex: File = _
+
   override def beforeGraph() {
     super.beforeGraph()
     if (variant != null)
@@ -100,8 +104,7 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
     deps ++= comp.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     deps ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
-      if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outputFiles :+= VcfUtils.getVcfIndexFile(out)
+      outputIndex = VcfUtils.getVcfIndexFile(out)
   }
 
   override def cmdLine = super.cmdLine +

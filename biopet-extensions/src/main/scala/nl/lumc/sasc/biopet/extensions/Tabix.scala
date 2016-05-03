@@ -65,6 +65,9 @@ class Tabix(val root: Configurable) extends BiopetCommandLineFunction with Versi
   /** Formats that tabix can handle */
   private val validFormats: Set[String] = Set("gff", "bed", "sam", "vcf", "psltbl")
 
+  @Output
+  var outputFiles: List[File] = Nil
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     p match {

@@ -9,7 +9,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ CatVariantsGatherer, TaggedFile }
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output, _ }
 
 class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
@@ -170,14 +170,17 @@ class VariantRecalibrator(val root: Configurable) extends CommandLineGATK {
   @Argument(fullName = "filter_bases_not_stored", shortName = "filterNoBases", doc = "Filter out reads with no stored bases (i.e. '*' where the sequence should be), instead of failing with an error", required = false, exclusiveOf = "", validation = "")
   var filter_bases_not_stored: Boolean = config("filter_bases_not_stored", default = false)
 
+  @Output
+  @Gather(enabled = false)
+  private var outputIndex: File = _
+
   override def beforeGraph() {
     super.beforeGraph()
     deps ++= input.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     deps ++= aggregate.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     deps ++= resource.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (recal_file != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(recal_file))
-      if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(recal_file.getPath))
-        outputFiles :+= VcfUtils.getVcfIndexFile(recal_file)
+      outputIndex = VcfUtils.getVcfIndexFile(recal_file)
   }
 
   override def cmdLine = super.cmdLine +

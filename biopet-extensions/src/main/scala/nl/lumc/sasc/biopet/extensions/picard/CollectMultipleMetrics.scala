@@ -54,6 +54,9 @@ class CollectMultipleMetrics(val root: Configurable) extends Picard with Summari
   @Argument(doc = "Stop after processing N reads", required = false)
   var stopAfter: Option[Long] = config("stop_after")
 
+  @Output
+  private var outputFiles: List[File] = Nil
+
   override def beforeGraph(): Unit = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()

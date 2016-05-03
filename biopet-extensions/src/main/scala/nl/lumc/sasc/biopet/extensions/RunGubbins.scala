@@ -49,6 +49,9 @@ class RunGubbins(val root: Configurable) extends BiopetCommandLineFunction {
   var verbose: Boolean = config("verbose", default = false)
   var noCleanup: Boolean = config("no_cleanup", default = false)
 
+  @Output
+  var outputFiles: List[File] = Nil
+
   /** Set correct output files */
   override def beforeGraph(): Unit = {
     super.beforeGraph()

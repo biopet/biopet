@@ -35,10 +35,6 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   @Input(doc = "deps", required = false)
   var deps: List[File] = Nil
 
-  @Output
-  @Gather(enabled = false)
-  var outputFiles: List[File] = Nil
-
   var executable: String = _
 
   /** This is the default shell for drmaa jobs */
