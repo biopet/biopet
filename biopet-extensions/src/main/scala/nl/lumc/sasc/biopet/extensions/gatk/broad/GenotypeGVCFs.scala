@@ -111,8 +111,7 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
     super.freezeFieldValues()
     deps ++= variant.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
-      if (!org.broadinstitute.gatk.utils.commandline.ArgumentTypeDescriptor.isCompressed(out.getPath))
-        outputFiles :+= VcfUtils.getVcfIndexFile(out)
+      outputFiles :+= VcfUtils.getVcfIndexFile(out)
     dbsnp.foreach(VcfUtils.getVcfIndexFile(_))
   }
 
