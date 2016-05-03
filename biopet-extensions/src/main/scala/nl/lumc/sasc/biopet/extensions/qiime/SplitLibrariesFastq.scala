@@ -54,10 +54,10 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
   var maxBarcodeErrors: Option[Double] = config("max_barcode_errors")
   var phredOffset: Option[String] = config("phred_offset")
 
-  def outputSeqs = _outputSeqs
+  def outputSeqs = new File(outputDir, "seqs.fna")
 
   @Output
-  var _outputSeqs: File = _
+  private var _outputSeqs: File = _
 
   override def defaultCoreMemory = 4.0
 
@@ -65,7 +65,7 @@ class SplitLibrariesFastq(val root: Configurable) extends BiopetCommandLineFunct
     super.beforeGraph()
     require(input.nonEmpty)
     require(outputDir != null)
-    _outputSeqs = new File(outputDir, "seqs.fna")
+    _outputSeqs = outputSeqs
   }
 
   def cmdLine = executable +

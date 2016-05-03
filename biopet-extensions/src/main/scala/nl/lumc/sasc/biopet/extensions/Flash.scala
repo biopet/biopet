@@ -66,31 +66,31 @@ class Flash(val root: Configurable) extends BiopetCommandLineFunction with Versi
 
   @Output
   private var _combinedFastq: File = _
-  def combinedFastq = _combinedFastq
+  def combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
 
   @Output
   private var _notCombinedR1: File = _
-  def notCombinedR1 = _notCombinedR1
+  def notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
 
   @Output
   private var _notCombinedR2: File = _
-  def notCombinedR2 = _notCombinedR2
+  def notCombinedR2 = new File(outputDirectory, s"$outputPrefix.notCombined_2.$suffix")
 
   @Output
   private var _outputHistogramTable: File = _
-  def outputHistogramTable = _outputHistogramTable
+  def outputHistogramTable = new File(outputDirectory, s"$outputPrefix.hist")
 
   @Output
   private var _outputHistogram: File = _
-  def outputHistogram = _outputHistogram
+  def outputHistogram = new File(outputDirectory, s"$outputPrefix.histogram")
 
   override def beforeGraph(): Unit = {
     super.beforeGraph()
-    _combinedFastq = new File(outputDirectory, s"$outputPrefix.extendedFrags.$suffix")
-    _notCombinedR1 = new File(outputDirectory, s"$outputPrefix.notCombined_1.$suffix")
-    _notCombinedR2 = new File(outputDirectory, s"$outputPrefix.notCombined_2.$suffix")
-    _outputHistogramTable = new File(outputDirectory, s"$outputPrefix.hist")
-    _outputHistogram = new File(outputDirectory, s"$outputPrefix.histogram")
+    _combinedFastq = combinedFastq
+    _notCombinedR1 = notCombinedR1
+    _notCombinedR2 = notCombinedR2
+    _outputHistogramTable = outputHistogramTable
+    _outputHistogram = outputHistogram
   }
 
   def cmdLine = executable +
