@@ -34,3 +34,11 @@ This file contains all the values needed to create the actual base exon counts a
 * Column1: GeneID
 * Column2: Base counts per gene
 
+# HTseq fragment counts
+
+**DIR_name:** fragmentspergene
+
+Inside this folder one will find:
+
+* <SampleName>.fragmentspergene.counts
+* fragmentspergene.fragments_per_gene.tsv which is the combined table of all separate count files
