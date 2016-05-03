@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.core
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.utils.commandline.Output
 
 /**
  * Created by pjvan_thof on 9/29/15.
@@ -46,6 +47,9 @@ class BiopetFifoPipe(val root: Configurable,
     ) yield outputFile
   }
 
+  @Output
+  private var outputFiles: List[File] = Nil
+
   override def beforeGraph(): Unit = {
     val outputs: Map[BiopetCommandLineFunction, Seq[File]] = try {
       commands.map(x => x -> x.outputs).toMap
@@ -60,6 +64,9 @@ class BiopetFifoPipe(val root: Configurable,
     }
 
     val fifoFiles = fifos
+
+    outputFiles :::= outputs.values.toList.flatten.filter(!fifoFiles.contains(_))
+    outputFiles = outputFiles.distinct
 
     deps :::= inputs.values.toList.flatten.filter(!fifoFiles.contains(_))
     deps = deps.distinct
