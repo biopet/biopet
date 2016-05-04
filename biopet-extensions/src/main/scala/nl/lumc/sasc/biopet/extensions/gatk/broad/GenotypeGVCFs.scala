@@ -111,12 +111,16 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
   @Gather(enabled = false)
   private var outputIndex: File = _
 
-  override def freezeFieldValues() {
-    super.freezeFieldValues()
+  @Output
+  @Gather(enabled = false)
+  private var dbsnpIndex: File = _
+
+  override def beforeGraph() {
+    super.beforeGraph()
     deps ++= variant.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       outputIndex = VcfUtils.getVcfIndexFile(out)
-    dbsnp.foreach(VcfUtils.getVcfIndexFile(_))
+    dbsnp.foreach(x => dbsnpIndex = VcfUtils.getVcfIndexFile(x))
   }
 
   override def cmdLine = super.cmdLine +
