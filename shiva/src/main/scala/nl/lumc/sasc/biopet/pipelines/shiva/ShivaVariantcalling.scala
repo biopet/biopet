@@ -72,13 +72,15 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
   /** Variantcallers requested by the config */
   protected val configCallers: Set[String] = config("variantcallers")
 
-  protected val callers: List[Variantcaller] = {
+  val callers: List[Variantcaller] = {
     (for (name <- configCallers) yield {
       if (!callersList.exists(_.name == name))
         Logging.addError(s"variantcaller '$name' does not exist, possible to use: " + callersList.map(_.name).mkString(", "))
       callersList.find(_.name == name)
     }).flatten.toList.sortBy(_.prio)
   }
+
+  callers.filter(_.isInstanceOf[HaplotypeCallerGvcf])
 
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {

@@ -13,14 +13,21 @@ class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
   val name = "haplotypecaller_gvcf"
   protected def defaultPrio = 5
 
+  /**
+    *
+    */
+  protected var gVcfFiles: Map[String, File] = Map()
+
+  def getGvcfs = gVcfFiles
+
   def biopetScript() {
-    val gvcfFiles = for ((sample, inputBam) <- inputBams) yield {
+    gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
       val hc = broad.HaplotypeCaller.gvcf(this, inputBam, new File(outputDir, sample + ".gvcf.vcf.gz"))
       add(hc)
-      hc.out
+      sample -> hc.out
     }
 
-    val genotypeGVCFs = broad.GenotypeGVCFs(this, gvcfFiles.toList, outputFile)
+    val genotypeGVCFs = broad.GenotypeGVCFs(this, gVcfFiles.values.toList, outputFile)
     add(genotypeGVCFs)
   }
 }
