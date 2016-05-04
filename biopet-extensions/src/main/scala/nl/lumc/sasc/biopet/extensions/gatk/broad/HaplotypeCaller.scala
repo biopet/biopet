@@ -411,7 +411,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     if (bamOutput != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(bamOutput))
       if (generate_md5)
         bamOutputMD5 = new File(bamOutput.getPath + ".md5")
-    alleles.foreach(VcfUtils.getVcfIndexFile(_))
+    alleles.foreach(deps :+= VcfUtils.getVcfIndexFile(_))
     num_cpu_threads_per_data_thread = Some(getThreads)
   }
 
