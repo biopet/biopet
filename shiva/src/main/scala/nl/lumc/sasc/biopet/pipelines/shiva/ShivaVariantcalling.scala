@@ -15,15 +15,15 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{CombineVariants, GenotypeConcordance}
+import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
+import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{ VarscanCnsSingleSample, _ }
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
@@ -88,7 +88,7 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
     val cv = new CombineVariants(qscript)
     cv.out = finalFile
-    cv.setKey = "VariantCaller"
+    cv.setKey = Some("VariantCaller")
     cv.genotypemergeoption = Some("PRIORITIZE")
     cv.rod_priority_list = Some(callers.map(_.name).mkString(","))
     for (caller <- callers) {

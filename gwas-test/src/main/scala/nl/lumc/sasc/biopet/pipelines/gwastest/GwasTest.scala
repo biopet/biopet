@@ -6,7 +6,7 @@ import java.util
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.extensions.Snptest
-import nl.lumc.sasc.biopet.extensions.gatk.broad.{ CatVariants, SelectVariants }
+import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
 import nl.lumc.sasc.biopet.extensions.tools.{ GensToVcf, SnptestToVcf }
 import nl.lumc.sasc.biopet.pipelines.gwastest.impute.ImputeOutput
 import nl.lumc.sasc.biopet.utils.Logging
@@ -105,7 +105,7 @@ class GwasTest(val root: Configurable) extends QScript with BiopetQScript with R
         bedFile.deleteOnExit()
 
         val sv = new SelectVariants(this)
-        sv.variant :+= chrVcfFiles.getOrElse(region.chr, vcfFile)
+        sv.variant = chrVcfFiles.getOrElse(region.chr, vcfFile)
         sv.out = new File(regionDir, s"$name.vcf.gz")
         sv.intervals :+= bedFile
         sv.isIntermediate = true

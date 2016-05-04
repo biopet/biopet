@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.gatk.broad.CatVariants
+import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caller delly */

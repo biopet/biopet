@@ -1,13 +1,10 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.Argument
-import org.broadinstitute.gatk.utils.commandline.Gather
-import org.broadinstitute.gatk.utils.commandline.Input
-import org.broadinstitute.gatk.utils.commandline.Output
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
 
 class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction {
   analysisName = "CatVariants"

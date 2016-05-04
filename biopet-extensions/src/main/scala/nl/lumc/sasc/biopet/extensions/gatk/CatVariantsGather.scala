@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile

@@ -1,12 +1,12 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
-import org.broadinstitute.gatk.utils.interval.IntervalUtils
 import java.io.File
 
 import org.broadinstitute.gatk.queue.extensions.gatk.GATKIntervals
-import org.broadinstitute.gatk.utils.io.IOUtils
 import org.broadinstitute.gatk.queue.function.scattergather.{ CloneFunction, ScatterFunction }
-import org.broadinstitute.gatk.utils.commandline.{ Output, _ }
+import org.broadinstitute.gatk.utils.commandline.Output
+import org.broadinstitute.gatk.utils.interval.IntervalUtils
+import org.broadinstitute.gatk.utils.io.IOUtils
 
 trait GATKScatterFunction extends ScatterFunction {
   /* The runtime field to set for specifying intervals. */

@@ -1,8 +1,9 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
-import collection.JavaConversions._
-import org.broadinstitute.gatk.utils.interval.IntervalUtils
 import org.broadinstitute.gatk.queue.function.InProcessFunction
+import org.broadinstitute.gatk.utils.interval.IntervalUtils
+
+import scala.collection.JavaConversions._
 
 /**
  * Splits intervals by contig instead of evenly.

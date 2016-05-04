@@ -24,14 +24,14 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, Pipe
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
-import nl.lumc.sasc.biopet.extensions.gatk.broad.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QScript
-import scala.language.reflectiveCalls
 
+import scala.language.reflectiveCalls
 import scala.collection.JavaConversions._
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {

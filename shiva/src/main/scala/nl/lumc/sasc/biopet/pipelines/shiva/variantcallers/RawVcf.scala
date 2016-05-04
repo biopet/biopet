@@ -15,11 +15,9 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import java.io.File
-
-import nl.lumc.sasc.biopet.extensions.gatk.broad.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
-import nl.lumc.sasc.biopet.extensions.tools.{ VcfFilter, MpileupToVcf }
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Makes a vcf file from a mpileup without statistics */
@@ -62,7 +60,7 @@ class RawVcf(val root: Configurable) extends Variantcaller {
     val cv = new CombineVariants(this)
     cv.variant = rawFiles.toList
     cv.out = outputFile
-    cv.setKey = "null"
+    cv.setKey = Some("null")
     cv.excludeNonVariants = !keepRefCalls
     add(cv)
   }
