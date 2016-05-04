@@ -2,7 +2,6 @@ package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.queue.function.RetryMemoryLimit
 import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
 
 /**

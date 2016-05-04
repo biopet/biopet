@@ -1,8 +1,6 @@
 package nl.lumc.sasc.biopet.extensions.gatk.broad
 
 import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
-import org.broadinstitute.gatk.queue.function.RetryMemoryLimit
-import java.io.File
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
