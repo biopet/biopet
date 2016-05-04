@@ -24,7 +24,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, Pipe
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.broad.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
@@ -173,7 +173,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
         genomeConfig.get("dbsnp_vcf_uri").foreach { dbsnpUri =>
           val cv = new CombineVariants(this)
-          cv.reference = fastaFile
+          cv.reference_sequence = fastaFile
           cv.deps ::= createDict.output
           def addDownload(uri: String): Unit = {
             val curl = new Curl(this)
@@ -181,7 +181,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             curl.output = new File(annotationDir, new File(curl.url).getName)
             curl.isIntermediate = true
             add(curl)
-            cv.inputFiles ::= curl.output
+            cv.variant :+= curl.output
 
             val tabix = new Tabix(this)
             tabix.input = curl.output
@@ -198,7 +198,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             case _                    => addDownload(dbsnpUri.toString)
           }
 
-          cv.outputFile = new File(annotationDir, "dbsnp.vcf.gz")
+          cv.out = new File(annotationDir, "dbsnp.vcf.gz")
           add(cv)
         }
 

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import java.io.PrintWriter
 
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.broad.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.varscan.{ FixMpileup, VarscanMpileup2cns }
 import nl.lumc.sasc.biopet.extensions.{ Bgzip, Tabix }
@@ -35,7 +35,8 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       "disable_baq" -> true,
       "depth" -> 1000000
     ),
-    "varscanmpileup2cns" -> Map("strand_filter" -> 0)
+    "varscanmpileup2cns" -> Map("strand_filter" -> 0),
+    "combinevariants" -> Map("scattercount" -> 20)
   )
 
   override def fixedValues = Map(
@@ -67,9 +68,9 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
     }
 
     val cv = new CombineVariants(this)
-    cv.inputFiles = sampleVcfs
-    cv.outputFile = outputFile
-    cv.setKey = "null"
+    cv.variant = sampleVcfs
+    cv.out = outputFile
+    cv.setKey = Some("null")
     cv.excludeNonVariants = true
     add(cv)
   }

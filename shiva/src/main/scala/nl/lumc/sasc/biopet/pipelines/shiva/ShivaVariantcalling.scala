@@ -15,17 +15,18 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference, SampleLibraryTag}
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.Tabix
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance }
+import nl.lumc.sasc.biopet.extensions.gatk.broad.{CombineVariants, GenotypeConcordance}
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
+import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
-import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{ VarscanCnsSingleSample, _ }
-import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
+import nl.lumc.sasc.biopet.pipelines.shiva.variantcallers.{VarscanCnsSingleSample, _}
+import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 
 /**
  * Implementation of ShivaVariantcalling
@@ -86,10 +87,10 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     require(callers.nonEmpty, "must select at least 1 variantcaller, choices are: " + callersList.map(_.name).mkString(", "))
 
     val cv = new CombineVariants(qscript)
-    cv.outputFile = finalFile
+    cv.out = finalFile
     cv.setKey = "VariantCaller"
-    cv.genotypeMergeOptions = Some("PRIORITIZE")
-    cv.rodPriorityList = callers.map(_.name).mkString(",")
+    cv.genotypemergeoption = Some("PRIORITIZE")
+    cv.rod_priority_list = Some(callers.map(_.name).mkString(","))
     for (caller <- callers) {
       caller.inputBams = inputBams
       caller.namePrefix = namePrefix
@@ -110,17 +111,17 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
         vtDecompose.inputVcf = vtNormalize.outputVcf
         vtDecompose.outputVcf = swapExt(caller.outputDir, vtNormalize.outputVcf, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.addInput(vtDecompose.outputVcf, caller.name)
+        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
       } else if (normalize && !decompose) {
         vtNormalize.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".normalized.vcf.gz")
         add(vtNormalize, Tabix(this, vtNormalize.outputVcf))
-        cv.addInput(vtNormalize.outputVcf, caller.name)
+        cv.variant :+= TaggedFile(vtNormalize.outputVcf, caller.name)
       } else if (!normalize && decompose) {
         vtDecompose.inputVcf = caller.outputFile
         vtDecompose.outputVcf = swapExt(caller.outputDir, caller.outputFile, ".vcf.gz", ".decompose.vcf.gz")
         add(vtDecompose, Tabix(this, vtDecompose.outputVcf))
-        cv.addInput(vtDecompose.outputVcf, caller.name)
-      } else cv.addInput(caller.outputFile, caller.name)
+        cv.variant :+= TaggedFile(vtDecompose.outputVcf, caller.name)
+      } else cv.variant :+= TaggedFile(caller.outputFile, caller.name)
     }
     add(cv)
 
@@ -139,9 +140,9 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
 
     referenceVcf.foreach(referenceVcfFile => {
       val gc = new GenotypeConcordance(this)
-      gc.evalFile = vcfFile
-      gc.compFile = referenceVcfFile
-      gc.outputFile = new File(vcfFile.getParentFile, s"$namePrefix-genotype_concordance.$name.txt")
+      gc.eval = vcfFile
+      gc.comp = referenceVcfFile
+      gc.out = new File(vcfFile.getParentFile, s"$namePrefix-genotype_concordance.$name.txt")
       referenceVcfRegions.foreach(gc.intervals ::= _)
       add(gc)
       addSummarizable(gc, s"$namePrefix-genotype_concordance-$name")

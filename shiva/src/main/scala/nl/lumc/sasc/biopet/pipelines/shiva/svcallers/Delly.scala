@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
 import nl.lumc.sasc.biopet.extensions.delly.DellyCaller
-import nl.lumc.sasc.biopet.extensions.gatk.CatVariants
+import nl.lumc.sasc.biopet.extensions.gatk.broad.CatVariants
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caller delly */
@@ -41,7 +41,7 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DEL"
         delly.outputvcf = new File(dellyDir, sample + ".delly.del.vcf")
         add(delly)
-        catVariants.inputFiles :+= delly.outputvcf
+        catVariants.variant :+= delly.outputvcf
       }
       if (dup) {
         val delly = new DellyCaller(this)
@@ -49,7 +49,7 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "DUP"
         delly.outputvcf = new File(dellyDir, sample + ".delly.dup.vcf")
         add(delly)
-        catVariants.inputFiles :+= delly.outputvcf
+        catVariants.variant :+= delly.outputvcf
       }
       if (inv) {
         val delly = new DellyCaller(this)
@@ -57,18 +57,18 @@ class Delly(val root: Configurable) extends SvCaller {
         delly.analysistype = "INV"
         delly.outputvcf = new File(dellyDir, sample + ".delly.inv.vcf")
         add(delly)
-        catVariants.inputFiles :+= delly.outputvcf
+        catVariants.variant :+= delly.outputvcf
       }
       if (tra) {
         val delly = new DellyCaller(this)
         delly.input = bamFile
         delly.analysistype = "TRA"
         delly.outputvcf = new File(dellyDir, sample + ".delly.tra.vcf")
-        catVariants.inputFiles :+= delly.outputvcf
+        catVariants.variant :+= delly.outputvcf
         add(delly)
       }
 
-      require(catVariants.inputFiles.nonEmpty, "Must atleast 1 SV-type be selected for Delly")
+      require(catVariants.variant.nonEmpty, "Must atleast 1 SV-type be selected for Delly")
 
       add(catVariants)
       addVCF(sample, catVariants.outputFile)

@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
+import nl.lumc.sasc.biopet.extensions.gatk.broad.CombineVariants
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsMpileup
 import nl.lumc.sasc.biopet.extensions.tools.{ VcfFilter, MpileupToVcf }
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -60,8 +60,8 @@ class RawVcf(val root: Configurable) extends Variantcaller {
     }
 
     val cv = new CombineVariants(this)
-    cv.inputFiles = rawFiles.toList
-    cv.outputFile = outputFile
+    cv.variant = rawFiles.toList
+    cv.out = outputFile
     cv.setKey = "null"
     cv.excludeNonVariants = !keepRefCalls
     add(cv)
