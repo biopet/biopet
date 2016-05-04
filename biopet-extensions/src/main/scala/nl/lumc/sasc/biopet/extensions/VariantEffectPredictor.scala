@@ -274,7 +274,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
       case (x1: Int, x2: Int) => x1 + x2
-      case _ => throw new IllegalStateException("Value are not Int's, unable to sum them up")
+      case _                  => throw new IllegalStateException("Value are not Int's, unable to sum them up")
     }
   }
 
