@@ -24,6 +24,8 @@ import org.broadinstitute.gatk.utils.commandline.Input
  * General extension for GATK module
  *
  * Created by pjvan_thof on 2/26/15.
+ *
+ * @deprecated
  */
 abstract class Gatk extends BiopetJavaCommandLineFunction with Reference with Version {
   override def subPath = "gatk" :: super.subPath

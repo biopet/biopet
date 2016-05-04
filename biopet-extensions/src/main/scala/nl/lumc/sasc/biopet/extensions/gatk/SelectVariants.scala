@@ -25,6 +25,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output }
  * Extension for CombineVariants from GATK
  *
  * Created by pjvan_thof on 2/26/15.
+ *
+ * @deprecated
  */
 class SelectVariants(val root: Configurable) extends Gatk {
   val analysisType = "SelectVariants"

@@ -26,6 +26,8 @@ import org.broadinstitute.gatk.utils.report.{ GATKReportTable, GATKReport }
  * Extension for CombineVariants from GATK
  *
  * Created by pjvan_thof on 2/26/15.
+ *
+ * @deprecated
  */
 class GenotypeConcordance(val root: Configurable) extends Gatk with Summarizable {
   val analysisType = "GenotypeConcordance"
