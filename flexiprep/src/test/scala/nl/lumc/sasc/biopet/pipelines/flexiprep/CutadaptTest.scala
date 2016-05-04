@@ -17,6 +17,8 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import java.io.File
 
+import org.testng.annotations.Test
+
 class CutadaptTest extends FastqcV0101Test {
   /** Mock output file of a Cutadapt 1.9 run */
   private[flexiprep] val cutadaptOut: File = resourceFile("ct-test.R1.clip.stats")
