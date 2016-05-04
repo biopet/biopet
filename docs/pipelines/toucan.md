@@ -83,6 +83,25 @@ The following config values are optional:
 Annotation queries can be set by the `annotation_queries` config value in the `manwe` config namespace. 
 By default, a global query is returned. 
 
+
+###Groups
+In case you want to add your samples to a specific group in your varda database, you can use the tagging system in your sample config.
+Specifically, the `varda_group` tag should be a list of strings pointing to group. 
+
+E.g. :
+
+```json
+{
+    "samples": {
+        "sample1": {
+            "tags": {
+                "varda_group": ["group1", "group2"]
+            }
+        }
+    }
+}
+```
+
 Running the pipeline
 ---------------
 The command to run the pipeline is:
