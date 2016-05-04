@@ -105,6 +105,7 @@ object ToucanTest {
     "varda_token" -> "test",
     "bcftools" -> Map("exe" -> "test"),
     "bedtools" -> Map("exe" -> "test"),
-    "manwe" -> Map("exe" -> "test")
+    "manwe" -> Map("exe" -> "test"),
+    "bgzip" -> Map("exe" -> "test")
   )
 }
