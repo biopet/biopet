@@ -14,8 +14,8 @@ class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
   protected def defaultPrio = 5
 
   /**
-    *
-    */
+   * Map of sample name -> gvcf. May be empty.
+   */
   protected var gVcfFiles: Map[String, File] = Map()
 
   def getGvcfs = gVcfFiles

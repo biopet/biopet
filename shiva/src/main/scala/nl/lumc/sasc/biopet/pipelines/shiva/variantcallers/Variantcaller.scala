@@ -29,8 +29,8 @@ trait Variantcaller extends QScript with BiopetQScript with Reference {
   var namePrefix: String = _
 
   /**
-    * Map of samplename -> (preprocessed) bam file
-    */
+   * Map of samplename -> (preprocessed) bam file
+   */
   var inputBams: Map[String, File] = _
 
   def init() = {}
