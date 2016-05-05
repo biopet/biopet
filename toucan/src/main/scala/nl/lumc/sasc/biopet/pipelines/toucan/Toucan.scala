@@ -80,9 +80,13 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
         val chunkName = s"${region.chr}-${region.start}-${region.end}"
         val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
+        val bedFile = new File(chunkDir, chunkName + ".bed")
+        BedRecordList.fromList(List(region)).writeToFile(bedFile)
+        bedFile.deleteOnExit()
         val sv = new SelectVariants(this)
         sv.inputFiles :+= useVcf
         sv.outputFile = new File(chunkDir, chunkName + ".vcf.gz")
+        sv.intervals :+= bedFile
         sv.isIntermediate = true
         add(sv)
 
