@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import nl.lumc.sasc.biopet.extensions.gatk.broad
+import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Gvcf mode for haplotypecaller */
@@ -15,12 +15,12 @@ class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
 
   def biopetScript() {
     val gvcfFiles = for ((sample, inputBam) <- inputBams) yield {
-      val hc = broad.HaplotypeCaller.gvcf(this, inputBam, new File(outputDir, sample + ".gvcf.vcf.gz"))
+      val hc = gatk.HaplotypeCaller.gvcf(this, inputBam, new File(outputDir, sample + ".gvcf.vcf.gz"))
       add(hc)
       hc.out
     }
 
-    val genotypeGVCFs = broad.GenotypeGVCFs(this, gvcfFiles.toList, outputFile)
+    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gvcfFiles.toList, outputFile)
     add(genotypeGVCFs)
   }
 }
