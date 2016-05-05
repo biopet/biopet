@@ -24,6 +24,7 @@ import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, Variant
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
+import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 
 import scala.collection.JavaConversions._
 
@@ -89,14 +90,14 @@ object VcfWithVcf extends ToolCommand {
     val header = reader.getFileHeader
     val vcfDict = header.getSequenceDictionary match {
       case r if r != null =>
-        r.assertSameDictionary(referenceDict)
+        r.assertSameDictionary(referenceDict, true)
         r
       case _ => referenceDict
     }
     val secondHeader = secondaryReader.getFileHeader
 
     secondHeader.getSequenceDictionary match {
-      case r if r != null => r.assertSameDictionary(referenceDict)
+      case r if r != null => r.assertSameDictionary(referenceDict, true)
       case _              =>
     }
 

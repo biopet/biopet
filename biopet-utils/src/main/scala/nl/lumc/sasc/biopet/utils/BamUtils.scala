@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{ SamReader, SamReaderFactory }
-import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -146,4 +146,13 @@ object BamUtils {
     bamFile -> sampleBamInsertSize(bamFile, samplingSize, binSize)
   }.toMap
 
+  implicit class SamDictCheck(samDics: SAMSequenceDictionary) extends SAMSequenceDictionary {
+    def assertSameDictionary(that: SAMSequenceDictionary, ignoreOrder: Boolean): Unit = {
+      if (ignoreOrder) {
+        assert(this.getReferenceLength == that.getReferenceLength)
+        val thisContigNames = this.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
+        assert(thisContigNames == that.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet)
+      } else assertSameDictionary(this)
+    }
+  }
 }
