@@ -144,7 +144,7 @@ object BamUtils {
   }.toMap
 
   /** This class will add functionality to [[SAMSequenceDictionary]] */
-  implicit class SamDictCheck(samDics: SAMSequenceDictionary) extends SAMSequenceDictionary {
+  implicit class SamDictCheck(samDics: SAMSequenceDictionary) {
     /**
       * This method will check if all contig and sizes are the same without looking at the order of the contigs
       *
@@ -154,10 +154,10 @@ object BamUtils {
       */
     def assertSameDictionary(that: SAMSequenceDictionary, ignoreOrder: Boolean): Unit = {
       if (ignoreOrder) {
-        assert(this.getReferenceLength == that.getReferenceLength)
-        val thisContigNames = this.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
+        assert(samDics.getReferenceLength == that.getReferenceLength)
+        val thisContigNames = samDics.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
         assert(thisContigNames == that.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet)
-      } else assertSameDictionary(that)
+      } else samDics.assertSameDictionary(that)
     }
   }
 }
