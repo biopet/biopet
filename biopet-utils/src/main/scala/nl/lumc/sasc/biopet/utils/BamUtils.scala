@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{ SamReader, SamReaderFactory }
-import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
+import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -129,11 +129,8 @@ object BamUtils {
     val counts = bamInsertSizes.flatMap(x => x)
 
     // avoid division by zero
-    if (counts.size != 0) {
-      counts.sum / counts.size
-    } else {
-      0
-    }
+    if (counts.size != 0) counts.sum / counts.size
+    else 0
   }
 
   /**
@@ -146,4 +143,21 @@ object BamUtils {
     bamFile -> sampleBamInsertSize(bamFile, samplingSize, binSize)
   }.toMap
 
+  /** This class will add functionality to [[SAMSequenceDictionary]] */
+  implicit class SamDictCheck(samDics: SAMSequenceDictionary) extends SAMSequenceDictionary {
+    /**
+      * This method will check if all contig and sizes are the same without looking at the order of the contigs
+      *
+      * @throws AssertionError
+      * @param that Dict to compare to
+      * @param ignoreOrder When true the order of the contig does not matter
+      */
+    def assertSameDictionary(that: SAMSequenceDictionary, ignoreOrder: Boolean): Unit = {
+      if (ignoreOrder) {
+        assert(this.getReferenceLength == that.getReferenceLength)
+        val thisContigNames = this.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet
+        assert(thisContigNames == that.getSequences.map(x => (x.getSequenceName, x.getSequenceLength)).sorted.toSet)
+      } else assertSameDictionary(that)
+    }
+  }
 }
