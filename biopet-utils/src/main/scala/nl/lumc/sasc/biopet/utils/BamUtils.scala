@@ -129,11 +129,8 @@ object BamUtils {
     val counts = bamInsertSizes.flatMap(x => x)
 
     // avoid division by zero
-    if (counts.size != 0) {
-      counts.sum / counts.size
-    } else {
-      0
-    }
+    if (counts.size != 0) counts.sum / counts.size
+    else 0
   }
 
   /**
