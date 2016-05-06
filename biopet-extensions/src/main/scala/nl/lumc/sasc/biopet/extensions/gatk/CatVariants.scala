@@ -2,11 +2,11 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.core.{BiopetJavaCommandLineFunction, Reference}
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Gather, Input, Output}
 
-class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction {
+class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction with Reference {
   analysisName = "CatVariants"
   javaMainClass = "org.broadinstitute.gatk.tools.CatVariants"
 
@@ -43,6 +43,11 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Output(fullName = "log_to_file", shortName = "log", doc = "Set the logging location", required = false, exclusiveOf = "", validation = "")
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var log_to_file: File = _
+
+  override def beforeGraph() = {
+    super.beforeGraph()
+    if (reference == null) reference = referenceFasta()
+  }
 
   override def cmdLine = super.cmdLine +
     required("-R", reference, spaceSeparated = true, escape = true, format = "%s") +
