@@ -134,4 +134,11 @@ object VcfUtils {
     else if (name.endsWith(".vcf.gz")) new File(name + ".tbi")
     else throw new IllegalArgumentException(s"File given is no vcf file: $vcfFile")
   }
+
+  def vcfFileIsEmpty(file: File): Boolean = {
+    val reader = new VCFFileReader(file, false)
+    val hasNext = reader.iterator().hasNext
+    reader.close()
+    !hasNext
+  }
 }
