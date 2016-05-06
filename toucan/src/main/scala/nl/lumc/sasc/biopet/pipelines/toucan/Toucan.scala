@@ -80,6 +80,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
         val chunkName = s"${region.chr}-${region.start}-${region.end}"
         val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
+        chunkDir.mkdirs()
         val bedFile = new File(chunkDir, chunkName + ".bed")
         BedRecordList.fromList(List(region)).writeToFile(bedFile)
         bedFile.deleteOnExit()
