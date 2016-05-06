@@ -37,7 +37,7 @@ class ToucanTest extends TestNGSuite with Matchers {
 
   @Test
   def testBinning(): Unit = {
-    val pipeline = initPipeline(ToucanTest.config ++ Map("bin_size" -> 4000))
+    val pipeline = initPipeline(ToucanTest.config ++ Map("bin_size" -> 4000, "min_scatter_genome_size" -> 1000))
     pipeline.inputVcf = new File(ToucanTest.resourcePath("/chrQ2.vcf.gz"))
     pipeline.script()
 

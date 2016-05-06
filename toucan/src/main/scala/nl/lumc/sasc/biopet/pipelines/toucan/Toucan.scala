@@ -49,7 +49,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
 
-  lazy val enableScatter: Boolean = config("enable_scater", default = {
+  lazy val enableScatter: Boolean = config("enable_scatter", default = {
     val ref = new FastaSequenceFile(referenceFasta(), true)
     val refLenght = ref.getSequenceDictionary.getReferenceLength
     ref.close()
