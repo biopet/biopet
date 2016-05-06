@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import nl.lumc.sasc.biopet.extensions.gatk.broad
+import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Allele mode for Haplotypecaller */
@@ -14,7 +14,7 @@ class HaplotypeCallerAllele(val root: Configurable) extends Variantcaller {
   protected def defaultPrio = 5
 
   def biopetScript() {
-    val hc = broad.HaplotypeCaller(this, inputBams.values.toList, outputFile)
+    val hc = gatk.HaplotypeCaller(this, inputBams.values.toList, outputFile)
     hc.alleles = config("input_alleles")
     hc.genotyping_mode = Some("GENOTYPE_GIVEN_ALLELES")
     add(hc)

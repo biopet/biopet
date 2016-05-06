@@ -1,11 +1,11 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.queue.extensions.gatk.{ TaggedFile }
 import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
+import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Input, _ }
 
 class RealignerTargetCreator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {

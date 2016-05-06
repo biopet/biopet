@@ -5,7 +5,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.variantcallers
 
-import nl.lumc.sasc.biopet.extensions.gatk.broad
+import nl.lumc.sasc.biopet.extensions.gatk
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Default mode for UnifiedGenotyper */
@@ -14,7 +14,7 @@ class UnifiedGenotyper(val root: Configurable) extends Variantcaller {
   protected def defaultPrio = 20
 
   def biopetScript() {
-    val ug = broad.UnifiedGenotyper(this, inputBams.values.toList, outputFile)
+    val ug = gatk.UnifiedGenotyper(this, inputBams.values.toList, outputFile)
     add(ug)
   }
 }
