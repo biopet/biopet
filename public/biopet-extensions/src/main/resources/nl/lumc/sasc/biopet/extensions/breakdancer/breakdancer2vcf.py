@@ -30,19 +30,21 @@ import csv
 import datetime
 
 
-def main(tsvfile, vcffile):
+def main(tsvfile, vcffile, samplename):
     '''
     :param tsvfile: filename of input file.tsv
     :type tsvfile: string
     :param vcffile: filename of output file.vcf
     :type vcffile: string
+    :param samplename: Name of the sample
+    :type samplename: string
     '''
     with open(tsvfile) as reader:
         # Parse file
         dictreader = _parse_tsvfile(reader)
 
         # Write out file
-        _format_vcffile(dictreader, vcffile)
+        _format_vcffile(dictreader, vcffile, samplename)
 
 def _parse_tsvfile(readable):
     '''
@@ -138,7 +140,7 @@ VCF_HEADER = """##fileformat=VCFv4.1
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">""".format( filedate=TS_NOW.strftime( "%Y%m%d" ) )
 
-def _format_vcffile(dictreader, vcffile):
+def _format_vcffile(dictreader, vcffile, samplename):
     '''
     Create a pseudo .vcf file based on values read from DictReader instance.
     :param dictreader: DictReader instance to read data from
@@ -148,7 +150,7 @@ def _format_vcffile(dictreader, vcffile):
     '''
     FORMAT = "GT:DP"
     with open(vcffile, mode='w') as writer:
-        writer.write('{header}\n#{columns}\n'.format(header=VCF_HEADER, columns='\t'.join(_vcf_fields)))
+        writer.write('{header}\n#{columns}\n'.format(header=VCF_HEADER, columns='\t'.join(_vcf_fields + [samplename])))
         output_vcf = []
         for line in dictreader:
             CHROM = line['Chr1']
@@ -163,7 +165,7 @@ def _format_vcffile(dictreader, vcffile):
                 INFO += ';SVLEN={}'.format(int(line['Size']))
                 INFO += ";SVEND={}".format(SVEND)
                 INFO += ";END={}".format(SVEND)
-            
+
             # write alternate ALT field for Intrachromosomal translocations
             if line['Type'] in ['CTX']:
                 ALT = "N[{}:{}[".format(line['Chr2'], line['Pos2'])
@@ -187,6 +189,8 @@ if __name__ == '__main__':
             help='Breakdancer TSV outputfile')
     parser.add_argument('-o', '--outputvcf', dest='outputvcf', type=str,
             help='Output vcf to')
+    parser.add_argument('-s', '--sample', dest='sample', type=str,
+                        help='sample name')
 
     args = parser.parse_args()
-    main(args.breakdancertsv, args.outputvcf)
+    main(args.breakdancertsv, args.outputvcf, args.sample)
