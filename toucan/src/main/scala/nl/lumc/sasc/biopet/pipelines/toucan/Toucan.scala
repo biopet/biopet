@@ -17,14 +17,15 @@ package nl.lumc.sasc.biopet.pipelines.toucan
 
 import java.io.File
 
+import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge }
-import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
-import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesImport }
-import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfWithVcf, VepNormalizer }
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, VariantEffectPredictor }
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsIntersect, BedtoolsMerge}
+import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, SelectVariants}
+import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesImport}
+import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VcfWithVcf, VepNormalizer}
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, VariantEffectPredictor}
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
@@ -45,6 +46,15 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   var inputGvcf: Option[File] = None
 
   var outputVcf: Option[File] = None
+
+  lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
+
+  lazy val enableScatter: Boolean = config("enable_scater", default = {
+    val ref = new FastaSequenceFile(referenceFasta(), true)
+    val refLenght = ref.getSequenceDictionary.getReferenceLength
+    ref.close()
+    refLenght > minScatterGenomeSize
+  })
 
   def sampleInfo: Map[String, Map[String, Any]] = root match {
     case m: MultiSampleQScript => m.samples.map { case (sampleId, sample) => sampleId -> sample.sampleTags }
@@ -74,78 +84,84 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       }
     } else inputVcf
 
-    val outputVcfFiles = BedRecordList.fromReference(referenceFasta())
-      .scatter(config("bin_size", default = 50000000))
-      .allRecords.map { region =>
+    if (enableScatter) {
+      val outputVcfFiles = BedRecordList.fromReference(referenceFasta())
+        .scatter(config("bin_size", default = 50000000))
+        .allRecords.map { region =>
 
-        val chunkName = s"${region.chr}-${region.start}-${region.end}"
-        val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
-        chunkDir.mkdirs()
-        val bedFile = new File(chunkDir, chunkName + ".bed")
-        BedRecordList.fromList(List(region)).writeToFile(bedFile)
-        bedFile.deleteOnExit()
-        val sv = new SelectVariants(this)
-        sv.variant = useVcf
-        sv.out = new File(chunkDir, chunkName + ".vcf.gz")
-        sv.intervals :+= bedFile
-        sv.isIntermediate = true
-        add(sv)
+          val chunkName = s"${region.chr}-${region.start}-${region.end}"
+          val chunkDir = new File(outputDir, "chunk" + File.separator + chunkName)
+          chunkDir.mkdirs()
+          val bedFile = new File(chunkDir, chunkName + ".bed")
+          BedRecordList.fromList(List(region)).writeToFile(bedFile)
+          bedFile.deleteOnExit()
+          val sv = new SelectVariants(this)
+          sv.variant = useVcf
+          sv.out = new File(chunkDir, chunkName + ".vcf.gz")
+          sv.intervals :+= bedFile
+          sv.isIntermediate = true
+          add(sv)
 
-        val vep = new VariantEffectPredictor(this)
-        vep.input = sv.out
-        vep.output = new File(chunkDir, chunkName + ".vep.vcf")
-        vep.isIntermediate = true
-        add(vep)
-        addSummarizable(vep, "variant_effect_predictor")
-
-        val normalizer = new VepNormalizer(this)
-        normalizer.inputVCF = vep.output
-        normalizer.outputVcf = new File(chunkDir, chunkName + ".normalized.vcf.gz")
-        normalizer.isIntermediate = true
-        add(normalizer)
-
-        var outputFile = normalizer.outputVcf
-
-        gonlVcfFile match {
-          case Some(gonlFile) =>
-            val vcfWithVcf = new VcfWithVcf(this)
-            vcfWithVcf.input = outputFile
-            vcfWithVcf.secondaryVcf = gonlFile
-            vcfWithVcf.output = swapExt(chunkDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
-            vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
-            vcfWithVcf.isIntermediate = true
-            add(vcfWithVcf)
-            outputFile = vcfWithVcf.output
-          case _ =>
+          runChunk(sv.out, chunkDir, chunkName)
         }
 
-        exacVcfFile match {
-          case Some(exacFile) =>
-            val vcfWithVcf = new VcfWithVcf(this)
-            vcfWithVcf.input = outputFile
-            vcfWithVcf.secondaryVcf = exacFile
-            vcfWithVcf.output = swapExt(chunkDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
-            vcfWithVcf.fields ::= ("AF", "AF_exac", None)
-            vcfWithVcf.isIntermediate = true
-            add(vcfWithVcf)
-            outputFile = vcfWithVcf.output
-          case _ =>
-        }
-
-        outputFile
+      val cv = new CatVariants(this)
+      cv.variant = outputVcfFiles.toList
+      cv.outputFile = (gonlVcfFile, exacVcfFile) match {
+        case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
+        case (Some(_), _) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
+        case (_, Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
+        case _ => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
       }
-
-    val cv = new CatVariants(this)
-    cv.variant = outputVcfFiles.toList
-    cv.outputFile = (gonlVcfFile, exacVcfFile) match {
-      case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
-      case (Some(_), _)       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
-      case (_, Some(_))       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
-      case _                  => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
-    }
-    add(cv)
+      add(cv)
+    } else runChunk(useVcf, outputDir, "toucan")
 
     addSummaryJobs()
+  }
+
+  def runChunk(file: File, chunkDir: File, chunkName: String): File = {
+    val vep = new VariantEffectPredictor(this)
+    vep.input = file
+    vep.output = new File(chunkDir, chunkName + ".vep.vcf")
+    vep.isIntermediate = true
+    add(vep)
+    addSummarizable(vep, "variant_effect_predictor")
+
+    val normalizer = new VepNormalizer(this)
+    normalizer.inputVCF = vep.output
+    normalizer.outputVcf = new File(chunkDir, chunkName + ".vep.normalized.vcf.gz")
+    normalizer.isIntermediate = true
+    add(normalizer)
+
+    var outputFile = normalizer.outputVcf
+
+    gonlVcfFile match {
+      case Some(gonlFile) =>
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = outputFile
+        vcfWithVcf.secondaryVcf = gonlFile
+        vcfWithVcf.output = swapExt(chunkDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
+        vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
+        vcfWithVcf.isIntermediate = true
+        add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
+      case _ =>
+    }
+
+    exacVcfFile match {
+      case Some(exacFile) =>
+        val vcfWithVcf = new VcfWithVcf(this)
+        vcfWithVcf.input = outputFile
+        vcfWithVcf.secondaryVcf = exacFile
+        vcfWithVcf.output = swapExt(chunkDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
+        vcfWithVcf.fields ::= ("AF", "AF_exac", None)
+        vcfWithVcf.isIntermediate = true
+        add(vcfWithVcf)
+        outputFile = vcfWithVcf.output
+      case _ =>
+    }
+
+    outputFile
   }
 
   /**
