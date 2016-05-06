@@ -85,14 +85,14 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         BedRecordList.fromList(List(region)).writeToFile(bedFile)
         bedFile.deleteOnExit()
         val sv = new SelectVariants(this)
-        sv.inputFiles :+= useVcf
-        sv.outputFile = new File(chunkDir, chunkName + ".vcf.gz")
+        sv.variant = useVcf
+        sv.out = new File(chunkDir, chunkName + ".vcf.gz")
         sv.intervals :+= bedFile
         sv.isIntermediate = true
         add(sv)
 
         val vep = new VariantEffectPredictor(this)
-        vep.input = sv.outputFile
+        vep.input = sv.out
         vep.output = new File(chunkDir, chunkName + ".vep.vcf")
         vep.isIntermediate = true
         add(vep)
@@ -136,7 +136,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       }
 
     val cv = new CatVariants(this)
-    cv.inputFiles = outputVcfFiles.toList
+    cv.variant = outputVcfFiles.toList
     cv.outputFile = (gonlVcfFile, exacVcfFile) match {
       case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
       case (Some(_), _)       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
