@@ -84,7 +84,10 @@ object VepNormalizer extends ToolCommand {
       logger.debug("Wrote header to file")
 
       normalize(reader, writer, newInfos, commandArgs.mode, commandArgs.removeCSQ)
-    } else writer.writeHeader(header)
+    } else {
+      logger.debug("No variants found, skipping normalize step")
+      writer.writeHeader(header)
+    }
     writer.close()
     logger.debug("Closed writer")
     reader.close()
