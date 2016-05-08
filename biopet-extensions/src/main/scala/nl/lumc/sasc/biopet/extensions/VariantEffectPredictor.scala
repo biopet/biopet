@@ -297,7 +297,6 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     val headers = contents
       .filter(x => x.startsWith("[") && x.endsWith("]"))
       .map(_.stripPrefix("[").stripSuffix("]"))
-      .filter(_.nonEmpty)
 
     headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
   }
@@ -317,7 +316,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
       }
       if (stripped == "") inBlock = false
     }
-    theMap
+    theMap.filter(_._1.nonEmpty)
   }
 
 }
