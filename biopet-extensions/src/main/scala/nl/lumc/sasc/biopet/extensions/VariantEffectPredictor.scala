@@ -276,10 +276,17 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else Map()
   }
 
+  protected val removeOnConflict = Set("Output_file", "Command_line_options", "Run_time", "Start_time", "End_time", "Input_file_(format)", "Novel_/_existing_variants")
+  protected val nonNumber = Set("VEP_version_(API)", "Cache/Database", "Species")
+
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
-    (v1, v2) match {
-      case (x1: Int, x2: Int) => x1 + x2
-      case _                  => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
+    if (removeOnConflict.contains(key)) None
+    else if (nonNumber.contains(key)) v1
+    else {
+      (v1, v2) match {
+        case (x1: Int, x2: Int) => x1 + x2
+        case _ => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
+      }
     }
   }
 
