@@ -45,7 +45,12 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
-  var outputVcf: Option[File] = None
+  def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
+    case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
+    case (Some(_), _) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
+    case (_, Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
+    case _ => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
+  }
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
 
@@ -107,19 +112,14 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
       val cv = new CatVariants(this)
       cv.variant = outputVcfFiles.toList
-      cv.outputFile = (gonlVcfFile, exacVcfFile) match {
-        case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
-        case (Some(_), _) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
-        case (_, Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
-        case _ => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
-      }
+      cv.outputFile = outputVcf
       add(cv)
     } else runChunk(useVcf, outputDir, "toucan")
 
     addSummaryJobs()
   }
 
-  def runChunk(file: File, chunkDir: File, chunkName: String): File = {
+  protected def runChunk(file: File, chunkDir: File, chunkName: String): File = {
     val vep = new VariantEffectPredictor(this)
     vep.input = file
     vep.output = new File(chunkDir, chunkName + ".vep.vcf")
@@ -130,7 +130,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     val normalizer = new VepNormalizer(this)
     normalizer.inputVCF = vep.output
     normalizer.outputVcf = new File(chunkDir, chunkName + ".vep.normalized.vcf.gz")
-    normalizer.isIntermediate = true
+    normalizer.isIntermediate = enableScatter || gonlVcfFile.isDefined || exacVcfFile.isDefined
     add(normalizer)
 
     var outputFile = normalizer.outputVcf
@@ -142,7 +142,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         vcfWithVcf.secondaryVcf = gonlFile
         vcfWithVcf.output = swapExt(chunkDir, normalizer.outputVcf, ".vcf.gz", ".gonl.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_gonl", None)
-        vcfWithVcf.isIntermediate = true
+        vcfWithVcf.isIntermediate = enableScatter || exacVcfFile.isDefined
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
       case _ =>
@@ -155,7 +155,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
         vcfWithVcf.secondaryVcf = exacFile
         vcfWithVcf.output = swapExt(chunkDir, outputFile, ".vcf.gz", ".exac.vcf.gz")
         vcfWithVcf.fields ::= ("AF", "AF_exac", None)
-        vcfWithVcf.isIntermediate = true
+        vcfWithVcf.isIntermediate = enableScatter
         add(vcfWithVcf)
         outputFile = vcfWithVcf.output
       case _ =>
@@ -281,7 +281,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   def summaryFile = new File(outputDir, "Toucan.summary.json")
 
-  def summaryFiles = Map()
+  def summaryFiles = Map("input_vcf" -> inputVcf, "outputVcf" -> outputVcf)
 
   def summarySettings = Map()
 }
