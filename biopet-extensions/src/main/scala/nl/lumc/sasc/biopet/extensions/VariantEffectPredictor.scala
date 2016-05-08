@@ -279,7 +279,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     (v1, v2) match {
       case (x1: Int, x2: Int) => x1 + x2
-      case _                  => throw new IllegalStateException("Value are not Int's, unable to sum them up")
+      case _                  => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
     }
   }
 
@@ -290,6 +290,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     val headers = contents
       .filter(x => x.startsWith("[") && x.endsWith("]"))
       .map(_.stripPrefix("[").stripSuffix("]"))
+      .filter(_.nonEmpty)
 
     headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
   }
