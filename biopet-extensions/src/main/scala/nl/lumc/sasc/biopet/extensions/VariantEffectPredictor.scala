@@ -18,10 +18,10 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.{Logging, VcfUtils, tryToParseNumber}
+import nl.lumc.sasc.biopet.utils.{ Logging, VcfUtils, tryToParseNumber }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
 
@@ -285,7 +285,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else {
       (v1, v2) match {
         case (x1: Int, x2: Int) => x1 + x2
-        case _ => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
+        case _                  => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
       }
     }
   }

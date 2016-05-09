@@ -21,11 +21,11 @@ import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.core._
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bcftools.BcftoolsView
-import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsIntersect, BedtoolsMerge}
-import nl.lumc.sasc.biopet.extensions.gatk.{CatVariants, SelectVariants}
-import nl.lumc.sasc.biopet.extensions.manwe.{ManweAnnotateVcf, ManweSamplesImport}
-import nl.lumc.sasc.biopet.extensions.tools.{GvcfToBed, VcfWithVcf, VepNormalizer}
-import nl.lumc.sasc.biopet.extensions.{Bgzip, Ln, VariantEffectPredictor}
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsIntersect, BedtoolsMerge }
+import nl.lumc.sasc.biopet.extensions.gatk.{ CatVariants, SelectVariants }
+import nl.lumc.sasc.biopet.extensions.manwe.{ ManweAnnotateVcf, ManweSamplesImport }
+import nl.lumc.sasc.biopet.extensions.tools.{ GvcfToBed, VcfWithVcf, VepNormalizer }
+import nl.lumc.sasc.biopet.extensions.{ Bgzip, Ln, VariantEffectPredictor }
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
@@ -47,9 +47,9 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
 
   def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
     case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
-    case (Some(_), _) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
-    case (_, Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
-    case _ => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
+    case (Some(_), _)       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
+    case (_, Some(_))       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
+    case _                  => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
   }
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)

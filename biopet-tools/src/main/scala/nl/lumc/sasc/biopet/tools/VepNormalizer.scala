@@ -24,7 +24,6 @@ import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.{ Map => MMap }
 
 /**
  * This tool parses a VEP annotated VCF into a standard VCF file.
@@ -59,7 +58,7 @@ object VepNormalizer extends ToolCommand {
     val header = reader.getFileHeader
     val writer = new AsyncVariantContextWriter(new VariantContextWriterBuilder().
       setOutputFile(output).setReferenceDictionary(header.getSequenceDictionary)
-      build())
+      build ())
 
     if (reader.iterator().hasNext) {
       logger.debug("Checking for CSQ tag")
@@ -97,8 +96,8 @@ object VepNormalizer extends ToolCommand {
 
   /**
    * Normalizer
-    *
-    * @param reader input VCF VCFFileReader
+   *
+   * @param reader input VCF VCFFileReader
    * @param writer output VCF AsyncVariantContextWriter
    * @param newInfos array of string containing names of new info fields
    * @param mode normalizer mode (explode or standard)
@@ -125,8 +124,8 @@ object VepNormalizer extends ToolCommand {
 
   /**
    * Checks whether header has a CSQ tag
-    *
-    * @param header VCF header
+   *
+   * @param header VCF header
    */
   def csqCheck(header: VCFHeader) = {
     if (!header.hasInfoLine("CSQ")) {
@@ -139,8 +138,8 @@ object VepNormalizer extends ToolCommand {
    * Checks whether version of input VCF is at least 4.0
    * VEP is known to cause issues below 4.0
    * Throws exception if not
-    *
-    * @param header VCFHeader of input VCF
+   *
+   * @param header VCFHeader of input VCF
    */
   def versionCheck(header: VCFHeader) = {
     var format = ""
@@ -158,8 +157,8 @@ object VepNormalizer extends ToolCommand {
 
   /**
    * Parses the CSQ tag in the header
-    *
-    * @param header the VCF header
+   *
+   * @param header the VCF header
    * @return list of strings with new info fields
    */
   def parseCsq(header: VCFHeader): Array[String] = {
@@ -170,8 +169,8 @@ object VepNormalizer extends ToolCommand {
   /**
    * Explode a single VEP-annotated record to multiple normal records
    * Based on the number of annotated transcripts in the CSQ tag
-    *
-    * @param record the record as a VariantContext object
+   *
+   * @param record the record as a VariantContext object
    * @param csqInfos An array with names of new info tags
    * @return An array with the new records
    */

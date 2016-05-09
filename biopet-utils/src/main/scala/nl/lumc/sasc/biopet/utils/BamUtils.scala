@@ -17,8 +17,8 @@ package nl.lumc.sasc.biopet.utils
 
 import java.io.File
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReader, SamReaderFactory}
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReader, SamReaderFactory }
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -146,12 +146,12 @@ object BamUtils {
   /** This class will add functionality to [[SAMSequenceDictionary]] */
   implicit class SamDictCheck(samDics: SAMSequenceDictionary) {
     /**
-      * This method will check if all contig and sizes are the same without looking at the order of the contigs
-      *
-      * @throws AssertionError
-      * @param that Dict to compare to
-      * @param ignoreOrder When true the order of the contig does not matter
-      */
+     * This method will check if all contig and sizes are the same without looking at the order of the contigs
+     *
+     * @throws AssertionError
+     * @param that Dict to compare to
+     * @param ignoreOrder When true the order of the contig does not matter
+     */
     def assertSameDictionary(that: SAMSequenceDictionary, ignoreOrder: Boolean): Unit = {
       if (ignoreOrder) {
         assert(samDics.getReferenceLength == that.getReferenceLength)
