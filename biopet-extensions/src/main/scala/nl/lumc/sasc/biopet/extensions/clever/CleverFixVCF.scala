@@ -4,12 +4,12 @@ package nl.lumc.sasc.biopet.extensions.clever
  * Created by wyleung on 4-4-16.
  */
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.utils.{ ToolCommand }
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
 
 import scala.io.Source
 
