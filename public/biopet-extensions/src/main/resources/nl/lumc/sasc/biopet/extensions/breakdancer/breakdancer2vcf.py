@@ -94,11 +94,11 @@ _tsv_fields = ('Chr1', 'Pos1', 'Orientation1',
 
 
 
-_vcf_fields = ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'default')
+_vcf_fields = ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT')
 
 TS_NOW = datetime.datetime.now()
 
-VCF_HEADER = """##fileformat=VCFv4.1
+VCF_HEADER = """##fileformat=VCFv4.2
 ##fileDate={filedate}
 ##source=breakdancer-max
 ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
