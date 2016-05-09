@@ -292,31 +292,20 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
   def parseStatsFile(file: File): Map[String, Any] = {
     val reader = Source.fromFile(file)
-    val contents = reader.getLines().filter(_ != "").toList
+    val contents = reader.getLines().filter(_ != "").toArray
     reader.close()
-    val headers = contents
-      .filter(x => x.startsWith("[") && x.endsWith("]"))
-      .map(_.stripPrefix("[").stripSuffix("]"))
 
-    headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
+    def isHeader(line: String) = line.startsWith("[") && line.endsWith("]")
+
+    val headers = contents.zipWithIndex
+      .filter(x => x._1.startsWith("[") && x._1.endsWith("]"))
+
+    (for ((header, headerIndex) <- headers) yield {
+      val name = header.stripPrefix("[").stripSuffix("]")
+      name -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).map { line =>
+        val values = line.split("\t", 2)
+        values.head -> tryToParseNumber(values.last).getOrElse(0)
+      }.toMap)
+    }).toMap
   }
-
-  def getBlockFromStatsFile(contents: List[String], header: String): Map[String, Any] = {
-    var inBlock = false
-    var theMap: Map[String, Any] = Map()
-    for (x <- contents) {
-      val stripped = x.stripPrefix("[").stripSuffix("]")
-      if (stripped == header) inBlock = true
-      else {
-        if (inBlock) {
-          val key = stripped.split('\t').head.replace(" ", "_")
-          val value = stripped.split('\t').last
-          theMap ++= Map(key -> tryToParseNumber(value, fallBack = true).getOrElse(value))
-        }
-      }
-      if (stripped == "") inBlock = false
-    }
-    theMap.filter(_._1.nonEmpty)
-  }
-
 }
