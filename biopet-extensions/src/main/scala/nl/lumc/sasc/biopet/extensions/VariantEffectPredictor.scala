@@ -302,9 +302,9 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
 
     (for ((header, headerIndex) <- headers) yield {
       val name = header.stripPrefix("[").stripSuffix("]")
-      name -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).map { line =>
+      name.replaceAll(" ", "_") -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).map { line =>
         val values = line.split("\t", 2)
-        values.head -> tryToParseNumber(values.last).getOrElse(0)
+        values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(0)
       }.toMap)
     }).toMap
   }
