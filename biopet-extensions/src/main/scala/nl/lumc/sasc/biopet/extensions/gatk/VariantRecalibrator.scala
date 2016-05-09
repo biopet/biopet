@@ -1,4 +1,4 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
+package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
