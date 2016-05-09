@@ -94,7 +94,7 @@ _tsv_fields = ('Chr1', 'Pos1', 'Orientation1',
 
 
 
-_vcf_fields = ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT')
+_vcf_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT']
 
 TS_NOW = datetime.datetime.now()
 
@@ -108,6 +108,7 @@ VCF_HEADER = """##fileformat=VCFv4.2
 ##INFO=<ID=NOVEL,Number=0,Type=Flag,Description="Indicates a novel structural variation">
 ##INFO=<ID=SVEND,Number=1,Type=Integer,Description="End position of the variant described in this record">
 ##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">
+##INFO=<ID=SVMETHOD,Number=0,Type=String,Description="Program called with">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=CIPOS,Number=2,Type=Integer,Description="Confidence interval around POS for imprecise variants">
@@ -159,7 +160,7 @@ def _format_vcffile(dictreader, vcffile, samplename):
             ALT = '.'
             SVEND = int(line['Pos2'])
 
-            INFO = 'PROGRAM=breakdancer;SVTYPE={}'.format(line['Type'])
+            INFO = 'SVMETHOD=breakdancer;SVTYPE={}'.format(line['Type'])
 
             if line['Type'] not in ['CTX']:
                 INFO += ';SVLEN={}'.format(int(line['Size']))
@@ -186,9 +187,9 @@ def _format_vcffile(dictreader, vcffile, samplename):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--breakdancertsv', dest='breakdancertsv', type=str,
-            help='Breakdancer TSV outputfile')
+                        help='Breakdancer TSV outputfile')
     parser.add_argument('-o', '--outputvcf', dest='outputvcf', type=str,
-            help='Output vcf to')
+                        help='Output vcf to')
     parser.add_argument('-s', '--sample', dest='sample', type=str,
                         help='sample name')
 
