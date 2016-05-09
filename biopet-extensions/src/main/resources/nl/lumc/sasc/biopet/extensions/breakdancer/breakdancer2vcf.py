@@ -157,7 +157,7 @@ def _format_vcffile(dictreader, vcffile, samplename):
             CHROM = line['Chr1']
             # TODO Figure out whether we have zero or one based positioning
             POS = int(line['Pos1'])
-            ALT = '.'
+            ALT = '<{}>'.format(line['Type'])
             SVEND = int(line['Pos2'])
 
             INFO = 'SVMETHOD=breakdancer;SVTYPE={}'.format(line['Type'])
