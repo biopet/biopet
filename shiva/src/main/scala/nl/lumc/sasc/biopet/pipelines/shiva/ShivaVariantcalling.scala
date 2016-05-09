@@ -80,8 +80,6 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
     }).flatten.toList.sortBy(_.prio)
   }
 
-  callers.filter(_.isInstanceOf[HaplotypeCallerGvcf])
-
   /** This will add jobs for this pipeline */
   def biopetScript(): Unit = {
     require(inputBams.nonEmpty, "No input bams found")
