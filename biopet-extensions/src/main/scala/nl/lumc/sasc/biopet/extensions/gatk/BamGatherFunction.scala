@@ -1,9 +1,8 @@
-package nl.lumc.sasc.biopet.extensions.gatk.broad
-
-import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
+package nl.lumc.sasc.biopet.extensions.gatk
 
 import nl.lumc.sasc.biopet.core.BiopetCommandLineFunction
 import nl.lumc.sasc.biopet.extensions.picard.MergeSamFiles
+import org.broadinstitute.gatk.queue.function.scattergather.GatherFunction
 
 /**
  * Merges BAM files using htsjdk.samtools.MergeSamFiles.
