@@ -27,7 +27,7 @@ class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
       sample -> hc.out
     }
 
-    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gvcfFiles.toList, outputFile)
+    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gvcfFiles.values.toList, outputFile)
     add(genotypeGVCFs)
   }
 }
