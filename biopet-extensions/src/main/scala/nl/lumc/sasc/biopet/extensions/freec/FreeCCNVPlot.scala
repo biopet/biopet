@@ -4,7 +4,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class FreeCCNVPlot(val root: Configurable) extends RscriptCommandLineFunction {
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/freec/freec_CNVPlot.R")

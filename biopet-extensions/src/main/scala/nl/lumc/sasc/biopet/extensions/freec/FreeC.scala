@@ -15,9 +15,9 @@
  */
 package nl.lumc.sasc.biopet.extensions.freec
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline._
 

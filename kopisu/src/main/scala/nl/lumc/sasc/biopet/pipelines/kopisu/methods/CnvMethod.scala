@@ -5,8 +5,8 @@ import nl.lumc.sasc.biopet.core.Reference
 import org.broadinstitute.gatk.queue.QScript
 
 /**
-  * Created by pjvanthof on 10/05/16.
-  */
+ * Created by pjvanthof on 10/05/16.
+ */
 trait CnvMethod extends QScript with SummaryQScript with Reference {
 
   /** Name of mode, this should also be used in the config */

@@ -18,7 +18,7 @@ package nl.lumc.sasc.biopet.extensions.sambamba
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 class SambambaMpileup(val root: Configurable) extends Sambamba {
   override val defaultThreads = 4
