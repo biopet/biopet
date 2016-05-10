@@ -59,12 +59,12 @@ class Pindel(val root: Configurable) extends SvCaller {
       pindelVcf.outputVCF = new File(pindelDir, s"${sample}.pindel.vcf")
       add(pindelVcf)
 
-      val compresssedVCF = new SortVcf(this)
-      compresssedVCF.input = pindelVcf.outputVCF
-      compresssedVCF.output = new File(pindelDir, s"${sample}.pindel.vcf.gz")
-      add(compresssedVCF)
+      val compressedVCF = new SortVcf(this)
+      compressedVCF.input = pindelVcf.outputVCF
+      compressedVCF.output = new File(pindelDir, s"${sample}.pindel.vcf.gz")
+      add(compressedVCF)
 
-      addVCF(sample, compresssedVCF.output)
+      addVCF(sample, compressedVCF.output)
     }
 
   }

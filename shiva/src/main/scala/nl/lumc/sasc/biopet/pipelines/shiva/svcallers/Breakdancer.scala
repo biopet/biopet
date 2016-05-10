@@ -35,13 +35,13 @@ class Breakdancer(val root: Configurable) extends SvCaller {
       val bdvcf = BreakdancerVCF(this, breakdancer.output, new File(breakdancerSampleDir, sample + ".breakdancer.vcf"),
         sample = sample + "_bd")
 
-      val compresssedVCF = new SortVcf(this)
-      compresssedVCF.input = bdvcf.output
-      compresssedVCF.output = new File(breakdancerSampleDir, s"${sample}.breakdancer.vcf.gz")
+      val compressedVCF = new SortVcf(this)
+      compressedVCF.input = bdvcf.output
+      compressedVCF.output = new File(breakdancerSampleDir, s"${sample}.breakdancer.vcf.gz")
 
-      add(bdcfg, breakdancer, bdvcf, compresssedVCF)
+      add(bdcfg, breakdancer, bdvcf, compressedVCF)
 
-      addVCF(sample, compresssedVCF.output)
+      addVCF(sample, compressedVCF.output)
     }
   }
 }
