@@ -12,8 +12,8 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvanthof on 09/05/16.
-  */
+ * Created by pjvanthof on 09/05/16.
+ */
 class WriteDependenciesTest extends TestNGSuite with Matchers {
 
   import WriteDependenciesTest._

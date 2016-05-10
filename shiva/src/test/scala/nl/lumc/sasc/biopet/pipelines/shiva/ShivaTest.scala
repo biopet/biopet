@@ -103,14 +103,16 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
       pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
 
-      pipeline.samples foreach { case (sampleId, sample) =>
-        sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
-        sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
-        sample.libraries.foreach { case (libId, lib) =>
-          lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
-          lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
-          lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
-        }
+      pipeline.samples foreach {
+        case (sampleId, sample) =>
+          sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
+          sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+          sample.libraries.foreach {
+            case (libId, lib) =>
+              lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
+              lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+              lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
+          }
       }
 
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (

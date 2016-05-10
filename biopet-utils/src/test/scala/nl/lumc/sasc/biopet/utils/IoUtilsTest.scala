@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.utils
 
-import java.io.{File, FileNotFoundException, PrintWriter}
+import java.io.{ File, FileNotFoundException, PrintWriter }
 import java.nio.file.Files
 
 import org.scalatest.Matchers
@@ -10,8 +10,8 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvanthof on 05/05/16.
-  */
+ * Created by pjvanthof on 05/05/16.
+ */
 class IoUtilsTest extends TestNGSuite with Matchers {
 
   def createTempTestFile(file: File): Unit = {
@@ -40,7 +40,7 @@ class IoUtilsTest extends TestNGSuite with Matchers {
     val temp1 = File.createTempFile("test.", ".txt")
     val tempDir = new File(Files.createTempDirectory("test").toFile, "non-exist")
     tempDir.deleteOnExit()
-    tempDir shouldNot  exist
+    tempDir shouldNot exist
     val temp2 = new File(tempDir, "test.txt")
     createTempTestFile(temp1)
     intercept[FileNotFoundException] {
@@ -65,12 +65,12 @@ class IoUtilsTest extends TestNGSuite with Matchers {
       "dir1" + File.separator + "test2.txt",
       "dir2" + File.separator + "test1.txt",
       "dir2" + File.separator + "test2.txt")
-    relativePaths.foreach{ x =>
+    relativePaths.foreach { x =>
       createTempTestFile(new File(tempDir1, x))
       new File(tempDir2, x) shouldNot exist
     }
     IoUtils.copyDir(tempDir1, tempDir2)
-    relativePaths.foreach{ x =>
+    relativePaths.foreach { x =>
       val file = new File(tempDir2, x)
       file should exist
       val reader = Source.fromFile(file)

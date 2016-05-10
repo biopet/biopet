@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.utils.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.scalatest.Matchers
@@ -8,8 +8,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 06/05/16.
-  */
+ * Created by pjvanthof on 06/05/16.
+ */
 class SummaryValueTest extends TestNGSuite with Matchers {
   @Test
   def testConstructor: Unit = {

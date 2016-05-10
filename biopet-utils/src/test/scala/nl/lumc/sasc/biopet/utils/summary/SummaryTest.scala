@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.utils.summary
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.scalatest.Matchers
@@ -8,8 +8,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 06/05/16.
-  */
+ * Created by pjvanthof on 06/05/16.
+ */
 class SummaryTest extends TestNGSuite with Matchers {
   @Test
   def testSamples: Unit = {
@@ -28,15 +28,15 @@ class SummaryTest extends TestNGSuite with Matchers {
     val summary = new Summary(SummaryTest.testSummaryFile)
     summary.getValue("key_1") shouldBe Some("test_1")
     summary.getValue("key_x") shouldBe None
-    summary.getValue("samples", "sample1","key_2") shouldBe Some("test_2")
-    summary.getValue("samples", "sample1", "libraries", "lib1","key_3") shouldBe Some("test_3")
+    summary.getValue("samples", "sample1", "key_2") shouldBe Some("test_2")
+    summary.getValue("samples", "sample1", "libraries", "lib1", "key_3") shouldBe Some("test_3")
 
-    summary.getValue(Some("sample1"), None,"key_2") shouldBe Some("test_2")
-    summary.getValue(Some("sample1"), None,"key_x") shouldBe None
-    summary.getValue(Some("sample1"), Some("lib1"),"key_3") shouldBe Some("test_3")
-    summary.getValue(Some("sample1"), Some("lib1"),"key_x") shouldBe None
-    summary.getValue(None, None,"key_1") shouldBe Some("test_1")
-    summary.getValue(None, None,"key_x") shouldBe None
+    summary.getValue(Some("sample1"), None, "key_2") shouldBe Some("test_2")
+    summary.getValue(Some("sample1"), None, "key_x") shouldBe None
+    summary.getValue(Some("sample1"), Some("lib1"), "key_3") shouldBe Some("test_3")
+    summary.getValue(Some("sample1"), Some("lib1"), "key_x") shouldBe None
+    summary.getValue(None, None, "key_1") shouldBe Some("test_1")
+    summary.getValue(None, None, "key_x") shouldBe None
   }
 
   @Test

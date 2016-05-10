@@ -9,10 +9,9 @@ import org.testng.annotations.Test
 
 import scala.io.Source
 
-
 /**
-  * Created by pjvanthof on 09/05/16.
-  */
+ * Created by pjvanthof on 09/05/16.
+ */
 class BamToChromSizesTest extends TestNGSuite with Matchers {
   private def resourcePath(p: String): String = {
     Paths.get(getClass.getResource(p).toURI).toString
