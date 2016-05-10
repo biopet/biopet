@@ -218,8 +218,8 @@ class SelectVariants(val root: Configurable) extends CommandLineGATK with Scatte
 
   override def cmdLine = super.cmdLine +
     required(TaggedFile.formatCommandLineParameter("-V", variant), variant, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-disc", discordance), discordance, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-conc", concordance), concordance, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-disc", discordance.getOrElse(null)), discordance, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-conc", concordance.getOrElse(null)), concordance, spaceSeparated = true, escape = true, format = "%s") +
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-sn", sample_name, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-se", sample_expressions, spaceSeparated = true, escape = true, format = "%s") +
