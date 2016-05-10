@@ -129,7 +129,7 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")

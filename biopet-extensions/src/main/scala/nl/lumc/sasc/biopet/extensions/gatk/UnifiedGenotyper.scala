@@ -276,7 +276,7 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
     conditional(ignoreSNPAlleles, "-ignoreSNPAlleles", escape = true, format = "%s") +
     conditional(allReadsSP, "-dl", escape = true, format = "%s") +
     conditional(ignoreLaneInfo, "-ignoreLane", escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-referenceCalls", reference_sample_calls), reference_sample_calls, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-referenceCalls", reference_sample_calls.getOrElse(null)), reference_sample_calls, spaceSeparated = true, escape = true, format = "%s") +
     optional("-refsample", reference_sample_name, spaceSeparated = true, escape = true, format = "%s") +
     optional("-minqs", min_quality_score, spaceSeparated = true, escape = true, format = "%s") +
     optional("-maxqs", max_quality_score, spaceSeparated = true, escape = true, format = "%s") +
@@ -291,14 +291,14 @@ class UnifiedGenotyper(val root: Configurable) extends CommandLineGATK with Scat
     repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
     optional("-gt_mode", genotyping_mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles), alleles, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.getOrElse(null)), alleles, spaceSeparated = true, escape = true, format = "%s") +
     optional("-contamination", contamination_fraction_to_filter, spaceSeparated = true, escape = true, format = contamination_fraction_to_filterFormat) +
     optional("-contaminationFile", contamination_fraction_per_sample_file, spaceSeparated = true, escape = true, format = "%s") +
     optional("-pnrm", p_nonref_model, spaceSeparated = true, escape = true, format = "%s") +
     optional("-logExactCalls", exactcallslog, spaceSeparated = true, escape = true, format = "%s") +
     optional("-out_mode", output_mode, spaceSeparated = true, escape = true, format = "%s") +
     conditional(allSitePLs, "-allSitePLs", escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-onlyEmitSamples", onlyEmitSamples, spaceSeparated = true, escape = true, format = "%s") +
