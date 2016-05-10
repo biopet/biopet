@@ -15,15 +15,16 @@
  */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand, Reference }
-import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCBAFPlot, FreeCCNVPlot }
+import nl.lumc.sasc.biopet.core.summary.SummaryQScript
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.pipelines.kopisu.methods.FreecMethod
 import nl.lumc.sasc.biopet.utils.BamUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.language.reflectiveCalls
 
-class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Reference {
+class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Reference {
   qscript =>
   def this() = this(null)
 
@@ -32,54 +33,34 @@ class Kopisu(val root: Configurable) extends QScript with BiopetQScript with Ref
 
   var inputBams: Map[String, File] = Map()
 
-  @Argument(doc = "Provide optional reference SNP file to call B-allele frequencies [exome]", required = false)
-  var snpFile: Option[File] = None
-
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
   }
 
+  lazy val freecMethod = if (config("use_freec_method", default = true)) {
+    Some(new FreecMethod(this))
+  } else None
+
   // This script is in fact FreeC only.
   def biopetScript() {
-    val cnvOutputDir = new File(outputDir, "cnv")
-
-    inputBams.foreach(bam => {
-      val bamFile = bam._2
-      val outputName = bam._1
-
-      val sampleOutput = new File(cnvOutputDir, outputName)
-
-      val freec = new FreeC(this)
-      freec.input = bamFile
-      freec.inputFormat = Some("BAM")
-      freec.outputPath = sampleOutput
-      freec.snpFile = snpFile
-      add(freec)
-
-      /*
-      * These scripts will wait for FreeC to Finish
-      *
-      * R-scripts to plot FreeC results
-      * */
-      val fcAssessSignificancePlot = new FreeCAssessSignificancePlot(this)
-      fcAssessSignificancePlot.cnv = freec.cnvOutput
-      fcAssessSignificancePlot.ratios = freec.ratioOutput
-      fcAssessSignificancePlot.output = new File(sampleOutput, outputName + ".freec_significant_calls.txt")
-      add(fcAssessSignificancePlot)
-
-      val fcCnvPlot = new FreeCCNVPlot(this)
-      fcCnvPlot.input = freec.ratioOutput
-      fcCnvPlot.output = new File(sampleOutput, outputName + ".freec_cnv")
-      add(fcCnvPlot)
-
-      snpFile.foreach(x => {
-        val fcBAFPlot = new FreeCBAFPlot(this)
-        fcBAFPlot.input = freec.bafOutput
-        fcBAFPlot.output = new File(sampleOutput, outputName + ".freec_baf")
-        add(fcBAFPlot)
-      })
-    })
+    freecMethod.foreach { method =>
+      method.inputBams = inputBams
+      method.outputDir = new File(outputDir, "freec_method")
+      add(method)
+    }
   }
+
+  /** Must return a map with used settings for this pipeline */
+  def summarySettings: Map[String, Any] = Map(
+    "reference" -> referenceSummary,
+    "freec_method" -> freecMethod.isDefined
+  )
+
+  /** File to put in the summary for thie pipeline */
+  def summaryFiles: Map[String, File] = inputBams.map(x => s"inputbam_${x._1}" -> x._2)
+
+  /** Name of summary output file */
+  def summaryFile: File = new File(outputDir, "kopisu.summary.json")
 }
 
 object Kopisu extends PipelineCommand
