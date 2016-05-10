@@ -48,6 +48,8 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
       method.outputDir = new File(outputDir, "freec_method")
       add(method)
     }
+
+    addSummaryJobs()
   }
 
   /** Must return a map with used settings for this pipeline */

@@ -49,6 +49,8 @@ class FreecMethod(val root: Configurable) extends CnvMethod {
           add(fcBAFPlot)
         }
     }
+
+    addSummaryJobs()
   }
 
   override def summaryFiles = super.summaryFiles ++ snpFile.map("snp_file" -> _)
