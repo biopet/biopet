@@ -33,13 +33,13 @@ class Clever(val root: Configurable) extends SvCaller {
       val cleverVCF = new CleverFixVCF(this)
       cleverVCF.input = clever.outputvcf
       cleverVCF.output = new File(cleverDir, s".${sample}.clever.vcf")
-      cleverVCF.sampleName = sample
+      cleverVCF.sampleName = sample + "_cl"
       cleverVCF.isIntermediate = true
       add(cleverVCF)
 
       val sortvcf = new SortVcf(this)
       sortvcf.input = cleverVCF.output
-      sortvcf.output = new File(cleverDir, s"${sample}.clever.vcf")
+      sortvcf.output = new File(cleverDir, s"${sample}.clever.vcf.gz")
       add(sortvcf)
 
       addVCF(sample, sortvcf.output)

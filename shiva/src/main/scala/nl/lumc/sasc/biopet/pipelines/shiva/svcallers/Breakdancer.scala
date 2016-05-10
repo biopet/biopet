@@ -15,7 +15,8 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.breakdancer.{ BreakdancerVCF, BreakdancerCaller, BreakdancerConfig }
+import nl.lumc.sasc.biopet.extensions.breakdancer.{BreakdancerCaller, BreakdancerConfig, BreakdancerVCF}
+import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /** Script for sv caler Breakdancer */
@@ -32,10 +33,15 @@ class Breakdancer(val root: Configurable) extends SvCaller {
       val bdcfg = BreakdancerConfig(this, bamFile, new File(breakdancerSampleDir, sample + ".breakdancer.cfg"))
       val breakdancer = BreakdancerCaller(this, bdcfg.output, new File(breakdancerSampleDir, sample + ".breakdancer.tsv"))
       val bdvcf = BreakdancerVCF(this, breakdancer.output, new File(breakdancerSampleDir, sample + ".breakdancer.vcf"),
-        sample = sample)
-      add(bdcfg, breakdancer, bdvcf)
+        sample = sample + "_bd")
 
-      addVCF(sample, bdvcf.output)
+      val compresssedVCF = new SortVcf(this)
+      compresssedVCF.input = bdvcf.output
+      compresssedVCF.output = new File(breakdancerSampleDir, s"${sample}.breakdancer.vcf.gz")
+
+      add(bdcfg, breakdancer, bdvcf, compresssedVCF)
+
+      addVCF(sample, compresssedVCF.output)
     }
   }
 }
