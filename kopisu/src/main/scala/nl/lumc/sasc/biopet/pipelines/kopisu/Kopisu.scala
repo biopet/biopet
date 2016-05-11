@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.pipelines.kopisu.methods.FreecMethod
+import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ConiferMethod, FreecMethod}
 import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -42,13 +42,23 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
     Some(new FreecMethod(this))
   } else None
 
+  lazy val coniferMethod = if (config("use_conifer_method", default = false)) {
+    Some(new ConiferMethod(this))
+  } else None
+
   // This script is in fact FreeC only.
   def biopetScript() {
-    if (freecMethod.isEmpty) Logging.addError("No method selected")
+    if (freecMethod.isEmpty && coniferMethod.isEmpty) Logging.addError("No method selected")
 
     freecMethod.foreach { method =>
       method.inputBams = inputBams
       method.outputDir = new File(outputDir, "freec_method")
+      add(method)
+    }
+
+    coniferMethod.foreach { method =>
+      method.inputBams = inputBams
+      method.outputDir = new File(outputDir, "conifer_method")
       add(method)
     }
 

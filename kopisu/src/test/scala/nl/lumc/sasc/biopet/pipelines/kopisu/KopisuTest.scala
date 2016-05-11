@@ -48,20 +48,25 @@ class KopisuTest extends TestNGSuite with Matchers {
     val bool = Array(true, false)
     (for (
       bams <- 0 to 3;
-      freec <- bool
-    ) yield Array(bams, freec)).toArray
+      freec <- bool;
+      conifer <- bool
+    ) yield Array(bams, freec, conifer)).toArray
   }
 
   @Test(dataProvider = "shivaSvCallingOptions")
   def testShivaSvCalling(bams: Int,
-                         freec: Boolean) = {
+                         freec: Boolean,
+                         conifer: Boolean) = {
     val callers: ListBuffer[String] = ListBuffer()
     val map = Map("sv_callers" -> callers.toList)
-    val pipeline = initPipeline(map ++ Map("use_freec_method" -> freec))
+    val pipeline = initPipeline(map ++ Map(
+      "use_freec_method" -> freec,
+      "use_conifer_method" -> conifer
+    ))
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> KopisuTest.inputTouch("bam_" + n + ".bam")).toMap
 
-    val illegalArgumentException = pipeline.inputBams.isEmpty || (!freec)
+    val illegalArgumentException = pipeline.inputBams.isEmpty || (!freec && !conifer)
 
     if (illegalArgumentException) intercept[IllegalStateException] {
       pipeline.init()
@@ -103,6 +108,10 @@ object KopisuTest {
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
 
+  val controlDir = Files.createTempDir()
+  controlDir.deleteOnExit()
+  Files.touch(new File(controlDir, "test.txt"))
+
   val config = Map(
     "name_prefix" -> "test",
     "output_dir" -> outputDir,
@@ -112,6 +121,10 @@ object KopisuTest {
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
-    "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" ->"test")
+    "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" ->"test"),
+    "controls_dir" -> controlDir.getAbsolutePath,
+    "conifer" -> Map("script" -> "/usr/bin/test"),
+    "probe_file" -> "test",
+    "rscript" -> Map("exe" -> "test")
   )
 }
