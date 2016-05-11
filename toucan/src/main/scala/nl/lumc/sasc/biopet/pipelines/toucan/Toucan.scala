@@ -45,11 +45,13 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
   @Input(doc = "Input GVCF file", shortName = "gvcf", required = false)
   var inputGvcf: Option[File] = None
 
+  def outputName = inputVcf.getName.stripSuffix(".vcf.gz")
+
   def outputVcf: File = (gonlVcfFile, exacVcfFile) match {
-    case (Some(_), Some(_)) => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.exac.vcf.gz")
-    case (Some(_), _)       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.gonl.vcf.gz")
-    case (_, Some(_))       => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.exac.vcf.gz")
-    case _                  => swapExt(outputDir, inputVcf, ".vcf.gz", ".vep.normalized.vcf.gz")
+    case (Some(_), Some(_)) => new File(outputDir, s"$outputName.vep.normalized.gonl.exac.vcf.gz")
+    case (Some(_), _)       => new File(outputDir, s"$outputName.vep.normalized.gonl.vcf.gz")
+    case (_, Some(_))       => new File(outputDir, s"$outputName.vep.normalized.exac.vcf.gz")
+    case _                  => new File(outputDir, s"$outputName.vep.normalized.vcf.gz")
   }
 
   lazy val minScatterGenomeSize: Long = config("min_scatter_genome_size", default = 75000000)
@@ -114,7 +116,7 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
       cv.variant = outputVcfFiles.toList
       cv.outputFile = outputVcf
       add(cv)
-    } else runChunk(useVcf, outputDir, "toucan")
+    } else runChunk(useVcf, outputDir, outputName)
 
     addSummaryJobs()
   }
