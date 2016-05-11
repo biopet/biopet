@@ -16,9 +16,9 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.pipelines.kopisu.methods.FreecMethod
-import nl.lumc.sasc.biopet.utils.BamUtils
+import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -35,6 +35,7 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
 
   def init(): Unit = {
     if (inputBamsArg.nonEmpty) inputBams = BamUtils.sampleBamMap(inputBamsArg)
+    if (inputBams.isEmpty) Logging.addError("No input bams found")
   }
 
   lazy val freecMethod = if (config("use_freec_method", default = true)) {
@@ -43,6 +44,8 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
 
   // This script is in fact FreeC only.
   def biopetScript() {
+    if (freecMethod.isEmpty) Logging.addError("No method selected")
+
     freecMethod.foreach { method =>
       method.inputBams = inputBams
       method.outputDir = new File(outputDir, "freec_method")
