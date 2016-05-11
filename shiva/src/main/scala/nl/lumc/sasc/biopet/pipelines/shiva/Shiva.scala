@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
@@ -164,7 +164,7 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
   } else None
 
   lazy val cnvCalling = if (config("cnv_calling", default = false).asBoolean) {
-    Some(new Kopisu()(this))
+    Some(new Kopisu(this))
   } else None
 
   lazy val annotation = if (multisampleVariantCalling.isDefined &&
