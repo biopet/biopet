@@ -15,10 +15,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
 import nl.lumc.sasc.biopet.core.report.ReportBuilderExtension
 import nl.lumc.sasc.biopet.extensions.gatk._
 import nl.lumc.sasc.biopet.pipelines.bammetrics.TargetRegions
+import nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
 import nl.lumc.sasc.biopet.pipelines.toucan.Toucan
 import nl.lumc.sasc.biopet.utils.config.Configurable
@@ -162,6 +163,10 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
     Some(new ShivaSvCalling(this))
   } else None
 
+  lazy val cnvCalling = if (config("cnv_calling", default = false).asBoolean) {
+    Some(new Kopisu()(this))
+  } else None
+
   lazy val annotation = if (multisampleVariantCalling.isDefined &&
     config("annotation", default = false).asBoolean) {
     Some(new Toucan(this))
@@ -183,11 +188,17 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
       }
     })
 
-    svCalling.foreach(sv => {
+    svCalling.foreach { sv =>
       sv.outputDir = new File(outputDir, "sv_calling")
       sv.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
       add(sv)
-    })
+    }
+
+    cnvCalling.foreach { cnv =>
+      cnv.outputDir = new File(outputDir, "cnv_calling")
+      cnv.inputBams = samples.flatMap { case (sampleId, sample) => sample.preProcessBam.map(sampleId -> _) }
+      add(cnv)
+    }
   }
 
   /** Location of summary file */
