@@ -209,6 +209,7 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
     "annotation" -> annotation.isDefined,
     "multisample_variantcalling" -> multisampleVariantCalling.isDefined,
     "sv_calling" -> svCalling.isDefined,
+    "cnv_calling" -> cnvCalling.isDefined,
     "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
     "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
   )

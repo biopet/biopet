@@ -104,6 +104,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
       pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
       pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
+      pipeline.summarySettings.get("cnv_calling") shouldBe Some(cnvCalling)
 
       pipeline.samples foreach {
         case (sampleId, sample) =>
