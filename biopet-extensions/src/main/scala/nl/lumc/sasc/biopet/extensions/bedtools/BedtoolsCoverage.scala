@@ -41,6 +41,8 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
 
+  var sorted: Boolean = config("sorted", default = false, freeVar = false)
+
   override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
@@ -50,6 +52,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     conditional(depth, "-d") +
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +
+    conditional(sorted, "-sorted") +
     (if (outputAsStsout) "" else " > " + required(output))
 }
 

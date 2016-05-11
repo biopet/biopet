@@ -41,6 +41,8 @@ class BamMetrics(val root: Configurable) extends QScript
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
 
+  override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
+
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
     case (Some(s), Some(l)) => new File(outputDir, s + "-" + l + ".BamMetrics.summary.json")
