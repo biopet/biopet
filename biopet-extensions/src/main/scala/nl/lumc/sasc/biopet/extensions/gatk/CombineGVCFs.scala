@@ -69,7 +69,7 @@ class CombineGVCFs(val root: Configurable) extends CommandLineGATK with ScatterG
   override def cmdLine = super.cmdLine +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-V", variant, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
     conditional(convertToBasePairResolution, "-bpResolution", escape = true, format = "%s") +

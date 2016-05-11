@@ -29,6 +29,7 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
 
   /**
    * Method to add a bamFile to the pipeline
+   *
    * @param id Unique id used for this bam file, most likely to be a sampleName
    * @param file Location of the bam file
    */
@@ -51,6 +52,8 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
     require(bamFiles.nonEmpty)
   }
 
+  lazy val mergeCountFiles: Boolean = config("merge_count_files", default = true)
+
   private var extraSummaryFiles: Map[String, File] = Map()
 
   def addMergeTableJob(countFiles: List[File],
@@ -58,18 +61,22 @@ trait Measurement extends SummaryQScript with Reference { qscript: QScript =>
                        name: String,
                        fileExtension: String,
                        args: MergeArgs = mergeArgs): Unit = {
-    add(MergeTables(this, countFiles, outputFile,
-      args.idCols, args.valCol, args.numHeaderLines, args.fallback, fileExtension = Some(fileExtension)))
-    extraSummaryFiles += s"${name}_table" -> outputFile
+    if (mergeCountFiles) {
+      add(MergeTables(this, countFiles, outputFile,
+        args.idCols, args.valCol, args.numHeaderLines, args.fallback, fileExtension = Some(fileExtension)))
+      extraSummaryFiles += s"${name}_table" -> outputFile
+    }
   }
 
   def addHeatmapJob(countTable: File, outputFile: File, name: String, countType: Option[String] = None): Unit = {
-    val job = new PlotHeatmap(qscript)
-    job.input = countTable
-    job.output = outputFile
-    job.countType = countType
-    add(job)
-    extraSummaryFiles += s"${name}_heatmap" -> outputFile
+    if (mergeCountFiles) {
+      val job = new PlotHeatmap(qscript)
+      job.input = countTable
+      job.output = outputFile
+      job.countType = countType
+      add(job)
+      extraSummaryFiles += s"${name}_heatmap" -> outputFile
+    }
   }
 
   /** Must return a map with used settings for this pipeline */

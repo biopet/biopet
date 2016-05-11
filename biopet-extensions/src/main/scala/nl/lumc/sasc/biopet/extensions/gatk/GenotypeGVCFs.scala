@@ -106,16 +106,12 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
   @Gather(enabled = false)
   private var outputIndex: File = _
 
-  @Output
-  @Gather(enabled = false)
-  private var dbsnpIndex: File = _
-
   override def beforeGraph() {
     super.beforeGraph()
     deps ++= variant.filter(orig => orig != null && (!orig.getName.endsWith(".list"))).map(orig => VcfUtils.getVcfIndexFile(orig))
     if (out != null && !org.broadinstitute.gatk.utils.io.IOUtils.isSpecialFile(out))
       outputIndex = VcfUtils.getVcfIndexFile(out)
-    dbsnp.foreach(x => dbsnpIndex = VcfUtils.getVcfIndexFile(x))
+    dbsnp.foreach(x => deps :+= VcfUtils.getVcfIndexFile(x))
   }
 
   override def cmdLine = super.cmdLine +
@@ -133,7 +129,7 @@ class GenotypeGVCFs(val root: Configurable) extends CommandLineGATK with Scatter
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-A", annotation, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-G", group, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     conditional(filter_reads_with_N_cigar, "-filterRNC", escape = true, format = "%s") +
     conditional(filter_mismatching_base_and_quals, "-filterMBQ", escape = true, format = "%s") +
     conditional(filter_bases_not_stored, "-filterNoBases", escape = true, format = "%s")

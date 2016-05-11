@@ -25,14 +25,14 @@ import org.testng.annotations.Test
 class FastqcV0101Test extends TestNGSuite with Matchers {
 
   /** Returns the absolute path to test resource directory as a File object */
-  private val resourceDir: File = new File(Paths.get(getClass.getResource("/").toURI).toString)
+  private[flexiprep] val resourceDir: File = new File(Paths.get(getClass.getResource("/").toURI).toString)
 
   /** Given a resource file name, returns the the absolute path to it as a File object */
-  private def resourceFile(p: String): File = new File(resourceDir, p)
+  private[flexiprep] def resourceFile(p: String): File = new File(resourceDir, p)
 
   /** Mock output file of a FastQC v0.10.1 run */
   // the file doesn't actually exist, we just need it so the outputDir value can be computed correctly
-  private val outputv0101: File = resourceFile("v0101.fq_fastqc.zip")
+  private[flexiprep] val outputv0101: File = resourceFile("v0101.fq_fastqc.zip")
 
   @Test def testOutputDir() = {
     val fqc = new Fastqc(null)
@@ -44,7 +44,7 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     // 11 QC modules
-    fqc.qcModules.size shouldBe 11
+    fqc.qcModules.size shouldBe 12
     // first module
     fqc.qcModules.keySet should contain("Basic Statistics")
     // mid (6th module)
@@ -87,4 +87,23 @@ class FastqcV0101Test extends TestNGSuite with Matchers {
     adapters.last.seq shouldEqual "GATCGGAAGAGCACACGTCTGAACTCCAGTCACATCACGATCTCGTATGCCGTCTTCTGCTTG"
 
   }
+
+  @Test def testPerBaseSequenceQuality() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+
+    val perBaseSequenceQuality = fqc.perBaseSequenceQuality
+    perBaseSequenceQuality.size shouldBe 55
+    perBaseSequenceQuality.keys should contain("54-55")
+  }
+
+  @Test def testPerBaseSequenceContent() = {
+    val fqc = new Fastqc(null)
+    fqc.output = outputv0101
+
+    val perBaseSequenceContent: Map[String, Map[String, Double]] = fqc.perBaseSequenceContent
+    perBaseSequenceContent.size shouldBe 55
+    perBaseSequenceContent.keys should contain("1")
+  }
+
 }
