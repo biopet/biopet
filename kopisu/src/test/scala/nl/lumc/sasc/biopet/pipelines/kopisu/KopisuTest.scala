@@ -73,6 +73,7 @@ class KopisuTest extends TestNGSuite with Matchers {
       pipeline.script()
 
       pipeline.freecMethod.isDefined shouldBe freec
+      pipeline.summarySettings.get("freec_method") shouldBe Some(freec)
 
       pipeline.functions.count(_.isInstanceOf[FreeC]) shouldBe (if (freec) bams else 0)
       pipeline.functions.count(_.isInstanceOf[FreeCAssessSignificancePlot]) shouldBe (if (freec) bams else 0)
