@@ -124,6 +124,7 @@ object VcfWithVcf extends ToolCommand {
 
     var counter = 0
     for (record <- reader) {
+      require(vcfDict.getSequence(record.getContig) != null, s"Contig ${record.getContig} does not exist on reference")
       val secondaryRecords = getSecondaryRecords(secondaryReader, record, commandArgs.matchAllele)
 
       val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
@@ -202,7 +203,6 @@ object VcfWithVcf extends ToolCommand {
           }
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
         case _ => {
-          print(attribute._2.getClass.toString)
           scalaListToJavaObjectArrayList(attribute._2)
         }
       })
