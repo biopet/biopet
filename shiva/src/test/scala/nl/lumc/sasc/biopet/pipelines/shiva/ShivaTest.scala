@@ -224,7 +224,12 @@ object ShivaTest {
     "pysvtools" -> Map(
       "exe" -> "test",
       "exclusion_regions" -> "test",
-      "translocations_only" -> false)
+      "translocations_only" -> false),
+    "freec" -> Map(
+      "exe" -> "test",
+      "chrFiles" -> "test",
+      "chrLenFile" -> "test"
+    )
   )
 
   val sample1 = Map(
