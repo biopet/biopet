@@ -35,7 +35,8 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty,
-    nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+    nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
+    nl.lumc.sasc.biopet.pipelines.GenerateIndexes
   )
 
   def tools: List[MainCommand] = BiopetToolsExecutable.tools
