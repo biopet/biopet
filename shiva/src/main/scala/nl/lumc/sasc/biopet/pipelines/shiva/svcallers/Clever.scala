@@ -33,7 +33,7 @@ class Clever(val root: Configurable) extends SvCaller {
       val cleverVCF = new CleverFixVCF(this)
       cleverVCF.input = clever.outputvcf
       cleverVCF.output = new File(cleverDir, s".${sample}.clever.vcf")
-      cleverVCF.sampleName = sample + "_cl"
+      cleverVCF.sampleName = sample + sampleNameSuffix
       cleverVCF.isIntermediate = true
       add(cleverVCF)
 

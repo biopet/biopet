@@ -40,7 +40,7 @@ class Pindel(val root: Configurable) extends SvCaller {
       val configFile: File = new File(pindelDir, sample + ".pindel.cfg")
       val cfg = new PindelConfig(this)
       cfg.input = bamFile
-      cfg.sampleName = sample + "_pd" // pindel suffix
+      cfg.sampleName = sample + sampleNameSuffix
       cfg.output = configFile
       add(cfg)
 
