@@ -60,6 +60,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def libraryCalling = false
   def dbsnp = true
   def svCalling = false
+  def cnvCalling = false
   def annotation = false
 
   @Test(dataProvider = "shivaOptions")
@@ -77,6 +78,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
         "use_indel_realigner" -> realign,
         "use_base_recalibration" -> baseRecalibration,
         "sv_calling" -> svCalling,
+        "cnv_calling" -> cnvCalling,
         "annotation" -> annotation), m)
 
     }
@@ -150,6 +152,13 @@ class ShivaWithSvCallingTest extends ShivaTestTrait {
   override def realignProvider = Array(false)
   override def baseRecalibrationProvider = Array(false)
   override def svCalling = true
+}
+class ShivaWithCnvCallingTest extends ShivaTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def cnvCalling = true
 }
 class ShivaWithAnnotationTest extends ShivaTestTrait {
   override def sample1 = Array(true)
