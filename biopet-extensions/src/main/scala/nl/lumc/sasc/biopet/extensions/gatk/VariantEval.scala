@@ -135,8 +135,8 @@ class VariantEval(val root: Configurable) extends CommandLineGATK {
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-eval", eval, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-gold", goldStandard), goldStandard, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-gold", goldStandard.getOrElse(null)), goldStandard, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-select", select_exps, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-selectName", select_names, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-sn", sample, spaceSeparated = true, escape = true, format = "%s") +

@@ -419,7 +419,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +
     optional("-likelihoodEngine", likelihoodCalculationEngine, spaceSeparated = true, escape = true, format = "%s") +
     optional("-hksr", heterogeneousKmerSizeResolution, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse(null)), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     conditional(dontTrimActiveRegions, "-dontTrimActiveRegions", escape = true, format = "%s") +
     optional("-maxDiscARExtension", maxDiscARExtension, spaceSeparated = true, escape = true, format = "%s") +
     optional("-maxGGAARExtension", maxGGAARExtension, spaceSeparated = true, escape = true, format = "%s") +
@@ -444,7 +444,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
     repeat("-inputPrior", input_prior, spaceSeparated = true, escape = true, format = "%s") +
     optional("-ploidy", sample_ploidy, spaceSeparated = true, escape = true, format = "%s") +
     optional("-gt_mode", genotyping_mode, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles), alleles, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-alleles", alleles.getOrElse(null)), alleles, spaceSeparated = true, escape = true, format = "%s") +
     optional("-contamination", contamination_fraction_to_filter, spaceSeparated = true, escape = true, format = contamination_fraction_to_filterFormat) +
     optional("-contaminationFile", contamination_fraction_per_sample_file, spaceSeparated = true, escape = true, format = "%s") +
     optional("-pnrm", p_nonref_model, spaceSeparated = true, escape = true, format = "%s") +

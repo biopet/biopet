@@ -58,7 +58,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
   override def makeSample(id: String) = new Sample(id)
   class Sample(sampleId: String) extends super.Sample(sampleId) {
 
-    override def preProcessBam = Some(createFile(".filter.bam"))
+    override def preProcessBam = Some(createFile("filter.bam"))
 
     val controls: List[String] = config("control", default = Nil)
 
