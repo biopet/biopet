@@ -24,6 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.collection.mutable
 import scala.io.Source
+import scala.util.matching.Regex
 
 /**
  * Extension for cutadapt
@@ -163,6 +164,51 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     (if (outputAsStsout) "" else required("--output", fastqOutput) +
       " > " + required(statsOutput))
 
+  def extractClippedAdapters(statsOutput: File): Map[String, Any] = {
+    val histoCountRow: Regex = """([\d]+)\t([\d]+)\t.*""".r
+    val adapterR = """Sequence: ([C|T|A|G]+);.*Trimmed: ([\d]+) times\.""".r
+
+    val statsFile = Source.fromFile(statsOutput)
+    val adapterRawStats: Array[String] = statsFile.mkString
+      .split("=== Adapter [\\d]+ ===")
+      .filter(_.contains("Sequence")
+      )
+    statsFile.close()
+
+    adapterRawStats.map(adapter => {
+      var adapterName = ""
+      var adapterCount = 0
+      // identify the adapter name and count
+      for (line <- adapter.split("\n")) {
+        line match {
+          case adapterR(adapter, count) => {
+            adapterName = adapter
+            adapterCount = count.toInt
+          }
+          case _ =>
+        }
+      }
+
+      // parse the block that gives the histogram of clipped bases and from which end
+      val counts = adapter.split("Overview of removed sequences ")
+        .filter(x => x.contains("length"))
+        .map(clipSideRawStats => {
+          val clipSideLabel = if (clipSideRawStats.contains("5'")) { "5p" } else { "3p" }
+
+          val histogramValues = clipSideRawStats.split("\n").flatMap({
+            case histoCountRow(length, count) => Some(length.toInt -> count.toInt)
+            case _                            => None
+          })
+          clipSideLabel -> histogramValues.toMap
+        })
+
+      adapterName -> Map(
+        "count" -> adapterCount,
+        "histogram" -> counts.toMap
+      )
+    }).toMap // converting the Array[String] containing map-items to Map with 'toMap'
+  }
+
   /** Output summary stats */
   def summaryStats: Map[String, Any] = {
     /**
@@ -177,7 +223,6 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
     val tooLongR = """.* that were too long: *([,\d]+) .*""".r
 
     val tooManyN = """.* with too many N: *([,\d]+) .*""".r
-    val adapterR = """Sequence ([C|T|A|G]*);.*Trimmed: ([,\d]+) times.""".r
 
     val basePairsProcessed = """Total basepairs processed: *([,\d]+) bp""".r
     val basePairsWritten = """Total written \(filtered\): *([,\d]+) bp .*""".r
@@ -192,24 +237,28 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "bpoutput" -> 0,
       "toomanyn" -> 0
     )
-    val adapterStats: mutable.Map[String, Long] = mutable.Map()
+
+    // extract the adapters with its histogram
+    val adapterStats = if (statsOutput.exists) {
+      extractClippedAdapters(statsOutput)
+    } else Map.empty
 
     if (statsOutput.exists) {
       val statsFile = Source.fromFile(statsOutput)
       for (line <- statsFile.getLines()) {
         line match {
-          case processedReads(m)        => stats("processed") = m.replaceAll(",", "").toLong
-          case withAdapters(m)          => stats("withadapters") = m.replaceAll(",", "").toLong
-          case readsPassingFilters(m)   => stats("passingfilters") = m.replaceAll(",", "").toLong
-          case tooShortR(m)             => stats("tooshort") = m.replaceAll(",", "").toLong
-          case tooLongR(m)              => stats("toolong") = m.replaceAll(",", "").toLong
-          case tooManyN(m)              => stats("toomanyn") = m.replaceAll(",", "").toLong
-          case basePairsProcessed(m)    => stats("bpinput") = m.replaceAll(",", "").toLong
-          case basePairsWritten(m)      => stats("bpoutput") = m.replaceAll(",", "").toLong
-          case adapterR(adapter, count) => adapterStats += (adapter -> count.toLong)
-          case _                        =>
+          case processedReads(m)      => stats("processed") = m.replaceAll(",", "").toLong
+          case withAdapters(m)        => stats("withadapters") = m.replaceAll(",", "").toLong
+          case readsPassingFilters(m) => stats("passingfilters") = m.replaceAll(",", "").toLong
+          case tooShortR(m)           => stats("tooshort") = m.replaceAll(",", "").toLong
+          case tooLongR(m)            => stats("toolong") = m.replaceAll(",", "").toLong
+          case tooManyN(m)            => stats("toomanyn") = m.replaceAll(",", "").toLong
+          case basePairsProcessed(m)  => stats("bpinput") = m.replaceAll(",", "").toLong
+          case basePairsWritten(m)    => stats("bpoutput") = m.replaceAll(",", "").toLong
+          case _                      =>
         }
       }
+      statsFile.close()
     }
 
     val cleanReads = stats("processed") - stats("withadapters")
@@ -223,8 +272,8 @@ class Cutadapt(val root: Configurable) extends BiopetCommandLineFunction with Su
       "num_reads_discarded_too_long" -> stats("toolong"),
       "num_reads_discarded_many_n" -> stats("toomanyn"),
       "num_bases_input" -> stats("bpinput"),
-      "num_based_output" -> stats("bpoutput"),
-      adaptersStatsName -> adapterStats.toMap
+      "num_bases_output" -> stats("bpoutput"),
+      adaptersStatsName -> adapterStats
     )
   }
 

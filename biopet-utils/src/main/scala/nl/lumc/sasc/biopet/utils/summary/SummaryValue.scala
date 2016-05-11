@@ -33,7 +33,6 @@ case class SummaryValue(value: Option[Any]) {
     })
   }
 
-  //TODO: Calculations are not yet used somewhere, needs more testing
   def +(that: SummaryValue): SummaryValue = {
     (this.value, that.value) match {
       case (Some(a: Double), Some(b)) => SummaryValue(Some(a + b.toString.toDouble))

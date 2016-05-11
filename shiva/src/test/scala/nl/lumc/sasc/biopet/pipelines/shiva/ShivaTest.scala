@@ -58,7 +58,9 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def multisampleCalling: Boolean = true
   def sampleCalling = false
   def libraryCalling = false
-  def dbsnp: Boolean = true
+  def dbsnp = true
+  def svCalling = false
+  def annotation = false
 
   @Test(dataProvider = "shivaOptions")
   def testShiva(f: String, sample1: Boolean, sample2: Boolean,
@@ -73,7 +75,9 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
         "single_sample_variantcalling" -> sampleCalling,
         "library_variantcalling" -> libraryCalling,
         "use_indel_realigner" -> realign,
-        "use_base_recalibration" -> baseRecalibration), m)
+        "use_base_recalibration" -> baseRecalibration,
+        "sv_calling" -> svCalling,
+        "annotation" -> annotation), m)
 
     }
 
@@ -95,6 +99,21 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[RealignerTargetCreator]) shouldBe (numberLibs * (if (realign) 1 else 0) + (if (sample2 && realign) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[BaseRecalibrator]) shouldBe (if (dbsnp && baseRecalibration) (numberLibs * 2) else 0)
       pipeline.functions.count(_.isInstanceOf[PrintReads]) shouldBe (if (dbsnp && baseRecalibration) numberLibs else 0)
+
+      pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
+      pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
+
+      pipeline.samples foreach {
+        case (sampleId, sample) =>
+          sample.summarySettings.get("single_sample_variantcalling") shouldBe Some(sampleCalling)
+          sample.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+          sample.libraries.foreach {
+            case (libId, lib) =>
+              lib.summarySettings.get("library_variantcalling") shouldBe Some(libraryCalling)
+              lib.summarySettings.get("use_indel_realigner") shouldBe Some(realign)
+              lib.summarySettings.get("use_base_recalibration") shouldBe Some(baseRecalibration && dbsnp)
+          }
+      }
 
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (
         (if (multisampleCalling) 2 else 0) +
@@ -124,6 +143,20 @@ class ShivaSampleCallingTest extends ShivaTestTrait {
   override def realignProvider = Array(false)
   override def baseRecalibrationProvider = Array(false)
   override def sampleCalling = true
+}
+class ShivaWithSvCallingTest extends ShivaTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def svCalling = true
+}
+class ShivaWithAnnotationTest extends ShivaTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def annotation = true
 }
 
 object ShivaTest {
@@ -170,7 +203,18 @@ object ShivaTest {
     "wigtobigwig" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
-    "tabix" -> Map("exe" -> "test")
+    "tabix" -> Map("exe" -> "test"),
+    "breakdancerconfig" -> Map("exe" -> "test"),
+    "breakdancercaller" -> Map("exe" -> "test"),
+    "pindelconfig" -> Map("exe" -> "test"),
+    "pindelcaller" -> Map("exe" -> "test"),
+    "pindelvcf" -> Map("exe" -> "test"),
+    "clever" -> Map("exe" -> "test"),
+    "delly" -> Map("exe" -> "test"),
+    "pysvtools" -> Map(
+      "exe" -> "test",
+      "exclusion_regions" -> "test",
+      "translocations_only" -> false)
   )
 
   val sample1 = Map(
