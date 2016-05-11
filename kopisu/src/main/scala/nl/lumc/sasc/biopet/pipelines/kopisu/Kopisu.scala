@@ -16,9 +16,9 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{PipelineCommand, Reference}
-import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ConiferMethod, FreecMethod}
-import nl.lumc.sasc.biopet.utils.{BamUtils, Logging}
+import nl.lumc.sasc.biopet.core.{ PipelineCommand, Reference }
+import nl.lumc.sasc.biopet.pipelines.kopisu.methods.{ ConiferMethod, FreecMethod }
+import nl.lumc.sasc.biopet.utils.{ BamUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 

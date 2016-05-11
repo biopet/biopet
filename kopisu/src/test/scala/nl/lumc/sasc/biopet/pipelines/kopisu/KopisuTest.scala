@@ -1,38 +1,38 @@
 /**
-  * Biopet is built on top of GATK Queue for building bioinformatic
-  * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
-  * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
-  * should also be able to execute Biopet tools and pipelines.
-  *
-  * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
-  *
-  * Contact us at: sasc@lumc.nl
-  *
-  * A dual licensing mode is applied. The source code within this project that are
-  * not part of GATK Queue is freely available for non-commercial use under an AGPL
-  * license; For commercial users or users who do not want to follow the AGPL
-  * license, please contact us to obtain a separate license.
-  */
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project that are
+ * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.pipelines.kopisu
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.freec.{FreeC, FreeCAssessSignificancePlot, FreeCCNVPlot}
+import nl.lumc.sasc.biopet.extensions.freec.{ FreeC, FreeCAssessSignificancePlot, FreeCCNVPlot }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Test class for [[Kopisu]]
-  *
-  * Created by pjvan_thof on 3/2/15.
-  */
+ * Test class for [[Kopisu]]
+ *
+ * Created by pjvan_thof on 3/2/15.
+ */
 class KopisuTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Kopisu = {
     new Kopisu() {
@@ -121,7 +121,7 @@ object KopisuTest {
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
-    "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" ->"test"),
+    "freec" -> Map("exe" -> "test", "chrFiles" -> "test", "chrLenFile" -> "test"),
     "controls_dir" -> controlDir.getAbsolutePath,
     "conifer" -> Map("script" -> "/usr/bin/test"),
     "probe_file" -> "test",

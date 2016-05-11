@@ -3,7 +3,7 @@ package nl.lumc.sasc.biopet.pipelines.kopisu.methods
 import java.io.File
 
 import nl.lumc.sasc.biopet.extensions.Ln
-import nl.lumc.sasc.biopet.extensions.conifer.{ConiferAnalyze, ConiferCall, ConiferRPKM}
+import nl.lumc.sasc.biopet.extensions.conifer.{ ConiferAnalyze, ConiferCall, ConiferRPKM }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
 /**
@@ -23,13 +23,14 @@ class ConiferMethod(val root: Configurable) extends CnvMethod {
   def biopetScript: Unit = {
     val RPKMdir = new File(outputDir, "rpkm")
 
-    val rpkmFiles: List[File] = inputBams.map { case (sampleName, bamFile) =>
-      val coniferRPKM = new ConiferRPKM(this)
-      coniferRPKM.bamFile = bamFile.getAbsoluteFile
-      coniferRPKM.probes = this.probeFile
-      coniferRPKM.output = new File(RPKMdir, s"$sampleName.rpkm.txt")
-      add(coniferRPKM)
-      coniferRPKM.output
+    val rpkmFiles: List[File] = inputBams.map {
+      case (sampleName, bamFile) =>
+        val coniferRPKM = new ConiferRPKM(this)
+        coniferRPKM.bamFile = bamFile.getAbsoluteFile
+        coniferRPKM.probes = this.probeFile
+        coniferRPKM.output = new File(RPKMdir, s"$sampleName.rpkm.txt")
+        add(coniferRPKM)
+        coniferRPKM.output
     }.toList ++ controlsDir.list.filter(_.toLowerCase.endsWith(".txt")).map { path =>
       val oldFile = new File(path)
       val newFile = new File(RPKMdir, s"control.${oldFile.getName}")
@@ -37,20 +38,21 @@ class ConiferMethod(val root: Configurable) extends CnvMethod {
       newFile
     }
 
-    inputBams.foreach { case (sampleName, bamFile) =>
-      val sampleDir = new File(outputDir, "samples" + File.separator + sampleName)
+    inputBams.foreach {
+      case (sampleName, bamFile) =>
+        val sampleDir = new File(outputDir, "samples" + File.separator + sampleName)
 
-      val coniferAnalyze = new ConiferAnalyze(this)
-      coniferAnalyze.deps ++= rpkmFiles
-      coniferAnalyze.probes = probeFile
-      coniferAnalyze.rpkmDir = RPKMdir
-      coniferAnalyze.output = new File(sampleDir, s"$sampleName.hdf5")
-      add(coniferAnalyze)
+        val coniferAnalyze = new ConiferAnalyze(this)
+        coniferAnalyze.deps ++= rpkmFiles
+        coniferAnalyze.probes = probeFile
+        coniferAnalyze.rpkmDir = RPKMdir
+        coniferAnalyze.output = new File(sampleDir, s"$sampleName.hdf5")
+        add(coniferAnalyze)
 
-      val coniferCall = new ConiferCall(this)
-      coniferCall.input = coniferAnalyze.output
-      coniferCall.output = new File(sampleDir, s"${sampleName}.calls.txt")
-      add(coniferCall)
+        val coniferCall = new ConiferCall(this)
+        coniferCall.input = coniferAnalyze.output
+        coniferCall.output = new File(sampleDir, s"${sampleName}.calls.txt")
+        add(coniferCall)
     }
 
     addSummaryJobs()
