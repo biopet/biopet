@@ -35,6 +35,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
 
   /** Allow reporting of all found (potentially adapter) sequences in the FastQC */
   var sensitiveAdapterSearch: Boolean = config("sensitiveAdapterSearch", default = false)
+  var enableRCtrimming: Boolean = config("enableRCtrimming", default = false)
 
   /** Class for storing a single FastQC module result */
   protected case class FastQCModule(name: String, status: String, lines: Seq[String])
@@ -188,9 +189,10 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       val fromKnownList: Set[AdapterSequence] = (adapterSet ++ contaminantSet)
         .filter(x => foundAdapterNames.exists(_.startsWith(x.name)))
 
-      val fromKnownListRC: Set[AdapterSequence] = fromKnownList.map {
+      val fromKnownListRC: Set[AdapterSequence] = if (enableRCtrimming) fromKnownList.map {
         x => AdapterSequence(x.name + "_RC", reverseComplement(x.seq))
       }
+      else Set.empty
 
       // list all sequences found by FastQC
       val fastQCFoundSequences: Seq[AdapterSequence] = if (sensitiveAdapterSearch) {
