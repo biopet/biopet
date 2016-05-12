@@ -15,11 +15,11 @@
  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 import scala.io.Source
 
@@ -44,7 +44,7 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools with Reference {
   @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
 
-  @Argument(doc = "sorted", required=  false)
+  @Argument(doc = "sorted", required = false)
   var sorted: Boolean = config("sorted", default = false, freeVar = false)
 
   override def defaultCoreMemory = 4.0
@@ -61,11 +61,11 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools with Reference {
     (if (outputAsStsout) "" else " > " + required(output))
 
   /**
-    * Creates the genome file. i.e. the first two columns of the fasta index
-    * @return
-    */
+   * Creates the genome file. i.e. the first two columns of the fasta index
+   * @return
+   */
   def createGenomeFile(fai: File): File = {
-    val tmp = File.createTempFile(fai.getName, ".genome", output.getParentFile)
+    val tmp = File.createTempFile(fai.getName, ".genome", config("output_dir"))
     tmp.deleteOnExit()
     val writer = new PrintWriter(tmp)
     Source.fromFile(fai).
