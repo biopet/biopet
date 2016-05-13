@@ -16,7 +16,7 @@
 package nl.lumc.sasc.biopet
 
 import nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes
-import nl.lumc.sasc.biopet.utils.{BiopetExecutable, MainCommand}
+import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutableMain extends BiopetExecutable {
   def pipelines: List[MainCommand] = List(

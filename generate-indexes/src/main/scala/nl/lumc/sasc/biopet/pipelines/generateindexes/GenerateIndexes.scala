@@ -19,9 +19,9 @@ import java.io.PrintWriter
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
@@ -30,6 +30,7 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
+import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.collection.JavaConversions._
 import scala.language.reflectiveCalls
@@ -40,7 +41,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
   @Argument(required = true)
   var referenceConfigFiles: List[File] = Nil
 
-  var referenceConfig: Map[String, Any] = Map()
+  var referenceConfig: Map[String, Any] = null
 
   var configDeps: List[File] = Nil
 
@@ -48,7 +49,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   /** This is executed before the script starts */
   def init(): Unit = {
-    referenceConfig = referenceConfigFiles.foldLeft(Map[String, Any]())((a,b) => ConfigUtils.mergeMaps(a, ConfigUtils.fileToConfigMap(b)))
+    if (referenceConfig == null)
+      referenceConfig = referenceConfigFiles.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, ConfigUtils.fileToConfigMap(b)))
   }
 
   /** Method where jobs must be added */
@@ -61,8 +63,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
-            case a: Array[_] => a.map(_.toString)
-            case a           => Array(a.toString)
+            case a: Traversable[_] => a.map(_.toString).toArray
+            case a                 => Array(a.toString)
           }
 
         val genomeDir = new File(speciesDir, genomeName)
@@ -83,16 +85,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           curl.output
         }
 
-        val fastaCat = new CommandLineFunction {
-          var cmds: Array[BiopetCommandLineFunction] = Array()
-
-          @Input
-          var input: List[File] = Nil
-
-          @Output
-          var output = fastaFile
-          def commandLine = cmds.mkString(" && ")
-        }
+        val fastaCat = new FastaMerging(this)
+        fastaCat.output = fastaFile
 
         if (fastaUris.length > 1 || fastaFiles.filter(_.getName.endsWith(".gz")).nonEmpty) {
           fastaFiles.foreach { file =>
@@ -259,6 +253,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
     add(new InProcessFunction {
       @Input val deps: List[File] = configDeps
+
+      @Output val out = outputConfigFile
 
       def run: Unit = {
         val writer = new PrintWriter(outputConfigFile)

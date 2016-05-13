@@ -161,6 +161,7 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
   def inputTouch(name: String): String = {
     val file = new File(outputDir, "input" + File.separator + name)
