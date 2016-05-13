@@ -211,7 +211,7 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
         (adapterSet ++ contaminantSet).count(y => x.name.startsWith(y.name)) == 1
       })
 
-      fromKnownList ++ fastQCFoundSequences
+      fromKnownList ++ fastQCFoundSequences ++ fromKnownListRC
     } else Set()
   }
 
