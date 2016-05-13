@@ -73,6 +73,8 @@ class BiopetFifoPipe(val root: Configurable,
 
     _pipesJobs :::= commands
     _pipesJobs = _pipesJobs.distinct
+
+    analysisName = commands.map(_.analysisName).mkString("_")
   }
 
   override def beforeCmd(): Unit = {
