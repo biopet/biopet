@@ -38,7 +38,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
       (fastqc.foundAdapters ++ customAdapters)
         .map(adapter => adapter.seq -> adapter.name).toMap
     } else {
-      Map.empty ++ customAdapters.map(adapter => adapter.seq -> adapter.name).toMap
+      customAdapters.map(adapter => adapter.seq -> adapter.name).toMap
     }
   }
 

@@ -107,7 +107,7 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
       val foundAdapters = if (!cutadapt.ignoreFastqcAdapters) {
         fastqc.foundAdapters.map(_.seq) ++ cutadapt.customAdapters.map(_.seq)
       } else {
-        Seq.empty ++ cutadapt.customAdapters.map(_.seq)
+        cutadapt.customAdapters.map(_.seq)
       }
 
       if (foundAdapters.nonEmpty) {
