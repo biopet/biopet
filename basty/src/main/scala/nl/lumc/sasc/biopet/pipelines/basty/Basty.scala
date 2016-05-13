@@ -26,7 +26,6 @@ import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.{ Cat, Raxml, RunGubbins }
 import nl.lumc.sasc.biopet.pipelines.shiva.Shiva
 import nl.lumc.sasc.biopet.extensions.tools.BastyGenerateFasta
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
