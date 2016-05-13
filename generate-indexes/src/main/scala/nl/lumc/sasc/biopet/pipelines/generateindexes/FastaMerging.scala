@@ -18,6 +18,6 @@ class FastaMerging(val root: Configurable) extends BiopetCommandLineFunction {
 
   var cmds: Array[BiopetCommandLineFunction] = Array()
 
-  def cmdLine = cmds.mkString(" && ")
+  def cmdLine = cmds.map(_.commandLine).mkString(" && ")
 
 }
