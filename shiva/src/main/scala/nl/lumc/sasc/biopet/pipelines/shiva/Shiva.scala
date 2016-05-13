@@ -178,7 +178,7 @@ class Shiva(val root: Configurable) extends QScript with MultisampleMappingTrait
 
       annotation.foreach { toucan =>
         toucan.outputDir = new File(outputDir, "annotation")
-        toucan.inputVCF = vc.finalFile
+        toucan.inputVcf = vc.finalFile
         add(toucan)
       }
     })

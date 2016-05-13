@@ -30,18 +30,16 @@ import scala.collection.mutable.ListBuffer
  */
 object WriteDependencies extends Logging with Configurable {
   val root: Configurable = null
-  private val functionNames: mutable.Map[QFunction, String] = mutable.Map()
-
-  private def createFunctionNames(functions: Seq[QFunction]): Unit = {
+  private def createFunctionNames(functions: Seq[QFunction]): Map[QFunction, String] = {
     val cache: mutable.Map[String, Int] = mutable.Map()
-    for (function <- functions) {
+    (for (function <- functions) yield {
       val baseName = function match {
         case f: Configurable => f.configNamespace
         case f               => f.getClass.getSimpleName
       }
       cache += baseName -> (cache.getOrElse(baseName, 0) + 1)
-      functionNames += function -> s"$baseName-${cache(baseName)}"
-    }
+      function -> s"$baseName-${cache(baseName)}"
+    }).toMap
   }
 
   /**
@@ -55,7 +53,7 @@ object WriteDependencies extends Logging with Configurable {
 
     val errorOnMissingInput: Boolean = config("error_on_missing_input", false)
 
-    createFunctionNames(functions)
+    val functionNames = createFunctionNames(functions)
 
     case class QueueFile(file: File) {
       private val inputJobs: ListBuffer[QFunction] = ListBuffer()

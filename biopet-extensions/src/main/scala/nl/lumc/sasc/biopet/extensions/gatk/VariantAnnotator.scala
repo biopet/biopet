@@ -104,8 +104,8 @@ class VariantAnnotator(val root: Configurable) extends CommandLineGATK with Scat
 
   override def cmdLine = super.cmdLine +
     required(TaggedFile.formatCommandLineParameter("-V", variant), variant, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-snpEffFile", snpEffFile), snpEffFile, spaceSeparated = true, escape = true, format = "%s") +
-    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-snpEffFile", snpEffFile.getOrElse()), snpEffFile, spaceSeparated = true, escape = true, format = "%s") +
+    optional(TaggedFile.formatCommandLineParameter("-D", dbsnp.getOrElse()), dbsnp, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-comp", comp, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     repeat("-resource", resource, formatPrefix = TaggedFile.formatCommandLineParameter, spaceSeparated = true, escape = true, format = "%s") +
     optional("-o", out, spaceSeparated = true, escape = true, format = "%s") +

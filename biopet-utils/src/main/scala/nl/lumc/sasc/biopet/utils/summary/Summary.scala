@@ -61,7 +61,7 @@ class Summary(file: File) {
   }
 
   /** Executes given function for each sample */
-  def getSampleValues(function: (Summary, String) => Option[Any]): Map[String, Option[Any]] = {
+  def getSampleValues[T](function: (Summary, String) => Option[T]): Map[String, Option[T]] = {
     (for (sample <- samples) yield sample -> function(this, sample)).toMap
   }
 
@@ -95,7 +95,7 @@ class Summary(file: File) {
    * @param function Function to execute
    * @return (sampleId, libId) -> value
    */
-  def getLibraryValues(function: (Summary, String, String) => Option[Any]): Map[(String, String), Option[Any]] = {
+  def getLibraryValues[T](function: (Summary, String, String) => Option[T]): Map[(String, String), Option[T]] = {
     (for (sample <- samples; lib <- libraries.getOrElse(sample, Set())) yield {
       (sample, lib) -> function(this, sample, lib)
     }).toMap

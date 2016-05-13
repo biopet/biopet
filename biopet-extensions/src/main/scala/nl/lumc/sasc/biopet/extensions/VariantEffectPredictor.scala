@@ -18,10 +18,9 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.Logging
+import nl.lumc.sasc.biopet.utils.{ Logging, VcfUtils, tryToParseNumber }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction, Reference }
-import nl.lumc.sasc.biopet.utils.tryToParseNumber
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 import scala.io.Source
@@ -164,147 +163,149 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
   }
 
   /** Returns command to execute */
-  def cmdLine = required(executable) +
-    required(vepScript) +
-    required("-i", input) +
-    required("-o", output) +
-    conditional(v, "-v") +
-    conditional(q, "-q") +
-    conditional(offline, "--offline") +
-    conditional(noProgress, "--no_progress") +
-    conditional(everything, "--everything") +
-    conditional(force, "--force_overwrite") +
-    conditional(noStats, "--no_stats") +
-    conditional(statsText, "--stats_text") +
-    conditional(html, "--html") +
-    conditional(cache, "--cache") +
-    conditional(humdiv, "--humdiv") +
-    conditional(regulatory, "--regulatory") +
-    conditional(cellType, "--cel_type") +
-    conditional(phased, "--phased") +
-    conditional(alleleNumber, "--allele_number") +
-    conditional(numbers, "--numbers") +
-    conditional(domains, "--domains") +
-    conditional(noEscape, "--no_escape") +
-    conditional(hgvs, "--hgvs") +
-    conditional(protein, "--protein") +
-    conditional(symbol, "--symbol") +
-    conditional(ccds, "--ccds") +
-    conditional(uniprot, "--uniprot") +
-    conditional(tsl, "--tsl") +
-    conditional(canonical, "--canonical") +
-    conditional(biotype, "--biotype") +
-    conditional(xrefRefseq, "--xref_refseq") +
-    conditional(checkExisting, "--check_existing") +
-    conditional(checkAlleles, "--check_alleles") +
-    conditional(checkSvs, "--check_svs") +
-    conditional(gmaf, "--gmaf") +
-    conditional(maf1kg, "--maf_1kg") +
-    conditional(mafEsp, "--maf_esp") +
-    conditional(pubmed, "--pubmed") +
-    conditional(vcf, "--vcf") +
-    conditional(json, "--json") +
-    conditional(gvf, "--gvf") +
-    conditional(checkRef, "--check_ref") +
-    conditional(codingOnly, "--coding_only") +
-    conditional(noIntergenic, "--no_intergenic") +
-    conditional(pick, "--pick") +
-    conditional(pickAllele, "--pick_allele") +
-    conditional(flagPick, "--flag_pick") +
-    conditional(flagPickAllele, "--flag_pick_allele") +
-    conditional(perGene, "--per_gene") +
-    conditional(mostSevere, "--most_severe") +
-    conditional(summary, "--summary") +
-    conditional(filterCommon, "--filter_common") +
-    conditional(checkFrequency, "--check_frequency") +
-    conditional(allowNonVariant, "--allow_non_variant") +
-    conditional(database, "--database") +
-    conditional(genomes, "--genomes") +
-    conditional(gencodeBasic, "--gencode_basic") +
-    conditional(refseq, "--refseq") +
-    conditional(merged, "--merged") +
-    conditional(allRefseq, "--all_refseq") +
-    conditional(lrg, "--lrg") +
-    conditional(noWholeGenome, "--no_whole_genome") +
-    conditional(skibDbCheck, "--skip_db_check") +
-    optional("--config", vepConfig) +
-    optional("--species", species) +
-    optional("--assembly", assembly) +
-    optional("--format", format) +
-    optional("--dir", dir) +
-    optional("--dir_cache", dirCache) +
-    optional("--dir_plugins", dirPlugins) +
-    optional("--fasta", fasta) +
-    optional("--sift", sift) +
-    optional("--polyphen", polyphen) +
-    repeat("--custom", custom) +
-    repeat("--plugin", plugin) +
-    optional("--individual", individual) +
-    optional("--fields", fields) +
-    optional("--convert", convert) +
-    optional("--terms", terms) +
-    optional("--chr", chr) +
-    optional("--pick_order", pickOrder) +
-    optional("--freq_pop", freqPop) +
-    optional("--freq_gt_lt", freqGtLt) +
-    optional("--freq_filter", freqFilter) +
-    optional("--filter", filter) +
-    optional("--host", host) +
-    optional("--user", user) +
-    optional("--password", password) +
-    optional("--registry", registry) +
-    optional("--build", build) +
-    optional("--compress", compress) +
-    optional("--cache_region_size", cacheRegionSize) +
-    optional("--fork", threads) +
-    optional("--cache_version", cacheVersion) +
-    optional("--freq_freq", freqFreq) +
-    optional("--port", port) +
-    optional("--db_version", dbVersion) +
-    optional("--buffer_size", bufferSize) +
-    optional("--failed", failed)
+  def cmdLine = {
+    if (input.exists() && VcfUtils.vcfFileIsEmpty(input)) {
+      val zcat = Zcat(this, input, output)
+      zcat.cmdLine
+    } else required(executable) +
+      required(vepScript) +
+      required("-i", input) +
+      required("-o", output) +
+      conditional(v, "-v") +
+      conditional(q, "-q") +
+      conditional(offline, "--offline") +
+      conditional(noProgress, "--no_progress") +
+      conditional(everything, "--everything") +
+      conditional(force, "--force_overwrite") +
+      conditional(noStats, "--no_stats") +
+      conditional(statsText, "--stats_text") +
+      conditional(html, "--html") +
+      conditional(cache, "--cache") +
+      conditional(humdiv, "--humdiv") +
+      conditional(regulatory, "--regulatory") +
+      conditional(cellType, "--cel_type") +
+      conditional(phased, "--phased") +
+      conditional(alleleNumber, "--allele_number") +
+      conditional(numbers, "--numbers") +
+      conditional(domains, "--domains") +
+      conditional(noEscape, "--no_escape") +
+      conditional(hgvs, "--hgvs") +
+      conditional(protein, "--protein") +
+      conditional(symbol, "--symbol") +
+      conditional(ccds, "--ccds") +
+      conditional(uniprot, "--uniprot") +
+      conditional(tsl, "--tsl") +
+      conditional(canonical, "--canonical") +
+      conditional(biotype, "--biotype") +
+      conditional(xrefRefseq, "--xref_refseq") +
+      conditional(checkExisting, "--check_existing") +
+      conditional(checkAlleles, "--check_alleles") +
+      conditional(checkSvs, "--check_svs") +
+      conditional(gmaf, "--gmaf") +
+      conditional(maf1kg, "--maf_1kg") +
+      conditional(mafEsp, "--maf_esp") +
+      conditional(pubmed, "--pubmed") +
+      conditional(vcf, "--vcf") +
+      conditional(json, "--json") +
+      conditional(gvf, "--gvf") +
+      conditional(checkRef, "--check_ref") +
+      conditional(codingOnly, "--coding_only") +
+      conditional(noIntergenic, "--no_intergenic") +
+      conditional(pick, "--pick") +
+      conditional(pickAllele, "--pick_allele") +
+      conditional(flagPick, "--flag_pick") +
+      conditional(flagPickAllele, "--flag_pick_allele") +
+      conditional(perGene, "--per_gene") +
+      conditional(mostSevere, "--most_severe") +
+      conditional(summary, "--summary") +
+      conditional(filterCommon, "--filter_common") +
+      conditional(checkFrequency, "--check_frequency") +
+      conditional(allowNonVariant, "--allow_non_variant") +
+      conditional(database, "--database") +
+      conditional(genomes, "--genomes") +
+      conditional(gencodeBasic, "--gencode_basic") +
+      conditional(refseq, "--refseq") +
+      conditional(merged, "--merged") +
+      conditional(allRefseq, "--all_refseq") +
+      conditional(lrg, "--lrg") +
+      conditional(noWholeGenome, "--no_whole_genome") +
+      conditional(skibDbCheck, "--skip_db_check") +
+      optional("--config", vepConfig) +
+      optional("--species", species) +
+      optional("--assembly", assembly) +
+      optional("--format", format) +
+      optional("--dir", dir) +
+      optional("--dir_cache", dirCache) +
+      optional("--dir_plugins", dirPlugins) +
+      optional("--fasta", fasta) +
+      optional("--sift", sift) +
+      optional("--polyphen", polyphen) +
+      repeat("--custom", custom) +
+      repeat("--plugin", plugin) +
+      optional("--individual", individual) +
+      optional("--fields", fields) +
+      optional("--convert", convert) +
+      optional("--terms", terms) +
+      optional("--chr", chr) +
+      optional("--pick_order", pickOrder) +
+      optional("--freq_pop", freqPop) +
+      optional("--freq_gt_lt", freqGtLt) +
+      optional("--freq_filter", freqFilter) +
+      optional("--filter", filter) +
+      optional("--host", host) +
+      optional("--user", user) +
+      optional("--password", password) +
+      optional("--registry", registry) +
+      optional("--build", build) +
+      optional("--compress", compress) +
+      optional("--cache_region_size", cacheRegionSize) +
+      optional("--fork", threads) +
+      optional("--cache_version", cacheVersion) +
+      optional("--freq_freq", freqFreq) +
+      optional("--port", port) +
+      optional("--db_version", dbVersion) +
+      optional("--buffer_size", bufferSize) +
+      optional("--failed", failed)
+  }
 
   def summaryFiles: Map[String, File] = Map()
 
   def summaryStats: Map[String, Any] = {
-    if (statsText) {
-      val statsFile: File = new File(output.getAbsolutePath + "_summary.txt")
-      parseStatsFile(statsFile)
-    } else {
-      Map()
+    val statsFile = new File(output.getAbsolutePath + "_summary.txt")
+    if (statsText && statsFile.exists()) parseStatsFile(statsFile)
+    else Map()
+  }
+
+  protected val removeOnConflict = Set("Output_file", "Command_line_options", "Run_time", "Start_time", "End_time", "Input_file_(format)", "Novel_/_existing_variants")
+  protected val nonNumber = Set("VEP_version_(API)", "Cache/Database", "Species")
+
+  override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
+    if (removeOnConflict.contains(key)) None
+    else if (nonNumber.contains(key)) v1
+    else {
+      (v1, v2) match {
+        case (x1: Int, x2: Int) => x1 + x2
+        case _                  => throw new IllegalStateException(s"Value are not Int's, unable to sum them up, key: $key, v1: $v1, v2: $v2")
+      }
     }
   }
 
   def parseStatsFile(file: File): Map[String, Any] = {
-    val contents = Source.fromFile(file).getLines().toList
-    val headers = getHeadersFromStatsFile(contents)
-    headers.foldLeft(Map.empty[String, Any])((acc, x) => acc + (x.replace(" ", "_") -> getBlockFromStatsFile(contents, x)))
-  }
+    val reader = Source.fromFile(file)
+    val contents = reader.getLines().filter(_ != "").toArray
+    reader.close()
 
-  def getBlockFromStatsFile(contents: List[String], header: String): Map[String, Any] = {
-    var inBlock = false
-    var theMap: Map[String, Any] = Map()
-    for (x <- contents) {
-      val stripped = x.stripPrefix("[").stripSuffix("]")
-      if (stripped == header) {
-        inBlock = true
-      } else {
-        if (inBlock) {
-          val key = stripped.split('\t').head.replace(" ", "_")
-          val value = stripped.split('\t').last
-          theMap ++= Map(key -> tryToParseNumber(value, fallBack = true).getOrElse(value))
-        }
-      }
-      if (stripped == "") {
-        inBlock = false
-      }
-    }
-    theMap
-  }
+    def isHeader(line: String) = line.startsWith("[") && line.endsWith("]")
 
-  def getHeadersFromStatsFile(contents: List[String]): List[String] = {
-    // block headers are of format '[block]'
-    contents.filter(_.startsWith("[")).filter(_.endsWith("]")).map(_.stripPrefix("[")).map(_.stripSuffix("]"))
-  }
+    val headers = contents.zipWithIndex
+      .filter(x => x._1.startsWith("[") && x._1.endsWith("]"))
 
+    (for ((header, headerIndex) <- headers) yield {
+      val name = header.stripPrefix("[").stripSuffix("]")
+      name.replaceAll(" ", "_") -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).map { line =>
+        val values = line.split("\t", 2)
+        values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(0)
+      }.toMap)
+    }).toMap
+  }
 }
