@@ -46,20 +46,31 @@ object CleverFixVCF extends ToolCommand {
     } text "Output path is missing"
   }
 
-  /**
-   * @param args the command line arguments
-   */
-  def main(args: Array[String]): Unit = {
-    val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+  def replaceHeaderLine(inHeaderLine: String, toCheckFor: String, replacement: String, extraHeader: String): String = {
+    (inHeaderLine == toCheckFor) match {
+      case true => {
+        extraHeader + "\n" + replacement + "\n"
+      }
+      case _ => {
+        // We have to deal with matching records
+        // these don't start with #
 
-    val input: File = commandArgs.inputVCF
-    val output: File = commandArgs.outputVCF
+        inHeaderLine.startsWith("#") match {
+          case true =>
+            inHeaderLine + "\n"
+          case _ => {
+            // this should be a record
+            // Ensure the REF field is at least an N
+            val cols = inHeaderLine.split("\t")
+            cols(3) = "N"
+            cols.mkString("\t") + "\n"
+          }
+        }
+      }
+    }
+  }
 
-    val vcfColHeader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tdefault"
-    val vcfColReplacementHeader = s"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t${commandArgs.sampleLabel}"
-
-    val extraHeader = """##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+  val extraHeader = """##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
 ##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">
@@ -99,32 +110,24 @@ object CleverFixVCF extends ToolCommand {
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">"""
 
+  val vcfColHeader = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tdefault"
+
+  val vcfColReplacementHeader = s"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t"
+  /**
+   * @param args the command line arguments
+   */
+  def main(args: Array[String]): Unit = {
+    val argsParser = new OptParser
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+
+    val input: File = commandArgs.inputVCF
+    val output: File = commandArgs.outputVCF
+
     val inputVCF = Source.fromFile(input)
     val writer = new PrintWriter(output)
-    for (line <- inputVCF.getLines()) {
-      (line == vcfColHeader) match {
-        case true => {
-          writer.write(extraHeader + "\n")
-          writer.write(vcfColReplacementHeader + "\n")
-        }
-        case _ => {
-          // We have to deal with matching records
-          // these don't start with #
-
-          line.startsWith("#") match {
-            case true =>
-              writer.write(line + "\n")
-            case _ => {
-              // this should be a record
-              // Ensure the REF field is at least an N
-              val cols = line.split("\t")
-              cols(3) = "N"
-              writer.write(cols.mkString("\t") + "\n")
-            }
-          }
-        }
-      }
-    }
+      inputVCF.getLines().foreach(x =>
+        writer.write(replaceHeaderLine(x, vcfColHeader, vcfColReplacementHeader + commandArgs.sampleLabel, extraHeader))
+      )
     writer.close()
     inputVCF.close()
   }
