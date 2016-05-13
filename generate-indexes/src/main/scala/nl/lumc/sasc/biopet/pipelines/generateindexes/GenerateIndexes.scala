@@ -19,7 +19,7 @@ import java.io.PrintWriter
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
@@ -30,7 +30,6 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
-import org.broadinstitute.gatk.utils.commandline.Output
 
 import scala.collection.JavaConversions._
 import scala.language.reflectiveCalls
