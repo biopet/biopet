@@ -59,8 +59,8 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
     val obs = Source.fromFile(output).getLines()
 
     (exp zip obs).foreach(_ match {
-      case (a,b) => {
-        a shouldEqual(b)
+      case (a, b) => {
+        a shouldEqual (b)
       }
       case _ =>
     })
@@ -75,8 +75,8 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
     cfvcf.output = output
     cfvcf.sampleName = "testsample"
 
-    cfvcf.cmdLine should include ("'-s' 'testsample'")
-    cfvcf.cmdLine should include (s"'-i' '${rawCleverVCF}'")
-    cfvcf.cmdLine should include (s"'-o' '${output}'")
+    cfvcf.cmdLine should include("'-s' 'testsample'")
+    cfvcf.cmdLine should include(s"'-i' '${rawCleverVCF}'")
+    cfvcf.cmdLine should include(s"'-o' '${output}'")
   }
 }
