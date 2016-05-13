@@ -87,7 +87,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val fastaCat = new FastaMerging(this)
         fastaCat.output = fastaFile
 
-        if (fastaUris.length > 1 || fastaFiles.filter(_.getName.endsWith(".gz")).nonEmpty) {
+        if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
           fastaFiles.foreach { file =>
             if (file.getName.endsWith(".gz")) {
               val zcat = new Zcat(this)
@@ -152,14 +152,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           val regex = """.*\/(.*)_vep_(\d*)_(.*)\.tar\.gz""".r
           vepCacheUri.toString match {
-            case regex(species, version, assembly) if (version.forall(_.isDigit)) => {
+            case regex(species, version, assembly) if version.forall(_.isDigit) =>
               outputConfig ++= Map("varianteffectpredictor" -> Map(
                 "species" -> species,
                 "assembly" -> assembly,
                 "cache_version" -> version.toInt,
                 "cache" -> vepDir,
                 "fasta" -> createLinks(vepDir)))
-            }
             case _ => throw new IllegalArgumentException("Cache found but no version was found")
           }
         }
