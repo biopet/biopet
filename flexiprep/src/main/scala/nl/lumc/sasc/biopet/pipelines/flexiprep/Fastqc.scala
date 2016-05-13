@@ -150,9 +150,6 @@ class Fastqc(root: Configurable) extends nl.lumc.sasc.biopet.extensions.Fastqc(r
       }
     } else Map()
 
-  /** Case class representing a known adapter sequence */
-  protected case class AdapterSequence(name: String, seq: String)
-
   /**
    * Retrieves overrepresented sequences found by FastQ.
    *
