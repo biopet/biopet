@@ -37,8 +37,8 @@ import scala.language.reflectiveCalls
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Argument
-  var referenceConfigFile: File = _
+  @Argument(required = true)
+  var referenceConfigFiles: List[File] = Nil
 
   var referenceConfig: Map[String, Any] = Map()
 
@@ -48,7 +48,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   /** This is executed before the script starts */
   def init(): Unit = {
-    referenceConfig = ConfigUtils.fileToConfigMap(referenceConfigFile)
+    referenceConfig = referenceConfigFiles.foldLeft(Map[String, Any]())((a,b) => ConfigUtils.mergeMaps(a, ConfigUtils.fileToConfigMap(b)))
   }
 
   /** Method where jobs must be added */
