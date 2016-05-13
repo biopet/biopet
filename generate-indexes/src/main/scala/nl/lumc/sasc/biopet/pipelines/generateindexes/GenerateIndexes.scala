@@ -13,26 +13,26 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.pipelines
+package nl.lumc.sasc.biopet.pipelines.generateindexes
 
 import java.io.PrintWriter
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, BiopetQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
+import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-import scala.language.reflectiveCalls
 import scala.collection.JavaConversions._
+import scala.language.reflectiveCalls
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
