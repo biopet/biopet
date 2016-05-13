@@ -63,6 +63,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
             case a: Traversable[_] => a.map(_.toString).toArray
+            case a: util.ArrayList[_] => a.map(_.toString).toArray
             case a                 => Array(a.toString)
           }
 
