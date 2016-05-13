@@ -15,7 +15,7 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva.svcallers
 
-import nl.lumc.sasc.biopet.extensions.clever.{CleverCaller, CleverFixVCF}
+import nl.lumc.sasc.biopet.extensions.clever.{ CleverCaller, CleverFixVCF }
 import nl.lumc.sasc.biopet.extensions.picard.SortVcf
 import nl.lumc.sasc.biopet.utils.config.Configurable
 

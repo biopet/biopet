@@ -5,8 +5,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by wyleung on 13-5-16.
-  */
+ * Created by wyleung on 13-5-16.
+ */
 class CleverFixVCFTest extends TestNGSuite with Matchers {
 
   @Test
@@ -16,9 +16,8 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
       CleverFixVCF.vcfColHeader,
       CleverFixVCF.vcfColReplacementHeader + "testsample",
       CleverFixVCF.extraHeader
-    ) should equal(CleverFixVCF.extraHeader + "\n" + CleverFixVCF.vcfColReplacementHeader + "testsample"+ "\n")
+    ) should equal(CleverFixVCF.extraHeader + "\n" + CleverFixVCF.vcfColReplacementHeader + "testsample" + "\n")
   }
-
 
   @Test
   def replacementOther = {
@@ -29,7 +28,7 @@ class CleverFixVCFTest extends TestNGSuite with Matchers {
       CleverFixVCF.vcfColHeader,
       CleverFixVCF.vcfColReplacementHeader + "testsample",
       CleverFixVCF.extraHeader
-    ) should equal(vcfRecordExpected+ "\n")
+    ) should equal(vcfRecordExpected + "\n")
   }
 
 }

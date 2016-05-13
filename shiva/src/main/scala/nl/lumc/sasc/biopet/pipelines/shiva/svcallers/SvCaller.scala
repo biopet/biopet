@@ -30,7 +30,7 @@ trait SvCaller extends QScript with BiopetQScript with Reference {
 
   var inputBams: Map[String, File] = Map.empty
 
-  val sampleNameSuffix: String = config("samplename_suffix", default="")
+  val sampleNameSuffix: String = config("samplename_suffix", default = "")
 
   def outputVCF(sample: String): Option[File] = {
     outputVCFs.get(sample) match {

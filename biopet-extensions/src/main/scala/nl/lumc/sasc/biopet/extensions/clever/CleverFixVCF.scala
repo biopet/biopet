@@ -4,12 +4,12 @@ package nl.lumc.sasc.biopet.extensions.clever
  * Created by wyleung on 4-4-16.
  */
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.BiopetJavaCommandLineFunction
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 import scala.io.Source
 
@@ -125,9 +125,9 @@ object CleverFixVCF extends ToolCommand {
 
     val inputVCF = Source.fromFile(input)
     val writer = new PrintWriter(output)
-      inputVCF.getLines().foreach(x =>
-        writer.write(replaceHeaderLine(x, vcfColHeader, vcfColReplacementHeader + commandArgs.sampleLabel, extraHeader))
-      )
+    inputVCF.getLines().foreach(x =>
+      writer.write(replaceHeaderLine(x, vcfColHeader, vcfColReplacementHeader + commandArgs.sampleLabel, extraHeader))
+    )
     writer.close()
     inputVCF.close()
   }
