@@ -31,6 +31,33 @@ import scala.collection.JavaConversions._
  */
 object ConfigUtils extends Logging {
   /**
+   * This method give back all nested values that does exist in map1 but not in map2
+   * @param map1 input map
+   * @param map2 input map
+   * @return Uniqe map1
+   */
+  def uniqeKeys(map1: Map[String, Any], map2: Map[String, Any]): Map[String, Any] = {
+    filterEmtpyMapValues(map1
+      .flatMap {
+        case (key, value: Map[_, _])             => Some(key -> uniqeKeys(value.asInstanceOf[Map[String, Any]], map2.getOrElse(key, Map()).asInstanceOf[Map[String, Any]]))
+        case (key, value) if !map2.contains(key) => Some(key -> value)
+        case _                                   => None
+      })
+  }
+
+  /**
+   * Filter values that are a map but are empty
+   * @param map input map
+   * @return output map
+   */
+  def filterEmtpyMapValues(map: Map[String, Any]): Map[String, Any] = {
+    map.filter {
+      case (key, value: Map[_, _]) => value.nonEmpty
+      case _                       => true
+    }
+  }
+
+  /**
    * Merge 2 maps, when value is in a map in map1 and map2 the value calls recursively this function
    * @param map1 Prio over map2
    * @param map2 Backup for map1

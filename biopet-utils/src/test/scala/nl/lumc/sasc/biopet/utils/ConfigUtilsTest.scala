@@ -223,6 +223,21 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "21"))
     mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "22"))
   }
+
+  @Test def testFilterEmtpyMapValues: Unit = {
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> "bla")) shouldBe Map("bla" -> "bla")
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map())) shouldBe Map()
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")) shouldBe Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")
+  }
+
+  @Test def testUniqeKeys: Unit = {
+    ConfigUtils.uniqeKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
+    ConfigUtils.uniqeKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
+    ConfigUtils.uniqeKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
+    ConfigUtils.uniqeKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map("bla" -> Map("bla" -> "bla"))
+  }
 }
 
 object ConfigUtilsTest {

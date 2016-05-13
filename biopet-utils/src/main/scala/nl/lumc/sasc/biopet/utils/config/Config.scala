@@ -215,6 +215,17 @@ class Config(protected var _map: Map[String, Any],
     // Positions where values are found
     val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
     val fixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
+    val unused = uniqeKeys(map, found)
+
+    def reportUnused(map: Map[String, Any], path: List[String] = Nil): Unit = {
+      map.foreach {
+        case (key, value: Map[_, _]) => reportUnused(value.asInstanceOf[Map[String, Any]], path :+ key)
+        case (key, value) => logger.warn(s"config key in user config is never used, key: $key" +
+          (if (path.nonEmpty) s", path: ${path.mkString(" -> ")}" else ""))
+      }
+    }
+
+    reportUnused(unused)
 
     // Positions where to start searching
     val effectiveFound = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.requestIndex, x._2.value)), Some(false))
@@ -226,7 +237,8 @@ class Config(protected var _map: Map[String, Any],
     val fullEffective = ConfigUtils.mergeMaps(effectiveFound, effectiveDefaultFound)
     val fullEffectiveWithNotFound = ConfigUtils.mergeMaps(fullEffective, notFound)
 
-    writeMapToJsonFile(_map, "input")
+    writeMapToJsonFile(map, "input")
+    writeMapToJsonFile(unused, "unused")
     writeMapToJsonFile(_defaults, "defaults")
     writeMapToJsonFile(found, "found")
     writeMapToJsonFile(fixed, "fixed")
@@ -238,7 +250,7 @@ class Config(protected var _map: Map[String, Any],
     writeMapToJsonFile(fullEffectiveWithNotFound, "effective.full.notfound")
   }
 
-  override def toString: String = _map.toString()
+  override def toString: String = map.toString()
 }
 
 object Config extends Logging {
