@@ -19,7 +19,7 @@ object BedCheck {
         try {
           bedrecords.validateContigs(reference)
         } catch {
-          case e: IllegalArgumentException => Logging.addError(e.getMessage)
+          case e: IllegalArgumentException => Logging.addError(e.getMessage + s", Bedfile: $bedFile")
         }
       } else bedrecords.validateContigs(reference)
     }

@@ -73,8 +73,8 @@ class BamMetrics(val root: Configurable) extends QScript
   /** executed before script */
   def init(): Unit = {
     inputFiles :+= new InputFile(inputBam)
-    ampliconBedFile.foreach(BedCheck.checkBedFileToReference(_, referenceFasta()))
-    roiBedFiles.foreach(BedCheck.checkBedFileToReference(_, referenceFasta()))
+    ampliconBedFile.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
+    roiBedFiles.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
   }
 
   /** Script to add jobs */
