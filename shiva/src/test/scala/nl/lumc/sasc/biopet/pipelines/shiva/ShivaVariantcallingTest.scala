@@ -5,20 +5,21 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
-import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
-import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, HaplotypeCaller, UnifiedGenotyper }
+import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
+import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, HaplotypeCaller, UnifiedGenotyper}
 import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
+import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 import scala.collection.mutable.ListBuffer
 
@@ -47,6 +48,9 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def haplotypeCaller: Boolean = false
   def freebayes: Boolean = false
   def varscanCnsSinglesample: Boolean = false
+
+  def normalize = false
+  def decompose = false
 
   @DataProvider(name = "shivaVariantcallingOptions")
   def shivaVariantcallingOptions = {
@@ -79,7 +83,11 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     if (haplotypeCaller) callers.append("haplotypecaller")
     if (freebayes) callers.append("freebayes")
     if (varscanCnsSinglesample) callers.append("varscan_cns_singlesample")
-    val map = Map("variantcallers" -> callers.toList)
+    val map = Map(
+      "variantcallers" -> callers.toList,
+      "execute_vt_normalize" -> normalize,
+      "execute_vt_decompose" -> decompose
+    )
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
@@ -106,6 +114,8 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1 else 0) +
         (if (unifiedGenotyperAllele) 1 else 0)
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size)
+      pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
+      pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
     }
   }
 }
@@ -153,6 +163,20 @@ class ShivaVariantcallingFreebayesTest extends ShivaVariantcallingTestTrait {
 class ShivaVariantcallingVarscanCnsSinglesampleTest extends ShivaVariantcallingTestTrait {
   override def varscanCnsSinglesample: Boolean = true
 }
+class ShivaVariantcallingNormalizeTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper: Boolean = true
+  override def normalize = true
+}
+class ShivaVariantcallingDecomposeTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper: Boolean = true
+  override def decompose = true
+}
+class ShivaVariantcallingNormalizeDecomposeTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper: Boolean = true
+  override def normalize = true
+  override def decompose = true
+}
+
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
@@ -189,6 +213,7 @@ object ShivaVariantcallingTest {
     "bgzip" -> Map("exe" -> "test"),
     "tabix" -> Map("exe" -> "test"),
     "input_alleles" -> "test.vcf.gz",
-    "varscan_jar" -> "test"
+    "varscan_jar" -> "test",
+    "vt" -> Map("exe" -> "test")
   )
 }
