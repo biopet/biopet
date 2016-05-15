@@ -117,13 +117,13 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
         (if (haplotypeCallerAllele) 1 else 0) + (if (haplotypeCallerGvcf) bams else 0)
       pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1 else 0) +
         (if (unifiedGenotyperAllele) 1 else 0)
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length)
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length * (1+ callers.size))
       pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
-      pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 else 0)
+      pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 + callers.size else 0)
 
       pipeline.summarySettings.get("variantcallers") shouldBe Some(callers.toList)
-      pipeline.summarySettings.get("amplicon_bed") shouldBe ampliconBedFile.map(_.getAbsolutePath)
+      pipeline.summarySettings.get("amplicon_bed") shouldBe Some(ampliconBedFile.map(_.getAbsolutePath))
       pipeline.summarySettings.get("regions_of_interest") shouldBe Some(roiBedFiles.map(_.getAbsolutePath))
     }
   }
