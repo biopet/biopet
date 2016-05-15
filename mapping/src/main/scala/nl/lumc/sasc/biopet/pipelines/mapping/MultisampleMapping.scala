@@ -43,7 +43,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   /** With this method the merge strategy for libraries to samples is defined. This can be overriden to fix the merge strategy. */
   def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
-    MergeStrategy.values.find(_.toString.toLowerCase == value) match {
+    MergeStrategy.values.find(_.toString.toLowerCase == value.toLowerCase) match {
       case Some(v) => v
       case _       => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
     }
@@ -151,10 +151,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
               try {
                 header.getSequenceDictionary.assertSameDictionary(referenceFile.getSequenceDictionary)
               } catch {
-                case e: AssertionError => {
+                case e: AssertionError =>
                   logger.error(e.getMessage)
                   oke = false
-                }
               }
               oke
             }
