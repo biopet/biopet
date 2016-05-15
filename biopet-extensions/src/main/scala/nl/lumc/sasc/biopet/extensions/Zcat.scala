@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 /** Extension for zcat */
 class Zcat(val root: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Zipped file", required = true)
-  var input: List[File] = _
+  var input: List[File] = Nil
 
   @Output(doc = "Unzipped file", required = true)
   var output: File = _

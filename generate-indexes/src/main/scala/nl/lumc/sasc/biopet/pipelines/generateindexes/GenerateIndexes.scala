@@ -13,14 +13,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.pipelines
+package nl.lumc.sasc.biopet.pipelines.generateindexes
 
 import java.io.PrintWriter
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
@@ -29,18 +28,19 @@ import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-import scala.language.reflectiveCalls
 import scala.collection.JavaConversions._
+import scala.language.reflectiveCalls
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Argument
-  var referenceConfigFile: File = _
+  @Argument(required = true)
+  var referenceConfigFiles: List[File] = Nil
 
-  var referenceConfig: Map[String, Any] = Map()
+  var referenceConfig: Map[String, Any] = null
 
   var configDeps: List[File] = Nil
 
@@ -48,7 +48,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   /** This is executed before the script starts */
   def init(): Unit = {
-    referenceConfig = ConfigUtils.fileToConfigMap(referenceConfigFile)
+    if (referenceConfig == null)
+      referenceConfig = referenceConfigFiles.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, ConfigUtils.fileToConfigMap(b)))
   }
 
   /** Method where jobs must be added */
@@ -61,8 +62,9 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
-            case a: Array[_] => a.map(_.toString)
-            case a           => Array(a.toString)
+            case a: Traversable[_] => a.map(_.toString).toArray
+            case a: util.ArrayList[_] => a.map(_.toString).toArray
+            case a                 => Array(a.toString)
           }
 
         val genomeDir = new File(speciesDir, genomeName)
@@ -83,16 +85,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           curl.output
         }
 
-        val fastaCat = new CommandLineFunction {
-          var cmds: Array[BiopetCommandLineFunction] = Array()
-
-          @Input
-          var input: List[File] = Nil
-
-          @Output
-          var output = fastaFile
-          def commandLine = cmds.mkString(" && ")
-        }
+        val fastaCat = new FastaMerging(this)
+        fastaCat.output = fastaFile
 
         if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
           fastaFiles.foreach { file =>
@@ -258,6 +252,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
     add(new InProcessFunction {
       @Input val deps: List[File] = configDeps
+
+      @Output val out = outputConfigFile
 
       def run: Unit = {
         val writer = new PrintWriter(outputConfigFile)
