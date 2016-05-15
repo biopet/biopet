@@ -121,6 +121,10 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 else 0)
+
+      pipeline.summarySettings.get("variantcallers") shouldBe Some(callers.toList)
+      pipeline.summarySettings.get("amplicon_bed") shouldBe ampliconBedFile.map(_.getAbsolutePath)
+      pipeline.summarySettings.get("regions_of_interest") shouldBe Some(roiBedFiles.map(_.getAbsolutePath))
     }
   }
 }
