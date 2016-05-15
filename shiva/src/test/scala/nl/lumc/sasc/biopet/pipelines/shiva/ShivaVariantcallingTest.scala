@@ -49,6 +49,8 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def freebayes: Boolean = false
   def varscanCnsSinglesample: Boolean = false
   def referenceVcf: Option[File] = None
+  def roiBedFiles: List[File] = Nil
+  def ampliconBedFile: Option[File] = None
 
   def normalize = false
   def decompose = false
@@ -87,8 +89,9 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
     val map = Map(
       "variantcallers" -> callers.toList,
       "execute_vt_normalize" -> normalize,
-      "execute_vt_decompose" -> decompose
-    ) ++ referenceVcf.map("reference_vcf" -> _)
+      "execute_vt_decompose" -> decompose,
+      "regions_of_interest" -> roiBedFiles.map(_.getAbsolutePath)
+    ) ++ referenceVcf.map("reference_vcf" -> _) ++ ampliconBedFile.map("amplicon_bed" -> _.getAbsolutePath)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
@@ -114,7 +117,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
         (if (haplotypeCallerAllele) 1 else 0) + (if (haplotypeCallerGvcf) bams else 0)
       pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1 else 0) +
         (if (unifiedGenotyperAllele) 1 else 0)
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size)
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length)
       pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 else 0)
@@ -178,9 +181,13 @@ class ShivaVariantcallingNormalizeDecomposeTest extends ShivaVariantcallingTestT
   override def normalize = true
   override def decompose = true
 }
-class ShivaVariantcallingUReferenceVcfTest extends ShivaVariantcallingTestTrait {
+class ShivaVariantcallingReferenceVcfTest extends ShivaVariantcallingTestTrait {
   override def unifiedGenotyper: Boolean = true
   override def referenceVcf = Some(new File("ref.vcf"))
+}
+class ShivaVariantcallingAmpliconTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper: Boolean = true
+  override def ampliconBedFile = Some(new File("amplicon.bed"))
 }
 
 object ShivaVariantcallingTest {
