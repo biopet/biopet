@@ -3,13 +3,13 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.picard.{MarkDuplicates, MergeSamFiles}
+import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
   * Created by pjvanthof on 15/05/16.
@@ -27,6 +27,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   def mergeStrategies = MultisampleMapping.MergeStrategy.values
   def bamToFastq = false
   def correctReadgroups = false
+  def unmappedToGears = false
   def sample1 = Array(true, false)
   def sample2 = Array(true, false)
 
@@ -43,7 +44,12 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       var m: Map[String, Any] = MultisampleMappingTestTrait.config
       if (sample1) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample2, m)
-      m ++ Map("merge_strategy" -> merge.toString, "bam_to_fastq" -> bamToFastq, "correct_readgroups" -> correctReadgroups)
+      m ++ Map(
+        "merge_strategy" -> merge.toString,
+        "bam_to_fastq" -> bamToFastq,
+        "correct_readgroups" -> correctReadgroups,
+        "unmapped_to_gears" -> unmappedToGears
+      )
     }
 
     if (!sample1 && !sample2) { // When no samples
@@ -64,7 +70,12 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
         (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
       pipeline.samples.foreach { case (sampleName, sample) =>
         if (merge == MergeStrategy.None) sample.bamFile shouldBe None
+        sample.summaryStats shouldBe Map()
+        sample.libraries.foreach { case (libraryId, library) =>
+          library.summaryStats shouldBe Map()
+        }
       }
+      pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
   }
 }
