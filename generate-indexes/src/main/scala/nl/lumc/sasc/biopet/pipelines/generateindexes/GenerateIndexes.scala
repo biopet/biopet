@@ -193,6 +193,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           cv.out = new File(annotationDir, "dbsnp.vcf.gz")
           add(cv)
+          outputConfig += "dbsnp" -> cv.out
         }
 
         // Bwa index
