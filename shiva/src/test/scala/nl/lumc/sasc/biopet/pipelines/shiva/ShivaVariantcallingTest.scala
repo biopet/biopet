@@ -11,7 +11,7 @@ import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
 import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
-import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, HaplotypeCaller, UnifiedGenotyper}
+import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance, HaplotypeCaller, UnifiedGenotyper}
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
 import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
@@ -48,6 +48,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
   def haplotypeCaller: Boolean = false
   def freebayes: Boolean = false
   def varscanCnsSinglesample: Boolean = false
+  def referenceVcf: Option[File] = None
 
   def normalize = false
   def decompose = false
@@ -87,7 +88,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       "variantcallers" -> callers.toList,
       "execute_vt_normalize" -> normalize,
       "execute_vt_decompose" -> decompose
-    )
+    ) ++ referenceVcf.map("reference_vcf" -> _)
     val pipeline = initPipeline(map)
 
     pipeline.inputBams = (for (n <- 1 to bams) yield n.toString -> ShivaVariantcallingTest.inputTouch("bam_" + n + ".bam")).toMap
@@ -116,6 +117,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
       pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size)
       pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
+      pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 else 0)
     }
   }
 }
@@ -176,7 +178,10 @@ class ShivaVariantcallingNormalizeDecomposeTest extends ShivaVariantcallingTestT
   override def normalize = true
   override def decompose = true
 }
-
+class ShivaVariantcallingUReferenceVcfTest extends ShivaVariantcallingTestTrait {
+  override def unifiedGenotyper: Boolean = true
+  override def referenceVcf = Some(new File("ref.vcf"))
+}
 
 object ShivaVariantcallingTest {
   val outputDir = Files.createTempDir()
