@@ -42,9 +42,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   var referenceConfig: Map[String, Any] = null
 
-  var configDeps: List[File] = Nil
-
-  def outputConfigFile = new File(outputDir, "reference.json")
+  protected var configDeps: List[File] = Nil
 
   /** This is executed before the script starts */
   def init(): Unit = {
@@ -59,6 +57,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
       val speciesConfig = ConfigUtils.any2map(c)
       val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) yield genomeName -> {
+        var configDeps: List[File] = Nil
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
@@ -246,6 +245,18 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
         )
 
+        add(new InProcessFunction {
+          @Input val deps: List[File] = configDeps
+
+          @Output val out: File = new File(genomeDir, s"$speciesName-$genomeName.json")
+
+          def run: Unit = {
+            val writer = new PrintWriter(out)
+            writer.println(ConfigUtils.mapToJson(Map("references" -> Map(speciesName -> Map(genomeName -> outputConfig)))).spaces2)
+            writer.close()
+          }
+        })
+        this.configDeps :::= configDeps
         outputConfig
       }
     }
@@ -253,10 +264,10 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
     add(new InProcessFunction {
       @Input val deps: List[File] = configDeps
 
-      @Output val out = outputConfigFile
+      @Output val out = new PrintWriter(outputDir, "references.json")
 
       def run: Unit = {
-        val writer = new PrintWriter(outputConfigFile)
+        val writer = new PrintWriter(out)
         writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
         writer.close()
       }
