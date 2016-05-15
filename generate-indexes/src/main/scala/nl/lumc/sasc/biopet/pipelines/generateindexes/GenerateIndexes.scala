@@ -15,13 +15,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.PrintWriter
+import java.io.{File, PrintWriter}
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
+import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
@@ -246,33 +246,22 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
         )
 
-        add(new InProcessFunction {
-          @Input val deps: List[File] = configDeps
+        val writeConfig = new WriteConfig
+        writeConfig.deps = configDeps
+        writeConfig.out = new File(genomeDir, s"$speciesName-$genomeName.json")
+        writeConfig.config = Map("references" -> Map(speciesName -> Map(genomeName -> outputConfig)))
+        add(writeConfig)
 
-          @Output val out: File = new File(genomeDir, s"$speciesName-$genomeName.json")
-
-          def run: Unit = {
-            val writer = new PrintWriter(out)
-            writer.println(ConfigUtils.mapToJson(Map("references" -> Map(speciesName -> Map(genomeName -> outputConfig)))).spaces2)
-            writer.close()
-          }
-        })
         this.configDeps :::= configDeps
         outputConfig
       }
     }
 
-    add(new InProcessFunction {
-      @Input val deps: List[File] = configDeps
-
-      @Output val out = new PrintWriter(outputDir, "references.json")
-
-      def run: Unit = {
-        val writer = new PrintWriter(out)
-        writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
-        writer.close()
-      }
-    })
+    val writeConfig = new WriteConfig
+    writeConfig.deps = configDeps
+    writeConfig.out = new File(outputDir, "references.json")
+    writeConfig.config = Map("references" -> outputConfig)
+    add(writeConfig)
   }
 }
 
