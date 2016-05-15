@@ -14,7 +14,7 @@ import org.testng.annotations.{DataProvider, Test}
 /**
   * Created by pjvanthof on 15/05/16.
   */
-class MultisampleMappingTest extends TestNGSuite with Matchers {
+trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): MultisampleMapping = {
     new MultisampleMapping() {
       override def configNamespace = "multisamplemapping"
@@ -27,13 +27,14 @@ class MultisampleMappingTest extends TestNGSuite with Matchers {
   def mergeStrategies = MultisampleMapping.MergeStrategy.values
   def bamToFastq = false
   def correctReadgroups = false
+  def sample1 = Array(true, false)
+  def sample2 = Array(true, false)
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val bool = Array(true, false)
     for (
-      merge <- mergeStrategies.toArray; sample2 <- bool
-    ) yield Array(merge, true, sample2)
+      merge <- mergeStrategies.toArray; s1 <- sample1 ; s2 <- sample2
+    ) yield Array(merge, s1, s2)
   }
 
   @Test(dataProvider = "mappingOptions")
@@ -66,6 +67,10 @@ class MultisampleMappingTest extends TestNGSuite with Matchers {
       }
     }
   }
+}
+
+class MultisampleMappingTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(true)
 }
 
 object MultisampleMappingTestTrait {
