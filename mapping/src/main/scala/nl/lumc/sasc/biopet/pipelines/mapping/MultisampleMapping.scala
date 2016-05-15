@@ -171,8 +171,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 "Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                   "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
               if (!dictOke) Logging.addError(
-                "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile +
-                  "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
+                "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile)
 
               if (!readGroupOke && correctReadgroups) {
                 logger.info("Correcting readgroups, file:" + inputBam.get)
