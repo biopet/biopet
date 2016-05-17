@@ -7,8 +7,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
-  * Created by pjvan_thof on 17-5-16.
-  */
+ * Created by pjvan_thof on 17-5-16.
+ */
 class GtfToGenePred(val root: Configurable) extends BiopetCommandLineFunction {
   executable = config("exe", default = "gtfToGenePred", freeVar = false)
 
