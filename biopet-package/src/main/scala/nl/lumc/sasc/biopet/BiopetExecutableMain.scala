@@ -28,6 +28,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
     nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
+    nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu,
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
     nl.lumc.sasc.biopet.pipelines.toucan.Toucan,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling,

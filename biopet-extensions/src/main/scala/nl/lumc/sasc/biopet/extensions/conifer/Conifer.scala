@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 abstract class Conifer extends PythonCommandLineFunction with Version {
   override def subPath = "conifer" :: super.subPath
   //  executable = config("exe", default = "conifer")
-  setPythonScript(config("script", default = "conifer"))
+  setPythonScript(config("script", default = "conifer.py", namespace = "conifer"))
   def versionRegex = """(.*)""".r
   override def versionExitcode = List(0)
   def versionCommand = executable + " " + pythonScript + " --version"

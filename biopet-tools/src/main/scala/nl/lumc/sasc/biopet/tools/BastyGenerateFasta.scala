@@ -113,7 +113,7 @@ object BastyGenerateFasta extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    cmdArgs = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     if (cmdArgs.outputVariants != null) {
       writeVariantsOnly()

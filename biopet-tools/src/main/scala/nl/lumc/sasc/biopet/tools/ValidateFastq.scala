@@ -51,7 +51,7 @@ object ValidateFastq extends ToolCommand {
 
     //parse all possible options into OptParser
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     //read in fastq file 1 and if present fastq file 2
     val readFq1 = new FastqReader(cmdArgs.input)

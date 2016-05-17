@@ -132,7 +132,7 @@ trait ReportBuilder extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     require(cmdArgs.outputDir.exists(), "Output dir does not exist")
     require(cmdArgs.outputDir.isDirectory, "Output dir is not a directory")

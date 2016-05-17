@@ -27,7 +27,7 @@ class CutadaptTest extends FastqcV0101Test {
     val fqc = new Fastqc(null)
     fqc.output = outputv0101
     fqc.contaminants = Option(resourceFile("fqc_contaminants_v0112.txt"))
-    //    fqc.beforeGraph()
+    fqc.enableRCtrimming = true
     fqc
   }
 

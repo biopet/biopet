@@ -16,7 +16,6 @@
 package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import scala.collection.JavaConversions._
 
 /**
  * Cutadapt wrapper specific for Flexiprep.
@@ -30,9 +29,29 @@ import scala.collection.JavaConversions._
  */
 class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
 
+  val ignoreFastqcAdapters: Boolean = config("ignore_fastqc_adapters", default = false)
+  val customAdaptersConfig: Map[String, Any] = config("custom_adapters", default = Map.empty)
+
   /** Clipped adapter names from FastQC */
-  protected def seqToName: Map[String, String] = fastqc.foundAdapters
-    .map(adapter => adapter.seq -> adapter.name).toMap
+  protected def seqToName: Map[String, String] = {
+    if (!ignoreFastqcAdapters) {
+      (fastqc.foundAdapters ++ customAdapters)
+        .map(adapter => adapter.seq -> adapter.name).toMap
+    } else {
+      customAdapters.map(adapter => adapter.seq -> adapter.name).toMap
+    }
+  }
+
+  def customAdapters: Set[AdapterSequence] = {
+    customAdaptersConfig.flatMap(adapter => {
+      adapter match {
+        case (adapterName: String, sequence: String) =>
+          Some(AdapterSequence(adapterName, sequence))
+        case _ =>
+          throw new IllegalStateException(s"Custom adapter was setup wrong for: $adapter")
+      }
+    }).toSet
+  }
 
   override def summaryStats: Map[String, Any] = {
     val initStats = super.summaryStats

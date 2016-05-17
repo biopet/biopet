@@ -188,7 +188,7 @@ object MergeTables extends ToolCommand {
   /** Parses the command line argument */
   def parseArgs(args: Array[String]): Args = new OptParser()
     .parse(args, Args())
-    .getOrElse(sys.exit(1))
+    .getOrElse(throw new IllegalArgumentException)
 
   /** Transforms the input file seq into a seq of [[InputTable]] objects */
   def prepInput(inFiles: Seq[File], ext: String, columnNames: Option[Seq[String]]): Seq[InputTable] = {

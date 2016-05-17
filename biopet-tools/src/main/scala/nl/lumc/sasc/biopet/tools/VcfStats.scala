@@ -206,7 +206,7 @@ object VcfStats extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Started")
     val argsParser = new OptParser
-    cmdArgs = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    cmdArgs = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     val reader = new VCFFileReader(cmdArgs.inputFile, true)
     val header = reader.getFileHeader
