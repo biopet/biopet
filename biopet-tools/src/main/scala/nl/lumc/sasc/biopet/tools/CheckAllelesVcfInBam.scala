@@ -71,7 +71,7 @@ object CheckAllelesVcfInBam extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     if (commandArgs.bamFiles.size != commandArgs.samples.size)
       logger.warn("Number of samples is different from number of bam files: additional samples or bam files will not be used")

@@ -39,7 +39,7 @@ object VepNormalizer extends ToolCommand {
   def main(args: Array[String]): Unit = {
     val commandArgs: Args = new OptParser()
       .parse(args, Args())
-      .getOrElse(sys.exit(1))
+      .getOrElse(throw new IllegalArgumentException)
 
     val input = commandArgs.inputVCF
     val output = commandArgs.outputVCF
