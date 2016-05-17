@@ -5,21 +5,21 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.core.BiopetPipe
 import nl.lumc.sasc.biopet.extensions.Freebayes
-import nl.lumc.sasc.biopet.extensions.bcftools.{BcftoolsCall, BcftoolsMerge}
-import nl.lumc.sasc.biopet.extensions.gatk.{CombineVariants, GenotypeConcordance, HaplotypeCaller, UnifiedGenotyper}
+import nl.lumc.sasc.biopet.extensions.bcftools.{ BcftoolsCall, BcftoolsMerge }
+import nl.lumc.sasc.biopet.extensions.gatk.{ CombineVariants, GenotypeConcordance, HaplotypeCaller, UnifiedGenotyper }
 import nl.lumc.sasc.biopet.utils.config.Config
-import nl.lumc.sasc.biopet.extensions.tools.{MpileupToVcf, VcfFilter, VcfStats}
-import nl.lumc.sasc.biopet.extensions.vt.{VtDecompose, VtNormalize}
+import nl.lumc.sasc.biopet.extensions.tools.{ MpileupToVcf, VcfFilter, VcfStats }
+import nl.lumc.sasc.biopet.extensions.vt.{ VtDecompose, VtNormalize }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 import scala.collection.mutable.ListBuffer
 
@@ -117,7 +117,7 @@ trait ShivaVariantcallingTestTrait extends TestNGSuite with Matchers {
         (if (haplotypeCallerAllele) 1 else 0) + (if (haplotypeCallerGvcf) bams else 0)
       pipeline.functions.count(_.isInstanceOf[UnifiedGenotyper]) shouldBe (if (unifiedGenotyper) 1 else 0) +
         (if (unifiedGenotyperAllele) 1 else 0)
-      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length * (1+ callers.size))
+      pipeline.functions.count(_.isInstanceOf[VcfStats]) shouldBe (1 + callers.size + (roiBedFiles ++ ampliconBedFile).length * (1 + callers.size))
       pipeline.functions.count(_.isInstanceOf[VtNormalize]) shouldBe (if (normalize) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[VtDecompose]) shouldBe (if (decompose) callers.size else 0)
       pipeline.functions.count(_.isInstanceOf[GenotypeConcordance]) shouldBe (if (referenceVcf.isDefined) 1 + callers.size else 0)

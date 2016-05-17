@@ -1,8 +1,9 @@
 package nl.lumc.sasc.biopet.pipelines.mapping
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -12,8 +13,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
 /**
-  * Created by pjvanthof on 15/05/16.
-  */
+ * Created by pjvanthof on 15/05/16.
+ */
 trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): MultisampleMapping = {
     new MultisampleMapping() {
@@ -36,7 +37,7 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
     for (
-      merge <- mergeStrategies.toArray; s1 <- sample1 ; s2 <- sample2
+      merge <- mergeStrategies.toArray; s1 <- sample1; s2 <- sample2
     ) yield Array(merge, s1, s2)
   }
 
@@ -76,13 +77,18 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
         (if (sample2 && (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (
         (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
-      pipeline.samples.foreach { case (sampleName, sample) =>
-        if (merge == MergeStrategy.None) sample.bamFile shouldBe None
-        sample.summaryStats shouldBe Map()
-        sample.libraries.foreach { case (libraryId, library) =>
-          library.summaryStats shouldBe Map()
-        }
+      pipeline.samples.foreach {
+        case (sampleName, sample) =>
+          if (merge == MergeStrategy.None) sample.bamFile shouldBe None
+          sample.summaryStats shouldBe Map()
+          sample.libraries.foreach {
+            case (libraryId, library) =>
+              library.summaryStats shouldBe Map()
+          }
       }
+
+      pipeline.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (unmappedToGears) (numberFastqLibs + numberSamples) else 0)
+
       pipeline.summarySettings.get("merge_strategy") shouldBe Some(merge.toString)
     }
   }
@@ -95,6 +101,13 @@ class MultisampleMappingTest extends MultisampleMappingTestTrait {
 class MultisampleMappingNoSamplesTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(false)
   override def sample2 = Array(false)
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultisampleMappingGearsTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def unmappedToGears = true
   override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
@@ -168,6 +181,8 @@ object MultisampleMappingTestTrait {
     "samtools" -> Map("exe" -> "test"),
     "igvtools" -> Map("exe" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
+    "kraken" -> Map("exe" -> "test", "db" -> "test"),
+    "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )
 
