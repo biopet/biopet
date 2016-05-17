@@ -238,6 +238,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         starIndex.outputDir = starDir
         starIndex.reference = createLinks(starDir)
         starIndex.runmode = "genomeGenerate"
+        starIndex.sjdbGTFfile = gtfFile
         add(starIndex)
         configDeps :+= starIndex.jobOutputFile
         outputConfig += "star" -> Map(
