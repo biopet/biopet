@@ -75,6 +75,7 @@ class Star(val root: Configurable) extends BiopetCommandLineFunction with Refere
   var genomeSAindexNbases: Option[Int] = config("genomesaindexnbases")
   var genomeSAsparseD: Option[Int] = config("genomesasparsed")
 
+  @Input(required = false)
   var sjdbGTFfile: Option[File] = config("sjdbgtfile")
   var sjdbGTFchrPrefix: Option[String] = config("sjdbgtfchrprefix")
   var sjdbGTFfeatureExon: Option[String] = config("sjdbgtffeatureexon")
