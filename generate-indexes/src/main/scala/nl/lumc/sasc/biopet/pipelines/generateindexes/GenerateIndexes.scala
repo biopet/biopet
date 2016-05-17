@@ -208,9 +208,12 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
         val refFlatFile: Option[File] = gtfFile.map { gtf =>
           val refFlat = new File(gtf + ".refFlat")
-          //TODO: gtf to refFlat conversion
+          val gtfToGenePred = new GtfToGenePred(this)
+          gtfToGenePred.inputGtfs :+= gtf
 
-          outputConfig += "ribosome_refflat" -> refFlat
+          add(gtfToGenePred | Awk(this, """{ print $12"\t"$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10 }""") > refFlat)
+
+          outputConfig += "annotation_refflat" -> refFlat
           refFlat
         }
 
