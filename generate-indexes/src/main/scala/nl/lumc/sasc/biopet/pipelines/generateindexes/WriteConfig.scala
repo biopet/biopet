@@ -1,14 +1,14 @@
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.broadinstitute.gatk.queue.function.InProcessFunction
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
-  * Created by pjvanthof on 15/05/16.
-  */
+ * Created by pjvanthof on 15/05/16.
+ */
 class WriteConfig extends InProcessFunction {
   @Input
   var deps: List[File] = Nil

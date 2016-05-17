@@ -80,7 +80,7 @@ object AnnotateVcfWithBed extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val fieldType = cmdArgs.fieldType match {
       case "Integer"   => VCFHeaderLineType.Integer
