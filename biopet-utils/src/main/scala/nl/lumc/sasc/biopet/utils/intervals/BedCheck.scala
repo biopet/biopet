@@ -6,8 +6,8 @@ import scala.collection.mutable.Set
 import nl.lumc.sasc.biopet.utils.Logging
 
 /**
-  * Created by pjvanthof on 14/05/16.
-  */
+ * Created by pjvanthof on 14/05/16.
+ */
 object BedCheck {
   private val cache: Set[(File, File)] = Set()
 

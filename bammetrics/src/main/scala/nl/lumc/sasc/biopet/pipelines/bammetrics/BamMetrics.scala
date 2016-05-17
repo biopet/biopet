@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
+import nl.lumc.sasc.biopet.core.annotations.{ AnnotationRefFlat, RibosomalRefFlat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag}
-import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsCoverage, BedtoolsIntersect}
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag }
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
