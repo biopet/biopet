@@ -50,7 +50,7 @@ object MergeAlleles extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val readers = commandArgs.inputFiles.map(new VCFFileReader(_, true))
     val referenceFile = new FastaSequenceFile(commandArgs.reference, true)

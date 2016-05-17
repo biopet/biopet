@@ -137,7 +137,7 @@ object VcfFilter extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Start")
     val argsParser = new OptParser
-    val cmdArgs = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val reader = new VCFFileReader(cmdArgs.inputVcf, false)
     val header = reader.getFileHeader

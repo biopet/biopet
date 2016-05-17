@@ -57,7 +57,7 @@ object GvcfToBed extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdArgs = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     logger.debug("Opening reader")
     val reader = new VCFFileReader(cmdArgs.inputVcf, false)

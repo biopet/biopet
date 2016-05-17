@@ -50,7 +50,7 @@ object BiopetFlagstat extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val inputSam = SamReaderFactory.makeDefault.open(commandArgs.inputFile)
     val iterSam = if (commandArgs.region.isEmpty) inputSam.iterator else {

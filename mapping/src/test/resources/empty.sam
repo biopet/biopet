@@ -1,0 +1,4 @@
+@HD	VN:1.5	SO:coordinate
+@SQ	SN:chr1	LN:9	UR:file:/home/pjvan_thof/pipelines/biopet/public/mapping/src/test/resources/ref.fa	M5:fe15dbbd0900310caf32827f6da57550
+@RG	ID:001	SM:sample3	LB:lib1
+r02	0	chr1	210	60	10M	*	0	0	TACGTACGTA	EEFFGGHHII	RG:Z:001

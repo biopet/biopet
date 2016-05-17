@@ -46,7 +46,7 @@ object SamplesTsvToJson extends ToolCommand {
   /** Executes SamplesTsvToJson */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val jsonString = stringFromInputs(cmdArgs.inputFiles, cmdArgs.tagFiles)
     cmdArgs.outputFile match {
