@@ -151,7 +151,7 @@ object FastqSync extends ToolCommand {
    */
   def parseArgs(args: Array[String]): Args = new OptParser()
     .parse(args, Args())
-    .getOrElse(sys.exit(1))
+    .getOrElse(throw new IllegalArgumentException)
 
   def main(args: Array[String]): Unit = {
 

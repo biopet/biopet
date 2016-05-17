@@ -61,7 +61,7 @@ object SummaryToTsv extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
 
     val summary = new Summary(cmdArgs.summary)
 
