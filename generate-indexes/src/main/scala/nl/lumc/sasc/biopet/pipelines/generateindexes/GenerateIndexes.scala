@@ -202,7 +202,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           curl.url = gtfUri.toString
           if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
           else add(curl > outputFile)
-          outputConfig += "annotation_gtf" -> curl.output
+          outputConfig += "annotation_gtf" -> outputFile
           outputFile
         }
 
