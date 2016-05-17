@@ -15,13 +15,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
@@ -61,9 +61,9 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
-            case a: Traversable[_] => a.map(_.toString).toArray
+            case a: Traversable[_]    => a.map(_.toString).toArray
             case a: util.ArrayList[_] => a.map(_.toString).toArray
-            case a                 => Array(a.toString)
+            case a                    => Array(a.toString)
           }
 
         val genomeDir = new File(speciesDir, genomeName)
@@ -197,17 +197,20 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         }
 
         val gtfFile: Option[File] = genomeConfig.get("gtf_uri").map { gtfUri =>
+          val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
           val curl = new Curl(this)
           curl.url = gtfUri.toString
-          curl.output = new File(annotationDir, new File(curl.url).getName)
-          add(curl)
+          if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+          else add(curl > outputFile)
           outputConfig += "annotation_gtf" -> curl.output
-          curl.output
+          outputFile
         }
 
         val refFlatFile: Option[File] = gtfFile.map { gtf =>
           val refFlat = new File(gtf + ".refFlat")
           //TODO: gtf to refFlat conversion
+
+          outputConfig += "ribosome_refflat" -> refFlat
           refFlat
         }
 
