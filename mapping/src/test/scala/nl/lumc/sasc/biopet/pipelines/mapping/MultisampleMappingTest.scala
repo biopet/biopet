@@ -30,6 +30,8 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
   def unmappedToGears = false
   def sample1 = Array(true, false)
   def sample2 = Array(true, false)
+  def sample3 = false
+  def sample4 = false
 
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
@@ -44,6 +46,8 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       var m: Map[String, Any] = MultisampleMappingTestTrait.config
       if (sample1) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample2, m)
+      if (sample3) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample3, m)
+      if (sample4) m = ConfigUtils.mergeMaps(MultisampleMappingTestTrait.sample4, m)
       m ++ Map(
         "merge_strategy" -> merge.toString,
         "bam_to_fastq" -> bamToFastq,
@@ -52,19 +56,23 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
       )
     }
 
-    if (!sample1 && !sample2) { // When no samples
+    if (!sample1 && !sample2 && !sample3 && !sample4) { // When no samples
       intercept[IllegalArgumentException] {
+        initPipeline(map).script()
+      }
+    } else if (sample4 && !bamToFastq && !correctReadgroups) {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
     } else {
       val pipeline = initPipeline(map)
       pipeline.script()
 
-      val numberLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0)
+      val numberFastqLibs = (if (sample1) 1 else 0) + (if (sample2) 2 else 0) + (if (sample3 && bamToFastq) 1 else 0) + (if (sample4 && bamToFastq) 1 else 0)
       val numberSamples = (if (sample1) 1 else 0) + (if (sample2) 1 else 0)
 
       import MultisampleMapping.MergeStrategy
-      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberLibs +
+      pipeline.functions.count(_.isInstanceOf[MarkDuplicates]) shouldBe (numberFastqLibs +
         (if (sample2 && (merge == MergeStrategy.MarkDuplicates || merge == MergeStrategy.PreProcessMarkDuplicates)) 1 else 0))
       pipeline.functions.count(_.isInstanceOf[MergeSamFiles]) shouldBe (
         (if (sample2 && (merge == MergeStrategy.MergeSam || merge == MergeStrategy.PreProcessMergeSam)) 1 else 0))
@@ -82,6 +90,43 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
 
 class MultisampleMappingTest extends MultisampleMappingTestTrait {
   override def sample1 = Array(true)
+}
+
+class MultisampleMappingNoSamplesTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(false)
+  override def sample2 = Array(false)
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultisampleMappingBamTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(false)
+  override def sample2 = Array(false)
+  override def sample3 = true
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultisampleMappingWrongBamTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(false)
+  override def sample2 = Array(false)
+  override def sample4 = true
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultisampleMappingCorrectBamTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(false)
+  override def sample2 = Array(false)
+  override def correctReadgroups = true
+  override def sample4 = true
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
+}
+
+class MultisampleMappingBamToFastqTest extends MultisampleMappingTestTrait {
+  override def sample1 = Array(false)
+  override def sample2 = Array(false)
+  override def bamToFastq = true
+  override def sample3 = true
+  override def sample4 = true
+  override def mergeStrategies = MultisampleMapping.MergeStrategy.values.filter(_ == MultisampleMapping.MergeStrategy.PreProcessMarkDuplicates)
 }
 
 object MultisampleMappingTestTrait {
@@ -104,6 +149,7 @@ object MultisampleMappingTestTrait {
   copyFile("ref.fa")
   copyFile("ref.dict")
   copyFile("ref.fa.fai")
+  copyFile("empty.sam")
 
   val config = Map(
     "name_prefix" -> "test",
@@ -143,6 +189,22 @@ object MultisampleMappingTestTrait {
       "lib2" -> Map(
         "R1" -> inputTouch("2_2_R1.fq"),
         "R2" -> inputTouch("2_2_R2.fq")
+      )
+    )
+    )))
+
+  val sample3 = Map(
+    "samples" -> Map("sample3" -> Map("libraries" -> Map(
+      "lib1" -> Map(
+        "bam" -> (outputDir + File.separator + "empty.sam")
+      )
+    )
+    )))
+
+  val sample4 = Map(
+    "samples" -> Map("sample4" -> Map("libraries" -> Map(
+      "lib1" -> Map(
+        "bam" -> (outputDir + File.separator + "empty.sam")
       )
     )
     )))
