@@ -233,10 +233,10 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
   }
 
   @Test def testUniqeKeys: Unit = {
-    ConfigUtils.uniqeKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
-    ConfigUtils.uniqeKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
-    ConfigUtils.uniqeKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
-    ConfigUtils.uniqeKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
+    ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
+    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
+    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map("bla" -> Map("bla" -> "bla"))
   }
 }
 

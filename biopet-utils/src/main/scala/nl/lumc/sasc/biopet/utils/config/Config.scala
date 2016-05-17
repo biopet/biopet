@@ -215,7 +215,7 @@ class Config(protected var _map: Map[String, Any],
     // Positions where values are found
     val found = convertIndexValuesToMap(foundCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
     val fixed = convertIndexValuesToMap(fixedCache.filter(!_._2.default).toList.map(x => (x._2.foundIndex, x._2.value)))
-    val unused = uniqeKeys(map, found)
+    val unused = uniqueKeys(map, found)
 
     def reportUnused(map: Map[String, Any], path: List[String] = Nil): Unit = {
       map.foreach {
