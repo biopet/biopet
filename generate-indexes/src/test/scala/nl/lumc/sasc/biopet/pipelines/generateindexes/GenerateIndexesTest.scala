@@ -65,6 +65,20 @@ class GenerateIndexesTest extends TestNGSuite with Matchers {
     pipeline.script()
   }
 
+  @Test
+  def testGtfZipped: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "gtf_uri" -> "bla.gf.gz")))
+    pipeline.script()
+  }
+
+  @Test
+  def testGtf: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "gtf_uri" -> "bla.gf")))
+    pipeline.script()
+  }
+
 }
 
 object GenerateIndexesTest {
