@@ -41,7 +41,7 @@ object MergeOtuMaps extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse(throw new IllegalArgumentException)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     var map: Map[Long, String] = Map()
 
