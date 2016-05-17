@@ -196,6 +196,21 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           outputConfig += "dbsnp" -> cv.out
         }
 
+        val gtfFile: Option[File] = genomeConfig.get("gtf_uri").map { gtfUri =>
+          val curl = new Curl(this)
+          curl.url = gtfUri.toString
+          curl.output = new File(annotationDir, new File(curl.url).getName)
+          add(curl)
+          outputConfig += "annotation_gtf" -> curl.output
+          curl.output
+        }
+
+        val refFlatFile: Option[File] = gtfFile.map { gtf =>
+          val refFlat = new File(gtf + ".refFlat")
+          //TODO: gtf to refFlat conversion
+          refFlat
+        }
+
         // Bwa index
         val bwaIndex = new BwaIndex(this)
         bwaIndex.reference = createLinks(new File(genomeDir, "bwa"))
