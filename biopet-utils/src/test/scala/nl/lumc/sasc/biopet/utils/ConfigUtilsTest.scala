@@ -228,7 +228,7 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> "bla")) shouldBe Map("bla" -> "bla")
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map())) shouldBe Map()
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
-    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> Map()))) shouldBe Map("bla" -> Map("bla" -> Map()))
     ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")) shouldBe Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")
   }
 
