@@ -8,8 +8,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvanthof on 17/05/16.
-  */
+ * Created by pjvanthof on 17/05/16.
+ */
 class WriteConfigTest extends TestNGSuite with Matchers {
   @Test
   def testWriteConfig: Unit = {
