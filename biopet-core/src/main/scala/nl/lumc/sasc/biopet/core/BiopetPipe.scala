@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 class BiopetPipe(val commands: List[BiopetCommandLineFunction]) extends BiopetCommandLineFunction {
 
-  @Input
+  @Input(required = false)
   lazy val input: List[File] = try {
     commands.flatMap(_.inputs)
   } catch {
