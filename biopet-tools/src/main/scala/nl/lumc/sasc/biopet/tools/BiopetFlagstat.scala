@@ -211,7 +211,8 @@ object BiopetFlagstat extends ToolCommand {
     def summary: String = {
       val map = (for (t <- 0 until names.size) yield {
         names(t) -> totalCounts(t)
-      }).toMap
+      }).toMap ++ Map("Singletons" -> crossCounts(names.find(_._2 == "Mapped").map(_._1).getOrElse(-1))(names.find(_._2 == "MateUnmapped").map(_._1).getOrElse(-1))
+      )
 
       ConfigUtils.mapToJson(map).spaces4
     }
