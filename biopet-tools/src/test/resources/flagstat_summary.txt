@@ -11,6 +11,7 @@
     "MateNegativeStrand" : 1,
     "FirstOfPair" : 1,
     "ReadPaired" : 1,
+    "Singletons" : 0,
     "SecondaryOrSupplementary" : 0,
     "SecondOfPair" : 0
 }
