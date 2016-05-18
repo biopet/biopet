@@ -79,7 +79,6 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           add(curl)
           add(Md5sum(this, curl.output, genomeDir))
-          configDeps :+= curl.output
           curl.output
         }
 
@@ -194,7 +193,6 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
               tabix.p = Some("vcf")
               tabix.isIntermediate = true
               add(tabix)
-              configDeps :+= tabix.outputIndex
             }
 
             cv.variant :+= output
