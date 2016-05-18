@@ -15,7 +15,6 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.{ File, PrintWriter }
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
@@ -164,25 +163,41 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         }
 
         genomeConfig.get("dbsnp_vcf_uri").foreach { dbsnpUri =>
+          val contigMap = genomeConfig.get("dbsnp_contig_map").map(_.asInstanceOf[Map[String, Any]])
+          val contigSed = contigMap.map { map =>
+            val sed = new Sed(this)
+            sed.expressions = map.map(x => s"""s/^${x._1}\t/${x._2}\t/""").toList
+            sed
+          }
+
           val cv = new CombineVariants(this)
           cv.reference_sequence = fastaFile
           cv.deps ::= createDict.output
           def addDownload(uri: String): Unit = {
+            val isZipped = uri.endsWith(".gz")
+            val output = new File(annotationDir, new File(uri).getName + (if (isZipped) "" else ".gz"))
             val curl = new Curl(this)
             curl.url = uri
-            curl.output = new File(annotationDir, new File(curl.url).getName)
-            curl.isIntermediate = true
-            add(curl)
-            cv.variant :+= curl.output
+
+            val downloadCmd = (isZipped, contigSed) match {
+              case (true, Some(sed)) => curl | Zcat(this) | sed | new Bgzip(this) > output
+              case (false, Some(sed)) => curl | sed | new Bgzip(this) > output
+              case (true, None) => curl > output
+              case (false, None) => curl | new Bgzip(this) > output
+            }
+            downloadCmd.isIntermediate = true
+            add(downloadCmd)
 
             if (curl.output.getName.endsWith(".vcf.gz")) {
               val tabix = new Tabix(this)
-              tabix.input = curl.output
+              tabix.input = output
               tabix.p = Some("vcf")
               tabix.isIntermediate = true
               add(tabix)
               configDeps :+= tabix.outputIndex
             }
+
+            cv.variant :+= output
           }
 
           dbsnpUri match {
