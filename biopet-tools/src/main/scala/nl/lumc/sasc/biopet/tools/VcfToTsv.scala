@@ -72,7 +72,7 @@ object VcfToTsv extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     // Throw exception if separator and listSeparator are identical
     if (commandArgs.separator == commandArgs.listSeparator) throw new IllegalArgumentException(

@@ -61,9 +61,9 @@ class BamMetricsTest extends TestNGSuite with Matchers {
   def testBamMetrics(rois: Int, amplicon: Boolean, rna: Boolean, wgs: Boolean) = {
     val map = ConfigUtils.mergeMaps(Map("output_dir" -> BamMetricsTest.outputDir, "rna_metrics" -> rna, "wgs_metrics" -> wgs),
       Map(BamMetricsTest.executables.toSeq: _*)) ++
-      (if (amplicon) Map("amplicon_bed" -> "amplicon.bed") else Map()) ++
+      (if (amplicon) Map("amplicon_bed" -> BamMetricsTest.ampliconBed.getAbsolutePath) else Map()) ++
       (if (rna) Map("annotation_refflat" -> "transcripts.refFlat") else Map()) ++
-      Map("regions_of_interest" -> (1 to rois).map("roi_" + _ + ".bed").toList)
+      Map("regions_of_interest" -> (1 to rois).map(BamMetricsTest.roi(_).getAbsolutePath).toList)
     val bammetrics: BamMetrics = initPipeline(map)
 
     bammetrics.inputBam = BamMetricsTest.bam
@@ -94,6 +94,14 @@ object BamMetricsTest {
 
   val bam = new File(outputDir, "input" + File.separator + "bla.bam")
   Files.touch(bam)
+  val ampliconBed = new File(outputDir, "input" + File.separator + "amplicon_bed.bed")
+  Files.touch(ampliconBed)
+
+  def roi(i: Int): File = {
+    val roi = new File(outputDir, "input" + File.separator + s"roi${i}.bed")
+    Files.touch(roi)
+    roi
+  }
 
   private def copyFile(name: String): Unit = {
     val is = getClass.getResourceAsStream("/" + name)

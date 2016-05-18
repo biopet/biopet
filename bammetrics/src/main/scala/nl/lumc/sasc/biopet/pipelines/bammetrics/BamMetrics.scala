@@ -17,15 +17,16 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{ RibosomalRefFlat, AnnotationRefFlat }
+import nl.lumc.sasc.biopet.core.annotations.{ AnnotationRefFlat, RibosomalRefFlat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag }
 import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.utils.intervals.BedCheck
 import org.broadinstitute.gatk.queue.QScript
 
 class BamMetrics(val root: Configurable) extends QScript
@@ -72,6 +73,8 @@ class BamMetrics(val root: Configurable) extends QScript
   /** executed before script */
   def init(): Unit = {
     inputFiles :+= new InputFile(inputBam)
+    ampliconBedFile.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
+    roiBedFiles.foreach(BedCheck.checkBedFileToReference(_, referenceFasta(), biopetError = true))
   }
 
   /** Script to add jobs */

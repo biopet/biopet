@@ -53,10 +53,7 @@ object BaseCounter extends ToolCommand {
 
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) match {
-      case Some(x) => x
-      case _       => throw new IllegalArgumentException
-    }
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     //Sets picard logging level
     htsjdk.samtools.util.Log.setGlobalLogLevel(htsjdk.samtools.util.Log.LogLevel.valueOf(logger.getLevel.toString))

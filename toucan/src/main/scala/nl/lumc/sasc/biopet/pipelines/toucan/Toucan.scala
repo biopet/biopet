@@ -30,6 +30,7 @@ import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedRecordList
 import org.broadinstitute.gatk.queue.QScript
+import scalaz._, Scalaz._
 
 /**
  * Pipeline to annotate a vcf file with VEP
@@ -263,11 +264,16 @@ class Toucan(val root: Configurable) extends QScript with BiopetQScript with Sum
     add(annotatedVcf)
 
     val activates = sampleInfo map { x =>
-      val sampleGroup = x._2.getOrElse("varda_group", Nil) match {
-        case x: List[String] => x
-        case Nil             => Nil
-        case _               => throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings")
+      val maybeSampleGroup = x._2.get("varda_group") match {
+        case None => Some(Nil)
+        case Some(vals) => vals match {
+          case xs: List[_] => xs
+            .traverse[Option, String] { x => Option(x.toString).filter(_ == x) }
+          case otherwise => None
+        }
       }
+      val sampleGroup = maybeSampleGroup
+        .getOrElse(throw new IllegalArgumentException("Sample tag 'varda_group' is not a list of strings"))
       importAndActivateSample(x._1, sampleGroup, vcf, gVcf, annotate)
     }
 

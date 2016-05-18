@@ -18,6 +18,7 @@ package nl.lumc.sasc.biopet.pipelines.mapping
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Fastqc
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -25,7 +26,7 @@ import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ BeforeClass, AfterClass, DataProvider, Test }
+import org.testng.annotations.{ AfterClass, BeforeClass, DataProvider, Test }
 
 /**
  * Test class for [[Mapping]]
@@ -42,14 +43,15 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     }
   }
 
+  def paired = Array(true, false)
+  def chunks = Array(1, 5)
+  def skipMarkDuplicates = Array(true, false)
+  def skipFlexipreps = Array(true, false)
+  def zipped = Array(true, false)
+  def unmappedToGears = false
+
   @DataProvider(name = "mappingOptions")
   def mappingOptions = {
-    val paired = Array(true, false)
-    val chunks = Array(1, 5)
-    val skipMarkDuplicates = Array(true, false)
-    val skipFlexipreps = Array(true, false)
-    val zipped = Array(true, false)
-
     for (
       pair <- paired;
       chunk <- chunks;
@@ -68,7 +70,8 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
       "aligner" -> aligner,
       "number_chunks" -> chunks,
       "skip_markduplicates" -> skipMarkDuplicate,
-      "skip_flexiprep" -> skipFlexiprep
+      "skip_flexiprep" -> skipFlexiprep,
+      "unmapped_to_gears" -> unmappedToGears
     ), Map(executables.toSeq: _*))
     val mapping: Mapping = initPipeline(map)
 
@@ -85,6 +88,8 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
 
     //Flexiprep
     mapping.functions.count(_.isInstanceOf[Fastqc]) shouldBe (if (skipFlexiprep) 0 else if (paired) 4 else 2)
+
+    mapping.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (unmappedToGears) 1 else 0)
   }
 
   val outputDir = Files.createTempDir()
@@ -133,6 +138,8 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     "bowtie2" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
     "samtools" -> Map("exe" -> "test"),
+    "kraken" -> Map("exe" -> "test", "db" -> "test"),
+    "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "md5sum" -> Map("exe" -> "test")
   )
 
@@ -151,3 +158,13 @@ class MappingBowtie2Test extends AbstractTestMapping("bowtie2")
 class MappingStampyTest extends AbstractTestMapping("stampy")
 class MappingGsnapTest extends AbstractTestMapping("gsnap")
 class MappingTophatTest extends AbstractTestMapping("tophat")
+
+class MappingGearsTest extends AbstractTestMapping("bwa-mem") {
+  override def unmappedToGears = true
+
+  override def paired = Array(true)
+  override def chunks = Array(1)
+  override def skipMarkDuplicates = Array(true)
+  override def skipFlexipreps = Array(true)
+  override def zipped = Array(true)
+}
