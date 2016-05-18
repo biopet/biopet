@@ -43,7 +43,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
   /** With this method the merge strategy for libraries to samples is defined. This can be overriden to fix the merge strategy. */
   def mergeStrategy: MergeStrategy.Value = {
     val value: String = config("merge_strategy", default = "preprocessmarkduplicates")
-    MergeStrategy.values.find(_.toString.toLowerCase == value) match {
+    MergeStrategy.values.find(_.toString.toLowerCase == value.toLowerCase) match {
       case Some(v) => v
       case _       => throw new IllegalArgumentException(s"merge_strategy '$value' does not exist")
     }
@@ -151,10 +151,9 @@ trait MultisampleMappingTrait extends MultiSampleQScript
               try {
                 header.getSequenceDictionary.assertSameDictionary(referenceFile.getSequenceDictionary)
               } catch {
-                case e: AssertionError => {
+                case e: AssertionError =>
                   logger.error(e.getMessage)
                   oke = false
-                }
               }
               oke
             }
@@ -172,8 +171,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
                 "Sample readgroup and/or library of input bamfile is not correct, file: " + bamFile +
                   "\nPlease note that it is possible to set 'correct_readgroups' to true in the config to automatic fix this")
               if (!dictOke) Logging.addError(
-                "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile +
-                  "\nPlease note that it is possible to set 'correct_dict' to true in the config to automatic fix this")
+                "Sequence dictionary in the bam file is not the same as the reference, file: " + bamFile)
 
               if (!readGroupOke && correctReadgroups) {
                 logger.info("Correcting readgroups, file:" + inputBam.get)

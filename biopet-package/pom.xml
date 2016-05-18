@@ -46,6 +46,11 @@
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
+            <artifactId>GenerateIndexes</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
             <artifactId>Flexiprep</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -52,7 +52,7 @@ object PrefixFastq extends ToolCommand {
     logger.info("Start")
 
     val argsParser = new OptParser
-    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val writer = new AsyncFastqWriter(new BasicFastqWriter(cmdArgs.output), 3000)
     val reader = new FastqReader(cmdArgs.input)

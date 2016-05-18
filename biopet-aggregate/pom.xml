@@ -17,6 +17,7 @@
 
     <modules>
         <module>../biopet-core</module>
+        <module>../generate-indexes</module>
         <module>../biopet-package</module>
         <module>../bammetrics</module>
         <module>../flexiprep</module>

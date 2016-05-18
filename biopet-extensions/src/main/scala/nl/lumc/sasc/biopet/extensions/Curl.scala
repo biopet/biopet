@@ -34,5 +34,5 @@ class Curl(val root: Configurable) extends BiopetCommandLineFunction with Versio
   def versionCommand = executable + " --version"
   def versionRegex = """curl (\w+\.\w+\.\w+) .*""".r
 
-  def cmdLine: String = required(executable) + required(url) + " > " + required(output)
+  def cmdLine: String = required(executable) + required(url) + (if (outputAsStsout) "" else " > " + required(output))
 }
