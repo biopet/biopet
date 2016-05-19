@@ -52,6 +52,27 @@ class GenerateIndexesTest extends TestNGSuite with Matchers {
   }
 
   @Test
+  def testContigMapDbsnp: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf.gz", "dbsnp_contig_map" -> Map("1" -> "chr1"))))
+    pipeline.script()
+  }
+
+  @Test
+  def testUnzippedContigMapDbsnp: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf", "dbsnp_contig_map" -> Map("1" -> "chr1"))))
+    pipeline.script()
+  }
+
+  @Test
+  def testSingleUnzippedDbsnp: Unit = {
+    val pipeline = initPipeline(Map())
+    pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> "uri.vcf")))
+    pipeline.script()
+  }
+
+  @Test
   def testMultiDbsnp: Unit = {
     val pipeline = initPipeline(Map())
     pipeline.referenceConfig = Map("s1" -> Map("g1" -> Map("fasta_uri" -> "uri", "dbsnp_vcf_uri" -> List("uri.vcf.gz", "uri2.vcf.gz"))))
