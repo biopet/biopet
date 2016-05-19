@@ -19,7 +19,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.extensions.PythonCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline._
 
 class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
   setPythonScript("breakdancer2vcf.py")
@@ -30,18 +30,23 @@ class BreakdancerVCF(val root: Configurable) extends PythonCommandLineFunction {
   @Output(doc = "Output VCF to PATH")
   var output: File = _
 
+  @Argument(doc = "Samplename")
+  var sample: String = _
+
   def cmdLine = {
     getPythonCommand +
       "-i " + required(input) +
-      "-o " + required(output)
+      "-o " + required(output) +
+      "-s " + required(sample)
   }
 }
 
 object BreakdancerVCF {
-  def apply(root: Configurable, input: File, output: File): BreakdancerVCF = {
+  def apply(root: Configurable, input: File, output: File, sample: String): BreakdancerVCF = {
     val bd = new BreakdancerVCF(root)
     bd.input = input
     bd.output = output
+    bd.sample = sample
     bd
   }
 }
