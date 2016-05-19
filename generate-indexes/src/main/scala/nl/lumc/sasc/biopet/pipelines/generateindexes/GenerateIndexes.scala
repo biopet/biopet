@@ -187,13 +187,11 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             downloadCmd.isIntermediate = true
             add(downloadCmd)
 
-            if (curl.output.getName.endsWith(".vcf.gz")) {
-              val tabix = new Tabix(this)
-              tabix.input = output
-              tabix.p = Some("vcf")
-              tabix.isIntermediate = true
-              add(tabix)
-            }
+            val tabix = new Tabix(this)
+            tabix.input = output
+            tabix.p = Some("vcf")
+            tabix.isIntermediate = true
+            add(tabix)
 
             cv.variant :+= output
           }
