@@ -11,6 +11,4 @@ if [ $1 ] ; then
     MODE=$1
 fi
 
-mvn -f $DIR/public/pom.xml license:$MODE -Dlicense.header=$DIR/public/LICENSE
-
-mvn -f $DIR/protected/pom.xml license:$MODE -Dlicense.header=$DIR/protected/LICENSE
+mvn -f $DIR/pom.xml license:$MODE -Dlicense.header=$DIR/LICENSE
