@@ -41,6 +41,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
           samtoolsSort.input = file
           samtoolsSort.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
           samtoolsSort.sortByName = true
+          samtoolsSort.isIntermediate = true
           add(samtoolsSort)
           samtoolsSort.output
         } else file
