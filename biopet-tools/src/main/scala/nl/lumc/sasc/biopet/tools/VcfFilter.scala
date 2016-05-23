@@ -33,6 +33,11 @@ object VcfFilter extends ToolCommand {
     }
   }
 
+  case class BooleanArgs(uniqueOnly: Boolean = false,
+                         sharedOnly: Boolean = false,
+                         filterRefCalls: Boolean = false,
+                         filterNoCalls: Boolean = false)
+
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
                   invertedOutputVcf: Option[File] = None,
@@ -49,14 +54,12 @@ object VcfFilter extends ToolCommand {
                   trioCompound: List[Trio] = Nil,
                   deNovoTrio: List[Trio] = Nil,
                   trioLossOfHet: List[Trio] = Nil,
+                  booleanArgs: BooleanArgs = BooleanArgs(),
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
-                  uniqueOnly: Boolean = false,
-                  sharedOnly: Boolean = false,
-                  filterRefCalls: Boolean = false,
-                  filterNoCalls: Boolean = false,
                   iDset: Set[String] = Set(),
-                  minGenomeQuality: Int = 0) extends AbstractArgs
+                  minGenomeQuality: Int = 0) extends AbstractArgs {
+  }
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -116,16 +119,16 @@ object VcfFilter extends ToolCommand {
     } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
     } text "If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered"
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
-      c.copy(filterRefCalls = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(filterRefCalls = true))
     } text "Filter when there are only ref calls"
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
-      c.copy(filterNoCalls = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(filterNoCalls = true))
     } text "Filter when there are only no calls"
     opt[Unit]("uniqueOnly") unbounded () action { (x, c) =>
-      c.copy(uniqueOnly = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(uniqueOnly = true))
     } text "Filter when there more then 1 sample have this variant"
     opt[Unit]("sharedOnly") unbounded () action { (x, c) =>
-      c.copy(sharedOnly = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(sharedOnly = true))
     } text "Filter when not all samples have this variant"
     opt[Double]("minQualScore") unbounded () action { (x, c) =>
       c.copy(minQualScore = Some(x))
@@ -167,10 +170,10 @@ object VcfFilter extends ToolCommand {
     var counterLeft = 0
     for (record <- reader) {
       if (cmdArgs.minQualScore.map(minQualscore(record, _)).getOrElse(true) &&
-        (!cmdArgs.filterRefCalls || hasNonRefCalls(record)) &&
-        (!cmdArgs.filterNoCalls || hasCalls(record)) &&
-        (!cmdArgs.uniqueOnly || hasUniqeSample(record)) &&
-        (!cmdArgs.sharedOnly || allSamplesVariant(record)) &&
+        (!cmdArgs.booleanArgs.filterRefCalls || hasNonRefCalls(record)) &&
+        (!cmdArgs.booleanArgs.filterNoCalls || hasCalls(record)) &&
+        (!cmdArgs.booleanArgs.uniqueOnly || hasUniqeSample(record)) &&
+        (!cmdArgs.booleanArgs.sharedOnly || allSamplesVariant(record)) &&
         hasMinTotalDepth(record, cmdArgs.minTotalDepth) &&
         hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
         minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
@@ -246,12 +249,12 @@ object VcfFilter extends ToolCommand {
 
   /** Checks if there is a variant in only 1 sample */
   def hasUniqeSample(record: VariantContext): Boolean = {
-    record.getGenotypes.count(_.getAlleles.exists(a => a.isNonReference && !a.isNoCall)) == 1
+    record.getGenotypes.count(g=> !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall)) == 1
   }
 
   /** Checks if all samples are a variant */
   def allSamplesVariant(record: VariantContext): Boolean = {
-    record.getGenotypes.forall(_.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
+    record.getGenotypes.forall(g=> !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
   }
 
   /** returns true when DP INFO field is atleast the given value */
