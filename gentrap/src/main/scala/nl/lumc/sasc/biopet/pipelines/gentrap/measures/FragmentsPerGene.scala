@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
 class FragmentsPerGene(val root: Configurable) extends QScript with Measurement with AnnotationGtf {
   def mergeArgs = MergeArgs(idCols = List(1), valCol = 2, numHeaderLines = 0, fallback = "0")
 
-  override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> "pos"))
+  override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> ""))
 
   lazy val sortOnId: Boolean = config("sort_on_id", default = false)
 
@@ -40,6 +40,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
           val samtoolsSort = new SamtoolsSort(this)
           samtoolsSort.input = file
           samtoolsSort.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
+          samtoolsSort.sortByName = true
           add(samtoolsSort)
           samtoolsSort.output
         } else file
@@ -49,6 +50,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
         job.inputAlignment = bamFile
         job.output = new File(outputDir, s"$id.$name.counts")
         job.format = Option("bam")
+        job.order = if (sortOnId) Some("name") else Some("pos")
         add(job)
         id -> job
     }
