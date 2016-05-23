@@ -51,6 +51,8 @@ object VcfFilter extends ToolCommand {
                   trioLossOfHet: List[Trio] = Nil,
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
+                  uniqueOnly: Boolean = false,
+                  sharedOnly: Boolean = false,
                   filterRefCalls: Boolean = false,
                   filterNoCalls: Boolean = false,
                   iDset: Set[String] = Set(),
@@ -119,6 +121,12 @@ object VcfFilter extends ToolCommand {
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
       c.copy(filterNoCalls = true)
     } text "Filter when there are only no calls"
+    opt[Unit]("uniqueOnly") unbounded () action { (x, c) =>
+      c.copy(uniqueOnly = true)
+    } text "Filter when there more then 1 sample have this variant"
+    opt[Unit]("sharedOnly") unbounded () action { (x, c) =>
+      c.copy(sharedOnly = true)
+    } text "Filter when not all samples have this variant"
     opt[Double]("minQualScore") unbounded () action { (x, c) =>
       c.copy(minQualScore = Some(x))
     } text "Min qual score"
@@ -161,6 +169,8 @@ object VcfFilter extends ToolCommand {
       if (cmdArgs.minQualScore.map(minQualscore(record, _)).getOrElse(true) &&
         (!cmdArgs.filterRefCalls || hasNonRefCalls(record)) &&
         (!cmdArgs.filterNoCalls || hasCalls(record)) &&
+        (!cmdArgs.uniqueOnly || hasUniqeSample(record)) &&
+        (!cmdArgs.sharedOnly || allSamplesVariant(record)) &&
         hasMinTotalDepth(record, cmdArgs.minTotalDepth) &&
         hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
         minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
@@ -232,6 +242,16 @@ object VcfFilter extends ToolCommand {
   /** returns true when record has calls */
   def hasCalls(record: VariantContext): Boolean = {
     record.getGenotypes.exists(g => !g.isNoCall)
+  }
+
+  /** Checks if there is a variant in only 1 sample */
+  def hasUniqeSample(record: VariantContext): Boolean = {
+    record.getGenotypes.count(_.getAlleles.exists(a => a.isNonReference && !a.isNoCall)) == 1
+  }
+
+  /** Checks if all samples are a variant */
+  def allSamplesVariant(record: VariantContext): Boolean = {
+    record.getGenotypes.forall(_.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
   }
 
   /** returns true when DP INFO field is atleast the given value */
