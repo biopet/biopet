@@ -205,7 +205,7 @@ trait ReportBuilder extends ToolCommand {
 
     val pageOutputDir = new File(outputDir, path.mkString(File.separator))
     pageOutputDir.mkdirs()
-    val rootPath = "./" + Array.fill(path.size)("src/main").mkString("")
+    val rootPath = "./" + Array.fill(path.size)("../").mkString
     val pageArgs = args ++ page.args ++
       Map("page" -> page,
         "path" -> path,
