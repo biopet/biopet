@@ -29,7 +29,7 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
 
   override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> ""))
 
-  lazy val sortOnId: Boolean = config("sort_on_id", default = false)
+  lazy val sortOnId: Boolean = config("sort_on_id", default = true)
 
   /** Pipeline itself */
   def biopetScript(): Unit = {
