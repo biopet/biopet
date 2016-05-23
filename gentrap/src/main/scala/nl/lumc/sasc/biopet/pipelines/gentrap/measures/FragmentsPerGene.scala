@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationGtf
 import nl.lumc.sasc.biopet.extensions.HtseqCount
+import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsSort
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -28,15 +29,24 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
 
   override def fixedValues: Map[String, Any] = Map("htseqcount" -> Map("order" -> "pos"))
 
+  lazy val sortOnId: Boolean = config("sort_on_id", default = false)
+
   /** Pipeline itself */
   def biopetScript(): Unit = {
     val jobs = bamFiles.map {
       case (id, file) =>
-        //TODO: ID sorting job
+
+        val bamFile = if (sortOnId) {
+          val samtoolsSort = new SamtoolsSort(this)
+          samtoolsSort.input = file
+          samtoolsSort.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
+          add(samtoolsSort)
+          samtoolsSort.output
+        } else file
 
         val job = new HtseqCount(this)
         job.inputAnnotation = annotationGtf
-        job.inputAlignment = file
+        job.inputAlignment = bamFile
         job.output = new File(outputDir, s"$id.$name.counts")
         job.format = Option("bam")
         add(job)
