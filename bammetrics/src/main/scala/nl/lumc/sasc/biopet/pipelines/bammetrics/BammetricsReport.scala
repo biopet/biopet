@@ -127,9 +127,9 @@ object BammetricsReport extends ReportBuilder {
         summary, Some(sample), lib).value.getOrElse(0).toString.toLong
       val sb = new StringBuffer()
       if (lib.isDefined) sb.append(sample + "-" + lib.get + "\t") else sb.append(sample + "\t")
-      sb.append((mapped - duplicates) + "\t")
+      sb.append((mapped - duplicates - secondary) + "\t")
       sb.append(duplicates + "\t")
-      sb.append((total - mapped - secondary) + "\t")
+      sb.append((total - mapped) + "\t")
       sb.append(secondary)
       sb.toString
     }
