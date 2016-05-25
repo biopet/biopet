@@ -210,9 +210,9 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    denovoInSample(record, "Sample_101") shouldBe false
-    denovoInSample(record, "Sample_102") shouldBe false
-    denovoInSample(record, "Sample_103") shouldBe false
+    uniqueVariantInSample(record, "Sample_101") shouldBe false
+    uniqueVariantInSample(record, "Sample_102") shouldBe false
+    uniqueVariantInSample(record, "Sample_103") shouldBe false
   }
 
   @Test def testResToDom() = {

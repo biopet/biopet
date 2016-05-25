@@ -49,7 +49,7 @@ object VcfFilter extends ToolCommand {
                   mustHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
                   mustHaveGenotype: List[(String, GenotypeType)] = Nil,
-                  deNovoInSample: String = null,
+                  uniqueVariantInSample: String = null,
                   resToDom: List[Trio] = Nil,
                   trioCompound: List[Trio] = Nil,
                   deNovoTrio: List[Trio] = Nil,
@@ -90,7 +90,7 @@ object VcfFilter extends ToolCommand {
       c.copy(trioCompound = new Trio(x) :: c.trioCompound)
     } text "Only shows variants where child is a compound variant combined from both parants"
     opt[String]("deNovoInSample") maxOccurs 1 unbounded () valueName "<sample>" action { (x, c) =>
-      c.copy(deNovoInSample = x)
+      c.copy(uniqueVariantInSample = x)
     } text "Only show variants that contain unique alleles in complete set for given sample"
     opt[String]("deNovoTrio") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(deNovoTrio = new Trio(x) :: c.deNovoTrio)
@@ -186,7 +186,7 @@ object VcfFilter extends ToolCommand {
           cmdArgs.filterHetVarToHomVar.isEmpty ||
           cmdArgs.filterHetVarToHomVar.forall(x => filterHetVarToHomVar(record, x._1, x._2))
         ) &&
-          denovoInSample(record, cmdArgs.deNovoInSample) &&
+          uniqueVariantInSample(record, cmdArgs.deNovoInSample) &&
           denovoTrio(record, cmdArgs.deNovoTrio) &&
           denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
           resToDom(record, cmdArgs.resToDom) &&
@@ -208,6 +208,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given samples are called
+   *
    * @param record VCF record
    * @param samples Samples that need this sample to be called
    * @return false when filters fail
@@ -219,6 +220,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given genotypes for given samples are there
+   *
    * @param record VCF record
    * @param samplesGenotypes samples and their associated genotypes to be checked (of format sample:genotype)
    * @return false when filter fails
@@ -229,6 +231,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if record has atleast minQualScore
+   *
    * @param record VCF record
    * @param minQualScore Minimal quality score
    * @return false when filters fail
@@ -249,7 +252,7 @@ object VcfFilter extends ToolCommand {
 
   /** Checks if there is a variant in only 1 sample */
   def hasUniqeSample(record: VariantContext): Boolean = {
-    record.getGenotypes.count(g=> !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall)) == 1
+    record.getSampleNames.exists(uniqueVariantInSample(record, _))
   }
 
   /** Checks if all samples are a variant */
@@ -264,6 +267,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if DP genotype field have a minimal value
+   *
    * @param record VCF record
    * @param minSampleDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
@@ -278,6 +282,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if non-ref AD genotype field have a minimal value
+   *
    * @param record VCF record
    * @param minAlternateDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
@@ -292,6 +297,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if genome quality field has minimum value
+   *
    * @param record VCF record
    * @param minGQ smallest GQ allowed
    * @param minSamplesPass number of samples to consider
@@ -306,6 +312,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given samples does have a variant hin this record
+   *
    * @param record VCF record
    * @param mustHaveVariant List of samples that should have this variant
    * @return true if filter passed
@@ -335,11 +342,11 @@ object VcfFilter extends ToolCommand {
   }
 
   /** Checks if given sample have alternative alleles that are unique in the VCF record */
-  def denovoInSample(record: VariantContext, sample: String): Boolean = {
+  def uniqueVariantInSample(record: VariantContext, sample: String): Boolean = {
     if (sample == null) return true
     val genotype = record.getGenotype(sample)
     if (genotype.isNoCall) return false
-    for (allele <- genotype.getAlleles) {
+    for (allele <- genotype.getAlleles if allele.isNonReference) {
       for (g <- record.getGenotypes if g.getSampleName != sample) {
         if (g.getAlleles.exists(_.basesMatch(allele))) return false
       }
