@@ -148,7 +148,7 @@ object VcfFilter extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Start")
     val argsParser = new OptParser
-    val cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs = argsParser.parse(args, Args()).getOrElse { throw new IllegalArgumentException }
 
     val reader = new VCFFileReader(cmdArgs.inputVcf, false)
     val header = reader.getFileHeader
@@ -226,7 +226,9 @@ object VcfFilter extends ToolCommand {
    * @return false when filter fails
    */
   def hasGenotype(record: VariantContext, samplesGenotypes: List[(String, GenotypeType)]): Boolean = {
-    samplesGenotypes.forall(x => record.getGenotype(x._1).getType == x._2)
+    samplesGenotypes.forall { x =>
+      record.getGenotype(x._1).getType == x._2
+    }
   }
 
   /**
@@ -346,6 +348,7 @@ object VcfFilter extends ToolCommand {
     if (sample == null) return true
     val genotype = record.getGenotype(sample)
     if (genotype.isNoCall) return false
+    if (genotype.getAlleles.forall(_.isReference)) return false
     for (allele <- genotype.getAlleles if allele.isNonReference) {
       for (g <- record.getGenotypes if g.getSampleName != sample) {
         if (g.getAlleles.exists(_.basesMatch(allele))) return false
