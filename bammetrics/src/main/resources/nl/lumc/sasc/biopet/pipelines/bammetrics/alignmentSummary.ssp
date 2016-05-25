@@ -93,7 +93,7 @@
                     <td>${secondary}</td>
                     <td>${(mapped - secondary).toDouble / (total - secondary) * 100}%</td>
                     <td>${duplicates}</td>
-                    <td>${duplicates.toDouble / total * 100}%</td>
+                    <td>${duplicates.toDouble / (total - secondary) * 100}%</td>
                 </tr>
             #end
         #end
