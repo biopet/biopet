@@ -186,7 +186,7 @@ object VcfFilter extends ToolCommand {
           cmdArgs.filterHetVarToHomVar.isEmpty ||
           cmdArgs.filterHetVarToHomVar.forall(x => filterHetVarToHomVar(record, x._1, x._2))
         ) &&
-          uniqueVariantInSample(record, cmdArgs.deNovoInSample) &&
+          uniqueVariantInSample(record, cmdArgs.uniqueVariantInSample) &&
           denovoTrio(record, cmdArgs.deNovoTrio) &&
           denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
           resToDom(record, cmdArgs.resToDom) &&
