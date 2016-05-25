@@ -71,10 +71,9 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     /**
      * This should simply not raise an exception
      */
-    val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
+    val tmp = File.createTempFile("VCfFilter", ".vcf")
     tmp.deleteOnExit()
-    val tmpPath = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath,
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmp.getAbsolutePath,
       "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
 
@@ -83,12 +82,11 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
 
     val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp2.deleteOnExit()
-    val tmpPath2 = tmp2.getAbsolutePath
-    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmpPath2,
+    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmp2.getAbsolutePath,
       "--mustHaveGenotype", "Sample_101:HOM_VAR")
     main(arguments2)
 
-    val size2 = new VCFFileReader(new File(tmpPath2), false).size
+    val size2 = new VCFFileReader(tmp2, false).size
     size2 shouldBe 0
 
   }
