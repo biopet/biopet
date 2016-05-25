@@ -259,7 +259,7 @@ object VcfFilter extends ToolCommand {
 
   /** Checks if all samples are a variant */
   def allSamplesVariant(record: VariantContext): Boolean = {
-    record.getGenotypes.forall(g=> !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
+    record.getGenotypes.forall(g => !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
   }
 
   /** returns true when DP INFO field is atleast the given value */

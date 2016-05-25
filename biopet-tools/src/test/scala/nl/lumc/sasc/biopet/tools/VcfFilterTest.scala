@@ -77,7 +77,7 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
       "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
 
-    val size = new VCFFileReader(new File(tmpPath), false).size
+    val size = new VCFFileReader(tmp, false).size
     size shouldBe 1
 
     val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
