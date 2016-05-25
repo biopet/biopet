@@ -8,12 +8,10 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-
 package nl.lumc.sasc.biopet.extensions.igvtools
 
 import nl.lumc.sasc.biopet.core.{ Version, BiopetCommandLineFunction }
