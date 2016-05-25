@@ -57,24 +57,9 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools with Reference {
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +
     conditional(sorted, "-sorted") +
-    (if (sorted) required("-g", createGenomeFile(referenceFai)) else "") +
+    (if (sorted) required("-g", BedtoolsCoverage.getGenomeFile(referenceFai, jobTempDir)) else "") +
     (if (outputAsStsout) "" else " > " + required(output))
 
-  /**
-   * Creates the genome file. i.e. the first two columns of the fasta index
-   * @return
-   */
-  def createGenomeFile(fai: File): File = {
-    val tmp = File.createTempFile(fai.getName, ".genome", config("output_dir"))
-    tmp.deleteOnExit()
-    val writer = new PrintWriter(tmp)
-    Source.fromFile(fai).
-      getLines().
-      map(s => s.split("\t").take(2).mkString("\t")).
-      foreach(f => writer.println(f))
-    writer.close()
-    tmp
-  }
 }
 
 object BedtoolsCoverage {
@@ -89,5 +74,28 @@ object BedtoolsCoverage {
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand
     bedtoolsCoverage
+  }
+
+  private var genomeCache: Map[(File, File), File] = Map()
+
+  def getGenomeFile(fai: File, dir: File): File = {
+    if (!genomeCache.contains((fai, dir))) genomeCache += (fai, dir) -> createGenomeFile(fai, dir)
+    genomeCache((fai, dir))
+  }
+
+  /**
+    * Creates the genome file. i.e. the first two columns of the fasta index
+    * @return
+    */
+  def createGenomeFile(fai: File, dir: File): File = {
+    val tmp = File.createTempFile(fai.getName, ".genome", dir)
+    tmp.deleteOnExit()
+    val writer = new PrintWriter(tmp)
+    Source.fromFile(fai).
+      getLines().
+      map(s => s.split("\t").take(2).mkString("\t")).
+      foreach(f => writer.println(f))
+    writer.close()
+    tmp
   }
 }
