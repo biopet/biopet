@@ -24,6 +24,7 @@ import htsjdk.variant.variantcontext.writer.{ AsyncVariantContextWriter, Variant
 import htsjdk.variant.vcf._
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.VcfUtils.scalaListToJavaObjectArrayList
+import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 
 import scala.collection.JavaConversions._
 
@@ -89,14 +90,14 @@ object VcfWithVcf extends ToolCommand {
     val header = reader.getFileHeader
     val vcfDict = header.getSequenceDictionary match {
       case r if r != null =>
-        r.assertSameDictionary(referenceDict)
+        r.assertSameDictionary(referenceDict, true)
         r
       case _ => referenceDict
     }
     val secondHeader = secondaryReader.getFileHeader
 
     secondHeader.getSequenceDictionary match {
-      case r if r != null => r.assertSameDictionary(referenceDict)
+      case r if r != null => r.assertSameDictionary(referenceDict, true)
       case _              =>
     }
 
@@ -123,6 +124,7 @@ object VcfWithVcf extends ToolCommand {
 
     var counter = 0
     for (record <- reader) {
+      require(vcfDict.getSequence(record.getContig) != null, s"Contig ${record.getContig} does not exist on reference")
       val secondaryRecords = getSecondaryRecords(secondaryReader, record, commandArgs.matchAllele)
 
       val fieldMap = createFieldMap(commandArgs.fields, secondaryRecords)
@@ -201,7 +203,6 @@ object VcfWithVcf extends ToolCommand {
           }
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
         case _ => {
-          print(attribute._2.getClass.toString)
           scalaListToJavaObjectArrayList(attribute._2)
         }
       })

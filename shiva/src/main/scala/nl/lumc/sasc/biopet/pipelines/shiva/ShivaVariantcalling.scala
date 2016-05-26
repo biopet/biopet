@@ -179,8 +179,8 @@ class ShivaVariantcalling(val root: Configurable) extends QScript
   /** Settings for the summary */
   def summarySettings = Map(
     "variantcallers" -> configCallers.toList,
-    "regions_of_interest" -> roiBedFiles.map(_.getName.stripSuffix(".bed")),
-    "amplicon_bed" -> ampliconBedFile.map(_.getName.stripSuffix(".bed"))
+    "regions_of_interest" -> roiBedFiles.map(_.getName),
+    "amplicon_bed" -> ampliconBedFile.map(_.getAbsolutePath)
   )
 
   /** Files for the summary */

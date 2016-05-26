@@ -60,6 +60,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
   def libraryCalling = false
   def dbsnp = true
   def svCalling = false
+  def cnvCalling = false
   def annotation = false
 
   @Test(dataProvider = "shivaOptions")
@@ -77,6 +78,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
         "use_indel_realigner" -> realign,
         "use_base_recalibration" -> baseRecalibration,
         "sv_calling" -> svCalling,
+        "cnv_calling" -> cnvCalling,
         "annotation" -> annotation), m)
 
     }
@@ -102,6 +104,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
 
       pipeline.summarySettings.get("annotation") shouldBe Some(annotation)
       pipeline.summarySettings.get("sv_calling") shouldBe Some(svCalling)
+      pipeline.summarySettings.get("cnv_calling") shouldBe Some(cnvCalling)
 
       pipeline.samples foreach {
         case (sampleId, sample) =>
@@ -151,6 +154,13 @@ class ShivaWithSvCallingTest extends ShivaTestTrait {
   override def baseRecalibrationProvider = Array(false)
   override def svCalling = true
 }
+class ShivaWithCnvCallingTest extends ShivaTestTrait {
+  override def sample1 = Array(true)
+  override def sample2 = Array(false)
+  override def realignProvider = Array(false)
+  override def baseRecalibrationProvider = Array(false)
+  override def cnvCalling = true
+}
 class ShivaWithAnnotationTest extends ShivaTestTrait {
   override def sample1 = Array(true)
   override def sample2 = Array(false)
@@ -161,6 +171,7 @@ class ShivaWithAnnotationTest extends ShivaTestTrait {
 
 object ShivaTest {
   val outputDir = Files.createTempDir()
+  outputDir.deleteOnExit()
   new File(outputDir, "input").mkdirs()
   def inputTouch(name: String): String = {
     val file = new File(outputDir, "input" + File.separator + name)
@@ -214,7 +225,12 @@ object ShivaTest {
     "pysvtools" -> Map(
       "exe" -> "test",
       "exclusion_regions" -> "test",
-      "translocations_only" -> false)
+      "translocations_only" -> false),
+    "freec" -> Map(
+      "exe" -> "test",
+      "chrFiles" -> "test",
+      "chrLenFile" -> "test"
+    )
   )
 
   val sample1 = Map(

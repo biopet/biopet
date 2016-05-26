@@ -15,6 +15,7 @@
  */
 package nl.lumc.sasc.biopet
 
+import nl.lumc.sasc.biopet.pipelines.generateindexes.GenerateIndexes
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetExecutableMain extends BiopetExecutable {
@@ -27,6 +28,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics,
     nl.lumc.sasc.biopet.pipelines.sage.Sage,
     nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig,
+    nl.lumc.sasc.biopet.pipelines.kopisu.Kopisu,
     nl.lumc.sasc.biopet.pipelines.carp.Carp,
     nl.lumc.sasc.biopet.pipelines.toucan.Toucan,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaSvCalling,
@@ -35,7 +37,8 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty,
-    nl.lumc.sasc.biopet.pipelines.shiva.Shiva
+    nl.lumc.sasc.biopet.pipelines.shiva.Shiva,
+    GenerateIndexes
   )
 
   def tools: List[MainCommand] = BiopetToolsExecutable.tools

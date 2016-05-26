@@ -13,14 +13,13 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.pipelines
+package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.PrintWriter
+import java.io.{ File, PrintWriter }
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.utils.config.Configurable
-import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, BiopetQScript, PipelineCommand }
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
@@ -29,26 +28,26 @@ import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
-import scala.language.reflectiveCalls
 import scala.collection.JavaConversions._
+import scala.language.reflectiveCalls
 
 class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript {
   def this() = this(null)
 
-  @Argument
-  var referenceConfigFile: File = _
+  @Argument(required = true)
+  var referenceConfigFiles: List[File] = Nil
 
-  var referenceConfig: Map[String, Any] = Map()
+  var referenceConfig: Map[String, Any] = null
 
-  var configDeps: List[File] = Nil
-
-  def outputConfigFile = new File(outputDir, "reference.json")
+  protected var configDeps: List[File] = Nil
 
   /** This is executed before the script starts */
   def init(): Unit = {
-    referenceConfig = ConfigUtils.fileToConfigMap(referenceConfigFile)
+    if (referenceConfig == null)
+      referenceConfig = referenceConfigFiles.foldLeft(Map[String, Any]())((a, b) => ConfigUtils.mergeMaps(a, ConfigUtils.fileToConfigMap(b)))
   }
 
   /** Method where jobs must be added */
@@ -58,11 +57,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
       val speciesConfig = ConfigUtils.any2map(c)
       val speciesDir = new File(outputDir, speciesName)
       for ((genomeName, c) <- speciesConfig) yield genomeName -> {
+        var configDeps: List[File] = Nil
         val genomeConfig = ConfigUtils.any2map(c)
         val fastaUris = genomeConfig.getOrElse("fasta_uri",
           throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
-            case a: Array[_] => a.map(_.toString)
-            case a           => Array(a.toString)
+            case a: Traversable[_]    => a.map(_.toString).toArray
+            case a: util.ArrayList[_] => a.map(_.toString).toArray
+            case a                    => Array(a.toString)
           }
 
         val genomeDir = new File(speciesDir, genomeName)
@@ -83,18 +84,10 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           curl.output
         }
 
-        val fastaCat = new CommandLineFunction {
-          var cmds: Array[BiopetCommandLineFunction] = Array()
+        val fastaCat = new FastaMerging(this)
+        fastaCat.output = fastaFile
 
-          @Input
-          var input: List[File] = Nil
-
-          @Output
-          var output = fastaFile
-          def commandLine = cmds.mkString(" && ")
-        }
-
-        if (fastaUris.length > 1 || fastaFiles.filter(_.getName.endsWith(".gz")).nonEmpty) {
+        if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
           fastaFiles.foreach { file =>
             if (file.getName.endsWith(".gz")) {
               val zcat = new Zcat(this)
@@ -159,14 +152,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           val regex = """.*\/(.*)_vep_(\d*)_(.*)\.tar\.gz""".r
           vepCacheUri.toString match {
-            case regex(species, version, assembly) if (version.forall(_.isDigit)) => {
+            case regex(species, version, assembly) if version.forall(_.isDigit) =>
               outputConfig ++= Map("varianteffectpredictor" -> Map(
                 "species" -> species,
                 "assembly" -> assembly,
                 "cache_version" -> version.toInt,
                 "cache" -> vepDir,
                 "fasta" -> createLinks(vepDir)))
-            }
             case _ => throw new IllegalArgumentException("Cache found but no version was found")
           }
         }
@@ -183,13 +175,14 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
             add(curl)
             cv.variant :+= curl.output
 
-            val tabix = new Tabix(this)
-            tabix.input = curl.output
-            tabix.p = Some("vcf")
-            tabix.isIntermediate = true
-            add(tabix)
-            configDeps :+= tabix.outputIndex
-            cv.deps ::= tabix.outputIndex
+            if (curl.output.getName.endsWith(".vcf.gz")) {
+              val tabix = new Tabix(this)
+              tabix.input = curl.output
+              tabix.p = Some("vcf")
+              tabix.isIntermediate = true
+              add(tabix)
+              configDeps :+= tabix.outputIndex
+            }
           }
 
           dbsnpUri match {
@@ -200,6 +193,28 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
           cv.out = new File(annotationDir, "dbsnp.vcf.gz")
           add(cv)
+          outputConfig += "dbsnp" -> cv.out
+        }
+
+        val gtfFile: Option[File] = genomeConfig.get("gtf_uri").map { gtfUri =>
+          val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
+          val curl = new Curl(this)
+          curl.url = gtfUri.toString
+          if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+          else add(curl > outputFile)
+          outputConfig += "annotation_gtf" -> outputFile
+          outputFile
+        }
+
+        val refFlatFile: Option[File] = gtfFile.map { gtf =>
+          val refFlat = new File(gtf + ".refFlat")
+          val gtfToGenePred = new GtfToGenePred(this)
+          gtfToGenePred.inputGtfs :+= gtf
+
+          add(gtfToGenePred | Awk(this, """{ print $12"\t"$1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10 }""") > refFlat)
+
+          outputConfig += "annotation_refflat" -> refFlat
+          refFlat
         }
 
         // Bwa index
@@ -220,11 +235,13 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         outputConfig += "gsnap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
         outputConfig += "gmap" -> Map("dir" -> gmapBuild.dir.getAbsolutePath, "db" -> genomeName)
 
+        // STAR index
         val starDir = new File(genomeDir, "star")
         val starIndex = new Star(this)
         starIndex.outputDir = starDir
         starIndex.reference = createLinks(starDir)
         starIndex.runmode = "genomeGenerate"
+        starIndex.sjdbGTFfile = gtfFile
         add(starIndex)
         configDeps :+= starIndex.jobOutputFile
         outputConfig += "star" -> Map(
@@ -232,6 +249,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           "genomeDir" -> starDir.getAbsolutePath
         )
 
+        // Bowtie index
         val bowtieIndex = new BowtieBuild(this)
         bowtieIndex.reference = createLinks(new File(genomeDir, "bowtie"))
         bowtieIndex.baseName = "reference"
@@ -239,6 +257,7 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         configDeps :+= bowtieIndex.jobOutputFile
         outputConfig += "bowtie" -> Map("reference_fasta" -> bowtieIndex.reference.getAbsolutePath)
 
+        // Bowtie2 index
         val bowtie2Index = new Bowtie2Build(this)
         bowtie2Index.reference = createLinks(new File(genomeDir, "bowtie2"))
         bowtie2Index.baseName = "reference"
@@ -249,19 +268,22 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
         )
 
+        val writeConfig = new WriteConfig
+        writeConfig.deps = configDeps
+        writeConfig.out = new File(genomeDir, s"$speciesName-$genomeName.json")
+        writeConfig.config = Map("references" -> Map(speciesName -> Map(genomeName -> outputConfig)))
+        add(writeConfig)
+
+        this.configDeps :::= configDeps
         outputConfig
       }
     }
 
-    add(new InProcessFunction {
-      @Input val deps: List[File] = configDeps
-
-      def run: Unit = {
-        val writer = new PrintWriter(outputConfigFile)
-        writer.println(ConfigUtils.mapToJson(Map("references" -> outputConfig)).spaces2)
-        writer.close()
-      }
-    })
+    val writeConfig = new WriteConfig
+    writeConfig.deps = configDeps
+    writeConfig.out = new File(outputDir, "references.json")
+    writeConfig.config = Map("references" -> outputConfig)
+    add(writeConfig)
   }
 }
 

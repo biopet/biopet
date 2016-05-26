@@ -50,7 +50,7 @@ object BiopetFlagstat extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse sys.exit(1)
+    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
     val inputSam = SamReaderFactory.makeDefault.open(commandArgs.inputFile)
     val iterSam = if (commandArgs.region.isEmpty) inputSam.iterator else {
@@ -211,7 +211,8 @@ object BiopetFlagstat extends ToolCommand {
     def summary: String = {
       val map = (for (t <- 0 until names.size) yield {
         names(t) -> totalCounts(t)
-      }).toMap
+      }).toMap ++ Map("Singletons" -> crossCounts(names.find(_._2 == "Mapped").map(_._1).getOrElse(-1))(names.find(_._2 == "MateUnmapped").map(_._1).getOrElse(-1))
+      )
 
       ConfigUtils.mapToJson(map).spaces4
     }

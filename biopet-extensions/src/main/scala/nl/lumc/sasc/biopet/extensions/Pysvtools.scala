@@ -64,7 +64,7 @@ class Pysvtools(val root: Configurable) extends BiopetCommandLineFunction {
 
   /** return commandline to execute */
   def cmdLine = required(executable) +
-    repeat("-c", input) +
+    repeat("-c", exclusionRegions) +
     optional("-f", flanking) +
     "-i " + repeat(input) +
     "-o " + required(tsvoutput) +
