@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.annotations.{ RibosomalRefFlat, AnnotationRefFlat }
+import nl.lumc.sasc.biopet.core.annotations.{AnnotationRefFlat, RibosomalRefFlat}
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
-import nl.lumc.sasc.biopet.core.{ Reference, BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
+import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag}
+import nl.lumc.sasc.biopet.extensions.bedtools.{BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort}
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
 import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
@@ -164,7 +164,11 @@ class BamMetrics(val root: Configurable) extends QScript
       addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val bedCov = BedtoolsCoverage(this, intervals.bed, inputBam, depth = true)
+      val sorter = new BedtoolsSort(this)
+      sorter.input = intervals.bed
+      sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
+      add(sorter)
+      val bedCov = BedtoolsCoverage(this, sorter.output, inputBam, depth = true)
       val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       covStats.title = Some("Coverage Plot")
       covStats.subTitle = Some(s"for file '$targetName.bed'")
