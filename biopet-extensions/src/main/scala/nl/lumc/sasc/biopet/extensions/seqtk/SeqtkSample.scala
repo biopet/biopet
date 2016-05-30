@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.extensions.seqtk
 import java.io.File
 
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Wrapper for the seqtk sample subcommand.
@@ -41,7 +41,7 @@ class SeqtkSample(val root: Configurable) extends Seqtk {
     " sample " +
     optional("-s", s) +
     required(input) +
-    (if (sample > 1) required(sample.toInt) else required(sample) ) +
+    (if (sample > 1) required(sample.toInt) else required(sample)) +
     (if (outputAsStsout) "" else " > " + required(output))
 
 }
