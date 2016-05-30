@@ -34,10 +34,10 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
   adapter ++= customAdaptersEnd.values.map(_.toString)
 
   val customAdaptersFront: Map[String, Any] = config("custom_adapters_front", default = Map())
-  front ++= customAdaptersEnd.values.map(_.toString)
+  front ++= customAdaptersFront.values.map(_.toString)
 
   val customAdaptersAny: Map[String, Any] = config("custom_adapters_any", default = Map())
-  anywhere ++= customAdaptersEnd.values.map(_.toString)
+  anywhere ++= customAdaptersAny.values.map(_.toString)
 
   /** Clipped adapter names from FastQC */
   protected def seqToName: Map[String, String] = {
