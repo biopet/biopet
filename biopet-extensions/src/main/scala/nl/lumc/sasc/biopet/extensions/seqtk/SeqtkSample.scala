@@ -37,13 +37,11 @@ class SeqtkSample(val root: Configurable) extends Seqtk {
 
   var sample: Double = _
 
-  def cmdLine = {
-    required(executable) +
-      " sample " +
-      optional("-s", s) +
-      (if (sample > 1) required(sample.toInt) else required(sample) ) +
-      (if (inputAsStdin) "" else required(input)) +
-      (if (outputAsStsout) "" else " > " + required(output))
-  }
+  def cmdLine = required(executable) +
+    " sample " +
+    optional("-s", s) +
+    required(input) +
+    (if (sample > 1) required(sample.toInt) else required(sample) ) +
+    (if (outputAsStsout) "" else " > " + required(output))
 
 }

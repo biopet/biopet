@@ -15,10 +15,11 @@
 package nl.lumc.sasc.biopet.pipelines.gears
 
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
-import nl.lumc.sasc.biopet.core.{ PipelineCommand, MultiSampleQScript }
+import nl.lumc.sasc.biopet.core.{MultiSampleQScript, PipelineCommand}
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
-import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat, Ln }
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Gzip, Ln, Zcat}
 import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -126,8 +127,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         flexiprep.inputR2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
         add(flexiprep)
 
-        gs.fastqR1 = Some(flexiprep.fastqR1Qc)
-        gs.fastqR2 = flexiprep.fastqR2Qc
+        gs.fastqR1 = Some(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
+        gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir))
         add(gs)
       }
 
@@ -156,8 +157,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
       }
 
-      gs.fastqR1 = Some(mergeR1)
-      gs.fastqR2 = mergeR2
+      gs.fastqR1 = Some(addDownsample(mergeR1, gs.outputDir))
+      gs.fastqR2 = mergeR2.map(addDownsample(_, gs.outputDir))
       add(gs)
     }
 
@@ -168,8 +169,23 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     def summaryStats: Any = Map()
   }
 
+  val downSample: Option[Double] = config("downsample")
+
+  def addDownsample(input: File, dir: File): File = {
+    downSample match {
+      case Some(x) =>
+        val output = new File(dir, input.getName + ".fq.gz")
+        val seqtk = new SeqtkSample(this)
+        seqtk.input = input
+        seqtk.sample = x
+        add(seqtk | new Bgzip(this) > output)
+        output
+      case _ => input
+    }
+  }
+
   /** Must return a map with used settings for this pipeline */
-  def summarySettings: Map[String, Any] = Map()
+  def summarySettings: Map[String, Any] = Map("downsample" -> downSample)
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = (
