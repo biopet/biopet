@@ -14,19 +14,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import java.io.{ File, PrintWriter }
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
-import nl.lumc.sasc.biopet.extensions.Flash
+import nl.lumc.sasc.biopet.extensions.{Bgzip, Flash, Gzip}
 import nl.lumc.sasc.biopet.extensions.qiime._
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.{ PrettyPrinter, Elem }
+import scala.xml.{Elem, PrettyPrinter}
 
 /**
  * Created by pjvan_thof on 12/4/15.
@@ -54,7 +55,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
   def biopetScript() = {
 
     val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= fastqInput
+    splitLib.input :+= addDownsample(fastqInput, outputDir)
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
     sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
     add(splitLib)
@@ -77,6 +78,21 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
+
+  val downSample: Option[Double] = config("downsample")
+
+  def addDownsample(input: File, dir: File): File = {
+    downSample match {
+      case Some(x) =>
+        val output = new File(dir, input.getName + ".fq.gz")
+        val seqtk = new SeqtkSample(this)
+        seqtk.input = input
+        seqtk.sample = x
+        add(seqtk | new Gzip(this) > output)
+        output
+      case _ => input
+    }
+  }
 }
 
 object GearsQiimeClosed {

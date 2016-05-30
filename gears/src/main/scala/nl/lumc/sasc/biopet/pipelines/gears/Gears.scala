@@ -169,7 +169,7 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     def summaryStats: Any = Map()
   }
 
-  val downSample: Option[Double] = config("downsample")
+  val downSample: Option[Double] = config("gears_downsample")
 
   def addDownsample(input: File, dir: File): File = {
     downSample match {
@@ -178,14 +178,14 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         val seqtk = new SeqtkSample(this)
         seqtk.input = input
         seqtk.sample = x
-        add(seqtk | new Bgzip(this) > output)
+        add(seqtk | new Gzip(this) > output)
         output
       case _ => input
     }
   }
 
   /** Must return a map with used settings for this pipeline */
-  def summarySettings: Map[String, Any] = Map("downsample" -> downSample)
+  def summarySettings: Map[String, Any] = Map("gears_downsample" -> downSample)
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = (
