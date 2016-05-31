@@ -9,17 +9,9 @@ Copyright 2014-2015 Sequencing Analysis Support Core - Leiden University Medical
 
 Contact us at: sasc@lumc.nl
 
-A dual licensing mode is applied. The source code within this project that are 
-not part of GATK Queue is freely available for non-commercial use under an AGPL 
-license; For commercial users or users who do not want to follow the AGPL 
+A dual licensing mode is applied. The source code within this project is 
+freely available for non-commercial use under an AGPL license; 
+For commercial users or users who do not want to follow the AGPL 
 license, please contact us to obtain a separate license.
 ~~~
-
-Private release:
-~~~bash
-Due to a license issue with GATK, this part of Biopet can only be used inside the 
-LUMC. Please refer to https://git.lumc.nl/biopet/biopet/wikis/home for instructions 
-on how to use this protected part of biopet or contact us at sasc@lumc.nl
-~~~
-
-    Copyright [2013-2015] [Sequence Analysis Support Core](https://sasc.lumc.nl/)
+    Copyright [2013-2016] [Sequence Analysis Support Core](https://sasc.lumc.nl/)

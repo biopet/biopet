@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -33,6 +32,11 @@ object VcfFilter extends ToolCommand {
     }
   }
 
+  case class BooleanArgs(uniqueOnly: Boolean = false,
+                         sharedOnly: Boolean = false,
+                         filterRefCalls: Boolean = false,
+                         filterNoCalls: Boolean = false)
+
   case class Args(inputVcf: File = null,
                   outputVcf: File = null,
                   invertedOutputVcf: Option[File] = None,
@@ -44,17 +48,17 @@ object VcfFilter extends ToolCommand {
                   mustHaveVariant: List[String] = Nil,
                   calledIn: List[String] = Nil,
                   mustHaveGenotype: List[(String, GenotypeType)] = Nil,
-                  deNovoInSample: String = null,
+                  uniqueVariantInSample: String = null,
                   resToDom: List[Trio] = Nil,
                   trioCompound: List[Trio] = Nil,
                   deNovoTrio: List[Trio] = Nil,
                   trioLossOfHet: List[Trio] = Nil,
+                  booleanArgs: BooleanArgs = BooleanArgs(),
                   diffGenotype: List[(String, String)] = Nil,
                   filterHetVarToHomVar: List[(String, String)] = Nil,
-                  filterRefCalls: Boolean = false,
-                  filterNoCalls: Boolean = false,
                   iDset: Set[String] = Set(),
-                  minGenomeQuality: Int = 0) extends AbstractArgs
+                  minGenomeQuality: Int = 0) extends AbstractArgs {
+  }
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputVcf") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
@@ -85,7 +89,7 @@ object VcfFilter extends ToolCommand {
       c.copy(trioCompound = new Trio(x) :: c.trioCompound)
     } text "Only shows variants where child is a compound variant combined from both parants"
     opt[String]("deNovoInSample") maxOccurs 1 unbounded () valueName "<sample>" action { (x, c) =>
-      c.copy(deNovoInSample = x)
+      c.copy(uniqueVariantInSample = x)
     } text "Only show variants that contain unique alleles in complete set for given sample"
     opt[String]("deNovoTrio") unbounded () valueName "<child:father:mother>" action { (x, c) =>
       c.copy(deNovoTrio = new Trio(x) :: c.deNovoTrio)
@@ -114,11 +118,17 @@ object VcfFilter extends ToolCommand {
     } validate { x => if (x.split(":").length == 2) success else failure("--filterHetVarToHomVar should be in this format: sample:sample")
     } text "If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered"
     opt[Unit]("filterRefCalls") unbounded () action { (x, c) =>
-      c.copy(filterRefCalls = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(filterRefCalls = true))
     } text "Filter when there are only ref calls"
     opt[Unit]("filterNoCalls") unbounded () action { (x, c) =>
-      c.copy(filterNoCalls = true)
+      c.copy(booleanArgs = c.booleanArgs.copy(filterNoCalls = true))
     } text "Filter when there are only no calls"
+    opt[Unit]("uniqueOnly") unbounded () action { (x, c) =>
+      c.copy(booleanArgs = c.booleanArgs.copy(uniqueOnly = true))
+    } text "Filter when there more then 1 sample have this variant"
+    opt[Unit]("sharedOnly") unbounded () action { (x, c) =>
+      c.copy(booleanArgs = c.booleanArgs.copy(sharedOnly = true))
+    } text "Filter when not all samples have this variant"
     opt[Double]("minQualScore") unbounded () action { (x, c) =>
       c.copy(minQualScore = Some(x))
     } text "Min qual score"
@@ -137,7 +147,7 @@ object VcfFilter extends ToolCommand {
   def main(args: Array[String]): Unit = {
     logger.info("Start")
     val argsParser = new OptParser
-    val cmdArgs = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs = argsParser.parse(args, Args()).getOrElse { throw new IllegalArgumentException }
 
     val reader = new VCFFileReader(cmdArgs.inputVcf, false)
     val header = reader.getFileHeader
@@ -159,8 +169,10 @@ object VcfFilter extends ToolCommand {
     var counterLeft = 0
     for (record <- reader) {
       if (cmdArgs.minQualScore.map(minQualscore(record, _)).getOrElse(true) &&
-        (!cmdArgs.filterRefCalls || hasNonRefCalls(record)) &&
-        (!cmdArgs.filterNoCalls || hasCalls(record)) &&
+        (!cmdArgs.booleanArgs.filterRefCalls || hasNonRefCalls(record)) &&
+        (!cmdArgs.booleanArgs.filterNoCalls || hasCalls(record)) &&
+        (!cmdArgs.booleanArgs.uniqueOnly || hasUniqeSample(record)) &&
+        (!cmdArgs.booleanArgs.sharedOnly || allSamplesVariant(record)) &&
         hasMinTotalDepth(record, cmdArgs.minTotalDepth) &&
         hasMinSampleDepth(record, cmdArgs.minSampleDepth, cmdArgs.minSamplesPass) &&
         minAlternateDepth(record, cmdArgs.minAlternateDepth, cmdArgs.minSamplesPass) &&
@@ -173,7 +185,7 @@ object VcfFilter extends ToolCommand {
           cmdArgs.filterHetVarToHomVar.isEmpty ||
           cmdArgs.filterHetVarToHomVar.forall(x => filterHetVarToHomVar(record, x._1, x._2))
         ) &&
-          denovoInSample(record, cmdArgs.deNovoInSample) &&
+          uniqueVariantInSample(record, cmdArgs.uniqueVariantInSample) &&
           denovoTrio(record, cmdArgs.deNovoTrio) &&
           denovoTrio(record, cmdArgs.trioLossOfHet, onlyLossHet = true) &&
           resToDom(record, cmdArgs.resToDom) &&
@@ -195,6 +207,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given samples are called
+   *
    * @param record VCF record
    * @param samples Samples that need this sample to be called
    * @return false when filters fail
@@ -206,16 +219,20 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given genotypes for given samples are there
+   *
    * @param record VCF record
    * @param samplesGenotypes samples and their associated genotypes to be checked (of format sample:genotype)
    * @return false when filter fails
    */
   def hasGenotype(record: VariantContext, samplesGenotypes: List[(String, GenotypeType)]): Boolean = {
-    samplesGenotypes.forall(x => record.getGenotype(x._1).getType == x._2)
+    samplesGenotypes.forall { x =>
+      record.getGenotype(x._1).getType == x._2
+    }
   }
 
   /**
    * Checks if record has atleast minQualScore
+   *
    * @param record VCF record
    * @param minQualScore Minimal quality score
    * @return false when filters fail
@@ -234,6 +251,16 @@ object VcfFilter extends ToolCommand {
     record.getGenotypes.exists(g => !g.isNoCall)
   }
 
+  /** Checks if there is a variant in only 1 sample */
+  def hasUniqeSample(record: VariantContext): Boolean = {
+    record.getSampleNames.exists(uniqueVariantInSample(record, _))
+  }
+
+  /** Checks if all samples are a variant */
+  def allSamplesVariant(record: VariantContext): Boolean = {
+    record.getGenotypes.forall(g => !g.isNonInformative && g.getAlleles.exists(a => a.isNonReference && !a.isNoCall))
+  }
+
   /** returns true when DP INFO field is atleast the given value */
   def hasMinTotalDepth(record: VariantContext, minTotalDepth: Int): Boolean = {
     record.getAttributeAsInt("DP", -1) >= minTotalDepth
@@ -241,6 +268,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if DP genotype field have a minimal value
+   *
    * @param record VCF record
    * @param minSampleDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
@@ -255,6 +283,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if non-ref AD genotype field have a minimal value
+   *
    * @param record VCF record
    * @param minAlternateDepth minimal depth
    * @param minSamplesPass Minimal number of samples to pass filter
@@ -269,6 +298,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if genome quality field has minimum value
+   *
    * @param record VCF record
    * @param minGQ smallest GQ allowed
    * @param minSamplesPass number of samples to consider
@@ -283,6 +313,7 @@ object VcfFilter extends ToolCommand {
 
   /**
    * Checks if given samples does have a variant hin this record
+   *
    * @param record VCF record
    * @param mustHaveVariant List of samples that should have this variant
    * @return true if filter passed
@@ -312,11 +343,12 @@ object VcfFilter extends ToolCommand {
   }
 
   /** Checks if given sample have alternative alleles that are unique in the VCF record */
-  def denovoInSample(record: VariantContext, sample: String): Boolean = {
+  def uniqueVariantInSample(record: VariantContext, sample: String): Boolean = {
     if (sample == null) return true
     val genotype = record.getGenotype(sample)
     if (genotype.isNoCall) return false
-    for (allele <- genotype.getAlleles) {
+    if (genotype.getAlleles.forall(_.isReference)) return false
+    for (allele <- genotype.getAlleles if allele.isNonReference) {
       for (g <- record.getGenotypes if g.getSampleName != sample) {
         if (g.getAlleles.exists(_.basesMatch(allele))) return false
       }

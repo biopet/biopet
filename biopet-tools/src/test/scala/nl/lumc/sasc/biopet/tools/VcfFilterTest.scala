@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -71,24 +70,22 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     /**
      * This should simply not raise an exception
      */
-    val tmp = File.createTempFile("VCfFilter", ".vcf.gz")
+    val tmp = File.createTempFile("VCfFilter", ".vcf")
     tmp.deleteOnExit()
-    val tmpPath = tmp.getAbsolutePath
-    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmpPath,
+    val arguments: Array[String] = Array("-I", veppedPath, "-o", tmp.getAbsolutePath,
       "--mustHaveGenotype", "Sample_101:HET")
     main(arguments)
 
-    val size = new VCFFileReader(new File(tmpPath), false).size
+    val size = new VCFFileReader(tmp, false).size
     size shouldBe 1
 
     val tmp2 = File.createTempFile("VcfFilter", ".vcf.gz")
     tmp2.deleteOnExit()
-    val tmpPath2 = tmp2.getAbsolutePath
-    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmpPath2,
+    val arguments2: Array[String] = Array("-I", veppedPath, "-o", tmp2.getAbsolutePath,
       "--mustHaveGenotype", "Sample_101:HOM_VAR")
     main(arguments2)
 
-    val size2 = new VCFFileReader(new File(tmpPath2), false).size
+    val size2 = new VCFFileReader(tmp2, false).size
     size2 shouldBe 0
 
   }
@@ -210,9 +207,9 @@ class VcfFilterTest extends TestNGSuite with MockitoSugar with Matchers {
     val reader = new VCFFileReader(vepped, false)
     val record = reader.iterator().next()
 
-    denovoInSample(record, "Sample_101") shouldBe false
-    denovoInSample(record, "Sample_102") shouldBe false
-    denovoInSample(record, "Sample_103") shouldBe false
+    uniqueVariantInSample(record, "Sample_101") shouldBe false
+    uniqueVariantInSample(record, "Sample_102") shouldBe false
+    uniqueVariantInSample(record, "Sample_103") shouldBe false
   }
 
   @Test def testResToDom() = {
