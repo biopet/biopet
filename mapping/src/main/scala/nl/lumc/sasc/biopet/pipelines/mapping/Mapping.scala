@@ -100,7 +100,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
 
   override def defaults = Map(
     "gsnap" -> Map("batch" -> 4),
-    "star" -> Map("outSAMunmapped" -> "Within")
+    "star" -> Map("outsamunmapped" -> "Within")
   )
 
   override def fixedValues = Map(
