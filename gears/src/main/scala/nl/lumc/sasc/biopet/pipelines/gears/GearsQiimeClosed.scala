@@ -14,11 +14,11 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gears
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
-import nl.lumc.sasc.biopet.extensions.{Bgzip, Flash, Gzip}
+import nl.lumc.sasc.biopet.extensions.Gzip
 import nl.lumc.sasc.biopet.extensions.qiime._
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -27,7 +27,7 @@ import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.{Elem, PrettyPrinter}
+import scala.xml.{ Elem, PrettyPrinter }
 
 /**
  * Created by pjvan_thof on 12/4/15.
