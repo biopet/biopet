@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gentrap.measures
 
 import nl.lumc.sasc.biopet.core.annotations.AnnotationGtf
 import nl.lumc.sasc.biopet.extensions.HtseqCount
+import nl.lumc.sasc.biopet.extensions.picard.SortSam
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsSort
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -37,10 +38,10 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
       case (id, file) =>
 
         val bamFile = if (sortOnId) {
-          val samtoolsSort = new SamtoolsSort(this)
+          val samtoolsSort = new SortSam(this)
           samtoolsSort.input = file
           samtoolsSort.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
-          samtoolsSort.sortByName = true
+          samtoolsSort.sortOrder = "queryname"
           samtoolsSort.isIntermediate = true
           add(samtoolsSort)
           samtoolsSort.output
