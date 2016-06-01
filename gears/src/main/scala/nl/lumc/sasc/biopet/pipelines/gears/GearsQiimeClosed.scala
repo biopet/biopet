@@ -55,13 +55,13 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
   def biopetScript() = {
 
     val splitLib = new SplitLibrariesFastq(this)
-    splitLib.input :+= addDownsample(fastqInput, outputDir)
+    splitLib.input :+= fastqInput
     splitLib.outputDir = new File(outputDir, "split_libraries_fastq")
     sampleId.foreach(splitLib.sampleIds :+= _.replaceAll("_", "-"))
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = splitLib.outputSeqs
+    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, splitLib.outputDir)
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
