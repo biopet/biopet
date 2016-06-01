@@ -98,7 +98,10 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
   /** location of summary file */
   def summaryFile = new File(outputDir, sampleId.getOrElse("x") + "-" + libId.getOrElse("x") + ".summary.json")
 
-  override def defaults = Map("gsnap" -> Map("batch" -> 4))
+  override def defaults = Map(
+    "gsnap" -> Map("batch" -> 4),
+    "star" -> Map("outsamunmapped" -> "Within")
+  )
 
   override def fixedValues = Map(
     "gsnap" -> Map("format" -> "sam"),
