@@ -90,7 +90,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Mode for emitting reference confidence scores */
   @Argument(fullName = "emitRefConfidence", shortName = "ERC", doc = "Mode for emitting reference confidence scores", required = false, exclusiveOf = "", validation = "")
-  var emitRefConfidence: String = _
+  var emitRefConfidence: Option[String] = config("emitRefConfidence")
 
   /** File to which assembled haplotypes should be written */
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
@@ -520,14 +520,6 @@ object HaplotypeCaller {
     val hc = new HaplotypeCaller(root)
     hc.input_file = inputFiles
     hc.out = outputFile
-    hc
-  }
-
-  def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
-    val hc = apply(root, List(inputFile), outputFile)
-    hc.emitRefConfidence = "GVCF"
-    hc.variant_index_type = Some("LINEAR")
-    hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
     hc
   }
 }
