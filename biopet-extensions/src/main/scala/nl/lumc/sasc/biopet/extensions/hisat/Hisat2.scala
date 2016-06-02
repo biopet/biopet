@@ -89,11 +89,11 @@ class Hisat2(val root: Configurable) extends BiopetCommandLineFunction with Refe
 
   /* Scoring */
   var ma: Option[Int] = config("ma")
-  var mp: Option[String] = config("mp")  // TODO: should be (Int, Int)
-  var sp: Option[String] = config("sp")  // TODO: should be (Int, Int)
+  var mp: Option[String] = config("mp") // TODO: should be (Int, Int)
+  var sp: Option[String] = config("sp") // TODO: should be (Int, Int)
   var np: Option[Int] = config("np")
-  var rdg: Option[String] = config("rdg")  // TODO: should be (Int, Int)
-  var rfg: Option[String] = config("rfg")  // TODO: should be (Int, Int)
+  var rdg: Option[String] = config("rdg") // TODO: should be (Int, Int)
+  var rfg: Option[String] = config("rfg") // TODO: should be (Int, Int)
   var scoreMin: Option[String] = config("score_min")
 
   /* Reporting */
