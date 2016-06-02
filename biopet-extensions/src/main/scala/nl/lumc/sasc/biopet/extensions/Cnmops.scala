@@ -18,7 +18,7 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.extensions.RscriptCommandLineFunction
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
+import org.broadinstitute.gatk.utils.commandline._
 
 /**
  * Wrapper for the Cnmops command line tool.
@@ -26,10 +26,16 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
  */
 class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
+  override def defaultThreads = 4
+  override def defaultCoreMemory: Double = 4.0
+
   protected var script: File = new File("/nl/lumc/sasc/biopet/extensions/cnmops.R")
 
   @Input(doc = "Input file BAM", required = true)
   var input: List[File] = List()
+
+  @Argument(doc = "Chromsomosome to query", required = true)
+  var chromosome: String = _
 
   // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
@@ -44,6 +50,12 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
     new File(outputDir, "cnr.txt")
   }
 
+  @Output(doc = "Raw output")
+  private lazy val rawoutput: File = {
+    require(outputDir == null, "Unexpected error when trying to set cn.MOPS raw output")
+    new File(outputDir, "rawoutput.txt")
+  }
+
   /** write all output files to this directory [./] */
   var outputDir: String = _
 
@@ -54,5 +66,10 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
   }
 
   override def cmdLine = super.cmdLine +
+    required("--cnr", outputCnr) +
+    required("--cnv", outputCnv) +
+    required("--chr", chromosome) +
+    required("--rawoutput", rawoutput) +
+    required("--threads", threads) +
     required(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
 }
