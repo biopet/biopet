@@ -158,9 +158,7 @@ class Hisat2(val root: Configurable) extends BiopetCommandLineFunction with Refe
       if (!indexDir.list()
         .toList
         .filter(_.startsWith(basename))
-        .exists({ p =>
-          p.endsWith(".bt2") || p.endsWith(".bt2l")
-        }))
+        .exists(_.endsWith(".ht2")))
         Logging.addError(s"No index files found for hisat2 in: $indexDir with basename: $basename")
     }
   }
