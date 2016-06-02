@@ -38,13 +38,13 @@ class FragmentsPerGene(val root: Configurable) extends QScript with Measurement 
       case (id, file) =>
 
         val bamFile = if (sortOnId) {
-          val samtoolsSort = new SortSam(this)
-          samtoolsSort.input = file
-          samtoolsSort.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
-          samtoolsSort.sortOrder = "queryname"
-          samtoolsSort.isIntermediate = true
-          add(samtoolsSort)
-          samtoolsSort.output
+          val sortSam = new SortSam(this)
+          sortSam.input = file
+          sortSam.output = swapExt(outputDir, file, ".bam", ".idsorted.bam")
+          sortSam.sortOrder = "queryname"
+          sortSam.isIntermediate = true
+          add(sortSam)
+          sortSam.output
         } else file
 
         val job = new HtseqCount(this)
