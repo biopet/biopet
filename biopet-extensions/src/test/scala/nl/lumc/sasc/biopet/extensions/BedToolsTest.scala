@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import nl.lumc.sasc.biopet.extensions.bedtools.BedtoolsCoverage
-import nl.lumc.sasc.biopet.utils.config.{Config, Configurable}
+import nl.lumc.sasc.biopet.utils.config.{ Config, Configurable }
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -21,7 +21,7 @@ class BedToolsTest extends TestNGSuite with Matchers {
     val file = new File(Paths.get(this.getClass.getResource("/ref.fa.fai").toURI).toString)
     val tmp = File.createTempFile("test", ".bed")
     tmp.deleteOnExit()
-    class TestCov(override val root: Configurable) extends BedtoolsCoverage(root)  {
+    class TestCov(override val root: Configurable) extends BedtoolsCoverage(root) {
       jobTempDir = tmp
       override def referenceFai = file
 

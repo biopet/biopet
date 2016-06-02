@@ -84,9 +84,9 @@ object BedtoolsCoverage {
   }
 
   /**
-    * Creates the genome file. i.e. the first two columns of the fasta index
-    * @return
-    */
+   * Creates the genome file. i.e. the first two columns of the fasta index
+   * @return
+   */
   def createGenomeFile(fai: File, dir: File): File = {
     val tmp = File.createTempFile(fai.getName, ".genome", dir)
     tmp.deleteOnExit()

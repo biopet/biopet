@@ -4,12 +4,11 @@ import java.io.File
 
 import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Argument, Input, Output}
-
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
 /**
-  * Created by Sander Bollen on 26-5-16.
-  */
+ * Created by Sander Bollen on 26-5-16.
+ */
 class BedtoolsSort(val root: Configurable) extends Bedtools with Reference {
 
   @Input
@@ -21,9 +20,8 @@ class BedtoolsSort(val root: Configurable) extends Bedtools with Reference {
   @Argument(required = false)
   var faidx: File = referenceFai
 
-
   def cmdLine = required(executable) + required("sort") + required("-i", input) +
     optional("-faidx", faidx) +
-    (if(outputAsStsout) "" else " > " + required(output))
+    (if (outputAsStsout) "" else " > " + required(output))
 
 }
