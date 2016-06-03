@@ -9,6 +9,7 @@ At the moment, Gentrap supports the following aligners:
 1. [GSNAP](http://research-pub.gene.com/gmap/)
 2. [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml)
 3. [Star](https://github.com/alexdobin/STAR/releases)
+4. [Hisat2](https://ccb.jhu.edu/software/hisat2/index.shtml)
 
 and the following quantification modes:
 
