@@ -40,4 +40,10 @@ trait CnvMethod extends QScript with SummaryQScript with Reference {
   def summaryFiles: Map[String, File] = inputBams.map(x => s"inputbam_${x._1}" -> x._2)
 
   def init() = {}
+
+  protected var cnvOutputFiles: Map[String, File] = Map.empty
+
+  protected def addOutput(sample: String, outputFile: File) = {
+    cnvOutputFiles += (sample -> outputFile)
+  }
 }

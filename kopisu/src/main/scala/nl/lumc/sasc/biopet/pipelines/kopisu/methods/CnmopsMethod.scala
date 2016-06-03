@@ -1,6 +1,6 @@
 package nl.lumc.sasc.biopet.pipelines.kopisu.methods
 
-import htsjdk.samtools.SamReaderFactory
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.extensions.Cnmops
 import nl.lumc.sasc.biopet.utils.config.Configurable
 
@@ -14,7 +14,10 @@ class CnmopsMethod(val root: Configurable) extends CnvMethod {
 
   def biopetScript: Unit = {
 
-    val genomeContigs = SamReaderFactory.makeDefault.referenceSequence(referenceFasta).getFileHeader(referenceDict).getSequenceDictionary
+    val genomeContigs: SAMSequenceDictionary = SamReaderFactory.makeDefault
+      .referenceSequence(referenceFasta)
+      .getFileHeader(referenceDict)
+      .getSequenceDictionary
 
     // we repeat running cnmops for all chromosomes
     val cnmopsJobs = genomeContigs.getSequences.map(contig => {
