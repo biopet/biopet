@@ -27,7 +27,7 @@ class UnifiedGenotyperAllele(val root: Configurable) extends Variantcaller {
   val name = "unifiedgenotyper_allele"
   protected def defaultPrio = 9
 
-  val alleles: File = config("input_alleles")
+  lazy val alleles: File = config("input_alleles")
 
   def biopetScript() {
     val ug = gatk.UnifiedGenotyper(this, inputBams.values.toList, outputFile)

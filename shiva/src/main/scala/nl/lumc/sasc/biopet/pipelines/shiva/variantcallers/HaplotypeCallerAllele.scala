@@ -28,7 +28,7 @@ class HaplotypeCallerAllele(val root: Configurable) extends Variantcaller {
   val name = "haplotypecaller_allele"
   protected def defaultPrio = 5
 
-  val alleles: File = config("input_alleles")
+  lazy val alleles: File = config("input_alleles")
 
   def biopetScript() {
     val hc = gatk.HaplotypeCaller(this, inputBams.values.toList, outputFile)
