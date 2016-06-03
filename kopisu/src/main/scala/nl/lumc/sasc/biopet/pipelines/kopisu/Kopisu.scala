@@ -51,7 +51,7 @@ class Kopisu(val root: Configurable) extends QScript with SummaryQScript with Re
 
   // This script is in fact FreeC only.
   def biopetScript() {
-    if (freecMethod.isEmpty && coniferMethod.isEmpty && cnMopsMethod.isEmpty) Logging.addError("No method selected")
+    if (freecMethod.isEmpty && coniferMethod.isEmpty && cnMopsMethod.isEmpty) Logging.addError("No CNV method selected")
 
     freecMethod.foreach { method =>
       method.inputBams = inputBams
