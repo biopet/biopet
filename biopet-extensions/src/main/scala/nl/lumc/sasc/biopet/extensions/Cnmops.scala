@@ -71,5 +71,5 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
     required("--chr", chromosome) +
     required("--rawoutput", rawoutput) +
     required("--threads", threads) +
-    required(input.foreach(f => f.getAbsolutePath).toString.mkString(" "))
+    required(input.map(f => f.getAbsolutePath).mkString(" "))
 }
