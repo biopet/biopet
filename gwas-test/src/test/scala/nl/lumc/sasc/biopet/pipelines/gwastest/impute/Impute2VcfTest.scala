@@ -11,8 +11,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 31-5-16.
-  */
+ * Created by pjvan_thof on 31-5-16.
+ */
 class Impute2VcfTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Impute2Vcf = {
     new Impute2Vcf {

@@ -177,10 +177,10 @@ object VcfWithVcf extends ToolCommand {
   def getSecondaryRecords(secondaryReader: VCFFileReader,
                           record: VariantContext, matchAllele: Boolean): List[VariantContext] = {
     if (matchAllele) {
-      secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList.
-        filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele))
+      secondaryReader.query(record.getContig, record.getStart, record.getEnd).
+        filter(x => record.getAlternateAlleles.exists(x.hasAlternateAllele)).toList
     } else {
-      secondaryReader.query(record.getContig, record.getStart, record.getEnd).toList
+      secondaryReader.query(record.getContig, record.getStart, record.getEnd).toIterable.toList
     }
   }
 
