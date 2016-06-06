@@ -43,6 +43,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   def init() = {
     require(fastqInput != null)
+    require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
@@ -60,7 +61,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"$sampleId.downsample.fna"))
+    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
