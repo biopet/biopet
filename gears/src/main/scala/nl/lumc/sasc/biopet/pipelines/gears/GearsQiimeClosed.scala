@@ -18,7 +18,6 @@ import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
-import nl.lumc.sasc.biopet.extensions.Gzip
 import nl.lumc.sasc.biopet.extensions.qiime._
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -61,7 +60,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, splitLib.outputDir)
+    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"$sampleId.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
@@ -81,14 +80,14 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   val downSample: Option[Double] = config("downsample")
 
-  def addDownsample(input: File, dir: File): File = {
+  def addDownsample(input: File, output: File): File = {
     downSample match {
       case Some(x) =>
-        val output = new File(dir, input.getName + ".fq.gz")
         val seqtk = new SeqtkSample(this)
         seqtk.input = input
         seqtk.sample = x
-        add(seqtk | new Gzip(this) > output)
+        seqtk.output = output
+        add(seqtk)
         output
       case _ => input
     }
@@ -128,8 +127,7 @@ object GearsQiimeClosed {
         val n = b.split("__", 2)
         val level = n(0)
         val name = n(1)
-        val bla = a.childs.find(_ == TaxNode(name, level))
-        bla match {
+        a.childs.find(_ == TaxNode(name, level)) match {
           case Some(node) => node
           case _ =>
             val node = TaxNode(name, level)
