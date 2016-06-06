@@ -23,7 +23,7 @@ CNVoutput <- opt$cnv
 CNRoutput <- opt$cnr
 bamFile <- args
 
-BAMFiles <- c(bamFile)
+BAMFiles <- strsplit(c(bamFile), " ")[[1]]
 bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=1000, parallel=opt$threads)
 
 write.table(as.data.frame( bamDataRanges ), quote = FALSE, opt$rawoutput, row.names=FALSE)
