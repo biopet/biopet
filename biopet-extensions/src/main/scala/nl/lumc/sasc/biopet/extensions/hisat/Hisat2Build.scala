@@ -2,13 +2,13 @@ package nl.lumc.sasc.biopet.extensions.hisat
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Reference, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Reference, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.Input
 
 /**
-  * Created by pjvan_thof on 7-6-16.
-  */
+ * Created by pjvan_thof on 7-6-16.
+ */
 class Hisat2Build(val root: Configurable) extends BiopetCommandLineFunction with Version {
 
   @Input(required = true)

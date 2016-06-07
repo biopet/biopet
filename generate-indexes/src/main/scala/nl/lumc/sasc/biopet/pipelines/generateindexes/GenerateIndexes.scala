@@ -14,13 +14,13 @@
  */
 package nl.lumc.sasc.biopet.pipelines.generateindexes
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{Bowtie2Build, BowtieBuild}
+import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
