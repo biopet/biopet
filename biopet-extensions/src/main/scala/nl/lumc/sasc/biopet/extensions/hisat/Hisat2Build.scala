@@ -57,6 +57,7 @@ class Hisat2Build(val root: Configurable) extends BiopetCommandLineFunction with
   }
 
   def cmdLine = required(executable) +
+    optional("-p", threads) +
     optional("--bmax", bmax) +
     optional("--bmaxdivn", bmaxdivn) +
     optional("--dcv", dcv) +
