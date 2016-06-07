@@ -42,9 +42,8 @@ class Hisat2Build(val root: Configurable) extends BiopetCommandLineFunction with
   var localftabchars: Option[Int] = config("localftabchars")
   var seed: Option[Int] = config("seed")
 
-  var large-index: Boolean = config("large-index", default = false)
-  var dcv: Boolean = config("dcv", default = false)
-  var memory-fitting: Boolean = config("memory-fitting", default = false)
+  var largeIndex: Boolean = config("large_index", default = false)
+  var memoryFitting: Boolean = config("memory_fitting", default = false)
   var nodc: Boolean = config("nodc", default = false)
   var noref: Boolean = config("noref", default = false)
   var justref: Boolean = config("justref", default = false)
@@ -70,9 +69,8 @@ class Hisat2Build(val root: Configurable) extends BiopetCommandLineFunction with
     optional("--haplotype", haplotype) +
     optional("--ss", ss) +
     optional("--exon", exon) +
-    conditional(large-index, "--large-index") +
-    conditional(dcv, "--dcv") +
-    conditional(memory-fitting, "--memory-fitting") +
+    conditional(largeIndex, "--large-index") +
+    conditional(memoryFitting, "--memory-fitting") +
     conditional(nodc, "--nodc") +
     conditional(noref, "--noref") +
     conditional(justref, "--justref") +
