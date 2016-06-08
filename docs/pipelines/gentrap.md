@@ -9,6 +9,7 @@ At the moment, Gentrap supports the following aligners:
 1. [GSNAP](http://research-pub.gene.com/gmap/)
 2. [TopHat](http://ccb.jhu.edu/software/tophat/index.shtml)
 3. [Star](https://github.com/alexdobin/STAR/releases)
+4. [Hisat2](https://ccb.jhu.edu/software/hisat2/index.shtml)
 
 and the following quantification modes:
 
@@ -83,7 +84,7 @@ In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
-2. `aligner`: which aligner to use (`gsnap` or `tophat`)
+2. `aligner`: which aligner to use (`gsnap`, `tophat`, `hisat2`, `star` or `star-2pass`)
 3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
 4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.

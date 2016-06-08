@@ -98,6 +98,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
   val r2 = new File(outputDir, "input" + File.separator + "R2.fq")
   val r1Zipped = new File(outputDir, "input" + File.separator + "R1.fq.gz")
   val r2Zipped = new File(outputDir, "input" + File.separator + "R2.fq.gz")
+  val hisat2Index = new File(outputDir, "ref.1.ht2")
 
   @BeforeClass
   def createTempFiles: Unit = {
@@ -105,6 +106,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     Files.touch(r2)
     Files.touch(r1Zipped)
     Files.touch(r2Zipped)
+    Files.touch(hisat2Index)
 
     copyFile("ref.fa")
     copyFile("ref.dict")
@@ -125,6 +127,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     "reference_fasta" -> (outputDir + File.separator + "ref.fa"),
     "db" -> "test",
     "bowtie_index" -> (outputDir + File.separator + "ref"),
+    "hisat2_index" -> (outputDir + File.separator + "ref"),
     "fastqc" -> Map("exe" -> "test"),
     "seqtk" -> Map("exe" -> "test"),
     "gsnap" -> Map("exe" -> "test"),
@@ -135,6 +138,7 @@ abstract class AbstractTestMapping(val aligner: String) extends TestNGSuite with
     "star" -> Map("exe" -> "test"),
     "bowtie" -> Map("exe" -> "test"),
     "bowtie2" -> Map("exe" -> "test"),
+    "hisat2" -> Map("exe" -> "test"),
     "stampy" -> Map("exe" -> "test", "genome" -> "test", "hash" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
@@ -154,6 +158,7 @@ class MappingStarTest extends AbstractTestMapping("star")
 class MappingStar2PassTest extends AbstractTestMapping("star-2pass")
 class MappingBowtieTest extends AbstractTestMapping("bowtie")
 class MappingBowtie2Test extends AbstractTestMapping("bowtie2")
+class MappingHisat2Test extends AbstractTestMapping("hisat2")
 class MappingStampyTest extends AbstractTestMapping("stampy")
 class MappingGsnapTest extends AbstractTestMapping("gsnap")
 class MappingTophatTest extends AbstractTestMapping("tophat")
