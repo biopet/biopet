@@ -432,7 +432,7 @@ object VcfStats extends ToolCommand {
       else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
     }
 
-    buffer += "QUAL" -> Map(0 -> 1)
+    buffer += "QUAL" -> Map("not set" -> 1)
 
     addToBuffer("SampleDistribution-Het", 0, found = false)
     addToBuffer("SampleDistribution-HetNonRef", 0, found = false)
