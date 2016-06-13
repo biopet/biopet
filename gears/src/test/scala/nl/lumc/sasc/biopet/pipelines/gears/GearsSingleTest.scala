@@ -115,6 +115,18 @@ class GearsSingleTest extends TestNGSuite with Matchers {
     gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe (if (kraken) 1 else 0)
   }
 
+  @Test
+  def testNoSample: Unit = {
+    val map = ConfigUtils.mergeMaps(Map(
+      "output_dir" -> GearsSingleTest.outputDir
+    ), Map(GearsSingleTest.executables.toSeq: _*))
+    val gears: GearsSingle = initPipeline(map)
+
+    intercept[IllegalArgumentException] {
+      gears.script()
+    }
+  }
+
   // remove temporary run directory all tests in the class have been run
   @AfterClass def removeTempOutputDir() = {
     FileUtils.deleteDirectory(GearsSingleTest.outputDir)
