@@ -16,11 +16,11 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{ ValidateFastq, SeqStat, FastqSync }
-
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq }
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -74,33 +74,37 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Function that's need to be executed before the script is accessed */
   def init() {
-    require(outputDir != null, "Missing output directory on flexiprep module")
-    require(inputR1 != null, "Missing input R1 on flexiprep module")
-    require(sampleId != null, "Missing sample ID on flexiprep module")
-    require(libId != null, "Missing library ID on flexiprep module")
+    if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
+    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on flexiprep module")
+    if (libId == null || libId == None) Logging.addError("Missing library ID on flexiprep module")
 
-    paired = inputR2.isDefined
+    if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
+    else {
+      paired = inputR2.isDefined
 
-    inputFiles :+= new InputFile(inputR1)
-    inputR2.foreach(inputFiles :+= new InputFile(_))
+      inputFiles :+= new InputFile(inputR1)
+      inputR2.foreach(inputFiles :+= new InputFile(_))
 
-    R1Name = getUncompressedFileName(inputR1)
-    inputR2.foreach { fileR2 =>
-      paired = true
-      R2Name = getUncompressedFileName(fileR2)
+      R1Name = getUncompressedFileName(inputR1)
+      inputR2.foreach { fileR2 =>
+        paired = true
+        R2Name = getUncompressedFileName(fileR2)
+      }
     }
   }
 
   /** Script to add jobs */
   def biopetScript() {
-    runInitialJobs()
+    if (inputR1 != null) {
+      runInitialJobs()
 
-    if (paired) runTrimClip(inputR1, inputR2, outputDir)
-    else runTrimClip(inputR1, outputDir)
+      if (paired) runTrimClip(inputR1, inputR2, outputDir)
+      else runTrimClip(inputR1, outputDir)
 
-    val R1Files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
-    val R2Files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
-    runFinalize(R1Files.toList, R2Files.toList)
+      val R1Files = for ((k, v) <- outputFiles if k.endsWith("output_R1")) yield v
+      val R2Files = for ((k, v) <- outputFiles if k.endsWith("output_R2")) yield v
+      runFinalize(R1Files.toList, R2Files.toList)
+    }
   }
 
   /** Add init non chunkable jobs */

@@ -18,6 +18,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -48,6 +49,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   def init(): Unit = {
     require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
     require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or a R1/R2 file")
+    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
     if (outputName == null) {
       if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
@@ -80,6 +82,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       val flexiprep = new Flexiprep(this)
       flexiprep.inputR1 = r1
       flexiprep.inputR2 = r2
+      flexiprep.sampleId = if (sampleId.isEmpty) Some("noSampleName") else sampleId
+      flexiprep.libId = if (libId.isEmpty) Some("noLibName") else libId
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       add(flexiprep)
       (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
