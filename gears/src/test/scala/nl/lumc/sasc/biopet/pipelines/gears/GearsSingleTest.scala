@@ -80,6 +80,8 @@ class GearsSingleTest extends TestNGSuite with Matchers {
     ), Map(GearsSingleTest.executables.toSeq: _*))
 
     val gears: GearsSingle = initPipeline(map)
+    gears.sampleId = Some("sampleName")
+    gears.libId = Some("libName")
 
     if (fromBam) {
       gears.bamFile = Some(GearsSingleTest.bam)
