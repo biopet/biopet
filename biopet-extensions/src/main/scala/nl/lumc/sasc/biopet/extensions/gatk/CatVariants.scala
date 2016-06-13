@@ -58,6 +58,8 @@ class CatVariants(val root: Configurable) extends BiopetJavaCommandLineFunction 
   @Gather(classOf[org.broadinstitute.gatk.queue.function.scattergather.SimpleTextGatherFunction])
   var log_to_file: File = _
 
+  override def defaultCoreMemory = 4.0
+
   override def beforeGraph() = {
     super.beforeGraph()
     if (reference == null) reference = referenceFasta()
