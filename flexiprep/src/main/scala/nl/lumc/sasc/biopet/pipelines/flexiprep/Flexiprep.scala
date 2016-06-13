@@ -16,11 +16,11 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.{ Zcat, Gzip }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Zcat }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.IoUtils._
-import nl.lumc.sasc.biopet.extensions.tools.{ ValidateFastq, SeqStat, FastqSync }
-
+import nl.lumc.sasc.biopet.extensions.tools.{ FastqSync, SeqStat, ValidateFastq }
+import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.QScript
 
 class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
@@ -74,10 +74,9 @@ class Flexiprep(val root: Configurable) extends QScript with SummaryQScript with
 
   /** Function that's need to be executed before the script is accessed */
   def init() {
-    require(outputDir != null, "Missing output directory on flexiprep module")
-    require(inputR1 != null, "Missing input R1 on flexiprep module")
-    require(sampleId != null, "Missing sample ID on flexiprep module")
-    require(libId != null, "Missing library ID on flexiprep module")
+    if (inputR1 == null) Logging.addError("Missing input R1 on flexiprep module")
+    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on flexiprep module")
+    if (libId == null || libId == None) Logging.addError("Missing library ID on flexiprep module")
 
     paired = inputR2.isDefined
 
