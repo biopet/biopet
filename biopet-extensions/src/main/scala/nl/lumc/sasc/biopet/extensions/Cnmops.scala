@@ -39,19 +39,19 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
 
   // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
-  private lazy val outputCnv: File = {
+  lazy val outputCnv: File = {
     require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS CNV output")
     new File(outputDir, "cnv.txt")
   }
 
   @Output(doc = "Output CNR file")
-  private lazy val outputCnr: File = {
+  lazy val outputCnr: File = {
     require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS CNR output")
     new File(outputDir, "cnr.txt")
   }
 
   @Output(doc = "Raw output")
-  private lazy val rawoutput: File = {
+  lazy val rawOutput: File = {
     require(!outputDir.isEmpty, "Unexpected error when trying to set cn.MOPS raw output")
     new File(outputDir, "rawoutput.txt")
   }
@@ -69,7 +69,7 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
     required("--cnr", outputCnr) +
     required("--cnv", outputCnv) +
     required("--chr", chromosome) +
-    required("--rawoutput", rawoutput) +
+    required("--rawoutput", rawOutput) +
     required("--threads", threads) +
     required(input.map(f => f.getAbsolutePath).mkString(" "))
 }

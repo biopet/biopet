@@ -33,6 +33,10 @@ class CnmopsMethod(val root: Configurable) extends CnvMethod {
     }).toList
 
     addAll(cnmopsJobs)
+    // adding output files to the outputSummary
+    cnmopsJobs.foreach(job => {
+      addOutput(job.chromosome, job.rawOutput)
+    })
 
     addSummaryJobs()
   }

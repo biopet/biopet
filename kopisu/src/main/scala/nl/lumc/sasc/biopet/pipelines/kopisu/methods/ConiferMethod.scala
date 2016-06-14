@@ -67,6 +67,7 @@ class ConiferMethod(val root: Configurable) extends CnvMethod {
         coniferCall.input = coniferAnalyze.output
         coniferCall.output = new File(sampleDir, s"${sampleName}.calls.txt")
         add(coniferCall)
+        addOutput(sampleName, coniferCall.output)
     }
 
     addSummaryJobs()
