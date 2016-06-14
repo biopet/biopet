@@ -43,7 +43,7 @@ class VcfWithVcf(val root: Configurable) extends ToolCommandFunction with Refere
 
   var fields: List[(String, String, Option[String])] = List()
 
-  override def defaultCoreMemory = 2.0
+  override def defaultCoreMemory = 4.0
 
   override def beforeGraph() {
     super.beforeGraph()

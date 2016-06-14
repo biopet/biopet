@@ -34,6 +34,7 @@ object BiopetExecutableMain extends BiopetExecutable {
     nl.lumc.sasc.biopet.pipelines.gears.GearsSingle,
     nl.lumc.sasc.biopet.pipelines.gears.Gears,
     nl.lumc.sasc.biopet.pipelines.gwastest.GwasTest,
+    nl.lumc.sasc.biopet.pipelines.gwastest.impute.Impute2Vcf,
     nl.lumc.sasc.biopet.pipelines.shiva.ShivaVariantcalling,
     nl.lumc.sasc.biopet.pipelines.basty.Basty,
     nl.lumc.sasc.biopet.pipelines.shiva.Shiva,

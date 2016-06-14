@@ -16,17 +16,16 @@ package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.core.ScatterGatherableFunction
 import nl.lumc.sasc.biopet.utils.VcfUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.extensions.gatk.TaggedFile
-import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, _ }
+import org.broadinstitute.gatk.utils.commandline.{ Argument, Gather, Output, Input }
 
-//TODO: check gathering
-class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with ScatterGatherableFunction */ {
+class BaseRecalibrator(val root: Configurable) extends CommandLineGATK with ScatterGatherableFunction {
   def analysis_type = "BaseRecalibrator"
-  //TODO: check gathering
-  //scatterClass = classOf[ContigScatterFunction]
-  //setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
+  scatterClass = classOf[ContigScatterFunction]
+  setupScatterFunction = { case scatter: GATKScatterFunction => scatter.includeUnmapped = false }
 
   /** A database of known polymorphic sites */
   @Input(fullName = "knownSites", shortName = "knownSites", doc = "A database of known polymorphic sites", required = false, exclusiveOf = "", validation = "")
@@ -38,7 +37,7 @@ class BaseRecalibrator(val root: Configurable) extends CommandLineGATK /* with S
 
   /** The output recalibration table file to create */
   @Output(fullName = "out", shortName = "o", doc = "The output recalibration table file to create", required = true, exclusiveOf = "", validation = "") //TODO: check gathering
-  //@Gather(classOf[org.broadinstitute.gatk.engine.recalibration.BQSRGatherer])
+  @Gather(classOf[org.broadinstitute.gatk.engine.recalibration.BQSRGatherer])
   var out: File = _
 
   /** One or more covariates to be used in the recalibration. Can be specified multiple times */

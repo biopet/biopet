@@ -102,6 +102,7 @@ object GenerateIndexesTest {
   val config = Map("output_dir" -> outputDir,
     "bwa" -> Map("exe" -> "test"),
     "star" -> Map("exe" -> "test"),
+    "hisat2build" -> Map("exe" -> "test"),
     "bowtiebuild" -> Map("exe" -> "test"),
     "bowtie2build" -> Map("exe" -> "test"),
     "gmapbuild" -> Map("exe" -> "test"),
