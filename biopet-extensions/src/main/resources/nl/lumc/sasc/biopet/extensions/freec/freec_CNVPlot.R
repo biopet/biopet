@@ -151,7 +151,7 @@ dev.off()
 
 # Export the whole genome graph
 
-png(filename = paste(opt$output, ".wg.png",sep=""), width = 16 * ppi, height = 10 * ppi,
+png(filename = paste(opt$output, ".wg.png",sep=""), width = 50 * ppi, height = 10 * ppi,
 res=ppi, bg = "white")
 
 plot_margins <- c(3,4,2,2)+0.1
