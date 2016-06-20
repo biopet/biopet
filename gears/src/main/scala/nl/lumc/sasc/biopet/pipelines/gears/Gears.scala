@@ -116,10 +116,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       flexiprep.inputR2 = config("R2")
       flexiprep.outputDir = new File(libDir, "flexiprep")
 
-      lazy val gs = new GearsSingle(qscript)
-      gs.sampleId = Some(sampleId)
-      gs.libId = Some(libId)
-      gs.outputDir = libDir
+      val libraryGears: Boolean = config("library_gears", default = false)
+
+      lazy val gearsSingle = if (libraryGears) Some(new GearsSingle(qscript)) else None
 
       /** Function that add library jobs */
       protected def addJobs(): Unit = {
@@ -127,9 +126,15 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         flexiprep.inputR2.foreach(inputFiles :+= InputFile(_, config("R2_md5")))
         add(flexiprep)
 
-        gs.fastqR1 = Some(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
-        gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir))
-        add(gs)
+        gearsSingle.foreach { gs =>
+          gs.sampleId = Some(sampleId)
+          gs.libId = Some(libId)
+          gs.outputDir = libDir
+
+          gs.fastqR1 = Some(addDownsample(flexiprep.fastqR1Qc, gs.outputDir))
+          gs.fastqR2 = flexiprep.fastqR2Qc.map(addDownsample(_, gs.outputDir))
+          add(gs)
+        }
       }
 
       /** Must return files to store into summary */
