@@ -127,7 +127,7 @@ object GearsQiimeClosed {
       taxonomy.foldLeft(root) { (a, b) =>
         val n = b.split("__", 2)
         val level = n(0)
-        val name = n(1)
+        val name = if (level == "Unassigned") "Unassigned" else n(1)
         a.childs.find(_ == TaxNode(name, level)) match {
           case Some(node) => node
           case _ =>
