@@ -76,7 +76,7 @@ In ```json``` this will become:
       }
     }
  }
- ~~~
+~~~
 
 In ```yaml``` this is a bit different and will look like this:
 
@@ -101,6 +101,28 @@ While optional settings are:
 1. `aligner`: which aligner to use (`bwa` or `bowtie`)
 2. `macs2`: Here only the callpeak modus is implemented. But one can set all the options from [macs2 callpeak](https://github.com/taoliu/MACS/#call-peaks) in this settings config. Note that the config value is: `macs2_callpeak`
 
+## Configuration for detection of broad peaks (ATAC-seq)
+
+Carp can do broad peak-calling by using the following config: 
+
+``` json
+  "bowtie2": {
+    "maxins": 2000,
+    "m": 1
+  },
+  
+  "macs2callpeak":{
+    "gsize": 1.87e9,
+    "bdg": true,
+    "nomodel": true,
+    "broad": true,
+    "extsize": 200,
+    "shift": 100,
+    "qvalue": 0.001
+  }
+```
+
+These settings are optimized to call peaks on samples prepared using the ATAC protocol.
 
 ## Running Carp
 
