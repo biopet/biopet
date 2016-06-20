@@ -24,7 +24,9 @@ import scala.io.Source
  * Created by pjvan_thof on 12/18/15.
  */
 object MergeOtuMaps extends ToolCommand {
-  case class Args(inputFiles: List[File] = Nil, outputFile: File = null) extends AbstractArgs
+  case class Args(inputFiles: List[File] = Nil,
+                  outputFile: File = null,
+                  skipPrefix: List[String] = Nil) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") minOccurs 2 required () unbounded () valueName "<file>" action { (x, c) =>
@@ -33,6 +35,9 @@ object MergeOtuMaps extends ToolCommand {
     opt[File]('o', "output") required () unbounded () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     }
+    opt[String]('p', "skipPrefix") unbounded () valueName "<text>" action { (x, c) =>
+      c.copy(skipPrefix = x :: c.skipPrefix)
+    }
   }
 
   /**
@@ -40,23 +45,24 @@ object MergeOtuMaps extends ToolCommand {
    */
   def main(args: Array[String]): Unit = {
     val argsParser = new OptParser
-    val commandArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
+    val cmdArgs: Args = argsParser.parse(args, Args()) getOrElse (throw new IllegalArgumentException)
 
-    var map: Map[Long, String] = Map()
+    var map: Map[String, String] = Map()
 
-    for (inputFile <- commandArgs.inputFiles) {
+    for (inputFile <- cmdArgs.inputFiles) {
       logger.info(s"Start reading $inputFile")
       val reader = Source.fromFile(inputFile)
       reader.getLines().foreach { line =>
         val values = line.split("\t", 2)
-        val key = values.head.toLong
-        map += key -> (line.stripPrefix(s"$key") + map.getOrElse(key, ""))
+        val key = values.head
+        if (!cmdArgs.skipPrefix.exists(key.startsWith))
+          map += key -> (line.stripPrefix(s"$key") + map.getOrElse(key, ""))
       }
       reader.close()
     }
 
-    logger.info(s"Start writing to ${commandArgs.outputFile}")
-    val writer = new PrintWriter(commandArgs.outputFile)
+    logger.info(s"Start writing to ${cmdArgs.outputFile}")
+    val writer = new PrintWriter(cmdArgs.outputFile)
     map.foreach { case (key, list) => writer.println(key + list) }
     writer.close()
   }

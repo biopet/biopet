@@ -37,6 +37,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
     Some(gearsReport)
   }
 
+  override def defaults = Map("mergeotumaps" -> Map("skip_prefix" -> "New."))
+
   override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
   /** Init for pipeline */

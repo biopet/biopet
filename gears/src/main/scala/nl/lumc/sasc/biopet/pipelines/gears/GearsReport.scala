@@ -43,7 +43,6 @@ object GearsReport extends MultisampleReportBuilder {
     val qiimeOpenOtuTable = summary.getValue("gears", "files", "pipeline", "qiime_open_otu_table", "path")
       .map(x => new File(x.toString))
 
-
     ReportPage(
       (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
