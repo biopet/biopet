@@ -88,4 +88,3 @@ class GearsQiimeOpen(val root: Configurable) extends QScript with SummaryQScript
   }
 }
 
-

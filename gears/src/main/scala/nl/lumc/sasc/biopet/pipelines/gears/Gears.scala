@@ -131,8 +131,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     /**
      * Factory method for Library class
-      *
-      * @param id SampleId
+     *
+     * @param id SampleId
      * @return Sample class
      */
     def makeLibrary(id: String): Library = new Library(id)
@@ -224,6 +224,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
 
   /** File to put in the summary for thie pipeline */
   def summaryFiles: Map[String, File] = (
+    qiimeOpenOtuTable.map("qiime_open_otu_table" -> _) ++
+    qiimeOpenOtuMap.map("qiime_open_otu_map" -> _) ++
     qiimeClosedOtuTable.map("qiime_closed_otu_table" -> _) ++
     qiimeClosedOtuMap.map("qiime_closed_otu_map" -> _)
   ).toMap

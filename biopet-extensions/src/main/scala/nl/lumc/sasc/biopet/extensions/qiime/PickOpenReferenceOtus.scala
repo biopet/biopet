@@ -16,9 +16,9 @@ package nl.lumc.sasc.biopet.extensions.qiime
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{BiopetCommandLineFunction, Version}
+import nl.lumc.sasc.biopet.core.{ BiopetCommandLineFunction, Version }
 import nl.lumc.sasc.biopet.utils.config.Configurable
-import org.broadinstitute.gatk.utils.commandline.{Input, Output}
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
 /**
  * Created by pjvan_thof on 12/4/15.
@@ -54,7 +54,7 @@ class PickOpenReferenceOtus(val root: Configurable) extends BiopetCommandLineFun
   var minOtuSize: Option[Int] = config("min_otu_size")
   var suppressAlignAndTree: Boolean = config("suppress_taxonomy_assignment", default = false)
 
-  def otuTable = new File(outputDir, "otu_table_mc2.biom")
+  def otuTable = new File(outputDir, "otu_table_mc2_w_tax.biom")
   def failedOtuTable = new File(outputDir, "otu_table_mc2_w_tax_no_pynast_failures.biom")
   def otuMap = new File(outputDir, "final_otu_map.txt")
 
