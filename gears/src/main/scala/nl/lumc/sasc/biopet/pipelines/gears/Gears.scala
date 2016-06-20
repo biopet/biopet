@@ -53,22 +53,30 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   }
 
   def qiimeClosedDir: Option[File] = {
-    if (samples.values.flatMap(_.gs.qiimeClosed).nonEmpty) {
+    if (samples.values.flatMap(_.gearsSingle.qiimeClosed).nonEmpty) {
       Some(new File(outputDir, "qiime_closed_reference"))
     } else None
+  }
 
+  def qiimeOpenDir: Option[File] = {
+    if (samples.values.flatMap(_.gearsSingle.qiimeOpen).nonEmpty) {
+      Some(new File(outputDir, "qiime_open_reference"))
+    } else None
   }
 
   def qiimeClosedOtuTable: Option[File] = qiimeClosedDir.map(new File(_, "otu_table.biom"))
   def qiimeClosedOtuMap: Option[File] = qiimeClosedDir.map(new File(_, "otu_map.txt"))
 
+  def qiimeOpenOtuTable: Option[File] = qiimeOpenDir.map(new File(_, "otu_table.biom"))
+  def qiimeOpenOtuMap: Option[File] = qiimeOpenDir.map(new File(_, "otu_map.txt"))
+
   /**
    * Method where the multisample jobs should be added, this will be executed only when running the -sample argument is not given.
    */
   def addMultiSampleJobs(): Unit = {
-    val gss = samples.values.flatMap(_.gs.qiimeClosed).toList
-    val closedOtuTables = gss.map(_.otuTable)
-    val closedOtuMaps = gss.map(_.otuMap)
+    val qiimeCloseds = samples.values.flatMap(_.gearsSingle.qiimeClosed).toList
+    val closedOtuTables = qiimeCloseds.map(_.otuTable)
+    val closedOtuMaps = qiimeCloseds.map(_.otuMap)
     require(closedOtuTables.size == closedOtuMaps.size)
     if (closedOtuTables.nonEmpty) {
       if (closedOtuTables.size > 1) {
@@ -86,14 +94,35 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         add(Ln(qscript, closedOtuMaps.head, qiimeClosedOtuMap.get))
         add(Ln(qscript, closedOtuTables.head, qiimeClosedOtuTable.get))
       }
+    }
 
-      //TODO: Plots
+    val qiimeOpens = samples.values.flatMap(_.gearsSingle.qiimeOpen).toList
+    val openOtuTables = qiimeOpens.map(_.otuTable)
+    val openOtuMaps = qiimeOpens.map(_.otuMap)
+    require(openOtuTables.size == openOtuMaps.size)
+    if (openOtuTables.nonEmpty) {
+      if (openOtuTables.size > 1) {
+        val mergeTables = new MergeOtuTables(qscript)
+        mergeTables.input = openOtuTables
+        mergeTables.outputFile = qiimeOpenOtuTable.get
+        add(mergeTables)
+
+        val mergeMaps = new MergeOtuMaps(qscript)
+        mergeMaps.input = openOtuMaps
+        mergeMaps.output = qiimeOpenOtuMap.get
+        add(mergeMaps)
+
+      } else {
+        add(Ln(qscript, openOtuMaps.head, qiimeOpenOtuMap.get))
+        add(Ln(qscript, openOtuTables.head, qiimeOpenOtuTable.get))
+      }
 
     }
   }
 
   /**
    * Factory method for Sample class
+   *
    * @param id SampleId
    * @return Sample class
    */
@@ -102,7 +131,8 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
   class Sample(sampleId: String) extends AbstractSample(sampleId) {
     /**
      * Factory method for Library class
-     * @param id SampleId
+      *
+      * @param id SampleId
      * @return Sample class
      */
     def makeLibrary(id: String): Library = new Library(id)
@@ -144,9 +174,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
       def summaryStats = Map()
     }
 
-    lazy val gs = new GearsSingle(qscript)
-    gs.sampleId = Some(sampleId)
-    gs.outputDir = sampleDir
+    lazy val gearsSingle = new GearsSingle(qscript)
+    gearsSingle.sampleId = Some(sampleId)
+    gearsSingle.outputDir = sampleDir
 
     /** Function to add sample jobs */
     protected def addJobs(): Unit = {
@@ -162,9 +192,9 @@ class Gears(val root: Configurable) extends QScript with MultiSampleQScript { qs
         add(Zcat(qscript, flexipreps.flatMap(_.fastqR2Qc)) | new Gzip(qscript) > file)
       }
 
-      gs.fastqR1 = Some(addDownsample(mergeR1, gs.outputDir))
-      gs.fastqR2 = mergeR2.map(addDownsample(_, gs.outputDir))
-      add(gs)
+      gearsSingle.fastqR1 = Some(addDownsample(mergeR1, gearsSingle.outputDir))
+      gearsSingle.fastqR2 = mergeR2.map(addDownsample(_, gearsSingle.outputDir))
+      add(gearsSingle)
     }
 
     /** Must return files to store into summary */
