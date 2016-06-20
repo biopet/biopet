@@ -207,7 +207,23 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
           outputConfig += "dbsnp" -> cv.out
         }
 
-        val gtfFile: Option[File] = genomeConfig.get("gtf_uri").map { gtfUri =>
+        val gffFile: Option[File] = genomeConfig.get("gff_uri").map { gtfUri =>
+          val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
+          val curl = new Curl(this)
+          curl.url = gtfUri.toString
+          if (gtfUri.toString.endsWith(".gz")) add(curl | Zcat(this) > outputFile)
+          else add(curl > outputFile)
+          outputConfig += "annotation_gff" -> outputFile
+          outputFile
+        }
+
+        val gtfFile: Option[File] = if (gffFile.isDefined) gffFile.map { gff =>
+          val gffRead = new GffRead(this)
+          gffRead.input = gff
+          gffRead.output = swapExt(annotationDir, gff, ".gff", ".gtf")
+          add(gffRead)
+          gffRead.output
+        } else genomeConfig.get("gtf_uri").map { gtfUri =>
           val outputFile = new File(annotationDir, new File(gtfUri.toString).getName.stripSuffix(".gz"))
           val curl = new Curl(this)
           curl.url = gtfUri.toString
