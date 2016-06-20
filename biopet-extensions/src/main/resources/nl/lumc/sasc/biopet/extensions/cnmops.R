@@ -43,7 +43,7 @@ dir.create(chromosome, showWarnings=FALSE, recursive=TRUE, mode="0744")
 
 # Plot chromosome per sample.
 for ( i in 1:length(BAMFiles)){
-  png(file=paste(chromosome,"/",chromosome,"-segplot-",i,".png", sep=""),
+  png(file=paste(dirname(opt$rawoutput),"/",chromosome,"-segplot-",i,".png", sep=""),
   width = 16 * ppi, height = 10 * ppi,
     res=ppi, bg = "white"
   )
@@ -56,7 +56,7 @@ for ( i in 1:length(BAMFiles)){
 
 # Plot cnvr regions.
 for ( i in 1:nrow(as.data.frame(cnvr(res)))) {
-  png(file=paste(chromosome,"/",chromosome,"-cnv-",i,".png",sep=""),
+  png(file=paste(dirname(opt$rawoutput),"/",chromosome,"-cnv-",i,".png",sep=""),
   width = 16 * ppi, height = 10 * ppi,
     res=ppi, bg = "white")
     par(mfrow = c(1,1))
