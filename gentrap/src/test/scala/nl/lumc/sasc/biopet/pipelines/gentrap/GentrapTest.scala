@@ -14,9 +14,10 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
@@ -26,7 +27,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: Option[String]) extends TestNGSuite with Matchers {
 
@@ -114,7 +115,11 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
     val gentrap: Gentrap = initPipeline(config)
 
     gentrap.script()
-    val functions = gentrap.functions.groupBy(_.getClass)
+    val functions = gentrap.functions.flatMap {
+      case f: BiopetFifoPipe => f.pipesJobs
+      case f: BiopetPipe     => f.pipesJobs
+      case f                 => List(f)
+    }.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
 
     if (expMeasures.contains("fragments_per_gene"))
@@ -151,15 +156,15 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
 
     val alignerClass = classMap.get(aligner.getOrElse("gsnap"))
 
-    alignerClass.foreach(c => assert(gentrap.functions.exists(c.isInstance(_))))
-    classMap.values.filterNot(Some(_) == alignerClass).foreach(x => assert(!gentrap.functions.exists(x.isInstance(_))))
+    alignerClass.foreach(c => assert(functions.keys.exists(_ == c)))
+    classMap.values.filterNot(Some(_) == alignerClass).foreach(x => assert(!functions.keys.exists(_ == x)))
   }
 
 }
 
 class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene", None)
 //class GentrapFragmentsPerExonTest extends GentrapTestAbstract("fragments_per_exon", None)
-class GentrapBaseCountsTest extends GentrapTestAbstract("base_counts", Some("gsnap"))
+class GentrapBaseCountsTest extends GentrapTestAbstract("base_counts", None)
 class GentrapCufflinksStrictTest extends GentrapTestAbstract("cufflinks_strict", None)
 class GentrapCufflinksGuidedTest extends GentrapTestAbstract("cufflinks_guided", None)
 class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind", None)
