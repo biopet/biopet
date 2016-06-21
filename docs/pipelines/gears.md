@@ -10,6 +10,7 @@ Pipeline analysis components include:
  
  - [Kraken, DerrickWood](https://github.com/DerrickWood/kraken)
  - [Qiime closed reference](http://qiime.org)
+ - [Qiime open reference](http://qiime.org)
  - [Qiime rtax](http://qiime.org) (**Experimental**)
  - SeqCount (**Experimental**)
 
