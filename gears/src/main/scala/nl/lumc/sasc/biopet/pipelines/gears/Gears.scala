@@ -17,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ MultiSampleQScript, PipelineCommand }
 import nl.lumc.sasc.biopet.extensions.tools.MergeOtuMaps
-import nl.lumc.sasc.biopet.extensions.{ Bgzip, Gzip, Ln, Zcat }
+import nl.lumc.sasc.biopet.extensions.{ Gzip, Ln, Zcat }
 import nl.lumc.sasc.biopet.extensions.qiime.MergeOtuTables
 import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
