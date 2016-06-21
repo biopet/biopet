@@ -48,8 +48,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
 
   /** Executed before running the script */
   def init(): Unit = {
-    require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
-    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or a R1/R2 file")
+    if (!fastqR1.isDefined && !bamFile.isDefined) Logging.addError("Please specify fastq-file(s) or bam file")
+    if (fastqR1.isDefined == bamFile.isDefined) Logging.addError("Provide either a bam file or a R1/R2 file")
     if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
     if (outputName == null) {
@@ -64,7 +64,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (fastqR1.isDefined) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
-    } else inputFiles :+= InputFile(bamFile.get)
+    } else bamFile.foreach(inputFiles :+= InputFile(_))
   }
 
   override def reportClass = {
