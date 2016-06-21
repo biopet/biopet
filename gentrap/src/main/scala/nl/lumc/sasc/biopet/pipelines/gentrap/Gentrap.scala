@@ -117,6 +117,7 @@ class Gentrap(val root: Configurable) extends QScript
     ),
     // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
     "mapping" -> Map(
+      "aligner" -> "gsnap",
       "skip_markduplicates" -> true
     )
   )
