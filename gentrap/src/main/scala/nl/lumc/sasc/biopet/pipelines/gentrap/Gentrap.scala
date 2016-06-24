@@ -119,6 +119,10 @@ class Gentrap(val root: Configurable) extends QScript
     "mapping" -> Map(
       "aligner" -> "gsnap",
       "skip_markduplicates" -> true
+    ),
+    "wipereads" -> Map(
+      "limit_removal" -> true,
+      "no_make_index" -> false
     )
   )
 

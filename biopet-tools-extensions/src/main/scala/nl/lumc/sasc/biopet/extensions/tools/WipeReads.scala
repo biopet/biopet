@@ -42,10 +42,10 @@ class WipeReads(val root: Configurable) extends ToolCommandFunction {
   var readgroup: Set[String] = config("read_group", default = Nil)
 
   @Argument(doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
-  var limitRemoval: Boolean = config("limit_removal")
+  var limitRemoval: Boolean = config("limit_removal", default=true)
 
-  @Argument(doc = "Whether to index output BAM file or not (default: yes)")
-  var noMakeIndex: Boolean = config("no_make_index")
+  @Argument(doc = "Whether to index output BAM file or not")
+  var noMakeIndex: Boolean = config("no_make_index", default=false)
 
   @Argument(doc = "GTF feature containing intervals (default: exon)")
   var featureType: Option[String] = config("feature_type")

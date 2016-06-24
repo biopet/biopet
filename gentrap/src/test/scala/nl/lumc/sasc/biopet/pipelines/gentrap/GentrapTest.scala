@@ -14,20 +14,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, BiopetPipe}
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.tools.{BaseCounter, WipeReads}
+import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: Option[String]) extends TestNGSuite with Matchers {
 
@@ -192,6 +192,7 @@ object GentrapTest {
     "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
     "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
     "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
+    "ribosome_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test",
     "rscript" -> Map("exe" -> "test")
   ) ++ Seq(
