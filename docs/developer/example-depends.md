@@ -94,7 +94,7 @@ In case you want to use a specific pipeline you want to add this to your depende
     </dependencies>
 ```
 
-For a complete example pom.xml see [here](pom.xml). 
+For a complete example pom.xml see [here](../examples/pom.xml). 
 
 
 ## SBT build
@@ -137,4 +137,4 @@ When you build your jar, you cna then simply use:
 java -jar MyProject.jar -config some_config.yml <other arguments>
 ```
 
-This jar comes with all standar biopet arguments. 
+This jar comes with all standard biopet arguments. 
