@@ -17,12 +17,12 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 /**
  * Created by pjvanthof on 04/02/16.
@@ -75,6 +75,7 @@ abstract class GearsTest extends TestNGSuite with Matchers {
       intercept[IllegalArgumentException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else {
       val pipeline = initPipeline(map)
       pipeline.script()
