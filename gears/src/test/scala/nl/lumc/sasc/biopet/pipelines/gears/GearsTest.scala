@@ -28,7 +28,7 @@ import org.testng.annotations.{ DataProvider, Test, AfterClass }
 /**
  * Created by pjvanthof on 04/02/16.
  */
-class GearsTest extends TestNGSuite with Matchers {
+abstract class GearsTest extends TestNGSuite with Matchers {
   def initPipeline(map: Map[String, Any]): Gears = {
     new Gears {
       override def configNamespace = "gears"
@@ -40,22 +40,36 @@ class GearsTest extends TestNGSuite with Matchers {
     }
   }
 
+  def kraken: Option[Boolean] = None
+  def qiimeClosed: Boolean = false
+  def qiimeOpen: Boolean = false
+  def qiimeRtax: Boolean = false
+  def seqCount: Boolean = false
+  def libraryGears: Boolean = false
+
   @DataProvider(name = "gearsOptions")
   def gearsOptions = {
     val bool = Array(true, false)
 
     for (
-      s1 <- bool; s2 <- bool; qiimeClosed <- bool
-    ) yield Array("", s1, s2, qiimeClosed)
+      s1 <- bool; s2 <- bool
+    ) yield Array("", s1, s2)
   }
 
   @Test(dataProvider = "gearsOptions")
-  def testGears(dummy: String, sample1: Boolean, sample2: Boolean, qiimeCLosed: Boolean): Unit = {
+  def testGears(dummy: String, sample1: Boolean, sample2: Boolean): Unit = {
     val map = {
       var m: Map[String, Any] = GearsTest.config
       if (sample1) m = ConfigUtils.mergeMaps(GearsTest.sample1, m)
       if (sample2) m = ConfigUtils.mergeMaps(GearsTest.sample2, m)
-      ConfigUtils.mergeMaps(Map("gear_use_qiime_closed" -> qiimeCLosed), m)
+      ConfigUtils.mergeMaps(Map(
+        "gears_use_qiime_rtax" -> qiimeRtax,
+        "gears_use_qiime_closed" -> qiimeClosed,
+        "gears_use_qiime_open" -> qiimeOpen,
+        "gears_use_seq_count" -> seqCount,
+        "library_gears" -> libraryGears,
+        "output_dir" -> TestGearsSingle.outputDir
+      ) ++ kraken.map("gears_use_kraken" -> _), m)
     }
 
     if (!sample1 && !sample2) { // When no samples
@@ -74,6 +88,22 @@ class GearsTest extends TestNGSuite with Matchers {
     FileUtils.deleteDirectory(GearsTest.outputDir)
   }
 
+}
+
+class GearsDefaultTest extends GearsTest
+class GearsKrakenTest extends GearsTest {
+  override def kraken = Some(true)
+}
+class GearsQiimeClosedTest extends GearsTest {
+  override def kraken = Some(false)
+  override def qiimeClosed = true
+}
+class GearsQiimeOpenTest extends GearsTest {
+  override def kraken = Some(false)
+  override def qiimeOpen = true
+}
+class GearsLibraryTest extends GearsTest {
+  override def libraryGears = true
 }
 
 object GearsTest {
