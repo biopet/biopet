@@ -26,8 +26,42 @@ You should perform the same steps for [Biopet](https://github.com/biopet/biopet)
   
 ### SBT dependencies 
 
-TODO
-  
+You can develop biopet pipelines with SBT as well. However, since GATK uses Maven, you will still need to install GATK
+into your local Maven repository with `mvn install`.
+
+After this, you can create a regular `build.sbt` file in the project root directory. In addition to the regular
+SBT settings, you will also need to make SBT aware of the local GATK Maven installation you just did. This can be done
+by adding a new resolver object:
+
+```
+resolvers += {
+  val repo = new IBiblioResolver
+  repo.setM2compatible(true)
+  repo.setName("localhost")
+  repo.setRoot(s"file://${Path.userHome.absolutePath}/.m2/repository")
+  repo.setCheckconsistency(false)
+  new RawRepository(repo)
+}
+```
+
+Having set this, you can then add specific biopet modules as your library dependency. Here is one example that adds
+the Flexiprep version 0.7.0 dependency:
+
+```
+libraryDependencies ++= Seq(
+    "nl.lumc.sasc" % "Flexiprep" % "0.7.0"
+)
+```
+
+In some cases, there may be a conflict with the `org.reflections` package used (this is a transitive dependency of
+GATK). If you encounter this, we recommend forcing the version to 0.9.9-RC1 like so:
+
+```
+libraryDependencies ++= Seq(
+    "org.reflections" % "reflections" % "0.9.9-RC1" force()
+)
+```
+
 ## Project structure 
 
 You should follow typical Scala folder structure. Ideally your IDE will handles this for you.
@@ -99,7 +133,21 @@ For a complete example pom.xml see [here](../examples/pom.xml).
 
 ## SBT build
 
-(skip this section if using Maven)
+You can use SBT to build a fat JAR that contains all the required class files in a single JAR file. This can be done
+using the [sbt-assembly plugin](https://github.com/sbt/sbt-assembly). Keep in mind that you have to explicitly define a specific merge strategy for conflicting
+file names. In our experience, the merge strategy below works quite well:
+
+```
+assemblyMergeStrategy in assembly := {
+  case "git.properties"      => MergeStrategy.first
+  // Discard the GATK's queueJobReport.R and use the one from Biopet
+  case PathList("org", "broadinstitute", "gatk", "queue", "util", x) if x.endsWith("queueJobReport.R")
+                             => MergeStrategy.first
+  case "GATKText.properties" => MergeStrategy.first
+  case "dependency_list.txt" => MergeStrategy.discard
+  case other                 => MergeStrategy.defaultMergeStrategy(other)
+}
+```
 
 TODO
 
