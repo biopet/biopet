@@ -36,7 +36,7 @@ class SeqStat(val root: Configurable) extends ToolCommandFunction with Summariza
   @Output(doc = "Output JSON", shortName = "output", required = true)
   var output: File = null
 
-  override def defaultCoreMemory = 2.5
+  override def defaultCoreMemory = 4.0
 
   override def cmdLine = super.cmdLine + required("-i", input) + required("-o", output)
 

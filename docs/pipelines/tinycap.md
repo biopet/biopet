@@ -55,34 +55,22 @@ One can specify other options such as: `bowtie` (alignment) options, clipping an
   "chunkmbs": 256,  # this is a performance option, keep it high (256) as many alternative alignments are possible
   "seedmms": 3,
   "seedlen": 25,
-  "k": 5,           # take and report best 5 alignments 
-  "best": true      # sort by best hit
+  "k": 3,           # take and report best 3 alignments 
+  "best": true,     # sort by best hit,
+  "strata" true     # select from best strata
 },
 "sickle": {
-  "lengthThreshold": 8  # minimum length to keep after trimming
+  "lengthThreshold": 15  # minimum length to keep after trimming
 },
 "cutadapt": {
-  "error_rate": 0.2,    # recommended: 0.2, allow more mismatches in adapter to be clipped of (ratio)
-  "minimum_length":  8, # minimum length to keep after clipping, setting lower will cause multiple alignments afterwards
+  "error_rate": 0.1,    # recommended: 0.1, allow more mismatches in adapter to be clipped of (ratio)
+  "minimum_length":  15, # minimum length to keep after clipping, setting lower will cause multiple alignments afterwards
   "q": 30,              # minimum quality over the read after the clipping in order to keep and report the read
-  "default_clip_mode": "both",  # clip from: front/end/both (5'/3'/both). Depending on the protocol. Setting `both` makes clipping take more time, but is safest to do on short sequences such as smallRNA.
-  "times": 2            # in cases of chimera reads/adapters, how many times should cutadapt try to remove am adapter-sequence
+  "default_clip_mode": "3",  # clip from: front/end/both (5'/3'/both). Depending on the protocol.
+  "times": 1,            # in cases of chimera reads/adapters, how many times should cutadapt try to remove am adapter-sequence
+  "ignore_fastqc_adapters": true    # by default ignore the detected adapters by FastQC. These tend to give false positive hits for smallRNA projects.
 }
 ```
-
-The settings above is quite strict and aggressive on the clipping with `cutadapt`. By default the option `sensitiveAdapterSearch` is turned on in the TinyCap pipeline:
-
-```json
-"fastqc": {
-    "sensitiveAdapterSearch": true
-}
-```
-
-This setting is turned on to enable aggressive adapter trimming. e.g. found (partial) adapters in `FastQC` 
-are all used in `Cutadapt`. Depending on the sequencing technique and sample preparation, e.g. short 
-sequences (76bp - 100bp). Turning of this option will still produce sensible results.
-
-
 
 ## Examine results
 

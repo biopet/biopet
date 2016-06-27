@@ -17,7 +17,10 @@ package nl.lumc.sasc.biopet.pipelines.gentrap
 import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
+import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
+import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
 import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
@@ -26,7 +29,7 @@ import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.{ DataProvider, Test }
 
-abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNGSuite with Matchers {
+abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: Option[String]) extends TestNGSuite with Matchers {
 
   def initPipeline(map: Map[String, Any]): Gentrap = {
     new Gentrap() {
@@ -105,15 +108,18 @@ abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNG
     val settings = Map(
       "output_dir" -> GentrapTest.outputDir,
       "gsnap" -> Map("db" -> "test", "dir" -> "test"),
-      "aligner" -> "gsnap",
       "expression_measures" -> expMeasures,
       "strand_protocol" -> strandProtocol
-    )
+    ) ++ aligner.map("aligner" -> _)
     val config = ConfigUtils.mergeMaps(settings ++ sampleConfig, Map(GentrapTest.executables.toSeq: _*))
     val gentrap: Gentrap = initPipeline(config)
 
     gentrap.script()
-    val functions = gentrap.functions.groupBy(_.getClass)
+    val functions = gentrap.functions.flatMap {
+      case f: BiopetFifoPipe => f.pipesJobs
+      case f: BiopetPipe     => f.pipesJobs
+      case f                 => List(f)
+    }.groupBy(_.getClass)
     val numSamples = sampleConfig("samples").size
 
     if (expMeasures.contains("fragments_per_gene"))
@@ -139,16 +145,29 @@ abstract class GentrapTestAbstract(val expressionMeasure: String) extends TestNG
       assert(gentrap.functions.exists(_.isInstanceOf[Cufflinks]))
       assert(gentrap.functions.exists(_.isInstanceOf[Ln]))
     }
+
+    val classMap = Map(
+      "gsnap" -> classOf[Gsnap],
+      "tophat" -> classOf[Tophat],
+      "star" -> classOf[Star],
+      "star-2pass" -> classOf[Star],
+      "hisat2" -> classOf[Hisat2]
+    )
+
+    val alignerClass = classMap.get(aligner.getOrElse("gsnap"))
+
+    alignerClass.foreach(c => assert(functions.keys.exists(_ == c)))
+    classMap.values.filterNot(Some(_) == alignerClass).foreach(x => assert(!functions.keys.exists(_ == x)))
   }
 
 }
 
-class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene")
-//class GentrapFragmentsPerExonTest extends GentrapTestAbstract("fragments_per_exon")
-class GentrapBaseCountsTest extends GentrapTestAbstract("base_counts")
-class GentrapCufflinksStrictTest extends GentrapTestAbstract("cufflinks_strict")
-class GentrapCufflinksGuidedTest extends GentrapTestAbstract("cufflinks_guided")
-class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind")
+class GentrapFragmentsPerGeneTest extends GentrapTestAbstract("fragments_per_gene", None)
+//class GentrapFragmentsPerExonTest extends GentrapTestAbstract("fragments_per_exon", None)
+class GentrapBaseCountsTest extends GentrapTestAbstract("base_counts", None)
+class GentrapCufflinksStrictTest extends GentrapTestAbstract("cufflinks_strict", None)
+class GentrapCufflinksGuidedTest extends GentrapTestAbstract("cufflinks_guided", None)
+class GentrapCufflinksBlindTest extends GentrapTestAbstract("cufflinks_blind", None)
 
 object GentrapTest {
   val outputDir = Files.createTempDir()
