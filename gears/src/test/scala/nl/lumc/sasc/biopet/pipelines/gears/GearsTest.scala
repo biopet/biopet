@@ -82,12 +82,6 @@ abstract class GearsTest extends TestNGSuite with Matchers {
 
     }
   }
-
-  // remove temporary run directory all tests in the class have been run
-  @AfterClass def removeTempOutputDir() = {
-    FileUtils.deleteDirectory(GearsTest.outputDir)
-  }
-
 }
 
 class GearsDefaultTest extends GearsTest
@@ -109,6 +103,7 @@ class GearsLibraryTest extends GearsTest {
 object GearsTest {
   val outputDir = Files.createTempDir()
   new File(outputDir, "input").mkdirs()
+  outputDir.deleteOnExit()
 
   val r1 = new File(outputDir, "input" + File.separator + "R1.fq")
   Files.touch(r1)
