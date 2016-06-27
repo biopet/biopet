@@ -17,11 +17,11 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
+import nl.lumc.sasc.biopet.extensions.kraken.{Kraken, KrakenReport}
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.extensions.tools.KrakenReportToJson
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -90,6 +90,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       intercept[IllegalArgumentException] {
         gears.script()
       }
+      Logging.errors.clear()
     } else {
 
       gears.script()
