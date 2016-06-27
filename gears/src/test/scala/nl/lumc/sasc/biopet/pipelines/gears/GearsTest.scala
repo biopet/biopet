@@ -19,11 +19,10 @@ import java.io.File
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
-import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test, AfterClass }
+import org.testng.annotations.{ DataProvider, Test }
 
 /**
  * Created by pjvanthof on 04/02/16.
