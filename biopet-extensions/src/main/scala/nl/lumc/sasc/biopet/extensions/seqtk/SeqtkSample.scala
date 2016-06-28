@@ -12,33 +12,36 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.tools
+package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.ToolCommandFunction
-import nl.lumc.sasc.biopet.core.summary.Summarizable
-import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class MergeOtuMaps(val root: Configurable) extends ToolCommandFunction {
-  def toolObject = nl.lumc.sasc.biopet.tools.MergeOtuMaps
+/**
+ * Wrapper for the seqtk sample subcommand.
+ * Written based on seqtk version 1.0-r63-dirty.
+ */
+class SeqtkSample(val root: Configurable) extends Seqtk {
 
-  @Input(doc = "Input", shortName = "input", required = true)
-  var input: List[File] = Nil
+  /** input file */
+  @Input(doc = "Input file (FASTQ or FASTA)", required = true)
+  var input: File = _
 
-  @Output(doc = "Output", shortName = "output", required = true)
+  /** output file */
+  @Output(doc = "Output file", required = true)
   var output: File = _
 
-  var skipPrefix: List[String] = config("skip_prefix", default = Nil)
+  var s: Option[Int] = config("seed")
 
-  override def defaultCoreMemory = 6.0
+  var sample: Double = _
 
-  override def cmdLine = super.cmdLine +
-    repeat("-I", input) +
-    required("-o", output) +
-    repeat("-p", skipPrefix)
+  def cmdLine = required(executable) +
+    " sample " +
+    optional("-s", s) +
+    required(input) +
+    (if (sample > 1) required(sample.toInt) else required(sample)) +
+    (if (outputAsStsout) "" else " > " + required(output))
 
 }
-
