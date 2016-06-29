@@ -42,7 +42,7 @@ class WipeReads(val root: Configurable) extends ToolCommandFunction {
   var readgroup: Set[String] = config("read_group", default = Nil)
 
   @Argument(doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
-  var limitRemoval: Boolean = config("limit_removal", default=true)
+  var limitRemoval: Boolean = config("limit_removal", default=false)
 
   @Argument(doc = "Whether to index output BAM file or not")
   var noMakeIndex: Boolean = config("no_make_index", default=false)
@@ -59,8 +59,16 @@ class WipeReads(val root: Configurable) extends ToolCommandFunction {
   @Output(doc = "Output BAM", shortName = "o", required = true)
   var outputBam: File = null
 
+  @Output(required = false)
+  private var outputIndex: Option[File] = None
+
   @Output(doc = "BAM containing discarded reads", shortName = "f", required = false)
   var discardedBam: Option[File] = None
+
+  override def beforeGraph() {
+    super.beforeGraph()
+    if (! noMakeIndex) outputIndex = Some(new File(outputBam.getPath.stripSuffix(".bam") + ".bai"))
+  }
 
   override def cmdLine = super.cmdLine +
     required("-I", inputBam) +

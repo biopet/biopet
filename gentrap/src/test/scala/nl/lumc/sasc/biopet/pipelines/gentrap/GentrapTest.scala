@@ -138,9 +138,8 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
       assert(gentrap.functions.exists(_.isInstanceOf[Ln]))
     }
 
-    if (gentrap.removeRibosomalReads) {
-      assert(gentrap.functions.exists(_.isInstanceOf[WipeReads]))
-    }
+    gentrap.removeRibosomalReads shouldBe removeRiboReads
+    gentrap.functions.exists(_.isInstanceOf[WipeReads]) shouldBe removeRiboReads
 
     val classMap = Map(
       "gsnap" -> classOf[Gsnap],
