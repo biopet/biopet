@@ -19,7 +19,7 @@ If you decide to use Maven, you should clone the [GATK public github repository]
 You should use GATK 3.6. 
 After cloning GATK 3.6, run the following in a terminal
 
-`mvn clean && mvn install`
+`mvn clean install`
 
 You should perform the same steps for [Biopet](https://github.com/biopet/biopet). This document assumes you are working with Biopet 0.7 or higher.
   
@@ -148,8 +148,6 @@ assemblyMergeStrategy in assembly := {
   case other                 => MergeStrategy.defaultMergeStrategy(other)
 }
 ```
-
-TODO
 
 ## New pipeline
  
