@@ -119,6 +119,10 @@ class Gentrap(val root: Configurable) extends QScript
     "mapping" -> Map(
       "aligner" -> "gsnap",
       "skip_markduplicates" -> true
+    ),
+    "wipereads" -> Map(
+      "limit_removal" -> true,
+      "no_make_index" -> false
     )
   )
 
@@ -209,7 +213,7 @@ class Gentrap(val root: Configurable) extends QScript
       job.inputBam = bamFile.get
       ribosomalRefFlat().foreach(job.intervalFile = _)
       job.outputBam = createFile("cleaned.bam")
-      job.discardedBam = createFile("rrna.bam")
+      job.discardedBam = Some(createFile("rrna.bam"))
       add(job)
       Some(job.outputBam)
     } else bamFile

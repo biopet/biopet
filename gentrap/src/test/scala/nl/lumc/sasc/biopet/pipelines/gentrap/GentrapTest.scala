@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.tools.BaseCounter
+import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
@@ -71,10 +71,6 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
       .toMap
     )
 
-  val validExpressionMeasures = Set(
-    "fragments_per_gene", "fragments_per_exon", "base_counts",
-    "cufflinks_strict", "cufflinks_guided", "cufflinks_blind")
-
   @DataProvider(name = "expMeasuresstrandProtocol")
   def expMeasuresStrandProtocolProvider = {
 
@@ -89,27 +85,23 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
     } yield makeSamplesConfig(sampleNum, libNum, libType)
 
     val strandProtocols = Array("non_specific", "dutp")
-    // get all possible combinations of expression measures
-    val expressionMeasures = validExpressionMeasures
-      //.subsets
-      //.map(_.toList)
-      .toArray
 
     for {
       sampleConfig <- sampleConfigs.toArray
-      //expressionMeasure <- expressionMeasures
       strandProtocol <- strandProtocols
-    } yield Array(sampleConfig, List(expressionMeasure), strandProtocol)
+      removeRiboReads <- Array(true, false)
+    } yield Array(sampleConfig, List(expressionMeasure), strandProtocol, removeRiboReads)
   }
 
   @Test(dataProvider = "expMeasuresstrandProtocol")
-  def testGentrap(sampleConfig: SamplesConfig, expMeasures: List[String], strandProtocol: String) = {
+  def testGentrap(sampleConfig: SamplesConfig, expMeasures: List[String], strandProtocol: String, removeRiboReads: Boolean) = {
 
     val settings = Map(
       "output_dir" -> GentrapTest.outputDir,
       "gsnap" -> Map("db" -> "test", "dir" -> "test"),
       "expression_measures" -> expMeasures,
-      "strand_protocol" -> strandProtocol
+      "strand_protocol" -> strandProtocol,
+      "remove_ribosomal_reads" -> removeRiboReads
     ) ++ aligner.map("aligner" -> _)
     val config = ConfigUtils.mergeMaps(settings ++ sampleConfig, Map(GentrapTest.executables.toSeq: _*))
     val gentrap: Gentrap = initPipeline(config)
@@ -145,6 +137,9 @@ abstract class GentrapTestAbstract(val expressionMeasure: String, val aligner: O
       assert(gentrap.functions.exists(_.isInstanceOf[Cufflinks]))
       assert(gentrap.functions.exists(_.isInstanceOf[Ln]))
     }
+
+    gentrap.removeRibosomalReads shouldBe removeRiboReads
+    gentrap.functions.exists(_.isInstanceOf[WipeReads]) shouldBe removeRiboReads
 
     val classMap = Map(
       "gsnap" -> classOf[Gsnap],
@@ -196,6 +191,7 @@ object GentrapTest {
     "annotation_gtf" -> (outputDir + File.separator + "ref.fa"),
     "annotation_bed" -> (outputDir + File.separator + "ref.fa"),
     "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
+    "ribosome_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test",
     "rscript" -> Map("exe" -> "test")
   ) ++ Seq(
