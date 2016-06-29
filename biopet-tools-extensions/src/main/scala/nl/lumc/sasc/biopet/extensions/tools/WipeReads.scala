@@ -42,10 +42,10 @@ class WipeReads(val root: Configurable) extends ToolCommandFunction {
   var readgroup: Set[String] = config("read_group", default = Nil)
 
   @Argument(doc = "Whether to remove multiple-mapped reads outside the target regions (default: yes)")
-  var limitRemoval: Boolean = config("limit_removal", default=false)
+  var limitRemoval: Boolean = config("limit_removal", default = false)
 
   @Argument(doc = "Whether to index output BAM file or not")
-  var noMakeIndex: Boolean = config("no_make_index", default=false)
+  var noMakeIndex: Boolean = config("no_make_index", default = false)
 
   @Argument(doc = "GTF feature containing intervals (default: exon)")
   var featureType: Option[String] = config("feature_type")
@@ -67,7 +67,7 @@ class WipeReads(val root: Configurable) extends ToolCommandFunction {
 
   override def beforeGraph() {
     super.beforeGraph()
-    if (! noMakeIndex) outputIndex = Some(new File(outputBam.getPath.stripSuffix(".bam") + ".bai"))
+    if (!noMakeIndex) outputIndex = Some(new File(outputBam.getPath.stripSuffix(".bam") + ".bai"))
   }
 
   override def cmdLine = super.cmdLine +
