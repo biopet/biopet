@@ -14,20 +14,20 @@
  */
 package nl.lumc.sasc.biopet.pipelines.gentrap
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.core.{BiopetFifoPipe, BiopetPipe}
+import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, BiopetPipe }
 import nl.lumc.sasc.biopet.extensions._
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
 import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
-import nl.lumc.sasc.biopet.extensions.tools.{BaseCounter, WipeReads}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.extensions.tools.{ BaseCounter, WipeReads }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{DataProvider, Test}
+import org.testng.annotations.{ DataProvider, Test }
 
 abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends TestNGSuite with Matchers {
 
@@ -68,14 +68,14 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
       aligner.map("aligner" -> _) ++
       removeRiboReads.map("remove_ribosomal_reads" -> _)
     val configs: List[Option[Map[String, Any]]] = List(Some(settings), (if (sample1) Some(GentrapTest.sample1) else None), (if (sample2) Some(GentrapTest.sample2) else None))
-    val config = configs.flatten.foldLeft(GentrapTest.executables)( (a,b) => ConfigUtils.mergeMaps(a, b))
+    val config = configs.flatten.foldLeft(GentrapTest.executables)((a, b) => ConfigUtils.mergeMaps(a, b))
     val gentrap: Gentrap = initPipeline(config)
 
     val numSamples = (sample1, sample2) match {
       case (true, true) => 2
-      case (_, true) => 1
-      case (true, _) => 1
-      case _ => 0
+      case (_, true)    => 1
+      case (true, _)    => 1
+      case _            => 0
     }
 
     if (numSamples == 0) {
@@ -88,8 +88,8 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
 
       val functions = gentrap.functions.flatMap {
         case f: BiopetFifoPipe => f.pipesJobs
-        case f: BiopetPipe => f.pipesJobs
-        case f => List(f)
+        case f: BiopetPipe     => f.pipesJobs
+        case f                 => List(f)
       }.groupBy(_.getClass)
 
       if (expressionMeasures.contains("fragments_per_gene"))
