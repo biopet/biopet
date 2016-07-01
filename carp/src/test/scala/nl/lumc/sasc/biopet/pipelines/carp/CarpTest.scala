@@ -14,19 +14,19 @@
  */
 package nl.lumc.sasc.biopet.pipelines.carp
 
-import java.io.{File, FileOutputStream}
+import java.io.{ File, FileOutputStream }
 
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
-import nl.lumc.sasc.biopet.extensions.picard.{MergeSamFiles, SortSam}
-import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
+import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{AfterClass, DataProvider, Test}
+import org.testng.annotations.{ AfterClass, DataProvider, Test }
 
 /**
  * Test class for [[Carp]]
