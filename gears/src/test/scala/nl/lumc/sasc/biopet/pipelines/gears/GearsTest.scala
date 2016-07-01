@@ -72,7 +72,7 @@ abstract class GearsTest extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
       Logging.errors.clear()

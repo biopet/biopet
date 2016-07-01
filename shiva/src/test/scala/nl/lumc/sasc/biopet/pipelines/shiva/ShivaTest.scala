@@ -14,18 +14,18 @@
  */
 package nl.lumc.sasc.biopet.pipelines.shiva
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream}
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.gatk.{ BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator }
+import nl.lumc.sasc.biopet.extensions.gatk.{BaseRecalibrator, IndelRealigner, PrintReads, RealignerTargetCreator}
 import nl.lumc.sasc.biopet.extensions.picard.MarkDuplicates
 import nl.lumc.sasc.biopet.extensions.tools.VcfStats
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ConfigUtils, Logging}
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
-import org.testng.annotations.{ DataProvider, Test }
+import org.testng.annotations.{DataProvider, Test}
 
 /**
  * Class for testing shiva
@@ -86,6 +86,7 @@ trait ShivaTestTrait extends TestNGSuite with Matchers {
       intercept[IllegalArgumentException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else {
       val pipeline = initPipeline(map)
       pipeline.script()
