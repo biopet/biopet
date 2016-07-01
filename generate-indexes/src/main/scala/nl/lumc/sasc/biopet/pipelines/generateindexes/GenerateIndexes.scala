@@ -43,6 +43,8 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
 
   protected var configDeps: List[File] = Nil
 
+  override def fixedValues = Map("gffread" -> Map("T" -> true))
+
   /** This is executed before the script starts */
   def init(): Unit = {
     if (referenceConfig == null)
