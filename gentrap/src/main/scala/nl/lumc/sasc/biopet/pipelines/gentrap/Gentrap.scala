@@ -253,7 +253,7 @@ object Gentrap extends PipelineCommand {
   }
 
   /** Converts string with underscores into camel-case strings */
-  private def camelize(ustring: String): String = ustring
+  private[gentrap] def camelize(ustring: String): String = ustring
     .split("_")
     .map(_.toLowerCase.capitalize)
     .mkString("")

@@ -48,6 +48,7 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
   def removeRiboReads: Option[Boolean] = Some(false)
   def sample1: Boolean = true
   def sample2: Boolean = true
+  def callVariants: Option[Boolean] = None
 
   @DataProvider(name = "expMeasuresstrandProtocol")
   def expMeasuresStrandProtocolProvider = {
@@ -66,7 +67,8 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
       "strand_protocol" -> strandProtocol
     ) ++
       aligner.map("aligner" -> _) ++
-      removeRiboReads.map("remove_ribosomal_reads" -> _)
+      removeRiboReads.map("remove_ribosomal_reads" -> _) ++
+      callVariants.map("call_variants" -> _)
     val configs: List[Option[Map[String, Any]]] = List(Some(settings), (if (sample1) Some(GentrapTest.sample1) else None), (if (sample2) Some(GentrapTest.sample2) else None))
     val config = configs.flatten.foldLeft(GentrapTest.executables)((a, b) => ConfigUtils.mergeMaps(a, b))
     val gentrap: Gentrap = initPipeline(config)
@@ -91,6 +93,14 @@ abstract class GentrapTestAbstract(val expressionMeasures: List[String]) extends
         case f: BiopetPipe     => f.pipesJobs
         case f                 => List(f)
       }.groupBy(_.getClass)
+
+      gentrap.shivaVariantcalling.isDefined shouldBe callVariants.getOrElse(false)
+
+      gentrap.summarySettings.getOrElse("expression_measures", List()).asInstanceOf[List[String]].sorted shouldBe
+        expressionMeasures.map(Gentrap.camelize(_)).sorted
+      gentrap.summarySettings.get("call_variants") shouldBe Some(callVariants.getOrElse(false))
+      gentrap.summarySettings.get("remove_ribosomal_reads") shouldBe Some(removeRiboReads.getOrElse(false))
+      gentrap.summarySettings.get("strand_protocol") shouldBe Some(Gentrap.camelize(strandProtocol))
 
       if (expressionMeasures.contains("fragments_per_gene"))
         assert(gentrap.functions.exists(_.isInstanceOf[HtseqCount]))
@@ -150,6 +160,9 @@ class GentrapNoSamplesTest extends GentrapTestAbstract(List("fragments_per_gene"
 class GentrapRemoveRibosomeTest extends GentrapTestAbstract(List("fragments_per_gene")) {
   override def removeRiboReads = Some(true)
 }
+class GentrapCallVariantsTest extends GentrapTestAbstract(List("fragments_per_gene")) {
+  override def callVariants = Some(true)
+}
 
 object GentrapTest {
   val outputDir = Files.createTempDir()
@@ -180,7 +193,8 @@ object GentrapTest {
     "annotation_refflat" -> (outputDir + File.separator + "ref.fa"),
     "ribosome_refflat" -> (outputDir + File.separator + "ref.fa"),
     "varscan_jar" -> "test",
-    "rscript" -> Map("exe" -> "test")
+    "rscript" -> Map("exe" -> "test"),
+    "gatk_jar" -> "test"
   ) ++ Seq(
       // fastqc executables
       "fastqc", "seqtk", "sickle", "cutadapt",
