@@ -129,9 +129,6 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val fragmentsPerGene = if (expMeasures().contains(ExpMeasures.FragmentsPerGene))
     Some(new FragmentsPerGene(this)) else None
 
-  lazy val fragmentsPerExon = if (expMeasures().contains(ExpMeasures.FragmentsPerExon))
-    Some(new FragmentsPerExon(this)) else None
-
   lazy val baseCounts = if (expMeasures().contains(ExpMeasures.BaseCounts))
     Some(new BaseCounts(this)) else None
 
@@ -144,7 +141,7 @@ class Gentrap(val root: Configurable) extends QScript
   lazy val cufflinksStrict = if (expMeasures().contains(ExpMeasures.CufflinksStrict))
     Some(new CufflinksStrict(this)) else None
 
-  def executedMeasures = (fragmentsPerGene :: fragmentsPerExon :: baseCounts :: cufflinksBlind ::
+  def executedMeasures = (fragmentsPerGene :: baseCounts :: cufflinksBlind ::
     cufflinksGuided :: cufflinksStrict :: Nil).flatten
 
   /** Whether to do simple variant calling on RNA or not */
