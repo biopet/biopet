@@ -84,8 +84,8 @@ In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
-2. `aligner`: which aligner to use (`gsnap`, `tophat`, `hisat2`, `star` or `star-2pass`)
-3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
+2. `aligner`: which aligner to use (`gsnap`, `tophat`, `hisat2`, `star` or `star-2pass`). `star-2pass` enables the 2-pass mapping option of STAR, for the most sensitive novel junction discovery. For more, please refer to [STAR user Manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) 
+3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file. If the `.dict` file does not exist, you can create it using: ```` java -jar CreateSequenceDictionary.jar R= yourReference.fasta O= yourReference.dict ````
 4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.
 6. `annotation_refflat`: contains the path to an annotation refFlat file of the entire genome
@@ -99,7 +99,6 @@ While optional settings are:
 5. `call_variants`: whether to call variants on the RNA-seq data or not, defaults to `false`.
 
 Thus, an example settings configuration is as follows:
-
 ~~~ json
 {
   "output_dir": "/path/to/output/dir",
@@ -107,7 +106,20 @@ Thus, an example settings configuration is as follows:
   "strand_protocol": "dutp",
   "reference_fasta": "/path/to/reference/fastafile",
   "annotation_gtf": "/path/to/gtf",
-  "annotation_refflat": "/path/to/refflat",
+  "annotation_refflat": "/path/to/refflat"
+}
+~~~
+
+#### Best practice example
+If you are unsure of how to use the numerous options of gentrap, please refer to the following best practice configuration file example. 
+~~~ json
+{
+  "output_dir": "/path/to/output/dir",
+  "aligner": "gsnap",
+  "reference_fasta": "/path/to/reference/fastafile",
+  "expression_measures": ["fragments_per_gene"],
+  "strand_protocol": "dutp",
+  "annotation_refflat": "/path/to/refflat"
 }
 ~~~
 
