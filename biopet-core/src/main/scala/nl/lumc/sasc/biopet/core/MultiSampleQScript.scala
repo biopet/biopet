@@ -24,7 +24,7 @@ import org.broadinstitute.gatk.queue.QScript
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
-  @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
+  @Argument(doc = "Only Process This Sample", shortName = "s", required = false, fullName = "sample")
   private[core] val onlySamples: List[String] = Nil
 
   require(globalConfig.map.contains("samples"), "No Samples found in config")
