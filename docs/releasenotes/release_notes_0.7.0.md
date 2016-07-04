@@ -5,7 +5,7 @@
 * Switch to full public licence
 * Upgrade to Queue 3.6
  * Upgrade to java 8
- * Upgrade to PIcard / htsjdk 2.4.1
+ * Upgrade to Picard / htsjdk 2.4.1
 
 ## Functionality
 
