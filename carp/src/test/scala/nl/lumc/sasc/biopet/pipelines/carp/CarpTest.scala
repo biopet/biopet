@@ -65,9 +65,10 @@ class CarpTest extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2 && !sample3 && !threatment && !control) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else if (threatment && !control) { // If control of a samples does not exist in samples
       intercept[IllegalStateException] {
         initPipeline(map).script()
