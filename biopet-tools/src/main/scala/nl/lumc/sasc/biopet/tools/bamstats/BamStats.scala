@@ -2,7 +2,7 @@ package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
 
-import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
+import htsjdk.samtools.{CigarOperator, SAMSequenceDictionary, SamReaderFactory}
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
@@ -82,6 +82,11 @@ object BamStats extends ToolCommand {
 
     stats.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
     stats.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
+    stats.clippingHistogram.writeToTsv(new File(outputDir, "clipping.tsv"))
+    stats.leftClippingHistogram.writeToTsv(new File(outputDir, "left_clipping.tsv"))
+    stats.rightClippingHistogram.writeToTsv(new File(outputDir, "right_clipping.tsv"))
+    stats._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
+    stats._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
   }
 
   def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int): Stats = {
@@ -134,7 +139,21 @@ object BamStats extends ToolCommand {
         if (samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
           totalStats.insertSizeHistogram.add(samRecord.getInferredInsertSize.abs)
 
-        //TODO: Clipping stats
+        val leftClipping = samRecord.getAlignmentStart - samRecord.getUnclippedStart
+        val rightClipping = samRecord.getUnclippedEnd - samRecord.getAlignmentEnd
+
+        totalStats.clippingHistogram.add(leftClipping + rightClipping)
+        totalStats.leftClippingHistogram.add(leftClipping)
+        totalStats.rightClippingHistogram.add(rightClipping)
+
+        if (samRecord.getReadNegativeStrandFlag) {
+          totalStats._5_ClippingHistogram.add(leftClipping)
+          totalStats._3_ClippingHistogram.add(rightClipping)
+        } else {
+          totalStats._5_ClippingHistogram.add(rightClipping)
+          totalStats._3_ClippingHistogram.add(leftClipping)
+        }
+
         //TODO: Bin Support
       }
 
