@@ -20,6 +20,7 @@ pages:
     - TinyCap (smallRNA): 'pipelines/tinycap.md'
     - Toucan (Annotation): 'pipelines/toucan.md'
 - Tools:
+    - AnnotateVcfWithBed: 'tools/AnnotateVcfWithBed.md'
     - SamplesTsvToJson: 'tools/SamplesTsvToJson.md'
     - BedToInterval: 'tools/bedtointerval.md'
     - BastyGenerateFasta: 'tools/BastyGenerateFasta.md'
