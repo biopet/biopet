@@ -14,7 +14,6 @@ import scala.concurrent.blocking
 import scala.util.{Failure, Success}
 import scala.concurrent.duration.Duration
 import scala.collection.JavaConversions._
-import scala.collection.immutable.Queue
 
 /**
   * Created by pjvanthof on 25/05/16.
@@ -71,28 +70,18 @@ object BamStats extends ToolCommand {
   }
 
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
-    var stats = Stats()
-
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
-      val f = Future {
-        val s = processContig(contig, bamFile, binSize, threadBinSize)
-        blocking { stats += s }
-      }
-      f.onFailure { case t => throw new RuntimeException(t) }
-      contig -> f
+      Future { processContig(contig, bamFile, binSize, threadBinSize) }
     }
 
     val unmappedFuture = Future { processUnmappedReads(bamFile) }
-    unmappedFuture.onFailure { case t => throw new RuntimeException(t) }
 
-    // Waiting on all contigs to complete
-    contigsFutures.foreach { x => Await.ready(x._2, Duration.Inf) }
-
-    Await.ready(unmappedFuture, Duration.Inf)
-    stats += unmappedFuture.value.get.get
+    val stats = waitOnFutures(unmappedFuture :: contigsFutures.toList)
 
     logger.info(s"total: ${stats.totalReads},  unmapped: ${stats.unmapped}, secondary: ${stats.secondary}")
-    stats.insertSizeHistogram.keys.toList.sorted.foreach(x => println(s"$x\t${stats.insertSizeHistogram(x)}"))
+
+    stats.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
+    stats.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
   }
 
   def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int): Stats = {
@@ -105,19 +94,22 @@ object BamStats extends ToolCommand {
     val scattersPerThread = (region.length.toDouble / threadBinSize).ceil.toInt
 
     val scattersFutures = scatters.grouped(scattersPerThread).map { scatters =>
-      val f = Future {
-        val s = processThread(scatters, bamFile)
-        blocking { stats += s }
-      }
-      f.onFailure { case t => throw new RuntimeException(t) }
-      f
+      Future { processThread(scatters, bamFile) }
     }
 
-    // Waiting on all contigs to complete
-    scattersFutures.foreach { x => Await.ready(x, Duration.Inf) }
+    waitOnFutures(scattersFutures.toList)
+  }
 
-    logger.info(s"Contig '${region.chr}' done")
-
+  def waitOnFutures(futures: List[Future[Stats]], msg: Option[String] = None): Stats = {
+    futures.foreach(_.onFailure { case t => throw new RuntimeException(t) })
+    var stats = Stats()
+    var running = futures
+    while (running.nonEmpty) {
+      val done = running.filter(_.value.isDefined)
+      done.foreach(stats += _.value.get.get)
+      running = running.filterNot(done.contains(_))
+      Thread.sleep(1000)
+    }
     stats
   }
 
@@ -137,12 +129,13 @@ object BamStats extends ToolCommand {
         if (samRecord.isSecondaryOrSupplementary) totalStats.secondary += 1
         if (samRecord.getReadUnmappedFlag) totalStats.unmapped += 1
         else { // Mapped read
-          totalStats.mappingQualityHistogram += samRecord.getMappingQuality -> (totalStats.mappingQualityHistogram.getOrElse(samRecord.getMappingQuality, 0L) + 1)
+          totalStats.mappingQualityHistogram.add(samRecord.getMappingQuality)
         }
         if (samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
-          totalStats.insertSizeHistogram += samRecord.getInferredInsertSize.abs -> (totalStats.insertSizeHistogram.getOrElse(samRecord.getInferredInsertSize.abs, 0L) + 1)
+          totalStats.insertSizeHistogram.add(samRecord.getInferredInsertSize.abs)
 
-        //TODO: Read counting
+        //TODO: Clipping stats
+        //TODO: Bin Support
       }
 
       //TODO: bases counting
