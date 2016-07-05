@@ -19,7 +19,7 @@ import java.io.{ File, FileOutputStream }
 import com.google.common.io.Files
 import nl.lumc.sasc.biopet.extensions.kraken.Kraken
 import nl.lumc.sasc.biopet.extensions.picard.{ MarkDuplicates, MergeSamFiles }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -72,9 +72,10 @@ trait MultisampleMappingTestTrait extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2 && !sample3 && !sample4) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else if (sample4 && !bamToFastq && !correctReadgroups) {
       intercept[IllegalStateException] {
         initPipeline(map).script()
