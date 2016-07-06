@@ -16,6 +16,7 @@ case class Stats() {
   val _5_ClippingHistogram = Histogram()
   val _3_ClippingHistogram = Histogram()
 
+  /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {
     this.totalReads += other.totalReads
     this.unmapped += other.unmapped
