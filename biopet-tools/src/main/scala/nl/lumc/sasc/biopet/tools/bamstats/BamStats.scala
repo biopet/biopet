@@ -2,22 +2,22 @@ package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
 
-import htsjdk.samtools.{CigarOperator, SAMSequenceDictionary, SamReaderFactory}
+import htsjdk.samtools.{ CigarOperator, SAMSequenceDictionary, SamReaderFactory }
 import htsjdk.samtools.reference.FastaSequenceFile
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
-import nl.lumc.sasc.biopet.utils.intervals.{BedRecord, BedRecordList}
-import nl.lumc.sasc.biopet.utils.{BamUtils, ToolCommand}
+import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
+import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.blocking
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 import scala.concurrent.duration.Duration
 import scala.collection.JavaConversions._
 
 /**
-  * Created by pjvanthof on 25/05/16.
-  */
+ * Created by pjvanthof on 25/05/16.
+ */
 object BamStats extends ToolCommand {
   case class Args(outputDir: File = null,
                   bamFile: File = null,
@@ -26,7 +26,7 @@ object BamStats extends ToolCommand {
                   threadBinSize: Int = 10000000) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('R', "reference")  valueName "<file>" action { (x, c) =>
+    opt[File]('R', "reference") valueName "<file>" action { (x, c) =>
       c.copy(referenceFasta = Some(x))
     }
     opt[File]('o', "outputDir") required () valueName "<directory>" action { (x, c) =>

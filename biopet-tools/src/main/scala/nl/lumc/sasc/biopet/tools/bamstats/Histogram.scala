@@ -1,14 +1,14 @@
 package nl.lumc.sasc.biopet.tools.bamstats
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import scala.collection.generic.Sorted
 import scala.collection.mutable
 import scala.math.ScalaNumber
 
 /**
-  * Created by pjvanthof on 05/07/16.
-  */
+ * Created by pjvanthof on 05/07/16.
+ */
 case class Histogram() {
   protected[Histogram] val histrogram: mutable.Map[Int, Long] = mutable.Map()
 

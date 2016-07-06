@@ -3,7 +3,6 @@ package nl.lumc.sasc.biopet.tools.bamstats
 import scala.collection.mutable
 import scala.concurrent.blocking
 
-
 /**
  * Created by pjvanthof on 05/07/16.
  */
