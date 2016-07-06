@@ -27,10 +27,10 @@ object BedtoolsCoverageToCounts extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "input") required () valueName "<file>" action { (x, c) =>
       c.copy(input = x)
-    }
+    } text "Coverage file produced with bedtools"
     opt[File]('o', "output") required () unbounded () valueName "<file>" action { (x, c) =>
       c.copy(output = x)
-    }
+    } text "Output file name"
   }
 
   /**
