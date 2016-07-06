@@ -19,7 +19,7 @@ case class Stats() {
   val _5_ClippingHistogram = Histogram()
   val _3_ClippingHistogram = Histogram()
 
-  def +(other: Stats): Stats = {
+  def +=(other: Stats): Stats = {
     this.totalReads += other.totalReads
     this.unmapped += other.unmapped
     this.mappingQualityHistogram += other.mappingQualityHistogram
