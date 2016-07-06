@@ -1,16 +1,18 @@
 package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
+import java.util.concurrent.TimeoutException
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
+import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
 
 /**
  * This tool will collect stats from a bamfile
@@ -135,7 +137,11 @@ object BamStats extends ToolCommand {
       done.foreach(stats += _.value.get.get)
       running = running.filterNot(done.contains(_))
       if (running.nonEmpty && done.nonEmpty) msg.foreach(m => logger.info(s"Jobs for '$m', ${running.size}/${futures.size} jobs"))
-      if (running.nonEmpty) Thread.sleep(1000)
+      if (running.nonEmpty) try {
+        Await.ready(running.head, 1 second)
+      } catch {
+        case e: TimeoutException =>
+      }
     }
     msg.foreach(m => logger.info(s"All jobs for '$m' are done"))
     stats
