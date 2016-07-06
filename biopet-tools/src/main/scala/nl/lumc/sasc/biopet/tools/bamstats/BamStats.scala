@@ -2,18 +2,15 @@ package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
 
-import htsjdk.samtools.{ CigarOperator, SAMSequenceDictionary, SamReaderFactory }
 import htsjdk.samtools.reference.FastaSequenceFile
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
+import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
-import nl.lumc.sasc.biopet.utils.{ BamUtils, ToolCommand }
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.blocking
-import scala.util.{ Failure, Success }
-import scala.concurrent.duration.Duration
 import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
  * Created by pjvanthof on 25/05/16.
