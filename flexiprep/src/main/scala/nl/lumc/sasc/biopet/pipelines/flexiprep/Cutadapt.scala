@@ -29,7 +29,15 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.extensions.Cutadapt(root) {
 
   val ignoreFastqcAdapters: Boolean = config("ignore_fastqc_adapters", default = false)
-  val customAdaptersConfig: Map[String, Any] = config("custom_adapters", default = Map.empty)
+
+  val customAdaptersEnd: Map[String, Any] = config("custom_adapters_end", default = Map())
+  adapter ++= customAdaptersEnd.values.map(_.toString)
+
+  val customAdaptersFront: Map[String, Any] = config("custom_adapters_front", default = Map())
+  front ++= customAdaptersFront.values.map(_.toString)
+
+  val customAdaptersAny: Map[String, Any] = config("custom_adapters_any", default = Map())
+  anywhere ++= customAdaptersAny.values.map(_.toString)
 
   /** Clipped adapter names from FastQC */
   protected def seqToName: Map[String, String] = {
@@ -42,7 +50,7 @@ class Cutadapt(root: Configurable, fastqc: Fastqc) extends nl.lumc.sasc.biopet.e
   }
 
   def customAdapters: Set[AdapterSequence] = {
-    customAdaptersConfig.flatMap(adapter => {
+    (customAdaptersEnd ++ customAdaptersFront ++ customAdaptersAny).flatMap(adapter => {
       adapter match {
         case (adapterName: String, sequence: String) =>
           Some(AdapterSequence(adapterName, sequence))

@@ -10,6 +10,7 @@ Pipeline analysis components include:
  
  - [Kraken, DerrickWood](https://github.com/DerrickWood/kraken)
  - [Qiime closed reference](http://qiime.org)
+ - [Qiime open reference](http://qiime.org)
  - [Qiime rtax](http://qiime.org) (**Experimental**)
  - SeqCount (**Experimental**)
 
@@ -23,6 +24,7 @@ This pipeline is used to analyse a group of samples. This pipeline only accepts 
 | --- | ---- | ------- | -------- |
 | gears_use_kraken | Boolean | true | Run fastq file with kraken |
 | gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
+| gears_use_qiime_open | Boolean | false | Run fastq files with qiime with the open reference module |
 | gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
 | gears_use_seq_count | Boolean | false | Produces raw count files |
 
@@ -75,6 +77,7 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 | --- | ---- | ------- | -------- |
 | gears_use_kraken | Boolean | true | Run fastq file with kraken |
 | gears_use_qiime_closed | Boolean | false | Run fastq files with qiime with the closed reference module |
+| gears_use_qiime_open | Boolean | false | Run fastq files with qiime with the open reference module |
 | gears_use_qiime_rtax | Boolean | false |  Run fastq files with qiime with the rtax module |
 | gears_use_seq_count | Boolean | false | Produces raw count files |
 

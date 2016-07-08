@@ -18,15 +18,15 @@ import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.SampleLibraryTag
-import nl.lumc.sasc.biopet.extensions.Flash
 import nl.lumc.sasc.biopet.extensions.qiime._
+import nl.lumc.sasc.biopet.extensions.seqtk.SeqtkSample
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.xml.{ PrettyPrinter, Elem }
+import scala.xml.{ Elem, PrettyPrinter }
 
 /**
  * Created by pjvan_thof on 12/4/15.
@@ -43,6 +43,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   def init() = {
     require(fastqInput != null)
+    require(sampleId.isDefined)
   }
 
   private var _otuMap: File = _
@@ -60,7 +61,7 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
     add(splitLib)
 
     val closedReference = new PickClosedReferenceOtus(this)
-    closedReference.inputFasta = splitLib.outputSeqs
+    closedReference.inputFasta = addDownsample(splitLib.outputSeqs, new File(splitLib.outputDir, s"${sampleId.get}.downsample.fna"))
     closedReference.outputDir = new File(outputDir, "pick_closed_reference_otus")
     add(closedReference)
     _otuMap = closedReference.otuMap
@@ -77,6 +78,21 @@ class GearsQiimeClosed(val root: Configurable) extends QScript with SummaryQScri
 
   /** Name of summary output file */
   def summaryFile: File = new File(outputDir, "summary.closed_reference.json")
+
+  val downSample: Option[Double] = config("downsample")
+
+  def addDownsample(input: File, output: File): File = {
+    downSample match {
+      case Some(x) =>
+        val seqtk = new SeqtkSample(this)
+        seqtk.input = input
+        seqtk.sample = x
+        seqtk.output = output
+        add(seqtk)
+        output
+      case _ => input
+    }
+  }
 }
 
 object GearsQiimeClosed {
@@ -111,9 +127,8 @@ object GearsQiimeClosed {
       taxonomy.foldLeft(root) { (a, b) =>
         val n = b.split("__", 2)
         val level = n(0)
-        val name = n(1)
-        val bla = a.childs.find(_ == TaxNode(name, level))
-        bla match {
+        val name = if (level == "Unassigned") "Unassigned" else n(1)
+        a.childs.find(_ == TaxNode(name, level)) match {
           case Some(node) => node
           case _ =>
             val node = TaxNode(name, level)

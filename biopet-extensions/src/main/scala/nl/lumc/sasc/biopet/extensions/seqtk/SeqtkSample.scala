@@ -12,26 +12,36 @@
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
-package nl.lumc.sasc.biopet.extensions.tools
+package nl.lumc.sasc.biopet.extensions.seqtk
 
 import java.io.File
 
-import nl.lumc.sasc.biopet.core.{ Reference, ToolCommandFunction }
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 
-class ValidateFastq(val root: Configurable) extends ToolCommandFunction {
-  def toolObject = nl.lumc.sasc.biopet.tools.ValidateFastq
+/**
+ * Wrapper for the seqtk sample subcommand.
+ * Written based on seqtk version 1.0-r63-dirty.
+ */
+class SeqtkSample(val root: Configurable) extends Seqtk {
 
-  @Input(doc = "Input R1 fastq file", required = true)
-  var r1Fastq: File = _
+  /** input file */
+  @Input(doc = "Input file (FASTQ or FASTA)", required = true)
+  var input: File = _
 
-  @Input(doc = "Input R1 fastq file", required = false)
-  var r2Fastq: Option[File] = None
+  /** output file */
+  @Output(doc = "Output file", required = true)
+  var output: File = _
 
-  override def defaultCoreMemory = 4.0
+  var s: Option[Int] = config("seed")
 
-  override def cmdLine = super.cmdLine +
-    required("-i", r1Fastq) +
-    optional("-j", r2Fastq)
+  var sample: Double = _
+
+  def cmdLine = required(executable) +
+    " sample " +
+    optional("-s", s) +
+    required(input) +
+    (if (sample > 1) required(sample.toInt) else required(sample)) +
+    (if (outputAsStsout) "" else " > " + required(output))
+
 }

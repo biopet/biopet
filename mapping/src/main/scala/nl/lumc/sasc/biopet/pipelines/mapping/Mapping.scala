@@ -22,6 +22,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2, Bowtie }
 import nl.lumc.sasc.biopet.extensions.bwa.{ BwaAln, BwaMem, BwaSampe, BwaSamse }
 import nl.lumc.sasc.biopet.extensions.gmap.Gsnap
+import nl.lumc.sasc.biopet.extensions.hisat.Hisat2
 import nl.lumc.sasc.biopet.extensions.picard.{ AddOrReplaceReadGroups, MarkDuplicates, MergeSamFiles, ReorderSam, SortSam }
 import nl.lumc.sasc.biopet.extensions.tools.FastqSplitter
 import nl.lumc.sasc.biopet.extensions._
@@ -127,7 +128,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "skip_markduplicates" -> skipMarkduplicates,
     "aligner" -> aligner,
     "chunking" -> chunking,
-    "numberChunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
+    "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)
   ) ++ (if (root == null) Map("reference" -> referenceSummary) else Map())
 
   override def reportClass = {
@@ -232,6 +233,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
         case "bowtie"     => addBowtie(R1, R2, outputBam)
         case "bowtie2"    => addBowtie2(R1, R2, outputBam)
         case "gsnap"      => addGsnap(R1, R2, outputBam)
+        case "hisat2"     => addHisat2(R1, R2, outputBam)
         // TODO: make TopHat here accept multiple input files
         case "tophat"     => addTophat(R1, R2, outputBam)
         case "stampy"     => addStampy(R1, R2, outputBam)
@@ -361,6 +363,32 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     pipe.threadsCorrection = -2
     add(pipe)
     ar._2
+  }
+
+  def addHisat2(R1: File, R2: Option[File], output: File): File = {
+    val hisat2 = new Hisat2(this)
+    hisat2.R1 = R1
+    hisat2.R2 = R2
+    hisat2.rgId = Some(readgroupId)
+    hisat2.rg +:= s"PL:$platform"
+    hisat2.rg +:= s"PU:$platformUnit"
+    libId match {
+      case Some(id)  => hisat2.rg +:= s"LB:$id"
+      case otherwise => ;
+    }
+    sampleId match {
+      case Some(id)  => hisat2.rg +:= s"SM:$id"
+      case otherwise => ;
+    }
+
+    val sortSam = new SortSam(this)
+    sortSam.output = output
+    val pipe = hisat2 | sortSam
+    pipe.isIntermediate = chunking || !skipMarkduplicates
+    pipe.threadsCorrection = 1
+    add(pipe)
+
+    output
   }
 
   def addTophat(R1: File, R2: Option[File], output: File): File = {

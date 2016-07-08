@@ -69,10 +69,14 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     outputDir = outputDir.getAbsoluteFile
     init()
     biopetScript()
+    logger.info("Biopet script done")
 
-    if (disableScatter) for (function <- functions) function match {
-      case f: ScatterGatherableFunction => f.scatterCount = 1
-      case _                            =>
+    if (disableScatter) {
+      logger.info("Disable scatters")
+      for (function <- functions) function match {
+        case f: ScatterGatherableFunction => f.scatterCount = 1
+        case _                            =>
+      }
     }
 
     this match {
@@ -81,6 +85,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       case _ => reportClass.foreach(add(_))
     }
 
+    logger.info("Running pre commands")
     for (function <- functions) function match {
       case f: BiopetCommandLineFunction =>
         f.preProcessExecutable()
@@ -94,7 +99,8 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
       globalConfig.writeReport(qSettings.runName, new File(outputDir, ".log/" + qSettings.runName))
     else Logging.addError("Parent of output dir: '" + outputDir.getParent + "' is not writeable, output directory cannot be created")
 
-    inputFiles.foreach { i =>
+    logger.info("Checking input files")
+    inputFiles.par.foreach { i =>
       if (!i.file.exists()) Logging.addError(s"Input file does not exist: ${i.file}")
       if (!i.file.canRead) Logging.addError(s"Input file can not be read: ${i.file}")
       if (!i.file.isAbsolute) Logging.addError(s"Input file should be an absolute path: ${i.file}")
@@ -111,6 +117,7 @@ trait BiopetQScript extends Configurable with GatkLogging { qscript: QScript =>
     if (logger.isDebugEnabled) WriteDependencies.writeDependencies(functions, new File(outputDir, s".log/${qSettings.runName}.deps.json"))
 
     Logging.checkErrors()
+    logger.info("Script complete without errors")
   }
 
   /** Get implemented from org.broadinstitute.gatk.queue.QScript */

@@ -18,6 +18,7 @@ import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.BiopetQScript.InputFile
 import nl.lumc.sasc.biopet.core.{ PipelineCommand, SampleLibraryTag }
 import nl.lumc.sasc.biopet.pipelines.flexiprep.Flexiprep
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
@@ -42,12 +43,14 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
   lazy val krakenScript = if (config("gears_use_kraken", default = true)) Some(new GearsKraken(this)) else None
   lazy val qiimeRatx = if (config("gears_use_qiime_rtax", default = false)) Some(new GearsQiimeRtax(this)) else None
   lazy val qiimeClosed = if (config("gears_use_qiime_closed", default = false)) Some(new GearsQiimeClosed(this)) else None
+  lazy val qiimeOpen = if (config("gears_use_qiime_open", default = false)) Some(new GearsQiimeOpen(this)) else None
   lazy val seqCount = if (config("gears_use_seq_count", default = false)) Some(new GearsSeqCount(this)) else None
 
   /** Executed before running the script */
   def init(): Unit = {
-    require(fastqR1.isDefined || bamFile.isDefined, "Please specify fastq-file(s) or bam file")
-    require(fastqR1.isDefined != bamFile.isDefined, "Provide either a bam file or a R1/R2 file")
+    if (!fastqR1.isDefined && !bamFile.isDefined) Logging.addError("Please specify fastq-file(s) or bam file")
+    if (fastqR1.isDefined == bamFile.isDefined) Logging.addError("Provide either a bam file or a R1/R2 file")
+    if (sampleId == null || sampleId == None) Logging.addError("Missing sample ID on GearsSingle module")
 
     if (outputName == null) {
       if (fastqR1.isDefined) outputName = fastqR1.map(_.getName
@@ -61,7 +64,7 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     if (fastqR1.isDefined) {
       fastqR1.foreach(inputFiles :+= InputFile(_))
       fastqR2.foreach(inputFiles :+= InputFile(_))
-    } else inputFiles :+= InputFile(bamFile.get)
+    } else bamFile.foreach(inputFiles :+= InputFile(_))
   }
 
   override def reportClass = {
@@ -80,6 +83,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       val flexiprep = new Flexiprep(this)
       flexiprep.inputR1 = r1
       flexiprep.inputR2 = r2
+      flexiprep.sampleId = if (sampleId.isEmpty) Some("noSampleName") else sampleId
+      flexiprep.libId = if (libId.isEmpty) Some("noLibName") else libId
       flexiprep.outputDir = new File(outputDir, "flexiprep")
       add(flexiprep)
       (flexiprep.fastqR1Qc, flexiprep.fastqR2Qc)
@@ -134,6 +139,12 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
       add(qiimeClosed)
     }
 
+    qiimeOpen foreach { qiimeOpen =>
+      qiimeOpen.outputDir = new File(outputDir, "qiime_open")
+      qiimeOpen.fastqInput = combinedFastq
+      add(qiimeOpen)
+    }
+
     seqCount.foreach { seqCount =>
       seqCount.fastqInput = combinedFastq
       seqCount.outputDir = new File(outputDir, "seq_count")
@@ -151,7 +162,8 @@ class GearsSingle(val root: Configurable) extends QScript with SummaryQScript wi
     "skip_flexiprep" -> skipFlexiprep,
     "gears_use_kraken" -> krakenScript.isDefined,
     "gear_use_qiime_rtax" -> qiimeRatx.isDefined,
-    "gear_use_qiime_closed" -> qiimeClosed.isDefined
+    "gear_use_qiime_closed" -> qiimeClosed.isDefined,
+    "gear_use_qiime_open" -> qiimeOpen.isDefined
   )
 
   /** Statistics shown in the summary file */
