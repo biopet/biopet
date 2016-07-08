@@ -37,6 +37,9 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
   @Argument(doc = "Chromsomosome to query", required = true)
   var chromosome: String = _
 
+  @Argument(doc = "Window length", required = false)
+  var windowLength: Int = config("window_length", namespace = "kopisu", default = 1000)
+
   // output files, computed automatically from output directory
   @Output(doc = "Output CNV file")
   lazy val outputCnv: File = {
@@ -71,5 +74,6 @@ class Cnmops(val root: Configurable) extends RscriptCommandLineFunction {
     required("--chr", chromosome) +
     required("--rawoutput", rawOutput) +
     required("--threads", threads) +
+    optional("--wl", windowLength) +
     required(input.map(f => f.getAbsolutePath).mkString(" "))
 }

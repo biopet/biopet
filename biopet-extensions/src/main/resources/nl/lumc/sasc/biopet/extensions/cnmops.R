@@ -10,7 +10,8 @@ option_list <- list(
     make_option(c("--cnv"), dest="cnv"),
     make_option(c("--cnr"), dest="cnr"),
     make_option(c("--chr"), dest="chr"),
-    make_option(c("--threads"), dest="threads", default=8, type="integer")
+    make_option(c("--threads"), dest="threads", default=8, type="integer"),
+    make_option(c("--wl"), dest="wl", default=1000, type="integer")
     )
 
 parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
@@ -21,10 +22,11 @@ args = arguments$args
 chromosome <- opt$chr
 CNVoutput <- opt$cnv
 CNRoutput <- opt$cnr
+windowLength <- opt$wl
 bamFile <- args
 
 BAMFiles <- strsplit(c(bamFile), " ")[[1]]
-bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=1000, parallel=opt$threads)
+bamDataRanges <- getReadCountsFromBAM(BAMFiles, mode="paired", refSeqName=chromosome, WL=windowLength, parallel=opt$threads)
 
 write.table(as.data.frame( bamDataRanges ), quote = FALSE, opt$rawoutput, row.names=FALSE)
 
