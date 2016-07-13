@@ -1,7 +1,7 @@
 # SamplesTsvToJson
 
-This tool enables a user to create a full sample sheet in JSON format suitable for all our Queue pipelines.
-The tool can be started as follows:
+This tool enables a user to create a full sample sheet in JSON format, suitable for all our Queue pipelines, from TSV file(s).
+The tool can be called as follows:
 
 ~~~ bash
 biopet tool SamplesTsvToJson
@@ -27,11 +27,11 @@ Usage: SamplesTsvToJson [options]
 
 ~~~
 
-The tool is designed in such a way that a user can provide a TAB seperated file (TSV) with sample specific properties and even those will be parsed by the tool.
-For example: a user wants to have certain properties e.g. which treatment a sample got than the user should provide a extra columns called treatment and then the 
-JSON file is parsed with those properties inside it as well. The order of columns does not matter.
+A user provides a TAB seperated file (TSV) with sample specific properties which are parsed into JSOn format by the tool.
+For example, a user wants to add certain properties to the description of a sample, such as the treatment a sample received. Then a TSV file with an extra column called treatment is provided. 
+The resulting JSON file will have the 'treatment' property in it as well. The order of the columns is not relevant to the end result 
 
-The tag files works the same only the value are prefixed in the key `tags`.
+The tag files works the same only the value is prefixed in the key `tags`.
 
 #### Example
 
