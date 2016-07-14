@@ -1,6 +1,11 @@
 # VcfFilter
 
 ## Introduction
+This tool filters VCF files on a number values. For example, it can filter on sample depth and/or total depth.
+It can also filter out the reference calls and/or minimum number of sample passes.
+For more on filtering options and how to set them, please refer to the help menu. 
+
+
 This tool enables a user to filter VCF files. For example on sample depth and/or total depth.
 It can also be used to filter out the reference calls and/or minimum number of sample passes.
 There is a wide set of options which one can use to change the filter settings.
@@ -32,19 +37,19 @@ Usage: VcfFilter [options]
         Min number of samples to pass --minAlternateDepth, --minBamAlternateDepth and --minSampleDepth
   --minBamAlternateDepth <int>
   --denovoInSample <sample>
-        Only show variants that contain unique alleles in compete set for given sample
+        Only keep variants that contain unique alleles in complete set for the given sample
   --mustHaveVariant <sample>
-        Given sample must have 1 alternative allele
+        Only keep variants that for the given sample have an alternative allele
   --diffGenotype <sample:sample>
-        Given samples must have a different genotype
-  --filterHetVarToHomVar <sample:sample>
-        If variants in sample 1 are heterogeneous and alternative alleles are homogeneous in sample 2 variants are filtered
+        Only keep variands that for the given samples have a different genotype
+  --filterHetVarToHomVar <sample1:sample2>
+        Filter out varianst that are heterozygous in sample1 and homozygous in sample2
   --filterRefCalls
-        Filter when there are only ref calls
+        Filter out ref calls
   --filterNoCalls
-        Filter when there are only no calls
+        Filter out no calls
   --minQualScore <value>
-        Min qual score
+        Filter out variants with Min qual score below threshold
 ~~~
 
 To run the tool:
@@ -54,4 +59,4 @@ biopet tool VcfFilter --inputVcf myInput.vcf \
 ~~~
 
 ## Output
-The output is a vcf file containing the filters specified values.
+The output is a vcf file containing the values that pass the user-defined filtering options
