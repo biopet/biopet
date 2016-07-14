@@ -27,7 +27,7 @@ Usage: SamplesTsvToJson [options]
 
 ~~~
 
-A user provides a TAB seperated file (TSV) with sample specific properties which are parsed into JSOn format by the tool.
+A user provides a TAB seperated file (TSV) with sample specific properties which are parsed into JSON format by the tool.
 For example, a user wants to add certain properties to the description of a sample, such as the treatment a sample received. Then a TSV file with an extra column called treatment is provided. 
 The resulting JSON file will have the 'treatment' property in it as well. The order of the columns is not relevant to the end result 
 
