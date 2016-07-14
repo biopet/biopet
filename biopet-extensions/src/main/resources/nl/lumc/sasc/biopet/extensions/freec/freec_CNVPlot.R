@@ -4,7 +4,6 @@ library('naturalsort')
 # Script taken from  http://bioinfo-out.curie.fr/projects/freec/tutorial.html and modified for biopet
 
 option_list <- list(
-    make_option(c("-m", "--mappability"), dest="mappability"),
     make_option(c("-p", "--ploidy"), default=2, type="integer", dest="ploidy"),
     make_option(c("-i", "--input"), dest="input"),
     make_option(c("-o", "--output"), dest="output")
@@ -12,17 +11,6 @@ option_list <- list(
 
 parser <- OptionParser(usage = "%prog [options] file", option_list=option_list)
 opt = parse_args(parser)
-
-
-#
-# Load mappability track
-#
-
-mappabilityFile <- opt$mappability
-mappabilityTrack <- read.table(mappabilityFile, header=FALSE, col.names=c("chrom", "start", "end", "score"))
-
-mappabilityTrack$Start <- mappabilityTrack$start+1
-mappabilityTrack$Chromosome <- gsub("chr", "", mappabilityTrack$chrom)
 
 
 #
@@ -37,9 +25,7 @@ chromosomes <- naturalsort(levels(input_ratio$Chromosome))
 input_ratio$Chromosome <- factor(input_ratio$Chromosome, levels=chromosomes, ordered=T)
 
 sorted_ratio <- input_ratio[order(input_ratio$Chromosome),]
-ratio <- merge(sorted_ratio, mappabilityTrack, sort=TRUE)
-ratio <- ratio[order(ratio$Chromosome, ratio$Start),]
-
+ratio <- input_ratio[order(input_ratio$Chromosome, input_ratio$Start),]
 
 ploidy <- opt$ploidy
 ppi <- 300
@@ -98,15 +84,6 @@ for (i in chromosomes) {
 
     dev.off()
 }
-
-
-
-
-
-
-
-
-
 
 png(filename = paste(opt$output, ".png",sep=""), width = 16 * ppi, height = 10 * ppi,
     res=ppi, bg = "white")
