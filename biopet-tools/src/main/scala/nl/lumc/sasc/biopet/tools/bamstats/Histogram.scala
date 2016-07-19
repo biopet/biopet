@@ -7,8 +7,14 @@ import scala.collection.mutable
 /**
  * Created by pjvanthof on 05/07/16.
  */
-class Counts[T](implicit ord: Ordering[T]) {
-  protected[Counts] val counts: mutable.Map[T, Long] = mutable.Map()
+class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T]) {
+  protected[Counts] val counts: mutable.Map[T, Long] = mutable.Map() ++ _counts
+
+  /** Returns histogram as map */
+  def countsMap = counts.toMap
+
+  /** Returns value if it does exist */
+  def get(key: T) = counts.get(key)
 
   /** This will add an other histogram to `this` */
   def +=(other: Counts[T]): Counts[T] = {
@@ -30,6 +36,6 @@ class Counts[T](implicit ord: Ordering[T]) {
   }
 }
 
-class Histogram[T](implicit ord: Numeric[T]) extends Counts[T] {
+class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric[T]) extends Counts[T](_counts) {
 
 }
