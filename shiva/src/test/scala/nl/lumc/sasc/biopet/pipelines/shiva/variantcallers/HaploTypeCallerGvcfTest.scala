@@ -19,7 +19,7 @@ class HaploTypeCallerGvcfTest extends TestNGSuite with Matchers {
     hc.biopetScript()
 
     hc.getGvcfs.size shouldBe 3
-    hc.getGvcfs.keys.toList shouldEqual samples
+    hc.getGvcfs.keys.toList.sorted shouldEqual samples.sorted
   }
 
   def createInputMap(samples: List[String]): Map[String, File] = {
