@@ -155,7 +155,7 @@ object BamStats extends ToolCommand {
     * @return Output stats
     */
   def processThread(scatters: List[BedRecord], bamFile: File): Stats = {
-    var totalStats = Stats()
+    val totalStats = Stats()
     val sortedScatters = scatters.sortBy(_.start)
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     val threadChr = sortedScatters.head.chr
@@ -206,7 +206,7 @@ object BamStats extends ToolCommand {
     * @return Output stats
     */
   def processUnmappedReads(bamFile: File): Stats = {
-    var stats = Stats()
+    val stats = Stats()
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     var size = samReader.queryUnmapped().size
     stats.totalReads += size
