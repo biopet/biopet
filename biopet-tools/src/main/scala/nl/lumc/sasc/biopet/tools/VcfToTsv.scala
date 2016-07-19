@@ -34,7 +34,7 @@ object VcfToTsv extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    }
+    } text "Input vcf file"
     opt[File]('o', "outputFile") maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
     } text "output file, default to stdout"
