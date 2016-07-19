@@ -1,10 +1,10 @@
 # MpileupToVcf
 
 ## Introduction
-This tool enables a user to extract a VCF file out a mpileup file generated from the BAM file. 
-The tool can also stream through STDin and STDout so that the mpileup file is not stored on disk.
-Mpileup files tend to be very large since they describe each covered base position in the genome on a per read basis,
-so usually one does not want to safe these files.
+This tool enables a user to extract a VCF file out a mpileup file generated from the BAM file using *samtools mpileup*, for instance. 
+The tool can also stream through STDin and STDout so that it is not necessary to store the mpileup file on disk.
+Mpileup files can to be very large because they describe each covered base position in the genome on a per read basis,
+so it is not desired to store them.
 
 ----
 

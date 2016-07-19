@@ -32,48 +32,34 @@ To get help creating the appropriate [configs](../general/config.md) please refe
 
 Samples are single experimental units whose expression you want to measure. They usually consist of a single sequencing library, but in some cases (for example when the experiment demands each sample have a minimum library depth) a single sample may contain multiple sequencing libraries as well. All this is can be configured using the correct JSON nesting, with the following pattern:
 
-~~~ json
-{
-  "samples": {
-    "sample_A": {
-      "libraries": {
-        "lib_01": {
-          "R1": "/absolute/path/to/first/read/pair.fq",
-          "R2": "/absolute/path/to/second/read/pair.fq"
-        }
-      }
-    }
-  }
-}
+~~~ yaml
+---
+  samples: 
+    sample_A: 
+      libraries: 
+        lib_01: 
+          R1: "/absolute/path/to/first/read/pair.fq"
+          R2: "/absolute/path/to/second/read/pair.fq"
 ~~~
 
 In the example above, there is one sample (named `sample_A`) which contains one sequencing library (named `lib_01`). The library itself is paired end, with both `R1` and `R2` pointing to the location of the files in the file system. A more complicated example is the following:
 
-~~~ json
-{
-  "samples": {
-    "sample_X": {
-      "libraries": {
-        "lib_one": {
-          "R1": "/absolute/path/to/first/read/pair.fq",
-          "R2": "/absolute/path/to/second/read/pair.fq"
-        }
-      }
-    },
-    "sample_Y": {
-      "libraries": {
-        "lib_one": {
-          "R1": "/absolute/path/to/first/read/pair.fq",
-          "R2": "/absolute/path/to/second/read/pair.fq"
-        },
-        "lib_two": {
-          "R1": "/absolute/path/to/first/read/pair.fq",
-          "R2": "/absolute/path/to/second/read/pair.fq"
-        }
-      }
-    }
-  }
-}
+~~~ yaml
+---
+  samples: 
+    sample_X: 
+      libraries: 
+        lib_one: 
+          R1: "/absolute/path/to/first/read/pair.fq"
+          R2: "/absolute/path/to/second/read/pair.fq"
+    sample_Y: 
+      libraries: 
+        lib_one: 
+          R1: "/absolute/path/to/first/read/pair.fq"
+          R2: "/absolute/path/to/second/read/pair.fq"
+        lib_two: 
+          R1: "/absolute/path/to/first/read/pair.fq"
+          R2: "/absolute/path/to/second/read/pair.fq"
 ~~~
 
 In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has two different libraries (`lib_one` and `lib_two`). Notice that the names of the samples and libraries may change, but several keys such as `samples`, `libraries`, `R1`, and `R2` remain the same.
@@ -84,8 +70,8 @@ In this case, we have two samples (`sample_X` and `sample_Y`) and `sample_Y` has
 For the pipeline settings, there are some values that you need to specify while some are optional. Required settings are:
 
 1. `output_dir`: path to output directory (if it does not exist, Gentrap will create it for you).
-2. `aligner`: which aligner to use (`gsnap`, `tophat`, `hisat2`, `star` or `star-2pass`)
-3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file.
+2. `aligner`: which aligner to use (`gsnap`, `tophat`, `hisat2`, `star` or `star-2pass`). `star-2pass` enables the 2-pass mapping option of STAR, for the most sensitive novel junction discovery. For more, please refer to [STAR user Manual](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf) 
+3. `reference_fasta`: this must point to a reference FASTA file and in the same directory, there must be a `.dict` file of the FASTA file. If the `.dict` file does not exist, you can create it using: ```` java -jar <picard jar> CreateSequenceDictionary R=<reference.fasta> O=<outputDict> ````
 4. `expression_measures`: this entry determines which expression measurement modes Gentrap will do. You can choose zero or more from the following: `fragments_per_gene`, `base_counts`, `cufflinks_strict`, `cufflinks_guided` and/or `cufflinks_blind`. If you only wish to align, you can set the value as an empty list (`[]`).
 5. `strand_protocol`: this determines whether your library is prepared with a specific stranded protocol or not. There are two protocols currently supported now: `dutp` for dUTP-based protocols and `non_specific` for non-strand-specific protocols.
 6. `annotation_refflat`: contains the path to an annotation refFlat file of the entire genome
@@ -99,16 +85,29 @@ While optional settings are:
 5. `call_variants`: whether to call variants on the RNA-seq data or not, defaults to `false`.
 
 Thus, an example settings configuration is as follows:
+~~~ yaml
+---
+  output_dir: "/path/to/output/dir"
+  expression_measures: 
+    - "fragments_per_gene"
+    - "bases_per_gene"
+  strand_protocol: "dutp"
+  reference_fasta: "/path/to/reference/fastafile"
+  annotation_gtf: "/path/to/gtf"
+  annotation_refflat: "/path/to/refflat"
+~~~
 
-~~~ json
-{
-  "output_dir": "/path/to/output/dir",
-  "expression_measures": ["fragments_per_gene", "bases_per_gene"],
-  "strand_protocol": "dutp",
-  "reference_fasta": "/path/to/reference/fastafile",
-  "annotation_gtf": "/path/to/gtf",
-  "annotation_refflat": "/path/to/refflat",
-}
+#### Best practice example
+If you are unsure of how to use the numerous options of gentrap, please refer to the following best practice configuration file example. 
+~~~ yaml
+---
+  output_dir: "/path/to/output/dir"
+  aligner: "gsnap"
+  reference_fasta: "/path/to/reference/fastafile"
+  expression_measures: 
+    - "fragments_per_gene"
+  strand_protocol: "dutp"
+  annotation_refflat: "/path/to/refflat"
 ~~~
 
 #### Example configurations
@@ -126,7 +125,7 @@ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -ru
 You can also use the `biopet` environment module (recommended) when you are running the pipeline in SHARK:
 
 ~~~ bash
-$ module load biopet/v0.5.0
+$ module load biopet/v0.7.0
 $ biopet pipeline gentrap -config </path/to/config.json> -qsub -jobParaEnv BWA -run
 ~~~
 

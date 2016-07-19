@@ -41,7 +41,7 @@ object BiopetFlagstat extends ToolCommand {
     } text "summary output file"
     opt[String]('r', "region") valueName "<chr:start-stop>" action { (x, c) =>
       c.copy(region = Some(x))
-    }
+    } text "Region to calculate the statistics on"
   }
 
   /**

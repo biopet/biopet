@@ -1,7 +1,7 @@
 # CheckAllelesVcfInBam
 
 ## Introduction
-This tool has been written to check the allele frequency in BAM files.
+This tool has been written to check the allele frequency in BAM files. This is meant for comparison with the allele frequency reported at the VCF file 
 
 ## Example
 To get the help menu:
@@ -16,14 +16,15 @@ Usage: CheckAllelesVcfInBam [options]
   -v | --version
         Print version
   -I <file> | --inputFile <file>
-        
+        VCF file
   -o <file> | --outputFile <file>
-        
+        output VCF file name
   -s <value> | --sample <value>
-        
+        sample name
   -b <value> | --bam <value>
-        
+        bam file, from which the variants (VCF files) were called
   -m <value> | --min_mapping_quality <value>
+        minimum mapping quality score for a read to be taken into account
 ~~~
 
 To run the tool:

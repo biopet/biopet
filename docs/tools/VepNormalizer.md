@@ -3,11 +3,12 @@ VepNormalizer
 
 Introduction
 ------------
-This tool normalizes a VCF file annotated with the Variant Effect Predictor (VEP). 
+This tool modifies a VCF file annotated with the Variant Effect Predictor (VEP). 
 Since the VEP does not use INFO fields to annotate, but rather puts all its annotations in one big string inside a "CSQ" INFO tag it is necessary to normalize it. 
 
-This normalizer will use the information in the CSQ header to create INFO fields for each annotation field. 
-It has two modes: `standard` and `explode`. The `standard` mode will produce a VCF according to the VCF specification.
+Tool will parse the information in the CSQ header to create INFO fields for each annotation field. Tool has two modes: `standard` and `explode`. 
+
+The `standard` mode will produce a VCF according to the VCF specification.
 This means that every VEP INFO tag will consist of the comma-separated list of values for each transcript.
 In case the value is empty, the VEP INFO tag will not be shown for that specific record 
 
@@ -20,6 +21,7 @@ The CSQ tag is by default removed from the output VCF file. If one wishes to ret
 
 Example
 ---------
+Help menu:
 
 ~~~ bash
 biopet tool VepNormalizer -h

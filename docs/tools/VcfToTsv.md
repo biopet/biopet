@@ -1,10 +1,10 @@
 # VcfToTsv
 
 ## Introduction
-This tool enables a user to convert a vcf file to a tab delimited file (TSV). 
-This can be very usefull since some programs only accept a TSV for downstream analysis.
-It gets rid of the vcf header and parses all data columns in a nice TSV file.
-There is also a possibility to only select some specific fields from you vcf and only parse those fields to a TSV.
+Tool converts a vcf file to a Tab Separated Values (TSV) file. For every key in the INFO column of the VCF file, a separate column will be created with the corresponding values. 
+User can select the keys that will be parsed into the output TSV file.
+This can be useful in the case a program only accepts a TSV file for downstream analysis.
+
 
 ## Example
 To open the help menu:

@@ -38,13 +38,13 @@ object BaseCounter extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('r', "refFlat") required () valueName "<file>" action { (x, c) =>
       c.copy(refFlat = x)
-    }
+    } text "refFlat file. Mandatory"
     opt[File]('o', "outputDir") required () valueName "<directory>" action { (x, c) =>
       c.copy(outputDir = x)
-    }
+    } text "Output directory. Mandatory"
     opt[File]('b', "bam") required () valueName "<file>" action { (x, c) =>
       c.copy(bamFile = x)
-    }
+    } text "Bam file. Mandatory"
     opt[String]('p', "prefix") valueName "<prefix>" action { (x, c) =>
       c.copy(prefix = x)
     }
