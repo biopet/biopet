@@ -24,10 +24,10 @@ import org.broadinstitute.gatk.queue.QScript
 /** This trait creates a structured way of use multisample pipelines */
 trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
 
-  @Argument(doc = "Only Sample", shortName = "s", required = false, fullName = "sample")
+  @Argument(doc = "Only Process This Sample", shortName = "s", required = false, fullName = "sample")
   private[core] val onlySamples: List[String] = Nil
 
-  require(globalConfig.map.contains("samples"), "No Samples found in config")
+  if (!globalConfig.map.contains("samples")) Logging.addError("No Samples found in config")
 
   /** Sample class with basic functions build in */
   abstract class AbstractSample(val sampleId: String) extends Summarizable { sample =>
@@ -190,7 +190,7 @@ trait MultiSampleQScript extends SummaryQScript { qscript: QScript =>
   val samples: Map[String, Sample] = sampleIds.map(id => id -> makeSample(id)).toMap
 
   /** Returns a list of all sampleIDs */
-  protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map("samples")).keySet
+  protected def sampleIds: Set[String] = ConfigUtils.any2map(globalConfig.map.getOrElse("samples", Map())).keySet
 
   protected lazy val nameRegex = """^[a-zA-Z0-9][a-zA-Z0-9-_]+[a-zA-Z0-9]$""".r
   protected lazy val nameError = "has an invalid name. " +

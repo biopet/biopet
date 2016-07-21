@@ -52,22 +52,22 @@ object AnnotateVcfWithBed extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(inputFile = x)
-    } text "Input is a required file property"
+    } text "Input VCF file. Mandatory field"
     opt[File]('B', "bedFile") required () unbounded () valueName "<bed file>" action { (x, c) =>
       c.copy(bedFile = x)
-    } text "Bedfile is a required file property"
+    } text "Input Bed file. Mandatory field"
     opt[File]('o', "output") required () unbounded () valueName "<vcf file>" action { (x, c) =>
       c.copy(outputFile = x)
-    } text "out is a required file property"
+    } text "Output VCF file. Mandatory field"
     opt[String]('f', "fieldName") required () unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
       c.copy(fieldName = x)
     } text "Name of info field in new vcf file"
-    opt[String]('d', "fieldDescription") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
+    opt[String]('d', "fieldDescription") unbounded () valueName "<description of field in vcf file>" action { (x, c) =>
       c.copy(fieldDescription = x)
     } text "Description of field in new vcf file"
-    opt[String]('t', "fieldType") unbounded () valueName "<name of field in vcf file>" action { (x, c) =>
+    opt[String]('t', "fieldType") unbounded () valueName "<type of field in vcf file>" action { (x, c) =>
       c.copy(fieldType = x)
-    } text "Description of field in new vcf file"
+    } text "Type of field in new vcf file. Can be 'Integer', 'Flag', 'Character', 'Float'"
   }
 
   /**

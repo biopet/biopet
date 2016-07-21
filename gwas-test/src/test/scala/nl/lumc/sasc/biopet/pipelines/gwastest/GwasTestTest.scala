@@ -18,6 +18,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -39,37 +40,10 @@ class GwasTestTest extends TestNGSuite with Matchers {
 
   @Test
   def testFromVcf: Unit = {
+    Logging.errors.clear()
     val pipeline = initPipeline(GwasTestTest.config ++
       Map("input_vcf" -> GwasTestTest.vcfFile.toString
       )
-    )
-    pipeline.script()
-  }
-
-  @Test
-  def testFromGens: Unit = {
-    val pipeline = initPipeline(GwasTestTest.config ++
-      Map("input_gens" -> List(Map("genotypes" -> GwasTestTest.vcfFile, "contig" -> "chrQ"))
-      )
-    )
-    pipeline.script()
-  }
-
-  @Test
-  def testWrongContig: Unit = {
-    val pipeline = initPipeline(GwasTestTest.config ++
-      Map("input_gens" -> List(Map("genotypes" -> GwasTestTest.vcfFile, "contig" -> "chrBla"))
-      )
-    )
-    intercept[IllegalStateException] {
-      pipeline.script()
-    }
-  }
-
-  @Test
-  def testFromSpecs: Unit = {
-    val pipeline = initPipeline(GwasTestTest.config ++
-      Map("imute_specs_file" -> GwasTestTest.resourcePath("/specs/files.specs"))
     )
     pipeline.script()
   }
@@ -101,8 +75,8 @@ object GwasTestTest {
   }
 
   val config = Map(
-    "reference_fasta" -> GwasTestTest.reference.toString,
-    "phenotype_file" -> GwasTestTest.phenotypeFile.toString,
+    "reference_fasta" -> reference.toString,
+    "phenotype_file" -> phenotypeFile.toString,
     "output_dir" -> outputDir,
     "snptest" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),

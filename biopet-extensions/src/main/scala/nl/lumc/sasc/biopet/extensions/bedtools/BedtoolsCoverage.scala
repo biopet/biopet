@@ -14,13 +14,16 @@
  */
 package nl.lumc.sasc.biopet.extensions.bedtools
 
-import java.io.File
+import java.io.{ File, PrintWriter }
 
+import nl.lumc.sasc.biopet.core.Reference
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.utils.commandline.{ Argument, Input, Output }
 
+import scala.io.Source
+
 /** Extension for bedtools coverage */
-class BedtoolsCoverage(val root: Configurable) extends Bedtools {
+class BedtoolsCoverage(val root: Configurable) extends Bedtools with Reference {
 
   @Input(doc = "Input file (bed/gff/vcf/bam)")
   var input: File = null
@@ -40,6 +43,9 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
   @Argument(doc = "diffStrand", required = false)
   var diffStrand: Boolean = false
 
+  @Argument(doc = "sorted", required = false)
+  var sorted: Boolean = config("sorted", default = false, freeVar = false)
+
   override def defaultCoreMemory = 4.0
 
   /** Returns command to execute */
@@ -49,7 +55,10 @@ class BedtoolsCoverage(val root: Configurable) extends Bedtools {
     conditional(depth, "-d") +
     conditional(sameStrand, "-s") +
     conditional(diffStrand, "-S") +
+    conditional(sorted, "-sorted") +
+    (if (sorted) required("-g", BedtoolsCoverage.getGenomeFile(referenceFai, jobTempDir)) else "") +
     (if (outputAsStsout) "" else " > " + required(output))
+
 }
 
 object BedtoolsCoverage {
@@ -64,5 +73,28 @@ object BedtoolsCoverage {
     bedtoolsCoverage.sameStrand = sameStrand
     bedtoolsCoverage.diffStrand = diffStrand
     bedtoolsCoverage
+  }
+
+  private var genomeCache: Map[(File, File), File] = Map()
+
+  def getGenomeFile(fai: File, dir: File): File = {
+    if (!genomeCache.contains((fai, dir))) genomeCache += (fai, dir) -> createGenomeFile(fai, dir)
+    genomeCache((fai, dir))
+  }
+
+  /**
+   * Creates the genome file. i.e. the first two columns of the fasta index
+   * @return
+   */
+  def createGenomeFile(fai: File, dir: File): File = {
+    val tmp = File.createTempFile(fai.getName, ".genome", dir)
+    tmp.deleteOnExit()
+    val writer = new PrintWriter(tmp)
+    Source.fromFile(fai).
+      getLines().
+      map(s => s.split("\t").take(2).mkString("\t")).
+      foreach(f => writer.println(f))
+    writer.close()
+    tmp
   }
 }

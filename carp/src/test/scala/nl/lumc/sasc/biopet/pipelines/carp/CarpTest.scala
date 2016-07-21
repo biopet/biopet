@@ -21,7 +21,7 @@ import nl.lumc.sasc.biopet.utils.config.Config
 import nl.lumc.sasc.biopet.extensions.bwa.BwaMem
 import nl.lumc.sasc.biopet.extensions.macs2.Macs2CallPeak
 import nl.lumc.sasc.biopet.extensions.picard.{ MergeSamFiles, SortSam }
-import nl.lumc.sasc.biopet.utils.ConfigUtils
+import nl.lumc.sasc.biopet.utils.{ ConfigUtils, Logging }
 import org.apache.commons.io.FileUtils
 import org.broadinstitute.gatk.queue.QSettings
 import org.scalatest.Matchers
@@ -65,13 +65,15 @@ class CarpTest extends TestNGSuite with Matchers {
     }
 
     if (!sample1 && !sample2 && !sample3 && !threatment && !control) { // When no samples
-      intercept[IllegalArgumentException] {
+      intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else if (threatment && !control) { // If control of a samples does not exist in samples
       intercept[IllegalStateException] {
         initPipeline(map).script()
       }
+      Logging.errors.clear()
     } else { // When samples are correct
       val carp = initPipeline(map)
       carp.script()

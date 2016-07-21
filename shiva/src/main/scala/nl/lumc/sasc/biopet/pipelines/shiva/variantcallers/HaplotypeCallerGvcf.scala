@@ -34,14 +34,21 @@ class HaplotypeCallerGvcf(val root: Configurable) extends Variantcaller {
 
   def getGvcfs = gVcfFiles
 
+  override def fixedValues = Map("haplotypecaller" -> Map("emitRefConfidence" -> "GVCF"))
+
+  override def defaults = Map("haplotypecaller" -> Map(
+    "variant_index_type" -> "LINEAR",
+    "variant_index_parameter" -> 128000)
+  )
+
   def biopetScript() {
-    val gvcfFiles = for ((sample, inputBam) <- inputBams) yield {
-      val hc = gatk.HaplotypeCaller.gvcf(this, inputBam, new File(outputDir, sample + ".gvcf.vcf.gz"))
+    gVcfFiles = for ((sample, inputBam) <- inputBams) yield {
+      val hc = gatk.HaplotypeCaller(this, List(inputBam), new File(outputDir, sample + ".gvcf.vcf.gz"))
       add(hc)
       sample -> hc.out
     }
 
-    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gvcfFiles.values.toList, outputFile)
+    val genotypeGVCFs = gatk.GenotypeGVCFs(this, gVcfFiles.values.toList, outputFile)
     add(genotypeGVCFs)
   }
 }

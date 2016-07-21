@@ -17,12 +17,13 @@ Usage: BedtoolsCoverageToCounts [options]
   -v | --version
         Print version
   -I <file> | --input <file>
-        
+        coverage file produced with bedtools
   -o <file> | --output <file>
+        output file name
 ~~~
 
-input: coverage file produced with bedtools
-output: a count file with the counts from the the values inside the coverage file. Where values could be almost everything, e.g.
+input: A coverage file produced with bedtools
+output: A count file with the counts from the the values inside the coverage file. Where values could be almost everything, e.g.
 genes, ensemblIDs etc. etc.
 
 To run the tool:

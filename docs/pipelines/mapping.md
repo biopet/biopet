@@ -16,6 +16,7 @@ After the QC, the pipeline simply maps the reads with the chosen aligner. The re
     * <a href="http://www.well.ox.ac.uk/project-stampy" target="_blank">Stampy</a>
     * <a href="http://research-pub.gene.com/gmap/" target="_blank">Gsnap</a>
     * <a href="https://ccb.jhu.edu/software/tophat" target="_blank">TopHat</a>
+    * <a href="https://ccb.jhu.edu/software/hisat2/index.shtml" target="_blank">Hisat2</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star</a>
     * <a href="https://github.com/alexdobin/STAR" target="_blank">Star-2pass</a>
 * <a href="http://broadinstitute.github.io/picard/" target="_blank">Picard tool suite</a>
@@ -48,7 +49,7 @@ All other values should be provided in the config. Specific config values toward
 | ---- | ---- | -------- |
 | output_dir | Path (**required**) | directory for output files |
 | reference_fasta | Path (**required**) | Path to indexed fasta file to be used as reference |
-| aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`] |
+| aligner | String (optional) | Which aligner to use. Defaults to `bwa`. Choose from [`bwa`, `bwa-aln`, `bowtie`, `gsnap`, `tophat`, `stampy`, `star`, `star-2pass`, `hisat2`] |
 | skip_flexiprep | Boolean (optional) | Whether to skip the flexiprep QC step (default = False) |
 | skip_markduplicates | Boolean (optional) | Whether to skip the Picard Markduplicates step (default = False) |
 | skip_metrics | Boolean (optional) | Whether to skip the metrics gathering step (default = False) |

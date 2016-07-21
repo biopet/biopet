@@ -29,6 +29,8 @@ class ValidateFastq(val root: Configurable) extends ToolCommandFunction {
   @Input(doc = "Input R1 fastq file", required = false)
   var r2Fastq: Option[File] = None
 
+  override def defaultCoreMemory = 4.0
+
   override def cmdLine = super.cmdLine +
     required("-i", r1Fastq) +
     optional("-j", r2Fastq)

@@ -39,6 +39,7 @@ object Logging {
 
   def addError(error: String, debug: String = null): Unit = {
     val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    logger.error(msg)
     errors.append(new Exception(msg))
   }
 

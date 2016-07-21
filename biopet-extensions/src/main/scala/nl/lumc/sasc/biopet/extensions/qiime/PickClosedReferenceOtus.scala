@@ -31,8 +31,8 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
 
   var outputDir: File = null
 
-  override def defaultThreads = 3
-  override def defaultCoreMemory = 16.0
+  override def defaultThreads = 1
+  override def defaultCoreMemory = 20.0
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 
@@ -51,7 +51,8 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   var suppressTaxonomyAssignment: Boolean = config("suppress_taxonomy_assignment", default = false)
 
   def otuTable = new File(outputDir, "otu_table.biom")
-  def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
+  def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator +
+    inputFasta.getName.stripSuffix(".fna").stripSuffix(".fasta").stripSuffix(".fa") + "_otus.txt")
 
   @Output
   private var outputFiles: List[File] = Nil
