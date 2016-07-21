@@ -87,12 +87,10 @@ object BamStats extends ToolCommand {
    */
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
-      Future { processContig(contig, bamFile, binSize, threadBinSize, outputDir) }
+      processContig(contig, bamFile, binSize, threadBinSize, outputDir)
     }
 
-    val unmappedFuture = Future { processUnmappedReads(bamFile) }
-
-    val stats = waitOnFutures(unmappedFuture :: contigsFutures.toList)
+    val stats = waitOnFutures(processUnmappedReads(bamFile) :: contigsFutures.toList)
 
     stats.writeStatsToFiles(outputDir)
   }
@@ -106,11 +104,11 @@ object BamStats extends ToolCommand {
    * @param threadBinSize Thread binsize
    * @return Output stats
    */
-  def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int, outputDir: File): Stats = {
+  def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int, outputDir: File): Future[Stats] = Future {
     val scattersFutures = region
       .scatter(binSize)
       .grouped((region.length.toDouble / binSize).ceil.toInt / (region.length.toDouble / threadBinSize).ceil.toInt)
-      .map(scatters => Future { processThread(scatters, bamFile) })
+      .map(scatters => processThread(scatters, bamFile))
       .toList
     val stats = waitOnFutures(scattersFutures, Some(region.chr))
     val contigDir = new File(outputDir, "contigs" + File.separator + region.chr)
@@ -153,7 +151,7 @@ object BamStats extends ToolCommand {
    * @param bamFile Input bamfile
    * @return Output stats
    */
-  def processThread(scatters: List[BedRecord], bamFile: File): Stats = {
+  def processThread(scatters: List[BedRecord], bamFile: File): Future[Stats] = Future {
     val totalStats = Stats()
     val sortedScatters = scatters.sortBy(_.start)
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
@@ -203,7 +201,7 @@ object BamStats extends ToolCommand {
    * @param bamFile Input bamfile
    * @return Output stats
    */
-  def processUnmappedReads(bamFile: File): Stats = {
+  def processUnmappedReads(bamFile: File): Future[Stats] = Future {
     val stats = Stats()
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     for (samRecord <- samReader.queryUnmapped()) {
