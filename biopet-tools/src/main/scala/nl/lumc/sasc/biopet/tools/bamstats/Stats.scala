@@ -1,5 +1,7 @@
 package nl.lumc.sasc.biopet.tools.bamstats
 
+import java.io.File
+
 /**
  * Created by pjvanthof on 05/07/16.
  */
@@ -26,5 +28,15 @@ case class Stats(var totalReads: Long = 0L,
     this._5_ClippingHistogram += other._5_ClippingHistogram
     this._3_ClippingHistogram += other._3_ClippingHistogram
     this
+  }
+
+  def writeStatsToFiles(outputDir: File): Unit = {
+    this.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
+    this.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
+    this.clippingHistogram.writeToTsv(new File(outputDir, "clipping.tsv"))
+    this.leftClippingHistogram.writeToTsv(new File(outputDir, "left_clipping.tsv"))
+    this.rightClippingHistogram.writeToTsv(new File(outputDir, "right_clipping.tsv"))
+    this._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
+    this._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
   }
 }

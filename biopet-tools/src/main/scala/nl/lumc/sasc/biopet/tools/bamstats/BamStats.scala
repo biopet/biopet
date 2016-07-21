@@ -52,7 +52,7 @@ object BamStats extends ToolCommand {
 
     logger.info("Start")
 
-    val sequenceDict = validateReferenceinBam(cmdArgs.bamFile, cmdArgs.referenceFasta)
+    val sequenceDict = validateReferenceInBam(cmdArgs.bamFile, cmdArgs.referenceFasta)
 
     init(cmdArgs.outputDir, cmdArgs.bamFile, sequenceDict, cmdArgs.binSize, cmdArgs.threadBinSize)
 
@@ -63,7 +63,7 @@ object BamStats extends ToolCommand {
    * This will retrieve the [[SAMSequenceDictionary]] from the bam file.
    * When `referenceFasta is given he will validate this against the bam file.`
    */
-  def validateReferenceinBam(bamFile: File, referenceFasta: Option[File]) = {
+  def validateReferenceInBam(bamFile: File, referenceFasta: Option[File]) = {
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     val samHeader = samReader.getFileHeader
     samReader.close()
@@ -87,7 +87,7 @@ object BamStats extends ToolCommand {
    */
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
-      Future { processContig(contig, bamFile, binSize, threadBinSize) }
+      Future { processContig(contig, bamFile, binSize, threadBinSize, outputDir) }
     }
 
     val unmappedFuture = Future { processUnmappedReads(bamFile) }
@@ -96,13 +96,7 @@ object BamStats extends ToolCommand {
 
     logger.info(s"total: ${stats.totalReads},  unmapped: ${stats.unmapped}, secondary: ${stats.secondary}")
 
-    stats.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
-    stats.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
-    stats.clippingHistogram.writeToTsv(new File(outputDir, "clipping.tsv"))
-    stats.leftClippingHistogram.writeToTsv(new File(outputDir, "left_clipping.tsv"))
-    stats.rightClippingHistogram.writeToTsv(new File(outputDir, "right_clipping.tsv"))
-    stats._5_ClippingHistogram.writeToTsv(new File(outputDir, "5_prime_clipping.tsv"))
-    stats._3_ClippingHistogram.writeToTsv(new File(outputDir, "3_prime_clipping.tsv"))
+    stats.writeStatsToFiles(outputDir)
   }
 
   /**
@@ -114,16 +108,21 @@ object BamStats extends ToolCommand {
    * @param threadBinSize Thread binsize
    * @return Output stats
    */
-  def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int): Stats = {
+  def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int, outputDir: File): Stats = {
     val scattersFutures = region
       .scatter(binSize)
       .grouped((region.length.toDouble / threadBinSize).ceil.toInt)
       .map(scatters => Future { processThread(scatters, bamFile) })
-    waitOnFutures(scattersFutures.toList, Some(region.chr))
+    val stats = waitOnFutures(scattersFutures.toList, Some(region.chr))
+    val contigDir = new File(outputDir, "contigs" +  File.separator + region.chr)
+    contigDir.mkdirs()
+    stats.writeStatsToFiles(contigDir)
+    stats
   }
 
   /**
    * This method will wait when all futures are complete and collect a single [[Stats]] instance
+   *
    * @param futures List of futures to monitor
    * @param msg Optional message for logging
    * @return Output stats
@@ -151,7 +150,7 @@ object BamStats extends ToolCommand {
   /**
    * This method will process 1 thread bin
    *
-   * @param scatters bins to check
+   * @param scatters bins to check, there should be no gaps withing the scatters
    * @param bamFile Input bamfile
    * @return Output stats
    */
@@ -203,7 +202,8 @@ object BamStats extends ToolCommand {
 
   /**
    * This method will only count the unmapped fragments
-   * @param bamFile Input bamfile
+    *
+    * @param bamFile Input bamfile
    * @return Output stats
    */
   def processUnmappedReads(bamFile: File): Stats = {
