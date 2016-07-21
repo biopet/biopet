@@ -62,7 +62,7 @@ object BiopetFlagstat extends ToolCommand {
 
     val flagstatCollector = new FlagstatCollector
     flagstatCollector.loadDefaultFunctions()
-    flagstatCollector.loadAditionalFunctions()
+    flagstatCollector.loadQualityFunctions()
 
     logger.info("Start reading file: " + commandArgs.inputFile)
     for (record <- iterSam) {

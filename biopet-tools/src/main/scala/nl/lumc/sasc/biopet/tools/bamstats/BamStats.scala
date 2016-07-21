@@ -77,7 +77,7 @@ object BamStats extends ToolCommand {
   }
 
   /**
-   * This is the main running function of [[BamStats]]. This will start the thereads and collect and write the results.
+   * This is the main running function of [[BamStats]]. This will start the threads and collect and write the results.
    *
    * @param outputDir All output files will be placed here
    * @param bamFile Input bam file

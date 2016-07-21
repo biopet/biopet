@@ -17,7 +17,8 @@ case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
                  _3_ClippingHistogram: Histogram[Int] = new Histogram[Int]()) {
 
   flagstat.loadDefaultFunctions()
-  flagstat.loadAditionalFunctions(1, 0)
+  flagstat.loadQualityFunctions(1, 0)
+  flagstat.loadOrientationFunctions
 
   /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {
