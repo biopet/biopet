@@ -2,12 +2,15 @@ package nl.lumc.sasc.biopet.tools.bamstats
 
 import java.io.File
 
+import nl.lumc.sasc.biopet.tools.flagstat.FlagstatCollector
+
 /**
  * Created by pjvanthof on 05/07/16.
  */
 case class Stats(var totalReads: Long = 0L,
                  var unmapped: Long = 0L,
                  var secondary: Long = 0L,
+                 flagstat: FlagstatCollector = new FlagstatCollector(),
                  mappingQualityHistogram: Histogram[Int] = new Histogram[Int](),
                  insertSizeHistogram: Histogram[Int] = new Histogram[Int](),
                  clippingHistogram: Histogram[Int] = new Histogram[Int](),
@@ -16,10 +19,14 @@ case class Stats(var totalReads: Long = 0L,
                  _5_ClippingHistogram: Histogram[Int] = new Histogram[Int](),
                  _3_ClippingHistogram: Histogram[Int] = new Histogram[Int]()) {
 
+  flagstat.loadDefaultFunctions()
+  flagstat.loadAditionalFunctions(1, 0)
+
   /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {
     this.totalReads += other.totalReads
     this.unmapped += other.unmapped
+    this.flagstat += other.flagstat
     this.mappingQualityHistogram += other.mappingQualityHistogram
     this.insertSizeHistogram += other.insertSizeHistogram
     this.clippingHistogram += other.clippingHistogram
@@ -31,6 +38,8 @@ case class Stats(var totalReads: Long = 0L,
   }
 
   def writeStatsToFiles(outputDir: File): Unit = {
+    this.flagstat.writeReportToFile(new File(outputDir, "flagstats"))
+    this.flagstat.writeSummaryTofile(new File(outputDir, "flagstats.summary.json"))
     this.mappingQualityHistogram.writeToTsv(new File(outputDir, "mapping_quality.tsv"))
     this.insertSizeHistogram.writeToTsv(new File(outputDir, "insert_size.tsv"))
     this.clippingHistogram.writeToTsv(new File(outputDir, "clipping.tsv"))

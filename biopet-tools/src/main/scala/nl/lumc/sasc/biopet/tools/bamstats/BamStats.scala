@@ -114,7 +114,7 @@ object BamStats extends ToolCommand {
       .grouped((region.length.toDouble / threadBinSize).ceil.toInt)
       .map(scatters => Future { processThread(scatters, bamFile) })
     val stats = waitOnFutures(scattersFutures.toList, Some(region.chr))
-    val contigDir = new File(outputDir, "contigs" +  File.separator + region.chr)
+    val contigDir = new File(outputDir, "contigs" + File.separator + region.chr)
     contigDir.mkdirs()
     stats.writeStatsToFiles(contigDir)
     stats
@@ -166,6 +166,7 @@ object BamStats extends ToolCommand {
 
       // Read based stats
       if (samRecord.getAlignmentStart > threadStart && samRecord.getAlignmentStart <= threadEnd) {
+        totalStats.flagstat.loadRecord(samRecord)
         totalStats.totalReads += 1
         if (samRecord.isSecondaryOrSupplementary) totalStats.secondary += 1
         if (samRecord.getReadUnmappedFlag) totalStats.unmapped += 1
@@ -202,16 +203,18 @@ object BamStats extends ToolCommand {
 
   /**
    * This method will only count the unmapped fragments
-    *
-    * @param bamFile Input bamfile
+   *
+   * @param bamFile Input bamfile
    * @return Output stats
    */
   def processUnmappedReads(bamFile: File): Stats = {
     val stats = Stats()
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
-    var size = samReader.queryUnmapped().size
-    stats.totalReads += size
-    stats.unmapped += size
+    for (samRecord <- samReader.queryUnmapped()) {
+      stats.flagstat.loadRecord(samRecord)
+      stats.totalReads += 1
+      stats.unmapped += 1
+    }
     samReader.close()
     stats
   }

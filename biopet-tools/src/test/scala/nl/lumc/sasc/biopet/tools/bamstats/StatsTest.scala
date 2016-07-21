@@ -5,8 +5,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 19-7-16.
-  */
+ * Created by pjvan_thof on 19-7-16.
+ */
 class StatsTest extends TestNGSuite with Matchers {
   @Test
   def testEqual(): Unit = {
