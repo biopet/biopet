@@ -7,8 +7,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by Sander Bollen on 13-7-16.
-  */
+ * Created by Sander Bollen on 13-7-16.
+ */
 class HaploTypeCallerGvcfTest extends TestNGSuite with Matchers {
 
   @Test

@@ -109,9 +109,10 @@ object BamStats extends ToolCommand {
   def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int, outputDir: File): Stats = {
     val scattersFutures = region
       .scatter(binSize)
-      .grouped((region.length.toDouble / threadBinSize).ceil.toInt)
+      .grouped((region.length.toDouble / binSize).ceil.toInt / (region.length.toDouble / threadBinSize).ceil.toInt)
       .map(scatters => Future { processThread(scatters, bamFile) })
-    val stats = waitOnFutures(scattersFutures.toList, Some(region.chr))
+      .toList
+    val stats = waitOnFutures(scattersFutures, Some(region.chr))
     val contigDir = new File(outputDir, "contigs" + File.separator + region.chr)
     contigDir.mkdirs()
     stats.writeStatsToFiles(contigDir)
