@@ -9,12 +9,12 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvan_thof on 19-7-16.
-  */
+ * Created by pjvan_thof on 19-7-16.
+ */
 class HistogramTest extends TestNGSuite with Matchers {
   @Test
   def testValues: Unit = {
-    val data:  Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
+    val data: Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
     val c1 = new Histogram[Int](data)
     c1.countsMap shouldBe data
     c1.get(1) shouldBe Some(1)
@@ -44,7 +44,7 @@ class HistogramTest extends TestNGSuite with Matchers {
 
   @Test
   def testTsv: Unit = {
-    val data:  Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
+    val data: Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
     val c1 = new Histogram[Int](data)
 
     val tsvFile = File.createTempFile("counts.", ".tsv")

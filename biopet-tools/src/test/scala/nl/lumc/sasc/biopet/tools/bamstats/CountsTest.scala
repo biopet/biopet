@@ -9,12 +9,12 @@ import org.testng.annotations.Test
 import scala.io.Source
 
 /**
-  * Created by pjvan_thof on 19-7-16.
-  */
+ * Created by pjvan_thof on 19-7-16.
+ */
 class CountsTest extends TestNGSuite with Matchers {
   @Test
-  def testValues: Unit = {
-    val data:  Map[String, Long] = Map("1" -> 1, "2" -> 2, "3" -> 3)
+  def testValues(): Unit = {
+    val data: Map[String, Long] = Map("1" -> 1, "2" -> 2, "3" -> 3)
     val c1 = new Counts[String](data)
     c1.countsMap shouldBe data
     c1.get("1") shouldBe Some(1)
@@ -37,14 +37,36 @@ class CountsTest extends TestNGSuite with Matchers {
   }
 
   @Test
-  def testEmpty: Unit = {
+  def testEmpty(): Unit = {
     val c1 = new Counts[Int]()
     c1.countsMap.isEmpty shouldBe true
   }
 
   @Test
-  def testTsv: Unit = {
-    val data:  Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
+  def testEqual(): Unit = {
+    val c1 = new Counts[Int]()
+    val c2 = new Counts[Int]()
+
+    c1 should not be "be a string"
+
+    c1 shouldBe c1
+    c2 shouldBe c2
+    c1 shouldBe c2
+
+    c1.add(1)
+    c1 shouldBe c1
+    c2 shouldBe c2
+    c1 should not be c2
+
+    c2.add(1)
+    c1 shouldBe c1
+    c2 shouldBe c2
+    c1 shouldBe c2
+  }
+
+  @Test
+  def testTsv(): Unit = {
+    val data: Map[Int, Long] = Map(1 -> 1, 2 -> 2, 3 -> 3)
     val c1 = new Counts[Int](data)
 
     val tsvFile = File.createTempFile("counts.", ".tsv")

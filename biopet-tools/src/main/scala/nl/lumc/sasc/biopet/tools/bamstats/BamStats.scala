@@ -4,7 +4,7 @@ import java.io.File
 import java.util.concurrent.TimeoutException
 
 import htsjdk.samtools.reference.FastaSequenceFile
-import htsjdk.samtools.{SAMSequenceDictionary, SamReaderFactory}
+import htsjdk.samtools.{ SAMSequenceDictionary, SamReaderFactory }
 import nl.lumc.sasc.biopet.utils.BamUtils.SamDictCheck
 import nl.lumc.sasc.biopet.utils.ToolCommand
 import nl.lumc.sasc.biopet.utils.intervals.{ BedRecord, BedRecordList }
@@ -13,6 +13,7 @@ import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future }
+import scala.language.postfixOps
 
 /**
  * This tool will collect stats from a bamfile
@@ -76,14 +77,14 @@ object BamStats extends ToolCommand {
   }
 
   /**
-    * This is the main running function of [[BamStats]]. This will start the thereads and collect and write the results.
-    *
-    * @param outputDir All output files will be placed here
-    * @param bamFile Input bam file
-    * @param referenceDict Dict for scattering
-    * @param binSize stats binsize
-    * @param threadBinSize Thread binsize
-    */
+   * This is the main running function of [[BamStats]]. This will start the thereads and collect and write the results.
+   *
+   * @param outputDir All output files will be placed here
+   * @param bamFile Input bam file
+   * @param referenceDict Dict for scattering
+   * @param binSize stats binsize
+   * @param threadBinSize Thread binsize
+   */
   def init(outputDir: File, bamFile: File, referenceDict: SAMSequenceDictionary, binSize: Int, threadBinSize: Int): Unit = {
     val contigsFutures = BedRecordList.fromDict(referenceDict).allRecords.map { contig =>
       Future { processContig(contig, bamFile, binSize, threadBinSize) }
@@ -105,28 +106,28 @@ object BamStats extends ToolCommand {
   }
 
   /**
-    * This will start the subjobs for each contig and collect [[Stats]] on contig level
-    *
-    * @param region Region to check, mostly yhis is the complete contig
-    * @param bamFile Input bam file
-    * @param binSize stats binsize
-    * @param threadBinSize Thread binsize
-    * @return Output stats
-    */
+   * This will start the subjobs for each contig and collect [[Stats]] on contig level
+   *
+   * @param region Region to check, mostly yhis is the complete contig
+   * @param bamFile Input bam file
+   * @param binSize stats binsize
+   * @param threadBinSize Thread binsize
+   * @return Output stats
+   */
   def processContig(region: BedRecord, bamFile: File, binSize: Int, threadBinSize: Int): Stats = {
     val scattersFutures = region
       .scatter(binSize)
       .grouped((region.length.toDouble / threadBinSize).ceil.toInt)
-      .map( scatters => Future { processThread(scatters, bamFile) })
+      .map(scatters => Future { processThread(scatters, bamFile) })
     waitOnFutures(scattersFutures.toList, Some(region.chr))
   }
 
   /**
-    * This method will wait when all futures are complete and collect a single [[Stats]] instance
-    * @param futures List of futures to monitor
-    * @param msg Optional message for logging
-    * @return Output stats
-    */
+   * This method will wait when all futures are complete and collect a single [[Stats]] instance
+   * @param futures List of futures to monitor
+   * @param msg Optional message for logging
+   * @return Output stats
+   */
   def waitOnFutures(futures: List[Future[Stats]], msg: Option[String] = None): Stats = {
     msg.foreach(m => logger.info(s"Start monitoring jobs for '$m', ${futures.size} jobs"))
     futures.foreach(_.onFailure { case t => throw new RuntimeException(t) })
@@ -148,12 +149,12 @@ object BamStats extends ToolCommand {
   }
 
   /**
-    * This method will process 1 thread bin
-    *
-    * @param scatters bins to check
-    * @param bamFile Input bamfile
-    * @return Output stats
-    */
+   * This method will process 1 thread bin
+   *
+   * @param scatters bins to check
+   * @param bamFile Input bamfile
+   * @return Output stats
+   */
   def processThread(scatters: List[BedRecord], bamFile: File): Stats = {
     val totalStats = Stats()
     val sortedScatters = scatters.sortBy(_.start)
@@ -201,10 +202,10 @@ object BamStats extends ToolCommand {
   }
 
   /**
-    * This method will only count the unmapped fragments
-    * @param bamFile Input bamfile
-    * @return Output stats
-    */
+   * This method will only count the unmapped fragments
+   * @param bamFile Input bamfile
+   * @return Output stats
+   */
   def processUnmappedReads(bamFile: File): Stats = {
     val stats = Stats()
     val samReader = SamReaderFactory.makeDefault().open(bamFile)

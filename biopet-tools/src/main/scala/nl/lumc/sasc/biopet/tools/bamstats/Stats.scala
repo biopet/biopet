@@ -3,18 +3,16 @@ package nl.lumc.sasc.biopet.tools.bamstats
 /**
  * Created by pjvanthof on 05/07/16.
  */
-case class Stats() {
-
-  var totalReads = 0L
-  var unmapped = 0L
-  var secondary = 0L
-  val mappingQualityHistogram = new Histogram[Int]()
-  val insertSizeHistogram = new Histogram[Int]()
-  val clippingHistogram = new Histogram[Int]()
-  val leftClippingHistogram = new Histogram[Int]()
-  val rightClippingHistogram = new Histogram[Int]()
-  val _5_ClippingHistogram = new Histogram[Int]()
-  val _3_ClippingHistogram = new Histogram[Int]()
+case class Stats(var totalReads: Long = 0L,
+                 var unmapped: Long = 0L,
+                 var secondary: Long = 0L,
+                 mappingQualityHistogram: Histogram[Int] = new Histogram[Int](),
+                 insertSizeHistogram: Histogram[Int] = new Histogram[Int](),
+                 clippingHistogram: Histogram[Int] = new Histogram[Int](),
+                 leftClippingHistogram: Histogram[Int] = new Histogram[Int](),
+                 rightClippingHistogram: Histogram[Int] = new Histogram[Int](),
+                 _5_ClippingHistogram: Histogram[Int] = new Histogram[Int](),
+                 _3_ClippingHistogram: Histogram[Int] = new Histogram[Int]()) {
 
   /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {

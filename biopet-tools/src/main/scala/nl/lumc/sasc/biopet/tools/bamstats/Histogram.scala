@@ -34,6 +34,13 @@ class Counts[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Ordering[T
     counts.keys.toList.sorted.foreach(x => writer.println(s"$x\t${counts(x)}"))
     writer.close()
   }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case c: Counts[T] => this.counts == c.counts
+      case _            => false
+    }
+  }
 }
 
 class Histogram[T](_counts: Map[T, Long] = Map[T, Long]())(implicit ord: Numeric[T]) extends Counts[T](_counts) {
