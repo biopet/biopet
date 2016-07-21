@@ -41,19 +41,19 @@ class FlagstatCollector {
   }
 
   /**
-    * The method will aditional checks based on  mapping quality of the sam records.
-    *
-    * @param m steps of qaulity
-    * @param max maximum quality
-    */
+   * The method will aditional checks based on  mapping quality of the sam records.
+   *
+   * @param m steps of qaulity
+   * @param max maximum quality
+   */
   def loadQualityFunctions(m: Int = 10, max: Int = 60): Unit = {
     for (t <- 0 to (max / m))
       this.addFunction("MAPQ>" + (t * m), record => record.getMappingQuality > (t * m))
   }
 
   /**
-    * This method will add functions to check orientation, for this a combination of flags and read positions are used.
-    */
+   * This method will add functions to check orientation, for this a combination of flags and read positions are used.
+   */
   def loadOrientationFunctions = {
     this.addFunction("First normal, second read inverted (paired end orientation)", record => {
       if (record.getReadPairedFlag &&

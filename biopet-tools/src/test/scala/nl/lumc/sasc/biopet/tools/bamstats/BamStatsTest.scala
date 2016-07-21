@@ -9,8 +9,8 @@ import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
 
 /**
-  * Created by pjvan_thof on 21-7-16.
-  */
+ * Created by pjvan_thof on 21-7-16.
+ */
 class BamStatsTest extends TestNGSuite with Matchers {
   @Test
   def testMain: Unit = {
