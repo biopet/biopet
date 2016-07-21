@@ -14,7 +14,6 @@
  */
 package nl.lumc.sasc.biopet
 
-import nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat
 import nl.lumc.sasc.biopet.utils.{ BiopetExecutable, MainCommand }
 
 object BiopetToolsExecutable extends BiopetExecutable {
@@ -23,10 +22,11 @@ object BiopetToolsExecutable extends BiopetExecutable {
 
   def tools: List[MainCommand] = List(
     nl.lumc.sasc.biopet.tools.AnnotateVcfWithBed,
+    nl.lumc.sasc.biopet.tools.bamstats.BamStats,
     nl.lumc.sasc.biopet.tools.BaseCounter,
     nl.lumc.sasc.biopet.tools.BastyGenerateFasta,
     nl.lumc.sasc.biopet.tools.BedtoolsCoverageToCounts,
-    BiopetFlagstat,
+    nl.lumc.sasc.biopet.tools.flagstat.BiopetFlagstat,
     nl.lumc.sasc.biopet.tools.CheckAllelesVcfInBam,
     nl.lumc.sasc.biopet.tools.ExtractAlignedFastq,
     nl.lumc.sasc.biopet.tools.FastqSplitter,
