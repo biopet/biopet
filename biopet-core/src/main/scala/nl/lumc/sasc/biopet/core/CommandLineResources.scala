@@ -87,10 +87,10 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     else memoryLimit = Some(_coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) 1 else threads))
+    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) threads else 1))
 
     if (!config.contains("vmem"))
-      vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) 1 else threads)) + "G")
+      vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) threads else 1)) + "G")
     jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
   }
 
