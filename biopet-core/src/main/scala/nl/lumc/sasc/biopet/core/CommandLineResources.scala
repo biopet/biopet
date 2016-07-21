@@ -31,6 +31,9 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
       t
   }
 
+  val multiplyVmemThreads: Boolean = config("multiply_vmem_threads", default = true)
+  val multiplyRssThreads: Boolean = config("multiply_rss_threads", default = true)
+
   var vmem: Option[String] = config("vmem")
   def defaultCoreMemory: Double = 2.0
   def defaultVmemFactor: Double = 1.4
@@ -84,9 +87,10 @@ trait CommandLineResources extends CommandLineFunction with Configurable {
     else memoryLimit = Some(_coreMemory * threads)
 
     if (config.contains("resident_limit")) residentLimit = config("resident_limit")
-    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor)
+    else residentLimit = Some((_coreMemory + (0.5 * retryMultipler)) * residentFactor * (if (multiplyRssThreads) 1 else threads))
 
-    if (!config.contains("vmem")) vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler))) + "G")
+    if (!config.contains("vmem"))
+      vmem = Some((_coreMemory * (vmemFactor + (0.5 * retryMultipler)) * (if (multiplyVmemThreads) 1 else threads)) + "G")
     jobName = configNamespace + ":" + (if (firstOutput != null) firstOutput.getName else jobOutputFile)
   }
 
