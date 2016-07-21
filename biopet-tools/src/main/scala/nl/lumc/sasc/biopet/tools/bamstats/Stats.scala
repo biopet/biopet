@@ -7,10 +7,7 @@ import nl.lumc.sasc.biopet.tools.flagstat.FlagstatCollector
 /**
  * Created by pjvanthof on 05/07/16.
  */
-case class Stats(var totalReads: Long = 0L,
-                 var unmapped: Long = 0L,
-                 var secondary: Long = 0L,
-                 flagstat: FlagstatCollector = new FlagstatCollector(),
+case class Stats(flagstat: FlagstatCollector = new FlagstatCollector(),
                  mappingQualityHistogram: Histogram[Int] = new Histogram[Int](),
                  insertSizeHistogram: Histogram[Int] = new Histogram[Int](),
                  clippingHistogram: Histogram[Int] = new Histogram[Int](),
@@ -24,8 +21,6 @@ case class Stats(var totalReads: Long = 0L,
 
   /** This will add an other [[Stats]] inside `this` */
   def +=(other: Stats): Stats = {
-    this.totalReads += other.totalReads
-    this.unmapped += other.unmapped
     this.flagstat += other.flagstat
     this.mappingQualityHistogram += other.mappingQualityHistogram
     this.insertSizeHistogram += other.insertSizeHistogram

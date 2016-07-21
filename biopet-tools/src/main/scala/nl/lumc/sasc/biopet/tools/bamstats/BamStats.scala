@@ -94,8 +94,6 @@ object BamStats extends ToolCommand {
 
     val stats = waitOnFutures(unmappedFuture :: contigsFutures.toList)
 
-    logger.info(s"total: ${stats.totalReads},  unmapped: ${stats.unmapped}, secondary: ${stats.secondary}")
-
     stats.writeStatsToFiles(outputDir)
   }
 
@@ -167,10 +165,7 @@ object BamStats extends ToolCommand {
       // Read based stats
       if (samRecord.getAlignmentStart > threadStart && samRecord.getAlignmentStart <= threadEnd) {
         totalStats.flagstat.loadRecord(samRecord)
-        totalStats.totalReads += 1
-        if (samRecord.isSecondaryOrSupplementary) totalStats.secondary += 1
-        if (samRecord.getReadUnmappedFlag) totalStats.unmapped += 1
-        else { // Mapped read
+        if (!samRecord.getReadUnmappedFlag) { // Mapped read
           totalStats.mappingQualityHistogram.add(samRecord.getMappingQuality)
         }
         if (samRecord.getProperPairFlag && samRecord.getFirstOfPairFlag && !samRecord.getSecondOfPairFlag)
@@ -212,8 +207,6 @@ object BamStats extends ToolCommand {
     val samReader = SamReaderFactory.makeDefault().open(bamFile)
     for (samRecord <- samReader.queryUnmapped()) {
       stats.flagstat.loadRecord(samRecord)
-      stats.totalReads += 1
-      stats.unmapped += 1
     }
     samReader.close()
     stats
