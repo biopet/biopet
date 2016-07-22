@@ -57,7 +57,11 @@ object BaseCounter extends ToolCommand {
     //Sets picard logging level
     htsjdk.samtools.util.Log.setGlobalLogLevel(htsjdk.samtools.util.Log.LogLevel.valueOf(logger.getLevel.toString))
 
+    require(cmdArgs.outputDir.exists(), s"Output dir does not exist: ${cmdArgs.outputDir}")
+    require(cmdArgs.outputDir.isDirectory, s"Output dir is not a dir: ${cmdArgs.outputDir}")
+
     logger.info("Start reading RefFlat file")
+
     val bamReader = SamReaderFactory.makeDefault().open(cmdArgs.bamFile)
     val geneReader = GeneAnnotationReader.loadRefFlat(cmdArgs.refFlat, bamReader.getFileHeader.getSequenceDictionary)
     bamReader.close()
