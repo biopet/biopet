@@ -63,6 +63,7 @@ object BaseCounter extends ToolCommand {
     logger.info("Start reading RefFlat file")
 
     val bamReader = SamReaderFactory.makeDefault().open(cmdArgs.bamFile)
+    require(bamReader.hasIndex, "Bamfile require an index")
     val geneReader = GeneAnnotationReader.loadRefFlat(cmdArgs.refFlat, bamReader.getFileHeader.getSequenceDictionary)
     bamReader.close()
     logger.info("Done reading RefFlat file")
