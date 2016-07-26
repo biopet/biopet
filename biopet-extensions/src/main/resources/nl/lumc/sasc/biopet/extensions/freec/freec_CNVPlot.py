@@ -114,13 +114,13 @@ def plot_chromosome(lines, chromosome, output_file, ploidy):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-I', "--input", required=True, help="Input bam_ratio.txt file")
-    parser.add_argument('-O', '--output-dir', required=True, help="Path to output dir")
+    parser.add_argument('-O', '--output-prefix', required=True, help="Path to output prefix")
     parser.add_argument("-p", "--ploidy", type=int, default=2, help="Ploidy of sample")
 
     args = parser.parse_args()
 
     reader = BamRatioReader(args.input)
     for chromosome in reader.chromosomes:
-        ofile = join(args.output_dir, "chr{0}.png".format(chromosome))
+        ofile = args.output_prefix + "." + "chr{0}.png".format(chromosome)
         lines = reader.get_chromosome(chromosome)
         plot_chromosome(lines, chromosome, ofile, args.ploidy)
