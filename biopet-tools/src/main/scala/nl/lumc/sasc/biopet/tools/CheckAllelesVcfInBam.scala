@@ -47,19 +47,19 @@ object CheckAllelesVcfInBam extends ToolCommand {
   class OptParser extends AbstractOptParser {
     opt[File]('I', "inputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(inputFile = x)
-    }
+    } text "VCF file"
     opt[File]('o', "outputFile") required () maxOccurs 1 valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
-    }
+    } text "output VCF file name"
     opt[String]('s', "sample") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(samples = x :: c.samples)
-    }
+    } text "sample name"
     opt[File]('b', "bam") unbounded () minOccurs 1 action { (x, c) =>
       c.copy(bamFiles = x :: c.bamFiles)
-    }
+    } text "bam file, from which the variants (VCF files) were called"
     opt[Int]('m', "min_mapping_quality") maxOccurs 1 action { (x, c) =>
       c.copy(minMapQual = c.minMapQual)
-    }
+    } text "minimum mapping quality score for a read to be taken into account"
   }
 
   private class CountReport(

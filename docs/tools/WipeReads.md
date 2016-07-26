@@ -1,10 +1,9 @@
 # WipeReads
 
 ## Introduction
-WipeReads is a tool for removing reads from indexed BAM files.
-It respects pairing information and can be set to remove reads whose duplicate
-maps outside of the target region. The main use case is to remove reads mapping
-to known ribosomal RNA regions (using a supplied BED file containing intervals for these regions).
+WipeReads is a tool for removing reads from indexed BAM files that are inside a user defined region.
+It takes pairing information into account and can be set to remove reads if one of the pairs maps outside of the target region. 
+An application example is to remove reads mapping to known ribosomal RNA regions (using a supplied BED file containing intervals for these regions).
 
 ## Example
 To open the help menu:
@@ -62,5 +61,5 @@ biopet tool WipeReads --input_file myBam.bam \
 ~~~
 
 ## Output
-This tool outputs a bam file containing all the reads not inside a ribosomal region.
-And optionally a bam file with only the ribosomal reads
+This tool outputs a bam file containing all the reads not inside the ribosomal region.
+It can optionally output a bam file with only the reads inside the ribosomal region

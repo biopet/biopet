@@ -35,7 +35,7 @@ trait ToolCommand extends MainCommand with Logging {
         case "error" => logger.setLevel(org.apache.log4j.Level.ERROR)
         case _       =>
       }
-    } text "Log level" validate {
+    } text "Level of log information printed. Possible levels: 'debug', 'info', 'warn', 'error'" validate {
       case "debug" | "info" | "warn" | "error" => success
       case _                                   => failure("Log level must be <debug/info/warn/error>")
     }
