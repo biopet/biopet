@@ -127,19 +127,7 @@ object BamStats extends ToolCommand {
   def waitOnFutures(futures: List[Future[Stats]], msg: Option[String] = None): Stats = {
     msg.foreach(m => logger.info(s"Start monitoring jobs for '$m', ${futures.size} jobs"))
     futures.foreach(_.onFailure { case t => throw new RuntimeException(t) })
-    var stats = Stats()
-    var running = futures
-    while (running.nonEmpty) {
-      val done = running.filter(_.value.isDefined)
-      done.foreach(stats += _.value.get.get)
-      running = running.filterNot(done.contains(_))
-      if (running.nonEmpty && done.nonEmpty) msg.foreach(m => logger.info(s"Jobs for '$m', ${running.size}/${futures.size} jobs"))
-      if (running.nonEmpty) try {
-        Await.ready(running.head, 1 second)
-      } catch {
-        case e: TimeoutException =>
-      }
-    }
+    val stats = Await.result(Future.sequence(futures).map(_.fold(Stats())(_ += _)), Duration.Inf)
     msg.foreach(m => logger.info(s"All jobs for '$m' are done"))
     stats
   }
