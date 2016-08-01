@@ -8,19 +8,18 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
 package nl.lumc.sasc.biopet.utils.intervals
 
-import java.io.{ PrintWriter, File }
+import java.io.{ File, PrintWriter }
 
+import htsjdk.samtools.SAMSequenceDictionary
 import htsjdk.samtools.reference.FastaSequenceFile
 
 import scala.collection.JavaConversions._
-
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -155,8 +154,13 @@ object BedRecordList {
 
   def fromReference(file: File) = {
     val referenceFile = new FastaSequenceFile(file, true)
+    val dict = referenceFile.getSequenceDictionary
+    referenceFile.close()
+    fromDict(dict)
+  }
 
-    fromList(for (contig <- referenceFile.getSequenceDictionary.getSequences) yield {
+  def fromDict(dict: SAMSequenceDictionary) = {
+    fromList(for (contig <- dict.getSequences) yield {
       BedRecord(contig.getSequenceName, 0, contig.getSequenceLength)
     })
   }

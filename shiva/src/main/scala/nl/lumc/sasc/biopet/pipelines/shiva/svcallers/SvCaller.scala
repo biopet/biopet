@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -29,6 +28,8 @@ trait SvCaller extends QScript with BiopetQScript with Reference {
   var namePrefix: String = _
 
   var inputBams: Map[String, File] = Map.empty
+
+  val sampleNameSuffix: String = config("samplename_suffix", default = "")
 
   def outputVCF(sample: String): Option[File] = {
     outputVCFs.get(sample) match {

@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -25,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
 import nl.lumc.sasc.biopet.pipelines.bammetrics.BamMetrics
 import nl.lumc.sasc.biopet.pipelines.bamtobigwig.Bam2Wig
 import nl.lumc.sasc.biopet.pipelines.mapping.MultisampleMappingTrait
+import nl.lumc.sasc.biopet.utils.Logging
 import nl.lumc.sasc.biopet.utils.config._
 import org.broadinstitute.gatk.queue.QScript
 
@@ -50,7 +50,8 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     "samtoolsview" -> Map(
       "h" -> true,
       "b" -> true
-    )
+    ),
+    "macs2callpeak" -> Map("fileformat" -> "")
   )
 
   def summaryFile = new File(outputDir, "Carp.summary.json")
@@ -92,6 +93,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
       macs2.treatment = preProcessBam.get
       macs2.name = Some(sampleId)
       macs2.outputdir = sampleDir + File.separator + "macs2" + File.separator + sampleId + File.separator
+      macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
       add(macs2)
     }
   }
@@ -101,6 +103,13 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     carp.outputDir = new File(outputDir, "report")
     carp.summaryFile = summaryFile
     Some(carp)
+  }
+
+  lazy val paired: Boolean = {
+    val notPaired = samples.forall(_._2.libraries.forall(_._2.inputR2.isEmpty))
+    val p = samples.forall(_._2.libraries.forall(_._2.inputR2.isDefined))
+    if (!notPaired && !p) Logging.addError("Combination of Paired-end and Single-end detected, this is not allowed in Carp")
+    p
   }
 
   override def init() = {
@@ -120,6 +129,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
         macs2.treatment = sample.preProcessBam.get
         macs2.control = samples(controlId).preProcessBam.get
         macs2.name = Some(sampleId + "_VS_" + controlId)
+        macs2.fileformat = if (paired) Some("BAMPE") else Some("BAM")
         macs2.outputdir = sample.sampleDir + File.separator + "macs2" + File.separator + macs2.name.get + File.separator
         add(macs2)
       }

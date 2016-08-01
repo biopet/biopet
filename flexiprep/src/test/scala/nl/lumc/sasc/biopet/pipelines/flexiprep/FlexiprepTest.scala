@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -18,7 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.flexiprep
 import java.io.File
 
 import com.google.common.io.Files
-import nl.lumc.sasc.biopet.extensions.tools.{ ValidateFastq, SeqStat }
+import nl.lumc.sasc.biopet.extensions.tools.{ SeqStat, ValidateFastq }
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Config
 import org.apache.commons.io.FileUtils
@@ -82,6 +81,18 @@ class FlexiprepTest extends TestNGSuite with Matchers {
     flexiprep.functions.count(_.isInstanceOf[ValidateFastq]) shouldBe 2
     flexiprep.functions.count(_.isInstanceOf[CheckValidateFastq]) shouldBe (if (abortOnCorruptFastq) 2 else 0)
 
+  }
+
+  @Test
+  def testNoSample: Unit = {
+    val map = ConfigUtils.mergeMaps(Map(
+      "output_dir" -> FlexiprepTest.outputDir
+    ), Map(FlexiprepTest.executables.toSeq: _*))
+    val flexiprep: Flexiprep = initPipeline(map)
+
+    intercept[IllegalStateException] {
+      flexiprep.script()
+    }
   }
 
   // remove temporary run directory all tests in the class have been run

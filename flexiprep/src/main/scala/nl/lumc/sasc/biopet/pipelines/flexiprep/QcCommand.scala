@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -104,13 +103,11 @@ class QcCommand(val root: Configurable, val fastqc: Fastqc) extends BiopetComman
     clip = if (!flexiprep.skipClip) {
       val cutadapt = clip.getOrElse(new Cutadapt(root, fastqc))
 
-      val foundAdapters = if (!cutadapt.ignoreFastqcAdapters) {
-        fastqc.foundAdapters.map(_.seq) ++ cutadapt.customAdapters.map(_.seq)
-      } else {
-        cutadapt.customAdapters.map(_.seq)
-      }
+      val foundAdapters: Set[String] = if (!cutadapt.ignoreFastqcAdapters) {
+        fastqc.foundAdapters.map(_.seq)
+      } else Set()
 
-      if (foundAdapters.nonEmpty) {
+      if (foundAdapters.nonEmpty || cutadapt.adapter.nonEmpty || cutadapt.front.nonEmpty || cutadapt.anywhere.nonEmpty) {
         cutadapt.fastqInput = seqtk.output
         cutadapt.fastqOutput = new File(output.getParentFile, input.getName + ".cutadapt.fq")
         cutadapt.statsOutput = new File(flexiprep.outputDir, s"${flexiprep.sampleId.getOrElse("x")}-${flexiprep.libId.getOrElse("x")}.$read.clip.stats")

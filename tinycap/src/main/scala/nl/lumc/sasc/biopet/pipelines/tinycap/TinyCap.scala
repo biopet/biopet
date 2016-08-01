@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -65,22 +64,24 @@ class TinyCap(val root: Configurable) extends QScript
     "bowtie" -> Map(
       "chunkmbs" -> 256,
       "seedmms" -> 3,
-      "seedlen" -> 25,
-      "k" -> 5,
-      "best" -> true
+      "seedlen" -> 28,
+      "k" -> 3,
+      "best" -> true,
+      "strata" -> true
     ),
     "sickle" -> Map(
       "lengthThreshold" -> 15
     ),
     "fastqc" -> Map(
-      "sensitiveAdapterSearch" -> true
+      "sensitiveAdapterSearch" -> false
     ),
     "cutadapt" -> Map(
-      "error_rate" -> 0.2,
+      "error_rate" -> 0.1,
       "minimum_length" -> 15,
       "q" -> 30,
-      "default_clip_mode" -> "both",
-      "times" -> 2
+      "default_clip_mode" -> "3",
+      "times" -> 1,
+      "ignore_fastqc_adapters" -> true
     )
   )
 

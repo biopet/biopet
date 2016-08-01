@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -29,6 +28,8 @@ class ValidateFastq(val root: Configurable) extends ToolCommandFunction {
 
   @Input(doc = "Input R1 fastq file", required = false)
   var r2Fastq: Option[File] = None
+
+  override def defaultCoreMemory = 4.0
 
   override def cmdLine = super.cmdLine +
     required("-i", r1Fastq) +

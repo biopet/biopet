@@ -22,7 +22,7 @@ class extractReads {}
 
 ```
 
-- Avoid using `null`, the Option `type` in Scala can be used instead
+- Avoid using `null`; Scala's `Option` type should be used instead
 
 ```scala
 // correct:

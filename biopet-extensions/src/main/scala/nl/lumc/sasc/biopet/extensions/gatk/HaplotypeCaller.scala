@@ -1,3 +1,17 @@
+/**
+ * Biopet is built on top of GATK Queue for building bioinformatic
+ * pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+ * SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+ * should also be able to execute Biopet tools and pipelines.
+ *
+ * Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+ *
+ * Contact us at: sasc@lumc.nl
+ *
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+ * license; For commercial users or users who do not want to follow the AGPL
+ * license, please contact us to obtain a separate license.
+ */
 package nl.lumc.sasc.biopet.extensions.gatk
 
 import java.io.File
@@ -76,7 +90,7 @@ class HaplotypeCaller(val root: Configurable) extends CommandLineGATK with Scatt
 
   /** Mode for emitting reference confidence scores */
   @Argument(fullName = "emitRefConfidence", shortName = "ERC", doc = "Mode for emitting reference confidence scores", required = false, exclusiveOf = "", validation = "")
-  var emitRefConfidence: String = _
+  var emitRefConfidence: Option[String] = config("emitRefConfidence")
 
   /** File to which assembled haplotypes should be written */
   @Output(fullName = "bamOutput", shortName = "bamout", doc = "File to which assembled haplotypes should be written", required = false, exclusiveOf = "", validation = "")
@@ -506,14 +520,6 @@ object HaplotypeCaller {
     val hc = new HaplotypeCaller(root)
     hc.input_file = inputFiles
     hc.out = outputFile
-    hc
-  }
-
-  def gvcf(root: Configurable, inputFile: File, outputFile: File): HaplotypeCaller = {
-    val hc = apply(root, List(inputFile), outputFile)
-    hc.emitRefConfidence = "GVCF"
-    hc.variant_index_type = Some("LINEAR")
-    hc.variant_index_parameter = Some(hc.config("variant_index_parameter", default = 128000).asInt)
     hc
   }
 }

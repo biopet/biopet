@@ -19,6 +19,10 @@
     val trimCount = summary.getLibraryValues("flexiprep", "settings", "skip_trim").count(_._2 == Some(false))
     val clipCount = summary.getLibraryValues("flexiprep", "settings", "skip_clip").count(_._2 == Some(false))
     val librariesCount = summary.samples.foldLeft(0)(_ + summary.libraries(_).size)
+
+    val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
+    summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
+    else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
 }#
 
 #if (showIntro)
@@ -62,9 +66,6 @@
 
 #if (showPlot)
     #{
-        val paired: Boolean = if (sampleId.isDefined && libId.isDefined)
-            summary.getLibraryValue(sampleId.get, libId.get, "flexiprep", "settings", "paired").get.asInstanceOf[Boolean]
-        else summary.getLibraryValues("flexiprep", "settings", "paired").values.exists(_ == Some(true))
         FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R1","R1", summary, sampleId = sampleId)
         if (paired) FlexiprepReport.readSummaryPlot(outputDir, "QC_Reads_R2","R2", summary, sampleId = sampleId)
     }#
@@ -105,6 +106,7 @@
         <th>Before QC</th>
         <th>Clipping</th>
         <th>Trimming</th>
+        #if (paired == true) <th>Out of Sync</th> #end
         <th>After QC</th>
     </tr></thead>
     <tbody>
@@ -140,8 +142,8 @@
                     #for (read <- reads)
                         #if (read == "R2") </tr><tr> #end
                         #{
-                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "reads", "num_total")
-                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total")
+                            val beforeTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read, "reads", "num_total").getOrElse(0).toString.toLong
+                            val afterTotal = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "seqstat_" + read + "_qc", "reads", "num_total").getOrElse(0).toString.toLong
                             val clippingDiscardedToShort = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_short").getOrElse(0).toString.toLong
                             val clippingDiscardedToLong = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "clipping_" + read, "num_reads_discarded_too_long").getOrElse(0).toString.toLong
                             var trimmingDiscarded = summary.getLibraryValue(sample, libId, "flexiprep", "stats", "trimming_" + read, "num_reads_discarded_total").getOrElse(0).toString.toLong
@@ -150,6 +152,7 @@
                         <td>${beforeTotal}</td>
                         <td>${clippingDiscardedToShort + clippingDiscardedToLong}</td>
                         <td>${trimmingDiscarded}</td>
+                        #if (paired == true) <td>${beforeTotal - clippingDiscardedToShort - clippingDiscardedToLong - trimmingDiscarded - afterTotal}</td> #end
                         <td>${afterTotal}</td>
                     #end
                 </tr>

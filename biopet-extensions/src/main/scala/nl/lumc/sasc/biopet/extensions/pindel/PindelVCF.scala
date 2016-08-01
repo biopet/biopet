@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -81,7 +80,6 @@ class PindelVCF(val root: Configurable) extends BiopetCommandLineFunction with R
     required("--reference", reference) +
     required("--reference_name", referenceSpecies) +
     required("--reference_date", rDate) +
-    required("--fake_biopet_input_holder", pindelOutputInputHolder) +
     optional("--pindel_output", pindelOutput) +
     optional("--pindel_output_root", pindelOutputRoot) +
     required("--vcf", outputVCF) +

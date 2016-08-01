@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -222,6 +221,21 @@ class ConfigUtilsTest extends TestNGSuite with Matchers {
     mergeMaps(map1, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "12"))
     mergeMaps(map2, map1, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "21"))
     mergeMaps(map2, map2, (a, b, k) => a.toString + b.toString) shouldBe Map("c" -> Map("x" -> "22"))
+  }
+
+  @Test def testFilterEmtpyMapValues: Unit = {
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> "bla")) shouldBe Map("bla" -> "bla")
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map())) shouldBe Map()
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"))) shouldBe Map("bla" -> Map("bla" -> "bla"))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> Map()))) shouldBe Map("bla" -> Map("bla" -> Map()))
+    ConfigUtils.filterEmtpyMapValues(Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")) shouldBe Map("bla" -> Map("bla" -> "bla"), "bla2" -> "bla")
+  }
+
+  @Test def testUniqeKeys: Unit = {
+    ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map("bla" -> "bla")) shouldBe Map()
+    ConfigUtils.uniqueKeys(Map("bla" -> "bla"), Map()) shouldBe Map("bla" -> "bla")
+    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map("bla" -> "bla"))) shouldBe Map()
+    ConfigUtils.uniqueKeys(Map("bla" -> Map("bla" -> "bla")), Map("bla" -> Map())) shouldBe Map("bla" -> Map("bla" -> "bla"))
   }
 }
 

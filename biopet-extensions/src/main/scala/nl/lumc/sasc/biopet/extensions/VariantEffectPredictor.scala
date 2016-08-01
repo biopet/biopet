@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -156,7 +155,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     super.beforeGraph()
     if (!cache && !database) {
       Logging.addError("Must either set 'cache' or 'database' to true for VariantEffectPredictor")
-    } else if (cache && dir.isEmpty) {
+    } else if (cache && dir.isEmpty && dirCache.isEmpty) {
       Logging.addError("Must supply 'dir_cache' to cache for VariantEffectPredictor")
     }
     if (statsText) _summary = new File(output.getAbsolutePath + "_summary.txt")

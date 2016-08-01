@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -32,8 +31,8 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
 
   var outputDir: File = null
 
-  override def defaultThreads = 3
-  override def defaultCoreMemory = 16.0
+  override def defaultThreads = 1
+  override def defaultCoreMemory = 20.0
   def versionCommand = executable + " --version"
   def versionRegex = """Version: (.*)""".r
 
@@ -52,7 +51,8 @@ class PickClosedReferenceOtus(val root: Configurable) extends BiopetCommandLineF
   var suppressTaxonomyAssignment: Boolean = config("suppress_taxonomy_assignment", default = false)
 
   def otuTable = new File(outputDir, "otu_table.biom")
-  def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator + "seqs_otus.txt")
+  def otuMap = new File(outputDir, "uclust_ref_picked_otus" + File.separator +
+    inputFasta.getName.stripSuffix(".fna").stripSuffix(".fasta").stripSuffix(".fa") + "_otus.txt")
 
   @Output
   private var outputFiles: List[File] = Nil

@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -282,8 +281,17 @@ object VcfStats extends ToolCommand {
           val stats = createStats
           logger.info("Starting on: " + interval)
 
+          val query = reader.query(interval.getContig, interval.getStart, interval.getEnd)
+          if (!query.hasNext) {
+            mergeNestedStatsMap(stats.generalStats, fillGeneral(adInfoTags))
+            for (sample <- samples) yield {
+              mergeNestedStatsMap(stats.samplesStats(sample).genotypeStats, fillGenotype(adGenotypeTags))
+            }
+            chunkCounter += 1
+          }
+
           for (
-            record <- reader.query(interval.getContig, interval.getStart, interval.getEnd) if record.getStart <= interval.getEnd
+            record <- query if record.getStart <= interval.getEnd
           ) {
             mergeNestedStatsMap(stats.generalStats, checkGeneral(record, adInfoTags))
             for (sample1 <- samples) yield {
@@ -415,6 +423,59 @@ object VcfStats extends ToolCommand {
     }
   }
 
+  protected[tools] def fillGeneral(additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+    val buffer = mutable.Map[String, Map[Any, Int]]()
+
+    def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
+      val map = buffer.getOrElse(key, Map())
+      if (found) buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
+    }
+
+    buffer += "QUAL" -> Map("not set" -> 1)
+
+    addToBuffer("SampleDistribution-Het", "not set", found = false)
+    addToBuffer("SampleDistribution-HetNonRef", "not set", found = false)
+    addToBuffer("SampleDistribution-Hom", "not set", found = false)
+    addToBuffer("SampleDistribution-HomRef", "not set", found = false)
+    addToBuffer("SampleDistribution-HomVar", "not set", found = false)
+    addToBuffer("SampleDistribution-Mixed", "not set", found = false)
+    addToBuffer("SampleDistribution-NoCall", "not set", found = false)
+    addToBuffer("SampleDistribution-NonInformative", "not set", found = false)
+    addToBuffer("SampleDistribution-Available", "not set", found = false)
+    addToBuffer("SampleDistribution-Called", "not set", found = false)
+    addToBuffer("SampleDistribution-Filtered", "not set", found = false)
+    addToBuffer("SampleDistribution-Variant", "not set", found = false)
+
+    addToBuffer("general", "Total", found = true)
+    addToBuffer("general", "Biallelic", false)
+    addToBuffer("general", "ComplexIndel", false)
+    addToBuffer("general", "Filtered", false)
+    addToBuffer("general", "FullyDecoded", false)
+    addToBuffer("general", "Indel", false)
+    addToBuffer("general", "Mixed", false)
+    addToBuffer("general", "MNP", false)
+    addToBuffer("general", "MonomorphicInSamples", false)
+    addToBuffer("general", "NotFiltered", false)
+    addToBuffer("general", "PointEvent", false)
+    addToBuffer("general", "PolymorphicInSamples", false)
+    addToBuffer("general", "SimpleDeletion", false)
+    addToBuffer("general", "SimpleInsertion", false)
+    addToBuffer("general", "SNP", false)
+    addToBuffer("general", "StructuralIndel", false)
+    addToBuffer("general", "Symbolic", false)
+    addToBuffer("general", "SymbolicOrSV", false)
+    addToBuffer("general", "Variant", false)
+
+    val skipTags = List("QUAL", "general")
+
+    for (tag <- additionalTags if !skipTags.contains(tag)) {
+      addToBuffer(tag, 0, found = false)
+    }
+
+    Map("total" -> buffer.toMap)
+  }
+
   /** Function to check all general stats, all info expect sample/genotype specific stats */
   protected[tools] def checkGeneral(record: VariantContext, additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
     val buffer = mutable.Map[String, Map[Any, Int]]()
@@ -469,6 +530,42 @@ object VcfStats extends ToolCommand {
     }
 
     Map(record.getContig -> buffer.toMap, "total" -> buffer.toMap)
+  }
+
+  protected[tools] def fillGenotype(additionalTags: List[String]): Map[String, Map[String, Map[Any, Int]]] = {
+    val buffer = mutable.Map[String, Map[Any, Int]]()
+
+    def addToBuffer(key: String, value: Any, found: Boolean): Unit = {
+      val map = buffer.getOrElse(key, Map())
+      if (found) buffer += key -> (map + (value -> (map.getOrElse(value, 0) + 1)))
+      else buffer += key -> (map + (value -> map.getOrElse(value, 0)))
+    }
+
+    buffer += "DP" -> Map("not set" -> 1)
+    buffer += "GQ" -> Map("not set" -> 1)
+
+    addToBuffer("general", "Total", found = true)
+    addToBuffer("general", "Het", false)
+    addToBuffer("general", "HetNonRef", false)
+    addToBuffer("general", "Hom", false)
+    addToBuffer("general", "HomRef", false)
+    addToBuffer("general", "HomVar", false)
+    addToBuffer("general", "Mixed", false)
+    addToBuffer("general", "NoCall", false)
+    addToBuffer("general", "NonInformative", false)
+    addToBuffer("general", "Available", false)
+    addToBuffer("general", "Called", false)
+    addToBuffer("general", "Filtered", false)
+    addToBuffer("general", "Variant", false)
+
+    val skipTags = List("DP", "GQ", "AD", "AD-ref", "AD-alt", "AD-used", "AD-not_used", "general")
+
+    for (tag <- additionalTags if !skipTags.contains(tag)) {
+      addToBuffer(tag, 0, found = false)
+    }
+
+    Map("total" -> buffer.toMap)
+
   }
 
   /** Function to check sample/genotype specific stats */

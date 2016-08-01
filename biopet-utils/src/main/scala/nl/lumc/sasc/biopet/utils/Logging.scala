@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -40,6 +39,7 @@ object Logging {
 
   def addError(error: String, debug: String = null): Unit = {
     val msg = error + (if (debug != null && logger.isDebugEnabled) "; " + debug else "")
+    logger.error(msg)
     errors.append(new Exception(msg))
   }
 

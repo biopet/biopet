@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -193,7 +192,7 @@ object ExtractAlignedFastq extends ToolCommand {
     opt[String]('r', "interval") required () unbounded () valueName "<interval>" action { (x, c) =>
       // yes, we are appending and yes it's O(n) ~ preserving order is more important than speed here
       c.copy(intervals = c.intervals :+ x)
-    } text "Interval strings"
+    } text "Interval strings (e.g. chr1:1-100)"
 
     opt[File]('i', "in1") required () valueName "<fastq>" action { (x, c) =>
       c.copy(inputFastq1 = x)
@@ -221,7 +220,11 @@ object ExtractAlignedFastq extends ToolCommand {
 
     opt[Int]('s', "read_suffix_length") optional () action { (x, c) =>
       c.copy(commonSuffixLength = x)
-    } text "Length of common suffix from each read pair (default: 0)"
+    } text
+      """Length of suffix mark from each read pair (default: 0). This is used for distinguishing read pairs with
+         different suffices. For example, if your FASTQ records end with `/1` for the first pair and `/2` for the
+         second pair, the value of `read_suffix_length` should be 2."
+      """.stripMargin
 
     note(
       """

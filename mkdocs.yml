@@ -20,6 +20,7 @@ pages:
     - TinyCap (smallRNA): 'pipelines/tinycap.md'
     - Toucan (Annotation): 'pipelines/toucan.md'
 - Tools:
+    - AnnotateVcfWithBed: 'tools/AnnotateVcfWithBed.md'
     - SamplesTsvToJson: 'tools/SamplesTsvToJson.md'
     - BedToInterval: 'tools/bedtointerval.md'
     - BastyGenerateFasta: 'tools/BastyGenerateFasta.md'
@@ -36,6 +37,7 @@ pages:
     - VcfFilter: 'tools/VcfFilter.md'
     - VepNormalizer: 'tools/VepNormalizer.md'
 - Release notes:
+    - 0.7.0: 'releasenotes/release_notes_0.7.0.md'
     - 0.6.0: 'releasenotes/release_notes_0.6.0.md'
     - 0.5.0: 'releasenotes/release_notes_0.5.0.md'
     - 0.4.0: 'releasenotes/release_notes_0.4.0.md'
@@ -45,9 +47,10 @@ pages:
 - Developer:
     - Getting Started: 'developer/getting-started.md'
     - Code Style: 'developer/code-style.md'
-    - Example pipeline: 'developer/example-pipeline.md'
-    - Example tool: 'developer/example-tool.md'
-    - Example pipeable: 'developer/example-pipeable.md'
+    - Example Dependecies: 'developer/example-depends.md'
+    - Example Pipeline: 'developer/example-pipeline.md'
+    - Example Tool: 'developer/example-tool.md'
+    - Example Pipeable: 'developer/example-pipeable.md'
     - Scala docs: 'developer/scaladocs.md'
 #- ['developing/Setup.md', 'Developing', 'Setting up your local development environment']
 #theme: readthedocs

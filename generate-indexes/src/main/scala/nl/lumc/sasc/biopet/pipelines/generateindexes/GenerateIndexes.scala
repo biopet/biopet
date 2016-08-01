@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -25,6 +24,7 @@ import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
 import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
 import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
 import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
+import nl.lumc.sasc.biopet.extensions.hisat.Hisat2Build
 import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
 import nl.lumc.sasc.biopet.utils.ConfigUtils
@@ -266,6 +266,17 @@ class GenerateIndexes(val root: Configurable) extends QScript with BiopetQScript
         outputConfig += "bowtie2" -> Map("reference_fasta" -> bowtie2Index.reference.getAbsolutePath)
         outputConfig += "tophat" -> Map(
           "bowtie_index" -> bowtie2Index.reference.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
+        )
+
+        // Hisat2 index
+        val hisat2Index = new Hisat2Build(this)
+        hisat2Index.inputFasta = createLinks(new File(genomeDir, "hisat2"))
+        hisat2Index.hisat2IndexBase = new File(new File(genomeDir, "hisat2"), "reference").getAbsolutePath
+        add(hisat2Index)
+        configDeps :+= hisat2Index.jobOutputFile
+        outputConfig += "hisat2" -> Map(
+          "reference_fasta" -> hisat2Index.inputFasta.getAbsolutePath,
+          "hisat_index" -> hisat2Index.inputFasta.getAbsolutePath.stripSuffix(".fa").stripSuffix(".fasta")
         )
 
         val writeConfig = new WriteConfig

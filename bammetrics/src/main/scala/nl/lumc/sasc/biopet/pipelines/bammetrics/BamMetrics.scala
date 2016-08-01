@@ -8,8 +8,7 @@
  *
  * Contact us at: sasc@lumc.nl
  *
- * A dual licensing mode is applied. The source code within this project that are
- * not part of GATK Queue is freely available for non-commercial use under an AGPL
+ * A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
  * license; For commercial users or users who do not want to follow the AGPL
  * license, please contact us to obtain a separate license.
  */
@@ -18,14 +17,14 @@ package nl.lumc.sasc.biopet.pipelines.bammetrics
 import java.io.File
 
 import nl.lumc.sasc.biopet.core.annotations.{ AnnotationRefFlat, RibosomalRefFlat }
-import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.core.summary.SummaryQScript
 import nl.lumc.sasc.biopet.core.{ BiopetFifoPipe, PipelineCommand, Reference, SampleLibraryTag }
-import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect }
+import nl.lumc.sasc.biopet.extensions.bedtools.{ BedtoolsCoverage, BedtoolsIntersect, BedtoolsSort }
 import nl.lumc.sasc.biopet.extensions.picard._
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFlagstat
-import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
 import nl.lumc.sasc.biopet.extensions.tools.BiopetFlagstat
+import nl.lumc.sasc.biopet.pipelines.bammetrics.scripts.CoverageStats
+import nl.lumc.sasc.biopet.utils.config.Configurable
 import nl.lumc.sasc.biopet.utils.intervals.BedCheck
 import org.broadinstitute.gatk.queue.QScript
 
@@ -41,6 +40,8 @@ class BamMetrics(val root: Configurable) extends QScript
 
   @Input(doc = "Bam File", shortName = "BAM", required = true)
   var inputBam: File = _
+
+  override def defaults = Map("bedtoolscoverage" -> Map("sorted" -> true))
 
   /** return location of summary file */
   def summaryFile = (sampleId, libId) match {
@@ -165,7 +166,11 @@ class BamMetrics(val root: Configurable) extends QScript
       addSummarizable(biopetFlagstatLoose, targetName + "_biopet_flagstat_loose")
       add(new BiopetFifoPipe(this, List(biLoose, biopetFlagstatLoose)))
 
-      val bedCov = BedtoolsCoverage(this, intervals.bed, inputBam, depth = true)
+      val sorter = new BedtoolsSort(this)
+      sorter.input = intervals.bed
+      sorter.output = swapExt(targetDir, intervals.bed, ".bed", ".sorted.bed")
+      add(sorter)
+      val bedCov = BedtoolsCoverage(this, sorter.output, inputBam, depth = true)
       val covStats = CoverageStats(this, targetDir, inputBam.getName.stripSuffix(".bam") + ".coverage")
       covStats.title = Some("Coverage Plot")
       covStats.subTitle = Some(s"for file '$targetName.bed'")
