@@ -63,7 +63,7 @@ object ExtractAlignedFastq extends ToolCommand {
     def intFromCoord(s: String): Int = s.replaceAll(",", "").replaceAll("\\.", "").toInt
 
     inStrings.map {
-      case ptn1(chr, start, end) => new Interval(chr, intFromCoord(start), intFromCoord(end))
+      case ptn1(chr, start, end) if intFromCoord(end) > intFromCoord(start)  => new Interval(chr, intFromCoord(start), intFromCoord(end))
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
