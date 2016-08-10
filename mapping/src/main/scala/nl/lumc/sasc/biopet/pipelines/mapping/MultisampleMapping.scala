@@ -67,7 +67,7 @@ trait MultisampleMappingTrait extends MultiSampleQScript
 
   override def defaults = super.defaults ++ Map("reordersam" -> Map("allow_incomplete_dict_concordance" -> true))
 
-  override def fixedValues = Map("gearssingle" -> Map("skip_flexiprep" -> true))
+  override def fixedValues: Map[String, Any] = super.fixedValues ++ Map("gearssingle" -> Map("skip_flexiprep" -> true))
 
   /** In a default multisample mapping run there are no multsample jobs. This method can be overriden by other pipelines */
   def addMultiSampleJobs(): Unit = {
