@@ -32,7 +32,10 @@ class ShivaReport(val root: Configurable) extends ReportBuilderExtension {
 }
 
 /** Object for report generation for Shiva pipeline */
-object ShivaReport extends MultisampleMappingReportTrait {
+object ShivaReport extends ShivaReportTrait
+
+/** Trait for report generation for Shiva pipeline, this can be extended */
+trait ShivaReportTrait extends MultisampleMappingReportTrait {
 
   def variantcallingExecuted = summary.getValue("shiva", "settings", "multisample_variantcalling") match {
     case Some(true) => true
