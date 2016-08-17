@@ -11,12 +11,12 @@ Output file	/exports/sasc/pjvan_thof/toucan_test/output/chunk/chr17_GL000204_ran
 
 [General statistics]
 Lines of input read	413
-Variants processed
-Variants remaining after filtering
-Lines of output written
+Variants processed	
+Variants remaining after filtering	
+Lines of output written	
 Novel / existing variants	-
-Overlapped genes
-Overlapped transcripts
+Overlapped genes	
+Overlapped transcripts	
 Overlapped regulatory features	-
 
 [Variant classes]
