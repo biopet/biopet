@@ -1,0 +1,36 @@
+[VEP run statistics]
+VEP version (API)	82 (82)
+Cache/Database	/usr/local/Genomes/H.Sapiens/GRCh37/annotation/vep/homo_sapiens_merged/81_GRCh37
+Species	homo_sapiens
+Command line options	-i /exports/sasc/pjvan_thof/toucan_test/output/chunk/chr17_GL000204_random-0-81310/chr17_GL000204_random-0-81310.vcf.gz -o /exports/sasc/pjvan_thof/toucan_test/output/chunk/chr17_GL000204_random-0-81310/chr17_GL000204_random-0-81310.vep.vcf -v --everything --stats_text --cache --vcf --allow_non_variant --merged --species homo_sapiens --assembly GRCh37 --dir /usr/local/Genomes/H.Sapiens/GRCh37/annotation/vep --fasta /usr/local/Genomes/H.Sapiens/GRCh37/annotation/vep/reference.fa --fork 2 --cache_version 81 --port 3337 --db_version 81 --failed 1
+Start time	2016-08-17 13:44:42
+End time	2016-08-17 13:44:42
+Run time	0 seconds
+Input file (format)	/exports/sasc/pjvan_thof/toucan_test/output/chunk/chr17_GL000204_random-0-81310/chr17_GL000204_random-0-81310.vcf.gz (VCF)
+Output file	/exports/sasc/pjvan_thof/toucan_test/output/chunk/chr17_GL000204_random-0-81310/chr17_GL000204_random-0-81310.vep.vcf [text]
+
+[General statistics]
+Lines of input read	413
+Variants processed
+Variants remaining after filtering
+Lines of output written
+Novel / existing variants	-
+Overlapped genes
+Overlapped transcripts
+Overlapped regulatory features	-
+
+[Variant classes]
+
+[Consequences (most severe)]
+
+[Consequences (all)]
+
+[Coding consequences]
+
+[SIFT summary]
+
+[PolyPhen summary]
+
+[Variants by chromosome]
+
+[Position in protein]
