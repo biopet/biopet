@@ -275,8 +275,8 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
     else Map()
   }
 
-  protected val removeOnConflict = Set("Output_file", "Run_time", "Start_time", "End_time", "Novel_/_existing_variants")
-  protected val nonNumber = Set("VEP_version_(API)", "Cache/Database", "Species", "Command_line_options", "Input_file_(format)")
+  protected val removeOnConflict = Set("Output_file", "Run_time", "Start_time", "End_time", "Novel_/_existing_variants", "Input_file_(format)")
+  protected val nonNumber = Set("VEP_version_(API)", "Cache/Database", "Species", "Command_line_options")
 
   override def resolveSummaryConflict(v1: Any, v2: Any, key: String): Any = {
     if (removeOnConflict.contains(key)) None
@@ -303,7 +303,7 @@ class VariantEffectPredictor(val root: Configurable) extends BiopetCommandLineFu
       val name = header.stripPrefix("[").stripSuffix("]")
       name.replaceAll(" ", "_") -> (contents.drop(headerIndex + 1).takeWhile(!isHeader(_)).map { line =>
         val values = line.split("\t", 2)
-        values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(0)
+        values.head.replaceAll(" ", "_") -> tryToParseNumber(values.last).getOrElse(values.last)
       }.toMap)
     }).toMap
   }
