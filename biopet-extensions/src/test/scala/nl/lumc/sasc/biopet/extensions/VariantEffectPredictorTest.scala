@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.extensions
 import java.io.File
 import java.nio.file.Paths
 
+import nl.lumc.sasc.biopet.utils.ConfigUtils
 import org.scalatest.Matchers
 import org.scalatest.testng.TestNGSuite
 import org.testng.annotations.Test
@@ -44,6 +45,28 @@ class VariantEffectPredictorTest extends TestNGSuite with Matchers {
     stats.contains("Distribution_of_variants_on_chromosome_1") shouldBe true
     stats.contains("Position_in_protein") shouldBe true
 
+  }
+
+  @Test
+  def testFailedSummaryStats = {
+    val file = new File(Paths.get(getClass.getResource("/vep.failed.metrics").toURI).toString)
+
+    val vep = new VariantEffectPredictor(null)
+    val stats = vep.parseStatsFile(file)
+  }
+
+  @Test
+  def testMergeFailSuccess: Unit = {
+    val file1 = new File(Paths.get(getClass.getResource("/vep.metrics").toURI).toString)
+    val vep1 = new VariantEffectPredictor(null)
+    val stats1 = vep1.parseStatsFile(file1)
+
+    val file2 = new File(Paths.get(getClass.getResource("/vep.failed.metrics").toURI).toString)
+    val vep2 = new VariantEffectPredictor(null)
+    val stats2 = vep2.parseStatsFile(file2)
+
+    ConfigUtils.mergeMaps(stats1, stats2, vep1.resolveSummaryConflict)
+    ConfigUtils.mergeMaps(stats2, stats1, vep1.resolveSummaryConflict)
   }
 
 }
