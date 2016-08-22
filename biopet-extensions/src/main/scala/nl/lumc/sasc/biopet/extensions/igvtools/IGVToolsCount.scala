@@ -76,25 +76,23 @@ class IGVToolsCount(val root: Configurable) extends IGVTools {
   }
 
   /** Returns command to execute */
-  def cmdLine = {
-    required(executable) +
-      required("count") +
-      optional("--maxZoom", maxZoom) +
-      optional("--windowSize", windowSize) +
-      optional("--extFactor", extFactor) +
-      optional("--preExtFactor", preExtFactor) +
-      optional("--postExtFactor", postExtFactor) +
-      optional("--windowFunctions", windowFunctions) +
-      optional("--strands", strands) +
-      conditional(bases, "--bases") +
-      optional("--query", query) +
-      optional("--minMapQuality", minMapQuality) +
-      conditional(includeDuplicates, "--includeDuplicates") +
-      conditional(pairs, "--pairs") +
-      required(input) +
-      required(outputArg) +
-      required(genomeChromSizes)
-  }
+  override def cmdLine = super.cmdLine +
+    required("count") +
+    optional("--maxZoom", maxZoom) +
+    optional("--windowSize", windowSize) +
+    optional("--extFactor", extFactor) +
+    optional("--preExtFactor", preExtFactor) +
+    optional("--postExtFactor", postExtFactor) +
+    optional("--windowFunctions", windowFunctions) +
+    optional("--strands", strands) +
+    conditional(bases, "--bases") +
+    optional("--query", query) +
+    optional("--minMapQuality", minMapQuality) +
+    conditional(includeDuplicates, "--includeDuplicates") +
+    conditional(pairs, "--pairs") +
+    required(input) +
+    required(outputArg) +
+    required(genomeChromSizes)
 
   /** This part should never fail, these values are set within this wrapper */
   private def outputArg: String = {
