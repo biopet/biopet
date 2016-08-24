@@ -60,7 +60,9 @@ class VarscanCnsSingleSample(val root: Configurable) extends Variantcaller {
       val varscan = new VarscanMpileup2cns(this)
       varscan.vcfSampleList = Some(sampleFile)
 
-      add(mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf)
+      val variantcallingJob = mpileup | new FixMpileup(this) | varscan | new Bgzip(this) > sampleVcf
+      variantcallingJob.threadsCorrection = -2
+      add(variantcallingJob)
       add(Tabix(this, sampleVcf))
 
       sampleVcf
