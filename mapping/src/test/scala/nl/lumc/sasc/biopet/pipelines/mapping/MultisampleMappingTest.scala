@@ -194,7 +194,7 @@ object MultisampleMappingTestTrait {
     "cutadapt" -> Map("exe" -> "test"),
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
