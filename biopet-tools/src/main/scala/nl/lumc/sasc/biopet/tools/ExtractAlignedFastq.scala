@@ -64,8 +64,6 @@ object ExtractAlignedFastq extends ToolCommand {
 
     inStrings.map {
       case ptn1(chr, start, end) if intFromCoord(end) >= intFromCoord(start)  => new Interval(chr, intFromCoord(start), intFromCoord(end))
-      case ptn1(chr, start, end) if intFromCoord(end) < intFromCoord(start)  =>
-        throw new IllegalStateException(s"end is higher then start: $chr:$start-$end")
       case ptn2(chr, start) =>
         val startCoord = intFromCoord(start)
         new Interval(chr, startCoord, startCoord)
