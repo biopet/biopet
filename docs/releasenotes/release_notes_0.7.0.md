@@ -1,4 +1,4 @@
-# Release notes Biopet version 0.6.0
+# Release notes Biopet version 0.7.0
 
 ## General Code changes
 
