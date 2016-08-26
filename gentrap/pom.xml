@@ -1,0 +1,58 @@
+<!--
+
+    Biopet is built on top of GATK Queue for building bioinformatic
+    pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+    SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+    should also be able to execute Biopet tools and pipelines.
+
+    Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+
+    Contact us at: sasc@lumc.nl
+
+    A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+    license; For commercial users or users who do not want to follow the AGPL
+    license, please contact us to obtain a separate license.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>Gentrap</artifactId>
+    <packaging>jar</packaging>
+    
+    <parent>
+        <groupId>nl.lumc.sasc</groupId>
+        <artifactId>Biopet</artifactId>
+        <version>0.7.0</version>
+        <relativePath>../</relativePath>
+    </parent>
+    
+    <inceptionYear>2014</inceptionYear>
+    <name>Gentrap</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Shiva</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Mapping</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.10</artifactId>
+            <version>2.2.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

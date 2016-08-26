@@ -1,0 +1,5 @@
+ID_1	ID_2	missing	hip	knee	hand	knee_or_hip	sex	age	bmi
+0 0 0 D D D D D P P
+sample-1	fam-1	0.0	2	NA	2	2	1	59.0767123287671	27.1314117909924
+sample-2	fam-1	0.0	2	NA	NA	2	2	48.4958904109589	23.8754325259516
+sample-3	fam-1	0.0	NA	NA	NA	NA	2	57.0876712328767	45.8842609074008

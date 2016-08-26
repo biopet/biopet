@@ -1,0 +1,17 @@
+{
+    "Duplicates" : 0,
+    "NotPrimaryAlignment" : 0,
+    "All" : 1,
+    "ReadNegativeStrand" : 0,
+    "ProperPair" : 1,
+    "MateUnmapped" : 0,
+    "ReadFailsVendorQualityCheck" : 0,
+    "Mapped" : 1,
+    "SupplementaryAlignment" : 0,
+    "MateNegativeStrand" : 1,
+    "FirstOfPair" : 1,
+    "ReadPaired" : 1,
+    "Singletons" : 0,
+    "SecondaryOrSupplementary" : 0,
+    "SecondOfPair" : 0
+}

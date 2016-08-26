@@ -34,7 +34,7 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 
 #### Required configuration values
 
-| Submodule | Name | Type | Default | Function |
+| namespace | Name | Type | Default | Function |
 | --------- | ---- | ---- | ------- | -------- |
 | shiva | variantcallers | List[String] |  | Which variant caller to use |
 | - | output_dir | Path | Path to output directory |
@@ -44,7 +44,7 @@ Please refer [to our mapping pipeline](mapping.md) for information about how the
 
 Specific configuration options additional to Basty are:
 
-| Submodule | Name | Type | Default | Function |
+| namespace | Name | Type | Default | Function |
 | --------- | ---- | ---- | ------- | -------- |
 | raxml | seed | Integer | 12345 | RAxML Random seed|
 | raxml | raxml_ml_model | String | GTRGAMMAX | RAxML model |

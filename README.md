@@ -55,18 +55,18 @@ At the moment, we do not provide links to download the Biopet package. If you ar
 
 ## Contributing to Biopet
 
-Biopet is based on the Queue framework developed by the Broad Institute as part of their Genome Analysis Toolkit (GATK) framework. The current Biopet release is based on the GATK 3.4 release.
+Biopet is based on the Queue framework developed by the Broad Institute as part of their Genome Analysis Toolkit (GATK) framework. The current Biopet release is based on the GATK 3.5 release.
 
 We welcome any kind of contribution, be it merge requests on the code base, documentation updates, or any kinds of other fixes! The main language we use is Scala, though the repository also contains a small bit of Python and R. Our main code repository is located at [https://github.com/biopet/biopet](https://github.com/biopet/biopet/issues), along with our issue tracker.
 
 ## Local development setup
 
-To develop Biopet, Java 7, Maven 3.2.2, and GATK Queue 3.4 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
+To develop Biopet, Java 7, Maven 3.3.3, and GATK Queue 3.5 is required. Please consult the Java homepage and Maven homepage for the respective installation instruction. After you have both Java and Maven installed, you would then need to install GATK Queue. However, as the GATK Queue package is not yet available as an artifact in Maven Central, you will need to download, compile, and install GATK Queue first.
 
 ~~~
 $ git clone https://github.com/broadgsa/gatk-protected
-$ cd gatk-protected
-$ git checkout 3.4                              # the current release is based on GATK 3.4
+$ cd gatk
+$ git checkout 3.5                              # the current release is based on GATK 3.5
 $ mvn -U clean install
 ~~~
 

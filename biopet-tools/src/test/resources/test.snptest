@@ -1,0 +1,14 @@
+# Analysis: "snptest"
+#  started: 2016-04-08 13:44:20
+#
+# Analysis properties:
+#   -analysis_name snptest (user-supplied)
+#   -data /exports/sasc/project-171/analysis/snptest/18/18-22307785-33461676.vcf.gz /exports/sasc/project-171/src/Phenotypes_knee_hip_hand.fixed2.txt (user-supplied)
+#   -o /exports/sasc/project-171/analysis/snptest/18/18-22307785-33461676.snptest (user-supplied)
+#   -summary_stats_only  (user-supplied)
+#
+alternate_ids rsid chromosome position alleleA alleleB index average_maximum_posterior_call info cohort_1_AA cohort_1_AB cohort_1_BB cohort_1_NULL all_AA all_AB all_BB all_NULL all_total all_maf missing_data_proportion comment
+rs184556815 rs184556815 18 22307810 G T 1 1 1 2869 0 0 0 2869 0 0 0 2869 0 0 NA
+rs143248971 rs143248971 18 22307875 C T 2 1 1 2869 0 0 0 2869 0 0 0 2869 0 0 NA
+rs74666159 rs74666159 18 22307884 C T 3 1 1 2690 177 2 0 2690 177 2 0 2869 0.0315441 0 NA
+# Completed successfully at 2016-04-08 13:47:05

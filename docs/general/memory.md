@@ -20,7 +20,7 @@ We assume here that the cluster will amplify those values by the number of threa
 - **residentFactor**: 1.2
 - **vmemFactor**: 1.4, 2.0 for java jobs
 
-This are de defaults of biopet but each extension in biopet can set their own defaults. As example the *bwa mem* tools 
+This are the defaults of biopet but each extension in biopet can set their own defaults. As example the *bwa mem* tools 
 use by default 8 `threads` and `core_memory` of 6.0.
 
 ### Config

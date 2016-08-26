@@ -10,7 +10,5 @@ git.properties
 .idea/*
 *.iml
 target/
-public/target/
-protected/target/
 site/
 *.sc

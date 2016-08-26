@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Biopet is built on top of GATK Queue for building bioinformatic
+    pipelines. It is mainly intended to support LUMC SHARK cluster which is running
+    SGE. But other types of HPC that are supported by GATK Queue (such as PBS)
+    should also be able to execute Biopet tools and pipelines.
+
+    Copyright 2014 Sequencing Analysis Support Core - Leiden University Medical Center
+
+    Contact us at: sasc@lumc.nl
+
+    A dual licensing mode is applied. The source code within this project is freely available for non-commercial use under an AGPL
+    license; For commercial users or users who do not want to follow the AGPL
+    license, please contact us to obtain a separate license.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>path.to.your</groupId>
+    <artifactId>MyProject</artifactId>
+    <version>YourVersion1.0</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <scoverage.plugin.version>1.0.4</scoverage.plugin.version>
+        <sting.shade.phase>package</sting.shade.phase>
+        <app.main.class>path.to.your.MyProject</app.main.class>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>BiopetCore</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.lumc.sasc</groupId>
+            <artifactId>Shiva</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.10</artifactId>
+            <version>2.2.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.10</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+        <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>${basedir}/src/test/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </testResource>
+        </testResources>
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <!--suppress MavenModelInspection -->
+                    <finalName>Magpie-${project.version}-${git.commit.id.abbrev}</finalName>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>${app.main.class}</Main-Class>
+                                <!--suppress MavenModelInspection -->
+                                <X-Compile-Source-JDK>${maven.compile.source}</X-Compile-Source-JDK>
+                                <!--suppress MavenModelInspection -->
+                                <X-Compile-Target-JDK>${maven.compile.target}</X-Compile-Target-JDK>
+                            </manifestEntries>
+                        </transformer>
+                    </transformers>
+                    <filters>
+                    </filters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <forkCount>1C</forkCount>
+                    <workingDirectory>${project.build.directory}</workingDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+                <executions>
+                    <execution>
+                        <id>copy-installed</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>list</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.outputDirectory}/dependency_list.txt</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>scala-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <args>
+                                <arg>-dependencyfile</arg>
+                                <arg>${project.build.directory}/.scala_dependencies</arg>
+                                <arg>-deprecation</arg>
+                                <arg>-feature</arg>
+                            </args>
+                        </configuration>
+                    </execution>
+                </executions>
+                <!-- ... (see other usage or goals for details) ... -->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scalariform</groupId>
+                <artifactId>scalariform-maven-plugin</artifactId>
+                <version>0.1.4</version>
+                <executions>
+                    <execution>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <configuration>
+                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
+                            <alignParameters>true</alignParameters>
+                            <alignSingleLineCaseStatements_maxArrowIndent>40
+                            </alignSingleLineCaseStatements_maxArrowIndent>
+                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
+                            <compactStringConcatenation>false</compactStringConcatenation>
+                            <compactControlReadability>false</compactControlReadability>
+                            <doubleIndentClassDeclaration>false</doubleIndentClassDeclaration>
+                            <formatXml>true</formatXml>
+                            <indentLocalDefs>false</indentLocalDefs>
+                            <indentPackageBlocks>true</indentPackageBlocks>
+                            <indentSpaces>2</indentSpaces>
+                            <placeScaladocAsterisksBeneathSecondAsterisk>false
+                            </placeScaladocAsterisksBeneathSecondAsterisk>
+                            <preserveDanglingCloseParenthesis>true</preserveDanglingCloseParenthesis>
+                            <preserveSpaceBeforeArguments>false</preserveSpaceBeforeArguments>
+                            <rewriteArrowSymbols>false</rewriteArrowSymbols>
+                            <spaceBeforeColon>false</spaceBeforeColon>
+                            <spaceInsideBrackets>false</spaceInsideBrackets>
+                            <spaceInsideParentheses>false</spaceInsideParentheses>
+                            <spacesWithinPatternBinders>true</spacesWithinPatternBinders>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.1.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <prefix>git</prefix>
+                    <dateFormat>dd.MM.yyyy '@' HH:mm:ss z</dateFormat>
+                    <verbose>false</verbose>
+                    <dotGitDirectory>${basedir}/../../.git</dotGitDirectory>
+                    <useNativeGit>true</useNativeGit>
+                    <skipPoms>false</skipPoms>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>src/main/resources/git.properties</generateGitPropertiesFilename>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <abbrevLength>8</abbrevLength>
+                    <skip>false</skip>
+                    <gitDescribe>
+                        <skip>false</skip>
+                        <always>false</always>
+                        <abbrev>8</abbrev>
+                        <dirty>-dirty</dirty>
+                        <forceLongFormat>false</forceLongFormat>
+                    </gitDescribe>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*git*</exclude>
+                        <exclude>**/*.bam</exclude>
+                        <exclude>**/*.bai</exclude>
+                        <exclude>**/*.gtf</exclude>
+                        <exclude>**/*.fq</exclude>
+                        <exclude>**/*.sam</exclude>
+                        <exclude>**/*.bed</exclude>
+                        <exclude>**/*.refFlat</exclude>
+                        <exclude>**/*.R</exclude>
+                        <exclude>**/*.rscript</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>${scoverage.plugin.version}</version>
+                <configuration>
+                    <scalaVersion>2.10.2</scalaVersion>
+                    <!-- other parameters -->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>${scoverage.plugin.version}</version>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>
