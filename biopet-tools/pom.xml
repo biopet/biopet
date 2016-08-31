@@ -21,7 +21,7 @@
     <parent>
         <artifactId>Biopet</artifactId>
         <groupId>nl.lumc.sasc</groupId>
-        <version>0.7.0</version>
+        <version>BIOS-SNAPSHOT</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>

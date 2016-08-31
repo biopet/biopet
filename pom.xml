@@ -21,7 +21,7 @@
     <groupId>nl.lumc.sasc</groupId>
     <name>Biopet</name>
     <packaging>pom</packaging>
-    <version>0.7.0</version>
+    <version>BIOS-SNAPSHOT</version>
     
     <modules>
         <module>biopet-package</module>
