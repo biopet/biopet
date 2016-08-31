@@ -210,7 +210,7 @@ object ShivaTest {
     "bwa" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
     "macs2" -> Map("exe" -> "test"),
-    "igvtools" -> Map("exe" -> "test"),
+    "igvtools" -> Map("exe" -> "test", "igvtools_jar" -> "test"),
     "wigtobigwig" -> Map("exe" -> "test"),
     "md5sum" -> Map("exe" -> "test"),
     "bgzip" -> Map("exe" -> "test"),

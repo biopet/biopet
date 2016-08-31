@@ -56,19 +56,19 @@
             <artifactId>BiopetCore</artifactId>
 
             <!--TODO: replace version of pipeline to a fixed version -->
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.7.0</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>BiopetExtensions</artifactId>
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.7.0</version>
         </dependency>
         <dependency>
             <groupId>nl.lumc.sasc</groupId>
             <artifactId>Shiva</artifactId>
 
             <!--TODO: replace version of pipeline to a fixed version -->
-            <version>0.7.0-SNAPSHOT</version>
+            <version>0.7.0</version>
         </dependency>
     </dependencies>
 

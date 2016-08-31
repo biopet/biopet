@@ -126,6 +126,7 @@ class Mapping(val root: Configurable) extends QScript with SummaryQScript with S
     "skip_metrics" -> skipMetrics,
     "skip_flexiprep" -> skipFlexiprep,
     "skip_markduplicates" -> skipMarkduplicates,
+    "paired" -> inputR2.isDefined,
     "aligner" -> aligner,
     "chunking" -> chunking,
     "number_of_chunks" -> (if (chunking) numberChunks.getOrElse(1) else None)

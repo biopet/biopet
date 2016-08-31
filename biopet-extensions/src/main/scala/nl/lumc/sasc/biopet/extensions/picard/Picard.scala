@@ -60,7 +60,7 @@ abstract class Picard extends BiopetJavaCommandLineFunction with Version {
   def versionRegex = """Version: (.*)""".r
   override def versionExitcode = List(0, 1)
 
-  override def defaultCoreMemory = 3.0
+  override def defaultCoreMemory = 4.0
 
   override def getVersion = {
     if (jarFile == null) Picard.getBiopetPicardVersion

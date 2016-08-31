@@ -46,7 +46,7 @@ class Carp(val root: Configurable) extends QScript with MultisampleMappingTrait 
     "samtoolsview" -> Map("q" -> 10)
   )
 
-  override def fixedValues = Map(
+  override def fixedValues = super.fixedValues ++ Map(
     "samtoolsview" -> Map(
       "h" -> true,
       "b" -> true
