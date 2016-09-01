@@ -31,7 +31,7 @@
     <parent>
         <groupId>nl.lumc.sasc</groupId>
         <artifactId>Biopet</artifactId>
-        <version>BIOS-SNAPSHOT</version>
+        <version>BIOS</version>
         <relativePath>../</relativePath>
     </parent>
     
