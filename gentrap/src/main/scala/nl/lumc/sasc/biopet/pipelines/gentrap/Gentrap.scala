@@ -53,7 +53,7 @@ class Gentrap(val root: Configurable) extends QScript
   /** Expression measurement modes */
   // see the enumeration below for valid modes
   lazy val expMeasures = new LazyCheck({
-    config("expression_measures", default = Nil).asStringList.map(value =>
+    config("expression_measures", default = List("fragments_per_gene", "bios_base_counts")).asStringList.map(value =>
       ExpMeasures.values.find(_.toString == Gentrap.camelize(value)) match {
         case Some(v) => v
         case _       => throw new IllegalArgumentException(s"'$value' is not a valid Expression measurement")
@@ -63,7 +63,7 @@ class Gentrap(val root: Configurable) extends QScript
 
   /** Strandedness modes */
   lazy val strandProtocol = new LazyCheck({
-    val value: String = config("strand_protocol")
+    val value: String = config("strand_protocol", default = "non_specific")
     StrandProtocol.values.find(_.toString == Gentrap.camelize(value)) match {
       case Some(v) => v
       case other =>
@@ -117,13 +117,32 @@ class Gentrap(val root: Configurable) extends QScript
     ),
     // disable markduplicates since it may not play well with all aligners (this can still be overriden via config)
     "mapping" -> Map(
-      "aligner" -> "gsnap",
+      "aligner" -> "star",
       "skip_markduplicates" -> true
     ),
     "wipereads" -> Map(
       "limit_removal" -> true,
       "no_make_index" -> false
-    )
+    ),
+    "star" -> Map(
+      "threads" -> 10,
+      "outfiltermultimapnmax" -> 5,
+      "outfiltermismatchnmax" -> 8,
+      "outsamunmapped" -> "Within",
+      "outsamstrandfield" -> "intronMotif"
+    ),
+    "fastqc" -> Map("nogroup" -> true),
+    "htseq-count" -> Map(
+      "type" -> "exon",
+      "order" -> "name",
+      "mode" -> "union"
+    ),
+    "sickle" -> Map(
+      "lengthThreshold" -> 25,
+      "qualityThreshold" -> 20,
+      "qualitytype" -> "sanger"
+    ),
+    "cutadapt" -> Map("minimum_length" -> 25)
   )
 
   lazy val fragmentsPerGene = if (expMeasures().contains(ExpMeasures.FragmentsPerGene))
