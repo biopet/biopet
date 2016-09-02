@@ -202,9 +202,28 @@ object VcfWithVcf extends ToolCommand {
           }
         case FieldMethod.unique => scalaListToJavaObjectArrayList(attribute._2.distinct)
         case _ => {
-          scalaListToJavaObjectArrayList(attribute._2)
+          header.getInfoHeaderLine(attribute._1).getCountType match {
+            case VCFHeaderLineCount.A => scalaListToJavaObjectArrayList(numberA(record, record, attribute._1)) // TODO: get the reference reocrd in here
+            case _ => scalaListToJavaObjectArrayList(attribute._2)
+          }
         }
       })
     }).make()
+  }
+
+  /**
+    * Get the correct values from a field that has number=A
+    * @param referenceRecord the reference record
+    * @param annotateRecord the to-be-annotated record
+    * @param field the field to annotate
+    * @return
+    */
+  def numberA(referenceRecord: VariantContext, annotateRecord: VariantContext, field: String): List[Any] = {
+    val refValues = referenceRecord.getAttributeAsList(field)
+    annotateRecord.
+      getAlternateAlleles.
+      map(x => referenceRecord.getAlternateAlleles.indexOf(x)).
+      map(x => refValues(x)).
+      toList
   }
 }
