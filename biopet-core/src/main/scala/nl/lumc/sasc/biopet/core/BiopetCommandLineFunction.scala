@@ -18,7 +18,7 @@ import java.io.{ File, FileInputStream, PrintWriter }
 import java.security.MessageDigest
 
 import nl.lumc.sasc.biopet.utils.Logging
-import org.broadinstitute.gatk.utils.commandline.{ Gather, Input, Output }
+import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import org.broadinstitute.gatk.utils.runtime.ProcessSettings
 import org.ggf.drmaa.JobTemplate
 
@@ -39,6 +39,8 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   /** This is the default shell for drmaa jobs */
   def defaultRemoteCommand = "bash"
   private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
+
+  val preCommands: List[String] = config("pre_commands", default = Nil)
 
   private def changeScript(file: File): Unit = {
     val lines = Source.fromFile(file).getLines().toList
@@ -219,7 +221,8 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
    */
   override final def commandLine: String = {
     preCmdInternal()
-    val cmd = cmdLine +
+    val cmd = preCommands.mkString("\n", "\n", "\n") +
+      cmdLine +
       stdinFile.map(file => " < " + required(file.getAbsoluteFile)).getOrElse("") +
       stdoutFile.map(file => " > " + required(file.getAbsoluteFile)).getOrElse("")
     addJobReportBinding("command", cmd)
