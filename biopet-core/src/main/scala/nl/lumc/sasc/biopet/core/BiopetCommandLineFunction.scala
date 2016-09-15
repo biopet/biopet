@@ -40,7 +40,7 @@ trait BiopetCommandLineFunction extends CommandLineResources { biopetFunction =>
   def defaultRemoteCommand = "bash"
   private val remoteCommand: String = config("remote_command", default = defaultRemoteCommand)
 
-  val preCommands: List[String] = config("pre_commands", default = Nil)
+  val preCommands: List[String] = config("pre_commands", default = Nil, freeVar = false)
 
   private def changeScript(file: File): Unit = {
     val lines = Source.fromFile(file).getLines().toList
