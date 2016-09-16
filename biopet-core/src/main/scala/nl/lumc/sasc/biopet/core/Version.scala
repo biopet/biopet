@@ -14,13 +14,13 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.File
+import java.io.{File, PrintWriter}
 
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.function.QFunction
 
 import scala.collection.mutable
-import scala.sys.process.{ Process, ProcessLogger }
+import scala.sys.process.{Process, ProcessLogger}
 import scala.util.matching.Regex
 
 /**
@@ -39,7 +39,10 @@ trait Version extends QFunction {
   /** Executes the version command */
   private[core] def getVersionInternal: Option[String] = {
     if (versionCommand == null || versionRegex == null) None
-    else Version.getVersionInternal(versionCommand, versionRegex, versionExitcode)
+    else this match {
+      case b: BiopetCommandLineFunction => Version.getVersionInternal(versionCommand, versionRegex, versionExitcode, b.preCommands)
+      case _ => Version.getVersionInternal(versionCommand, versionRegex, versionExitcode)
+    }
   }
 
   /** Get version from cache otherwise execute the version command  */
@@ -64,16 +67,23 @@ object Version extends Logging {
   /** Executes the version command */
   private[core] def getVersionInternal(versionCommand: String,
                                        versionRegex: Regex,
-                                       versionExitcode: List[Int] = List(0)): Option[String] = {
+                                       versionExitcode: List[Int] = List(0), pre_commands: List[String] = Nil): Option[String] = {
     if (versionCache.contains(versionCommand)) return versionCache.get(versionCommand)
     else if (versionCommand == null || versionRegex == null) return None
     else {
+      val tempFile = File.createTempFile("which.", ".sh")
+      tempFile.deleteOnExit()
+      val writer = new PrintWriter(tempFile)
+      pre_commands.foreach(cmd => writer.println(cmd + " > /dev/null 2> /dev/null"))
+      writer.println(versionCommand)
+      writer.close()
+
       val stdout = new StringBuffer()
       val stderr = new StringBuffer()
       def outputLog = "Version command: \n" + versionCommand +
         "\n output log: \n stdout: \n" + stdout.toString +
         "\n stderr: \n" + stderr.toString
-      val process = Process(versionCommand).run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
+      val process = Process(s"bash ${tempFile.getAbsolutePath}").run(ProcessLogger(stdout append _ + "\n", stderr append _ + "\n"))
       if (!versionExitcode.contains(process.exitValue())) {
         logger.warn("getVersion give exit code " + process.exitValue + ", version not found \n" + outputLog)
         return None
