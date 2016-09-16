@@ -14,13 +14,13 @@
  */
 package nl.lumc.sasc.biopet.core
 
-import java.io.{File, PrintWriter}
+import java.io.{ File, PrintWriter }
 
 import nl.lumc.sasc.biopet.utils.Logging
 import org.broadinstitute.gatk.queue.function.QFunction
 
 import scala.collection.mutable
-import scala.sys.process.{Process, ProcessLogger}
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.matching.Regex
 
 /**
@@ -41,7 +41,7 @@ trait Version extends QFunction {
     if (versionCommand == null || versionRegex == null) None
     else this match {
       case b: BiopetCommandLineFunction => Version.getVersionInternal(versionCommand, versionRegex, versionExitcode, b.preCommands)
-      case _ => Version.getVersionInternal(versionCommand, versionRegex, versionExitcode)
+      case _                            => Version.getVersionInternal(versionCommand, versionRegex, versionExitcode)
     }
   }
 
