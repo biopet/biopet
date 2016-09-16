@@ -155,7 +155,9 @@ object GensToVcf extends ToolCommand {
             .make()
       }
 
-      val infoMap = infoHeaderKeys.map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x))).toMap).getOrElse(Map())
+      val infoMap = infoHeaderKeys
+        .map(_.map(x => ("GENS_" + x) -> infoValues.get(infoHeaderMap.get(x)).replaceAll(";", ",")).toMap)
+        .getOrElse(Map())
 
       val builder = (new VariantContextBuilder)
         .chr(cmdArgs.contig)
