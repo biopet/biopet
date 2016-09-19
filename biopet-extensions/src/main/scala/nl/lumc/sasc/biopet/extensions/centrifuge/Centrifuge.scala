@@ -19,7 +19,7 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   var inputR2: Option[File] = None
 
   @Input(doc = "Centrifuge index prefix", required = true)
-  var index: File = config("centrifige_index")
+  var index: File = config("centrifuge_index")
 
   @Output(doc = "Output with hits per sequence")
   var output: File = _

@@ -17,7 +17,7 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   var output: File = _
 
   @Input(doc = "Centrifuge index prefix", required = true)
-  var index: File = config("centrifige_index", namespace = "centrifuge")
+  var index: File = config("centrifuge_index", namespace = "centrifuge")
 
   executable = config("exe", default = "centrifuge-kreport", freeVar = false)
 

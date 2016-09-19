@@ -231,6 +231,8 @@ object TestGearsSingle {
 
   val executables = Map(
     "kraken" -> Map("exe" -> "test", "db" -> "test"),
+    "centrifuge" -> Map("exe" -> "test", "centrifuge_index" -> "test"),
+    "centrifugekreport" -> Map("exe" -> "test"),
     "krakenreport" -> Map("exe" -> "test", "db" -> "test"),
     "sambamba" -> Map("exe" -> "test"),
     "samtools" -> Map("exe" -> "test"),
