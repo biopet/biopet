@@ -107,7 +107,7 @@ class GearsKraken(val root: Configurable) extends QScript with SummaryQScript wi
   def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
 
   /** Pipeline settings shown in the summary file */
-  def summarySettings: Map[String, Any] = Map.empty
+  def summarySettings: Map[String, Any] = Map()
 
   /** Statistics shown in the summary file */
   def summaryFiles: Map[String, File] = outputFiles + ("input_R1" -> fastqR1) ++ (fastqR2 match {
