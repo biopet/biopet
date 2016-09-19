@@ -19,7 +19,7 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   var inputR2: Option[File] = None
 
   @Input(doc = "Centrifuge index prefix", required = true)
-  var index: File = _
+  var index: File = config("centrifige_index")
 
   @Output(doc = "Output with hits per sequence")
   var output: File = _
@@ -42,7 +42,7 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
     *
     * @return Command to run
     */
-  protected[core] def cmdLine: String = executable +
+  def cmdLine: String = executable +
     //TODO: Options
     optional("--threads", threads)
     required("-x", index) +
