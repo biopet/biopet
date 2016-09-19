@@ -17,6 +17,7 @@ package nl.lumc.sasc.biopet.pipelines.gears
 import java.io.File
 
 import com.google.common.io.Files
+import nl.lumc.sasc.biopet.extensions.centrifuge.{ Centrifuge, CentrifugeKreport }
 import nl.lumc.sasc.biopet.extensions.kraken.{ Kraken, KrakenReport }
 import nl.lumc.sasc.biopet.extensions.picard.SamToFastq
 import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsView
@@ -49,6 +50,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
   def paired: Boolean = false
   def hasOutputName: Boolean = false
   def kraken: Option[Boolean] = None
+  def centrifuge: Boolean = false
   def qiimeClosed: Boolean = false
   def qiimeOpen: Boolean = false
   def qiimeRtax: Boolean = false
@@ -61,6 +63,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
   def testGears(): Unit = {
     val map = ConfigUtils.mergeMaps(Map(
       "gears_use_qiime_rtax" -> qiimeRtax,
+      "gears_use_centrifuge" -> centrifuge,
       "gears_use_qiime_closed" -> qiimeClosed,
       "gears_use_qiime_open" -> qiimeOpen,
       "gears_use_seq_count" -> seqCount,
@@ -108,6 +111,7 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
       gears.summarySettings("gear_use_qiime_open") shouldBe qiimeOpen
 
       gears.krakenScript.isDefined shouldBe kraken.getOrElse(true)
+      gears.centrifugeScript.isDefined shouldBe centrifuge
       gears.qiimeClosed.isDefined shouldBe qiimeClosed
       gears.qiimeOpen.isDefined shouldBe qiimeOpen
       gears.qiimeRatx.isDefined shouldBe qiimeRtax
@@ -119,7 +123,11 @@ abstract class TestGearsSingle extends TestNGSuite with Matchers {
 
       gears.functions.count(_.isInstanceOf[Kraken]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
       gears.functions.count(_.isInstanceOf[KrakenReport]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
-      gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe (if (kraken.getOrElse(true)) 1 else 0)
+      gears.functions.count(_.isInstanceOf[KrakenReportToJson]) shouldBe
+        ((if (kraken.getOrElse(true)) 1 else 0) + (if (centrifuge) 1 else 0))
+
+      gears.functions.count(_.isInstanceOf[Centrifuge]) shouldBe (if (centrifuge) 1 else 0)
+      gears.functions.count(_.isInstanceOf[CentrifugeKreport]) shouldBe (if (centrifuge) 1 else 0)
     }
   }
 }
@@ -131,6 +139,9 @@ class GearsSingleNoInputTest extends TestGearsSingle {
 class GearsSingleDefaultTest extends TestGearsSingle
 class GearsSingleKrakenTest extends TestGearsSingle {
   override def kraken = Some(true)
+}
+class GearsSingleCentrifugeTest extends TestGearsSingle {
+  override def centrifuge = true
 }
 class GearsSingleQiimeClosedTest extends TestGearsSingle {
   override def qiimeClosed = true
@@ -148,6 +159,10 @@ class GearsSingleseqCountTest extends TestGearsSingle {
 class GearsSingleKrakenPairedTest extends TestGearsSingle {
   override def paired = true
   override def kraken = Some(true)
+}
+class GearsSingleCentrifugePairedTest extends TestGearsSingle {
+  override def paired = true
+  override def centrifuge = true
 }
 class GearsSingleQiimeClosedPairedTest extends TestGearsSingle {
   override def paired = true
@@ -168,6 +183,7 @@ class GearsSingleseqCountPairedTest extends TestGearsSingle {
 
 class GearsSingleAllTest extends TestGearsSingle {
   override def kraken = Some(true)
+  override def centrifuge = true
   override def qiimeClosed = true
   override def qiimeOpen = true
   override def qiimeRtax = true
@@ -175,6 +191,7 @@ class GearsSingleAllTest extends TestGearsSingle {
 }
 class GearsSingleAllPairedTest extends TestGearsSingle {
   override def kraken = Some(true)
+  override def centrifuge = true
   override def qiimeClosed = true
   override def qiimeOpen = true
   override def qiimeRtax = true

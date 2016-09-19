@@ -8,8 +8,8 @@ import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
 
 /**
-  * Created by pjvanthof on 19/09/16.
-  */
+ * Created by pjvanthof on 19/09/16.
+ */
 class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScript with SampleLibraryTag {
 
   var fastqR1: File = _
@@ -35,7 +35,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     add(centrifuge)
 
     val centrifugeKreport = new CentrifugeKreport(this)
-    centrifugeKreport.centrifugeOutputFiles += centrifuge.output
+    centrifugeKreport.centrifugeOutputFiles :+= centrifuge.output
     centrifugeKreport.output = new File(outputDir, s"$outputName.centrifuge.kreport")
     add(centrifugeKreport)
 

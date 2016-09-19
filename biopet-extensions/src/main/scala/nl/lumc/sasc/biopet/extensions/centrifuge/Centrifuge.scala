@@ -9,8 +9,8 @@ import org.broadinstitute.gatk.utils.commandline.{ Input, Output }
 import scala.util.matching.Regex
 
 /**
-  * Created by pjvanthof on 19/09/16.
-  */
+ * Created by pjvanthof on 19/09/16.
+ */
 class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with Version {
   @Input(doc = "Input: FastQ or FastA", required = true)
   var inputR1: File = _
@@ -38,14 +38,14 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
   def versionRegex: Regex = ".* version (.*)".r
 
   /**
-    * This function needs to be implemented to define the command that is executed
-    *
-    * @return Command to run
-    */
+   * This function needs to be implemented to define the command that is executed
+   *
+   * @return Command to run
+   */
   def cmdLine: String = executable +
     //TODO: Options
     optional("--threads", threads)
-    required("-x", index) +
+  required("-x", index) +
     (inputR2 match {
       case Some(r2) => required("-1", inputR1) + required("-2", r2)
       case _        => required("-U", inputR1)
