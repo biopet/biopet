@@ -18,6 +18,8 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
 
   var outputName: String = _
 
+  override def fixedValues = Map("centrifugekreport" -> Map("only_unique" -> false))
+
   def init(): Unit = {
     require(fastqR1 != null)
     if (outputName == null) outputName = fastqR1.getName
@@ -34,19 +36,25 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     centrifuge.report = Some(new File(outputDir, s"$outputName.centrifuge.report"))
     add(centrifuge)
 
+    makeKreport(List(centrifuge.output), "centrifuge", unique = false)
+    makeKreport(List(centrifuge.output), "centrifuge_unique", unique = true)
+
+    addSummaryJobs()
+  }
+
+  protected def makeKreport(inputFiles: List[File], name: String, unique: Boolean): Unit = {
     val centrifugeKreport = new CentrifugeKreport(this)
-    centrifugeKreport.centrifugeOutputFiles :+= centrifuge.output
-    centrifugeKreport.output = new File(outputDir, s"$outputName.centrifuge.kreport")
+    centrifugeKreport.centrifugeOutputFiles = inputFiles
+    centrifugeKreport.output = new File(outputDir, s"$outputName.$name.kreport")
+    centrifugeKreport.onlyUnique = unique
     add(centrifugeKreport)
 
     val krakenReportJSON = new KrakenReportToJson(this)
     krakenReportJSON.inputReport = centrifugeKreport.output
-    krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
+    krakenReportJSON.output = new File(outputDir, s"$outputName.$name.krkn.json")
     krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
-    addSummarizable(krakenReportJSON, "centrifuge_report")
-
-    addSummaryJobs()
+    addSummarizable(krakenReportJSON, s"${name}_report")
   }
 
   /** Location of summary file */

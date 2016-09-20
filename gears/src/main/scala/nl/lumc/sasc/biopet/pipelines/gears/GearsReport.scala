@@ -46,8 +46,11 @@ object GearsReport extends MultisampleReportBuilder {
 
     ReportPage(
       (if (centrifugeExecuted) List("Centriguge analysis" -> ReportPage(List(), List(
-        "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
-        )), Map("summaryStatsTag" -> "centrifuge_report", "summaryModuleTag" -> "gearscentrifuge")))
+        "Unique Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_unique_report")
+        ), "All Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp",
+          Map("summaryStatsTag" -> "centrifuge_report")
+        )), Map("summaryModuleTag" -> "gearscentrifuge")))
       else Nil) ::: (if (krakenExecuted) List("Kraken analysis" -> ReportPage(List(), List(
         "Krona plot" -> ReportSection("/nl/lumc/sasc/biopet/pipelines/gears/krakenKrona.ssp"
         )), Map()))
