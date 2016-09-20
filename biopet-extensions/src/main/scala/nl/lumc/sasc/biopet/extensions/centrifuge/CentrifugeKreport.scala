@@ -24,5 +24,6 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   def cmdLine = executable +
     //TODO: Options
     required("-x", index) +
-    repeat(centrifugeOutputFiles)
+    repeat(centrifugeOutputFiles) +
+    " > " + required(output)
 }
