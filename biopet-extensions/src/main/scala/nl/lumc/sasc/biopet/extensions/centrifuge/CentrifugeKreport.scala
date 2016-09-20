@@ -26,6 +26,8 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   var minScore: Option[Double] = config("min_score")
   var minLength: Option[Int] = config("min_length")
 
+  override def defaultCoreMemory = 4.0
+
   executable = config("exe", default = "centrifuge-kreport", freeVar = false)
 
   def cmdLine = executable +
