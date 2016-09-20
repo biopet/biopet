@@ -45,10 +45,12 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
     addSummarizable(krakenReportJSON, "centrifugereport")
+
+    addSummaryJobs()
   }
 
   /** Location of summary file */
-  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".kraken.summary.json")
+  def summaryFile = new File(outputDir, sampleId.getOrElse("sampleName_unknown") + ".centrifuge.summary.json")
 
   /** Pipeline settings shown in the summary file */
   def summarySettings: Map[String, Any] = Map()
