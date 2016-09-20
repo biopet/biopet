@@ -19,9 +19,9 @@ class CentrifugeKreport(val root: Configurable) extends BiopetCommandLineFunctio
   @Input(doc = "Centrifuge index prefix", required = true)
   var index: File = config("centrifuge_index", namespace = "centrifuge")
 
-  var onlyUnique: Boolean = config ("only_unique", default = false)
-  var showZeros: Boolean = config ("show_zeros", default = false)
-  var isCounts: Boolean = config ("is_counts", default = false)
+  var onlyUnique: Boolean = config("only_unique", default = false)
+  var showZeros: Boolean = config("show_zeros", default = false)
+  var isCounts: Boolean = config("is_counts", default = false)
 
   var minScore: Option[Double] = config("min_score")
   var minLength: Option[Int] = config("min_length")
