@@ -44,8 +44,8 @@ class Centrifuge(val root: Configurable) extends BiopetCommandLineFunction with 
    */
   def cmdLine: String = executable +
     //TODO: Options
-    optional("--threads", threads)
-  required("-x", index) +
+    optional("--threads", threads) +
+    required("-x", index) +
     (inputR2 match {
       case Some(r2) => required("-1", inputR1) + required("-2", r2)
       case _        => required("-U", inputR1)
