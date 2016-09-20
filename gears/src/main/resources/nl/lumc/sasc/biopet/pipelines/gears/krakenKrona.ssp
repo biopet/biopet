@@ -10,11 +10,12 @@
 <%@ var libId: Option[String] = None %>
 <%@ var args: Map[String, Any] %>
 <%@ var outputDir: File %>
+<%@ var summaryTag: String = "krakenreport" %>
 
 <%
     val summaries = if (sampleId.isEmpty && libId.isEmpty) {
-        summary.getSampleValues("gearskraken", "stats", "krakenreport").map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
-    } else summary.getValue(sampleId, libId, "gearskraken", "stats", "krakenreport").map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
+        summary.getSampleValues("gearskraken", "stats", summaryTag).map(x => x._1 -> x._2.get.asInstanceOf[Map[String, Any]])
+    } else summary.getValue(sampleId, libId, "gearskraken", "stats", summaryTag).map(sampleId.get -> _.asInstanceOf[Map[String, Any]]).toList.toMap
 
     val tempFile = File.createTempFile("krona.", ".xml")
     tempFile.deleteOnExit()

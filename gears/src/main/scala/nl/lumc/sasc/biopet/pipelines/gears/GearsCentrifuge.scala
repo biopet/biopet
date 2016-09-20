@@ -44,7 +44,7 @@ class GearsCentrifuge(val root: Configurable) extends QScript with SummaryQScrip
     krakenReportJSON.output = new File(outputDir, s"$outputName.krkn.json")
     krakenReportJSON.skipNames = config("skipNames", default = false)
     add(krakenReportJSON)
-    addSummarizable(krakenReportJSON, "centrifugereport")
+    addSummarizable(krakenReportJSON, "centrifuge_report")
 
     addSummaryJobs()
   }
