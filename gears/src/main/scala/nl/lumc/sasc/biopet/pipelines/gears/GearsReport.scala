@@ -38,7 +38,7 @@ object GearsReport extends MultisampleReportBuilder {
 
   def indexPage = {
     val krakenExecuted = summary.getSampleValues("gearskraken", "stats", "krakenreport").values.forall(_.isDefined)
-    val centrifugeExecuted = summary.getSampleValues("gearskraken", "stats", "centrifuge_report").values.forall(_.isDefined)
+    val centrifugeExecuted = summary.getSampleValues("gearscentrifuge", "stats", "centrifuge_report").values.forall(_.isDefined)
     val qiimeClosesOtuTable = summary.getValue("gears", "files", "pipeline", "qiime_closed_otu_table", "path")
       .map(x => new File(x.toString))
     val qiimeOpenOtuTable = summary.getValue("gears", "files", "pipeline", "qiime_open_otu_table", "path")
