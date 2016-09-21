@@ -13,6 +13,7 @@ object DownloadNcbiAssembly extends ToolCommand {
 
   case class Args(assemblyId: String = null,
                   outputFile: File = null,
+                  reportFile: Option[File] = None,
                   contigNameHeader: Option[String] = None,
                   mustHaveOne: Map[String, String] = Map(),
                   mustNotHave: Map[String, String] = Map()) extends AbstractArgs
@@ -23,6 +24,9 @@ object DownloadNcbiAssembly extends ToolCommand {
     }
     opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
       c.copy(outputFile = x)
+    }
+    opt[File]("report") required () valueName "<file>" action { (x, c) =>
+      c.copy(reportFile = Some(x))
     }
     opt[String]("nameHeader") valueName "<string>" action { (x, c) =>
       c.copy(contigNameHeader = Some(x))
@@ -46,6 +50,11 @@ object DownloadNcbiAssembly extends ToolCommand {
     val reader = Source.fromURL(s"ftp://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/All/${cmdargs.assemblyId}.assembly.txt")
     val assamblyReport = reader.getLines().toList
     reader.close()
+    cmdargs.reportFile.foreach { file =>
+      val writer = new PrintWriter(file)
+      assamblyReport.foreach(writer.println)
+      writer.close()
+    }
 
     val headers = assamblyReport.filter(_.startsWith("#")).last.stripPrefix("# ").split("\t").zipWithIndex.toMap
     val nameId = cmdargs.contigNameHeader.map(x => headers(x))

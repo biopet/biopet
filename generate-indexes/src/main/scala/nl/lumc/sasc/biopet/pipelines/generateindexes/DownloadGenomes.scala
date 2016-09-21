@@ -17,15 +17,9 @@ package nl.lumc.sasc.biopet.pipelines.generateindexes
 import java.util
 
 import nl.lumc.sasc.biopet.core.extensions.Md5sum
-import nl.lumc.sasc.biopet.core.{ BiopetQScript, PipelineCommand }
-import nl.lumc.sasc.biopet.extensions._
-import nl.lumc.sasc.biopet.extensions.bowtie.{ Bowtie2Build, BowtieBuild }
-import nl.lumc.sasc.biopet.extensions.bwa.BwaIndex
-import nl.lumc.sasc.biopet.extensions.gatk.CombineVariants
-import nl.lumc.sasc.biopet.extensions.gmap.GmapBuild
-import nl.lumc.sasc.biopet.extensions.hisat.Hisat2Build
-import nl.lumc.sasc.biopet.extensions.picard.CreateSequenceDictionary
-import nl.lumc.sasc.biopet.extensions.samtools.SamtoolsFaidx
+import nl.lumc.sasc.biopet.core.{BiopetQScript, PipelineCommand}
+import nl.lumc.sasc.biopet.extensions.{Cat, Curl, Zcat}
+import nl.lumc.sasc.biopet.extensions.tools.DownloadNcbiAssembly
 import nl.lumc.sasc.biopet.utils.ConfigUtils
 import nl.lumc.sasc.biopet.utils.config.Configurable
 import org.broadinstitute.gatk.queue.QScript
@@ -58,59 +52,79 @@ class DownloadGenomes(val root: Configurable) extends QScript with BiopetQScript
       for ((genomeName, c) <- speciesConfig) yield genomeName -> {
         var configDeps: List[File] = Nil
         val genomeConfig = ConfigUtils.any2map(c)
-        val fastaUris = genomeConfig.getOrElse("fasta_uri",
-          throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
-            case a: Traversable[_]    => a.map(_.toString).toArray
-            case a: util.ArrayList[_] => a.map(_.toString).toArray
-            case a                    => Array(a.toString)
-          }
 
         val genomeDir = new File(speciesDir, genomeName)
         val fastaFile = new File(genomeDir, "reference.fa")
 
-        val fastaFiles = for (fastaUri <- fastaUris) yield {
-          val curl = new Curl(this)
-          curl.url = fastaUri
-          curl.output = if (fastaUris.length > 1 || fastaUri.endsWith(".gz")) {
-            curl.isIntermediate = true
-            new File(genomeDir, new File(fastaUri).getName)
-          } else fastaFile
+        referenceConfig.get("ncbi_assembly_id") match {
+          case Some(assemblyID: String) => {
+            val downloadAssembly = new DownloadNcbiAssembly(this)
+            downloadAssembly.assemblyId = assemblyID
+            downloadAssembly.output = fastaFile
+            downloadAssembly
+            downloadAssembly.nameHeader = referenceConfig.get("ncbi_assembly_header_name").map(_.toString)
+            downloadAssembly.mustHaveOne = referenceConfig.get("ncbi_assembly_must_have_one")
+              .map(_.asInstanceOf[Map[String, String]])
+              .getOrElse(Map())
+            downloadAssembly.mustNotHave = referenceConfig.get("ncbi_assembly_must_not_have")
+              .map(_.asInstanceOf[Map[String, String]])
+              .getOrElse(Map())
+            add(downloadAssembly)
+          }
+          case _ => {
+            val fastaUris = genomeConfig.getOrElse("fasta_uri",
+              throw new IllegalArgumentException(s"No fasta_uri found for $speciesName - $genomeName")) match {
+              case a: Traversable[_]    => a.map(_.toString).toArray
+              case a: util.ArrayList[_] => a.map(_.toString).toArray
+              case a                    => Array(a.toString)
+            }
 
-          add(curl)
-          add(Md5sum(this, curl.output, genomeDir))
-          curl.output
-        }
+            val fastaFiles = for (fastaUri <- fastaUris) yield {
+              val curl = new Curl(this)
+              curl.url = fastaUri
+              curl.output = if (fastaUris.length > 1 || fastaUri.endsWith(".gz")) {
+                curl.isIntermediate = true
+                new File(genomeDir, new File(fastaUri).getName)
+              } else fastaFile
 
-        val fastaCat = new FastaMerging(this)
-        fastaCat.output = fastaFile
+              add(curl)
+              add(Md5sum(this, curl.output, genomeDir))
+              curl.output
+            }
 
-        if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
-          fastaFiles.foreach { file =>
-            if (file.getName.endsWith(".gz")) {
-              val zcat = new Zcat(this)
-              zcat.appending = true
-              zcat.input :+= file
-              zcat.output = fastaFile
-              fastaCat.cmds :+= zcat
-              fastaCat.input :+= file
-            } else {
-              val cat = new Cat(this)
-              cat.appending = true
-              cat.input :+= file
-              cat.output = fastaFile
-              fastaCat.cmds :+= cat
-              fastaCat.input :+= file
+            val fastaCat = new FastaMerging(this)
+            fastaCat.output = fastaFile
+
+            if (fastaUris.length > 1 || fastaFiles.exists(_.getName.endsWith(".gz"))) {
+              fastaFiles.foreach { file =>
+                if (file.getName.endsWith(".gz")) {
+                  val zcat = new Zcat(this)
+                  zcat.appending = true
+                  zcat.input :+= file
+                  zcat.output = fastaFile
+                  fastaCat.cmds :+= zcat
+                  fastaCat.input :+= file
+                } else {
+                  val cat = new Cat(this)
+                  cat.appending = true
+                  cat.input :+= file
+                  cat.output = fastaFile
+                  fastaCat.cmds :+= cat
+                  fastaCat.input :+= file
+                }
+              }
+              add(fastaCat)
+              configDeps :+= fastaCat.output
             }
           }
-          add(fastaCat)
-          configDeps :+= fastaCat.output
         }
+
 
         val generateIndexes = new GenerateIndexes(this)
         generateIndexes.fastaFile = fastaFile
         generateIndexes.speciesName = speciesName
         generateIndexes.genomeName = genomeName
-        generateIndexes.fastaUris = fastaUris
+        //generateIndexes.fastaUris = fastaUris
         //TODO: add gtf file
         add(generateIndexes)
 
