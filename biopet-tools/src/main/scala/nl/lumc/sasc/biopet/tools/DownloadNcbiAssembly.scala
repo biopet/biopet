@@ -11,14 +11,14 @@ import scala.io.Source
   */
 object DownloadNcbiAssembly extends ToolCommand {
 
-  case class Args(assemblyId: File = null,
+  case class Args(assemblyId: String = null,
                   outputFile: File = null,
                   contigNameHeader: Option[String] = None,
                   mustHaveOne: Map[String, String] = Map(),
                   mustNotHave: Map[String, String] = Map()) extends AbstractArgs
 
   class OptParser extends AbstractOptParser {
-    opt[File]('a', "assembly id") required () valueName "<file>" action { (x, c) =>
+    opt[String]('a', "assembly id") required () valueName "<file>" action { (x, c) =>
       c.copy(assemblyId = x)
     }
     opt[File]('o', "output") required () valueName "<file>" action { (x, c) =>
