@@ -25,11 +25,11 @@ import org.testng.annotations.Test
 /**
  * Created by pjvan_thof on 13-5-16.
  */
-class GenerateIndexesTest extends TestNGSuite with Matchers {
-  def initPipeline(map: Map[String, Any]): GenerateIndexes = {
-    new GenerateIndexes() {
+class DownloadGenomesTest extends TestNGSuite with Matchers {
+  def initPipeline(map: Map[String, Any]): DownloadGenomes = {
+    new DownloadGenomes() {
       override def configNamespace = "generateindexes"
-      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, GenerateIndexesTest.config))
+      override def globalConfig = new Config(ConfigUtils.mergeMaps(map, DownloadGenomesTest.config))
       qSettings = new QSettings
       qSettings.runName = "test"
     }
@@ -116,7 +116,7 @@ class GenerateIndexesTest extends TestNGSuite with Matchers {
 
 }
 
-object GenerateIndexesTest {
+object DownloadGenomesTest {
   val outputDir = Files.createTempDir()
   outputDir.deleteOnExit()
 
