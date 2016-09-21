@@ -48,5 +48,6 @@ object BiopetToolsExecutable extends BiopetExecutable {
     nl.lumc.sasc.biopet.tools.VcfToTsv,
     nl.lumc.sasc.biopet.tools.VcfWithVcf,
     nl.lumc.sasc.biopet.tools.VepNormalizer,
-    nl.lumc.sasc.biopet.tools.WipeReads)
+    nl.lumc.sasc.biopet.tools.WipeReads,
+    nl.lumc.sasc.biopet.tools.DownloadNcbiAssembly)
 }

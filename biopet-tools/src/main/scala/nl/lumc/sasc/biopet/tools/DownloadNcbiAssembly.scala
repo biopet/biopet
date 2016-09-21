@@ -9,7 +9,7 @@ import scala.io.Source
 /**
   * Created by pjvan_thof on 21-9-16.
   */
-object DownloadNcbiAssemblyextends extends ToolCommand {
+object DownloadNcbiAssembly extends ToolCommand {
 
   case class Args(assemblyId: File = null,
                   outputFile: File = null,
